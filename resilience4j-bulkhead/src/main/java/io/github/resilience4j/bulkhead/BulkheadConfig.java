@@ -18,21 +18,28 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import javax.annotation.concurrent.Immutable;
 import java.time.Duration;
 
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}
  */
+@Immutable
 public class BulkheadConfig {
 
 	public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
-	public static final long DEFAULT_MAX_WAIT_TIME = 0L;
+	public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
+	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
-	private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
-	private long maxWaitTime = DEFAULT_MAX_WAIT_TIME;
+	private final int maxConcurrentCalls;
+	private final Duration maxWaitDuration;
+	private final boolean writableStackTraceEnabled;
 
-	private BulkheadConfig() {
-	}
+    private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration, boolean writableStackTraceEnabled) {
+        this.maxConcurrentCalls = maxConcurrentCalls;
+        this.maxWaitDuration = maxWaitDuration;
+        this.writableStackTraceEnabled = writableStackTraceEnabled;
+    }
 
 	/**
 	 * Returns a builder to create a custom BulkheadConfig.
@@ -65,19 +72,29 @@ public class BulkheadConfig {
 		return maxConcurrentCalls;
 	}
 
-	public long getMaxWaitTime() {
-		return maxWaitTime;
+	public Duration getMaxWaitDuration() {
+		return maxWaitDuration;
+	}
+
+	public boolean isWritableStackTraceEnabled() {
+		return writableStackTraceEnabled;
 	}
 
 	public static class Builder {
-
-		private BulkheadConfig config = new BulkheadConfig();
+        private int maxConcurrentCalls;
+        private Duration maxWaitDuration;
+        private boolean writableStackTraceEnabled;
 
 		public Builder() {
+            this.maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
+            this.maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
+            this.writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 		}
 
 		public Builder(BulkheadConfig bulkheadConfig) {
-			this.config = bulkheadConfig;
+            this.maxConcurrentCalls = bulkheadConfig.getMaxConcurrentCalls();
+            this.maxWaitDuration = bulkheadConfig.getMaxWaitDuration();
+            this.writableStackTraceEnabled = bulkheadConfig.isWritableStackTraceEnabled();
 		}
 
 		/**
@@ -90,45 +107,38 @@ public class BulkheadConfig {
 			if (maxConcurrentCalls < 0) {
 				throw new IllegalArgumentException("maxConcurrentCalls must be an integer value >= 0");
 			}
-			config.maxConcurrentCalls = maxConcurrentCalls;
-			return this;
-		}
-
-		/**
-		 * Configures a maximum amount of time in ms the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
-		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
-		 * <p>
-		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
-		 * an event-loop thread will most likely have a negative effect on application throughput.
-		 *
-		 * @param maxWaitTime maximum wait time for bulkhead entry
-		 * @return the BulkheadConfig.Builder
-		 * @deprecated since 0.16.0 use {@link #maxWaitTimeDuration(Duration)}
-		 */
-		@Deprecated
-		public Builder maxWaitTime(long maxWaitTime) {
-			if (maxWaitTime < 0) {
-				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
-			}
-			config.maxWaitTime = maxWaitTime;
+			this.maxConcurrentCalls = maxConcurrentCalls;
 			return this;
 		}
 
 		/**
 		 * Configures a maximum amount of time which the calling thread will wait to enter the bulkhead. If bulkhead has space available, entry
-		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitTime can be set to 0.
+		 * is guaranteed and immediate. If bulkhead is full, calling threads will contest for space, if it becomes available. maxWaitDuration can be set to 0.
 		 * <p>
-		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitTime to 0 is highly recommended. Blocking
+		 * Note: for threads running on an event-loop or equivalent (rx computation pool, etc), setting maxWaitDuration to 0 is highly recommended. Blocking
 		 * an event-loop thread will most likely have a negative effect on application throughput.
 		 *
-		 * @param maxWaitTime maximum wait time for bulkhead entry
+		 * @param maxWaitDuration maximum wait time for bulkhead entry
 		 * @return the BulkheadConfig.Builder
 		 */
-		public Builder maxWaitTimeDuration(Duration maxWaitTime) {
-			if (maxWaitTime.toMillis() < 0) {
-				throw new IllegalArgumentException("maxWaitTime must be a positive integer value >= 0");
+		public Builder maxWaitDuration(Duration maxWaitDuration) {
+			if (maxWaitDuration.toMillis() < 0) {
+				throw new IllegalArgumentException("maxWaitDuration must be a positive integer value >= 0");
 			}
-			config.maxWaitTime = maxWaitTime.toMillis();
+			this.maxWaitDuration = maxWaitDuration;
+			return this;
+		}
+
+		/**
+		 * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
+		 * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
+		 * known (the circuit breaker is short-circuiting calls).
+		 *
+		 * @param writableStackTraceEnabled flag to control if stack trace is writable
+		 * @return the BulkheadConfig.Builder
+		 */
+		public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+			this.writableStackTraceEnabled = writableStackTraceEnabled;
 			return this;
 		}
 
@@ -138,7 +148,7 @@ public class BulkheadConfig {
 		 * @return the BulkheadConfig
 		 */
 		public BulkheadConfig build() {
-			return config;
+			return new BulkheadConfig(maxConcurrentCalls, maxWaitDuration, writableStackTraceEnabled);
 		}
 	}
 }

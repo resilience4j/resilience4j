@@ -138,3 +138,11 @@ long nanosToWaitForPermission = atomicLimiter.getNanosToWait();
 If you're interested in making your own thing on top of Resilience4j RateLimiter you'll possibly be interested in
 our lower level APIs like `getPermission` and `reservePermission` methods.
 
+===== Thread interruption
+
+You can interrupt threads that are blocked or waiting inside rate limiters.
+Our implementations don't throw `InterruptedException`, but set `Thread.isInterrupted` status into true,
+ so you are responsible for handling this state in your client code.
+In the case where we should interrupt the positive flow of code after `Thread.interrupt'ion
+ we throw `AcquirePermissionCancelledException` that is extended from IllegalStateException
+ to preserve backward compatibility with version 1.0.0 of Resilience4j.

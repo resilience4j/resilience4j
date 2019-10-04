@@ -23,8 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import javax.xml.ws.WebServiceException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
@@ -85,7 +83,7 @@ public class CacheEventPublisherTest {
     @Test
     public void shouldConsumeOnErrorEvent() throws Throwable {
         // Given the cache does not contain the key
-        given(cache.get("testKey")).willThrow(new WebServiceException("BLA"));
+        given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
 
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onError(event ->

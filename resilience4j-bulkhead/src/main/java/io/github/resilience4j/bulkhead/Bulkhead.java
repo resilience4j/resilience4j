@@ -24,10 +24,13 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -61,16 +64,10 @@ public interface Bulkhead {
     void changeConfig(BulkheadConfig newConfig);
 
     /**
-     * Attempts to obtain a permission to execute a call.
-     * @deprecated Use {@link Bulkhead#tryAcquirePermission()} ()}. instead.
-     *
-     * @return {@code true} if a permission was acquired and {@code false} otherwise
-     */
-    @Deprecated
-    boolean isCallPermitted();
-
-    /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
+     * If the current thread is {@linkplain Thread#interrupt interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
@@ -78,8 +75,12 @@ public interface Bulkhead {
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation
+     * If the current thread is {@linkplain Thread#interrupt interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+     * but its interrupt status will be set.
      *
      * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
      */
     void acquirePermission();
 
@@ -134,6 +135,28 @@ public interface Bulkhead {
      */
     default <T> T executeSupplier(Supplier<T> supplier){
         return decorateSupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier){
+        return decorateTrySupplier(this, supplier).get();
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param supplier the original Supplier
+     * @param <T> the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     */
+    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
+        return decorateEitherSupplier(this, supplier).get();
     }
 
     /**
@@ -214,7 +237,7 @@ public interface Bulkhead {
             final CompletableFuture<T> promise = new CompletableFuture<>();
 
             if (!bulkhead.tryAcquirePermission()) {
-                promise.completeExceptionally(new BulkheadFullException(bulkhead));
+                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
             }
             else {
                 try {
@@ -299,6 +322,55 @@ public interface Bulkhead {
             }
             finally {
                 bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Try<T>> decorateTrySupplier(Bulkhead bulkhead, Supplier<Try<T>> supplier){
+        return () -> {
+            if(bulkhead.tryAcquirePermission()){
+                try {
+                    return supplier.get();
+                }
+                finally {
+                    bulkhead.onComplete();
+                }
+            } else {
+                return Try.failure(BulkheadFullException.createBulkheadFullException(bulkhead));
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of results supplied by this supplier
+     *
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead, Supplier<Either<? extends Exception, T>> supplier){
+        return () -> {
+            if(bulkhead.tryAcquirePermission()){
+                try {
+                    Either<? extends Exception, T> result = supplier.get();
+                    return Either.narrow(result);
+                }
+                finally {
+                    bulkhead.onComplete();
+                }
+            } else {
+                return Either.left(BulkheadFullException.createBulkheadFullException(bulkhead));
             }
         };
     }

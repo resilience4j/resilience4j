@@ -1,10 +1,5 @@
 package io.github.resilience4j.bulkhead.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import org.junit.Test;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
@@ -12,9 +7,16 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import org.junit.Test;
+
+import java.time.Duration;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of bulkhead configuration
@@ -25,14 +27,10 @@ public class BulkHeadConfigurationTest {
 	public void tesFixedThreadPoolBulkHeadRegistry() {
 		//Given
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
-		threadPoolProperties.setCoreThreadPoolSize(1);
-		backendProperties1.setThreadPoolProperties(threadPoolProperties);
+		backendProperties1.setCoreThreadPoolSize(1);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties2 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
-		threadPoolProperties2.setCoreThreadPoolSize(2);
-		backendProperties2.setThreadPoolProperties(threadPoolProperties2);
+		backendProperties2.setCoreThreadPoolSize(2);
 
 		ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
@@ -42,7 +40,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+		ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -61,30 +59,22 @@ public class BulkHeadConfigurationTest {
 	public void testCreateThreadPoolBulkHeadRegistryWithSharedConfigs() {
 		//Given
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties = new ThreadPoolProperties();
-		threadPoolProperties.setCoreThreadPoolSize(1);
-		threadPoolProperties.setQueueCapacity(1);
-		threadPoolProperties.setKeepAliveTime(5);
-		threadPoolProperties.setMaxThreadPoolSize(10);
-		defaultProperties.setThreadPoolProperties(threadPoolProperties);
+		defaultProperties.setCoreThreadPoolSize(1);
+		defaultProperties.setQueueCapacity(1);
+		defaultProperties.setKeepAliveDuration(Duration.ofNanos(5));
+		defaultProperties.setMaxThreadPoolSize(10);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-		ThreadPoolProperties threadPoolProperties2 = new ThreadPoolProperties();
-		threadPoolProperties2.setCoreThreadPoolSize(2);
-		threadPoolProperties2.setQueueCapacity(2);
-		sharedProperties.setThreadPoolProperties(threadPoolProperties2);
+		sharedProperties.setCoreThreadPoolSize(2);
+		sharedProperties.setQueueCapacity(2);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		ThreadPoolProperties threadPoolProperties3 = new ThreadPoolProperties();
-		threadPoolProperties3.setCoreThreadPoolSize(3);
-		backendWithDefaultConfig.setThreadPoolProperties(threadPoolProperties3);
+		backendWithDefaultConfig.setCoreThreadPoolSize(3);
 
 		ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		ThreadPoolProperties threadPoolProperties4 = new ThreadPoolProperties();
-		threadPoolProperties4.setCoreThreadPoolSize(4);
-		backendWithSharedConfig.setThreadPoolProperties(threadPoolProperties4);
+		backendWithSharedConfig.setCoreThreadPoolSize(4);
 
 		ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
 		bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
@@ -98,7 +88,7 @@ public class BulkHeadConfigurationTest {
 
 		//When
 		try {
-			ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+			ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 			//Then
 			assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
 			// Should get default config and core number
@@ -141,7 +131,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -161,22 +151,22 @@ public class BulkHeadConfigurationTest {
 		//Given
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxConcurrentCalls(3);
-		defaultProperties.setMaxWaitTime(50L);
+		defaultProperties.setMaxWaitDuration(Duration.ofMillis(50L));
 		assertThat(defaultProperties.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxConcurrentCalls(2);
-		sharedProperties.setMaxWaitTime(100L);
+		sharedProperties.setMaxWaitDuration(Duration.ofMillis(100L));
 		assertThat(sharedProperties.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
-		backendWithDefaultConfig.setMaxWaitTime(200L);
+		backendWithDefaultConfig.setMaxWaitDuration(Duration.ofMillis(200L));
 		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
 
 		io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
-		backendWithSharedConfig.setMaxWaitTime(300L);
+		backendWithSharedConfig.setMaxWaitDuration(Duration.ofMillis(300L));
 		assertThat(backendWithSharedConfig.getEventConsumerBufferSize()).isNull();
 
 		BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
@@ -190,7 +180,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry);
+		BulkheadRegistry bulkheadRegistry = bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
 		//Then
 		assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -199,18 +189,18 @@ public class BulkHeadConfigurationTest {
 		Bulkhead bulkhead1 = bulkheadRegistry.bulkhead("backendWithDefaultConfig");
 		assertThat(bulkhead1).isNotNull();
 		assertThat(bulkhead1.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-		assertThat(bulkhead1.getBulkheadConfig().getMaxWaitTime()).isEqualTo(200L);
+		assertThat(bulkhead1.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(200L);
 
 		// Should get shared config and overwrite wait time
 		Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("backendWithSharedConfig");
 		assertThat(bulkhead2).isNotNull();
 		assertThat(bulkhead2.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
-		assertThat(bulkhead2.getBulkheadConfig().getMaxWaitTime()).isEqualTo(300L);
+		assertThat(bulkhead2.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(300L);
 
 		// Unknown backend should get default config of Registry
 		Bulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
 		assertThat(bulkhead3).isNotNull();
-		assertThat(bulkhead3.getBulkheadConfig().getMaxWaitTime()).isEqualTo(50L);
+		assertThat(bulkhead3.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(50L);
 
 		assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
 	}
@@ -227,7 +217,7 @@ public class BulkHeadConfigurationTest {
 		DefaultEventConsumerRegistry<BulkheadEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
 		//When
-		assertThatThrownBy(() -> bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry))
+		assertThatThrownBy(() -> bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList())))
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}

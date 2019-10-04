@@ -45,15 +45,13 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test circuit breakers"() {
         given:
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule) {
-                    it.circuitBreaker('test')
+                    it.circuitBreaker('test1')
                       .circuitBreaker('test2') {
                         it.setFailureRateThreshold(50)
                                 .setWaitDurationInOpenState(Duration.ofMillis(5000))
@@ -80,12 +78,13 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         circuitBreakerRegistry.allCircuitBreakers.size() == 2
         def test1 = circuitBreakerRegistry.circuitBreaker('test1')
         test1.name == 'test1'
         test1.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 100
-            assert ringBufferSizeInHalfOpenState == 10
+            assert slidingWindowSize == 100
+            assert permittedNumberOfCallsInHalfOpenState == 10
             assert waitDurationInOpenState == Duration.ofMinutes(1)
             assert failureRateThreshold == 50
             assert !automaticTransitionFromOpenToHalfOpenEnabled
@@ -94,25 +93,23 @@ class Resilience4jModuleSpec extends Specification {
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
         test2.name == 'test2'
         test2.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 200
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 200
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new Exception())
+            assert recordExceptionPredicate.test(new Exception())
             it
         }
     }
 
     def "test no circuit breakers"() {
         given:
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -125,6 +122,7 @@ class Resilience4jModuleSpec extends Specification {
 
         when:
         def actual = client.get()
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
 
         then:
         actual.statusCode == 200
@@ -136,7 +134,6 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test circuit breakers from yaml"() {
         given:
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
@@ -144,7 +141,6 @@ class Resilience4jModuleSpec extends Specification {
                 require("/resilience4j", Resilience4jConfig)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -163,42 +159,55 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
         circuitBreakerRegistry.allCircuitBreakers.size() == 2
         def test1 = circuitBreakerRegistry.circuitBreaker('test1')
         test1.name == 'test1'
         test1.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 100
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 100
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(1000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new DummyException1("test"))
-            assert recordFailurePredicate.test(new DummyException2("test"))
+            assert recordExceptionPredicate.test(new DummyException1("test"))
+            assert recordExceptionPredicate.test(new DummyException2("test"))
             it
         }
         def test2 = circuitBreakerRegistry.circuitBreaker('test2')
         test2.name == 'test2'
         test2.circuitBreakerConfig.with {
-            assert ringBufferSizeInClosedState == 200
-            assert ringBufferSizeInHalfOpenState == 20
+            assert slidingWindowSize == 200
+            assert permittedNumberOfCallsInHalfOpenState == 20
             assert waitDurationInOpenState == Duration.ofMillis(5000)
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
-            assert recordFailurePredicate.test(new DummyException1("test"))
-            assert !recordFailurePredicate.test(new DummyException2("test"))
+            assert recordExceptionPredicate.test(new DummyException1("test"))
+            assert !recordExceptionPredicate.test(new DummyException2("test"))
+            it
+        }
+        // test default
+        def test3 = circuitBreakerRegistry.circuitBreaker('test3', 'default')
+        circuitBreakerRegistry.allCircuitBreakers.size() == 3
+        test3.name == 'test3'
+        test3.circuitBreakerConfig.with {
+            assert slidingWindowSize == 200
+            assert permittedNumberOfCallsInHalfOpenState == 20
+            assert waitDurationInOpenState == Duration.ofMillis(1000)
+            assert failureRateThreshold == 60
+            assert automaticTransitionFromOpenToHalfOpenEnabled
+            assert recordExceptionPredicate.test(new DummyException1("test"))
+            assert recordExceptionPredicate.test(new DummyException2("test"))
             it
         }
     }
 
     def "test rate limiters"() {
         given:
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test')
                       .rateLimiter('test2') {
@@ -224,6 +233,7 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
         rateLimiterRegistry.allRateLimiters.size() == 2
         def test1 = rateLimiterRegistry.rateLimiter('test1')
         test1.name == 'test1'
@@ -245,13 +255,11 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test no rate limiters"() {
         given:
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -264,6 +272,7 @@ class Resilience4jModuleSpec extends Specification {
 
         when:
         def actual = client.get()
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
 
         then:
         actual.statusCode == 200
@@ -275,7 +284,6 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test rate limiters from yaml"() {
         given:
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
@@ -283,7 +291,6 @@ class Resilience4jModuleSpec extends Specification {
                 require("/resilience4j", Resilience4jConfig)
             }
             bindings {
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -302,6 +309,7 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
         rateLimiterRegistry.allRateLimiters.size() == 2
         def test1 = rateLimiterRegistry.rateLimiter('test1')
         test1.name == 'test1'
@@ -319,22 +327,29 @@ class Resilience4jModuleSpec extends Specification {
             assert timeoutDuration == Duration.ofMillis(10)
             it
         }
+        // test default
+        def test3 = rateLimiterRegistry.rateLimiter('test3')
+        test3.name == 'test3'
+        test3.rateLimiterConfig.with {
+            assert limitForPeriod == 100
+            assert limitRefreshPeriod == Duration.ofNanos(900)
+            assert timeoutDuration == Duration.ofMillis(10)
+            it
+        }
     }
 
     def "test retries"() {
         given:
-        def retryRegistry = RetryRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule) {
                     it.retry('test')
                       .retry('test2') {
                         it.setMaxRetryAttempts(3)
-                                .setWaitDurationMillis(1000)
+                                .setWaitDuration(Duration.ofMillis(1000))
                     }
                 }
             }
@@ -354,6 +369,7 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
         retryRegistry.allRetries.size() == 2
         def test1 = retryRegistry.retry('test1')
         test1.name == 'test1'
@@ -371,13 +387,11 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test no retries"() {
         given:
-        def retryRegistry = RetryRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -390,6 +404,7 @@ class Resilience4jModuleSpec extends Specification {
 
         when:
         def actual = client.get()
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
 
         then:
         actual.statusCode == 200
@@ -401,7 +416,6 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test retries from yaml"() {
         given:
-        def retryRegistry = RetryRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
@@ -409,7 +423,6 @@ class Resilience4jModuleSpec extends Specification {
                 require("/resilience4j", Resilience4jConfig)
             }
             bindings {
-                bindInstance(RetryRegistry, retryRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -428,6 +441,7 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
         retryRegistry.allRetries.size() == 2
         def test1 = retryRegistry.retry('test1')
         test1.name == 'test1'
@@ -441,17 +455,22 @@ class Resilience4jModuleSpec extends Specification {
             assert maxAttempts == 3
             it
         }
+        // test default
+        def test3 = retryRegistry.retry('test3')
+        test3.name == 'test3'
+        test3.retryConfig.with {
+            assert maxAttempts == 3
+            it
+        }
     }
 
     def "test bulkheads"() {
         given:
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.bulkhead('test')
                       .bulkhead('test2') {
@@ -476,32 +495,31 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
         bulkheadRegistry.allBulkheads.size() == 2
         def test1 = bulkheadRegistry.bulkhead('test1')
         test1.name == 'test1'
         test1.bulkheadConfig.with {
             assert maxConcurrentCalls == 25
-            assert maxWaitTime == 0
+            assert maxWaitDuration.toMillis() == 0
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
         test2.name == 'test2'
         test2.bulkheadConfig.with {
             assert maxConcurrentCalls == 100
-            assert maxWaitTime == 1000
+            assert maxWaitDuration.toMillis() == 1000
             it
         }
     }
 
     def "test no bulkheads"() {
         given:
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -514,6 +532,7 @@ class Resilience4jModuleSpec extends Specification {
 
         when:
         def actual = client.get()
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
 
         then:
         actual.statusCode == 200
@@ -525,7 +544,6 @@ class Resilience4jModuleSpec extends Specification {
 
     def "test bulkheads from yaml"() {
         given:
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
@@ -533,7 +551,6 @@ class Resilience4jModuleSpec extends Specification {
                 require("/resilience4j", Resilience4jConfig)
             }
             bindings {
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -552,26 +569,34 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
         bulkheadRegistry.allBulkheads.size() == 2
         def test1 = bulkheadRegistry.bulkhead('test1')
         test1.name == 'test1'
         test1.bulkheadConfig.with {
             assert maxConcurrentCalls == 50
-            assert maxWaitTime == 750
+            assert maxWaitDuration.toMillis() == 750
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
         test2.name == 'test2'
         test2.bulkheadConfig.with {
             assert maxConcurrentCalls == 100
-            assert maxWaitTime == 1000
+            assert maxWaitDuration.toMillis() == 1000
+            it
+        }
+        // test default
+        def test3 = bulkheadRegistry.bulkhead('test3')
+        test3.name == 'test3'
+        test3.bulkheadConfig.with {
+            assert maxConcurrentCalls == 50
+            assert maxWaitDuration.toMillis() == 500
             it
         }
     }
 
     def "test threadpool bulkheads from yaml"() {
         given:
-        def bulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
@@ -579,7 +604,6 @@ class Resilience4jModuleSpec extends Specification {
                 require("/resilience4j", Resilience4jConfig)
             }
             bindings {
-                bindInstance(ThreadPoolBulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule)
             }
             handlers {
@@ -598,6 +622,7 @@ class Resilience4jModuleSpec extends Specification {
         actual.body.text == 'ok'
 
         and:
+        def bulkheadRegistry = app.server.registry.get().get(ThreadPoolBulkheadRegistry)
         bulkheadRegistry.allBulkheads.size() == 2
         def test1 = bulkheadRegistry.bulkhead('test1')
         test1.name == 'test1'
@@ -605,7 +630,7 @@ class Resilience4jModuleSpec extends Specification {
             assert maxThreadPoolSize == 4
             assert coreThreadPoolSize == 2
             assert queueCapacity == 2
-            assert keepAliveTime == 1000
+            assert keepAliveDuration.toMillis() == 1000
             it
         }
         def test2 = bulkheadRegistry.bulkhead('test2')
@@ -614,32 +639,90 @@ class Resilience4jModuleSpec extends Specification {
             assert maxThreadPoolSize == 1
             assert coreThreadPoolSize == 1
             assert queueCapacity == 1
-            assert keepAliveTime == 1000
+            assert keepAliveDuration.toMillis() == 1000
+            it
+        }
+        // test default
+        def test3 = bulkheadRegistry.bulkhead('test3')
+        test3.name == 'test3'
+        test3.bulkheadConfig.with {
+            assert maxThreadPoolSize == 4
+            assert coreThreadPoolSize == 2
+            assert queueCapacity == 2
+            assert keepAliveDuration.toMillis() == 1000
             it
         }
     }
 
+    def "test shared configs are added to each type registry"() {
+        given:
+        app = ratpack {
+            serverConfig {
+                development(false)
+                yaml(getClass().classLoader.getResource('application.yml'))
+                require("/resilience4j", Resilience4jConfig)
+            }
+            bindings {
+                module(Resilience4jModule)
+            }
+            handlers {
+                get {
+                    render "OK"
+                }
+            }
+        }
+        client = testHttpClient(app)
+
+        when:
+        def actual = client.get()
+
+        then:
+        actual.statusCode == 200
+        actual.body.text == "OK"
+
+        when:
+        def circuitBreakerRegistry = app.server.registry.get().get(CircuitBreakerRegistry)
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
+        def retryRegistry = app.server.registry.get().get(RetryRegistry)
+        def bulkheadRegistry = app.server.registry.get().get(BulkheadRegistry)
+        def threadPoolBulkheadRegistry = app.server.registry.get().get(ThreadPoolBulkheadRegistry)
+        def circuitBreakerConfig = circuitBreakerRegistry.getConfiguration('shared')
+        def rateLimiterConfig = rateLimiterRegistry.getConfiguration('shared')
+        def retryConfig = retryRegistry.getConfiguration('shared')
+        def bulkheadConfig = bulkheadRegistry.getConfiguration('shared')
+        def threadPoolBulkheadConfig = threadPoolBulkheadRegistry.getConfiguration('shared')
+        def circuitBreakerConfig2 = circuitBreakerRegistry.getConfiguration('shared2')
+        def rateLimiterConfig2 = rateLimiterRegistry.getConfiguration('shared2')
+        def retryConfig2 = retryRegistry.getConfiguration('shared2')
+        def bulkheadConfig2 = bulkheadRegistry.getConfiguration('shared2')
+        def threadPoolBulkheadConfig2 = threadPoolBulkheadRegistry.getConfiguration('shared2')
+
+        then:
+        circuitBreakerConfig.present
+        rateLimiterConfig.present
+        retryConfig.present
+        bulkheadConfig.present
+        threadPoolBulkheadConfig.present
+        !circuitBreakerConfig2.present
+        !rateLimiterConfig2.present
+        !retryConfig2.present
+        !bulkheadConfig2.present
+        !threadPoolBulkheadConfig2.present
+    }
+
     def "test dropwizard metrics"() {
         given:
-        def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
-        circuitBreakerRegistry.circuitBreaker('test')
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
-        rateLimiterRegistry.rateLimiter('test')
-        def retryRegistry = RetryRegistry.ofDefaults()
-        retryRegistry.retry('test')
-        def bulkheadRegistry = BulkheadRegistry.ofDefaults()
-        bulkheadRegistry.bulkhead('test')
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(CircuitBreakerRegistry, circuitBreakerRegistry)
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
-                bindInstance(RetryRegistry, retryRegistry)
-                bindInstance(BulkheadRegistry, bulkheadRegistry)
                 module(Resilience4jModule) {
                     it.metrics(true)
+                    it.circuitBreaker('test')
+                    it.rateLimiter('test')
+                    it.retry('test')
+                    it.bulkhead('test')
                 }
                 module(DropwizardMetricsModule) {
                     it.blockingTimingMetrics(false)
@@ -674,14 +757,17 @@ class Resilience4jModuleSpec extends Specification {
         timer.count == 3
 
         and:
-        registry.gauges.size() == 15
+        registry.gauges.size() == 18
         registry.gauges.keySet() == ['resilience4j.circuitbreaker.test.state',
                                      'resilience4j.circuitbreaker.test.buffered',
-                                     'resilience4j.circuitbreaker.test.buffered_max',
                                      'resilience4j.circuitbreaker.test.failed',
+                                     'resilience4j.circuitbreaker.test.slow',
+                                     'resilience4j.circuitbreaker.test.slow_successful',
+                                     'resilience4j.circuitbreaker.test.slow_failed',
                                      'resilience4j.circuitbreaker.test.not_permitted',
                                      'resilience4j.circuitbreaker.test.successful',
                                      'resilience4j.circuitbreaker.test.failure_rate',
+                                     'resilience4j.circuitbreaker.test.slow_call_rate',
                                      'resilience4j.ratelimiter.test.available_permissions',
                                      'resilience4j.ratelimiter.test.number_of_waiting_threads',
                                      'resilience4j.retry.test.successful_calls_without_retry',
@@ -738,13 +824,15 @@ class Resilience4jModuleSpec extends Specification {
         then:
         families == ['resilience4j_bulkhead_available_concurrent_calls',
                      'resilience4j_bulkhead_max_allowed_concurrent_calls',
+                     'resilience4j_circuitbreaker_slow_call_rate',
+                     'resilience4j_circuitbreaker_slow_calls',
                      'resilience4j_circuitbreaker_buffered_calls',
-                     'resilience4j_circuitbreaker_max_buffered_calls',
                      'resilience4j_circuitbreaker_calls',
                      'resilience4j_circuitbreaker_state',
                      'resilience4j_circuitbreaker_failure_rate',
                      'resilience4j_ratelimiter_available_permissions',
                      'resilience4j_ratelimiter_waiting_threads',
+                     'resilience4j_retry_calls',
                      'resilience4j_thread_pool_bulkhead_available_queue_capacity',
                      'resilience4j_thread_pool_bulkhead_current_thread_pool_size'].sort()
     }

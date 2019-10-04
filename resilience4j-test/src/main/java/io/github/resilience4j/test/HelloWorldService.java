@@ -18,11 +18,18 @@
  */
 package io.github.resilience4j.test;
 
+import io.vavr.control.Either;
+import io.vavr.control.Try;
+
 import java.io.IOException;
 
 public interface HelloWorldService {
 
     String returnHelloWorld();
+
+    Either<HelloWorldException, String> returnEither();
+
+    Try<String> returnTry();
 
     String returnHelloWorldWithException() throws IOException;
 

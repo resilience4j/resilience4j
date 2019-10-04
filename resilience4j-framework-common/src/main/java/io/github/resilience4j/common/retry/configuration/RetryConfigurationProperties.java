@@ -15,15 +15,6 @@ package io.github.resilience4j.common.retry.configuration;
  * limitations under the License.
  */
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
-
-import javax.validation.constraints.Min;
-
-import org.hibernate.validator.constraints.time.DurationMin;
-
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -31,6 +22,12 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
  * Main spring properties for retry configuration
@@ -185,14 +182,12 @@ public class RetryConfigurationProperties {
 		/*
 		 * wait long value for the next try
 		 */
-		@DurationMin(millis = 100)
 		@Nullable
 		private Duration waitDuration;
 
 		/*
 		 * max retry attempts value
 		 */
-		@Min(1)
 		@Nullable
 		private Integer maxRetryAttempts;
 		/*
@@ -220,7 +215,6 @@ public class RetryConfigurationProperties {
 		/*
 		 * event buffer size for generated retry events
 		 */
-		@Min(1)
 		@Nullable
 		private Integer eventConsumerBufferSize;
 		/*
@@ -246,38 +240,19 @@ public class RetryConfigurationProperties {
 		@Nullable
 		private String baseConfig;
 
-		/**
-		 * @return wait duration in milliseconds
-		 * @deprecated As of release 0.16.0 , use {@link #getWaitDuration()} instead
-		 */
-		@Deprecated
-		@Nullable
-		public Long getWaitDurationMillis() {
-			if (waitDuration != null) {
-				return waitDuration.toMillis();
-			} else {
-				return null;
-			}
-		}
-
-		/**
-		 * @param waitDurationMillis wait time in milliseconds
-		 * @return InstanceProperties
-		 * @deprecated As of release 0.16.0 , use {@link #setWaitDuration(Duration)} instead
-		 */
-		@Deprecated
-		public InstanceProperties setWaitDurationMillis(Long waitDurationMillis) {
-			this.waitDuration = Duration.ofMillis(waitDurationMillis);
-			return this;
-		}
-
 		@Nullable
 		public Duration getWaitDuration() {
 			return waitDuration;
 		}
 
 		public InstanceProperties setWaitDuration(Duration waitDuration) {
-			this.waitDuration = waitDuration;
+            Objects.requireNonNull(waitDuration);
+            if (waitDuration.toMillis() < 100) {
+                throw new IllegalArgumentException(
+                        "waitDurationInOpenStateMillis must be greater than or equal to 100 millis.");
+            }
+
+            this.waitDuration = waitDuration;
 			return this;
 		}
 
@@ -287,7 +262,12 @@ public class RetryConfigurationProperties {
 		}
 
 		public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
-			this.maxRetryAttempts = maxRetryAttempts;
+            Objects.requireNonNull(maxRetryAttempts);
+            if (maxRetryAttempts < 1) {
+                throw new IllegalArgumentException("maxRetryAttempts must be greater than or equal to 1.");
+            }
+
+            this.maxRetryAttempts = maxRetryAttempts;
 			return this;
 		}
 
@@ -336,7 +316,12 @@ public class RetryConfigurationProperties {
 		}
 
 		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
-			this.eventConsumerBufferSize = eventConsumerBufferSize;
+            Objects.requireNonNull(eventConsumerBufferSize);
+            if (eventConsumerBufferSize < 1) {
+                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
+            }
+
+            this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
 

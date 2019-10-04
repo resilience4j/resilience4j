@@ -232,3 +232,34 @@ NOTE: Breaking changes:
 * Issue #486: Added bulkhead configs to resilience4j-ratpack
 * Issue #489: Set the proper order of spring aspects to make thread pool spring aspect work properly
 * PR #478: Added a find() method to all registries
+
+== Version 0.17.0
+* Removed all deprecated methods in preparation for v1.0.0
+* Issue #500: Fixed bug where default external configs in Ratpack apps are not honored
+* Issue #506: Fixed bug where resilience4j-ratpack fails to run when Dropwizard metrics in not on classpath
+* Issue #515: Added Aspect ordering feature in resilience4j-spring again
+* Issue #518: Added support for Vavr Try and Either return types
+* Issue #538: Removed minimum waitDuration constraint for retry
+* Issue #544: Fixed bug where CircuitBreaker gets stuck in HALF_OPEN when the last test request throws an ignored exception
+* Issue #530: Improved RxJava2OnClasspathCondition and ReactorOnClasspathCondition
+
+== Version 1.0.0
+* Issue #607: Spring Boot HealthIndicators are by default disabled now
+* Issue #546: Added support for Spring Cloud Config
+* Issue #581: Enhancement in resilience4j-reactor and resilience4j-rxjava2 to better support the zip operator.
+* Issue #559: Added support for @FeignClient annotation
+* Issue #560: Fixed bug when using a lambda fallback in Feign
+* Issue #547: Replaced the CircuitBreaker ring buffer implementation by a count-based and time-based sliding window implementation
+* Issue #562: Fixed bug: Illegal state transition from CLOSED to HALF_OPEN
+* Issue #568: Allow to configure exceptions which should be treated as a success in the CircuitBreaker.
+* Issue #381: Allow to configure a slow response time threshold. If too many slow calls are recorded the CircuitBreaker opens.
+* Issue #488: Micrometer support for ThreadPoolBulkhead
+* Issue #540: Fixed a bug where IDE did not recognize the auto config properties
+
+== Version 1.1.0
+* Issue #235: Added a TimeLimiter operator to resilience4j-reactor and resilience4j-rxjava2
+* Issue #625: Fixed reliability and security issues raised by sonar
+* Issue #626: Handle thread interruption consistently in Bulkhead and RateLimiter blocking methods
+* Issue #634: Adapted resilience4j-metrics to latest changes in the CircuitBreaker
+* Issue #646: Fixed CircuitBreaker 'XX' tried an illegal state transition from OPEN to OPEN
+* Issue #607: Added a new config parameter to enable the CircuitBreaker and RateLimiter health indicator. They are disabled by default now.

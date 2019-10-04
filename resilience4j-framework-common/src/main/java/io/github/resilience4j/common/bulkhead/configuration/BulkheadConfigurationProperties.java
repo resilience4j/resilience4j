@@ -15,25 +15,23 @@
  */
 package io.github.resilience4j.common.bulkhead.configuration;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.validation.constraints.Min;
-
-import org.hibernate.validator.constraints.time.DurationMin;
-
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class BulkheadConfigurationProperties {
 
 	private Map<String, InstanceProperties> instances = new HashMap<>();
 	private Map<String, InstanceProperties> configs = new HashMap<>();
 
-	public io.github.resilience4j.bulkhead.BulkheadConfig createBulkheadConfig(InstanceProperties instanceProperties) {
+	public BulkheadConfig createBulkheadConfig(InstanceProperties instanceProperties) {
 		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
 			InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
 			if (baseProperties == null) {
@@ -41,21 +39,21 @@ public class BulkheadConfigurationProperties {
 			}
 			return buildConfigFromBaseConfig(baseProperties, instanceProperties);
 		}
-		return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(), instanceProperties);
+		return buildBulkheadConfig(BulkheadConfig.custom(), instanceProperties);
 	}
 
-	private io.github.resilience4j.bulkhead.BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+	private BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
 		ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-		io.github.resilience4j.bulkhead.BulkheadConfig baseConfig = buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.custom(), baseProperties);
-		return buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.from(baseConfig), instanceProperties);
+		BulkheadConfig baseConfig = buildBulkheadConfig(BulkheadConfig.custom(), baseProperties);
+		return buildBulkheadConfig(BulkheadConfig.from(baseConfig), instanceProperties);
 	}
 
-	private io.github.resilience4j.bulkhead.BulkheadConfig buildBulkheadConfig(io.github.resilience4j.bulkhead.BulkheadConfig.Builder builder, InstanceProperties instanceProperties) {
+	private BulkheadConfig buildBulkheadConfig(BulkheadConfig.Builder builder, InstanceProperties instanceProperties) {
 		if (instanceProperties.getMaxConcurrentCalls() != null) {
 			builder.maxConcurrentCalls(instanceProperties.getMaxConcurrentCalls());
 		}
 		if (instanceProperties.getMaxWaitDuration() != null) {
-			builder.maxWaitTimeDuration(instanceProperties.getMaxWaitDuration());
+			builder.maxWaitDuration(instanceProperties.getMaxWaitDuration());
 		}
 		return builder.build();
 	}
@@ -86,34 +84,30 @@ public class BulkheadConfigurationProperties {
 	 */
 	public static class InstanceProperties {
 
-		@Min(1)
 		private Integer maxConcurrentCalls;
-		@DurationMin(millis = 0)
-		private Duration maxWaitDuration;
-		@Nullable
-		private String baseConfig;
-		@Min(1)
-		@Nullable
-		private Integer eventConsumerBufferSize;
+        private Duration maxWaitDuration;
+        @Nullable
+        private String baseConfig;
+        @Nullable
+        private Integer eventConsumerBufferSize;
 
 		public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
+            Objects.requireNonNull(maxConcurrentCalls);
+            if (maxConcurrentCalls < 1) {
+                throw new IllegalArgumentException("maxConcurrentCalls must be greater than or equal to 1.");
+            }
+
 			this.maxConcurrentCalls = maxConcurrentCalls;
 			return this;
 		}
 
-		/**
-		 * @param maxWaitTime max wait time in milliseconds
-		 * @return InstanceProperties
-		 * @deprecated As of release 0.16.0 , use {@link #setMaxWaitDuration(Duration)} instead
-		 */
-		@Deprecated
-		public InstanceProperties setMaxWaitTime(Long maxWaitTime) {
-			this.maxWaitDuration = Duration.ofMillis(maxWaitTime);
-			return this;
-		}
-
 		public InstanceProperties setMaxWaitDuration(Duration maxWaitDuration) {
-			this.maxWaitDuration = maxWaitDuration;
+            Objects.requireNonNull(maxWaitDuration);
+            if (maxWaitDuration.toMillis() < 0) {
+                throw new IllegalArgumentException("maxWaitDuration must be greater than or equal to 0.");
+            }
+
+            this.maxWaitDuration = maxWaitDuration;
 			return this;
 		}
 
@@ -123,7 +117,12 @@ public class BulkheadConfigurationProperties {
 		}
 
 		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
-			this.eventConsumerBufferSize = eventConsumerBufferSize;
+            Objects.requireNonNull(eventConsumerBufferSize);
+            if (eventConsumerBufferSize < 1) {
+                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
+            }
+
+            this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
 
@@ -131,27 +130,16 @@ public class BulkheadConfigurationProperties {
 			return maxConcurrentCalls;
 		}
 
-		/**
-		 * @return max wait time in milliseconds
-		 * @deprecated As of release 0.16.0 , use {@link #getMaxWaitDuration} instead
-		 */
-		@Deprecated
-		public Long getMaxWaitTime() {
-			if (maxWaitDuration != null) {
-				return maxWaitDuration.toMillis();
-			} else {
-				return null;
-			}
-		}
-
 		public Duration getMaxWaitDuration() {
 			return maxWaitDuration;
 		}
 
+        @Nullable
 		public String getBaseConfig() {
 			return baseConfig;
 		}
 
+        @Nullable
 		public Integer getEventConsumerBufferSize() {
 			return eventConsumerBufferSize;
 		}

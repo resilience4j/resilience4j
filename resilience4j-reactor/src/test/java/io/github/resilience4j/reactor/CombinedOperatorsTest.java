@@ -30,12 +30,12 @@ public class CombinedOperatorsTest {
     private final CircuitBreaker circuitBreaker = CircuitBreaker.of("test",
             CircuitBreakerConfig.custom()
                     .waitDurationInOpenState(Duration.of(10, ChronoUnit.SECONDS))
-                    .ringBufferSizeInClosedState(4)
-                    .ringBufferSizeInHalfOpenState(4)
+                    .slidingWindowSize(4)
+                    .permittedNumberOfCallsInHalfOpenState(4)
                     .build());
 
     private Bulkhead bulkhead = Bulkhead
-            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitTime(0).build());
+            .of("test", BulkheadConfig.custom().maxConcurrentCalls(1).maxWaitDuration(Duration.ZERO).build());
 
     private final RetryConfig config = io.github.resilience4j.retry.RetryConfig.ofDefaults();
     private final Retry retry = Retry.of("testName", config);

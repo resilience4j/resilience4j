@@ -18,7 +18,9 @@ ext {
     springVersion = '5.1.6.RELEASE'
     springBootVersion = '1.5.20.RELEASE'
     springBoot2Version = '2.1.4.RELEASE'
-    ratpackVersion = '1.6.0'
+    springCloudContextVersion = '1.3.6.RELEASE'
+    springCloudContext2Version = '2.1.2.RELEASE'
+    ratpackVersion = '1.6.1'
     spockVersion = '1.3-groovy-2.5'
     retrofitVersion = '2.5.0'
     feignVersion = '10.2.0'
@@ -29,6 +31,7 @@ ext {
     wiremockVersion = '2.22.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.2.0'
+    springBootOpenFeignVersion= '2.1.2.RELEASE'
 
     libraries = [
             // compile
@@ -67,6 +70,7 @@ ext {
             spring_boot_web: "org.springframework.boot:spring-boot-starter-web:${springBootVersion}",
             spring_boot_test:  "org.springframework.boot:spring-boot-starter-test:${springBootVersion}",
             spring_boot_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}",
+            spring_boot_autoconfigure : "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}",
             spring_boot_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBootVersion}",
 
             // Spring Boot2 addon
@@ -75,7 +79,12 @@ ext {
             spring_boot2_web: "org.springframework.boot:spring-boot-starter-web:${springBoot2Version}",
             spring_boot2_test:  "org.springframework.boot:spring-boot-starter-test:${springBoot2Version}",
             spring_boot2_config_processor : "org.springframework.boot:spring-boot-configuration-processor:${springBoot2Version}",
+            spring_boot2_autoconfigure : "org.springframework.boot:spring-boot-autoconfigure:${springBoot2Version}",
             spring_boot2_autoconfigure_processor : "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot2Version}",
+
+            // Spring Cloud
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springCloudContextVersion}",
+            spring_cloud_context2: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
 
             // Hibernate validator addon
             hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
@@ -121,7 +130,12 @@ ext {
 
             // Kotlin addon
             kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
-            kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}"
+            kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}",
+            
+            // Spring cloud addon
+            spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
+            spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}"
     ]
 
 }

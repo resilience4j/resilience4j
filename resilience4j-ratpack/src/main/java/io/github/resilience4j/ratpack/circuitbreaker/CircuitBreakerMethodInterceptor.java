@@ -16,7 +16,6 @@
 package io.github.resilience4j.ratpack.circuitbreaker;
 
 import com.google.inject.Inject;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
@@ -33,6 +32,9 @@ import reactor.core.publisher.Mono;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
@@ -73,6 +75,9 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         CircuitBreaker annotation = invocation.getMethod().getAnnotation(CircuitBreaker.class);
+        if (annotation == null) {
+            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(CircuitBreaker.class);
+        }
         final RecoveryFunction<?> fallbackMethod = Optional
                 .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
                 .orElse(new DefaultRecoveryFunction<>());
@@ -111,25 +116,21 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
                     result.whenComplete((v, t) -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (t != null) {
-                            breaker.onError(durationInNanos, t);
+                            breaker.onError(durationInNanos, TimeUnit.NANOSECONDS, t);
                             completeFailedFuture(t, fallbackMethod, promise);
                         } else {
-                            breaker.onSuccess(durationInNanos);
+                            breaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                             promise.complete(v);
                         }
                     });
                 }
             } else {
-                Throwable t = new CallNotPermittedException(breaker);
+                Throwable t = createCallNotPermittedException(breaker);
                 completeFailedFuture(t, fallbackMethod, promise);
             }
             return promise;
         } else {
-            try {
-                return proceed(invocation, breaker);
-            } catch (Throwable throwable) {
-                return fallbackMethod.apply(throwable);
-            }
+            return handleProceedWithException(invocation, breaker, fallbackMethod);
         }
     }
 
@@ -142,7 +143,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
             result = invocation.proceed();
         } catch (Exception e) {
             long durationInNanos = System.nanoTime() - start;
-            breaker.onError(durationInNanos, e);
+            breaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
             if (Promise.class.isAssignableFrom(returnType)) {
                 return Promise.error(e);
             } else if (Flux.class.isAssignableFrom(returnType)) {
@@ -160,4 +161,12 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         return result;
     }
 
+    @Nullable
+    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.circuitbreaker.CircuitBreaker breaker, RecoveryFunction<?> recoveryFunction) throws Throwable {
+        try {
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).apply();
+        } catch (Throwable throwable) {
+            return recoveryFunction.apply(throwable);
+        }
+    }
 }

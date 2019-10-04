@@ -15,11 +15,15 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.utils.AnnotationExtractor;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,15 +35,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
-import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead} annotation.
@@ -146,9 +146,9 @@ public class BulkheadAspect implements Ordered {
 		io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}' for method: '{}'",
+			logger.debug("Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}ms' for method: '{}'",
 					backend, bulkhead.getBulkheadConfig().getMaxConcurrentCalls(),
-					bulkhead.getBulkheadConfig().getMaxWaitTime(), methodName);
+					bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(), methodName);
 		}
 
 		return bulkhead;
@@ -163,8 +163,12 @@ public class BulkheadAspect implements Ordered {
 		if (logger.isDebugEnabled()) {
 			logger.debug("bulkhead parameter is null");
 		}
-
-		return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
+		if (proceedingJoinPoint.getTarget() instanceof Proxy) {
+			logger.debug("The bulkhead annotation is kept on a interface which is acting as a proxy");
+			return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Bulkhead.class);
+		} else {
+			return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
+		}
 	}
 
 	/**

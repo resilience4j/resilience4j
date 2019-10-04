@@ -18,9 +18,9 @@ package io.github.resilience4j.feign;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException;
 import io.github.resilience4j.feign.test.TestService;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,7 +40,7 @@ public class Resilience4jFeignCircuitBreakerTest {
     public WireMockRule wireMockRule = new WireMockRule();
 
     private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .ringBufferSizeInClosedState(3)
+            .slidingWindowSize(3)
             .waitDurationInOpenState(Duration.ofMillis(1000))
             .build();
 
@@ -50,7 +50,8 @@ public class Resilience4jFeignCircuitBreakerTest {
     @Before
     public void setUp() {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
-        final FeignDecorators decorators = FeignDecorators.builder().withCircuitBreaker(circuitBreaker).build();
+        final FeignDecorators decorators = FeignDecorators.builder()
+                .withCircuitBreaker(circuitBreaker).build();
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
     }
 
@@ -94,7 +95,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         boolean exceptionThrown = false;
         final int threshold = circuitBreaker
                 .getCircuitBreakerConfig()
-                .getRingBufferSizeInClosedState() + 1;
+                .getSlidingWindowSize() + 1;
 
         setupStub(400);
 
@@ -103,13 +104,13 @@ public class Resilience4jFeignCircuitBreakerTest {
                 testService.greeting();
             } catch (final FeignException ex) {
                 // ignore
-            } catch (final CircuitBreakerOpenException ex) {
+            } catch (final CallNotPermittedException ex) {
                 exceptionThrown = true;
             }
         }
 
         assertThat(exceptionThrown)
-                .describedAs("CircuitBreakerOpenException thrown")
+                .describedAs("CallNotPermittedException thrown")
                 .isTrue();
         assertThat(circuitBreaker.tryAcquirePermission())
                 .describedAs("CircuitBreaker Closed")
@@ -122,7 +123,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         boolean exceptionThrown = false;
         final int threshold = circuitBreaker
                 .getCircuitBreakerConfig()
-                .getRingBufferSizeInClosedState() - 1;
+                .getSlidingWindowSize() - 1;
 
         setupStub(400);
 
@@ -131,13 +132,13 @@ public class Resilience4jFeignCircuitBreakerTest {
                 testService.greeting();
             } catch (final FeignException ex) {
                 // ignore
-            } catch (final CircuitBreakerOpenException ex) {
+            } catch (final CallNotPermittedException ex) {
                 exceptionThrown = true;
             }
         }
 
         assertThat(exceptionThrown)
-                .describedAs("CircuitBreakerOpenException thrown")
+                .describedAs("CallNotPermittedException thrown")
                 .isFalse();
         assertThat(circuitBreaker.tryAcquirePermission())
                 .describedAs("CircuitBreaker Closed")

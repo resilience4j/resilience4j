@@ -26,6 +26,7 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.HealthIndicatorAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
+        HealthIndicatorAutoConfiguration.class,
         CircuitBreakerConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
         CircuitBreakerAutoConfiguration.class,
         CircuitBreakerConfigurationOnMissingBean.class
@@ -73,7 +75,8 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
-                if (!methodOnMissing.getName().equals("eventConsumerRegistry")) {
+                if (!"eventConsumerRegistry".equals(methodOnMissing.getName()) &&
+                        !"circuitBreakerRegistryEventConsumer".equals(methodOnMissing.getName())) {
                     assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
                 }
             }

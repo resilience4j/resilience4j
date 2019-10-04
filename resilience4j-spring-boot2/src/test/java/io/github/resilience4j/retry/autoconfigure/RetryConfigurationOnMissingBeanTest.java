@@ -63,7 +63,7 @@ public class RetryConfigurationOnMissingBeanTest {
 	public void testAllBeansFromRetryHasOnMissingBean() throws NoSuchMethodException {
 		final Class<RetryConfiguration> originalClass = RetryConfiguration.class;
 		final Class<RetryConfigurationOnMissingBean> onMissingBeanClass = RetryConfigurationOnMissingBean.class;
-		TestUtils.assertAnnaations(originalClass, onMissingBeanClass);
+		TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
 	}
 
 	@Test

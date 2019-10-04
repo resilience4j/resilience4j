@@ -27,6 +27,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
@@ -73,22 +74,22 @@ public interface RetrofitCircuitBreaker {
                 return;
             }
 
-            final StopWatch stopWatch = StopWatch.start();
+            final long start = System.nanoTime();
             call.enqueue(new Callback<T>() {
                 @Override
                 public void onResponse(final Call<T> call, final Response<T> response) {
                     if (responseSuccess.test(response)) {
-                        circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+                        circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
                     } else {
                         final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                        circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
+                        circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, throwable);
                     }
                     callback.onResponse(call, response);
                 }
 
                 @Override
                 public void onFailure(final Call<T> call, final Throwable t) {
-                    circuitBreaker.onError(stopWatch.stop().toNanos(), t);
+                    circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, t);
                     callback.onFailure(call, t);
                 }
             });
@@ -102,15 +103,15 @@ public interface RetrofitCircuitBreaker {
                 final Response<T> response = call.execute();
 
                 if (responseSuccess.test(response)) {
-                    circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+                    circuitBreaker.onSuccess(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS);
                 } else {
                     final Throwable throwable = new Throwable("Response error: HTTP " + response.code() + " - " + response.message());
-                    circuitBreaker.onError(stopWatch.stop().toNanos(), throwable);
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, throwable);
                 }
 
                 return response;
             } catch (Exception exception) {
-                circuitBreaker.onError(stopWatch.stop().toNanos(), exception);
+                circuitBreaker.onError(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, exception);
                 throw exception;
             }
         }

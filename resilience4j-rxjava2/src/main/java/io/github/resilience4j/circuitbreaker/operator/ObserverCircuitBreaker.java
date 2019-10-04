@@ -16,12 +16,14 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
 import io.github.resilience4j.AbstractObserver;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.StopWatch;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class ObserverCircuitBreaker<T> extends Observable<T> {
 
@@ -39,31 +41,35 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
             upstream.subscribe(new CircuitBreakerObserver(downstream));
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new CallNotPermittedException(circuitBreaker));
+            downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
     }
     class CircuitBreakerObserver extends AbstractObserver<T> {
 
-        private final StopWatch stopWatch;
+        private final long start;
 
         CircuitBreakerObserver(Observer<? super T> downstreamObserver) {
             super(downstreamObserver);
-            this.stopWatch = StopWatch.start();
+            this.start = System.nanoTime();
         }
 
         @Override
         protected void hookOnError(Throwable e) {
-            circuitBreaker.onError(stopWatch.stop().toNanos(), e);
+            circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
         }
 
         @Override
         protected void hookOnComplete() {
-            circuitBreaker.onSuccess(stopWatch.stop().toNanos());
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
         }
 
         @Override
         protected void hookOnCancel() {
-            circuitBreaker.releasePermission();
+            if(eventWasEmitted.get()){
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            }else{
+                circuitBreaker.releasePermission();
+            }
         }
     }
 

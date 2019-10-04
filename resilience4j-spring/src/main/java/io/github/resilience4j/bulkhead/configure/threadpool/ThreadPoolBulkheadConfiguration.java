@@ -21,9 +21,14 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,11 +47,19 @@ public class ThreadPoolBulkheadConfiguration {
 	 */
 	@Bean
 	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry) {
-		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties);
+																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+																 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer);
 		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
 		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
 		return bulkheadRegistry;
+	}
+
+	@Bean
+	@Primary
+	public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
+			Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
+		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
 	}
 
 	/**
@@ -55,13 +68,14 @@ public class ThreadPoolBulkheadConfiguration {
 	 * @param bulkheadConfigurationProperties The bulkhead configuration properties.
 	 * @return a ThreadPoolBulkheadRegistry
 	 */
-	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
+	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
+															  RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 		Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
 				.entrySet()
 				.stream()
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
 
-		return ThreadPoolBulkheadRegistry.of(configs);
+		return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer);
 	}
 
 	/**

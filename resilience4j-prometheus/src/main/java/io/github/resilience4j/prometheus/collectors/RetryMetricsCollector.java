@@ -16,6 +16,7 @@
 package io.github.resilience4j.prometheus.collectors;
 
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
+import io.github.resilience4j.prometheus.LabelNames;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.prometheus.client.Collector;
@@ -23,7 +24,6 @@ import io.prometheus.client.GaugeMetricFamily;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -38,7 +38,7 @@ public class RetryMetricsCollector extends Collector {
      * @param names    the custom metric names
      * @param retryRegistry the source of retries
      */
-    public static RetryMetricsCollector ofRetryRegistry(RetryMetricsCollector.MetricNames names, RetryRegistry retryRegistry) {
+    public static RetryMetricsCollector ofRetryRegistry(MetricNames names, RetryRegistry retryRegistry) {
         return new RetryMetricsCollector(names, retryRegistry);
     }
 
@@ -48,15 +48,15 @@ public class RetryMetricsCollector extends Collector {
      * @param retryRegistry the source of retries
      */
     public static RetryMetricsCollector ofRetryRegistry(RetryRegistry retryRegistry) {
-        return new RetryMetricsCollector(RetryMetricsCollector.MetricNames.ofDefaults(), retryRegistry);
+        return new RetryMetricsCollector(MetricNames.ofDefaults(), retryRegistry);
     }
 
     private final MetricNames names;
     private final RetryRegistry retryRegistry;
 
     private RetryMetricsCollector(MetricNames names, RetryRegistry retryRegistry) {
-        this.names = Objects.requireNonNull(names);
-        this.retryRegistry = Objects.requireNonNull(retryRegistry);
+        this.names = requireNonNull(names);
+        this.retryRegistry = requireNonNull(retryRegistry);
     }
 
     @Override

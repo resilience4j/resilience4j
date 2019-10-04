@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
+import io.github.resilience4j.prometheus.LabelNames;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.Collector;
@@ -28,7 +29,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 /** Collects RateLimiter exposed {@link Metrics}. */
-public class RateLimiterMetricsCollector extends Collector  {
+public class RateLimiterMetricsCollector extends Collector {
 
     /**
      * Creates a new collector with custom metric names and
@@ -37,7 +38,7 @@ public class RateLimiterMetricsCollector extends Collector  {
      * @param names    the custom metric names
      * @param rateLimiterRegistry the source of rate limiters
      */
-    public static RateLimiterMetricsCollector ofRateLimiterRegistry(RateLimiterMetricsCollector.MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+    public static RateLimiterMetricsCollector ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetricsCollector(names, rateLimiterRegistry);
     }
 
@@ -47,7 +48,7 @@ public class RateLimiterMetricsCollector extends Collector  {
      * @param rateLimiterRegistry the source of rate limiters
      */
     public static RateLimiterMetricsCollector ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
-        return new RateLimiterMetricsCollector(RateLimiterMetricsCollector.MetricNames.ofDefaults(), rateLimiterRegistry);
+        return new RateLimiterMetricsCollector(MetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
     private final MetricNames names;

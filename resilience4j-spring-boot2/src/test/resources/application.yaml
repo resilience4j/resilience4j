@@ -3,10 +3,11 @@ resilience4j.retry:
   configs:
     default:
       maxRetryAttempts: 3
-      waitDurationMillis: 100
+      waitDuration: 100ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.io.IOException
+        - feign.FeignException
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
   backends:
@@ -16,27 +17,31 @@ resilience4j.retry:
       baseConfig: default
     retryBackendC:
       maxRetryAttempts: 3
-      waitDurationMillis: 100
+      waitDuration: 100ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.lang.IllegalArgumentException
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
+    retryDummyFeignClient:
+      baseConfig: default
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
   configs:
     default:
-      ringBufferSizeInClosedState: 100
-      ringBufferSizeInHalfOpenState: 10
+      slidingWindowSize: 100
+      slidingWindowType: COUNT_BASED
+      permittedNumberOfCallsInHalfOpenState: 10
       waitDurationInOpenState: 10s
       failureRateThreshold: 60
       eventConsumerBufferSize: 10
       registerHealthIndicator: true
   backends:
     backendA:
-      ringBufferSizeInClosedState: 6
-      ringBufferSizeInHalfOpenState: 2
+      registerHealthIndicator: true
+      slidingWindowSize: 6
+      permittedNumberOfCallsInHalfOpenState: 2
       waitDurationInOpenState: 5s
       failureRateThreshold: 70
       eventConsumerBufferSize: 20
@@ -46,25 +51,32 @@ resilience4j.circuitbreaker:
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
     backendB:
-      ringBufferSizeInClosedState: 10
-      ringBufferSizeInHalfOpenState: 5
+      slidingWindowSize: 10
+      slidingWindowType: TIME_BASED
+      permittedNumberOfCallsInHalfOpenState: 5
       waitDurationInOpenState: 5000
       failureRateThreshold: 50
       eventConsumerBufferSize: 20
       registerHealthIndicator: false
     backendSharedA:
       baseConfig: default
-      ringBufferSizeInClosedState: 6
+      slidingWindowSize: 6
     backendSharedB:
       baseConfig: default
+      slidingWindowType: TIME_BASED
+    dummyFeignClient:
+      baseConfig: default
+      slidingWindowSize: 18
+      permittedNumberOfCallsInHalfOpenState: 6
+
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
   configs:
     default:
       limitForPeriod: 10
-      limitRefreshPeriodInNanos: 1000000000
-      timeoutInMillis: 0
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0
       subscribeForEvents: true
       registerHealthIndicator: true
   limiters:
@@ -72,39 +84,45 @@ resilience4j.ratelimiter:
       baseConfig: default
     backendB:
       limitForPeriod: 100
-      limitRefreshPeriodInNanos: 500000000
-      timeoutInMillis: 3000
+      limitRefreshPeriod: 500ms
+      timeoutDuration: 3s
+    rateLimiterDummyFeignClient:
+      baseConfig: default
 
 resilience4j.bulkhead:
-  bulkheadAspectOrder: 398
   configs:
     default:
-      maxWaitTime: 10
+      maxWaitDuration: 10
       maxConcurrentCalls: 2
   backends:
     backendA:
       maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+    dummyFeignClient:
+      maxWaitDuration: 100
+      maxConcurrentCalls: 3
 
 resilience4j.thread-pool-bulkhead":
   configs:
     default:
-      threadPoolProperties:
-        maxThreadPoolSize: 4
-        coreThreadPoolSize: 2
-        queueCapacity: 2
+      maxThreadPoolSize: 4
+      coreThreadPoolSize: 2
+      queueCapacity: 2
+      keepAliveDuration: 1s
   backends:
     backendB:
       baseConfig: default
     backendC:
-      threadPoolProperties:
-        maxThreadPoolSize: 1
-        coreThreadPoolSize: 1
-        queueCapacity: 1
+      maxThreadPoolSize: 1
+      coreThreadPoolSize: 1
+      queueCapacity: 1
 
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
+
+management.health.circuitbreakers.enabled: true
+management.health.ratelimiters.enabled: true
 

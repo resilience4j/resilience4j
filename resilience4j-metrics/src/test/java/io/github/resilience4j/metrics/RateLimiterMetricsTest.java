@@ -18,76 +18,28 @@
  */
 package io.github.resilience4j.metrics;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
 
-public class RateLimiterMetricsTest {
+public class RateLimiterMetricsTest extends AbstractRateLimiterMetricsTest {
 
-    private static final int DEFAULT_LIMIT_FOR_PERIOD = RateLimiterConfig.ofDefaults().getLimitForPeriod();
-    private MetricRegistry metricRegistry;
-    private HelloWorldService helloWorldService;
+    @Override
+    protected RateLimiter given(String prefix, MetricRegistry metricRegistry) {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
+        metricRegistry.registerAll(RateLimiterMetrics.ofIterable(prefix, rateLimiterRegistry.getAllRateLimiters()));
 
-    @Before
-    public void setUp() {
-        metricRegistry = new MetricRegistry();
-        helloWorldService = mock(HelloWorldService.class);
+        return rateLimiter;
     }
 
-    @Test
-    public void shouldRegisterMetrics() throws Throwable {
-        //Given
+    @Override
+    protected RateLimiter given(MetricRegistry metricRegistry) {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
         metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry));
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
-        String value = rateLimiter.executeSupplier(helloWorldService::returnHelloWorld);
-
-        //Then
-        assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
-            .getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("resilience4j.ratelimiter.testLimit.available_permissions").getValue())
-            .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
+        return rateLimiter;
     }
 
-    @Test
-    public void shouldUseCustomPrefix() throws Throwable {
-        //Given
-        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
-        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
-        metricRegistry.registerAll(RateLimiterMetrics.ofIterable("testPre", rateLimiterRegistry.getAllRateLimiters()));
-
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
-        String value = rateLimiter.executeSupplier(helloWorldService::returnHelloWorld);
-
-        //Then
-        assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("testPre.testLimit.number_of_waiting_threads")
-            .getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("testPre.testLimit.available_permissions").getValue())
-            .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
-    }
 }

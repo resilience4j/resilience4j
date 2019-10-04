@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 
 public class FluxRateLimiterTest {
 
@@ -34,7 +35,7 @@ public class FluxRateLimiterTest {
 
     @Before
     public void setUp(){
-        rateLimiter = Mockito.mock(RateLimiter.class);
+        rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -51,7 +52,7 @@ public class FluxRateLimiterTest {
 
     @Test
     public void shouldDelaySubscription() {
-        given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(2).toNanos());
+        given(rateLimiter.reservePermission()).willReturn(Duration.ofMillis(50).toNanos());
 
         StepVerifier.create(
                 Flux.error(new IOException("BAM!"))
@@ -59,7 +60,7 @@ public class FluxRateLimiterTest {
                         .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(IOException.class)
-                .verify(Duration.ofSeconds(3));
+                .verify(Duration.ofMillis(250));
     }
 
     @Test
@@ -71,7 +72,7 @@ public class FluxRateLimiterTest {
                         .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(IOException.class)
-                .verify(Duration.ofSeconds(1));
+                .verify(Duration.ofMillis(100));
 
     }
 
@@ -84,7 +85,7 @@ public class FluxRateLimiterTest {
                         .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofSeconds(1));
+                .verify(Duration.ofMillis(100));
     }
 
     @Test
@@ -96,6 +97,6 @@ public class FluxRateLimiterTest {
                         .compose(RateLimiterOperator.of(rateLimiter)))
                 .expectSubscription()
                 .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofSeconds(1));
+                .verify(Duration.ofMillis(100));
     }
 }

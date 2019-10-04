@@ -2,7 +2,6 @@ package io.github.resilience4j.core;
 
 import org.junit.Test;
 
-import javax.xml.ws.WebServiceException;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
@@ -69,7 +68,7 @@ public class CallableUtilsTest {
         assertThat(result).isEqualTo("Bla");
     }
 
-    @Test(expected = WebServiceException.class)
+    @Test(expected = RuntimeException.class)
     public void shouldRethrowException() throws Exception {
 
         Callable<String> callable = () -> {
@@ -77,7 +76,7 @@ public class CallableUtilsTest {
         };
         //When
         Callable<String> callableWithRecovery = CallableUtils.recover(callable, (ex) -> {
-            throw new WebServiceException();
+            throw new RuntimeException();
         });
 
         callableWithRecovery.call();

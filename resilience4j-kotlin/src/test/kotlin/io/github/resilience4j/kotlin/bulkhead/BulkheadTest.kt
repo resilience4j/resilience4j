@@ -28,7 +28,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import java.lang.IllegalStateException
+import java.time.Duration
 
 class BulkheadTest {
 
@@ -72,7 +72,7 @@ class BulkheadTest {
             val bulkhead = Bulkhead.of("testName") {
                 BulkheadConfig.custom()
                         .maxConcurrentCalls(1)
-                        .maxWaitTime(0)
+                        .maxWaitDuration(Duration.ZERO)
                         .build()
             }.registerEventListener()
 

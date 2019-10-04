@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
-import io.github.resilience4j.circuitbreaker.CircuitBreakerOpenException
-import io.github.resilience4j.ratpack.circuitbreaker.CircuitBreakerTransformer
 import ratpack.exec.Blocking
+import ratpack.exec.Promise
 import ratpack.test.exec.ExecHarness
 import spock.lang.Specification
 
@@ -93,53 +93,84 @@ class CircuitBreakerTransformerSpec extends Specification {
     def "can circuit break promise to from closed to open, then half open, then closed"() {
         given:
         CircuitBreaker breaker = buildBreaker()
-        CircuitBreakerTransformer<String> transformer = CircuitBreakerTransformer.of(breaker)
+        CircuitBreakerTransformer<String> circuitTransformer = CircuitBreakerTransformer.of(breaker)
         Exception e = new Exception("puke")
 
-        when:
+        when: "the first request and retry is a failure"
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(transformer)
+                    .transform(circuitTransformer)
+
         }
 
-        then:
+        then: "circuit is still closed since buffer hasn't been filled (1 call)"
         r.value == null
         r.error
         r.throwable == e
         breaker.state == CircuitBreaker.State.CLOSED
 
-        when:
+        when: "the request and the retry fails again"
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(transformer)
+                    .transform(circuitTransformer)
         }
 
-        then:
+        then: "the circuit open since the buffer has at least 2 calls and the failure threshold was met"
         r.value == null
         r.error
         r.throwable == e
         breaker.state == CircuitBreaker.State.OPEN
 
-        when:
+        when: "a call is made after the wait duration that is a success"
         sleep 1000
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { "foo" }
-                    .transform(transformer)
+                    .transform(circuitTransformer)
         }
 
-        then:
+        then: "the circuit is now in the HALF_OPEN state"
         r.value == "foo"
         !r.error
         r.throwable == null
         breaker.state == CircuitBreaker.State.HALF_OPEN
 
-        when:
+        and: "do a call where the Upstream promise handles the error, thus calling complete on the circuit"
+
+        when: "error on half open, retry swallows exception thrown"
         r = ExecHarness.yieldSingle {
-            Blocking.<String> get { "foo" }
-                    .transform(transformer)
+            Blocking.<String> get { throw e }.onError { exception -> Promise.value("not foo") }
+                    .transform(circuitTransformer)
         }
 
-        then:
+        then: "the test call was ran and returned our expected error"
+        r.value == null
+        !r.error
+        r.throwable == null
+        breaker.state == CircuitBreaker.State.HALF_OPEN
+        breaker.metrics
+
+        when: "error on half open, retry swallows exception thrown"
+        r = ExecHarness.yieldSingle {
+            Blocking.<String> get { throw e }.onError { exception -> Promise.value("not foo") }
+                    .transform(circuitTransformer)
+        }
+
+        then: "the test call was ran and returned our expected error"
+        r.value == null
+        !r.error
+        r.throwable == null
+        breaker.state == CircuitBreaker.State.HALF_OPEN
+        breaker.metrics
+
+        and: "the circuit transformer should not count this effectively canceled promises as attempts made while HALF_OPEN"
+
+        when: "trying the circuit that returns a succcess"
+        r = ExecHarness.yieldSingle {
+            Blocking.<String> get { "foo" }
+                    .transform(circuitTransformer)
+        }
+
+        then: "the call was allowed and transitioned the circuit to CLOSED"
         r.value == "foo"
         !r.error
         r.throwable == null
@@ -179,7 +210,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         then:
         r.value == null
         r.error
-        r.throwable instanceof CircuitBreakerOpenException
+        r.throwable instanceof CallNotPermittedException
         breaker.state == CircuitBreaker.State.OPEN
     }
 
@@ -187,9 +218,9 @@ class CircuitBreakerTransformerSpec extends Specification {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
                 .waitDurationInOpenState(Duration.ofMillis(1000))
-                .ringBufferSizeInHalfOpenState(2)
-                .ringBufferSizeInClosedState(2)
-                .recordFailure(predicate)
+                .permittedNumberOfCallsInHalfOpenState(2)
+                .slidingWindowSize(2)
+                .recordException(predicate)
                 .build()
         CircuitBreaker.of("test", config)
     }

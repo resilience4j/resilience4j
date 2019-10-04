@@ -16,12 +16,16 @@
 package io.github.resilience4j.prometheus.collectors;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector.MetricNames.*;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsCollectorTest {
@@ -34,13 +38,17 @@ public class CircuitBreakerMetricsCollectorTest {
     public void setup() {
         registry = new CollectorRegistry();
         circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+
+        CircuitBreakerConfig configWithSlowCallThreshold = CircuitBreakerConfig.custom()
+                .slowCallDurationThreshold(Duration.ofSeconds(1)).build();
+        circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA", configWithSlowCallThreshold);
 
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry).register(registry);
 
         // record some basic stats
-        circuitBreaker.onSuccess(0);
-        circuitBreaker.onError(0, new RuntimeException("oops"));
+        // SLOW_SUCCESS
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+        circuitBreaker.onError(100, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
 
@@ -83,26 +91,15 @@ public class CircuitBreakerMetricsCollectorTest {
                 new String[]{name, circuitBreaker.getState().name().toLowerCase()}
         )).isNull();
 
-        circuitBreakerRegistry.circuitBreaker(name);
+        CircuitBreaker newlyAddedCircuitBreaker = circuitBreakerRegistry.circuitBreaker(name);
 
         double state = registry.getSampleValue(
                 DEFAULT_CIRCUIT_BREAKER_STATE,
                 new String[]{"name", "state"},
-                new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase()}
+                new String[]{name, newlyAddedCircuitBreaker.getState().name().toLowerCase()}
         );
 
         assertThat(state).isEqualTo(1);
-    }
-
-    @Test
-    public void maxBufferedCallsReportsCorrespondingValue() {
-        double maxBufferedCalls = registry.getSampleValue(
-            DEFAULT_CIRCUIT_BREAKER_MAX_BUFFERED_CALLS,
-            new String[]{"name"},
-            new String[]{circuitBreaker.getName()}
-        );
-
-        assertThat(maxBufferedCalls).isEqualTo(circuitBreaker.getMetrics().getMaxNumberOfBufferedCalls());
     }
 
     @Test
@@ -117,6 +114,17 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
+    public void slowSuccessfulCallsReportsCorrespondingValue() {
+        double slowCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
+                new String[]{"name", "kind"},
+                new String[]{circuitBreaker.getName(), "successful"}
+        );
+
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowSuccessfulCalls());
+    }
+
+    @Test
     public void failedBufferedCallsReportsCorrespondingValue() {
         double failedCalls = registry.getSampleValue(
             DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
@@ -125,6 +133,17 @@ public class CircuitBreakerMetricsCollectorTest {
         );
 
         assertThat(failedCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfFailedCalls());
+    }
+
+    @Test
+    public void slowFailedCallsReportsCorrespondingValue() {
+        double slowCalls = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
+                new String[]{"name", "kind"},
+                new String[]{circuitBreaker.getName(), "failed"}
+        );
+
+        assertThat(slowCalls).isEqualTo(circuitBreaker.getMetrics().getNumberOfSlowFailedCalls());
     }
 
     @Test
@@ -173,17 +192,28 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
+    public void slowCallRateReportsCorrespondingValue() {
+        Double slowCallRate = registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE,
+                new String[]{"name"},
+                new String[]{circuitBreaker.getName()}
+        );
+
+        assertThat(slowCallRate.floatValue()).isEqualTo(circuitBreaker.getMetrics().getSlowCallRate());
+    }
+
+    @Test
     public void customMetricNamesOverrideDefaultOnes() {
         CollectorRegistry registry = new CollectorRegistry();
 
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(
-            CircuitBreakerMetricsCollector.MetricNames.custom()
-                .callsMetricName("custom_calls")
-                .stateMetricName("custom_state")
-                .maxBufferedCallsMetricName("custom_max_buffered_calls")
-                .bufferedCallsMetricName("custom_buffered_calls")
-                .failureRateMetricName("custom_failure_rate")
-                .build(),
+            custom().callsMetricName("custom_calls")
+                    .stateMetricName("custom_state")
+                    .bufferedCallsMetricName("custom_buffered_calls")
+                    .slowCallsMetricName("custom_slow_calls")
+                    .failureRateMetricName("custom_failure_rate")
+                    .slowCallRateMetricName("custom_slow_rate")
+                    .build(),
             circuitBreakerRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
@@ -200,11 +230,6 @@ public class CircuitBreakerMetricsCollectorTest {
             "custom_state",
             new String[]{"name", "state"},
             new String[]{"backendA", "closed"}
-        )).isNotNull();
-        assertThat(registry.getSampleValue(
-            "custom_max_buffered_calls",
-            new String[]{"name"},
-            new String[]{"backendA"}
         )).isNotNull();
     }
 }

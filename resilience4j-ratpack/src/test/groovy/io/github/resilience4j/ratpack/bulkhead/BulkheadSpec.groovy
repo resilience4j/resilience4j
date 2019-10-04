@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratpack.bulkhead
 
+import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.bulkhead.annotation.Bulkhead
 import io.github.resilience4j.ratpack.Resilience4jModule
@@ -30,6 +31,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.UndeclaredThrowableException
+import java.time.Duration
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -43,7 +45,7 @@ import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@IgnoreIf({ env.TRAVIS })
+@IgnoreIf({ env.TRAVIS || env.AZURE })
 @Unroll
 class BulkheadSpec extends Specification {
 
@@ -380,9 +382,9 @@ class BulkheadSpec extends Specification {
 
     // 1 concurrent call
     def buildConfig() {
-        io.github.resilience4j.bulkhead.BulkheadConfig.custom()
+        BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
-                .maxWaitTime(0)
+                .maxWaitDuration(Duration.ZERO)
                 .build()
     }
 

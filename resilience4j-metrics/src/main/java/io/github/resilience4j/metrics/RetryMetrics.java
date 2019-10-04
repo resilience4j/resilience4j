@@ -1,6 +1,9 @@
 package io.github.resilience4j.metrics;
 
-import com.codahale.metrics.*;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
@@ -8,7 +11,11 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.retry.utils.MetricNames.*;
+import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITH_RETRY;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -16,18 +23,19 @@ import static java.util.Objects.requireNonNull;
  */
 public class RetryMetrics implements MetricSet {
 
-    private final MetricRegistry metricRegistry = new MetricRegistry();
+    private final MetricRegistry metricRegistry;
 
     private RetryMetrics(Iterable<Retry> retries){
-        this(DEFAULT_PREFIX, retries);
+        this(DEFAULT_PREFIX, retries, new MetricRegistry());
     }
 
-    private RetryMetrics(String prefix, Iterable<Retry> retries){
+    private RetryMetrics(String prefix, Iterable<Retry> retries, MetricRegistry metricRegistry){
         requireNonNull(prefix);
         requireNonNull(retries);
+        requireNonNull(metricRegistry);
+        this.metricRegistry = metricRegistry;
         retries.forEach(retry -> {
             String name = retry.getName();
-
             metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITHOUT_RETRY),
                     (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
             metricRegistry.register(name(prefix, name, SUCCESSFUL_CALLS_WITH_RETRY),
@@ -39,8 +47,16 @@ public class RetryMetrics implements MetricSet {
         });
     }
 
+    public static RetryMetrics ofRetryRegistry(String prefix, RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
+        return new RetryMetrics(prefix, retryRegistry.getAllRetries(), metricRegistry);
+    }
+
     public static RetryMetrics ofRetryRegistry(String prefix, RetryRegistry retryRegistry) {
-        return new RetryMetrics(prefix, retryRegistry.getAllRetries());
+        return new RetryMetrics(prefix, retryRegistry.getAllRetries(), new MetricRegistry());
+    }
+
+    public static RetryMetrics ofRetryRegistry(RetryRegistry retryRegistry, MetricRegistry metricRegistry) {
+        return new RetryMetrics(DEFAULT_PREFIX, retryRegistry.getAllRetries(), metricRegistry);
     }
 
     public static RetryMetrics ofRetryRegistry(RetryRegistry retryRegistry) {
@@ -48,7 +64,7 @@ public class RetryMetrics implements MetricSet {
     }
 
     public static RetryMetrics ofIterable(String prefix, Iterable<Retry> retries) {
-        return new RetryMetrics(prefix, retries);
+        return new RetryMetrics(prefix, retries, new MetricRegistry());
     }
 
     public static RetryMetrics ofIterable(Iterable<Retry> retries) {

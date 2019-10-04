@@ -46,7 +46,7 @@ import static org.mockito.Mockito.*;
 public class SemaphoreBasedRateLimiterImplTest {
 
     private static final int LIMIT = 2;
-    private static final Duration TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration TIMEOUT = Duration.ofMillis(100);
     private static final Duration REFRESH_PERIOD = Duration.ofMillis(100);
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
@@ -109,6 +109,7 @@ public class SemaphoreBasedRateLimiterImplTest {
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isTrue();
         then(limit.acquirePermission()).isFalse();
+
     }
 
     @Test
@@ -168,19 +169,15 @@ public class SemaphoreBasedRateLimiterImplTest {
         RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config, scheduledExecutorService);
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(TIMEOUT.toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
 
         rateLimiter.changeTimeoutDuration(Duration.ofSeconds(1));
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(1));
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(Duration.ofSeconds(1).toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
     }
 
     @Test
@@ -189,19 +186,15 @@ public class SemaphoreBasedRateLimiterImplTest {
         RateLimiter rateLimiter = new SemaphoreBasedRateLimiter("some", config, scheduledExecutorService);
         RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(TIMEOUT.toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
 
         rateLimiter.changeLimitForPeriod(LIMIT * 2);
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(rateLimiterConfig.getTimeoutDurationInNanos()).isEqualTo(TIMEOUT.toNanos());
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(LIMIT * 2);
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
-        then(rateLimiterConfig.getLimitRefreshPeriodInNanos()).isEqualTo(REFRESH_PERIOD.toNanos());
     }
 
     @Test
@@ -214,7 +207,7 @@ public class SemaphoreBasedRateLimiterImplTest {
         limit.acquirePermission();
 
         Thread thread = new Thread(() -> {
-            limit.acquirePermission(TIMEOUT);
+            limit.acquirePermission();
             while (true) {
                 Function.identity().apply(1);
             }

@@ -67,7 +67,7 @@ class RateLimiterSpec extends Specification {
         def actual = get('promise')
 
         then:
-        actual.body.text == 'rateLimiter promise'
+        actual.body.text == 'ratelimiter promise'
         actual.statusCode == 200
     }
 
@@ -113,7 +113,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -172,7 +172,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -227,7 +227,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -279,7 +279,7 @@ class RateLimiterSpec extends Specification {
 
         when:
         def actual = null
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 3; i++) {
             actual = get(path)
         }
 
@@ -299,8 +299,8 @@ class RateLimiterSpec extends Specification {
     def buildConfig() {
         RateLimiterConfig.custom()
                 .limitRefreshPeriod(Duration.ofSeconds(60))
-                .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(100))
+                .limitForPeriod(3)
+                .timeoutDuration(Duration.ofMillis(20))
                 .build()
     }
 
@@ -309,104 +309,104 @@ class RateLimiterSpec extends Specification {
         @RateLimiter(name = "test")
         Promise<String> rateLimiterPromise() {
             Promise.<String>async {
-                it.success("rateLimiter promise")
+                it.success("ratelimiter promise")
             }
         }
 
         @RateLimiter(name = "test")
         Flux<String> rateLimiterFlux() {
-            Flux.just("rateLimiter Flux")
+            Flux.just("ratelimiter Flux")
         }
 
         @RateLimiter(name = "test")
         Mono<String> rateLimiterMono() {
-            Mono.just("rateLimiter Mono")
+            Mono.just("ratelimiter Mono")
         }
 
         @RateLimiter(name = "test")
         CompletionStage<String> rateLimiterStage() {
-            CompletableFuture.supplyAsync { 'rateLimiter stage' }
+            CompletableFuture.supplyAsync { 'ratelimiter stage' }
         }
 
         @RateLimiter(name = "test")
         String rateLimiterNormal() {
-            "rateLimiter normal"
+            "ratelimiter normal"
         }
 
         @RateLimiter(name = "test")
         Promise<String> rateLimiterPromiseException() {
             Promise.<String>async {
-                it.error(new Exception("rateLimiter promise exception"))
+                it.error(new Exception("ratelimiter promise exception"))
             }
         }
 
         @RateLimiter(name = "test")
         Flux<Void> rateLimiterFluxException() {
-            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, Void>)
+            Flux.just("ratelimiter Flux").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test")
         Mono<Void> rateLimiterMonoException() {
-            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, Void>)
+            Mono.just("ratelimiter Mono").map({ throw new Exception("bad") } as Function<String, Void>)
         }
 
         @RateLimiter(name = "test")
         CompletionStage<Void> rateLimiterStageException() {
-            CompletableFuture.supplyAsync { throw new Exception('rateLimiter stage exception') }
+            CompletableFuture.supplyAsync { throw new Exception('ratelimiter stage exception') }
         }
 
         @RateLimiter(name = "test")
         String rateLimiterNormalException() {
-            throw new Exception("rateLimiter normal exception")
+            throw new Exception("ratelimiter normal exception")
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallback")
         Promise<String> rateLimiterPromiseFallback() {
             Promise.<String>async {
-                it.error(new Exception("rateLimiter promise exception"))
+                it.error(new Exception("ratelimiter promise exception"))
             }
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallback")
         Flux<String> rateLimiterFluxFallback() {
-            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, String>)
+            Flux.just("ratelimiter Flux").map({ throw new Exception("bad") } as Function<String, String>)
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallback")
         Mono<String> rateLimiterMonoFallback() {
-            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, String>)
+            Mono.just("ratelimiter Mono").map({ throw new Exception("bad") } as Function<String, String>)
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallback")
         CompletionStage<String> rateLimiterStageFallback() {
-            CompletableFuture.<String>supplyAsync { throw new Exception('rateLimiter stage exception') }
+            CompletableFuture.<String>supplyAsync { throw new Exception('ratelimiter stage exception') }
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallback")
         String rateLimiterNormalFallback() {
-            throw new Exception("rateLimiter normal exception")
+            throw new Exception("ratelimiter normal exception")
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallbackPromise")
         Promise<String> rateLimiterPromiseFallbackPromise() {
             Promise.<String>async {
-                it.error(new Exception("rateLimiter promise exception"))
+                it.error(new Exception("ratelimiter promise exception"))
             }
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallbackFlux")
         Flux<String> rateLimiterFluxFallbackFlux() {
-            Flux.just("rateLimiter Flux").map({ throw new Exception("bad") } as Function<String, String>)
+            Flux.just("ratelimiter Flux").map({ throw new Exception("bad") } as Function<String, String>)
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallbackMono")
         Mono<String> rateLimiterMonoFallbackMono() {
-            Mono.just("rateLimiter Mono").map({ throw new Exception("bad") } as Function<String, String>)
+            Mono.just("ratelimiter Mono").map({ throw new Exception("bad") } as Function<String, String>)
         }
 
         @RateLimiter(name = "test", fallbackMethod = "fallbackStage")
         CompletionStage<String> rateLimiterStageFallbackStage() {
-            CompletableFuture.<String>supplyAsync { throw new Exception('rateLimiter stage exception') }
+            CompletableFuture.<String>supplyAsync { throw new Exception('ratelimiter stage exception') }
         }
 
         Promise<String> fallbackPromise(Throwable throwable) {

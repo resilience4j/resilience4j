@@ -144,10 +144,11 @@ public class RetryConfig {
 		}
 
 		public Builder<T> waitDuration(Duration waitDuration) {
-			if (waitDuration.toMillis() < 10) {
-				throw new IllegalArgumentException("waitDurationInOpenState must be at least 10ms");
+			if (waitDuration.toMillis() >= 0) {
+				this.intervalFunction = (x) -> waitDuration.toMillis();
+			} else {
+				throw new IllegalArgumentException("waitDurationInOpenState must be a positive value");
 			}
-			this.intervalFunction = (x) -> waitDuration.toMillis();
 			return this;
 		}
 
@@ -250,12 +251,12 @@ public class RetryConfig {
 
 		private Predicate<Throwable> createExceptionPredicate() {
 			return createRetryOnExceptionPredicate()
-					.and(PredicateCreator.createIgnoreExceptionsPredicate(ignoreExceptions)
+					.and(PredicateCreator.createNegatedExceptionsPredicate(ignoreExceptions)
 							.orElse(DEFAULT_RECORD_FAILURE_PREDICATE));
 		}
 
 		private Predicate<Throwable> createRetryOnExceptionPredicate() {
-			return PredicateCreator.createRecordExceptionsPredicate(retryExceptions)
+			return PredicateCreator.createExceptionsPredicate(retryExceptions)
 					.map(predicate -> retryOnExceptionPredicate != null ? predicate.or(retryOnExceptionPredicate) : predicate)
 					.orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate : DEFAULT_RECORD_FAILURE_PREDICATE);
 		}

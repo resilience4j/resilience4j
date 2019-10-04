@@ -26,19 +26,18 @@ public class RateLimiterConfig {
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
+    private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
     private final Duration timeoutDuration;
-    private final long timeoutDurationInNanos;
     private final Duration limitRefreshPeriod;
-    private final long limitRefreshPeriodInNanos;
     private final int limitForPeriod;
+    private final boolean writableStackTraceEnabled;
 
-    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod, int limitForPeriod) {
+    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod, int limitForPeriod, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
-        this.timeoutDurationInNanos = timeoutDuration.toNanos();
         this.limitRefreshPeriod = limitRefreshPeriod;
-        this.limitRefreshPeriodInNanos = limitRefreshPeriod.toNanos();
         this.limitForPeriod = limitForPeriod;
+        this.writableStackTraceEnabled = writableStackTraceEnabled;
     }
 
     /**
@@ -81,12 +80,8 @@ public class RateLimiterConfig {
         return limitForPeriod;
     }
 
-    public long getTimeoutDurationInNanos() {
-        return timeoutDurationInNanos;
-    }
-
-    public long getLimitRefreshPeriodInNanos() {
-        return limitRefreshPeriodInNanos;
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
     }
 
     @Override public String toString() {
@@ -94,6 +89,7 @@ public class RateLimiterConfig {
             "timeoutDuration=" + timeoutDuration +
             ", limitRefreshPeriod=" + limitRefreshPeriod +
             ", limitForPeriod=" + limitForPeriod +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
             '}';
     }
 
@@ -101,6 +97,7 @@ public class RateLimiterConfig {
         private Duration timeoutDuration =  Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
+        private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
         }
@@ -109,6 +106,7 @@ public class RateLimiterConfig {
             this.timeoutDuration = prototype.timeoutDuration;
             this.limitRefreshPeriod = prototype.limitRefreshPeriod;
             this.limitForPeriod = prototype.limitForPeriod;
+            this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
         }
 
         /**
@@ -117,7 +115,20 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod);
+            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod, writableStackTraceEnabled);
+        }
+
+        /**
+         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
+         * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
+         * known (the circuit breaker is short-circuiting calls).
+         *
+         * @param writableStackTraceEnabled flag to control if stack trace is writable
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
         }
 
         /**

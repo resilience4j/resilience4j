@@ -17,9 +17,9 @@
 package io.github.resilience4j.ratpack.ratelimiter.monitoring.endpoint
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent
-import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
 import ratpack.http.client.HttpClient
 import ratpack.test.embed.EmbeddedApp
@@ -48,18 +48,16 @@ class RateLimiterChainSpec extends Specification {
 
     def "test events"() {
         given: "an app"
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofSeconds(0))
                     }.rateLimiter('test2') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofSeconds(0))
                     }
                 }
             }
@@ -74,6 +72,7 @@ class RateLimiterChainSpec extends Specification {
 
         when: "we do a sanity check"
         def actual = client.get()
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
 
         then: "it works"
         actual.statusCode == 200
@@ -85,7 +84,7 @@ class RateLimiterChainSpec extends Specification {
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
             (0..5).each {
-                r.acquirePermission(Duration.ZERO)
+                r.acquirePermission()
             }
         }
         actual = client.get('ratelimiter/events')
@@ -132,18 +131,16 @@ class RateLimiterChainSpec extends Specification {
 
     def "test stream events"() {
         given: "an app"
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofMillis(0))
                     }.rateLimiter('test2') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofMillis(0))
                     }
                 }
             }
@@ -156,9 +153,10 @@ class RateLimiterChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all rate limiter events"
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
-            r.acquirePermission(Duration.ZERO)
+            r.acquirePermission()
         }
         def actual = ExecHarness.yieldSingle {
             streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/ratelimiter/stream/events")) {
@@ -202,18 +200,16 @@ class RateLimiterChainSpec extends Specification {
 
     def "test disabled"() {
         given: "an app"
-        def rateLimiterRegistry = RateLimiterRegistry.ofDefaults()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
-                bindInstance(RateLimiterRegistry, rateLimiterRegistry)
                 module(Resilience4jModule) {
                     it.rateLimiter('test1') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofMillis(0))
                     }.rateLimiter('test2') {
-                        it.setLimitForPeriod(5).setLimitRefreshPeriodInNanos(1000000000).setTimeoutInMillis(0)
+                        it.setLimitForPeriod(5).setLimitRefreshPeriod(Duration.ofNanos(1000000000)).setTimeoutDuration(Duration.ofMillis(0))
                     }.endpoints {
                         it.rateLimiters {
                             it.enabled(false)
@@ -226,10 +222,11 @@ class RateLimiterChainSpec extends Specification {
         app.server.start() // override lazy start
 
         when: "we get all rate limiter events"
+        def rateLimiterRegistry = app.server.registry.get().get(RateLimiterRegistry)
         ['test1', 'test2'].each {
             def r = rateLimiterRegistry.rateLimiter(it)
             (0..5).each {
-                r.acquirePermission(Duration.ZERO)
+                r.acquirePermission()
             }
         }
         def actual = client.get('ratelimiter/events')

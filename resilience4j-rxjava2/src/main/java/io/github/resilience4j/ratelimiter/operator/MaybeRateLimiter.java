@@ -47,7 +47,7 @@ class MaybeRateLimiter<T> extends Maybe<T> {
             }
         }else{
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
-            downstream.onError(new RequestNotPermitted(rateLimiter));
+            downstream.onError(RequestNotPermitted.createRequestNotPermitted(rateLimiter));
         }
     }
 

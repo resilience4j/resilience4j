@@ -3,6 +3,9 @@ io.github.resilience4j.bulkhead.autoconfigure.BulkheadAutoConfiguration,\
 io.github.resilience4j.bulkhead.autoconfigure.BulkheadMetricsAutoConfiguration,\
 io.github.resilience4j.bulkhead.autoconfigure.BulkheadMicrometerAutoConfiguration,\
 io.github.resilience4j.bulkhead.autoconfigure.BulkheadPrometheusAutoConfiguration,\
+io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadMetricsAutoConfiguration,\
+io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadMicrometerAutoConfiguration,\
+io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadPrometheusAutoConfiguration,\
 io.github.resilience4j.retry.autoconfigure.RetryAutoConfiguration,\
 io.github.resilience4j.retry.autoconfigure.RetryMetricsAutoConfiguration,\
 io.github.resilience4j.retry.autoconfigure.RetryMicrometerAutoConfiguration,\
@@ -10,7 +13,9 @@ io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfigurat
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMetricsAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMicrometerAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerPrometheusAutoConfiguration,\
+io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakersHealthIndicatorAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMetricsAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMicrometerAutoConfiguration,\
-io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterPrometheusAutoConfiguration
+io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterPrometheusAutoConfiguration,\
+io.github.resilience4j.ratelimiter.autoconfigure.RateLimitersHealthIndicatorAutoConfiguration

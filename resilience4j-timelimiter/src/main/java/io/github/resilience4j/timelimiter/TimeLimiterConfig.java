@@ -7,7 +7,7 @@ import static java.util.Objects.requireNonNull;
 public class TimeLimiterConfig {
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
 
-    private Duration timeoutDuration =  Duration.ofSeconds(1);
+    private Duration timeoutDuration = Duration.ofSeconds(1);
     private boolean cancelRunningFuture = true;
 
     private TimeLimiterConfig() {
@@ -27,7 +27,7 @@ public class TimeLimiterConfig {
      *
      * @return a default TimeLimiter configuration.
      */
-    public static TimeLimiterConfig ofDefaults(){
+    public static TimeLimiterConfig ofDefaults() {
         return new Builder().build();
     }
 
@@ -39,7 +39,8 @@ public class TimeLimiterConfig {
         return cancelRunningFuture;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "TimeLimiterConfig{" +
                 "timeoutDuration=" + timeoutDuration +
                 "cancelRunningFuture=" + cancelRunningFuture +

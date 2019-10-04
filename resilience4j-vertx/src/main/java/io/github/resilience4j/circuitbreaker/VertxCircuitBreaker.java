@@ -20,7 +20,10 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.vertx.core.Future;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 /**
  * CircuitBreaker decorators for Vert.x
@@ -52,7 +55,7 @@ public interface VertxCircuitBreaker {
             final Future<T> future = Future.future();
 
             if (!circuitBreaker.tryAcquirePermission()) {
-                future.fail(new CallNotPermittedException(circuitBreaker));
+                future.fail(createCallNotPermittedException(circuitBreaker));
 
             } else {
                 long start = System.nanoTime();
@@ -60,16 +63,16 @@ public interface VertxCircuitBreaker {
                     supplier.get().setHandler(result -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (result.failed()) {
-                            circuitBreaker.onError(durationInNanos, result.cause());
+                            circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
                             future.fail(result.cause());
                         } else {
-                            circuitBreaker.onSuccess(durationInNanos);
+                            circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
                             future.complete(result.result());
                         }
                     });
                 } catch (Exception exception) {
                     long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, exception);
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
                     future.fail(exception);
                 }
             }

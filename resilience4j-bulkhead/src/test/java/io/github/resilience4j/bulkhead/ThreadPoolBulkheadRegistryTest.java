@@ -19,11 +19,16 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
@@ -113,6 +118,57 @@ public class ThreadPoolBulkheadRegistryTest {
 	}
 
 	@Test
+	public void testCreateWithSingleRegistryEventConsumer() {
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+				ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(), new NoOpThreadPoolBulkheadEventConsumer());
+
+		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+	@Test
+	public void testCreateWithMultipleRegistryEventConsumer() {
+		List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
+		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+				ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(), registryEventConsumers);
+
+		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+				ThreadPoolBulkheadRegistry.of(configs, new NoOpThreadPoolBulkheadEventConsumer());
+
+		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+	@Test
+	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+
+		List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
+		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+
+		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+				ThreadPoolBulkheadRegistry.of(configs, registryEventConsumers);
+
+		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+	}
+
+
+	@Test
 	public void testWithNotExistingConfig() {
 		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
 
@@ -127,6 +183,25 @@ public class ThreadPoolBulkheadRegistryTest {
 
 		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
 		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
+	}
+
+	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<ThreadPoolBulkhead> eventPublisher) {
+		if (eventPublisher instanceof EventProcessor<?>) {
+			return Optional.of((EventProcessor<?>) eventPublisher);
+		}
+
+		return Optional.empty();
+	}
+
+	private static class NoOpThreadPoolBulkheadEventConsumer implements RegistryEventConsumer<ThreadPoolBulkhead> {
+		@Override
+		public void onEntryAddedEvent(EntryAddedEvent<ThreadPoolBulkhead> entryAddedEvent) { }
+
+		@Override
+		public void onEntryRemovedEvent(EntryRemovedEvent<ThreadPoolBulkhead> entryRemoveEvent) { }
+
+		@Override
+		public void onEntryReplacedEvent(EntryReplacedEvent<ThreadPoolBulkhead> entryReplacedEvent) { }
 	}
 
 }
