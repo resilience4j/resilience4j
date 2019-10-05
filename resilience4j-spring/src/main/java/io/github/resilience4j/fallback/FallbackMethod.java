@@ -71,17 +71,21 @@ public class FallbackMethod {
      * @return FallbackMethod instance
      */
     public static FallbackMethod create(String fallbackMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
+        MethodMeta methodMeta = new MethodMeta(
+                fallbackMethodName,
+                originalMethod.getParameterTypes(),
+                originalMethod.getReturnType(),
+                target.getClass());
 
-        Class<?>[] params = originalMethod.getParameterTypes();
-        Class<?> originalReturnType = originalMethod.getReturnType();
+        Map<Class<?>, Method> methods = RECOVERY_METHODS_CACHE.computeIfAbsent(methodMeta, FallbackMethod::extractMethods);
 
-        Map<Class<?>, Method> methods = extractMethods(fallbackMethodName, params, originalReturnType, target.getClass());
-
-        if (methods.isEmpty()) {
-            throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)", originalReturnType, target.getClass(), fallbackMethodName, StringUtils.arrayToDelimitedString(params, ","), Throwable.class));
+        if (!methods.isEmpty()) {
+            return new FallbackMethod(methods, originalMethod.getReturnType(), args, target);
+        } else {
+            throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)",
+                    methodMeta.returnType, methodMeta.targetClass, methodMeta.recoveryMethodName,
+                    StringUtils.arrayToDelimitedString(methodMeta.params, ","), Throwable.class));
         }
-        return new FallbackMethod(methods, originalReturnType, args, target);
-
     }
 
     /**
@@ -103,16 +107,17 @@ public class FallbackMethod {
         }
 
         Method recovery = null;
-
-        for (Class<?> thrownClass = thrown.getClass(); recovery == null && thrownClass != Object.class; thrownClass = thrownClass.getSuperclass()) {
+        Class<?> thrownClass = thrown.getClass();
+        while (recovery == null && thrownClass != Object.class) {
             recovery = recoveryMethods.get(thrownClass);
+            thrownClass = thrownClass.getSuperclass();
         }
 
-        if (recovery == null) {
+        if (recovery != null) {
+            return invoke(recovery, thrown);
+        } else {
             throw thrown;
         }
-
-        return invoke(recovery, thrown);
     }
 
     /**
@@ -130,8 +135,8 @@ public class FallbackMethod {
      * @param fallback  fallback method
      * @param throwable the thrown exception
      * @return the result object if any
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
+     * @throws IllegalAccessException exception
+     * @throws InvocationTargetException exception
      */
     private Object invoke(Method fallback, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
         boolean accessible = fallback.isAccessible();
@@ -157,70 +162,65 @@ public class FallbackMethod {
             }
         }
     }
+
     /**
-     * @param fallbackMethodName fallback method name
-     * @param params             original method parameters
-     * @param originalReturnType original method return type
-     * @param targetClass        the owner class
+     * @param methodMeta the method meta data
      * @return Map<Class < ?>, Method>  map of all configure fallback methods for the original method that match the fallback method name
      */
-    private static Map<Class<?>, Method> extractMethods(String fallbackMethodName, Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
-        MethodMeta methodMeta = new MethodMeta(fallbackMethodName, params, originalReturnType, targetClass);
-        Map<Class<?>, Method> cachedMethods = RECOVERY_METHODS_CACHE.get(methodMeta);
-
-        if (cachedMethods != null) {
-            return cachedMethods;
-        }
-
+    private static Map<Class<?>, Method> extractMethods(MethodMeta methodMeta) {
         Map<Class<?>, Method> methods = new HashMap<>();
-
-        ReflectionUtils.doWithMethods(targetClass, method -> {
-            Class<?>[] recoveryParams = method.getParameterTypes();
-            Class<?> exception = recoveryParams[recoveryParams.length - 1];
-            Method similar = methods.get(exception);
-            if (similar == null || Arrays.equals(similar.getParameterTypes(), method.getParameterTypes())) {
-                methods.put(exception, method);
-            } else {
-                throw new IllegalStateException("You have more that one fallback method that cover the same exception type " + exception.getName());
-            }
-        }, method -> {
-            if (method.getParameterCount() == 1) {
-                if (!method.getName().equals(fallbackMethodName) || !originalReturnType.isAssignableFrom(method.getReturnType())) {
-                    return false;
-                }
-                return Throwable.class.isAssignableFrom(method.getParameterTypes()[0]);
-            } else {
-                if (!method.getName().equals(fallbackMethodName) || method.getParameterCount() != params.length + 1) {
-                    return false;
-                }
-                if (!originalReturnType.isAssignableFrom(method.getReturnType())) {
-                    return false;
-                }
-
-                Class[] targetParams = method.getParameterTypes();
-                for (int i = 0; i < params.length; i++) {
-                    if (params[i] != targetParams[i]) {
-                        return false;
-                    }
-                }
-                return Throwable.class.isAssignableFrom(targetParams[params.length]);
-            }
-
-        });
-
-        RECOVERY_METHODS_CACHE.putIfAbsent(methodMeta, methods);
+        ReflectionUtils.doWithMethods(methodMeta.targetClass,
+                method -> merge(method, methods),
+                method -> filter(method, methodMeta)
+        );
         return methods;
     }
 
-    /**
-     * fallback method cache lookup key
-     */
+    private static void merge(Method method, Map<Class<?>, Method> methods) {
+        Class<?>[] recoveryParams = method.getParameterTypes();
+        Class<?> exception = recoveryParams[recoveryParams.length - 1];
+        Method similar = methods.get(exception);
+        if (similar == null || Arrays.equals(similar.getParameterTypes(), method.getParameterTypes())) {
+            methods.put(exception, method);
+        } else {
+            throw new IllegalStateException("You have more that one fallback method that cover the same exception type " + exception.getName());
+        }
+    }
+
+    private static boolean filter(Method method, MethodMeta methodMeta) {
+        if (!method.getName().equals(methodMeta.recoveryMethodName)) {
+            return false;
+        }
+        if (!methodMeta.returnType.isAssignableFrom(method.getReturnType())) {
+            return false;
+        }
+        if (method.getParameterCount() == 1) {
+            return Throwable.class.isAssignableFrom(method.getParameterTypes()[0]);
+        }
+        if (method.getParameterCount() != methodMeta.params.length + 1) {
+            return false;
+        }
+        Class[] targetParams = method.getParameterTypes();
+        for (int i = 0; i < methodMeta.params.length; i++) {
+            if (methodMeta.params[i] != targetParams[i]) {
+                return false;
+            }
+        }
+        return Throwable.class.isAssignableFrom(targetParams[methodMeta.params.length]);
+    }
+
     private static class MethodMeta {
         final String recoveryMethodName;
         final Class<?>[] params;
         final Class<?> returnType;
         final Class<?> targetClass;
 
+        /**
+         * @param recoveryMethodName the configured recovery method name
+         * @param returnType         the original method return type
+         * @param params             the original method arguments
+         * @param targetClass        the target class that own the original method and recovery method
+         */
         MethodMeta(String recoveryMethodName, Class<?>[] params, Class<?> returnType, Class<?> targetClass) {
             this.recoveryMethodName = recoveryMethodName;
             this.params = params;
