@@ -176,10 +176,13 @@ public class FallbackMethod {
 
         ReflectionUtils.doWithMethods(targetClass, method -> {
             Class<?>[] recoveryParams = method.getParameterTypes();
-            if (methods.get(recoveryParams[recoveryParams.length - 1]) != null) {
-                throw new IllegalStateException("You have more that one fallback method that cover the same exception type " + recoveryParams[recoveryParams.length - 1].getName());
+            Class<?> exception = recoveryParams[recoveryParams.length - 1];
+            Method similar = methods.get(exception);
+            if (similar == null || Arrays.equals(similar.getParameterTypes(), method.getParameterTypes())) {
+                methods.put(exception, method);
+            } else {
+                throw new IllegalStateException("You have more that one fallback method that cover the same exception type " + exception.getName());
             }
-            methods.put(recoveryParams[recoveryParams.length - 1], method);
         }, method -> {
             if (method.getParameterCount() == 1) {
                 if (!method.getName().equals(fallbackMethodName) || !originalReturnType.isAssignableFrom(method.getReturnType())) {
