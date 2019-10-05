@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 
 import org.junit.Test;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings("unused")
 public class FallbackMethodTest {
     @Test
     public void recoverRuntimeExceptionTest() throws Throwable {
@@ -94,7 +94,7 @@ public class FallbackMethodTest {
     }
 
     public String testMethod(String parameter) {
-        return null;
+        return "test";
     }
 
     public String fallbackMethod(String parameter, RuntimeException exception) {
