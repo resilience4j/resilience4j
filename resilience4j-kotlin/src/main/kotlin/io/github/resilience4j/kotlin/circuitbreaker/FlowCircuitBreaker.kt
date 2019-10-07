@@ -51,26 +51,23 @@ import kotlin.coroutines.coroutineContext
 @UseExperimental(ExperimentalCoroutinesApi::class)
 fun <T> Flow<T>.circuitBreaker(circuitBreaker: CircuitBreaker): Flow<T> =
     flow {
-        if(circuitBreaker.tryAcquirePermission()) {
+        circuitBreaker.acquirePermission()
 
-            val start = System.nanoTime()
-            val source = this@circuitBreaker.onCompletion { e ->
-                when {
-                    isCancellation(e, coroutineContext) -> circuitBreaker
-                        .releasePermission()
+        val start = System.nanoTime()
+        val source = this@circuitBreaker.onCompletion { e ->
+            when {
+                isCancellation(e, coroutineContext) -> circuitBreaker
+                    .releasePermission()
 
-                    e == null -> circuitBreaker
-                        .onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS)
+                e == null -> circuitBreaker
+                    .onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS)
 
-                    else -> circuitBreaker
-                        .onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e)
-                }
+                else -> circuitBreaker
+                    .onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e)
             }
-
-            emitAll(source)
-        }else{
-            throw CallNotPermittedException.createCallNotPermittedException(circuitBreaker)
         }
+
+        emitAll(source)
     }
 
 
