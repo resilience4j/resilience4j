@@ -16,6 +16,8 @@
  *
  *
  */
+@file:Suppress("EXPERIMENTAL_API_USAGE")
+
 package io.github.resilience4j.kotlin.circuitbreaker
 
 
@@ -85,6 +87,44 @@ class FlowCircuitBreakerTest {
             }
 
             //Then
+            assertThat(resultList).isEmpty()
+            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
+            assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun `should not start flow when open`() {
+        runBlocking {
+
+            var wasStarted = false
+            val resultList = mutableListOf<Int>()
+            val circuitBreaker = CircuitBreaker.ofDefaults("testName")
+            circuitBreaker.transitionToOpenState()
+            val metrics = circuitBreaker.metrics
+            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+
+            //When
+            try {
+                flow {
+                    wasStarted = true
+                    repeat(3){
+                        emit(it)
+                    }
+                }
+                    .circuitBreaker(circuitBreaker)
+                    .toList(resultList)
+
+                Assertions.failBecauseExceptionWasNotThrown<Nothing>(CallNotPermittedException::class.java)
+            } catch (e: Throwable) {
+                assertThat(e).isInstanceOf(CallNotPermittedException::class.java)
+            }
+
+            //Then
+            assertThat(wasStarted).isFalse()
+            assertThat(resultList).isEmpty()
             assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
             assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
             assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
@@ -117,6 +157,7 @@ class FlowCircuitBreakerTest {
             }
 
             //Then
+            assertThat(resultList.size).isEqualTo(4)
             assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
             assertThat(metrics.numberOfFailedCalls).isEqualTo(1)
             assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
