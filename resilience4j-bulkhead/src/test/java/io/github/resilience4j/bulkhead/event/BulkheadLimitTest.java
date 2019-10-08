@@ -39,4 +39,34 @@ public class BulkheadLimitTest {
 
 	}
 
+
+	@Test
+	public void testLimitIgnoreEvent() {
+		BulkheadOnIgnoreEvent bulkheadOnIgnoreEvent = new BulkheadOnIgnoreEvent("test", evntData);
+		assertThat(bulkheadOnIgnoreEvent.getEventType()).isEqualTo(BulkheadLimit.Type.LIMIT_DECREASED);
+		assertThat(bulkheadOnIgnoreEvent.getBulkheadName()).isEqualTo("test");
+		assertThat(bulkheadOnIgnoreEvent.toString()).contains("error is ignored", "test1");
+
+	}
+
+
+	@Test
+	public void testLimitSuccessEvent() {
+		BulkheadOnSuccessEvent bulkheadOnSuccessEvent = new BulkheadOnSuccessEvent("test", evntData);
+		assertThat(bulkheadOnSuccessEvent.getEventType()).isEqualTo(BulkheadLimit.Type.LIMIT_DECREASED);
+		assertThat(bulkheadOnSuccessEvent.getBulkheadName()).isEqualTo("test");
+		assertThat(bulkheadOnSuccessEvent.toString()).contains("call is succeeded", "test1");
+
+	}
+
+
+	@Test
+	public void testLimitOnErrorEvent() {
+		BulkheadOnErrorEvent bulkheadOnErrorEvent = new BulkheadOnErrorEvent("test", evntData);
+		assertThat(bulkheadOnErrorEvent.getEventType()).isEqualTo(BulkheadLimit.Type.LIMIT_DECREASED);
+		assertThat(bulkheadOnErrorEvent.getBulkheadName()).isEqualTo("test");
+		assertThat(bulkheadOnErrorEvent.toString()).contains("call is failed", "test1");
+
+	}
+
 }

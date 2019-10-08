@@ -184,12 +184,12 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 		/**
 		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
-		 * Any exception matching or inheriting from one of the list should count as a failure, unless ignored via
+		 * an exception matching or inheriting from one of the list should count as a failure
 		 *
-		 * @param errorClasses the error classes that are recorded
+		 * @param errorClasses the error classes which are recorded
 		 * @return the Builder
 		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an exception.
-		 * For a more sophisticated exception management use the
+		 * For a more advanced exception management use the following
 		 * @see #recordException(Predicate) method
 		 */
 		@SuppressWarnings("unchecked")
@@ -201,9 +201,9 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 		/**
 		 * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
-		 * Any exception matching or inheriting from one of the list will not count as a failure nor success, even if marked via
+		 * an exception matching or inheriting from one of that list will not count as a failure nor success
 		 *
-		 * @param errorClasses the error classes that are ignored
+		 * @param errorClasses the error classes which are ignored
 		 * @return the Builder
 		 * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
 		 */

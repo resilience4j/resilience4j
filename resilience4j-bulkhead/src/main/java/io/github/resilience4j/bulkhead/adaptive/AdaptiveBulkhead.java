@@ -105,11 +105,11 @@ public interface AdaptiveBulkhead {
 	AdaptiveBulkheadConfig getBulkheadConfig();
 
 	/**
-	 * Get the Metrics of this Bulkhead.
+	 * Get the AdaptiveMetrics of this Bulkhead.
 	 *
-	 * @return the Metrics of this Bulkhead
+	 * @return the AdaptiveMetrics of this Bulkhead
 	 */
-	Metrics getMetrics();
+	AdaptiveMetrics getMetrics();
 
 	/**
 	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent/BulkheadLimit events and
@@ -513,7 +513,7 @@ public interface AdaptiveBulkhead {
 		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 
-	interface Metrics extends Bulkhead.Metrics {
+	interface AdaptiveMetrics extends Bulkhead.Metrics {
 		/**
 		 * Returns the current total number of calls which were slower than a certain threshold.
 		 *

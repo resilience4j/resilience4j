@@ -1,5 +1,7 @@
 package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -78,6 +80,8 @@ public class AdaptiveBulkheadWithLimiterTest {
 			executorService.execute(runnable);
 		}
 
+		assertThat(config).isNotNull();
+		assertThat(bulkhead).isNotNull();
 
 		Thread.sleep(20000);
 		executorService.shutdown();
