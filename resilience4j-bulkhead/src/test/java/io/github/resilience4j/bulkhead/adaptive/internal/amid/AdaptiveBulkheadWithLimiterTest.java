@@ -21,6 +21,8 @@ import org.knowm.xchart.style.Styler;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 
 /**
  * test the adoptive bulkhead limiter logic
@@ -52,9 +54,12 @@ public class AdaptiveBulkheadWithLimiterTest {
 		List<Double> maxConcurrentCalls = new ArrayList<>();
 		AtomicInteger count = new AtomicInteger();
 		if (drawGraphs) {
-			bulkhead.getEventPublisher().onEvent(bulkhead -> {
-				maxConcurrentCalls.add(Double.valueOf(bulkhead.eventData().get("newMaxConcurrentCalls")));
-				time.add((double) count.incrementAndGet());
+			bulkhead.getEventPublisher().onEvent(event -> {
+				if (event instanceof BulkheadOnLimitDecreasedEvent || event instanceof BulkheadOnLimitIncreasedEvent) {
+					maxConcurrentCalls.add(Double.valueOf(event.eventData().get("newMaxConcurrentCalls")));
+					time.add((double) count.incrementAndGet());
+				}
+
 			});
 		}
 		ExecutorService executorService = Executors.newFixedThreadPool(6);
