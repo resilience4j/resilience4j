@@ -29,7 +29,7 @@ public class AdaptiveBulkheadWithLimiterTest {
 	private AdaptiveBulkhead bulkhead;
 	private AdaptiveBulkheadConfig<AimdConfig> config;
 	// enable if u need to see the graphs of the executions
-	private boolean drawGraphs = false;
+	private boolean drawGraphs = true;
 
 	@Before
 	public void setup() {
