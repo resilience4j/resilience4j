@@ -36,6 +36,7 @@ import java.util.function.Function;
 import static com.jayway.awaitility.Awaitility.await;
 import static io.vavr.control.Try.run;
 import static java.lang.Thread.State.*;
+import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -43,7 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
-public class SemaphoreBasedRateLimiterImplTest {
+public class SemaphoreBasedRateLimiterImplTest extends RateLimiterTest {
 
     private static final int LIMIT = 2;
     private static final Duration TIMEOUT = Duration.ofMillis(100);
@@ -54,6 +55,11 @@ public class SemaphoreBasedRateLimiterImplTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
     private RateLimiterConfig config;
+
+    @Override
+    protected RateLimiter buildRateLimiter(RateLimiterConfig config) {
+        return new SemaphoreBasedRateLimiter("test", config, Executors.newScheduledThreadPool(1));
+    }
 
     private static ConditionFactory awaitImpatiently() {
         return await()

@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(AtomicRateLimiter.class)
-public class AtomicRateLimiterTest {
+public class AtomicRateLimiterTest extends RateLimiterTest {
 
     private static final String LIMITER_NAME = "test";
     private static final long CYCLE_IN_NANOS = 250_000_000L;
@@ -47,6 +47,11 @@ public class AtomicRateLimiterTest {
     private static final int PERMISSIONS_RER_CYCLE = 1;
     private AtomicRateLimiter rateLimiter;
     private AtomicRateLimiter.AtomicRateLimiterMetrics metrics;
+
+    @Override
+    protected RateLimiter buildRateLimiter(RateLimiterConfig config) {
+        return new AtomicRateLimiter("atomic", config);
+    }
 
     private static ConditionFactory awaitImpatiently() {
         return await()
@@ -108,56 +113,6 @@ public class AtomicRateLimiterTest {
 
         then(secondCycle - firstCycle).isEqualTo(2);
         then(thirdCycle - secondCycle).isEqualTo(1);
-    }
-
-    @Test
-    public void aquireBigWeightAtStartOfCycleTest() {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-                .limitForPeriod(10)
-                .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
-                .timeoutDuration(Duration.ZERO)
-                .build();
-        AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
-        AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics = rawLimiter.getDetailedMetrics();
-
-        waitForCurrentCycleToPass(rawDetailedMetrics, '.');
-
-        boolean firstPermission = rawLimiter.acquirePermission(5);
-        then(firstPermission).isTrue();
-        boolean secondPermission = rawLimiter.acquirePermission(5);
-        then(secondPermission).isTrue();
-        boolean firstNoPermission = rawLimiter.acquirePermission(1);
-        then(firstNoPermission).isFalse();
-
-        waitForCurrentCycleToPass(rawDetailedMetrics, '*');
-
-        boolean retryInNewCyclePermission = rawLimiter.acquirePermission(1);
-        then(retryInNewCyclePermission).isTrue();
-    }
-
-    @Test
-    public void tryAquiringBigWeightAtEndOfCycleTest() {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-                .limitForPeriod(10)
-                .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
-                .timeoutDuration(Duration.ZERO)
-                .build();
-        AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
-        AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics = rawLimiter.getDetailedMetrics();
-
-        waitForCurrentCycleToPass(rawDetailedMetrics, '.');
-
-        boolean firstPermission = rawLimiter.acquirePermission(1);
-        then(firstPermission).isTrue();
-        boolean secondPermission = rawLimiter.acquirePermission(5);
-        then(secondPermission).isTrue();
-        boolean firstNoPermission = rawLimiter.acquirePermission(5);
-        then(firstNoPermission).isFalse();
-
-        waitForCurrentCycleToPass(rawDetailedMetrics, '*');
-
-        boolean retryInSecondCyclePermission = rawLimiter.acquirePermission(5);
-        then(retryInSecondCyclePermission).isTrue();
     }
 
     @Test

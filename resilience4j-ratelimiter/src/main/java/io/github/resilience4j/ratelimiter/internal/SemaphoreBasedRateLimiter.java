@@ -132,27 +132,16 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public boolean acquirePermission() {
+    public boolean acquirePermission(int weight) {
         try {
-            boolean success = semaphore.tryAcquire(rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
-            publishRateLimiterEvent(success);
+            boolean success = semaphore.tryAcquire(weight, rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
+            publishRateLimiterEvent(success, weight);
             return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            publishRateLimiterEvent(false);
+            publishRateLimiterEvent(false, weight);
             return false;
         }
-    }
-
-    /**
-     * Acquiring permissions of a specified weight is not supported in the
-     * spemaphore based implementation. Use {@link #acquirePermission()}
-     *
-     * @throws UnsupportedOperationException always for this implementation
-     */
-    @Override
-    public boolean acquirePermission(int weight) {
-        throw new UnsupportedOperationException("Acquiring permissions of a specified weight is not supported in the spemaphore based implementation");
     }
 
     /**
@@ -238,14 +227,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         }
     }
 
-    private void publishRateLimiterEvent(boolean permissionAcquired) {
+    private void publishRateLimiterEvent(boolean permissionAcquired, int weight) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }
         if (permissionAcquired) {
-            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name));
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, weight));
             return;
         }
-        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name));
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, weight));
     }
 }
