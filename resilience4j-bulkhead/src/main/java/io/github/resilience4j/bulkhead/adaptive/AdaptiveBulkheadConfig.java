@@ -138,11 +138,19 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		}
 
 
+		/**
+		 * @param config the custom config object
+		 * @return the BulkheadConfig.Builder
+		 */
 		public final Builder<T> config(T config) {
 			adaptiveBulkheadConfig.config = config;
 			return this;
 		}
 
+		/**
+		 * @param initialConcurrency initial bulkhead allowed concurrent calls
+		 * @return the BulkheadConfig.Builder
+		 */
 		public final Builder<T> initialConcurrency(int initialConcurrency) {
 			adaptiveBulkheadConfig.initialConcurrency = initialConcurrency;
 			return this;
@@ -181,11 +189,6 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 * @param errorClasses the error classes that are recorded
 		 * @return the Builder
 		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an exception.
-		 * <p>
-		 * Example:
-		 * recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-		 * would capture all Errors and checked Exceptions plus ignore RuntimeExceptions.
-		 * <p>
 		 * For a more sophisticated exception management use the
 		 * @see #recordException(Predicate) method
 		 */
@@ -203,15 +206,6 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 * @param errorClasses the error classes that are ignored
 		 * @return the Builder
 		 * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
-		 * <p>
-		 * Example:
-		 * ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
-		 * would capture nothing.
-		 * <p>
-		 * Example:
-		 * ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
-		 * would capture Errors.
-		 * <p>
 		 */
 		@SuppressWarnings("unchecked")
 		@SafeVarargs

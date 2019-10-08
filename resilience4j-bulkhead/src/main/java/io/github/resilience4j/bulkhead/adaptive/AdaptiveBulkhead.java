@@ -32,8 +32,11 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
+import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnIgnoreEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.core.lang.Nullable;
@@ -86,12 +89,13 @@ public interface AdaptiveBulkhead {
 	/**
 	 * Records a successful call and releases a permission.
 	 */
-	void onSuccess(long callTime, TimeUnit durationUnit);
+	void onSuccess(long startTime, TimeUnit durationUnit);
 
 	/**
 	 * Records a failed call and releases a permission.
 	 */
-	void onError(long callTime, TimeUnit durationUnit);
+	void onError(long startTime, TimeUnit durationUnit,Throwable throwable);
+
 
 	/**
 	 * Returns the name of this bulkhead.
@@ -187,18 +191,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T> CheckedFunction0<T> decorateCheckedSupplier(AdaptiveBulkhead bulkhead, CheckedFunction0<T> supplier) {
 		return () -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				return supplier.apply();
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+				isFailed=true;
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -220,23 +225,22 @@ public interface AdaptiveBulkhead {
 			if (!bulkhead.tryAcquirePermission()) {
 				promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
 			} else {
-				Instant start = Instant.now();
+				long start = Instant.now().toEpochMilli();
 				try {
 					supplier.get()
 							.whenComplete(
 									(result, throwable) -> {
-										Instant finish = Instant.now();
 										if (throwable != null) {
-											bulkhead.onError(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+											bulkhead.onError(start, TimeUnit.MILLISECONDS,throwable);
 											promise.completeExceptionally(throwable);
 										} else {
-											bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+											bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 											promise.complete(result);
 										}
 									}
 							);
 				} catch (Exception e) {
-					handleError(bulkhead, start, e);
+					bulkhead.onError(start, TimeUnit.MILLISECONDS,e);
 					promise.completeExceptionally(e);
 				}
 			}
@@ -254,18 +258,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static CheckedRunnable decorateCheckedRunnable(AdaptiveBulkhead bulkhead, CheckedRunnable runnable) {
 		return () -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				runnable.run();
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -281,18 +286,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T> Callable<T> decorateCallable(AdaptiveBulkhead bulkhead, Callable<T> callable) {
 		return () -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				return callable.call();
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -308,18 +314,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T> Supplier<T> decorateSupplier(AdaptiveBulkhead bulkhead, Supplier<T> supplier) {
 		return () -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				return supplier.get();
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -335,18 +342,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T> Consumer<T> decorateConsumer(AdaptiveBulkhead bulkhead, Consumer<T> consumer) {
 		return t -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				consumer.accept(t);
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -362,19 +370,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T> CheckedConsumer<T> decorateCheckedConsumer(AdaptiveBulkhead bulkhead, CheckedConsumer<T> consumer) {
 		return t -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				consumer.accept(t);
-
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -389,18 +397,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static Runnable decorateRunnable(AdaptiveBulkhead bulkhead, Runnable runnable) {
 		return () -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				runnable.run();
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -417,18 +426,19 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T, R> Function<T, R> decorateFunction(AdaptiveBulkhead bulkhead, Function<T, R> function) {
 		return (T t) -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				return function.apply(t);
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if (start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -445,38 +455,25 @@ public interface AdaptiveBulkhead {
 	 */
 	static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(AdaptiveBulkhead bulkhead, CheckedFunction1<T, R> function) {
 		return (T t) -> {
+			long start = 0;
+			boolean isFailed=false;
 			bulkhead.acquirePermission();
-			Instant start = null;
 			try {
-				start = Instant.now();
+				start = Instant.now().toEpochMilli();
 				return function.apply(t);
 			} catch (Exception e) {
-				handleError(bulkhead, start, e);
+				isFailed=true;
+				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
 				throw e;
 			} finally {
-				if (start != null) {
-					Instant finish = Instant.now();
-					bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
+				if(start != 0 && !isFailed) {
+					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
 	}
 
-	static void handleError(AdaptiveBulkhead bulkhead, @Nullable Instant start, Exception e) {
-		//noinspection unchecked
-		if (bulkhead.getBulkheadConfig().getIgnoreExceptionPredicate().test(e)) {
-			bulkhead.releasePermission();
-		} else if (bulkhead.getBulkheadConfig().getRecordExceptionPredicate().test(e) && start != null) {
-			Instant finish = Instant.now();
-			bulkhead.onError(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
-		} else {
-			if (start != null) {
-				Instant finish = Instant.now();
-				bulkhead.onSuccess(Duration.between(start, finish).toMillis(), TimeUnit.MILLISECONDS);
-			}
 
-		}
-	}
 
 	/**
 	 * Create a Bulkhead with a default configuration.
@@ -569,5 +566,12 @@ public interface AdaptiveBulkhead {
 		EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
 
 		EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer);
+
+		EventPublisher onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer);
+
+		EventPublisher onError(EventConsumer<BulkheadOnErrorEvent> eventConsumer);
+
+		EventPublisher onIgnoredError(EventConsumer<BulkheadOnIgnoreEvent> eventConsumer);
+
 	}
 }

@@ -21,6 +21,8 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,8 +40,11 @@ import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
+import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnIgnoreEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
@@ -99,17 +104,27 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	@Override
 	public void onSuccess(long callTime, TimeUnit durationUnit) {
 		bulkhead.onComplete();
+		publishBulkheadEvent(new BulkheadOnSuccessEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), Collections.emptyMap()));
 		final LimitResult limitResult = record(callTime, true, inFlight.getAndDecrement());
 		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
 
 	@Override
-	public void onError(long callTime, TimeUnit durationUnit) {
-		bulkhead.onComplete();
-		final LimitResult limitResult = record(callTime, false, inFlight.getAndDecrement());
-		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
+	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
+		//noinspection unchecked
+		if (adaptationConfig.getIgnoreExceptionPredicate().test(throwable)) {
+			bulkhead.releasePermission();
+			publishBulkheadEvent(new BulkheadOnIgnoreEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
+		} else if (adaptationConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
+			Instant finish = Instant.now();
+			this.handleError(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit, throwable);
+		} else {
+			if (start != 0) {
+				Instant finish = Instant.now();
+				this.onSuccess(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit);
+			}
+		}
 	}
-
 
 	@Override
 	public AdaptiveBulkheadConfig getBulkheadConfig() {
@@ -190,6 +205,24 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 		@Override
+		public EventPublisher onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer) {
+			registerConsumer(BulkheadOnSuccessEvent.class.getSimpleName(), eventConsumer);
+			return this;
+		}
+
+		@Override
+		public EventPublisher onError(EventConsumer<BulkheadOnErrorEvent> eventConsumer) {
+			registerConsumer(BulkheadOnErrorEvent.class.getSimpleName(), eventConsumer);
+			return this;
+		}
+
+		@Override
+		public EventPublisher onIgnoredError(EventConsumer<BulkheadOnIgnoreEvent> eventConsumer) {
+			registerConsumer(BulkheadOnIgnoreEvent.class.getSimpleName(), eventConsumer);
+			return this;
+		}
+
+		@Override
 		public void consumeEvent(BulkheadLimit event) {
 			super.processEvent(event);
 		}
@@ -260,6 +293,9 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 
 	}
 
+	/**
+	 * @param eventSupplier the event supplier to be pushed to consumers
+	 */
 	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
 		if (eventProcessor.hasConsumers()) {
 			eventProcessor.consumeEvent(eventSupplier);
@@ -276,7 +312,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	protected LimitResult record(@NonNull long callTime, boolean isSuccess, int inFlight) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("starting the adation of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime, isSuccess, inFlight);
+			LOG.debug("starting the adaption of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime, isSuccess, inFlight);
 		}
 		Snapshot snapshot;
 		final long callTimeNanos = TimeUnit.MILLISECONDS.toNanos(callTime);
@@ -315,7 +351,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 					.build();
 			bulkhead.changeConfig(updatedConfig);
 			publishBulkheadEvent(new BulkheadOnLimitIncreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
-					eventData(waitTimeMillis, updatedLimit)));
+					limitChangeEventData(waitTimeMillis, updatedLimit)));
 		} else if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() == updatedLimit) {
 			// do nothing
 		} else {
@@ -328,7 +364,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 					.build();
 			bulkhead.changeConfig(updatedConfig);
 			publishBulkheadEvent(new BulkheadOnLimitDecreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
-					eventData(waitTimeMillis, updatedLimit)));
+					limitChangeEventData(waitTimeMillis, updatedLimit)));
 		}
 
 	}
@@ -338,11 +374,35 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	 * @param newMaxConcurrentCalls new max concurrent data
 	 * @return map of kep value string of the event properties
 	 */
-	private Map<String, String> eventData(long waitTimeMillis, int newMaxConcurrentCalls) {
+	private Map<String, String> limitChangeEventData(long waitTimeMillis, int newMaxConcurrentCalls) {
 		Map<String, String> eventData = new HashMap<>();
 		eventData.put("newMaxConcurrentCalls", String.valueOf(newMaxConcurrentCalls));
 		eventData.put("newWaitTimeMillis", String.valueOf(waitTimeMillis));
 		return eventData;
+	}
+
+
+	/**
+	 * @param throwable error exception to be wrapped into the event data
+	 * @return map of kep value string of the event properties
+	 */
+	private Map<String, String> errorData(Throwable throwable) {
+		Map<String, String> eventData = new HashMap<>();
+		eventData.put("exceptionMsg", throwable.getMessage());
+		return eventData;
+	}
+
+
+	/**
+	 * @param callTime the call duration time
+	 * @param durationUnit the duration unit
+	 * @param throwable the error exception
+	 */
+	private void handleError(long callTime, TimeUnit durationUnit, Throwable throwable) {
+		bulkhead.onComplete();
+		publishBulkheadEvent(new BulkheadOnSuccessEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
+		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
+		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
 
 }

@@ -18,16 +18,19 @@
  */
 package io.github.resilience4j.bulkhead.event;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
 
 abstract class AbstractBulkheadLimitEvent implements BulkheadLimit {
 
 	private final String bulkheadName;
 	private final Map<String, String> eventData;
+	private final ZonedDateTime creationTime;
 
 	AbstractBulkheadLimitEvent(String bulkheadName, Map<String, String> eventData) {
 		this.bulkheadName = bulkheadName;
 		this.eventData = eventData;
+		this.creationTime = ZonedDateTime.now();
 	}
 
 	@Override
@@ -38,5 +41,10 @@ abstract class AbstractBulkheadLimitEvent implements BulkheadLimit {
 	@Override
 	public Map<String, String> eventData() {
 		return eventData;
+	}
+
+	@Override
+	public ZonedDateTime getCreationTime() {
+		return creationTime;
 	}
 }
