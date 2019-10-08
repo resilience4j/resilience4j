@@ -21,6 +21,7 @@ import java.util.function.Function;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
+import io.github.resilience4j.feign.test.TestServiceFallbackThrowingException;
 import io.github.resilience4j.feign.test.TestServiceFallbackWithException;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -71,6 +72,19 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result).isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
+    @Test
+    public void should_go_to_fallback_and_rethrow_an_exception_thrown_in_fallback() {
+        setupStub(400);
+        TestService testService = buildTestService(e -> new TestServiceFallbackThrowingException());
+
+        Throwable result = catchThrowable(testService::greeting);
+
+        assertThat(result).isNotNull()
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Exception in greeting fallback");
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
