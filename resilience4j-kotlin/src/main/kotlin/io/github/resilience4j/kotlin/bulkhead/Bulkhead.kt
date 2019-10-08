@@ -20,6 +20,8 @@ package io.github.resilience4j.kotlin.bulkhead
 
 import io.github.resilience4j.bulkhead.Bulkhead
 import io.github.resilience4j.bulkhead.BulkheadConfig
+import io.github.resilience4j.kotlin.isCancellation
+import kotlin.coroutines.coroutineContext
 
 /**
  * Decorates and executes the given suspend function [block].
@@ -30,9 +32,14 @@ import io.github.resilience4j.bulkhead.BulkheadConfig
 suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
     acquirePermission()
     return try {
-        block()
-    } finally {
-        onComplete()
+        block().also { onComplete() }
+    } catch (e: Throwable){
+        if(isCancellation(e, coroutineContext)){
+            releasePermission()
+        }else{
+            onComplete()
+        }
+        throw e
     }
 }
 
