@@ -458,7 +458,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
             if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                scheduledExecutorService.schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
+                scheduledExecutorService.schedule(this::toHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
             }
             isOpen = new AtomicBoolean(true);
         }
@@ -473,9 +473,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public boolean tryAcquirePermission() {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
-                if(isOpen.compareAndSet(true, false)){
-                    transitionToHalfOpenState();
-                }
+                toHalfOpenState();
                 return true;
             }
             circuitBreakerMetrics.onCallNotPermitted();
@@ -528,6 +526,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
+
+        private void toHalfOpenState() {
+            if(isOpen.compareAndSet(true, false)){
+                transitionToHalfOpenState();
+            }
+        }
+
     }
 
     private class DisabledState implements CircuitBreakerState {
