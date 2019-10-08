@@ -70,24 +70,3 @@ fun <T> Flow<T>.circuitBreaker(circuitBreaker: CircuitBreaker): Flow<T> =
         emitAll(source)
     }
 
-
-private fun isCancellation(error: Throwable? = null, coroutineContext: CoroutineContext): Boolean {
-
-    // Check if job missing or not cancelled or supplied
-    // exception is a cancellation.
-    val job = coroutineContext[Job]
-    if (job == null || !job.isCancelled) return false
-    if(error != null && error is CancellationException) return true
-
-    // If the job is in a transient state it could potentially be
-    // already cancelled. In this case `job.isCancelled` would still
-    // return false.
-    //
-    // To check for transient cancellation we need to use `job.ensureActive()`
-    return try{
-        job.ensureActive()
-        false
-    }catch (e: Throwable){
-        e is CancellationException
-    }
-}
