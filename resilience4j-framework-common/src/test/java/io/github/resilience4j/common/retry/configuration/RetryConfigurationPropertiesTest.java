@@ -32,7 +32,7 @@ public class RetryConfigurationPropertiesTest {
 	@Test
 	public void testRetryProperties() {
 		//Given
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
 		instanceProperties1.setMaxRetryAttempts(3);
 		instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
 		instanceProperties1.setEnableExponentialBackoff(false);
@@ -42,7 +42,7 @@ public class RetryConfigurationPropertiesTest {
 		instanceProperties1.setIgnoreExceptions(new Class[]{IllegalArgumentException.class});
 		instanceProperties1.setRetryExceptionPredicate(RecordFailurePredicate.class);
 
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties instanceProperties2 = new RetryConfigurationProperties.InstanceProperties();
 		instanceProperties2.setMaxRetryAttempts(2);
 		instanceProperties2.setEnableExponentialBackoff(true);
 		instanceProperties2.setExponentialBackoffMultiplier(1.0);
@@ -72,19 +72,19 @@ public class RetryConfigurationPropertiesTest {
 	@Test
 	public void testCreateRetryPropertiesWithSharedConfigs() {
 		//Given
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
 		defaultProperties.setMaxRetryAttempts(3);
-		defaultProperties.setWaitDuration(Duration.ofMillis(50L));
+		defaultProperties.setWaitDuration(Duration.ofMillis(100L));
 
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties sharedProperties = new RetryConfigurationProperties.InstanceProperties();
 		sharedProperties.setMaxRetryAttempts(2);
 		sharedProperties.setWaitDuration(Duration.ofMillis(100L));
 
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RetryConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setBaseConfig("default");
 		backendWithDefaultConfig.setWaitDuration(Duration.ofMillis(200L));
 
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties backendWithSharedConfig = new RetryConfigurationProperties.InstanceProperties();
 		backendWithSharedConfig.setBaseConfig("sharedConfig");
 		backendWithSharedConfig.setWaitDuration(Duration.ofMillis(300L));
 
@@ -120,7 +120,7 @@ public class RetryConfigurationPropertiesTest {
 	public void testCreatePropertiesWithUnknownConfig() {
 		RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
 
-		io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties();
+		RetryConfigurationProperties.InstanceProperties instanceProperties = new RetryConfigurationProperties.InstanceProperties();
 		instanceProperties.setBaseConfig("unknownConfig");
 		retryConfigurationProperties.getInstances().put("backend", instanceProperties);
 
@@ -130,4 +130,21 @@ public class RetryConfigurationPropertiesTest {
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnEventConsumerBufferSize() {
+		RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
+		defaultProperties.setEventConsumerBufferSize(-1);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnWaitDuration() {
+		RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
+		defaultProperties.setWaitDuration(Duration.ofMillis(50));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalArgumentOnMaxRetryAttempts() {
+		RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
+		defaultProperties.setMaxRetryAttempts(0);
+	}
 }
