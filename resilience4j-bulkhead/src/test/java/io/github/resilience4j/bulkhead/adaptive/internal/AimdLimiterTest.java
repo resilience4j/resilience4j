@@ -1,5 +1,7 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -16,7 +18,6 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
-import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
@@ -44,10 +45,6 @@ public class AimdLimiterTest {
 				.slowCallDurationThreshold(200)
 				.build()).build();
 
-		BulkheadConfig currentConfig = BulkheadConfig.custom()
-				.maxConcurrentCalls(5)
-				.maxWaitDuration(Duration.ofMillis(0))
-				.build();
 
 		bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -72,6 +69,8 @@ public class AimdLimiterTest {
 			}
 		}
 
+		assertThat(config).isNotNull();
+		assertThat(bulkhead).isNotNull();
 
 		if (drawGraphs) {
 			// Create Chart

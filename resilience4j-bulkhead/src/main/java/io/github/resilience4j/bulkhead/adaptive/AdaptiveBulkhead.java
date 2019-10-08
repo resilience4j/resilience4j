@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +38,6 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
-import io.github.resilience4j.core.lang.Nullable;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -112,11 +110,11 @@ public interface AdaptiveBulkhead {
 	AdaptiveBulkheadConfig getBulkheadConfig();
 
 	/**
-	 * Get the Metrics of this Bulkhead.
+	 * Get the AdaptiveMetrics of this Bulkhead.
 	 *
-	 * @return the Metrics of this Bulkhead
+	 * @return the AdaptiveMetrics of this Bulkhead
 	 */
-	Metrics getMetrics();
+	AdaptiveMetrics getMetrics();
 
 	/**
 	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent/BulkheadLimit events and
@@ -520,7 +518,7 @@ public interface AdaptiveBulkhead {
 		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 
-	interface Metrics extends Bulkhead.Metrics {
+	interface AdaptiveMetrics extends Bulkhead.Metrics {
 		/**
 		 * Returns the current total number of calls which were slower than a certain threshold.
 		 *

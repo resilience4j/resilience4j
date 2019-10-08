@@ -38,6 +38,7 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadLimit;
 import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
@@ -132,7 +133,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public Metrics getMetrics() {
+	public AdaptiveMetrics getMetrics() {
 		return metrics;
 	}
 
@@ -146,7 +147,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		return name;
 	}
 
-	private final class InternalMetrics implements Metrics {
+	private final class InternalMetrics implements AdaptiveMetrics {
 
 		@Override
 		public double getFailureRate() {
@@ -260,7 +261,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 			if (customLimitAdapter != null) {
 				limitAdapter = customLimitAdapter;
 			}
-			if (config.getConfiguration().getSlidingWindowType() == AimdConfig.SlidingWindow.COUNT_BASED) {
+			if (config.getConfiguration().getSlidingWindowType() == AbstractConfig.SlidingWindow.COUNT_BASED) {
 				metrics = new FixedSizeSlidingWindowMetrics(config.getConfiguration().getSlidingWindowSize());
 			} else {
 				metrics = new SlidingTimeWindowMetrics(config.getConfiguration().getSlidingWindowTime());
