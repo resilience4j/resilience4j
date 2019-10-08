@@ -47,6 +47,19 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public CircuitBreakerRegistryInitializer circuitBreakerRegistryInitializer(CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) CircuitBreakerAnnotationConfigScanner circuitBreakerAnnotationConfigScanner) {
+	    return new CircuitBreakerRegistryInitializer(circuitBreakerRegistry, circuitBreakerConfiguration, circuitBreakerProperties, circuitBreakerAnnotationConfigScanner);
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	@Conditional(value = {AspectJOnClasspathCondition.class})
+	public CircuitBreakerAnnotationConfigScanner circuitBreakerAnnotationConfigScanner() {
+	    return new CircuitBreakerAnnotationConfigScanner();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
 														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
 		CircuitBreakerRegistry circuitBreakerRegistry =
@@ -54,9 +67,6 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
 		// Register the event consumers
 		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-
-		// Initialize backends that were initially configured.
-		circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
 
 		return circuitBreakerRegistry;
 	}

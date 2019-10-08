@@ -21,6 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 /**
  * This annotation can be applied to a class or a specific method.
  * Applying it on a class is equivalent to applying it on all its public methods.
@@ -46,4 +48,17 @@ public @interface CircuitBreaker {
 	 * @return fallbackMethod method name.
 	 */
 	String fallbackMethod() default "";
+	
+    /**
+     * recordExceptions array.
+     * 
+     * @return recordExceptions
+     */
+    Class<? extends Throwable>[] recordExceptions() default {};
+    /**
+     * ignoreExceptions array.
+     * 
+     * @return ignoreExceptions
+     */
+    Class<? extends Throwable>[] ignoreExceptions() default {};
 }
