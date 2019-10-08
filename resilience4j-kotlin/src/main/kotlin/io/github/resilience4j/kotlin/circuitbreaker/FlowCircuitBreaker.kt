@@ -20,16 +20,13 @@ package io.github.resilience4j.kotlin.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import io.github.resilience4j.kotlin.isCancellation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
-import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -44,7 +41,7 @@ import kotlin.coroutines.coroutineContext
  *     .collect { println(it) } // Throws CallNotPermittedException
  * ```
  *
- * Coroutine cancellation (_normal_ and _exceptional_) doe not record any events on the circuit breaker
+ * Coroutine cancellation (_normal_ and _exceptional_) do not record any events on the circuit breaker
  * and the acquired permission is released.
  *
  */
