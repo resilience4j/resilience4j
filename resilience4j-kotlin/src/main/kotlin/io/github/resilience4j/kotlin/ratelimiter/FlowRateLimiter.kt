@@ -31,13 +31,4 @@ import java.util.concurrent.TimeUnit
 
 @UseExperimental(ExperimentalCoroutinesApi::class)
 fun <T> Flow<T>.rateLimiter(rateLimiter: RateLimiter): Flow<T> =
-    flow {
-        val waitTimeNs = rateLimiter.reservePermission()
-        if (waitTimeNs < 0) throw RequestNotPermitted.createRequestNotPermitted(rateLimiter)
-
-        val source = this@rateLimiter.onStart {
-            delay(TimeUnit.NANOSECONDS.toMillis(waitTimeNs))
-        }
-
-        emitAll(source)
-    }
+    onStart { rateLimiter.awaitPermission() }
