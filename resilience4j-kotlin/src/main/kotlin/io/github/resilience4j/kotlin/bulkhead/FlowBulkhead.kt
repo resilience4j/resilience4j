@@ -15,7 +15,7 @@ fun <T> Flow<T>.bulkhead(bulkhead: Bulkhead): Flow<T> =
         bulkhead.acquirePermission()
 
         val source = this@bulkhead.onCompletion { e ->
-            if(isCancellation(e, coroutineContext)){
+            if(isCancellation(coroutineContext, e)){
                 bulkhead.releasePermission()
             }else{
                 bulkhead.onComplete()

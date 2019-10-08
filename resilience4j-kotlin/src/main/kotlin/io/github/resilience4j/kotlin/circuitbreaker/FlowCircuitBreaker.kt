@@ -53,7 +53,7 @@ fun <T> Flow<T>.circuitBreaker(circuitBreaker: CircuitBreaker): Flow<T> =
         val start = System.nanoTime()
         val source = this@circuitBreaker.onCompletion { e ->
             when {
-                isCancellation(e, coroutineContext) -> circuitBreaker
+                isCancellation(coroutineContext, e) -> circuitBreaker
                     .releasePermission()
 
                 e == null -> circuitBreaker
