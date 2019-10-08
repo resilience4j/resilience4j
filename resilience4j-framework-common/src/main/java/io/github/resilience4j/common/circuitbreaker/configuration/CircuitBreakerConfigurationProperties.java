@@ -23,13 +23,11 @@ import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
-import org.hibernate.validator.constraints.time.DurationMin;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -167,25 +165,18 @@ public class CircuitBreakerConfigurationProperties {
 	 */
 	public static class InstanceProperties {
 
-		@DurationMin(millis = 1)
 		@Nullable
 		private Duration waitDurationInOpenState;
 
-		@DurationMin(nanos = 1)
 		@Nullable
 		private Duration slowCallDurationThreshold;
 
-		@Min(1)
-		@Max(100)
 		@Nullable
 		private Float failureRateThreshold;
 
-		@Min(1)
-		@Max(100)
 		@Nullable
 		private Float slowCallRateThreshold;
 
-		@Min(1)
 		@Nullable
 		@Deprecated
 		@SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
@@ -194,19 +185,15 @@ public class CircuitBreakerConfigurationProperties {
 		@Nullable
 		private SlidingWindowType slidingWindowType;
 
-		@Min(1)
 		@Nullable
 		private Integer slidingWindowSize;
 
-		@Min(1)
 		@Nullable
 		private Integer minimumNumberOfCalls;
 
-		@Min(1)
 		@Nullable
 		private Integer permittedNumberOfCallsInHalfOpenState;
 
-		@Min(1)
 		@Nullable
 		@Deprecated
 		@SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
@@ -218,7 +205,6 @@ public class CircuitBreakerConfigurationProperties {
 		@Nullable
 		private Boolean writableStackTraceEnabled;
 
-		@Min(1)
 		@Nullable
 		private Integer eventConsumerBufferSize;
 
@@ -254,6 +240,11 @@ public class CircuitBreakerConfigurationProperties {
 		 * @param failureRateThreshold the failure rate threshold
 		 */
 		public InstanceProperties setFailureRateThreshold(Float failureRateThreshold) {
+            Objects.requireNonNull(failureRateThreshold);
+            if (failureRateThreshold < 1 || failureRateThreshold > 100) {
+                throw new IllegalArgumentException("failureRateThreshold must be between 1 and 100.");
+            }
+
 			this.failureRateThreshold = failureRateThreshold;
 			return this;
 		}
@@ -274,7 +265,13 @@ public class CircuitBreakerConfigurationProperties {
 		 * @param waitDurationInOpenStateMillis the wait duration
 		 */
 		public InstanceProperties setWaitDurationInOpenState(Duration waitDurationInOpenStateMillis) {
-			this.waitDurationInOpenState = waitDurationInOpenStateMillis;
+            Objects.requireNonNull(waitDurationInOpenStateMillis);
+            if (waitDurationInOpenStateMillis.toMillis() < 1) {
+                throw new IllegalArgumentException(
+                        "waitDurationInOpenStateMillis must be greater than or equal to 1 millis.");
+            }
+
+            this.waitDurationInOpenState = waitDurationInOpenStateMillis;
 			return this;
 		}
 
@@ -296,7 +293,12 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		@Deprecated
 		public InstanceProperties setRingBufferSizeInClosedState(Integer ringBufferSizeInClosedState) {
-			this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
+            Objects.requireNonNull(ringBufferSizeInClosedState);
+            if (ringBufferSizeInClosedState < 1) {
+                throw new IllegalArgumentException("ringBufferSizeInClosedState must be greater than or equal to 1.");
+            }
+
+            this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
 			return this;
 		}
 
@@ -318,7 +320,12 @@ public class CircuitBreakerConfigurationProperties {
 		 */
 		@Deprecated
 		public InstanceProperties setRingBufferSizeInHalfOpenState(Integer ringBufferSizeInHalfOpenState) {
-			this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
+            Objects.requireNonNull(ringBufferSizeInHalfOpenState);
+            if (ringBufferSizeInHalfOpenState < 1) {
+                throw new IllegalArgumentException("ringBufferSizeInHalfOpenState must be greater than or equal to 1.");
+            }
+
+            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
 			return this;
 		}
 
@@ -346,7 +353,8 @@ public class CircuitBreakerConfigurationProperties {
 		 *
 		 * @return writableStackTraceEnabled if we should enable writable stack traces or not.
 		 */
-		public Boolean getWritableStackTraceEnabled() {
+        @Nullable
+        public Boolean getWritableStackTraceEnabled() {
 			return this.writableStackTraceEnabled;
 		}
 
@@ -360,16 +368,23 @@ public class CircuitBreakerConfigurationProperties {
 			return this;
 		}
 
-		public Integer getEventConsumerBufferSize() {
+        @Nullable
+        public Integer getEventConsumerBufferSize() {
 			return eventConsumerBufferSize;
 		}
 
 		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
-			this.eventConsumerBufferSize = eventConsumerBufferSize;
+            Objects.requireNonNull(eventConsumerBufferSize);
+            if (eventConsumerBufferSize < 1) {
+                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
+            }
+
+            this.eventConsumerBufferSize = eventConsumerBufferSize;
 			return this;
 		}
 
-		public Boolean getRegisterHealthIndicator() {
+        @Nullable
+        public Boolean getRegisterHealthIndicator() {
 			return registerHealthIndicator;
 		}
 
@@ -435,8 +450,14 @@ public class CircuitBreakerConfigurationProperties {
 			return permittedNumberOfCallsInHalfOpenState;
 		}
 
-		public void setPermittedNumberOfCallsInHalfOpenState(@Nullable Integer permittedNumberOfCallsInHalfOpenState) {
-			this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
+		public void setPermittedNumberOfCallsInHalfOpenState(Integer permittedNumberOfCallsInHalfOpenState) {
+            Objects.requireNonNull(permittedNumberOfCallsInHalfOpenState);
+            if (permittedNumberOfCallsInHalfOpenState < 1) {
+                throw new IllegalArgumentException(
+                        "permittedNumberOfCallsInHalfOpenState must be greater than or equal to 1.");
+            }
+
+            this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
 		}
 
 		@Nullable
@@ -444,8 +465,13 @@ public class CircuitBreakerConfigurationProperties {
 			return minimumNumberOfCalls;
 		}
 
-		public void setMinimumNumberOfCalls(@Nullable Integer minimumNumberOfCalls) {
-			this.minimumNumberOfCalls = minimumNumberOfCalls;
+		public void setMinimumNumberOfCalls(Integer minimumNumberOfCalls) {
+            Objects.requireNonNull(minimumNumberOfCalls);
+            if (minimumNumberOfCalls < 1) {
+                throw new IllegalArgumentException("minimumNumberOfCalls must be greater than or equal to 1.");
+            }
+
+            this.minimumNumberOfCalls = minimumNumberOfCalls;
 		}
 
 		@Nullable
@@ -453,8 +479,13 @@ public class CircuitBreakerConfigurationProperties {
 			return slidingWindowSize;
 		}
 
-		public void setSlidingWindowSize(@Nullable Integer slidingWindowSize) {
-			this.slidingWindowSize = slidingWindowSize;
+		public void setSlidingWindowSize(Integer slidingWindowSize) {
+            Objects.requireNonNull(slidingWindowSize);
+            if (slidingWindowSize < 1) {
+                throw new IllegalArgumentException("slidingWindowSize must be greater than or equal to 1.");
+            }
+
+            this.slidingWindowSize = slidingWindowSize;
 		}
 
 		@Nullable
@@ -462,8 +493,13 @@ public class CircuitBreakerConfigurationProperties {
 			return slowCallRateThreshold;
 		}
 
-		public void setSlowCallRateThreshold(@Nullable Float slowCallRateThreshold) {
-			this.slowCallRateThreshold = slowCallRateThreshold;
+		public void setSlowCallRateThreshold(Float slowCallRateThreshold) {
+            Objects.requireNonNull(slowCallRateThreshold);
+            if (slowCallRateThreshold < 1 || slowCallRateThreshold > 100) {
+                throw new IllegalArgumentException("slowCallRateThreshold must be between 1 and 100.");
+            }
+
+            this.slowCallRateThreshold = slowCallRateThreshold;
 		}
 
 		@Nullable
@@ -471,8 +507,14 @@ public class CircuitBreakerConfigurationProperties {
 			return slowCallDurationThreshold;
 		}
 
-		public void setSlowCallDurationThreshold(@Nullable Duration slowCallDurationThreshold) {
-			this.slowCallDurationThreshold = slowCallDurationThreshold;
+		public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
+            Objects.requireNonNull(slowCallDurationThreshold);
+            if (slowCallDurationThreshold.toNanos() < 1) {
+                throw new IllegalArgumentException(
+                        "waitDurationInOpenStateMillis must be greater than or equal to 1 nanos.");
+            }
+
+            this.slowCallDurationThreshold = slowCallDurationThreshold;
 		}
 
 		@Nullable

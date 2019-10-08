@@ -141,6 +141,7 @@ https://resilience4j.readme.io/docs/bulkhead[documentation]
 |"Degrade gracefully",
 "A bird in the hand is worth two in the bush"
 |<<circuitbreaker-retry-fallback,Try::recover>>,
+https://resilience4j.readme.io/docs/getting-started-3#section-annotations[Spring],
 link:resilience4j-feign/README.adoc[Feign]
 
 |===
