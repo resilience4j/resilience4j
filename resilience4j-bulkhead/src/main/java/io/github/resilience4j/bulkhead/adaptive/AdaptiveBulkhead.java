@@ -107,11 +107,11 @@ public interface AdaptiveBulkhead {
     AdaptiveBulkheadConfig getBulkheadConfig();
 
     /**
-     * Get the Metrics of this Bulkhead.
+     * Get the AdaptiveMetrics of this Bulkhead.
      *
-     * @return the Metrics of this Bul`khead
+     * @return the AdaptiveMetrics of this Bul`khead
      */
-    Metrics getMetrics();
+    AdaptiveMetrics getMetrics();
 
     /**
 	 * Returns an EventPublisher which subscribes to the reactive stream of
@@ -578,7 +578,7 @@ public interface AdaptiveBulkhead {
         }
     }
 
-    interface Metrics extends Bulkhead.Metrics {
+    interface AdaptiveMetrics extends Bulkhead.Metrics {
 
         /**
          * Returns the current failure rate in percentage. If the number of measured calls is below
