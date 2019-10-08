@@ -12,7 +12,7 @@ import kotlin.coroutines.coroutineContext
 @UseExperimental(ExperimentalCoroutinesApi::class)
 fun <T> Flow<T>.bulkhead(bulkhead: Bulkhead): Flow<T> =
     flow {
-        bulkhead.acquirePermission()
+        bulkhead.acquirePermissionSuspend()
 
         val source = this@bulkhead.onCompletion { e ->
             if(isCancellation(coroutineContext, e)){
@@ -21,6 +21,5 @@ fun <T> Flow<T>.bulkhead(bulkhead: Bulkhead): Flow<T> =
                 bulkhead.onComplete()
             }
         }
-
         emitAll(source)
     }

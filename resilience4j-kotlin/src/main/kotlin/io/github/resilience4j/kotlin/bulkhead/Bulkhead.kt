@@ -21,6 +21,8 @@ package io.github.resilience4j.kotlin.bulkhead
 import io.github.resilience4j.bulkhead.Bulkhead
 import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.kotlin.isCancellation
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -29,19 +31,17 @@ import kotlin.coroutines.coroutineContext
  * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
-suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
-    acquirePermission()
-    return try {
-        block().also { onComplete() }
-    } catch (e: Throwable){
-        if(isCancellation(e, coroutineContext)){
+suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T =
+    try {
+        acquirePermissionSuspend()
+        block()
+    } finally {
+        if(isCancellation(coroutineContext)){
             releasePermission()
         }else{
             onComplete()
         }
-        throw e
     }
-}
 
 /**
  * Decorates the given suspend function [block] and returns it.
@@ -51,4 +51,20 @@ suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
  */
 fun <T> Bulkhead.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
+}
+
+/**
+ * Try to immediately acquire permission from the bulkhead when it is not expected to block.
+ *
+ * If a wait duration is configured on the bulkhead, then attempt to acquire permission within
+ * the confines of a dispatcher specialized for blocking calls.
+ *
+ */
+internal suspend fun Bulkhead.acquirePermissionSuspend(){
+    // Fast path. Avoid dispatch context switch.
+    if(bulkheadConfig.maxWaitDuration.isZero){
+        acquirePermission()
+    }else{
+        withContext(Dispatchers.IO){ acquirePermission() }
+    }
 }
