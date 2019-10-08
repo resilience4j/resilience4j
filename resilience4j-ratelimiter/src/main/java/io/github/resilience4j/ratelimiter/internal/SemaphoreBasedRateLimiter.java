@@ -36,8 +36,9 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
- * A RateLimiter implementation that consists of {@link Semaphore}
- * and scheduler that will refresh permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
+ * A RateLimiter implementation that consists of {@link Semaphore} and scheduler
+ * that will refresh permissions after each
+ * {@link RateLimiterConfig#getLimitRefreshPeriod()}.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
@@ -54,7 +55,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * Creates a RateLimiter.
      *
-     * @param name              the name of the RateLimiter
+     * @param name the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
      */
     public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
@@ -64,12 +65,12 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * Creates a RateLimiter.
      *
-     * @param name              the name of the RateLimiter
+     * @param name the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
-     * @param scheduler         executor that will refresh permissions
+     * @param scheduler executor that will refresh permissions
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-                                     @Nullable ScheduledExecutorService scheduler) {
+            @Nullable ScheduledExecutorService scheduler) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         this.rateLimiterConfig = new AtomicReference<>(requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 
@@ -93,10 +94,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     private void scheduleLimitRefresh() {
         scheduler.scheduleAtFixedRate(
-            this::refreshLimit,
-            this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
-            this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
-            TimeUnit.NANOSECONDS
+                this::refreshLimit,
+                this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
+                this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
+                TimeUnit.NANOSECONDS
         );
     }
 
@@ -144,13 +145,35 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     /**
-     * {@inheritDoc}
-     * SemaphoreBasedRateLimiter is totally blocking by it's nature. So this non-blocking API isn't supported.
-     * It will return negative numbers all the time.
+     * Acquiring permissions of a specified weight is not supported in the
+     * spemaphore based implementation. Use {@link #acquirePermission()}
+     *
+     * @throws UnsupportedOperationException always for this implementation
+     */
+    @Override
+    public boolean acquirePermission(int weight) {
+        throw new UnsupportedOperationException("Acquiring permissions of a specified weight is not supported in the spemaphore based implementation");
+    }
+
+    /**
+     * Reserving permissions is not supported in the spemaphore based
+     * implementation. Semaphores are totally blocking by it's nature. So this
+     * non-blocking API isn't supported. Use {@link #acquirePermission()}
+     *
+     * @throws UnsupportedOperationException always for this implementation
      */
     @Override
     public long reservePermission() {
-        return -1;
+        throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
+    }
+
+    /**
+     * @see #reservePermission()
+     * @throws UnsupportedOperationException always for this implementation
+     */
+    @Override
+    public long reservePermission(int weight) {
+        throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
     }
 
     /**
@@ -182,17 +205,19 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return this.rateLimiterConfig.get();
     }
 
-    @Override public String toString() {
-        return "SemaphoreBasedRateLimiter{" +
-            "name='" + name + '\'' +
-            ", rateLimiterConfig=" + rateLimiterConfig +
-            '}';
+    @Override
+    public String toString() {
+        return "SemaphoreBasedRateLimiter{"
+                + "name='" + name + '\''
+                + ", rateLimiterConfig=" + rateLimiterConfig
+                + '}';
     }
 
     /**
      * {@inheritDoc}
      */
     private final class SemaphoreBasedRateLimiterMetrics implements Metrics {
+
         private SemaphoreBasedRateLimiterMetrics() {
         }
 

@@ -23,16 +23,27 @@ import java.time.ZonedDateTime;
 public abstract class AbstractRateLimiterEvent implements RateLimiterEvent {
 
     private final String rateLimiterName;
+    private final int weight;
     private final ZonedDateTime creationTime;
 
     public AbstractRateLimiterEvent(String rateLimiterName) {
+        this(rateLimiterName, 1);
+    }
+
+    public AbstractRateLimiterEvent(String rateLimiterName, int weight) {
         this.rateLimiterName = rateLimiterName;
+        this.weight = weight;
         creationTime = ZonedDateTime.now();
     }
 
     @Override
     public String getRateLimiterName() {
         return rateLimiterName;
+    }
+
+    @Override
+    public int getWeight() {
+        return weight;
     }
 
     @Override

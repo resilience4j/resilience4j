@@ -28,6 +28,8 @@ public interface RateLimiterEvent {
 
     Type getEventType();
 
+    int getWeight();
+
     ZonedDateTime getCreationTime();
 
     enum Type {
