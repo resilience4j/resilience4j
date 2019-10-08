@@ -16,6 +16,7 @@
  */
 package io.github.resilience4j.feign;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -48,7 +49,12 @@ class FallbackFactory<T> implements FallbackHandler<T> {
                     T fallbackInstance = fallbackSupplier.apply(exception);
                     validateFallback(fallbackInstance, method);
                     Method fallbackMethod = getFallbackMethod(fallbackInstance, method);
-                    return fallbackMethod.invoke(fallbackInstance, args);
+                    try {
+                        return fallbackMethod.invoke(fallbackInstance, args);
+                    } catch (InvocationTargetException e) {
+                        // Rethrow the exception thrown in the fallback wrapped by InvocationTargetException
+                        throw e.getCause();
+                    }
                 }
                 throw exception;
             }
