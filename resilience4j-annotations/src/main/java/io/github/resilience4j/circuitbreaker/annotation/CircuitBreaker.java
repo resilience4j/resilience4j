@@ -49,14 +49,14 @@ public @interface CircuitBreaker {
 	String fallbackMethod() default "";
 	
 	/**
-	 * recordExceptions array.
+	 * recordExceptions array. NOTE: Any property configuration will take precedence in spring boot.
 	 * 
 	 * @return recordExceptions
 	 */
 	Class<? extends Throwable>[] recordExceptions() default {};
 
 	/**
-	 * ignoreExceptions array.
+	 * ignoreExceptions array. NOTE: Any property configuration will take precedence in spring boot.
 	 * 
 	 * @return ignoreExceptions
 	 */

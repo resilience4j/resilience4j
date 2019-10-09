@@ -14,7 +14,7 @@ import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreaker
 public class CircuitBreakerAnnotationConfigScannerTest {
 
 	@Test
-	public void testGetInstanceProperties() {
+	public void testMergeConfigurationPropertiesAnnotationConfigUsed() {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		BeanDefinition beanDefinition = new GenericBeanDefinition();
 		beanDefinition.setBeanClassName(AnnotatedBean.class.getName());
@@ -27,6 +27,25 @@ public class CircuitBreakerAnnotationConfigScannerTest {
 		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("mybreaker");
 		assertNotNull(instanceProperties);
 		assertArrayEquals(new Class[] { IllegalArgumentException.class }, instanceProperties.getIgnoreExceptions());
+	}
+	
+	@Test
+	public void testMergeConfigurationPropertiesPropertiesTakePrecedence() {
+		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+		BeanDefinition beanDefinition = new GenericBeanDefinition();
+		beanDefinition.setBeanClassName(AnnotatedBean.class.getName());
+		beanFactory.registerBeanDefinition("foo", beanDefinition);
+		CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
+		scanner.postProcessBeanFactory(beanFactory);
+
+		CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
+		InstanceProperties existingInstanceProperties = new InstanceProperties();
+		existingInstanceProperties.setIgnoreExceptions(new Class[] {NullPointerException.class});
+		circuitBreakerProperties.getInstances().put("mybreaker", existingInstanceProperties);
+		scanner.mergeConfigurationProperties(circuitBreakerProperties);
+		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("mybreaker");
+		assertNotNull(instanceProperties);
+		assertArrayEquals(new Class[] { NullPointerException.class }, instanceProperties.getIgnoreExceptions());
 	}
 
 	public static class AnnotatedBean {

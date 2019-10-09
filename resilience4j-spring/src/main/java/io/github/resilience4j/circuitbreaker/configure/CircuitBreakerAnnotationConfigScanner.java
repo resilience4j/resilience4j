@@ -20,9 +20,10 @@ import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreaker
  * configuration. This is done as a BeanFactoryPostProcessor so we can ensure
  * that we have found these before actual bean instantiation begins.
  * <p>
- * Unless resilience4j-spring-boot/resilience4j-spring-boot2 is used this bean
- * must be explicitly added to the spring configuration in order and the
- * mergeConfigurationProperties need to called for it to have effect.
+ * Unless resilience4j-spring-boot/resilience4j-spring-boot2/
+ * resilience4j-spring-cloud/resilience4j-spring-cloud2 is used this bean must
+ * be explicitly added to the spring configuration in order and the
+ * mergeConfigurationProperties need to be called for it to have effect.
  */
 public class CircuitBreakerAnnotationConfigScanner implements BeanFactoryPostProcessor {
 	private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerAnnotationConfigScanner.class);
