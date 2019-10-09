@@ -31,18 +31,19 @@ import kotlin.coroutines.coroutineContext
  * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
-suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T =
-    try {
-        acquirePermissionSuspend()
-        block()
-    } finally {
-        if(isCancellation(coroutineContext)){
+suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
+    acquirePermissionSuspend()
+    return try {
+        block().also { onComplete() }
+    } catch (e: Throwable) {
+        if (isCancellation(coroutineContext,e)) {
             releasePermission()
-        }else{
+        } else {
             onComplete()
         }
+        throw e
     }
-
+}
 /**
  * Decorates the given suspend function [block] and returns it.
  *
