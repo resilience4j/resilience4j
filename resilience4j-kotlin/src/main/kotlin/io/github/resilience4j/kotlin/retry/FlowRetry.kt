@@ -31,7 +31,7 @@ fun <T> Flow<T>.retry(retry: Retry): Flow<T> {
 
     return onEach {
         val delayMs = retryContext.onResult(it)
-        if (delayMs > 0) {
+        if (delayMs >= 0) {
             delay(delayMs)
             throw RetryDueToResultException()
         }
@@ -43,7 +43,7 @@ fun <T> Flow<T>.retry(retry: Retry): Flow<T> {
             shouldRetry = true
         } else {
             val delayMs = retryContext.onError(e)
-            if(delayMs > 0) {
+            if(delayMs >= 0) {
                 delay(delayMs)
                 shouldRetry = true
             }
