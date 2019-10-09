@@ -20,7 +20,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * This annotation can be applied to a class or a specific method.

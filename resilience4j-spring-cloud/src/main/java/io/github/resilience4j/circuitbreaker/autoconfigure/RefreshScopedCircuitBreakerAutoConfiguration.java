@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnClass({CircuitBreaker.class, RefreshScope.class})
-@AutoConfigureAfter(RefreshAutoConfiguration.class)
+@AutoConfigureAfter({CircuitBreakerAnnotationConfigScannerAutoConfiguration.class, RefreshAutoConfiguration.class})
 @AutoConfigureBefore(CircuitBreakerAutoConfiguration.class)
 public class RefreshScopedCircuitBreakerAutoConfiguration extends AbstractRefreshScopedCircuitBreakerConfiguration {
 

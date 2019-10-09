@@ -39,7 +39,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
-@Import({CircuitBreakerConfigurationOnMissingBean.class})
+@Import(CircuitBreakerConfigurationOnMissingBean.class)
 @AutoConfigureAfter(CircuitBreakerAnnotationConfigScannerAutoConfiguration.class)
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
