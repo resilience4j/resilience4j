@@ -157,24 +157,11 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		}
 
 		/**
-		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
-		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception
-		 * should count as a success, unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
-		 *
-		 * @param predicate the Predicate which evaluates if an exception should count as a failure
-		 * @return the Builder
-		 */
-		public final Builder recordException(Predicate<Throwable> predicate) {
-			this.recordExceptionPredicate = predicate;
-			return this;
-		}
-
-		/**
 		 * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
-		 * The Predicate must return true if the exception should be ignored .
-		 * The Predicate must return false, if the exception should count as a failure.
+		 * The Predicate must return true if the exception must be ignored .
+		 * The Predicate must return false, if the exception must count as a failure.
 		 *
-		 * @param predicate the Predicate which evaluates if an exception should count as a failure
+		 * @param predicate the Predicate which checks if an exception should count as a failure
 		 * @return the Builder
 		 */
 		public final Builder ignoreException(Predicate<Throwable> predicate) {
@@ -188,14 +175,25 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		 *
 		 * @param errorClasses the error classes which are recorded
 		 * @return the Builder
-		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an exception.
-		 * For a more advanced exception management use the following
-		 * @see #recordException(Predicate) method
+		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has more priority over recording an exception.
 		 */
 		@SuppressWarnings("unchecked")
 		@SafeVarargs
 		public final Builder recordExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
 			this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
+			return this;
+		}
+
+		/**
+		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
+		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception should count as a success
+		 * ,unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
+		 *
+		 * @param predicate the Predicate which checks if an exception should count as a failure
+		 * @return the Builder
+		 */
+		public final Builder recordException(Predicate<Throwable> predicate) {
+			this.recordExceptionPredicate = predicate;
 			return this;
 		}
 
