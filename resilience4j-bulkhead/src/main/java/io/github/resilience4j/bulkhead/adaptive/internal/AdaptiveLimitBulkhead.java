@@ -114,7 +114,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
 		//noinspection unchecked
 		if (adaptationConfig.getIgnoreExceptionPredicate().test(throwable)) {
-			bulkhead.releasePermission();
+			releasePermission();
 			publishBulkheadEvent(new BulkheadOnIgnoreEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
 		} else if (adaptationConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
 			Instant finish = Instant.now();
@@ -401,7 +401,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	 */
 	private void handleError(long callTime, TimeUnit durationUnit, Throwable throwable) {
 		bulkhead.onComplete();
-		publishBulkheadEvent(new BulkheadOnSuccessEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
+		publishBulkheadEvent(new BulkheadOnErrorEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
 		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
 		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
