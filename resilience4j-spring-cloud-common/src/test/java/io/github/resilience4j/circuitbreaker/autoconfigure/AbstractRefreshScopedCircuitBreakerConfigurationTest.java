@@ -24,6 +24,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +43,7 @@ public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
         CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
 
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(
-                new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()), Optional.empty())).isNotNull();
     }
 
     static class CircuitBreakerConfig extends AbstractRefreshScopedCircuitBreakerConfiguration {

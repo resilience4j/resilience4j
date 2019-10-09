@@ -20,7 +20,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
 import io.github.resilience4j.core.lang.Nullable;
 
 /**
@@ -49,16 +48,17 @@ public @interface CircuitBreaker {
 	 */
 	String fallbackMethod() default "";
 	
-    /**
-     * recordExceptions array.
-     * 
-     * @return recordExceptions
-     */
-    Class<? extends Throwable>[] recordExceptions() default {};
-    /**
-     * ignoreExceptions array.
-     * 
-     * @return ignoreExceptions
-     */
-    Class<? extends Throwable>[] ignoreExceptions() default {};
+	/**
+	 * recordExceptions array.
+	 * 
+	 * @return recordExceptions
+	 */
+	Class<? extends Throwable>[] recordExceptions() default {};
+
+	/**
+	 * ignoreExceptions array.
+	 * 
+	 * @return ignoreExceptions
+	 */
+	Class<? extends Throwable>[] ignoreExceptions() default {};
 }

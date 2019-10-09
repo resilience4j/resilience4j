@@ -1,6 +1,8 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAnnotationConfigScannerAutoConfiguration;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -11,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnClass({Bulkhead.class, RefreshScope.class})
-@AutoConfigureAfter(RefreshAutoConfiguration.class)
+@AutoConfigureAfter({CircuitBreakerAnnotationConfigScannerAutoConfiguration.class, RefreshAutoConfiguration.class})
 @AutoConfigureBefore(BulkheadAutoConfiguration.class)
 public class RefreshScopedBulkheadAutoConfiguration extends AbstractRefreshScopedBulkheadConfiguration {
 

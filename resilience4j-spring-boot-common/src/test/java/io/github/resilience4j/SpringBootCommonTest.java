@@ -21,7 +21,6 @@ import io.github.resilience4j.bulkhead.autoconfigure.AbstractBulkheadConfigurati
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAnnotationConfigScanner;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -64,7 +63,7 @@ public class SpringBootCommonTest {
 		CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
 		assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
 		assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
-		assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+		assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()), Optional.empty())).isNotNull();
 		assertThat(circuitBreakerConfig.circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
 		assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty()));
 	}

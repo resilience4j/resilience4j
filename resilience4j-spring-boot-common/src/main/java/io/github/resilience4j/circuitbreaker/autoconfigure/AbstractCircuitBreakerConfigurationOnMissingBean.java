@@ -47,26 +47,20 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public CircuitBreakerRegistryInitializer circuitBreakerRegistryInitializer(CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) CircuitBreakerAnnotationConfigScanner circuitBreakerAnnotationConfigScanner) {
-	    return new CircuitBreakerRegistryInitializer(circuitBreakerRegistry, circuitBreakerConfiguration, circuitBreakerProperties, circuitBreakerAnnotationConfigScanner);
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	@Conditional(value = {AspectJOnClasspathCondition.class})
-	public CircuitBreakerAnnotationConfigScanner circuitBreakerAnnotationConfigScanner() {
-	    return new CircuitBreakerAnnotationConfigScanner();
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
+														 Optional<CircuitBreakerAnnotationConfigScanner> circuitBreakerAnnotationConfigScanner) {
+		// Merge any annotation configuration found
+	    	circuitBreakerAnnotationConfigScanner.ifPresent(scanner->scanner.mergeConfigurationProperties(circuitBreakerProperties));
+	    	
 		CircuitBreakerRegistry circuitBreakerRegistry =
 				circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 
 		// Register the event consumers
 		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+
+		// Initialize backends that were initially configured.
+		circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
 
 		return circuitBreakerRegistry;
 	}

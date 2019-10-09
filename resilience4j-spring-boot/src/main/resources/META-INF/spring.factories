@@ -9,6 +9,7 @@ io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadPrometheusAutoCo
 io.github.resilience4j.retry.autoconfigure.RetryAutoConfiguration,\
 io.github.resilience4j.retry.autoconfigure.RetryMetricsAutoConfiguration,\
 io.github.resilience4j.retry.autoconfigure.RetryMicrometerAutoConfiguration,\
+io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAnnotationConfigScannerAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMetricsAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMicrometerAutoConfiguration,\

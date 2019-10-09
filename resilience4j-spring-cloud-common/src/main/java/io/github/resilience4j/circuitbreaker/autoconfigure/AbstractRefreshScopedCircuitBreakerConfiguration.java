@@ -2,11 +2,15 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAnnotationConfigScanner;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+
+import java.util.Optional;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +35,11 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+                                                         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
+                                                         Optional<CircuitBreakerAnnotationConfigScanner> circuitBreakerAnnotationConfigScanner) {
+        // Merge any annotation configuration found
+        circuitBreakerAnnotationConfigScanner.ifPresent(scanner->scanner.mergeConfigurationProperties(circuitBreakerProperties));
+	
         CircuitBreakerRegistry circuitBreakerRegistry =
                 circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 

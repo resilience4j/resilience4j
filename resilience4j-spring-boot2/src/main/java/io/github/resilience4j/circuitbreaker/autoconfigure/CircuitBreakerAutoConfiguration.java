@@ -25,6 +25,7 @@ import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMiss
 import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -41,6 +42,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnClass(CircuitBreaker.class)
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
 @Import({CircuitBreakerConfigurationOnMissingBean.class,  FallbackConfigurationOnMissingBean.class})
+@AutoConfigureAfter(CircuitBreakerAnnotationConfigScannerAutoConfiguration.class)
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
 
