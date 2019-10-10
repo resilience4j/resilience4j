@@ -1,16 +1,3 @@
-package io.github.resilience4j.circuitbreaker.configure;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNotNull;
-
-import org.junit.Test;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
-
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
-
 /*
  * Copyright 2019 Olov Andersson
  *
@@ -26,6 +13,19 @@ import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreaker
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.circuitbreaker.configure;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
+
 
 public class CircuitBreakerAnnotationConfigScannerTest {
 
