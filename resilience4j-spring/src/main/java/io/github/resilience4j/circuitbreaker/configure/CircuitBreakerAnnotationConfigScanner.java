@@ -65,22 +65,37 @@ public class CircuitBreakerAnnotationConfigScanner implements BeanFactoryPostPro
 	}
 
 	private void findAnnotationConfig(Class<?> beanClass) {
-		for (Method m : beanClass.getMethods()) {
-			CircuitBreaker circuitBreakerAnnotation = m.getAnnotation(CircuitBreaker.class);
-			if (circuitBreakerAnnotation != null) {
-				String name = circuitBreakerAnnotation.name();
-				if (circuitBreakerAnnotation.ignoreExceptions().length > 0) {
-					InstanceProperties properties = instanceProperties.computeIfAbsent(name,
-							(key) -> new InstanceProperties());
-					properties.setIgnoreExceptions(circuitBreakerAnnotation.ignoreExceptions());
-				}
-				if (circuitBreakerAnnotation.recordExceptions().length > 0) {
-					InstanceProperties properties = instanceProperties.computeIfAbsent(name,
-							(key) -> new InstanceProperties());
-					properties.setIgnoreExceptions(circuitBreakerAnnotation.recordExceptions());
-				}
-			}
+		CircuitBreaker circuitBreakerAnnotation = beanClass.getAnnotation(CircuitBreaker.class);
+		updateInstanceProperties(circuitBreakerAnnotation, beanClass);
+	    for (Method m : beanClass.getMethods()) {
+			circuitBreakerAnnotation = m.getAnnotation(CircuitBreaker.class);
+			updateInstanceProperties(circuitBreakerAnnotation, beanClass);
 		}
+	}
+	
+	private void updateInstanceProperties(CircuitBreaker circuitBreakerAnnotation, Class<?> beanClass) {
+	    if (circuitBreakerAnnotation != null) {
+            String name = circuitBreakerAnnotation.name();
+            if (circuitBreakerAnnotation.ignoreExceptions().length > 0) {
+                InstanceProperties properties = instanceProperties.computeIfAbsent(name,
+                        (key) -> new InstanceProperties());
+                checkConflictingConfigurations(name, properties.getIgnoreExceptions(), beanClass, "ignoreExceptions");
+                properties.setIgnoreExceptions(circuitBreakerAnnotation.ignoreExceptions());
+            }
+            if (circuitBreakerAnnotation.recordExceptions().length > 0) {
+                InstanceProperties properties = instanceProperties.computeIfAbsent(name,
+                        (key) -> new InstanceProperties());
+                checkConflictingConfigurations(name, properties.getRecordExceptions(), beanClass, "recordExceptions");
+                properties.setRecordExceptions(circuitBreakerAnnotation.recordExceptions());
+            }
+        }
+	}
+	
+	private void checkConflictingConfigurations(String breakerName, Class<? extends Throwable>[] existingExceptions, Class<?> beanClass, String configName) {
+	    if (existingExceptions != null && existingExceptions.length > 0) {
+	        String msg = String.format("Can't set %s for @CircuitBreaker %s in class %s, it has already been set elsewhere", configName, breakerName, beanClass.getName());
+            throw new IllegalArgumentException(msg);
+        }
 	}
 
 	/**
@@ -98,19 +113,21 @@ public class CircuitBreakerAnnotationConfigScanner implements BeanFactoryPostPro
 			InstanceProperties instanceProperties = circuitBreakerProperties.getInstances()
 					.get(annotationInstanceConfig.getKey());
 			if (instanceProperties == null) {
-				// No properties config, just add the annotation config:
+				// No properties file config, just add the annotation config:
 				circuitBreakerProperties.getInstances().put(annotationInstanceConfig.getKey(),
 						annotationInstanceProperties);
-				continue;
 			}
-			// Configuration file always takes precedence:
-			if (instanceProperties.getIgnoreExceptions() == null
-					&& annotationInstanceProperties.getIgnoreExceptions() != null) {
-				instanceProperties.setIgnoreExceptions(annotationInstanceProperties.getIgnoreExceptions());
-			}
-			if (instanceProperties.getRecordExceptions() == null
-					&& annotationInstanceProperties.getRecordExceptions() != null) {
-				instanceProperties.setRecordExceptions(annotationInstanceProperties.getRecordExceptions());
+			else {
+    			// Configuration file always takes precedence, check for config file values
+			    // before setting the annotation value:
+    			if (instanceProperties.getIgnoreExceptions() == null
+    					&& annotationInstanceProperties.getIgnoreExceptions() != null) {
+    				instanceProperties.setIgnoreExceptions(annotationInstanceProperties.getIgnoreExceptions());
+    			}
+    			if (instanceProperties.getRecordExceptions() == null
+    					&& annotationInstanceProperties.getRecordExceptions() != null) {
+    				instanceProperties.setRecordExceptions(annotationInstanceProperties.getRecordExceptions());
+    			}
 			}
 		}
 	}

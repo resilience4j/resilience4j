@@ -33,14 +33,14 @@ public class CircuitBreakerAnnotationConfigScannerTest {
 	public void testMergeConfigurationPropertiesAnnotationConfigUsed() {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		BeanDefinition beanDefinition = new GenericBeanDefinition();
-		beanDefinition.setBeanClassName(AnnotatedBean.class.getName());
+		beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
 		beanFactory.registerBeanDefinition("foo", beanDefinition);
 		CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
 		scanner.postProcessBeanFactory(beanFactory);
 
 		CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
 		scanner.mergeConfigurationProperties(circuitBreakerProperties);
-		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("mybreaker");
+		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("methodbreaker");
 		assertNotNull(instanceProperties);
 		assertArrayEquals(new Class[] { IllegalArgumentException.class }, instanceProperties.getIgnoreExceptions());
 	}
@@ -49,7 +49,7 @@ public class CircuitBreakerAnnotationConfigScannerTest {
 	public void testMergeConfigurationPropertiesPropertiesTakePrecedence() {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		BeanDefinition beanDefinition = new GenericBeanDefinition();
-		beanDefinition.setBeanClassName(AnnotatedBean.class.getName());
+		beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
 		beanFactory.registerBeanDefinition("foo", beanDefinition);
 		CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
 		scanner.postProcessBeanFactory(beanFactory);
@@ -57,18 +57,65 @@ public class CircuitBreakerAnnotationConfigScannerTest {
 		CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
 		InstanceProperties existingInstanceProperties = new InstanceProperties();
 		existingInstanceProperties.setIgnoreExceptions(new Class[] {NullPointerException.class});
-		circuitBreakerProperties.getInstances().put("mybreaker", existingInstanceProperties);
+		circuitBreakerProperties.getInstances().put("methodbreaker", existingInstanceProperties);
 		scanner.mergeConfigurationProperties(circuitBreakerProperties);
-		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("mybreaker");
+		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("methodbreaker");
 		assertNotNull(instanceProperties);
 		assertArrayEquals(new Class[] { NullPointerException.class }, instanceProperties.getIgnoreExceptions());
 	}
 
-	public static class AnnotatedBean {
+	@Test
+	public void testClassAndMethodAnnotatedConfigUsed() {
+	    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(ClassAndMethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("foo", beanDefinition);
+        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
+        scanner.postProcessBeanFactory(beanFactory);
 
-		@CircuitBreaker(name = "mybreaker", ignoreExceptions = { IllegalArgumentException.class })
-		public String foo() {
-			return null;
-		}
+        CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
+        scanner.mergeConfigurationProperties(circuitBreakerProperties);
+        
+        InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("classbreaker");
+        assertNotNull(instanceProperties);
+        assertArrayEquals(new Class[] { UnsupportedOperationException.class }, instanceProperties.getRecordExceptions());
+        instanceProperties = circuitBreakerProperties.getInstances().get("methodbreaker");
+        assertNotNull(instanceProperties);
+        assertArrayEquals(new Class[] { IllegalArgumentException.class }, instanceProperties.getIgnoreExceptions());
 	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testConflictingAnnotationsThrowsIllegalArgumentException() {
+	    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(ClassAndMethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("foo", beanDefinition);
+        beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("bar", beanDefinition);
+        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
+        scanner.postProcessBeanFactory(beanFactory);
+	}
+	
+    public static class MethodAnnotatedBean {
+
+        @CircuitBreaker(name = "methodbreaker", ignoreExceptions = {IllegalArgumentException.class})
+        public String foo() {
+            return null;
+        }
+    }
+
+    @CircuitBreaker(name = "classbreaker", recordExceptions = {UnsupportedOperationException.class})
+    public static class ClassAndMethodAnnotatedBean {
+        
+        public String breakerMethod1() {
+            return null;
+        }
+
+        @CircuitBreaker(name = "methodbreaker", ignoreExceptions = {IllegalArgumentException.class})
+        public void breakerMethod2() {
+        }
+    }
+	
+	
 }
