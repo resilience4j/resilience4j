@@ -18,13 +18,12 @@
  */
 package io.github.resilience4j.retry;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class RetryConfigBuilderTest {
@@ -44,7 +43,7 @@ public class RetryConfigBuilderTest {
     @Test
     public void waitIntervalUnderTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
-        assertThat(config.getIntervalFunction().apply(1).compareTo(5L));
+        assertThat(config.getIntervalFunction().apply(1)).isEqualTo(5L);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -55,7 +54,7 @@ public class RetryConfigBuilderTest {
     @Test
     public void waitIntervalOfTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(10)).build();
-        Assertions.assertThat(config).isNotNull();
+        assertThat(config).isNotNull();
     }
 
     @Test
@@ -72,7 +71,7 @@ public class RetryConfigBuilderTest {
     @Test
     public void waitIntervalOverTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofSeconds(10)).build();
-        Assertions.assertThat(config).isNotNull();
+        assertThat(config).isNotNull();
     }
 
     private static class ExtendsException extends Exception {

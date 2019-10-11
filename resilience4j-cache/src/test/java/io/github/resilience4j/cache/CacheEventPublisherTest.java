@@ -24,8 +24,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class CacheEventPublisherTest {
 
@@ -50,51 +52,45 @@ public class CacheEventPublisherTest {
 
     @Test
     public void shouldConsumeOnCacheHitEvent() throws Throwable {
-        // Given the cache does not contain the key
         given(cache.get("testKey")).willReturn("Hello world");
-
         Cache<String, String> cacheContext = Cache.of(cache);
-        cacheContext.getEventPublisher().onCacheHit(event ->
-                logger.info(event.getEventType().toString()));
+        cacheContext.getEventPublisher().onCacheHit(
+                event -> logger.info(event.getEventType().toString()));
+        CheckedFunction1<String, String> cachedFunction = Cache
+                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
-        assertThat(value).isEqualTo("Hello world");
 
+        assertThat(value).isEqualTo("Hello world");
         then(logger).should(times(1)).info("CACHE_HIT");
     }
 
     @Test
     public void shouldConsumeOnCacheMissEvent() throws Throwable {
-        // Given the cache does not contain the key
         given(cache.get("testKey")).willReturn(null);
-
         Cache<String, String> cacheContext = Cache.of(cache);
-        cacheContext.getEventPublisher().onCacheMiss(event ->
-                logger.info(event.getEventType().toString()));
-
+        cacheContext.getEventPublisher().onCacheMiss(
+                event -> logger.info(event.getEventType().toString()));
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
-        String value = cachedFunction.apply("testKey");
-        assertThat(value).isEqualTo("Hello world");
 
+        String value = cachedFunction.apply("testKey");
+
+        assertThat(value).isEqualTo("Hello world");
         then(logger).should(times(1)).info("CACHE_MISS");
     }
 
     @Test
     public void shouldConsumeOnErrorEvent() throws Throwable {
-        // Given the cache does not contain the key
         given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
-
         Cache<String, String> cacheContext = Cache.of(cache);
-        cacheContext.getEventPublisher().onError(event ->
-                logger.info(event.getEventType().toString()));
-
+        cacheContext.getEventPublisher().onError(
+                event -> logger.info(event.getEventType().toString()));
         CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
+
         assertThat(value).isEqualTo("Hello world");
 
         then(logger).should(times(1)).info("ERROR");
     }
-
 
 }

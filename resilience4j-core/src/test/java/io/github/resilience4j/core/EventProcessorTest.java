@@ -40,13 +40,12 @@ public class EventProcessorTest {
     public void testRegisterOnEventConsumer(){
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Number> eventConsumer = event -> logger.info(event.toString());
+
         eventProcessor.onEvent(eventConsumer);
         eventProcessor.onEvent(eventConsumer);
 
         assertThat(eventProcessor.onEventConsumers).hasSize(2);
-
         boolean consumed = eventProcessor.processEvent(1);
-
         then(logger).should(times(2)).info("1");
         assertThat(consumed).isEqualTo(true);
     }
@@ -55,14 +54,13 @@ public class EventProcessorTest {
     public void testRegisterConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
+
         eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer);
         eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer);
 
         assertThat(eventProcessor.eventConsumerMap).hasSize(1);
         assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getSimpleName())).hasSize(2);
-
         boolean consumed = eventProcessor.processEvent(1);
-
         then(logger).should(times(2)).info("1");
         assertThat(consumed).isEqualTo(true);
     }
@@ -72,19 +70,17 @@ public class EventProcessorTest {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> integerConsumer = event -> logger.info(event.toString());
         EventConsumer<Float> floatConsumer = event -> logger.info(event.toString());
+
         eventProcessor.registerConsumer(Integer.class.getSimpleName(), integerConsumer);
         eventProcessor.registerConsumer(Float.class.getSimpleName(), floatConsumer);
 
         assertThat(eventProcessor.eventConsumerMap).hasSize(2);
         assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getSimpleName())).hasSize(1);
         assertThat(eventProcessor.eventConsumerMap.get(Float.class.getSimpleName())).hasSize(1);
-
         boolean consumed = eventProcessor.processEvent(1);
         assertThat(consumed).isEqualTo(true);
-
         consumed = eventProcessor.processEvent(1.0f);
         assertThat(consumed).isEqualTo(true);
-
         then(logger).should(times(1)).info("1");
         then(logger).should(times(1)).info("1.0");
     }
@@ -93,11 +89,11 @@ public class EventProcessorTest {
     public void testOnEventAndRegisterConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
+
         eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer);
         eventProcessor.onEvent(event -> logger.info(event.toString()));
 
         boolean consumed = eventProcessor.processEvent(1);
-
         then(logger).should(times(2)).info("1");
         assertThat(consumed).isEqualTo(true);
     }
@@ -105,11 +101,10 @@ public class EventProcessorTest {
     @Test
     public void testNoConsumers() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
+
         boolean consumed = eventProcessor.processEvent(1);
 
         assertThat(consumed).isEqualTo(false);
     }
-
-
 
 }

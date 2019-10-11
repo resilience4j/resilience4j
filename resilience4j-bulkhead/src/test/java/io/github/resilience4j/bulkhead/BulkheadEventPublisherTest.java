@@ -20,12 +20,15 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
+
+import java.util.function.Supplier;
+
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 import org.slf4j.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -59,18 +62,13 @@ public class BulkheadEventPublisherTest {
 
     @Test
     public void shouldConsumeOnCallPermittedEvent() {
-        // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        // When
-        bulkhead.getEventPublisher()
-            .onCallPermitted(event ->
-                    logger.info(event.getEventType().toString()));
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        bulkhead.getEventPublisher().onCallPermitted(
+                event -> logger.info(event.getEventType().toString()));
 
         String result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
 
-        // Then
         assertThat(result).isEqualTo("Hello world");
         then(logger).should(times(1)).info("CALL_PERMITTED");
     }
@@ -78,51 +76,39 @@ public class BulkheadEventPublisherTest {
 
     @Test
     public void shouldConsumeOnCallRejectedEvent() {
-        // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
-
-        // When
-        bulkhead.getEventPublisher()
-                .onCallRejected(event ->
-                        logger.info(event.getEventType().toString()));
-
+        bulkhead.getEventPublisher().onCallRejected(
+                event -> logger.info(event.getEventType().toString()));
         bulkhead.tryAcquirePermission();
+        Supplier<String> supplier = Bulkhead
+                .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
+        
+        Try.ofSupplier(supplier);
 
-        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead,helloWorldService::returnHelloWorld));
-
-        // Then
         then(logger).should(times(1)).info("CALL_REJECTED");
     }
 
     @Test
     public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
-        // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
+        bulkhead.getEventPublisher().onCallFinished(
+                event -> logger.info(event.getEventType().toString()));
+        Supplier<String> supplier = Bulkhead
+                .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
+        
+        Try.ofSupplier(supplier);
 
-        // When
-        bulkhead.getEventPublisher()
-                .onCallFinished(event ->
-                        logger.info(event.getEventType().toString()));
-
-        Try.ofSupplier(Bulkhead.decorateSupplier(bulkhead,helloWorldService::returnHelloWorld));
-
-        // Then
         then(logger).should(times(1)).info("CALL_FINISHED");
     }
 
     @Test
     public void shouldConsumeOnCallFinishedEventOnComplete() throws Exception {
-        // Given
         Bulkhead bulkhead = Bulkhead.of("test", config);
-
-        // When
-        bulkhead.getEventPublisher()
-                .onCallFinished(event ->
-                        logger.info(event.getEventType().toString()));
+        bulkhead.getEventPublisher().onCallFinished(
+                event -> logger.info(event.getEventType().toString()));
 
         bulkhead.onComplete();
 
-        // Then
         then(logger).should(times(1)).info("CALL_FINISHED");
     }
 }

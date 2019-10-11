@@ -10,7 +10,7 @@ import java.time.Duration;
 public class RetryMetricsTest extends AbstractRetryMetricsTest{
 
     @Override
-    protected Retry given(String prefix, MetricRegistry metricRegistry) {
+    protected Retry givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
         RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
         Retry retry = retryRegistry.retry("testName");
         metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(prefix, retryRegistry));
@@ -19,7 +19,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest{
     }
 
     @Override
-    protected Retry given(MetricRegistry metricRegistry) {
+    protected Retry givenMetricRegistry(MetricRegistry metricRegistry) {
         RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.custom().waitDuration(Duration.ofMillis(150)).build());
         Retry retry = retryRegistry.retry("testName");
         metricRegistry.registerAll(RetryMetrics.ofRetryRegistry(retryRegistry));

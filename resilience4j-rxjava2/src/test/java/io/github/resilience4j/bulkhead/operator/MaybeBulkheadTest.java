@@ -6,7 +6,6 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,7 +22,7 @@ public class MaybeBulkheadTest {
 
     @Before
     public void setUp(){
-        bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
+        bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -35,7 +34,7 @@ public class MaybeBulkheadTest {
             .test()
             .assertResult(1);
 
-        verify(bulkhead, times(1)).onComplete();
+        verify(bulkhead).onComplete();
     }
 
     @Test
@@ -49,7 +48,7 @@ public class MaybeBulkheadTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(bulkhead, times(1)).onComplete();
+        verify(bulkhead).onComplete();
     }
 
     @Test
@@ -77,6 +76,6 @@ public class MaybeBulkheadTest {
             .test()
             .assertResult(1, 2);
 
-        verify(bulkhead, times(1)).onComplete();
+        verify(bulkhead).onComplete();
     }
 }

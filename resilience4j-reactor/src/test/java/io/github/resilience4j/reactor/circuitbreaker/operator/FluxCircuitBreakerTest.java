@@ -19,7 +19,6 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -37,7 +36,7 @@ public class FluxCircuitBreakerTest {
 
     @Before
     public void setUp(){
-        circuitBreaker = Mockito.mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
+        circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
     }
 
     @Test

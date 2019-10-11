@@ -6,13 +6,13 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 /**
@@ -24,7 +24,7 @@ public class SingleBulkheadTest {
 
     @Before
     public void setUp(){
-        bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
+        bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -36,7 +36,7 @@ public class SingleBulkheadTest {
             .test()
             .assertResult(1);
 
-        verify(bulkhead, times(1)).onComplete();
+        then(bulkhead).should().onComplete();
     }
 
     @Test
@@ -50,7 +50,7 @@ public class SingleBulkheadTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(bulkhead, times(1)).onComplete();
+        then(bulkhead).should().onComplete();
     }
 
     @Test
@@ -64,7 +64,7 @@ public class SingleBulkheadTest {
             .assertError(BulkheadFullException.class)
             .assertNotComplete();
 
-        verify(bulkhead, never()).onComplete();
+        then(bulkhead).should(never()).onComplete();
     }
 
     @Test
@@ -78,7 +78,7 @@ public class SingleBulkheadTest {
             .test()
             .assertResult(1, 2);
 
-        verify(bulkhead, times(1)).onComplete();
+        then(bulkhead).should().onComplete();
     }
 
     @Test
@@ -91,7 +91,7 @@ public class SingleBulkheadTest {
                 .test()
                 .cancel();
 
-        verify(bulkhead, times(1)).releasePermission();
-        verify(bulkhead, never()).onComplete();
+        then(bulkhead).should().releasePermission();
+        then(bulkhead).should(never()).onComplete();
     }
 }

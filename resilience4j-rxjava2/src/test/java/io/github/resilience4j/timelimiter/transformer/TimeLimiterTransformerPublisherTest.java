@@ -132,6 +132,7 @@ public class TimeLimiterTransformerPublisherTest {
     public void doNotTimeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
                 .willReturn(toConfig(Duration.ofMinutes(1)));
+
         TestSubscriber<Object> subscriber = Flowable.empty()
                 .compose(TimeLimiterTransformer.of(timeLimiter))
                 .test();

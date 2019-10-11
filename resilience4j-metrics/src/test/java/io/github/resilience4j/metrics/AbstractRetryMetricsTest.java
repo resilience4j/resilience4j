@@ -23,10 +23,11 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 
 import static io.github.resilience4j.retry.utils.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -41,25 +42,19 @@ public abstract class AbstractRetryMetricsTest {
         helloWorldService = mock(HelloWorldService.class);
     }
 
-    protected abstract Retry given(String prefix, MetricRegistry metricRegistry);
+    protected abstract Retry givenMetricRegistry(String prefix, MetricRegistry metricRegistry);
 
-    protected abstract Retry given(MetricRegistry metricRegistry);
+    protected abstract Retry givenMetricRegistry(MetricRegistry metricRegistry);
 
     @Test
     public void shouldRegisterMetricsWithoutRetry() throws Throwable {
-        //Given
-        Retry retry = given(metricRegistry);
+        Retry retry = givenMetricRegistry(metricRegistry);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        // Setup circuitbreaker with retry
         String value = retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-        //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
@@ -69,25 +64,19 @@ public abstract class AbstractRetryMetricsTest {
 
     @Test
     public void shouldRegisterMetricsWithRetry() throws Throwable {
-        //Given
-        Retry retry = given(metricRegistry);
-
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld())
+        Retry retry = givenMetricRegistry(metricRegistry);
+        given(helloWorldService.returnHelloWorld())
                 .willThrow(new HelloWorldException())
                 .willReturn("Hello world")
                 .willThrow(new HelloWorldException())
                 .willThrow(new HelloWorldException())
                 .willThrow(new HelloWorldException());
-
-        // Setup circuitbreaker with retry
         String value1 = retry.executeSupplier(helloWorldService::returnHelloWorld);
+
         Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
 
-        //Then
         assertThat(value1).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(5)).returnHelloWorld();
+        then(helloWorldService).should(times(5)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(1L);
         assertThat(metricRegistry.getGauges().get("resilience4j.retry.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(0L);
@@ -97,18 +86,13 @@ public abstract class AbstractRetryMetricsTest {
 
     @Test
     public void shouldUseCustomPrefix() throws Throwable {
-        //Given
-        Retry retry = given("testPrefix", metricRegistry);
-
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        Retry retry = givenMetricRegistry("testPrefix", metricRegistry);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         String value = retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-        //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(4);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITH_RETRY).getValue()).isEqualTo(0L);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName." + SUCCESSFUL_CALLS_WITHOUT_RETRY).getValue()).isEqualTo(1L);
