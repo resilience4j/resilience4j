@@ -32,6 +32,7 @@ ext {
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.2.0'
     springBootOpenFeignVersion= '2.1.2.RELEASE'
+    grpcVersion = '1.24.0'
 
     libraries = [
             // compile
@@ -135,7 +136,13 @@ ext {
             // Spring cloud addon
             spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
             spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
-            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}"
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}",
+
+            // gRPC addon
+            grpc_api: "io.grpc:grpc-api:$grpcVersion",
+            grpc_stub: "io.grpc:grpc-stub:$grpcVersion",
+            grpc_testing: "io.grpc:grpc-testing:$grpcVersion",
+            grpc_testing_proto: "io.grpc:grpc-testing-proto:$grpcVersion"
     ]
 
 }

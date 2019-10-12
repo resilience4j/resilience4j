@@ -1,0 +1,9 @@
+dependencies {
+    compileOnly ( libraries.grpc_stub )
+    compile project(':resilience4j-circuitbreaker')
+
+    testCompile ( libraries.grpc_api )
+    testCompile ( libraries.grpc_testing )
+    testCompile ( libraries.grpc_testing_proto)
+}
+ext.moduleName='io.github.resilience4j.grpc'
