@@ -209,8 +209,7 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
-     * Calculates time to wait for next permission as
-     * [time to the next cycle] + [duration of full cycles until reserved permissions expire]
+     * Calculates time to wait for the required weight of permissions to get accumulated
      *
      * @param weight               weight of required permissions
      * @param cyclePeriodInNanos   current configuration values
@@ -226,8 +225,12 @@ public class AtomicRateLimiter implements RateLimiter {
         }
         long nextCycleTimeInNanos = (currentCycle + 1) * cyclePeriodInNanos;
         long nanosToNextCycle = nextCycleTimeInNanos - currentNanos;
-        int fullCyclesToWait = (-availablePermissions) / permissionsPerCycle;
-        return (fullCyclesToWait * cyclePeriodInNanos) + nanosToNextCycle;
+        int permissionsLeftToTake = weight - availablePermissions;
+        int ovetakenCyclesCounter = Math.floorDiv(permissionsLeftToTake, permissionsPerCycle);
+        if (permissionsLeftToTake % permissionsPerCycle == 0) {
+            ovetakenCyclesCounter -= 1;
+        }
+        return nanosToNextCycle + (ovetakenCyclesCounter * cyclePeriodInNanos);
     }
 
     /**

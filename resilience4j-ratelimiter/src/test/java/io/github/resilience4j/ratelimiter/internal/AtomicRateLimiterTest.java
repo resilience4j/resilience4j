@@ -297,6 +297,14 @@ public class AtomicRateLimiterTest extends RateLimiterTest {
         then(metrics.getNanosToWait()).isEqualTo(0L);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
+    
+    @Test
+    public void reserveManyCyclesIfWegithgreaterThenLimitPerPeriod() throws Exception {
+        setup(Duration.ofNanos(CYCLE_IN_NANOS * 5));
+        setTimeOnNanos(CYCLE_IN_NANOS);
+        long nanosToWait = rateLimiter.reservePermission(PERMISSIONS_RER_CYCLE * 3);
+        then(nanosToWait).isGreaterThan(CYCLE_IN_NANOS);
+    }
 
     @Test
     public void rejectedByTimeoutNonBlocking() throws Exception {
@@ -460,12 +468,12 @@ public class AtomicRateLimiterTest extends RateLimiterTest {
     }
 
     private long waitForCurrentCycleToPass(AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics, char printedWhileWaiting) {
-        long firstCycle = rawDetailedMetrics.getCycle();
-        while (firstCycle == rawDetailedMetrics.getCycle()) {
+        long cycle = rawDetailedMetrics.getCycle();
+        while (cycle == rawDetailedMetrics.getCycle()) {
             System.out.print(printedWhileWaiting);
         }
         System.out.println();
-        return firstCycle;
+        return cycle;
     }
 
     private void waitForPermissionRenewal(AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics, char printedWhileWaiting) {
