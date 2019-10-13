@@ -225,13 +225,9 @@ public class AtomicRateLimiter implements RateLimiter {
         }
         long nextCycleTimeInNanos = (currentCycle + 1) * cyclePeriodInNanos;
         long nanosToNextCycle = nextCycleTimeInNanos - currentNanos;
-        int permissionsToTakeAfterCurrencyCycle = weight - availablePermissions;
-        int fullCyclesToWaitCount = Math.floorDiv(permissionsToTakeAfterCurrencyCycle, permissionsPerCycle);
-        if (permissionsToTakeAfterCurrencyCycle % permissionsPerCycle == 0) {
-            // will take all permissions from the last cycle but can reserve them without waiting till its end
-            fullCyclesToWaitCount -= 1;
-        }
-        return nanosToNextCycle + (fullCyclesToWaitCount * cyclePeriodInNanos);
+        int permissionsAtTheStartOfNextCycle = availablePermissions + permissionsPerCycle;
+        int fullCyclesToWait = -(permissionsAtTheStartOfNextCycle-weight) / permissionsPerCycle;
+        return (fullCyclesToWait * cyclePeriodInNanos) + nanosToNextCycle;
     }
 
     /**
