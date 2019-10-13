@@ -44,7 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
-public class SemaphoreBasedRateLimiterImplTest extends RateLimiterTest {
+public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
 
     private static final int LIMIT = 2;
     private static final Duration TIMEOUT = Duration.ofMillis(100);

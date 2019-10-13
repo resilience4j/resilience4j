@@ -37,8 +37,7 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore} and scheduler
- * that will refresh permissions after each
- * {@link RateLimiterConfig#getLimitRefreshPeriod()}.
+ * that will refresh permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
@@ -55,7 +54,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * Creates a RateLimiter.
      *
-     * @param name the name of the RateLimiter
+     * @param name              the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
      */
     public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
@@ -65,12 +64,12 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * Creates a RateLimiter.
      *
-     * @param name the name of the RateLimiter
+     * @param name              the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
-     * @param scheduler executor that will refresh permissions
+     * @param scheduler         executor that will refresh permissions
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-            @Nullable ScheduledExecutorService scheduler) {
+                                     @Nullable ScheduledExecutorService scheduler) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         this.rateLimiterConfig = new AtomicReference<>(requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 
@@ -94,10 +93,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     private void scheduleLimitRefresh() {
         scheduler.scheduleAtFixedRate(
-                this::refreshLimit,
-                this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
-                this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
-                TimeUnit.NANOSECONDS
+            this::refreshLimit,
+            this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
+            this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
+            TimeUnit.NANOSECONDS
         );
     }
 

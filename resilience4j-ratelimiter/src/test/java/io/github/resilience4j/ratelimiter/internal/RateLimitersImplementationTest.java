@@ -8,17 +8,17 @@ import static org.assertj.core.api.BDDAssertions.then;
 import org.junit.Test;
 
 /** Tests for functions that are common in all implementations should go here */
-public abstract class RateLimiterTest {
+public abstract class RateLimitersImplementationTest {
     
     protected abstract RateLimiter buildRateLimiter(RateLimiterConfig config);
 
     @Test
     public void aquireBigWeightAtStartOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitForPeriod(10)
-                .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
-                .timeoutDuration(Duration.ZERO)
-                .build();
+            .limitForPeriod(10)
+            .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
+            .timeoutDuration(Duration.ZERO)
+            .build();
         RateLimiter limiter = buildRateLimiter(config);
         RateLimiter.Metrics metrics = limiter.getMetrics();
 
@@ -40,10 +40,10 @@ public abstract class RateLimiterTest {
     @Test
     public void tryAquiringBigWeightAtEndOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitForPeriod(10)
-                .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
-                .timeoutDuration(Duration.ZERO)
-                .build();
+            .limitForPeriod(10)
+            .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
+            .timeoutDuration(Duration.ZERO)
+            .build();
         RateLimiter limiter = buildRateLimiter(config);
         RateLimiter.Metrics metrics = limiter.getMetrics();
 
