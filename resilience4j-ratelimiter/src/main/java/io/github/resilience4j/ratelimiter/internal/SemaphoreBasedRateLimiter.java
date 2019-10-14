@@ -131,14 +131,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public boolean acquirePermission(int weight) {
+    public boolean acquirePermission(int permits) {
         try {
-            boolean success = semaphore.tryAcquire(weight, rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
-            publishRateLimiterEvent(success, weight);
+            boolean success = semaphore.tryAcquire(permits, rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
+            publishRateLimiterEvent(success, permits);
             return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            publishRateLimiterEvent(false, weight);
+            publishRateLimiterEvent(false, permits);
             return false;
         }
     }
@@ -160,7 +160,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @throws UnsupportedOperationException always for this implementation
      */
     @Override
-    public long reservePermission(int weight) {
+    public long reservePermission(int permits) {
         throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
     }
 
@@ -226,14 +226,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         }
     }
 
-    private void publishRateLimiterEvent(boolean permissionAcquired, int weight) {
+    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }
         if (permissionAcquired) {
-            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, weight));
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
             return;
         }
-        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, weight));
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 }

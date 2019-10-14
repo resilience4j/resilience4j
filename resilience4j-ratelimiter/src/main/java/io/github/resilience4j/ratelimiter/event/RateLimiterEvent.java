@@ -28,7 +28,7 @@ public interface RateLimiterEvent {
 
     Type getEventType();
 
-    int getWeight();
+    int getNumberOfPermits();
 
     ZonedDateTime getCreationTime();
 

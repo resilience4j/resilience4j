@@ -23,16 +23,16 @@ import java.time.ZonedDateTime;
 public abstract class AbstractRateLimiterEvent implements RateLimiterEvent {
 
     private final String rateLimiterName;
-    private final int weight;
+    private final int numberOfPermits;
     private final ZonedDateTime creationTime;
 
     public AbstractRateLimiterEvent(String rateLimiterName) {
         this(rateLimiterName, 1);
     }
 
-    public AbstractRateLimiterEvent(String rateLimiterName, int weight) {
+    public AbstractRateLimiterEvent(String rateLimiterName, int numberOfPermits) {
         this.rateLimiterName = rateLimiterName;
-        this.weight = weight;
+        this.numberOfPermits = numberOfPermits;
         creationTime = ZonedDateTime.now();
     }
 
@@ -42,8 +42,8 @@ public abstract class AbstractRateLimiterEvent implements RateLimiterEvent {
     }
 
     @Override
-    public int getWeight() {
-        return weight;
+    public int getNumberOfPermits() {
+        return numberOfPermits;
     }
 
     @Override

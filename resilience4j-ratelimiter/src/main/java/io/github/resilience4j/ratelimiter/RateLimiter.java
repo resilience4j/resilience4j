@@ -323,18 +323,18 @@ public interface RateLimiter {
 	}
 
 	/**
-	 * Acquires a permission of a given weight from this rate limiter, blocking until one is available, or the thread is interrupted.
+	 * Acquires the given amount of permissions from this rate limiter, blocking until one is available, or the thread is interrupted.
 	 * Maximum wait time is {@link RateLimiterConfig#getTimeoutDuration()}
 	 *
 	 * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
 	 * while waiting for a permit then it won't throw {@linkplain InterruptedException},
 	 * but its interrupt status will be set.
 	 * 
-	 * @param weight weight of permission - use for systems where 1 call != 1 permission
+	 * @param permits number of permissions - use for systems where 1 call != 1 permission
 	 * @return {@code true} if a permit was acquired and {@code false}
 	 * if waiting timeoutDuration elapsed before a permit was acquired
 	 */
-	boolean acquirePermission(int weight);
+	boolean acquirePermission(int permits);
 
 	/**
 	 * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.
@@ -348,14 +348,14 @@ public interface RateLimiter {
 	}
 
 	/**
-	 * Reserves a permission of a given weight from this rate limiter and returns nanoseconds you should wait for it.
+	 * Reserves a number permission from this rate limiter and returns nanoseconds you should wait for it.
 	 * If returned long is negative, it means that you failed to reserve permission,
 	 * possibly your  {@link RateLimiterConfig#getTimeoutDuration()} is less then time to wait for permission.
 	 *
-	 * @param weight weight of permission - use for systems where 1 call != 1 permission
+	 * @param permits number of permission - use for systems where 1 call != 1 permission
 	 * @return {@code long} amount of nanoseconds you should wait for reserved permission. if negative, it means you failed to reserve.
 	 */
-	long reservePermission(int weight);
+	long reservePermission(int permits);
 
 	/**
 	 * Get the name of this RateLimiter

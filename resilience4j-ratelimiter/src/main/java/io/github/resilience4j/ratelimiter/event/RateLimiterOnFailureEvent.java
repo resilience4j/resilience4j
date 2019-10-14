@@ -23,8 +23,8 @@ public class RateLimiterOnFailureEvent extends AbstractRateLimiterEvent {
         super(rateLimiterName, 1);
     }
 	
-    public RateLimiterOnFailureEvent(String rateLimiterName, int weight) {
-        super(rateLimiterName, weight);
+    public RateLimiterOnFailureEvent(String rateLimiterName, int numberOfPermits) {
+        super(rateLimiterName, numberOfPermits);
     }
 
     @Override

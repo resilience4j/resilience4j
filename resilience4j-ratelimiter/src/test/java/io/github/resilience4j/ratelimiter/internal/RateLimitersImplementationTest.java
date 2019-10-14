@@ -13,7 +13,7 @@ public abstract class RateLimitersImplementationTest {
     protected abstract RateLimiter buildRateLimiter(RateLimiterConfig config);
 
     @Test
-    public void aquireBigWeightAtStartOfCycleTest() {
+    public void aquireBigNumberOfPermitsAtStartOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -38,7 +38,7 @@ public abstract class RateLimitersImplementationTest {
     }
 
     @Test
-    public void tryAquiringBigWeightAtEndOfCycleTest() {
+    public void tryAquiringBigNumberOfPermitsAtEndOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
