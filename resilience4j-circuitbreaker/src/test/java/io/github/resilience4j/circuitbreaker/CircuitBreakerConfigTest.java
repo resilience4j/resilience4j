@@ -22,8 +22,6 @@ import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.time.temporal.TemporalUnit;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;

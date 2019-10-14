@@ -8,6 +8,11 @@ import java.util.function.Function;
 import static io.github.resilience4j.core.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * An IntervalFunction which can be used to calculate the wait interval.
+ * The input parameter of the function is the number of attempts (attempt), the output parameter the wait interval in milliseconds.
+ * The attempt parameter starts at 1 and increases with every further attempt.
+ */
 @FunctionalInterface
 public interface IntervalFunction extends Function<Integer, Long> {
 
@@ -15,6 +20,11 @@ public interface IntervalFunction extends Function<Integer, Long> {
     double DEFAULT_MULTIPLIER = 1.5;
     double DEFAULT_RANDOMIZATION_FACTOR = 0.5;
 
+    /**
+     * Creates an IntervalFunction which returns a fixed default interval of 500 [ms].
+     *
+     * @return returns an IntervalFunction which returns a fixed default interval of 500 [ms]
+     */
     static IntervalFunction ofDefaults() {
         return of(DEFAULT_INITIAL_INTERVAL);
     }
@@ -33,6 +43,13 @@ public interface IntervalFunction extends Function<Integer, Long> {
         return of(interval.toMillis(), backoffFunction);
     }
 
+
+    /**
+     * Creates an IntervalFunction which returns a fixed interval in milliseconds.
+     *
+     * @param intervalMillis the interval in milliseconds
+     * @return an IntervalFunction which returns a fixed interval in milliseconds.
+     */
     static IntervalFunction of(long intervalMillis) {
         checkInterval(intervalMillis);
         return (attempt) -> {
@@ -41,6 +58,12 @@ public interface IntervalFunction extends Function<Integer, Long> {
         };
     }
 
+    /**
+     * Creates an IntervalFunction which returns a fixed interval in milliseconds.
+     *
+     * @param interval the interval
+     * @return an IntervalFunction which returns a fixed interval in milliseconds.
+     */
     static IntervalFunction of(Duration interval) {
         return of(interval.toMillis());
     }

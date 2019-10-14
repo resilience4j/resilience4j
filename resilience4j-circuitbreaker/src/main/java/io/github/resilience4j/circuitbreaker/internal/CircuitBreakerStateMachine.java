@@ -18,23 +18,18 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
-
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,6 +44,7 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
+import static java.time.temporal.ChronoUnit.MILLIS;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -464,23 +460,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         OpenState(final int attempts, CircuitBreakerMetrics circuitBreakerMetrics) {
             this.attempts = attempts;
-            final Duration waitDurationInOpenState = getWaitDuration(attempts);
-            this.retryAfterWaitDuration = clock.instant().plus(waitDurationInOpenState);
+            final long waitDurationInMillis = circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(attempts);
+            this.retryAfterWaitDuration = clock.instant().plus(waitDurationInMillis, MILLIS);
             this.circuitBreakerMetrics = circuitBreakerMetrics;
 
             if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                scheduledExecutorService.schedule(this::toHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
+                scheduledExecutorService.schedule(this::toHalfOpenState, waitDurationInMillis, TimeUnit.MILLISECONDS);
             }
             isOpen = new AtomicBoolean(true);
-        }
-
-        private Duration getWaitDuration(int attempts) {
-            IntervalFunction intervalFunction = circuitBreakerConfig.getWaitIntervalFunctionInOpenState();
-            if (intervalFunction != null) {
-                return Duration.of(intervalFunction.apply(attempts), MILLIS);
-            }
-            return circuitBreakerConfig.getWaitDurationInOpenState();
         }
 
         /**
