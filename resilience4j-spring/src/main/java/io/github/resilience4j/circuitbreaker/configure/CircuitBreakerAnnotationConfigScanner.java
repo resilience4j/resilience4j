@@ -25,6 +25,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
@@ -65,10 +66,10 @@ public class CircuitBreakerAnnotationConfigScanner implements BeanFactoryPostPro
 	}
 
 	private void findAnnotationConfig(Class<?> beanClass) {
-		CircuitBreaker circuitBreakerAnnotation = beanClass.getAnnotation(CircuitBreaker.class);
+		CircuitBreaker circuitBreakerAnnotation = AnnotationUtils.findAnnotation(beanClass, CircuitBreaker.class);
 		updateInstanceProperties(circuitBreakerAnnotation, beanClass);
 	    for (Method m : beanClass.getMethods()) {
-			circuitBreakerAnnotation = m.getAnnotation(CircuitBreaker.class);
+			circuitBreakerAnnotation = AnnotationUtils.findAnnotation(m, CircuitBreaker.class);
 			updateInstanceProperties(circuitBreakerAnnotation, beanClass);
 		}
 	}

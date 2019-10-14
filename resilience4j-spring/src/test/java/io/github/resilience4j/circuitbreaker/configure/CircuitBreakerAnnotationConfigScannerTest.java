@@ -97,6 +97,38 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         scanner.postProcessBeanFactory(beanFactory);
 	}
 	
+	@Test
+    public void testInterfaceMethodAnnotationUsed() {
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(InterfaceMethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("foo", beanDefinition);
+        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
+        scanner.postProcessBeanFactory(beanFactory);
+
+        CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
+        scanner.mergeConfigurationProperties(circuitBreakerProperties);
+        InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("interfacemethodbreaker");
+        assertNotNull(instanceProperties);
+        assertArrayEquals(new Class[] { NullPointerException.class }, instanceProperties.getRecordExceptions());
+    }
+	
+   @Test
+    public void testInterfaceTypeAnnotationUsed() {
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(InterfaceTypeAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("foo", beanDefinition);
+        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
+        scanner.postProcessBeanFactory(beanFactory);
+
+        CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
+        scanner.mergeConfigurationProperties(circuitBreakerProperties);
+        InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("interfacetypebreaker");
+        assertNotNull(instanceProperties);
+        assertArrayEquals(new Class[] { IllegalStateException.class }, instanceProperties.getIgnoreExceptions());
+    }
+	
     public static class MethodAnnotatedBean {
 
         @CircuitBreaker(name = "methodbreaker", ignoreExceptions = {IllegalArgumentException.class})
@@ -116,6 +148,30 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         public void breakerMethod2() {
         }
     }
+    
+    public static interface MethodAnnotatedInterface {
+        @CircuitBreaker( name = "interfacemethodbreaker", recordExceptions = {NullPointerException.class})
+        void breakerMethod();
+    }
 	
-	
+    @CircuitBreaker(name = "interfacetypebreaker", ignoreExceptions = {IllegalStateException.class})
+    public static interface TypeAnnotatedInterface {
+        void breakerMethod();
+    }
+    
+    public static class InterfaceMethodAnnotatedBean implements MethodAnnotatedInterface {
+        @Override
+        public void breakerMethod() {
+        }
+    }
+
+    public static abstract class AbstractInterfaceTypedAnnotatedBean implements TypeAnnotatedInterface {
+    }
+    
+    public static class InterfaceTypeAnnotatedBean extends AbstractInterfaceTypedAnnotatedBean {
+        @Override
+        public void breakerMethod() {
+        }
+    }
+    
 }
