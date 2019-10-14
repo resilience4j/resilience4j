@@ -1,6 +1,5 @@
 /*
- *
- *  Copyright 2018: Clint Checketts
+ *  Copyright 2019 Marco Ferrer
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,11 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- *
  */
 @NonNullApi
 @NonNullFields
-package io.github.resilience4j.retrofit;
+package io.github.resilience4j.grpc;
 
 import io.github.resilience4j.core.lang.NonNullApi;
 import io.github.resilience4j.core.lang.NonNullFields;
