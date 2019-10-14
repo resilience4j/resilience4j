@@ -59,9 +59,8 @@ public class CircuitBreakerConfig {
     private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
-    private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
-    private IntervalFunction waitIntervalFunctionInOpenState = null;
+    private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction.of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 
@@ -100,10 +99,21 @@ public class CircuitBreakerConfig {
         return failureRateThreshold;
     }
 
+    /**
+     * @deprecated since 1.2.0
+     * You should use {@link #getWaitIntervalFunctionInOpenState()} instead.
+     */
+    @Deprecated
     public Duration getWaitDurationInOpenState() {
-        return waitDurationInOpenState;
+        return Duration.ofMillis(waitIntervalFunctionInOpenState.apply(1));
     }
 
+    /**
+     * Returns an interval function which controls how long the CircuitBreaker should stay open, before it switches to half open.
+     *
+     *
+     * @return the CircuitBreakerConfig.Builder
+     */
     public IntervalFunction getWaitIntervalFunctionInOpenState() { return waitIntervalFunctionInOpenState; }
 
     public int getSlidingWindowSize() {
@@ -146,8 +156,6 @@ public class CircuitBreakerConfig {
         return slowCallDurationThreshold;
     }
 
-
-
     public static class Builder {
 
         @Nullable
@@ -165,15 +173,16 @@ public class CircuitBreakerConfig {
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
-        private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+
+        private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction.of(Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD));
+
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
-        private IntervalFunction waitIntervalFunctionInOpenState = null;
+
 
         public Builder(CircuitBreakerConfig baseConfig) {
-            this.waitDurationInOpenState = baseConfig.waitDurationInOpenState;
             this.waitIntervalFunctionInOpenState = baseConfig.waitIntervalFunctionInOpenState;
             this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
             this.slidingWindowSize = baseConfig.slidingWindowSize;
@@ -242,22 +251,27 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures the wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open.
+         * Configures an interval function with a fixed wait duration which controls how long the CircuitBreaker should stay open, before it switches to half open.
          * Default value is 60 seconds.
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the CircuitBreaker should stay open
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder waitDurationInOpenState(Duration waitDurationInOpenState) {
-            if (waitDurationInOpenState.toMillis() < 1) {
+            long waitDurationInMillis = waitDurationInOpenState.toMillis();
+            if (waitDurationInMillis < 1) {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 1[ms]");
             }
-            this.waitDurationInOpenState = waitDurationInOpenState;
+            this.waitIntervalFunctionInOpenState = IntervalFunction.of(waitDurationInMillis);
             return this;
         }
 
         /**
-         * configures the variable wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open. Useful for exponential back-off
+         * Configures an interval function which controls how long the CircuitBreaker should stay open, before it switches to half open.
+         * The default interval function returns a fixed wait duration of 60 seconds.
+         *
+         * A custom interval function is useful if you need an exponential backoff algorithm.
+         *
          * @param waitIntervalFunctionInOpenState Interval function that returns wait time as a function of attempts
          * @return the CircuitBreakerConfig.Builder
          */
@@ -529,7 +543,6 @@ public class CircuitBreakerConfig {
          */
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
-            config.waitDurationInOpenState = waitDurationInOpenState;
             config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
