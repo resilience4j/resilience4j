@@ -27,12 +27,14 @@ import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -140,6 +142,86 @@ public class RetrofitCircuitBreakerTest {
             service.greeting().execute();
         } catch (Throwable ignored) {
         }
+
+        assertThat(metrics.getNumberOfFailedCalls())
+                .isEqualTo(3);
+        // Circuit breaker should be OPEN, threshold met
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
+    @Test
+    public void decorateCancelledCall() throws Exception {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                .willReturn(aResponse()
+                        .withFixedDelay(500)
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("hello world")));
+
+        try {
+            Call<String> call = service.greeting();
+            cancelAsync(call, 100);
+            call.execute();
+        } catch (Throwable ignored) {
+        }
+
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls())
+                .describedAs("Failed calls")
+                .isEqualTo(0);
+
+        // Circuit breaker should still be closed, not hit open threshold
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.CLOSED);
+
+        try {
+            service.greeting().execute();
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            service.greeting().execute();
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            service.greeting().execute();
+        } catch (Throwable ignored) {
+        }
+
+        assertThat(metrics.getNumberOfFailedCalls())
+                .isEqualTo(3);
+        // Circuit breaker should be OPEN, threshold met
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
+    @Test
+    public void decorateCancelledEnqueuedCall() throws Exception {
+        stubFor(get(urlPathEqualTo("/greeting"))
+                .willReturn(aResponse()
+                        .withFixedDelay(500)
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("hello world")));
+
+        Call<String> call = service.greeting();
+        cancelAsync(call, 100);
+        EnqueueDecorator.performCatchingEnqueue(call);
+
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls())
+                .describedAs("Failed calls")
+                .isEqualTo(0);
+
+        // Circuit breaker should still be closed, not hit open threshold
+        assertThat(circuitBreaker.getState())
+                .isEqualTo(CircuitBreaker.State.CLOSED);
+
+        EnqueueDecorator.performCatchingEnqueue(service.greeting());
+        EnqueueDecorator.performCatchingEnqueue(service.greeting());
+        EnqueueDecorator.performCatchingEnqueue(service.greeting());
 
         assertThat(metrics.getNumberOfFailedCalls())
                 .isEqualTo(3);
@@ -322,5 +404,15 @@ public class RetrofitCircuitBreakerTest {
             Thread.sleep(10);
         }
         fail("Timeout exceeded while waiting for requests to be finished");
+    }
+
+    private void cancelAsync(Call<?> call, long delayMs){
+        CompletableFuture.runAsync(()-> {
+            try {
+                Thread.sleep(delayMs);
+            }catch (Exception ignored){
+            }
+            call.cancel();
+        });
     }
 }
