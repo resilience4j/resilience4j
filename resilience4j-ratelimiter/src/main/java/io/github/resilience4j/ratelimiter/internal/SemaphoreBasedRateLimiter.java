@@ -36,8 +36,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
- * A RateLimiter implementation that consists of {@link Semaphore}
- * and scheduler that will refresh permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
+ * A RateLimiter implementation that consists of {@link Semaphore} and scheduler
+ * that will refresh permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
@@ -131,26 +131,37 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public boolean acquirePermission() {
+    public boolean acquirePermission(int permits) {
         try {
-            boolean success = semaphore.tryAcquire(rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
-            publishRateLimiterEvent(success);
+            boolean success = semaphore.tryAcquire(permits, rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
+            publishRateLimiterEvent(success, permits);
             return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            publishRateLimiterEvent(false);
+            publishRateLimiterEvent(false, permits);
             return false;
         }
     }
 
     /**
-     * {@inheritDoc}
-     * SemaphoreBasedRateLimiter is totally blocking by it's nature. So this non-blocking API isn't supported.
-     * It will return negative numbers all the time.
+     * Reserving permissions is not supported in the spemaphore based
+     * implementation. Semaphores are totally blocking by it's nature. So this
+     * non-blocking API isn't supported. Use {@link #acquirePermission()}
+     *
+     * @throws UnsupportedOperationException always for this implementation
      */
     @Override
     public long reservePermission() {
-        return -1;
+        throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
+    }
+
+    /**
+     * @see #reservePermission()
+     * @throws UnsupportedOperationException always for this implementation
+     */
+    @Override
+    public long reservePermission(int permits) {
+        throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
     }
 
     /**
@@ -182,17 +193,19 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return this.rateLimiterConfig.get();
     }
 
-    @Override public String toString() {
-        return "SemaphoreBasedRateLimiter{" +
-            "name='" + name + '\'' +
-            ", rateLimiterConfig=" + rateLimiterConfig +
-            '}';
+    @Override
+    public String toString() {
+        return "SemaphoreBasedRateLimiter{"
+                + "name='" + name + '\''
+                + ", rateLimiterConfig=" + rateLimiterConfig
+                + '}';
     }
 
     /**
      * {@inheritDoc}
      */
     private final class SemaphoreBasedRateLimiterMetrics implements Metrics {
+
         private SemaphoreBasedRateLimiterMetrics() {
         }
 
@@ -213,14 +226,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         }
     }
 
-    private void publishRateLimiterEvent(boolean permissionAcquired) {
+    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }
         if (permissionAcquired) {
-            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name));
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
             return;
         }
-        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name));
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 }

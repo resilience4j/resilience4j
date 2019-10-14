@@ -36,6 +36,7 @@ import java.util.function.Function;
 import static com.jayway.awaitility.Awaitility.await;
 import static io.vavr.control.Try.run;
 import static java.lang.Thread.State.*;
+import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -43,7 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
-public class SemaphoreBasedRateLimiterImplTest {
+public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
 
     private static final int LIMIT = 2;
     private static final Duration TIMEOUT = Duration.ofMillis(100);
@@ -54,6 +55,11 @@ public class SemaphoreBasedRateLimiterImplTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
     private RateLimiterConfig config;
+
+    @Override
+    protected RateLimiter buildRateLimiter(RateLimiterConfig config) {
+        return new SemaphoreBasedRateLimiter("test", config, Executors.newScheduledThreadPool(1));
+    }
 
     private static ConditionFactory awaitImpatiently() {
         return await()
@@ -88,16 +94,8 @@ public class SemaphoreBasedRateLimiterImplTest {
         Runnable refreshLimitRunnable = refreshLimitRunnableCaptor.getValue();
 
         then(limit.acquirePermission()).isTrue();
-        then(limit.reservePermission()).isNegative();
-        then(limit.reservePermission()).isNegative();
-
         then(limit.acquirePermission()).isTrue();
-        then(limit.reservePermission()).isNegative();
-        then(limit.reservePermission()).isNegative();
-
         then(limit.acquirePermission()).isFalse();
-        then(limit.reservePermission()).isNegative();
-        then(limit.reservePermission()).isNegative();
 
         Thread.sleep(REFRESH_PERIOD.toMillis() * 2);
         verify(configSpy, times(1)).getLimitForPeriod();
@@ -137,17 +135,11 @@ public class SemaphoreBasedRateLimiterImplTest {
             synchronousQueue.take();
         }
 
-        then(limit.reservePermission()).isNegative();
-        then(limit.reservePermission()).isNegative();
-
         awaitImpatiently()
             .atMost(100, TimeUnit.MILLISECONDS).until(detailedMetrics::getAvailablePermissions, equalTo(0));
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(0);
-
-        then(limit.reservePermission()).isNegative();
-        then(limit.reservePermission()).isNegative();
 
         limit.refreshLimit();
         awaitImpatiently()
@@ -159,8 +151,6 @@ public class SemaphoreBasedRateLimiterImplTest {
         limit.changeLimitForPeriod(3);
         limit.refreshLimit();
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(3);
-        then(limit.reservePermission()).isNegative();
-        then(limit.reservePermission()).isNegative();
     }
 
     @Test
