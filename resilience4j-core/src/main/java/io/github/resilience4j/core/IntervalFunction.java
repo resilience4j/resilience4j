@@ -1,20 +1,15 @@
-package io.github.resilience4j.retry;
+package io.github.resilience4j.core;
 
 import io.vavr.collection.Stream;
 
 import java.time.Duration;
 import java.util.function.Function;
 
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.*;
+import static io.github.resilience4j.core.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
 
-/**
- * Use io.github.resilience4j.core.IntervalFunction instead, this class kept for backwards
- * compatibility
- */
 @FunctionalInterface
-@Deprecated
-public interface IntervalFunction extends io.github.resilience4j.core.IntervalFunction {
+public interface IntervalFunction extends Function<Integer, Long> {
 
     long DEFAULT_INITIAL_INTERVAL = 500;
     double DEFAULT_MULTIPLIER = 1.5;
