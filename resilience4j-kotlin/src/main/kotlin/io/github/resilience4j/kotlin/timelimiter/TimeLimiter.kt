@@ -37,9 +37,9 @@ import kotlinx.coroutines.withTimeout
  *    even if the `cancelRunningFuture` is set to `false`.
  */
 suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
-        withTimeout(timeLimiterConfig.timeoutDuration.toMillis()) {
-            block()
-        }
+    withTimeout(timeLimiterConfig.timeoutDuration.toMillis()) {
+        block()
+    }
 
 /**
  * Decorates the given suspend function [block] and returns it.
