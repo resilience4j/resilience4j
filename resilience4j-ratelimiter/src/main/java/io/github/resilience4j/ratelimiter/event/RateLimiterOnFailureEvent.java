@@ -20,7 +20,11 @@ package io.github.resilience4j.ratelimiter.event;
 
 public class RateLimiterOnFailureEvent extends AbstractRateLimiterEvent {
     public RateLimiterOnFailureEvent(String rateLimiterName) {
-        super(rateLimiterName);
+        super(rateLimiterName, 1);
+    }
+	
+    public RateLimiterOnFailureEvent(String rateLimiterName, int numberOfPermits) {
+        super(rateLimiterName, numberOfPermits);
     }
 
     @Override

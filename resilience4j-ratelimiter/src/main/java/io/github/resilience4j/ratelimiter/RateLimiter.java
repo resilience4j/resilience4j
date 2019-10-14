@@ -318,16 +318,44 @@ public interface RateLimiter {
 	 * @return {@code true} if a permit was acquired and {@code false}
 	 * if waiting timeoutDuration elapsed before a permit was acquired
 	 */
-	boolean acquirePermission();
+	default boolean acquirePermission() {
+		return acquirePermission(1);
+	}
+
+	/**
+	 * Acquires the given number of permits from this rate limiter, blocking until one is available, or the thread is interrupted.
+	 * Maximum wait time is {@link RateLimiterConfig#getTimeoutDuration()}
+	 *
+	 * <p>If the current thread is {@linkplain Thread#interrupt interrupted}
+	 * while waiting for a permit then it won't throw {@linkplain InterruptedException},
+	 * but its interrupt status will be set.
+	 * 
+	 * @param permits number of permits - use for systems where 1 call != 1 permit
+	 * @return {@code true} if a permit was acquired and {@code false}
+	 * if waiting timeoutDuration elapsed before a permit was acquired
+	 */
+	boolean acquirePermission(int permits);
 
 	/**
 	 * Reserves a permission from this rate limiter and returns nanoseconds you should wait for it.
 	 * If returned long is negative, it means that you failed to reserve permission,
 	 * possibly your  {@link RateLimiterConfig#getTimeoutDuration()} is less then time to wait for permission.
 	 *
-	 * @return {@code long} amount of nanoseconds you should wait for reserved permission. if negative, it means you failed to reserve.
+	 * @return {@code long} amount of nanoseconds you should wait for reserved permissions. if negative, it means you failed to reserve.
 	 */
-	long reservePermission();
+	default long reservePermission() {
+		return reservePermission(1);
+	}
+
+	/**
+	 * Reserves the given number permits from this rate limiter and returns nanoseconds you should wait for it.
+	 * If returned long is negative, it means that you failed to reserve permission,
+	 * possibly your  {@link RateLimiterConfig#getTimeoutDuration()} is less then time to wait for permission.
+	 *
+	 * @param permits number of permits - use for systems where 1 call != 1 permit
+	 * @return {@code long} amount of nanoseconds you should wait for reserved permissions. if negative, it means you failed to reserve.
+	 */
+	long reservePermission(int permits);
 
 	/**
 	 * Get the name of this RateLimiter
