@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
@@ -60,6 +61,7 @@ public class CircuitBreakerConfig {
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private Duration waitDurationInOpenState = Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE);
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+    private IntervalFunction waitIntervalFunctionInOpenState = null;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
 
@@ -101,6 +103,8 @@ public class CircuitBreakerConfig {
     public Duration getWaitDurationInOpenState() {
         return waitDurationInOpenState;
     }
+
+    public IntervalFunction getWaitIntervalFunctionInOpenState() { return waitIntervalFunctionInOpenState; }
 
     public int getSlidingWindowSize() {
         return slidingWindowSize;
@@ -166,9 +170,11 @@ public class CircuitBreakerConfig {
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+        private IntervalFunction waitIntervalFunctionInOpenState = null;
 
         public Builder(CircuitBreakerConfig baseConfig) {
             this.waitDurationInOpenState = baseConfig.waitDurationInOpenState;
+            this.waitIntervalFunctionInOpenState = baseConfig.waitIntervalFunctionInOpenState;
             this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
             this.slidingWindowSize = baseConfig.slidingWindowSize;
             this.slidingWindowType = baseConfig.slidingWindowType;
@@ -247,6 +253,16 @@ public class CircuitBreakerConfig {
                 throw new IllegalArgumentException("waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitDurationInOpenState = waitDurationInOpenState;
+            return this;
+        }
+
+        /**
+         * configures the variable wait duration which specifies how long the CircuitBreaker should stay open, before it switches to half open. Useful for exponential back-off
+         * @param waitIntervalFunctionInOpenState Interval function that returns wait time as a function of attempts
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder waitIntervalFunctionInOpenState(IntervalFunction waitIntervalFunctionInOpenState) {
+            this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             return this;
         }
 
@@ -514,6 +530,7 @@ public class CircuitBreakerConfig {
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
             config.waitDurationInOpenState = waitDurationInOpenState;
+            config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.slowCallRateThreshold = slowCallRateThreshold;
