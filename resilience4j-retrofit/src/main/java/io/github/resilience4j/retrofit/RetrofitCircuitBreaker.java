@@ -89,7 +89,11 @@ public interface RetrofitCircuitBreaker {
 
                 @Override
                 public void onFailure(final Call<T> call, final Throwable t) {
-                    circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, t);
+                    if(call.isCanceled()){
+                        circuitBreaker.releasePermission();
+                    }else{
+                        circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, t);
+                    }
                     callback.onFailure(call, t);
                 }
             });
@@ -111,7 +115,11 @@ public interface RetrofitCircuitBreaker {
 
                 return response;
             } catch (Exception exception) {
-                circuitBreaker.onError(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, exception);
+                if(call.isCanceled()){
+                    circuitBreaker.releasePermission();
+                } else {
+                    circuitBreaker.onError(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, exception);
+                }
                 throw exception;
             }
         }
