@@ -27,8 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofSeconds;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}
@@ -38,17 +38,12 @@ public class Resilience4jRateLimiterTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
 
-    private static final RateLimiterConfig config = RateLimiterConfig.custom()
-            .timeoutDuration(ofMillis(50))
-            .limitRefreshPeriod(ofSeconds(1))
-            .limitForPeriod(1)
-            .build();
-
     private TestService testService;
+    private RateLimiter rateLimiter;
 
     @Before
     public void setUp() {
-        final RateLimiter rateLimiter = RateLimiter.of("backendName", config);
+        rateLimiter = mock(RateLimiter.class);
         final FeignDecorators decorators = FeignDecorators.builder().withRateLimiter(rateLimiter).build();
         testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
     }
@@ -56,6 +51,8 @@ public class Resilience4jRateLimiterTest {
     @Test
     public void testSuccessfulCall() throws Exception {
         setupStub(200);
+
+        when(rateLimiter.acquirePermission()).thenReturn(true);
 
         testService.greeting();
 
@@ -66,26 +63,20 @@ public class Resilience4jRateLimiterTest {
     public void testRateLimiterLimiting() {
         setupStub(200);
 
-        testService.greeting();
-        testService.greeting();
-
-        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
-    }
-
-    @Test(expected = RequestNotPermitted.class)
-    public void testRateLimiterNotLimiting() throws Exception {
-        setupStub(200);
+        when(rateLimiter.acquirePermission()).thenReturn(false);
+        RateLimiterConfig config = RateLimiterConfig.ofDefaults();
+        when(rateLimiter.getRateLimiterConfig()).thenReturn(config);
 
         testService.greeting();
-        testService.greeting();
-        testService.greeting();
 
-        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(0, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
     @Test(expected = FeignException.class)
     public void testFailedHttpCall() {
         setupStub(400);
+
+        when(rateLimiter.acquirePermission()).thenReturn(true);
 
         testService.greeting();
     }
