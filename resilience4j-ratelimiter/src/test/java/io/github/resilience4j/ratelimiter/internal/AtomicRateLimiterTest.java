@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(AtomicRateLimiter.class)
-public class AtomicRateLimiterTest {
+public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
 
     private static final String LIMITER_NAME = "test";
     private static final long CYCLE_IN_NANOS = 250_000_000L;
@@ -47,6 +47,11 @@ public class AtomicRateLimiterTest {
     private static final int PERMISSIONS_RER_CYCLE = 1;
     private AtomicRateLimiter rateLimiter;
     private AtomicRateLimiter.AtomicRateLimiterMetrics metrics;
+
+    @Override
+    protected RateLimiter buildRateLimiter(RateLimiterConfig config) {
+        return new AtomicRateLimiter("atomic", config);
+    }
 
     private static ConditionFactory awaitImpatiently() {
         return await()
@@ -73,26 +78,19 @@ public class AtomicRateLimiterTest {
     @Test
     public void notSpyRawTest() {
         RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-                .limitForPeriod(PERMISSIONS_RER_CYCLE)
-                .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
-                .timeoutDuration(Duration.ZERO)
-                .build();
+            .limitForPeriod(PERMISSIONS_RER_CYCLE)
+            .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
+            .timeoutDuration(Duration.ZERO)
+            .build();
         AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
         AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics = rawLimiter.getDetailedMetrics();
 
-        long firstCycle = rawDetailedMetrics.getCycle();
-        while (firstCycle == rawDetailedMetrics.getCycle()) {
-            System.out.print('.'); // wait for current cycle to pass
-        }
+        long firstCycle = waitForCurrentCycleToPass(rawDetailedMetrics, '.');
 
         boolean firstPermission = rawLimiter.acquirePermission();
         then(firstPermission).isTrue();
 
-        long nanosToWait = rawDetailedMetrics.getNanosToWait();
-        long startTime = System.nanoTime();
-        while(System.nanoTime() - startTime < nanosToWait) {
-            System.out.print('*'); // wait for permission renewal
-        }
+        waitForPermissionRenewal(rawDetailedMetrics, '*');
 
         boolean secondPermission = rawLimiter.acquirePermission();
         then(secondPermission).isTrue();
@@ -102,11 +100,7 @@ public class AtomicRateLimiterTest {
         long secondCycle = rawDetailedMetrics.getCycle();
 
         rawLimiter.changeLimitForPeriod(PERMISSIONS_RER_CYCLE * 2);
-        nanosToWait = rawDetailedMetrics.getNanosToWait();
-        startTime = System.nanoTime();
-        while(System.nanoTime() - startTime < nanosToWait) {
-            System.out.print('^'); // wait for permission renewal
-        }
+        waitForPermissionRenewal(rawDetailedMetrics, '^');
         boolean thirdPermission = rawLimiter.acquirePermission();
         then(thirdPermission).isTrue();
 
@@ -117,7 +111,6 @@ public class AtomicRateLimiterTest {
         then(secondNoPermission).isFalse();
         long thirdCycle = rawDetailedMetrics.getCycle();
 
-
         then(secondCycle - firstCycle).isEqualTo(2);
         then(thirdCycle - secondCycle).isEqualTo(1);
     }
@@ -125,41 +118,29 @@ public class AtomicRateLimiterTest {
     @Test
     public void notSpyRawNonBlockingTest() {
         RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-                .limitForPeriod(PERMISSIONS_RER_CYCLE)
-                .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
-                .timeoutDuration(Duration.ZERO)
-                .build();
+            .limitForPeriod(PERMISSIONS_RER_CYCLE)
+            .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
+            .timeoutDuration(Duration.ZERO)
+            .build();
 
         AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
         AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics = rawLimiter.getDetailedMetrics();
 
-        long firstCycle = rawDetailedMetrics.getCycle();
-        while (firstCycle == rawDetailedMetrics.getCycle()) {
-            System.out.print('.'); // wait for current cycle to pass
-        }
+        long firstCycle = waitForCurrentCycleToPass(rawDetailedMetrics, '.');
 
         long firstPermission = rawLimiter.reservePermission();
-        long nanosToWait = rawDetailedMetrics.getNanosToWait();
-        long startTime = System.nanoTime();
-        while(System.nanoTime() - startTime < nanosToWait) {
-            System.out.print('*'); // wait for permission renewal
-        }
+        waitForPermissionRenewal(rawDetailedMetrics, '*');
 
         long secondPermission = rawLimiter.reservePermission();
         long firstNoPermission = rawLimiter.reservePermission();
         long secondCycle = rawDetailedMetrics.getCycle();
 
         rawLimiter.changeLimitForPeriod(PERMISSIONS_RER_CYCLE * 2);
-        nanosToWait = rawDetailedMetrics.getNanosToWait();
-        startTime = System.nanoTime();
-        while(System.nanoTime() - startTime < nanosToWait) {
-            System.out.print('^'); // wait for permission renewal
-        }
+        waitForPermissionRenewal(rawDetailedMetrics, '^');
         long thirdPermission = rawLimiter.reservePermission();
         long fourthPermission = rawLimiter.reservePermission();
         long secondNoPermission = rawLimiter.reservePermission();
         long thirdCycle = rawDetailedMetrics.getCycle();
-
 
         then(secondCycle - firstCycle).isEqualTo(2);
         then(thirdCycle - secondCycle).isEqualTo(1);
@@ -220,7 +201,7 @@ public class AtomicRateLimiterTest {
 
         AtomicReference<Boolean> reservedPermission = new AtomicReference<>(null);
         Thread caller = new Thread(
-            () -> reservedPermission.set(rateLimiter.acquirePermission()));
+                () -> reservedPermission.set(rateLimiter.acquirePermission()));
         caller.setDaemon(true);
         caller.start();
         awaitImpatiently()
@@ -299,7 +280,7 @@ public class AtomicRateLimiterTest {
         secondCaller.setDaemon(true);
         secondCaller.start();
         awaitImpatiently()
-                .atMost(5, SECONDS)
+            .atMost(5, SECONDS)
             .until(secondCaller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS * 2);
@@ -315,6 +296,14 @@ public class AtomicRateLimiterTest {
         then(metrics.getAvailablePermissions()).isEqualTo(1);
         then(metrics.getNanosToWait()).isEqualTo(0L);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+    }
+    
+    @Test
+    public void reserveManyCyclesIfWegithgreaterThenLimitPerPeriod() throws Exception {
+        setup(Duration.ofNanos(CYCLE_IN_NANOS * 5));
+        setTimeOnNanos(CYCLE_IN_NANOS);
+        long nanosToWait = rateLimiter.reservePermission(PERMISSIONS_RER_CYCLE * 3);
+        then(nanosToWait).isGreaterThan(CYCLE_IN_NANOS);
     }
 
     @Test
@@ -391,12 +380,12 @@ public class AtomicRateLimiterTest {
 
         AtomicReference<Boolean> reservedPermission = new AtomicReference<>(null);
         Thread caller = new Thread(
-                () -> reservedPermission.set(rateLimiter.acquirePermission()));
+            () -> reservedPermission.set(rateLimiter.acquirePermission()));
         caller.setDaemon(true);
         caller.start();
         awaitImpatiently()
-                .atMost(5, SECONDS)
-                .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
+            .atMost(5, SECONDS)
+            .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS + CYCLE_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
@@ -407,11 +396,10 @@ public class AtomicRateLimiterTest {
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
 
-
         setTimeOnNanos(CYCLE_IN_NANOS * 2 + 10);
         awaitImpatiently()
-                .atMost(5, SECONDS)
-                .until(reservedPermission::get, equalTo(true));
+            .atMost(5, SECONDS)
+            .until(reservedPermission::get, equalTo(true));
 
         then(metrics.getAvailablePermissions()).isEqualTo(1);
         then(metrics.getNanosToWait()).isEqualTo(0);
@@ -477,5 +465,23 @@ public class AtomicRateLimiterTest {
     public void metrics() {
         setup(Duration.ZERO);
         then(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isEqualTo(0);
+    }
+
+    private long waitForCurrentCycleToPass(AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics, char printedWhileWaiting) {
+        long cycle = rawDetailedMetrics.getCycle();
+        while (cycle == rawDetailedMetrics.getCycle()) {
+            System.out.print(printedWhileWaiting);
+        }
+        System.out.println();
+        return cycle;
+    }
+
+    private void waitForPermissionRenewal(AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics, char printedWhileWaiting) {
+        long nanosToWait = rawDetailedMetrics.getNanosToWait();
+        long startTime = System.nanoTime();
+        while (System.nanoTime() - startTime < nanosToWait) {
+            System.out.print(printedWhileWaiting);
+        }
+        System.out.println();
     }
 }

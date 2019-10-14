@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2019 authors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,19 +16,16 @@
  *
  *
  */
-package io.github.resilience4j.ratelimiter.event;
+package io.github.resilience4j.kotlin
 
-public class RateLimiterOnSuccessEvent extends AbstractRateLimiterEvent {
-    public RateLimiterOnSuccessEvent(String rateLimiterName) {
-        super(rateLimiterName, 1);
-    }
-	
-    public RateLimiterOnSuccessEvent(String rateLimiterName, int numberOfPermits) {
-        super(rateLimiterName, numberOfPermits);
-    }
+import kotlinx.coroutines.Job
+import java.util.concurrent.CancellationException
+import kotlin.coroutines.CoroutineContext
 
-    @Override
-    public Type getEventType() {
-        return Type.SUCCESSFUL_ACQUIRE;
-    }
+internal fun isCancellation(coroutineContext: CoroutineContext, error: Throwable? = null): Boolean {
+
+    // If job is missing then there is no cancellation
+    val job = coroutineContext[Job] ?: return false
+
+    return job.isCancelled || (error != null && error is CancellationException)
 }

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2019 authors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,19 +16,23 @@
  *
  *
  */
-package io.github.resilience4j.ratelimiter.event;
+package io.github.resilience4j.kotlin.timelimiter
 
-public class RateLimiterOnSuccessEvent extends AbstractRateLimiterEvent {
-    public RateLimiterOnSuccessEvent(String rateLimiterName) {
-        super(rateLimiterName, 1);
-    }
-	
-    public RateLimiterOnSuccessEvent(String rateLimiterName, int numberOfPermits) {
-        super(rateLimiterName, numberOfPermits);
-    }
+import io.github.resilience4j.timelimiter.TimeLimiter
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collect
 
-    @Override
-    public Type getEventType() {
-        return Type.SUCCESSFUL_ACQUIRE;
+
+@UseExperimental(ExperimentalCoroutinesApi::class)
+fun <T> Flow<T>.timeLimiter(timeLimiter: TimeLimiter): Flow<T> {
+    val source = this
+    return channelFlow {
+        timeLimiter.executeSuspendFunction {
+            source.collect {
+                send(it)
+            }
+        }
     }
 }
