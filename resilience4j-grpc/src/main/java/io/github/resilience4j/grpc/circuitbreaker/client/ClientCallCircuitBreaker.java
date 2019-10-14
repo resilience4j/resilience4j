@@ -1,4 +1,4 @@
-package io.github.resilience4j.grpc.circuitbreaker;
+package io.github.resilience4j.grpc.circuitbreaker.client;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
@@ -11,14 +11,14 @@ import io.grpc.Status;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-public class CircuitBreakerClientCall<ReqT, RespT>
+public class ClientCallCircuitBreaker<ReqT, RespT>
         extends ClientInterceptors.CheckedForwardingClientCall<ReqT, RespT> {
 
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
     private boolean isCancelled = false;
 
-    CircuitBreakerClientCall(
+    protected ClientCallCircuitBreaker(
             ClientCall<ReqT, RespT> delegate,
             CircuitBreaker circuitBreaker,
             Predicate<Status> successStatusPredicate) {
@@ -28,16 +28,22 @@ public class CircuitBreakerClientCall<ReqT, RespT>
         this.successStatusPredicate = successStatusPredicate;
     }
 
+    public static <ReqT, RespT> ClientCallCircuitBreaker<ReqT, RespT> decorate(
+            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker){
+        return new ClientCallCircuitBreaker<>(call, circuitBreaker, Status::isOk);
+    }
+
+    public static <ReqT, RespT> ClientCallCircuitBreaker<ReqT, RespT> decorate(
+            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
+        return new ClientCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
+    }
+
     @Override
     protected void checkedStart(
             Listener<RespT> responseListener, Metadata headers) throws Exception {
 
-        if(circuitBreaker != null){
-            circuitBreaker.acquirePermission();
-            delegate().start(new CircuitBreakerListener(responseListener), headers);
-        } else {
-            delegate().start(responseListener, headers);
-        }
+        circuitBreaker.acquirePermission();
+        delegate().start(new CircuitBreakerListener(responseListener), headers);
     }
 
     @Override
@@ -46,18 +52,13 @@ public class CircuitBreakerClientCall<ReqT, RespT>
         super.cancel(message, cause);
     }
 
-    private class CircuitBreakerListener extends ForwardingClientCallListener<RespT> {
+    private class CircuitBreakerListener
+            extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
 
-        private final ClientCall.Listener<RespT> _delegate;
         private final long startTime = System.nanoTime();
 
         CircuitBreakerListener(Listener<RespT> delegate) {
-            this._delegate = delegate;
-        }
-
-        @Override
-        protected ClientCall.Listener<RespT> delegate() {
-            return this._delegate;
+            super(delegate);
         }
 
         @Override

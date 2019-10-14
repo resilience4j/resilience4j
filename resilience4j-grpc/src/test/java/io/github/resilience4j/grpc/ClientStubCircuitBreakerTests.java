@@ -2,7 +2,7 @@ package io.github.resilience4j.grpc;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.grpc.circuitbreaker.CircuitBreakerCallOptions;
-import io.github.resilience4j.grpc.circuitbreaker.ClientCircuitBreakerInterceptor;
+import io.github.resilience4j.grpc.circuitbreaker.client.interceptor.ClientCircuitBreakerInterceptor;
 import io.grpc.Channel;
 import io.grpc.ClientInterceptors;
 import io.grpc.Status;
@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class GrpcClientCircuitBreaker {
+public class ClientStubCircuitBreakerTests {
 
     @Rule
     public GrpcServerRule serverRule = new GrpcServerRule();
@@ -94,6 +94,14 @@ public class GrpcClientCircuitBreaker {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+
+    }
+
+    public void recordFaliureOnNotPermittedCalls(){
+
+    }
+
+    public void shouldNotRecordFaliureWhenCallCancelled(){
 
     }
 

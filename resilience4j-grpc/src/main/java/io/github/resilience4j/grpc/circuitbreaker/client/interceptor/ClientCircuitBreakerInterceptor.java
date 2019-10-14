@@ -1,6 +1,8 @@
-package io.github.resilience4j.grpc.circuitbreaker;
+package io.github.resilience4j.grpc.circuitbreaker.client.interceptor;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.grpc.circuitbreaker.CircuitBreakerCallOptions;
+import io.github.resilience4j.grpc.circuitbreaker.client.ClientCallCircuitBreaker;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -17,7 +19,7 @@ public class ClientCircuitBreakerInterceptor implements ClientInterceptor {
                 .getOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER);
 
         if(circuitBreaker != null){
-            return new CircuitBreakerClientCall<>(
+            return ClientCallCircuitBreaker.decorate(
                     next.newCall(method, callOptions), circuitBreaker,
                     callOptions.getOption(CircuitBreakerCallOptions.SUCCESS_STATUS));
         } else {
