@@ -178,10 +178,10 @@ public class AtomicRateLimiter implements RateLimiter {
 
     /**
      * A side-effect-free function that can calculate next {@link State} from current.
-     * It determines time duration that you should wait for permission and reserves it for you,
-     * if you'll be able to wait long enough.
+     * It determines time duration that you should wait for the given number of permits
+     * and reserves it for you, if you'll be able to wait long enough.
      *
-	 * @param permits permits of the permission
+     * @param permits        number of permits
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
      * @param activeState    current state of {@link AtomicRateLimiter}
      * @return next {@link State}
