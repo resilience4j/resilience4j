@@ -40,7 +40,7 @@ public class ClientCircuitBreakerInterceptor implements ClientInterceptor {
     }
 
     public static ClientCircuitBreakerInterceptor of(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
+            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ClientCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
     }
 

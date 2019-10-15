@@ -26,30 +26,33 @@ import java.util.function.Predicate;
 
 public class ClientCircuitBreakerInterceptors {
 
-    public static <S extends AbstractStub<S>> S decorate(S stub){
+    private ClientCircuitBreakerInterceptors() {
+    }
+
+    public static <S extends AbstractStub<S>> S decorate(S stub) {
         return stub.withInterceptors(new ClientDynamicCircuitBreakerInterceptor());
     }
 
-    public static <S extends AbstractStub<S>> S decorate(S stub, CircuitBreaker circuitBreaker){
+    public static <S extends AbstractStub<S>> S decorate(S stub, CircuitBreaker circuitBreaker) {
         return decorate(stub, circuitBreaker, Status::isOk);
     }
 
     public static <S extends AbstractStub<S>> S decorate(
-            S stub, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
+            S stub, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         return stub.withInterceptors(ClientCircuitBreakerInterceptor.of(circuitBreaker, successStatusPredicate));
     }
 
-    public static Channel intercept(Channel channel){
+    public static Channel intercept(Channel channel) {
         return ClientInterceptors.intercept(channel, new ClientDynamicCircuitBreakerInterceptor());
     }
 
-    public static Channel intercept(Channel channel, CircuitBreaker circuitBreaker){
+    public static Channel intercept(Channel channel, CircuitBreaker circuitBreaker) {
         return intercept(channel, circuitBreaker, Status::isOk);
     }
 
     public static Channel intercept(
-            Channel channel, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
+            Channel channel, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         return ClientInterceptors.intercept(
                 channel, ClientCircuitBreakerInterceptor.of(circuitBreaker, successStatusPredicate));

@@ -26,34 +26,35 @@ import java.util.function.Predicate;
 
 public class ServerCircuitBreakerInterceptors {
 
-    private ServerCircuitBreakerInterceptors(){}
+    private ServerCircuitBreakerInterceptors() {
+    }
 
-    public static ServerCircuitBreakerInterceptor from(CircuitBreaker circuitBreaker){
+    public static ServerCircuitBreakerInterceptor from(CircuitBreaker circuitBreaker) {
         return from(circuitBreaker, Status::isOk);
     }
 
     public static ServerCircuitBreakerInterceptor from(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
-        return new ServerCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
+            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        return ServerCircuitBreakerInterceptor.from(circuitBreaker, successStatusPredicate);
     }
 
     public static ServiceMethodCircuitBreakerInterceptor forMethod(
-            MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker){
+            MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker) {
         return forMethod(methodDescriptor, circuitBreaker, Status::isOk);
     }
 
     public static ServiceMethodCircuitBreakerInterceptor forMethod(
             MethodDescriptor<?, ?> methodDescriptor,
             CircuitBreaker circuitBreaker,
-            Predicate<Status> successStatusPredicate){
-        return new ServiceMethodCircuitBreakerInterceptor(methodDescriptor, circuitBreaker, successStatusPredicate);
+            Predicate<Status> successStatusPredicate) {
+        return ServiceMethodCircuitBreakerInterceptor.from(methodDescriptor, circuitBreaker, successStatusPredicate);
     }
 
-    public static ServerCircuitBreakerDecorator decoratorFor(ServerServiceDefinition serviceDef){
+    public static ServerCircuitBreakerDecorator decoratorFor(ServerServiceDefinition serviceDef) {
         return new ServerServiceDefinitionDecorator(serviceDef);
     }
 
-    public static ServerCircuitBreakerDecorator decoratorFor(BindableService bindableService){
+    public static ServerCircuitBreakerDecorator decoratorFor(BindableService bindableService) {
         return new BindableServiceDecorator(bindableService);
     }
 

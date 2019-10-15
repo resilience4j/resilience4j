@@ -30,5 +30,6 @@ public class CircuitBreakerCallOptions {
     public static CallOptions.Key<Predicate<Status>> SUCCESS_STATUS = CallOptions.Key
             .createWithDefault("resilience4j-circuitbreaker-success-status", Status::isOk);
 
-    private CircuitBreakerCallOptions() {}
+    private CircuitBreakerCallOptions() {
+    }
 }

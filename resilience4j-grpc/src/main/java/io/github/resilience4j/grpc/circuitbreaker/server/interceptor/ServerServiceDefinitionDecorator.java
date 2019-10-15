@@ -27,7 +27,7 @@ public class ServerServiceDefinitionDecorator extends ServerCircuitBreakerDecora
         this.serverServiceDefinition = serverServiceDefinition;
     }
 
-    public ServerServiceDefinition build(){
+    public ServerServiceDefinition build() {
         return ServerInterceptors.interceptForward(serverServiceDefinition, interceptors);
     }
 }

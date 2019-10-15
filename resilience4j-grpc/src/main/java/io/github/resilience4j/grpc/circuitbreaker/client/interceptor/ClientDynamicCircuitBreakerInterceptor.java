@@ -34,7 +34,7 @@ public class ClientDynamicCircuitBreakerInterceptor implements ClientInterceptor
         CircuitBreaker circuitBreaker = callOptions
                 .getOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER);
 
-        if(circuitBreaker != null){
+        if (circuitBreaker != null) {
             return ClientCallCircuitBreaker.decorate(
                     next.newCall(method, callOptions), circuitBreaker,
                     callOptions.getOption(CircuitBreakerCallOptions.SUCCESS_STATUS));

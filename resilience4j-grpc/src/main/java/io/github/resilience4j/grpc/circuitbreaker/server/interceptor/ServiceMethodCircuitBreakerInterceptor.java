@@ -29,11 +29,11 @@ import java.util.function.Predicate;
 
 public class ServiceMethodCircuitBreakerInterceptor implements ServerInterceptor {
 
-    private final MethodDescriptor<?,?> methodDescriptor;
+    private final MethodDescriptor<?, ?> methodDescriptor;
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
 
-    ServiceMethodCircuitBreakerInterceptor(
+    private ServiceMethodCircuitBreakerInterceptor(
             MethodDescriptor<?, ?> methodDescriptor,
             CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
@@ -42,13 +42,20 @@ public class ServiceMethodCircuitBreakerInterceptor implements ServerInterceptor
         this.successStatusPredicate = successStatusPredicate;
     }
 
+    public static ServiceMethodCircuitBreakerInterceptor from(
+            MethodDescriptor<?, ?> methodDescriptor,
+            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+
+        return new ServiceMethodCircuitBreakerInterceptor(methodDescriptor, circuitBreaker, successStatusPredicate);
+    }
+
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
             ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
         ServerCall<ReqT, RespT> callToExecute = call;
 
-        if(call.getMethodDescriptor().getFullMethodName()
+        if (call.getMethodDescriptor().getFullMethodName()
                 .equals(methodDescriptor.getFullMethodName())) {
             callToExecute = ServerCallCircuitBreaker.decorate(call, circuitBreaker, successStatusPredicate);
         }

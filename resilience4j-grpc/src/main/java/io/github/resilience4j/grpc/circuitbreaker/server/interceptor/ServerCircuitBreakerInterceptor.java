@@ -31,11 +31,16 @@ public class ServerCircuitBreakerInterceptor implements ServerInterceptor {
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
 
-    ServerCircuitBreakerInterceptor(
+    private ServerCircuitBreakerInterceptor(
             CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         this.circuitBreaker = circuitBreaker;
         this.successStatusPredicate = successStatusPredicate;
+    }
+
+    public static ServerCircuitBreakerInterceptor from(
+            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        return new ServerCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
     }
 
     @Override

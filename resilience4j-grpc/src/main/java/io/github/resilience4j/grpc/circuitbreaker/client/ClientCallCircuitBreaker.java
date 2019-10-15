@@ -46,19 +46,19 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
     }
 
     public static <ReqT, RespT> ClientCallCircuitBreaker<ReqT, RespT> decorate(
-            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker){
+            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker) {
         return new ClientCallCircuitBreaker<>(call, circuitBreaker, Status::isOk);
     }
 
     public static <ReqT, RespT> ClientCallCircuitBreaker<ReqT, RespT> decorate(
-            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
+            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ClientCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
     private void acquirePermissionOrThrowStatus() throws StatusException {
-        try{
+        try {
             circuitBreaker.acquirePermission();
-        }catch (Exception exception){
+        } catch (Exception exception) {
             throw Status.UNAVAILABLE
                     .withDescription(exception.getMessage())
                     .withCause(exception)
@@ -91,11 +91,11 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
         @Override
         public void onClose(Status status, Metadata trailers) {
 
-            if(isCancelled){
+            if (isCancelled) {
                 circuitBreaker.releasePermission();
-            }else if(successStatusPredicate.test(status)){
+            } else if (successStatusPredicate.test(status)) {
                 circuitBreaker.onSuccess(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
-            }else{
+            } else {
                 circuitBreaker.onError(
                         System.nanoTime() - startTime, TimeUnit.NANOSECONDS,
                         status.asRuntimeException(trailers));

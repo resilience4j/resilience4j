@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class ServerCallCircuitBreaker<ReqT, RespT>
-        extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT>{
+        extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
 
     private final long startTime = System.nanoTime();
     private final CircuitBreaker circuitBreaker;
@@ -43,22 +43,23 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
     }
 
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(
-            ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker){
+            ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker) {
         return decorate(call, circuitBreaker, Status::isOk);
     }
 
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(
-            ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
+            ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ServerCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
+
     @Override
     public void close(Status status, Metadata trailers) {
-        if(delegate().isCancelled()){
+        if (delegate().isCancelled()) {
             circuitBreaker.releasePermission();
-        }else if(successStatusPredicate.test(status)){
+        } else if (successStatusPredicate.test(status)) {
             circuitBreaker.onSuccess(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
-        }else{
+        } else {
             circuitBreaker.onError(
                     System.nanoTime() - startTime, TimeUnit.NANOSECONDS,
                     status.asRuntimeException(trailers));
