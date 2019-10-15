@@ -15,9 +15,6 @@
  */
 package io.github.resilience4j;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -25,6 +22,10 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 public interface TestDummyService {
 	String BACKEND = "backendA";
@@ -51,6 +52,35 @@ public interface TestDummyService {
 	Maybe<String> maybe();
 
 	Flowable<String> flowable();
+
+	Future<String> asyncThreadPoolWithFutureSuccess();
+
+	Future<String> asyncThreadPoolWithFutureRecovery();
+
+	Future<String> asyncThreadPoolWithFutureRecoveryFailure();
+
+	Future<String> asyncFuture();
+
+	default Future<String> asyncFuture(FlakyBehavior flakyBehavior){
+		return CompletableFuture.supplyAsync(() -> flakyBehavior.execute());
+	}
+
+	default CompletionStage<String> async(FlakyBehavior flakyBehavior) {
+		return CompletableFuture.supplyAsync(() -> flakyBehavior.execute());
+	}
+
+	default Future<String> asyncFutureError() {
+		CompletableFuture<String> future = new CompletableFuture<>();
+		future.completeExceptionally(new RuntimeException("Test"));
+		return future;
+	}
+	default Future<String> futureRecovery(Throwable throwable) {
+		return CompletableFuture.supplyAsync(() -> "recovered");
+	}
+
+	default Future<String> futureRecoveryFailure(Throwable throwable) {
+		return CompletableFuture.supplyAsync(() -> { throw new RuntimeException("failed");});
+	}
 
 	default String syncError() {
 		throw new RuntimeException("Test");

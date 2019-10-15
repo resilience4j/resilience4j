@@ -20,6 +20,7 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -119,6 +120,8 @@ public class RateLimiterAspect implements Ordered {
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter);
+		} else if(Future.class.isAssignableFrom(returnType)){
+			return handleJoinPointFuture(proceedingJoinPoint, rateLimiter);
 		}
 		return handleJoinPoint(proceedingJoinPoint, rateLimiter);
 	}
@@ -171,6 +174,22 @@ public class RateLimiterAspect implements Ordered {
 		});
 	}
 
+	/**
+	 * handle the asynchronous future flow
+	 *
+	 * @param proceedingJoinPoint AOPJoinPoint
+	 * @param rateLimiter         configured rate limiter
+	 * @return CompletionStage
+	 */
+	private Object handleJoinPointFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
+		return rateLimiter.executeSupplier(() -> {
+			try {
+				return (Future<?>) proceedingJoinPoint.proceed();
+			} catch (Throwable throwable) {
+				throw new CompletionException(throwable);
+			}
+		});
+	}
 
 	@Override
 	public int getOrder() {

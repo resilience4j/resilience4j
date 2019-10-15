@@ -46,6 +46,11 @@ public class RetryRecoveryTest {
     }
 
     @Test
+    public void testAsyncFutureRecovery() throws Exception {
+		assertThat(testDummyService.asyncFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+	}
+
+    @Test
     public void testMonoRecovery() {
         assertThat(testDummyService.mono("test").block()).isEqualTo("test");
     }

@@ -1,18 +1,18 @@
 package io.github.resilience4j;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
-import org.springframework.stereotype.Component;
-
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 @Component
 public class BulkheadDummyService implements TestDummyService {
@@ -24,9 +24,7 @@ public class BulkheadDummyService implements TestDummyService {
 
 	@Override
 	@Bulkhead(name = BACKEND, fallbackMethod = "completionStageRecovery")
-	public CompletionStage<String> async() {
-		return asyncError();
-	}
+	public CompletionStage<String> async() { return asyncError(); }
 
 	@Override
 	@Bulkhead(name = BACKEND_B, type = Bulkhead.Type.THREADPOOL, fallbackMethod = "completionStageRecovery")
@@ -81,4 +79,27 @@ public class BulkheadDummyService implements TestDummyService {
 	public Flowable<String> flowable() {
 		return flowableError();
 	}
+
+	@Override
+	@Bulkhead(name = BACKEND, fallbackMethod = "futureRecovery")
+	public Future<String> asyncFuture() { return asyncFutureError(); }
+
+	@Override
+	@Bulkhead(name = BACKEND_B, type = Bulkhead.Type.THREADPOOL, fallbackMethod = "futureRecovery")
+	public Future<String> asyncThreadPoolWithFutureRecovery() {
+		return asyncFutureError();
+	}
+
+	@Override
+	@Bulkhead(name = BACKEND_B, type = Bulkhead.Type.THREADPOOL, fallbackMethod = "futureRecoveryFailure")
+	public Future<String> asyncThreadPoolWithFutureRecoveryFailure() {
+		return asyncFutureError();
+	}
+
+	@Override
+	@Bulkhead(name = BACKEND_B, type = Bulkhead.Type.THREADPOOL)
+	public Future<String> asyncThreadPoolWithFutureSuccess() {
+		return CompletableFuture.completedFuture("finished");
+	}
+
 }

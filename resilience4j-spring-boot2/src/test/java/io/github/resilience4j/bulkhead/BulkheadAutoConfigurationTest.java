@@ -169,6 +169,19 @@ public class BulkheadAutoConfigurationTest {
             es.submit(dummyService::doSomethingAsync);
         }
 
+        assertBulkheadEvents();
+        
+        for (int i = 0; i < 5; i++) {
+            es.submit(dummyService::doSomethingAsyncWithFuture);
+        }
+
+        assertBulkheadEvents();
+
+
+        es.shutdown();
+    }
+
+    private void assertBulkheadEvents() {
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents/backendC");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody().getBulkheadEvents();
 
@@ -179,8 +192,6 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkheadEventsByBackend.stream().filter(it -> it.getType() == BulkheadEvent.Type.CALL_FINISHED).count() == 1);
 
         assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
-
-        es.shutdown();
     }
 
 

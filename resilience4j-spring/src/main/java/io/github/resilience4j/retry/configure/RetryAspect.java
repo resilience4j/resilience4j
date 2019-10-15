@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -116,6 +117,8 @@ public class RetryAspect implements Ordered {
 	private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName, io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, retry);
+		} else if (Future.class.isAssignableFrom(returnType)) {
+			return handleJoinPointFuture(proceedingJoinPoint, retry);
 		}
 		if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
 			for (RetryAspectExt retryAspectExt : retryAspectExtList) {
@@ -176,6 +179,24 @@ public class RetryAspect implements Ordered {
 		return retry.executeCompletionStage(retryExecutorService, () -> {
 			try {
 				return (CompletionStage<Object>) proceedingJoinPoint.proceed();
+			} catch (Throwable throwable) {
+				throw new CompletionException(throwable);
+			}
+		});
+	}
+
+	/**
+	 * Handle joint point execution of type Future
+	 *
+	 * @param proceedingJoinPoint the AOP logic joint point
+	 * @param retry               the configured async retry
+	 * @return the result object if any
+	 */
+	@SuppressWarnings("unchecked")
+	private Object handleJoinPointFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.retry.Retry retry) {
+		return retry.executeFuture(retryExecutorService, () -> {
+			try {
+				return ((Future) proceedingJoinPoint.proceed());
 			} catch (Throwable throwable) {
 				throw new CompletionException(throwable);
 			}

@@ -37,6 +37,7 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker} annotation.
@@ -111,6 +112,8 @@ public class CircuitBreakerAspect implements Ordered {
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker);
+		}else if (Future.class.isAssignableFrom(returnType)) {
+			return handleJoinPointFuture(proceedingJoinPoint, circuitBreaker);
 		}
 		return defaultHandling(proceedingJoinPoint, circuitBreaker);
 	}
@@ -147,6 +150,19 @@ public class CircuitBreakerAspect implements Ordered {
 		return circuitBreaker.executeCompletionStage(() -> {
 			try {
 				return (CompletionStage<?>) proceedingJoinPoint.proceed();
+			} catch (Throwable throwable) {
+				throw new CompletionException(throwable);
+			}
+		});
+	}
+
+	/**
+	 * handle the Future return types AOP based into configured circuit-breaker
+	 */
+	private Object handleJoinPointFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) {
+		return circuitBreaker.executeSupplier(() -> {
+			try {
+				return (Future<?>) proceedingJoinPoint.proceed();
 			} catch (Throwable throwable) {
 				throw new CompletionException(throwable);
 			}

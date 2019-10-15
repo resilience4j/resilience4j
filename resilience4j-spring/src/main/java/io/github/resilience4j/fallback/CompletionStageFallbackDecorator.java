@@ -15,10 +15,11 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.vavr.CheckedFunction0;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import io.vavr.CheckedFunction0;
+import java.util.concurrent.Future;
 
 /**
  * fallbackMethod decorator for {@link CompletionStage}
@@ -27,7 +28,7 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
 
     @Override
     public boolean supports(Class<?> target) {
-        return CompletionStage.class.isAssignableFrom(target);
+        return CompletionStage.class.isAssignableFrom(target) || Future.class.isAssignableFrom(target);
     }
 
     @SuppressWarnings("unchecked")

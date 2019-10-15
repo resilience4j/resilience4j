@@ -94,6 +94,42 @@ public interface Retry {
 	}
 
 	/**
+	 * Decorates Future Supplier with Retry. Adapts Future to CompletableFuture.
+	 *
+	 * @param retry     the retry context
+	 * @param scheduler execution service to use to schedule retries
+	 * @param supplier  completion stage supplier
+	 * @param <T>       type of Future result
+	 * @return decorated supplier
+	 */
+	static <T> Supplier<CompletionStage<T>> decorateFuture(
+			Retry retry,
+			ScheduledExecutorService scheduler,
+			Supplier<Future<T>> supplier
+	) {
+		return decorateCompletionStage(retry, scheduler, () -> {
+			final CompletableFuture<T> promise = new CompletableFuture<>();
+			final Future<T> future = supplier.get();
+			do {
+				if (future.isDone()) {
+					try {
+						promise.complete(future.get());
+					} catch (InterruptedException e) {
+						promise.completeExceptionally(e);
+					} catch (ExecutionException e) {
+						promise.completeExceptionally(e.getCause());
+					}
+					return promise;
+				}
+				if (future.isCancelled()) {
+					promise.cancel(true);
+					return promise;
+				}
+			} while (true);
+		});
+	}
+
+	/**
 	 * Creates a retryable supplier.
 	 *
 	 * @param retry    the retry context
@@ -433,6 +469,18 @@ public interface Retry {
 	 */
 	default <T> CompletionStage<T> executeCompletionStage(ScheduledExecutorService scheduler, Supplier<CompletionStage<T>> supplier) {
 		return decorateCompletionStage(this, scheduler, supplier).get();
+	}
+
+	/**
+	 * Decorates and executes the decorated future.
+	 *
+	 * @param scheduler execution service to use to schedule retries
+	 * @param supplier  the original CompletionStage
+	 * @param <T>       the type of results supplied by this supplier
+	 * @return the decorated CompletionStage.
+	 */
+	default <T> CompletionStage<T> executeFuture(ScheduledExecutorService scheduler, Supplier<Future<T>> supplier) {
+		return decorateFuture(this, scheduler, supplier).get();
 	}
 
 	/**

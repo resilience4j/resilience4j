@@ -1,17 +1,18 @@
 package io.github.resilience4j;
 
-import java.util.concurrent.CompletionStage;
-
-import org.springframework.stereotype.Component;
-
 import io.github.resilience4j.retry.annotation.Retry;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 @Component
 public class RetryDummyService implements TestDummyService {
@@ -34,6 +35,18 @@ public class RetryDummyService implements TestDummyService {
 	}
 
 	@Override
+	@Retry(name = BACKEND)
+	public Future<String> asyncFuture(FlakyBehavior flakyBehavior) {
+		return CompletableFuture.supplyAsync(() -> flakyBehavior.execute());
+	}
+
+	@Override
+	@Retry(name = BACKEND)
+	public CompletionStage<String> async(FlakyBehavior flakyBehavior) {
+		return CompletableFuture.supplyAsync(() -> flakyBehavior.execute());
+	}
+
+	@Override
 	@Retry(name = BACKEND, fallbackMethod = "completionStageRecovery")
 	public CompletionStage<String> async() {
 		return asyncError();
@@ -43,6 +56,12 @@ public class RetryDummyService implements TestDummyService {
 	@Retry(name = BACKEND, fallbackMethod = "fluxRecovery")
 	public Flux<String> flux() {
 		return fluxError();
+	}
+
+	@Override
+	@Retry(name = BACKEND, fallbackMethod = "futureRecovery")
+	public Future<String> asyncFuture() {
+		return asyncFutureError();
 	}
 
 	@Override
@@ -79,5 +98,23 @@ public class RetryDummyService implements TestDummyService {
 	@Retry(name = BACKEND, fallbackMethod = "flowableRecovery")
 	public Flowable<String> flowable() {
 		return flowableError();
+	}
+
+	@Override
+	public Future<String> asyncThreadPoolWithFutureSuccess() {
+		// no-op
+		return null;
+	}
+
+	@Override
+	public Future<String> asyncThreadPoolWithFutureRecovery() {
+		// no-op
+		return null;
+	}
+
+	@Override
+	public Future<String> asyncThreadPoolWithFutureRecoveryFailure() {
+		// no-op
+		return null;
 	}
 }

@@ -1,17 +1,17 @@
 package io.github.resilience4j;
 
-import java.util.concurrent.CompletionStage;
-
-import org.springframework.stereotype.Component;
-
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 @Component
 public class CircuitBreakerDummyService implements TestDummyService {
@@ -38,6 +38,10 @@ public class CircuitBreakerDummyService implements TestDummyService {
 	public CompletionStage<String> async() {
 		return asyncError();
 	}
+
+	@Override
+	@CircuitBreaker(name = BACKEND, fallbackMethod = "futureRecovery")
+	public Future<String> asyncFuture() { return asyncFutureError(); }
 
 	@Override
 	@CircuitBreaker(name = BACKEND, fallbackMethod = "fluxRecovery")
@@ -80,4 +84,23 @@ public class CircuitBreakerDummyService implements TestDummyService {
 	public Flowable<String> flowable() {
 		return flowableError();
 	}
+
+    @Override
+    public Future<String> asyncThreadPoolWithFutureSuccess() {
+        // no-op
+        return null;
+    }
+
+    @Override
+    public Future<String> asyncThreadPoolWithFutureRecovery() {
+        // no-op
+        return null;
+    }
+
+    @Override
+    public Future<String> asyncThreadPoolWithFutureRecoveryFailure() {
+        // no-op
+        return null;
+    }
+
 }

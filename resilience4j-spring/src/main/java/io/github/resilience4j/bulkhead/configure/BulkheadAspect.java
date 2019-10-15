@@ -40,6 +40,7 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead} annotation.
@@ -138,6 +139,8 @@ public class BulkheadAspect implements Ordered {
 		}
 		if (CompletionStage.class.isAssignableFrom(returnType)) {
 			return handleJoinPointCompletableFuture(proceedingJoinPoint, bulkhead);
+		} else if (Future.class.isAssignableFrom(returnType)) {
+			return handleJoinPointFuture(proceedingJoinPoint, bulkhead);
 		}
 		return handleJoinPoint(proceedingJoinPoint, bulkhead);
 	}
@@ -201,6 +204,23 @@ public class BulkheadAspect implements Ordered {
 	}
 
 	/**
+	 * handle the asynchronous legacy future flow
+	 *
+	 * @param proceedingJoinPoint AOPJoinPoint
+	 * @param bulkhead            configured bulkhead
+	 * @return CompletionStage
+	 */
+	private Object handleJoinPointFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead) {
+		return bulkhead.executeSupplier(() -> {
+			try {
+				return ((Future) proceedingJoinPoint.proceed());
+			} catch (Throwable throwable) {
+				throw new CompletionException(throwable);
+			}
+		});
+	}
+
+	/**
 	 * execute the logic wrapped by ThreadPool bulkhead , please check {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead} for more information
 	 *
 	 * @param proceedingJoinPoint AOP proceedingJoinPoint
@@ -223,8 +243,16 @@ public class BulkheadAspect implements Ordered {
 					throw new CompletionException(throwable);
 				}
 			});
+		} else if (Future.class.isAssignableFrom(returnType)) {
+			return threadPoolBulkhead.executeSupplier(() -> {
+				try {
+					return ((Future<?>) proceedingJoinPoint.proceed()).get();
+				} catch (Throwable throwable) {
+					throw new CompletionException(throwable);
+				}
+			});
 		} else {
-			throw new IllegalStateException("ThreadPool bulkhead is only applicable for completable futures ");
+			throw new IllegalStateException("ThreadPool bulkhead is only applicable for completable futures and future type");
 		}
 	}
 

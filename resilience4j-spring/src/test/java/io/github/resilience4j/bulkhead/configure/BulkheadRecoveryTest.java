@@ -16,7 +16,9 @@
 package io.github.resilience4j.bulkhead.configure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -51,6 +53,18 @@ public class BulkheadRecoveryTest {
         assertThat(testDummyService.asyncThreadPool().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
 
         assertThat(testDummyService.asyncThreadPoolSuccess().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("finished");
+    }
+
+    @Test
+    public void testAsyncThreadPoolFutureRecovery() throws Exception {
+        assertThat(testDummyService.asyncThreadPoolWithFutureSuccess().get(5, TimeUnit.SECONDS)).isEqualTo("finished");
+
+        assertThat(testDummyService.asyncThreadPoolWithFutureRecovery().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+
+        Throwable thrown = catchThrowable(() -> testDummyService.asyncThreadPoolWithFutureRecoveryFailure().get(5, TimeUnit.SECONDS));
+        assertThat(thrown).isInstanceOf(ExecutionException.class)
+                .hasCauseInstanceOf(RuntimeException.class)
+                .withFailMessage("failed");
     }
 
     @Test

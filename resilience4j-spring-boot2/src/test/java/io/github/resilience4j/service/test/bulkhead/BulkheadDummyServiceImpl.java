@@ -1,6 +1,7 @@
 package io.github.resilience4j.service.test.bulkhead;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Component;
 
@@ -28,4 +29,12 @@ public class BulkheadDummyServiceImpl implements BulkheadDummyService {
         Thread.sleep(500);
         return CompletableFuture.completedFuture("Test");
     }
+	@Override
+	@Retry(name = BulkheadDummyService.BACKEND_C)
+	@Bulkhead(name = BulkheadDummyService.BACKEND_C, type = Bulkhead.Type.THREADPOOL)
+	public Future<String> doSomethingAsyncWithFuture() throws InterruptedException {
+		Thread.sleep(500);
+		return CompletableFuture.completedFuture("Test");
+	}
+
 }

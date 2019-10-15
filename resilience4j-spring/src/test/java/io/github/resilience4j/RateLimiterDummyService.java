@@ -1,6 +1,7 @@
 package io.github.resilience4j;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Component;
 
@@ -33,10 +34,33 @@ public class RateLimiterDummyService implements TestDummyService {
 		return null;
 	}
 
+    @Override
+    public Future<String> asyncThreadPoolWithFutureSuccess() {
+        //no-op
+        return null;
+    }
+
+    @Override
+    public Future<String> asyncThreadPoolWithFutureRecovery() {
+        // no-op
+        return null;
+    }
+
+	@Override
+	public Future<String> asyncThreadPoolWithFutureRecoveryFailure() {
+		return null;
+	}
+
 	@Override
 	@RateLimiter(name = BACKEND, fallbackMethod = "completionStageRecovery")
 	public CompletionStage<String> async() {
 		return asyncError();
+	}
+
+	@Override
+	@RateLimiter(name = BACKEND, fallbackMethod = "futureRecovery")
+	public Future<String> asyncFuture() {
+		return asyncFutureError();
 	}
 
 	@Override
