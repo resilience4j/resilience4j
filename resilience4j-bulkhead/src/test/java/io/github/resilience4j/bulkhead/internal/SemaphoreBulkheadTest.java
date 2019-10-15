@@ -49,12 +49,10 @@ public class SemaphoreBulkheadTest {
 
     @Before
     public void setUp() {
-
         BulkheadConfig config = BulkheadConfig.custom()
                 .maxConcurrentCalls(2)
                 .maxWaitDuration(Duration.ofMillis(0))
                 .build();
-
         bulkhead = Bulkhead.of("test", config);
         testSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
                 .map(BulkheadEvent::getEventType)
@@ -68,54 +66,40 @@ public class SemaphoreBulkheadTest {
 
     @Test
     public void testBulkhead() throws InterruptedException {
-
         bulkhead.tryAcquirePermission();
         bulkhead.tryAcquirePermission();
-
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
 
         bulkhead.tryAcquirePermission();
         bulkhead.onComplete();
-
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
 
         bulkhead.onComplete();
-
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
 
         bulkhead.tryAcquirePermission();
-
         testSubscriber.assertValueCount(6)
                 .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED, CALL_FINISHED, CALL_PERMITTED);
     }
 
     @Test
     public void testToString() {
-
-        // when
         String result = bulkhead.toString();
 
-        // then
         assertThat(result).isEqualTo("Bulkhead 'test'");
     }
 
     @Test
     public void testCreateWithNullConfig() {
-
-        // given
         Supplier<BulkheadConfig> configSupplier = () -> null;
 
-        // when
         assertThatThrownBy(() -> Bulkhead.of("test", configSupplier)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
     }
 
     @Test
     public void testCreateWithDefaults() {
-
-        // when
         Bulkhead bulkhead = Bulkhead.ofDefaults("test");
 
-        // then
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getBulkheadConfig()).isNotNull();
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
@@ -124,15 +108,12 @@ public class SemaphoreBulkheadTest {
 
     @Test
     public void testTryEnterWithTimeout() throws InterruptedException {
-        // given
         long expectedMillisOfWaitTime = 50;
         BulkheadConfig config = BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
                 .maxWaitDuration(Duration.ofMillis(expectedMillisOfWaitTime))
                 .build();
-
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-        // when
 
         boolean entered = bulkhead.tryEnterBulkhead();
         Thread subTestRoutine = new Thread(() -> {
@@ -145,7 +126,6 @@ public class SemaphoreBulkheadTest {
         subTestRoutine.setDaemon(true);
         subTestRoutine.start();
 
-        // then
         assertThat(entered).isTrue();
         subTestRoutine.join(2 * expectedMillisOfWaitTime);
         assertThat(subTestRoutine.isInterrupted()).isFalse();
@@ -154,15 +134,12 @@ public class SemaphoreBulkheadTest {
 
     @Test
     public void testTryEnterWithInterruptDuringTimeout() throws InterruptedException {
-        // given
         Duration expectedWaitTime = Duration.ofMillis(2000);
         BulkheadConfig config = BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
                 .maxWaitDuration(expectedWaitTime)
                 .build();
-
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-        // when
 
         AtomicBoolean interruptedWithoutCodeFlowBreak = new AtomicBoolean(false);
         boolean entered = bulkhead.tryEnterBulkhead();
@@ -170,7 +147,6 @@ public class SemaphoreBulkheadTest {
             long start = System.nanoTime();
             boolean acquired = bulkhead.tryAcquirePermission();
             Duration actualWaitTime = Duration.ofNanos(System.nanoTime() - start);
-
             assertThat(acquired).isFalse();
             assertThat(actualWaitTime).isLessThan(expectedWaitTime);
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
@@ -186,8 +162,6 @@ public class SemaphoreBulkheadTest {
         await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
                 .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
                 .until(() -> subTestRoutine.getState() == Thread.State.TERMINATED);
-
-        // then
         assertThat(entered).isTrue();
         assertThat(interruptedWithoutCodeFlowBreak.get()).isTrue();
         assertThat(subTestRoutine.isAlive()).isFalse();
@@ -195,16 +169,13 @@ public class SemaphoreBulkheadTest {
 
     @Test
     public void testAcquireWithInterruptDuringTimeout() throws InterruptedException {
-        // given
         Duration expectedWaitTime = Duration.ofMillis(2000);
         BulkheadConfig configTemplate = BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
                 .maxWaitDuration(expectedWaitTime)
                 .build();
         BulkheadConfig config = BulkheadConfig.from(configTemplate).build();
-
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
-        // when
 
         AtomicBoolean interruptedWithoutCodeFlowBreak = new AtomicBoolean(false);
         AtomicBoolean interruptedWithException = new AtomicBoolean(false);
@@ -233,8 +204,6 @@ public class SemaphoreBulkheadTest {
         await().atMost(expectedWaitTime.dividedBy(2).toMillis(), MILLISECONDS)
                 .pollInterval(expectedWaitTime.dividedBy(100).toMillis(), MILLISECONDS)
                 .until(() -> subTestRoutine.getState() == Thread.State.TERMINATED);
-
-        // then
         assertThat(entered).isTrue();
         assertThat(interruptedWithoutCodeFlowBreak.get()).isTrue();
         assertThat(interruptedWithException.get()).isTrue();
@@ -243,38 +212,28 @@ public class SemaphoreBulkheadTest {
 
     @Test
     public void testZeroMaxConcurrentCalls() {
-
-        // given
         BulkheadConfig config = BulkheadConfig.custom()
                 .maxConcurrentCalls(0)
                 .maxWaitDuration(Duration.ofMillis(0))
                 .build();
-
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
 
-        // when
         boolean entered = bulkhead.tryAcquirePermission();
 
-        // then
         assertThat(entered).isFalse();
     }
 
     @Test
     public void testEntryTimeout() {
-
-        // given
         BulkheadConfig config = BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
                 .maxWaitDuration(Duration.ofMillis(10))
                 .build();
-
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", config);
         bulkhead.tryAcquirePermission(); // consume the permit
 
-        // when
         boolean entered = bulkhead.tryEnterBulkhead();
 
-        // then
         assertThat(entered).isFalse();
     }
 

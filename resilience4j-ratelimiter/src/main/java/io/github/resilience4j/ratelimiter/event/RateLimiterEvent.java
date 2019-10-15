@@ -28,6 +28,8 @@ public interface RateLimiterEvent {
 
     Type getEventType();
 
+    int getNumberOfPermits();
+
     ZonedDateTime getCreationTime();
 
     enum Type {

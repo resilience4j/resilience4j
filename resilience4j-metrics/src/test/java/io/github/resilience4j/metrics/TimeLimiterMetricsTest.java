@@ -22,12 +22,10 @@ import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import io.vavr.control.Try;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import java.util.concurrent.TimeoutException;
 
 import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
 
@@ -55,11 +53,9 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
     public void shouldRecordSuccesses() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.ofDefaults());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
-        Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.completedFuture("Hello world");
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        timeLimiter.onSuccess();
+        timeLimiter.onSuccess();
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
@@ -74,11 +70,9 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
     public void shouldRecordErrors() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.ofDefaults());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
-        Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::fail);
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        timeLimiter.onError(new RuntimeException());
+        timeLimiter.onError(new RuntimeException());
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
@@ -95,11 +89,9 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
                 .timeoutDuration(Duration.ZERO)
                 .build());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
-        Supplier<CompletableFuture<String>> futureSupplier = () ->
-                CompletableFuture.supplyAsync(this::fail);
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        timeLimiter.onError(new TimeoutException());
+        timeLimiter.onError(new TimeoutException());
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
@@ -108,10 +100,6 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
                 .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
                 .hasValue(2L);
-    }
-
-    private String fail() {
-        throw new RuntimeException();
     }
 
 }

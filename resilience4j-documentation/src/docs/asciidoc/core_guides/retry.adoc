@@ -44,7 +44,7 @@ CheckedFunction0<String> retryableSupplier = Retry.decorateCheckedSupplier(retry
 Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
 
 // Then the helloWorldService should be invoked 3 times
-BDDMockito.then(helloWorldService).should(times(3)).sayHelloWorld();
+then(helloWorldService).should(times(3)).sayHelloWorld();
 // and the exception should be handled by the recovery function
 assertThat(result.get()).isEqualTo("Hello world from recovery function");
 ----

@@ -94,7 +94,6 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldConsumeOnStateTransitionEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .slidingWindowSize(1).build());
-
         circuitBreaker.getEventPublisher()
                 .onStateTransition(this::logEventType);
 
@@ -108,7 +107,6 @@ public class CircuitBreakerEventPublisherTest {
     public void shouldConsumeCallNotPermittedEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .slidingWindowSize(1).build());
-
         circuitBreaker.getEventPublisher()
                 .onCallNotPermitted(this::logEventType);
 
@@ -121,10 +119,8 @@ public class CircuitBreakerEventPublisherTest {
 
     @Test
     public void shouldNotProduceEventsInDisabledState() {
-        //Given
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
                 .slidingWindowSize(1).build());
-
         circuitBreaker.getEventPublisher()
                 .onEvent(this::logEventType);
 
@@ -154,9 +150,7 @@ public class CircuitBreakerEventPublisherTest {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .ignoreExceptions(IOException.class)
                 .build();
-
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
-
         circuitBreaker.getEventPublisher()
                 .onIgnoredError(this::logEventType);
 

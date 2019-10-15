@@ -25,7 +25,7 @@ import io.github.resilience4j.metrics.AbstractCircuitBreakerMetricsTest;
 public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMetricsTest {
 
     @Override
-    protected CircuitBreaker given(String prefix, MetricRegistry metricRegistry) {
+    protected CircuitBreaker givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry =
                 CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), new CircuitBreakerMetricsPublisher(prefix, metricRegistry));
 
@@ -33,7 +33,7 @@ public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMe
     }
 
     @Override
-    protected CircuitBreaker given(MetricRegistry metricRegistry) {
+    protected CircuitBreaker givenMetricRegistry(MetricRegistry metricRegistry) {
         CircuitBreakerRegistry circuitBreakerRegistry =
                 CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), new CircuitBreakerMetricsPublisher(metricRegistry));
 

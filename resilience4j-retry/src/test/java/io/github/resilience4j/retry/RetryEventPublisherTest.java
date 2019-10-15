@@ -58,14 +58,11 @@ public class RetryEventPublisherTest {
 
     @Test
     public void shouldConsumeOnSuccessEvent() {
-        // Given the HelloWorldService returns Hello world
         given(helloWorldService.returnHelloWorld())
                 .willThrow(new HelloWorldException())
                 .willReturn("Hello world");
-
-        retry.getEventPublisher()
-            .onSuccess(event ->
-                    logger.info(event.getEventType().toString()));
+        retry.getEventPublisher().onSuccess(
+                event -> logger.info(event.getEventType().toString()));
 
         retry.executeSupplier(helloWorldService::returnHelloWorld);
 
@@ -77,10 +74,8 @@ public class RetryEventPublisherTest {
     public void shouldConsumeOnRetryEvent() {
         given(helloWorldService.returnHelloWorld())
                 .willThrow(new HelloWorldException());
-
-        retry.getEventPublisher()
-            .onRetry(event ->
-                    logger.info(event.getEventType().toString()));
+        retry.getEventPublisher().onRetry(
+                event -> logger.info(event.getEventType().toString()));
 
         Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
 
@@ -90,13 +85,9 @@ public class RetryEventPublisherTest {
 
     @Test
     public void shouldConsumeOnErrorEvent() {
-        given(helloWorldService.returnHelloWorld())
-                .willThrow(new HelloWorldException());
-
-        retry.getEventPublisher()
-            .onError(event ->
-                    logger.info(event.getEventType().toString()));
-
+        given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
+        retry.getEventPublisher().onError(
+                event -> logger.info(event.getEventType().toString()));
 
         Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
 
@@ -108,17 +99,14 @@ public class RetryEventPublisherTest {
     public void shouldConsumeIgnoredErrorEvent() {
         given(helloWorldService.returnHelloWorld())
                 .willThrow(new HelloWorldException());
-
         RetryConfig retryConfig = RetryConfig.custom()
                 .retryOnException(throwable -> Match(throwable).of(
                         Case($(instanceOf(HelloWorldException.class)), false),
                         Case($(), true)))
                 .build();
         retry = Retry.of("testName", retryConfig);
-
-        retry.getEventPublisher()
-            .onIgnoredError(event ->
-                    logger.info(event.getEventType().toString()));
+        retry.getEventPublisher().onIgnoredError(
+                event -> logger.info(event.getEventType().toString()));
 
         Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
 

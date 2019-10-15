@@ -3,7 +3,6 @@ package io.github.resilience4j.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.reactivex.Single;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +27,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult(1);
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -43,9 +42,9 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult("Hello World", "Hello World");
 
-        then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
-        verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+        then(circuitBreaker).should(times(2)).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -61,8 +60,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertNotComplete();
 
         then(helloWorldService).should(never()).returnHelloWorld();
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -76,8 +75,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -91,8 +90,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -105,8 +104,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
                 .test()
                 .cancel();
 
-        verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().releasePermission();
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }
