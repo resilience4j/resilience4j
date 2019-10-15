@@ -25,7 +25,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 public class RateLimiterMetricsTest extends AbstractRateLimiterMetricsTest {
 
     @Override
-    protected RateLimiter given(String prefix, MetricRegistry metricRegistry) {
+    protected RateLimiter givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
         metricRegistry.registerAll(RateLimiterMetrics.ofIterable(prefix, rateLimiterRegistry.getAllRateLimiters()));
@@ -34,7 +34,7 @@ public class RateLimiterMetricsTest extends AbstractRateLimiterMetricsTest {
     }
 
     @Override
-    protected RateLimiter given(MetricRegistry metricRegistry) {
+    protected RateLimiter givenMetricRegistry(MetricRegistry metricRegistry) {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testLimit");
         metricRegistry.registerAll(RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry));

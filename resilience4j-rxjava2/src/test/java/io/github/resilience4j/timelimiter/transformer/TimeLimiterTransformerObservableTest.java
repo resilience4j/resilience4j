@@ -132,6 +132,7 @@ public class TimeLimiterTransformerObservableTest {
     public void doNotTimeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
                 .willReturn(toConfig(Duration.ofMinutes(1)));
+
         TestObserver<?> observer = Observable.empty()
                 .compose(TimeLimiterTransformer.of(timeLimiter))
                 .test();

@@ -17,16 +17,13 @@ package io.github.resilience4j.reactor.bulkhead.operator;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -38,7 +35,7 @@ public class FluxBulkheadTest {
 
     @Before
     public void setUp(){
-        bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
+        bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -72,7 +69,6 @@ public class FluxBulkheadTest {
     @Test
     public void shouldEmitErrorWithBulkheadFullException() {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
-
         bulkhead.tryAcquirePermission();
 
         StepVerifier.create(

@@ -27,11 +27,8 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.collection.Stream;
 import io.vavr.control.Try;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +39,10 @@ import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -63,66 +63,53 @@ public class TimerTest {
 
     @Test
     public void shouldDecorateCheckedSupplier() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
-
-        // And measure the call with  a Timer
-        CheckedFunction0<String> timedSupplier = Timer.decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CheckedFunction0<String> timedSupplier = Timer
+                .decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
 
         String value = timedSupplier.apply();
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-
         assertThat(metricRegistry.getCounters().size()).isEqualTo(2);
         assertThat(metricRegistry.getTimers().size()).isEqualTo(1);
-
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
     public void shouldDecorateCallable() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
-
-        // And measure the call with a Timer
-        Callable<String> timedSupplier = Timer.decorateCallable(timer, helloWorldService::returnHelloWorldWithException);
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        Callable<String> timedSupplier = Timer
+                .decorateCallable(timer, helloWorldService::returnHelloWorldWithException);
 
         String value = timedSupplier.call();
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
     public void shouldExecuteCallable() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
-
-        // And measure the call with a Timer
-        String value = timer.executeCallable(helloWorldService::returnHelloWorldWithException);
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        
+        String value = timer
+                .executeCallable(helloWorldService::returnHelloWorldWithException);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
 
     @Test
     public void shouldDecorateRunnable() throws Throwable {
-        // And measure the call with a Timer
         Runnable timedRunnable = Timer.decorateRunnable(timer, helloWorldService::sayHelloWorld);
 
         timedRunnable.run();
@@ -130,56 +117,44 @@ public class TimerTest {
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
+        then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
     @Test
     public void shouldExecuteRunnable() throws Throwable {
-        // And measure the call with a Timer
         timer.executeRunnable(helloWorldService::sayHelloWorld);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).sayHelloWorld();
+        then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
     @Test
     public void shouldExecuteCompletionStageSupplier() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        // And measure the call with a Timer
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<CompletionStage<String>> completionStageSupplier =
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
-
         CompletionStage<String> stringCompletionStage = timer.executeCompletionStageSupplier(completionStageSupplier);
+        
         String value = stringCompletionStage.toCompletableFuture().get();
-
         assertThat(value).isEqualTo("Hello world");
-
         await().atMost(1, SECONDS)
                 .until(() -> {
                     assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
                     assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
                     assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
                 });
-
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
     public void shouldExecuteCompletionStageAndReturnWithExceptionAtSyncStage() throws Throwable {
-
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
             throw new HelloWorldException();
         };
 
-        Assertions.assertThatThrownBy(() -> timer.executeCompletionStageSupplier(completionStageSupplier))
+        assertThatThrownBy(() -> timer.executeCompletionStageSupplier(completionStageSupplier))
                 .isInstanceOf(HelloWorldException.class);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
@@ -190,29 +165,23 @@ public class TimerTest {
 
     @Test
     public void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
-        // And measure the call with a Timer
+        given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Supplier<CompletionStage<String>> completionStageSupplier =
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
-
         CompletionStage<String> stringCompletionStage = timer.executeCompletionStageSupplier(completionStageSupplier);
 
-        Assertions.assertThatThrownBy(() -> stringCompletionStage.toCompletableFuture().get())
+        assertThatThrownBy(() -> stringCompletionStage.toCompletableFuture().get())
                 .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should().returnHelloWorld();
     }
 
 
     @Test
     public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
-        // And measure the call with a Timer
         CheckedRunnable timedRunnable = Timer.decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
 
         timedRunnable.run();
@@ -220,36 +189,28 @@ public class TimerTest {
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorldWithException();
+        then(helloWorldService).should().sayHelloWorldWithException();
     }
 
     @Test
     public void shouldDecorateSupplierAndReturnWithException() throws Throwable {
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
-
-        // And measure the call with a Timer
+        given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
         Supplier<String> supplier = Timer.decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
         Try<String> result = Try.of(supplier::get);
+       
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
 
     }
 
     @Test
     public void shouldDecorateSupplier() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        // And measure the call with a Timer
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<String> timedSupplier = Timer.decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
         Stream.range(0,2).forEach((i) -> timedSupplier.get());
@@ -257,68 +218,53 @@ public class TimerTest {
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(2);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
+        then(helloWorldService).should(times(2)).returnHelloWorld();
     }
 
     @Test
     public void shouldExecuteSupplier() throws Throwable {
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world").willThrow(new IllegalArgumentException("BAM!"));
-
-        // And measure the call with a Timer
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world").willThrow(new IllegalArgumentException("BAM!"));
+       
         Stream.range(0,2).forEach((i) -> {
             try{
                 timer.executeSupplier(helloWorldService::returnHelloWorld);
             }catch (Exception e){
-                Assertions.assertThat(e).isInstanceOf(IllegalArgumentException.class);
+                assertThat(e).isInstanceOf(IllegalArgumentException.class);
             }
         });
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(2);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(2)).returnHelloWorld();
+        then(helloWorldService).should(times(2)).returnHelloWorld();
     }
 
 
     @Test
     public void shouldDecorateFunctionAndReturnWithSuccess() throws Throwable {
-        // Given
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorldWithName("Tom")).willReturn("Hello world Tom");
-
-        //When
+        given(helloWorldService.returnHelloWorldWithName("Tom")).willReturn("Hello world Tom");
         Function<String, String> function = Timer.decorateFunction(timer, helloWorldService::returnHelloWorldWithName);
 
-        //Then
-        assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
+        String result = function.apply("Tom");
 
+        assertThat(result).isEqualTo("Hello world Tom");
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithName("Tom");
+        then(helloWorldService).should().returnHelloWorldWithName("Tom");
     }
 
     @Test
     public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
-        // Given
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willReturn("Hello world Tom");
-
-        //When
+        given(helloWorldService.returnHelloWorldWithNameWithException("Tom")).willReturn("Hello world Tom");
         CheckedFunction1<String, String> function = Timer.decorateCheckedFunction(timer, helloWorldService::returnHelloWorldWithNameWithException);
 
-        //Then
-        assertThat(function.apply("Tom")).isEqualTo("Hello world Tom");
-
+        String result = function.apply("Tom");
+        
+        assertThat(result).isEqualTo("Hello world Tom");
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorldWithNameWithException("Tom");
+        then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
 }

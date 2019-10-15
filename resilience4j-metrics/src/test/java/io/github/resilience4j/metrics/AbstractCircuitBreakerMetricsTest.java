@@ -21,9 +21,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -38,26 +39,20 @@ public abstract class AbstractCircuitBreakerMetricsTest {
         helloWorldService = mock(HelloWorldService.class);
     }
 
-    protected abstract CircuitBreaker given(String prefix, MetricRegistry metricRegistry);
+    protected abstract CircuitBreaker givenMetricRegistry(String prefix, MetricRegistry metricRegistry);
 
-    protected abstract CircuitBreaker given(MetricRegistry metricRegistry);
+    protected abstract CircuitBreaker givenMetricRegistry(MetricRegistry metricRegistry);
 
 
     @Test
     public void shouldRegisterMetrics() {
-        //Given
-        CircuitBreaker circuitBreaker = given(metricRegistry);
+        CircuitBreaker circuitBreaker = givenMetricRegistry(metricRegistry);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
         String value = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
 
-        //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(10);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.state").getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges().get("resilience4j.circuitbreaker.testName.buffered").getValue()).isEqualTo(1);
@@ -73,19 +68,13 @@ public abstract class AbstractCircuitBreakerMetricsTest {
 
     @Test
     public void shouldUseCustomPrefix() throws Throwable {
-        //Given
-        CircuitBreaker circuitBreaker = given("testPrefix", metricRegistry);
+        CircuitBreaker circuitBreaker = givenMetricRegistry("testPrefix", metricRegistry);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
         String value = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
 
-        //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(10);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.state").getValue()).isEqualTo(0);
         assertThat(metricRegistry.getGauges().get("testPrefix.testName.buffered").getValue()).isEqualTo(1);

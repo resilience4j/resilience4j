@@ -25,14 +25,14 @@ import io.github.resilience4j.retry.RetryRegistry;
 public class RetryMetricsPublisherTest extends AbstractRetryMetricsTest {
 
     @Override
-    protected Retry given(String prefix, MetricRegistry metricRegistry) {
+    protected Retry givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
         RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), new RetryMetricsPublisher(prefix, metricRegistry));
 
         return retryRegistry.retry("testName");
     }
 
     @Override
-    protected Retry given(MetricRegistry metricRegistry) {
+    protected Retry givenMetricRegistry(MetricRegistry metricRegistry) {
         RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), new RetryMetricsPublisher(metricRegistry));
 
         return retryRegistry.retry("testName");

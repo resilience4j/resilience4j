@@ -41,11 +41,7 @@ public class ThreadPoolBulkheadRegistryTest {
 
 	@Before
 	public void setUp() {
-
-		// registry with default config
 		registry = ThreadPoolBulkheadRegistry.ofDefaults();
-
-		// registry with custom config
 		config = ThreadPoolBulkheadConfig.custom()
 				.maxThreadPoolSize(100)
 				.build();
@@ -53,20 +49,15 @@ public class ThreadPoolBulkheadRegistryTest {
 
 	@Test
 	public void shouldReturnCustomConfig() {
-
-		// give
 		ThreadPoolBulkheadRegistry registry = ThreadPoolBulkheadRegistry.of(config);
 
-		// when
 		ThreadPoolBulkheadConfig bulkheadConfig = registry.getDefaultConfig();
 
-		// then
 		assertThat(bulkheadConfig).isSameAs(config);
 	}
 
 	@Test
 	public void shouldReturnTheCorrectName() {
-
 		ThreadPoolBulkhead bulkhead = registry.bulkhead("test");
 
 		assertThat(bulkhead).isNotNull();
@@ -76,7 +67,6 @@ public class ThreadPoolBulkheadRegistryTest {
 
 	@Test
 	public void shouldBeTheSameInstance() {
-
 		ThreadPoolBulkhead bulkhead1 = registry.bulkhead("test", config);
 		ThreadPoolBulkhead bulkhead2 = registry.bulkhead("test", config);
 
@@ -86,7 +76,6 @@ public class ThreadPoolBulkheadRegistryTest {
 
 	@Test
 	public void shouldBeNotTheSameInstance() {
-
 		ThreadPoolBulkhead bulkhead1 = registry.bulkhead("test1");
 		ThreadPoolBulkhead bulkhead2 = registry.bulkhead("test2");
 
@@ -155,7 +144,6 @@ public class ThreadPoolBulkheadRegistryTest {
 	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
 		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
 		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
-
 		List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
 		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
 		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
@@ -185,12 +173,8 @@ public class ThreadPoolBulkheadRegistryTest {
 		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
 	}
 
-	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<ThreadPoolBulkhead> eventPublisher) {
-		if (eventPublisher instanceof EventProcessor<?>) {
-			return Optional.of((EventProcessor<?>) eventPublisher);
-		}
-
-		return Optional.empty();
+	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<ThreadPoolBulkhead> ep) {
+		return ep instanceof EventProcessor<?> ? Optional.of((EventProcessor<?>) ep) : Optional.empty();
 	}
 
 	private static class NoOpThreadPoolBulkheadEventConsumer implements RegistryEventConsumer<ThreadPoolBulkhead> {

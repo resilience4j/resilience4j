@@ -33,31 +33,24 @@ public class FixedThreadPoolBulkheadTest {
 
 	@Before
 	public void setUp() {
-
 		ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
 				.maxThreadPoolSize(2)
 				.coreThreadPoolSize(1)
 				.queueCapacity(10)
 				.keepAliveDuration(Duration.ofMillis(10))
 				.build();
-
 		bulkhead = ThreadPoolBulkhead.of("test", config);
 	}
 
 	@Test
 	public void testToString() {
-
-		// when
 		String result = bulkhead.toString();
 
-		// then
 		assertThat(result).isEqualTo("FixedThreadPoolBulkhead 'test'");
 	}
 
 	@Test
 	public void testCustomSettings() {
-
-		// then
 		assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(2);
 		assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(10);
 		assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
@@ -66,10 +59,8 @@ public class FixedThreadPoolBulkheadTest {
 
 	@Test
 	public void testCreateWithDefaults() {
-		// when
 		ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("test");
 
-		// then
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig()).isNotNull();
 		assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE);

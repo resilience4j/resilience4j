@@ -3,14 +3,13 @@ package io.github.resilience4j.retrofit.internal;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 import retrofit2.Call;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @RunWith(JUnit4.class)
 public class DecoratedCallTest {
@@ -26,22 +25,22 @@ public class DecoratedCallTest {
     @Test
     public void passThroughCallsToDecoratedObject() throws IOException {
         decorated.cancel();
-        Mockito.verify(call).cancel();
+        verify(call).cancel();
 
         decorated.enqueue(null);
-        Mockito.verify(call).enqueue(any());
+        verify(call).enqueue(any());
 
         decorated.isExecuted();
-        Mockito.verify(call).isExecuted();
+        verify(call).isExecuted();
 
         decorated.isCanceled();
-        Mockito.verify(call).isCanceled();
+        verify(call).isCanceled();
 
         decorated.request();
-        Mockito.verify(call).request();
+        verify(call).request();
 
         decorated.execute();
-        Mockito.verify(call).execute();
+        verify(call).execute();
     }
 
     private interface StringCall extends Call<String> {
