@@ -29,11 +29,8 @@ import io.vavr.CheckedFunction0;
 import io.vavr.Predicates;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
@@ -45,6 +42,10 @@ import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static io.vavr.API.$;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class SupplierRetryTest {
 	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -54,235 +55,199 @@ public class SupplierRetryTest {
 
 	@Before
 	public void setUp() {
-		helloWorldService = Mockito.mock(HelloWorldService.class);
-		helloWorldServiceAsync = Mockito.mock(AsyncHelloWorldService.class);
+		helloWorldService = mock(HelloWorldService.class);
+		helloWorldServiceAsync = mock(AsyncHelloWorldService.class);
 		RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
 	}
 
 	@Test
 	public void shouldNotRetry() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-		// Create a Retry with default configuration
+		given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 		Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		String result = supplier.get();
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+
+		then(helloWorldService).should().returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
 	@Test
 	public void shouldNotRetryWithResult() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-		// Create a Retry with default configuration
-		final RetryConfig tryAgain = RetryConfig.<String>custom().retryOnResult(s -> s.contains("tryAgain"))
+		given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+                .retryOnResult(s -> s.contains("tryAgain"))
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
 		Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
-		// When
+		
 		String result = supplier.get();
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+		then(helloWorldService).should().returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
 	@Test
 	public void shouldRetryWithResult() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-		// Create a Retry with default configuration
-		final RetryConfig tryAgain = RetryConfig.<String>custom().retryOnResult(s -> s.contains("Hello world"))
+		given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+                .retryOnResult(s -> s.contains("Hello world"))
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
 		Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
-		// When
+
 		String result = supplier.get();
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+
+		then(helloWorldService).should(times(2)).returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 	}
 
 	@Test
 	public void shouldNotRetryDecoratedTry() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
+		
 		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
 
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
+		then(helloWorldService).should().returnTry();
 		assertThat(result.get()).isEqualTo("Hello world");
 	}
 
 	@Test
 	public void shouldNotRetryDecoratedEither() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
-		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
+		Either<HelloWorldException, String> result = retry
+                .executeEitherSupplier(helloWorldService::returnEither);
+
+		then(helloWorldService).should().returnEither();
 		assertThat(result.get()).isEqualTo("Hello world");
 	}
 
 	@Test
 	public void shouldRetryDecoratedTry() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.retryOnResult(s -> s.contains("Hello world"))
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
+
 		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
 
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnTry();
+		then(helloWorldService).should(times(2)).returnTry();
 		assertThat(result.get()).isEqualTo("Hello world");
 	}
 
 	@Test
 	public void shouldRetryDecoratedEither() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.retryOnResult(s -> s.contains("Hello world"))
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
-		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
+		Either<HelloWorldException, String> result = retry
+                .executeEitherSupplier(helloWorldService::returnEither);
+
+		then(helloWorldService).should(times(2)).returnEither();
 		assertThat(result.get()).isEqualTo("Hello world");
 	}
 
 	@Test
 	public void shouldFailToRetryDecoratedTry() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
+		
 		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
 
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnTry();
+		then(helloWorldService).should(times(2)).returnTry();
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.getCause()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void shouldFailToRetryDecoratedEither() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
-		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
+		
+		Either<HelloWorldException, String> result = retry
+                .executeEitherSupplier(helloWorldService::returnEither);
 
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnEither();
+		then(helloWorldService).should(times(2)).returnEither();
 		assertThat(result.isLeft()).isTrue();
 		assertThat(result.getLeft()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void shouldIgnoreExceptionOfDecoratedTry() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnTry()).willReturn(Try.failure(new HelloWorldException()));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.ignoreExceptions(HelloWorldException.class)
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
+
 		Try<String> result = retry.executeTrySupplier(helloWorldService::returnTry);
 
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnTry();
+		then(helloWorldService).should().returnTry();
 		assertThat(result.isFailure()).isTrue();
 		assertThat(result.getCause()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void shouldIgnoreExceptionOfDecoratedEither() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
-		// Create a Retry with default configuration
+		given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 		final RetryConfig tryAgain = RetryConfig.<String>custom()
 				.ignoreExceptions(HelloWorldException.class)
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
-		Either<HelloWorldException, String> result = retry.executeEitherSupplier(helloWorldService::returnEither);
 
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnEither();
+		Either<HelloWorldException, String> result = retry
+                .executeEitherSupplier(helloWorldService::returnEither);
+
+		then(helloWorldService).should().returnEither();
 		assertThat(result.isLeft()).isTrue();
 		assertThat(result.getLeft()).isInstanceOf(HelloWorldException.class);
 	}
 
 	@Test
 	public void testDecorateSupplier() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorld())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 		Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		String result = supplier.get();
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+		then(helloWorldService).should(times(2)).returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
 	@Test
 	public void testDecorateSupplierAndInvokeTwice() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld())
+		given(helloWorldService.returnHelloWorld())
 				.willThrow(new HelloWorldException())
 				.willReturn("Hello world")
 				.willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 		Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		String result = supplier.get();
 		String result2 = supplier.get();
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(4)).returnHelloWorld();
+		then(helloWorldService).should(times(4)).returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(result2).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
@@ -291,266 +256,202 @@ public class SupplierRetryTest {
 
 	@Test
 	public void testDecorateCallable() throws Exception {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorldWithException())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
-		Callable<String> callable = Retry.decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
+		Callable<String> callable = Retry
+                .decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
 
-		// When
 		String result = callable.call();
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorldWithException();
+		then(helloWorldService).should(times(2)).returnHelloWorldWithException();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
 	@Test
 	public void testDecorateCallableWithRetryResult() throws Exception {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorldWithException())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
-		final RetryConfig tryAgain = RetryConfig.<String>custom().retryOnResult(s -> s.contains("Hello world"))
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+                .retryOnResult(s -> s.contains("Hello world"))
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
-		Callable<String> callable = Retry.decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
+		Callable<String> callable = Retry
+                .decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
 
-		// When
 		String result = callable.call();
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorldWithException();
+		then(helloWorldService).should(times(2)).returnHelloWorldWithException();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
 	@Test
 	public void testExecuteCallable() throws Exception {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorldWithException()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorldWithException())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 
 		String result = retry.executeCallable(helloWorldService::returnHelloWorldWithException);
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorldWithException();
+		then(helloWorldService).should(times(2)).returnHelloWorldWithException();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
-
 	@Test
 	public void testExecuteSupplier() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorld())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 
 		String result = retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+		then(helloWorldService).should(times(2)).returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
 	@Test
 	public void testExecuteSupplierWithResult() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorld())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
-		final RetryConfig tryAgain = RetryConfig.<String>custom().retryOnResult(s -> s.contains("Hello world"))
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+                .retryOnResult(s -> s.contains("Hello world"))
 				.maxAttempts(2).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
 
 		String result = retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+		then(helloWorldService).should(times(2)).returnHelloWorld();
 		assertThat(result).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
 	@Test
 	public void shouldReturnSuccessfullyAfterSecondAttempt() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorld())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world");
-
-		// Create a Retry with default configuration
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		Try<String> result = Try.of(retryableSupplier);
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
+		then(helloWorldService).should(times(2)).returnHelloWorld();
 		assertThat(result.get()).isEqualTo("Hello world");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
 	}
 
 	@Test
 	public void shouldReturnAfterThreeAttempts() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
-
-		// Create a Retry with default configuration
+		given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		Try<String> result = Try.of(retryableSupplier);
 
-		// Then the helloWorldService should be invoked 3 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
-		// and the result should be a failure
+		then(helloWorldService).should(times(3)).returnHelloWorld();
 		assertThat(result.isFailure()).isTrue();
-		// and the returned exception should be of type RuntimeException
 		assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
 	}
 
 	@Test
 	public void shouldReturnAfterOneAttempt() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
-
-		// Create a Retry with custom configuration
+		given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 		RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
 		Retry retry = Retry.of("id", config);
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		Try<String> result = Try.of(retryableSupplier);
 
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
-		// and the result should be a failure
+		then(helloWorldService).should().returnHelloWorld();
 		assertThat(result.isFailure()).isTrue();
-		// and the returned exception should be of type RuntimeException
 		assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
 	@Test
 	public void shouldReturnAfterOneAttemptAndIgnoreException() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
-
-		// Create a Retry with default configuration
+		given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 		RetryConfig config = RetryConfig.custom()
 				.retryOnException(throwable -> API.Match(throwable).of(
 						API.Case($(Predicates.instanceOf(HelloWorldException.class)), false),
 						API.Case($(), true)))
 				.build();
 		Retry retry = Retry.of("id", config);
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
 		Try<String> result = Try.of(retryableSupplier);
 
-		// Then the helloWorldService should be invoked only once, because the exception should be rethrown immediately.
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
-		// and the result should be a failure
+		// Because the exception should be rethrown immediately.
+		then(helloWorldService).should().returnHelloWorld();
 		assertThat(result.isFailure()).isTrue();
-		// and the returned exception should be of type RuntimeException
 		assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
 	@Test
 	public void shouldReturnAfterThreeAttemptsAndRecover() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
-
-		// Create a Retry with default configuration
+		given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
 		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
-		Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
+		Try<String> result = Try.of(retryableSupplier)
+                .recover((throwable) -> "Hello world from recovery function");
 		assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
 
-		// Then the helloWorldService should be invoked 3 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
-
-		// and the returned exception should be of type RuntimeException
+		then(helloWorldService).should(times(3)).returnHelloWorld();
 		assertThat(result.get()).isEqualTo("Hello world from recovery function");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
 	}
 
 	@Test
 	public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException())
+		given(helloWorldService.returnHelloWorld())
+                .willThrow(new HelloWorldException())
 				.willReturn("Hello world")
 				.willThrow(new HelloWorldException());
-
-		// Create a Retry with default configuration
-		final RetryConfig tryAgain = RetryConfig.<String>custom().retryOnResult(s -> s.contains("Hello world"))
+		final RetryConfig tryAgain = RetryConfig.<String>custom()
+                .retryOnResult(s -> s.contains("Hello world"))
 				.maxAttempts(3).build();
 		Retry retry = Retry.of("id", tryAgain);
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
-		Try<String> result = Try.of(retryableSupplier).recover((throwable) -> "Hello world from recovery function");
+		Try<String> result = Try.of(retryableSupplier)
+                .recover((throwable) -> "Hello world from recovery function");
 
-		// Then the helloWorldService should be invoked 3 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
-
-		// and the returned exception should be of type RuntimeException
+		then(helloWorldService).should(times(3)).returnHelloWorld();
 		assertThat(result.get()).isEqualTo("Hello world from recovery function");
 		assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
 	}
 
 	@Test
 	public void shouldTakeIntoAccountBackoffFunction() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
-
-		// Create a Retry with a backoff function doubling the interval
-		RetryConfig config = RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0))
+		given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
+		RetryConfig config = RetryConfig.custom()
+                .intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0))
 				.build();
 		Retry retry = Retry.of("id", config);
-		// Decorate the invocation of the HelloWorldService
 		CheckedFunction0<String> retryableSupplier = Retry
 				.decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-		// When
-		Try<String> result = Try.of(retryableSupplier);
+		Try.of(retryableSupplier);
 
-		// Then the slept time should be according to the backoff function
-		BDDMockito.then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+		then(helloWorldService).should(times(3)).returnHelloWorld();
 		assertThat(sleptTime).isEqualTo(
 				RetryConfig.DEFAULT_WAIT_DURATION +
 						RetryConfig.DEFAULT_WAIT_DURATION * 2);
@@ -563,13 +464,8 @@ public class SupplierRetryTest {
 
 	private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
 	                                                                               String retryResponse) {
-
-		// Given the HelloWorldService return
-		BDDMockito.given(helloWorldServiceAsync.returnHelloWorld())
+		given(helloWorldServiceAsync.returnHelloWorld())
 				.willReturn(completedFuture("Hello world"));
-
-
-		// Create a Retry with default configuration
 		Retry retryContext = Retry.of(
 				"id",
 				RetryConfig
@@ -577,18 +473,14 @@ public class SupplierRetryTest {
 						.maxAttempts(noOfAttempts)
 						.retryOnResult(s -> s.contains(retryResponse))
 						.build());
-		// Decorate the invocation of the HelloWorldService
 		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
 				retryContext,
 				scheduler,
 				() -> helloWorldServiceAsync.returnHelloWorld());
 
-		// When
 		Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
 
-		// Then the helloWorldService should be invoked n + 1 times
-		BDDMockito.then(helloWorldServiceAsync).should(Mockito.times(noOfAttempts)).returnHelloWorld();
-		Assert.assertTrue(resultTry.isSuccess());
-
+		then(helloWorldServiceAsync).should(times(noOfAttempts)).returnHelloWorld();
+		assertThat(resultTry.isSuccess()).isTrue();
 	}
 }

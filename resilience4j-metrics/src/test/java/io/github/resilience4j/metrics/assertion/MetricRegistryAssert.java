@@ -17,8 +17,7 @@ public class MetricRegistryAssert extends AbstractAssert<MetricRegistryAssert, M
 
     public MetricRegistryAssert hasMetricsSize(int size) {
         isNotNull();
-        Assertions.assertThat(actual.getMetrics())
-                .hasSize(size);
+        Assertions.assertThat(actual.getMetrics()).hasSize(size);
         return this;
     }
 

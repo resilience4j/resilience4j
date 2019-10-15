@@ -19,7 +19,6 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,6 +27,7 @@ import java.time.Duration;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 
 public class MonoRateLimiterTest {
 
@@ -35,7 +35,7 @@ public class MonoRateLimiterTest {
 
     @Before
     public void setUp(){
-        rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
+        rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test

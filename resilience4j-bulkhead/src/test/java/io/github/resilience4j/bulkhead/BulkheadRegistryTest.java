@@ -40,9 +40,7 @@ public class BulkheadRegistryTest {
 
 	@Before
 	public void setUp() {
-		// registry with default config
 		registry = BulkheadRegistry.ofDefaults();
-		// registry with custom config
 		config = BulkheadConfig.custom()
 				.maxConcurrentCalls(100)
 				.maxWaitDuration(Duration.ofMillis(50))
@@ -51,17 +49,15 @@ public class BulkheadRegistryTest {
 
 	@Test
 	public void shouldReturnCustomConfig() {
-		// give
 		BulkheadRegistry registry = BulkheadRegistry.of(config);
-		// when
+
 		BulkheadConfig bulkheadConfig = registry.getDefaultConfig();
-		// then
+
 		assertThat(bulkheadConfig).isSameAs(config);
 	}
 
 	@Test
 	public void shouldReturnTheCorrectName() {
-
 		Bulkhead bulkhead = registry.bulkhead("test");
 
 		assertThat(bulkhead).isNotNull();
@@ -72,7 +68,6 @@ public class BulkheadRegistryTest {
 
 	@Test
 	public void shouldBeTheSameInstance() {
-
 		Bulkhead bulkhead1 = registry.bulkhead("test", config);
 		Bulkhead bulkhead2 = registry.bulkhead("test", config);
 
@@ -82,7 +77,6 @@ public class BulkheadRegistryTest {
 
 	@Test
 	public void shouldBeNotTheSameInstance() {
-
 		Bulkhead bulkhead1 = registry.bulkhead("test1");
 		Bulkhead bulkhead2 = registry.bulkhead("test2");
 
@@ -168,12 +162,8 @@ public class BulkheadRegistryTest {
 		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();
 	}
 
-	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Bulkhead> eventPublisher) {
-		if (eventPublisher instanceof EventProcessor<?>) {
-			return Optional.of((EventProcessor<?>) eventPublisher);
-		}
-
-		return Optional.empty();
+	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Bulkhead> ep) {
+		return ep instanceof EventProcessor<?> ? Optional.of((EventProcessor<?>) ep) : Optional.empty();
 	}
 
 	private static class NoOpBulkheadEventConsumer implements RegistryEventConsumer<Bulkhead> {

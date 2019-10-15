@@ -20,7 +20,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -43,8 +42,8 @@ public class MonoCircuitBreakerTest  {
 
     @Before
     public void setUp(){
-        circuitBreaker = Mockito.mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+        circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
+        helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
@@ -58,7 +57,7 @@ public class MonoCircuitBreakerTest  {
                 .expectNext("Hello World")
                 .verifyComplete();
 
-        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should().returnHelloWorld();
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -74,7 +73,7 @@ public class MonoCircuitBreakerTest  {
                 .expectNext("Hello World")
                 .verifyComplete();
 
-        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should().returnHelloWorld();
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -93,7 +92,7 @@ public class MonoCircuitBreakerTest  {
                 .expectNext("Hello World")
                 .verifyComplete();
 
-        then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+        then(helloWorldService).should(times(3)).returnHelloWorld();
         verify(circuitBreaker, times(3)).onSuccess(anyLong(), any(TimeUnit.class));
         verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -200,6 +199,5 @@ public class MonoCircuitBreakerTest  {
         } catch (InterruptedException | ExecutionException e) {
             fail();
         }
-
     }
 }
