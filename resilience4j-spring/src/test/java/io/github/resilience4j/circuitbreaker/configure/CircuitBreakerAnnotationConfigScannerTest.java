@@ -15,73 +15,62 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
 
 
 public class CircuitBreakerAnnotationConfigScannerTest {
 
+    ConfigurableEnvironment env;
+    MutablePropertySources propertySources = new MutablePropertySources();
+    CircuitBreakerAnnotationConfigScanner scanner;
+    
+    @Before
+    public void setUp() {
+        env = mock(ConfigurableEnvironment.class);
+        when(env.getPropertySources()).thenReturn(propertySources);
+        scanner = new CircuitBreakerAnnotationConfigScanner(env);
+    }
+    
 	@Test
-	public void testMergeConfigurationPropertiesAnnotationConfigUsed() {
+	public void testTwoExceptionsOnMethodAnnotationConfigUsed() {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		BeanDefinition beanDefinition = new GenericBeanDefinition();
 		beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
 		beanFactory.registerBeanDefinition("foo", beanDefinition);
-		CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
 		scanner.postProcessBeanFactory(beanFactory);
 
-		CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
-		scanner.mergeConfigurationProperties(circuitBreakerProperties);
-		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("methodbreaker");
-		assertNotNull(instanceProperties);
-		assertArrayEquals(new Class[] { IllegalArgumentException.class }, instanceProperties.getIgnoreExceptions());
+		PropertySource<?> propertySource = propertySources.get("circuitBreakerAnnotationConfig");
+		assertNotNull(propertySource);
+		assertEquals(IllegalArgumentException.class.getName(), propertySource.getProperty(getExceptionsPropertyName("methodbreaker", "ignoreExceptions", 0)));
+		assertEquals(NullPointerException.class.getName(), propertySource.getProperty(getExceptionsPropertyName("methodbreaker", "ignoreExceptions", 1)));
 	}
 	
-	@Test
-	public void testMergeConfigurationPropertiesPropertiesTakePrecedence() {
-		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-		BeanDefinition beanDefinition = new GenericBeanDefinition();
-		beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
-		beanFactory.registerBeanDefinition("foo", beanDefinition);
-		CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
-		scanner.postProcessBeanFactory(beanFactory);
-
-		CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
-		InstanceProperties existingInstanceProperties = new InstanceProperties();
-		existingInstanceProperties.setIgnoreExceptions(new Class[] {NullPointerException.class});
-		circuitBreakerProperties.getInstances().put("methodbreaker", existingInstanceProperties);
-		scanner.mergeConfigurationProperties(circuitBreakerProperties);
-		InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("methodbreaker");
-		assertNotNull(instanceProperties);
-		assertArrayEquals(new Class[] { NullPointerException.class }, instanceProperties.getIgnoreExceptions());
-	}
-
 	@Test
 	public void testClassAndMethodAnnotatedConfigUsed() {
 	    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new GenericBeanDefinition();
         beanDefinition.setBeanClassName(ClassAndMethodAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("foo", beanDefinition);
-        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
         scanner.postProcessBeanFactory(beanFactory);
 
-        CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
-        scanner.mergeConfigurationProperties(circuitBreakerProperties);
-        
-        InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("classbreaker");
-        assertNotNull(instanceProperties);
-        assertArrayEquals(new Class[] { UnsupportedOperationException.class }, instanceProperties.getRecordExceptions());
-        instanceProperties = circuitBreakerProperties.getInstances().get("methodbreaker");
-        assertNotNull(instanceProperties);
-        assertArrayEquals(new Class[] { IllegalArgumentException.class }, instanceProperties.getIgnoreExceptions());
+        PropertySource<?> propertySource = propertySources.get("circuitBreakerAnnotationConfig");
+        assertNotNull(propertySource);
+        assertEquals(UnsupportedOperationException.class.getName(), propertySource.getProperty(getRecordExceptionsPropertyName("classbreaker")));
+        assertEquals(IllegalArgumentException.class.getName(), propertySource.getProperty(getIgnoreExceptionsPropertyName("methodbreaker")));
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
@@ -93,9 +82,20 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         beanDefinition = new GenericBeanDefinition();
         beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("bar", beanDefinition);
-        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
         scanner.postProcessBeanFactory(beanFactory);
 	}
+	
+   @Test
+    public void testNonConflictingAnnotationsDeclaredTwiceAreAllowed() {
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("foo", beanDefinition);
+        beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("bar", beanDefinition);
+        scanner.postProcessBeanFactory(beanFactory);
+    }
 	
 	@Test
     public void testInterfaceMethodAnnotationUsed() {
@@ -103,14 +103,11 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         BeanDefinition beanDefinition = new GenericBeanDefinition();
         beanDefinition.setBeanClassName(InterfaceMethodAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("foo", beanDefinition);
-        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
         scanner.postProcessBeanFactory(beanFactory);
 
-        CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
-        scanner.mergeConfigurationProperties(circuitBreakerProperties);
-        InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("interfacemethodbreaker");
-        assertNotNull(instanceProperties);
-        assertArrayEquals(new Class[] { NullPointerException.class }, instanceProperties.getRecordExceptions());
+        PropertySource<?> propertySource = propertySources.get("circuitBreakerAnnotationConfig");
+        assertNotNull(propertySource);
+        assertEquals(NullPointerException.class.getName(), propertySource.getProperty(getRecordExceptionsPropertyName("interfacemethodbreaker")));
     }
 	
    @Test
@@ -119,19 +116,29 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         BeanDefinition beanDefinition = new GenericBeanDefinition();
         beanDefinition.setBeanClassName(InterfaceTypeAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("foo", beanDefinition);
-        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner();
+        CircuitBreakerAnnotationConfigScanner scanner = new CircuitBreakerAnnotationConfigScanner(env);
         scanner.postProcessBeanFactory(beanFactory);
 
-        CircuitBreakerConfigurationProperties circuitBreakerProperties = new CircuitBreakerConfigurationProperties();
-        scanner.mergeConfigurationProperties(circuitBreakerProperties);
-        InstanceProperties instanceProperties = circuitBreakerProperties.getInstances().get("interfacetypebreaker");
-        assertNotNull(instanceProperties);
-        assertArrayEquals(new Class[] { IllegalStateException.class }, instanceProperties.getIgnoreExceptions());
+        PropertySource<?> propertySource = propertySources.get("circuitBreakerAnnotationConfig");
+        assertNotNull(propertySource);
+        assertEquals(IllegalStateException.class.getName(), propertySource.getProperty(getIgnoreExceptionsPropertyName("interfacetypebreaker")));
     }
 	
+    private String getIgnoreExceptionsPropertyName(String instanceName) {
+        return getExceptionsPropertyName(instanceName, "ignoreExceptions", 0);
+    }
+
+    private String getRecordExceptionsPropertyName(String instanceName) {
+        return getExceptionsPropertyName(instanceName, "recordExceptions", 0);
+    }
+
+    private String getExceptionsPropertyName(String instanceName, String exceptionsPropertyName, int index) {
+        return String.format("resilience4j.circuitbreaker.instances.%s.%s[%d]", instanceName, exceptionsPropertyName, index);
+    }
+
     public static class MethodAnnotatedBean {
 
-        @CircuitBreaker(name = "methodbreaker", ignoreExceptions = {IllegalArgumentException.class})
+        @CircuitBreaker(name = "methodbreaker", ignoreExceptions = {IllegalArgumentException.class, NullPointerException.class})
         public String foo() {
             return null;
         }

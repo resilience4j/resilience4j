@@ -43,7 +43,7 @@ public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
         CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
 
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(
-                new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()), Optional.empty())).isNotNull();
+                new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
     }
 
     static class CircuitBreakerConfig extends AbstractRefreshScopedCircuitBreakerConfiguration {

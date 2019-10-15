@@ -54,9 +54,7 @@ public class CircuitBreakerConfiguration {
 
 	@Bean
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-														 Optional<CircuitBreakerAnnotationConfigScanner> circuitBreakerAnnotationConfigScanner) {
-        circuitBreakerAnnotationConfigScanner.ifPresent(scanner->scanner.mergeConfigurationProperties(circuitBreakerProperties));
+														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
 	    CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 		registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 		initCircuitBreakerRegistry(circuitBreakerRegistry);

@@ -35,10 +35,7 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     @RefreshScope
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-                                                         Optional<CircuitBreakerAnnotationConfigScanner> circuitBreakerAnnotationConfigScanner) {
-        // Merge any annotation configuration found
-        circuitBreakerAnnotationConfigScanner.ifPresent(scanner->scanner.mergeConfigurationProperties(circuitBreakerProperties));
+                                                         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
 	
         CircuitBreakerRegistry circuitBreakerRegistry =
                 circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);

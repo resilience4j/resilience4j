@@ -63,7 +63,7 @@ public class SpringBootCommonTest {
 		CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
 		assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
 		assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
-		assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()), Optional.empty())).isNotNull();
+		assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
 		assertThat(circuitBreakerConfig.circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
 		assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty()));
 	}
