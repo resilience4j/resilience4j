@@ -18,9 +18,8 @@ package io.github.resilience4j.grpc;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.grpc.circuitbreaker.CircuitBreakerCallOptions;
-import io.github.resilience4j.grpc.circuitbreaker.client.interceptor.ClientCircuitBreakerInterceptor;
+import io.github.resilience4j.grpc.circuitbreaker.client.interceptor.ClientCircuitBreakerInterceptors;
 import io.grpc.Channel;
-import io.grpc.ClientInterceptors;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -39,7 +38,7 @@ public class ClientStubCircuitBreakerTests {
     public GrpcServerRule serverRule = new GrpcServerRule();
 
     private Channel getInterceptedChannel(){
-        return ClientInterceptors.intercept(serverRule.getChannel(), new ClientCircuitBreakerInterceptor());
+        return ClientCircuitBreakerInterceptors.intercept(serverRule.getChannel());
     }
 
     @Test

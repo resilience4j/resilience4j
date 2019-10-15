@@ -23,6 +23,7 @@ import io.grpc.ClientInterceptors;
 import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.Status;
+import io.grpc.StatusException;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -34,7 +35,7 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
     private final Predicate<Status> successStatusPredicate;
     private boolean isCancelled = false;
 
-    protected ClientCallCircuitBreaker(
+    private ClientCallCircuitBreaker(
             ClientCall<ReqT, RespT> delegate,
             CircuitBreaker circuitBreaker,
             Predicate<Status> successStatusPredicate) {
@@ -54,11 +55,21 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
         return new ClientCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
+    private void acquirePermissionOrThrowStatus() throws StatusException {
+        try{
+            circuitBreaker.acquirePermission();
+        }catch (Exception exception){
+            throw Status.UNAVAILABLE
+                    .withDescription(exception.getMessage())
+                    .withCause(exception)
+                    .asException();
+        }
+    }
+
     @Override
     protected void checkedStart(
             Listener<RespT> responseListener, Metadata headers) throws Exception {
-
-        circuitBreaker.acquirePermission();
+        acquirePermissionOrThrowStatus();
         delegate().start(new CircuitBreakerListener(responseListener), headers);
     }
 
@@ -73,7 +84,7 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
 
         private final long startTime = System.nanoTime();
 
-        CircuitBreakerListener(Listener<RespT> delegate) {
+        private CircuitBreakerListener(Listener<RespT> delegate) {
             super(delegate);
         }
 

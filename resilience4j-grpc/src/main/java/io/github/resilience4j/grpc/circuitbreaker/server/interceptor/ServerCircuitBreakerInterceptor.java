@@ -26,31 +26,21 @@ import io.grpc.Status;
 
 import java.util.function.Predicate;
 
-public class ServiceInterceptor implements ServerInterceptor {
+public class ServerCircuitBreakerInterceptor implements ServerInterceptor {
 
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
 
-    private ServiceInterceptor(
+    ServerCircuitBreakerInterceptor(
             CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         this.circuitBreaker = circuitBreaker;
         this.successStatusPredicate = successStatusPredicate;
     }
 
-    public static ServiceInterceptor of(CircuitBreaker circuitBreaker){
-        return of(circuitBreaker, Status::isOk);
-    }
-
-    public static ServiceInterceptor of(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate){
-        return new ServiceInterceptor(circuitBreaker, successStatusPredicate);
-    }
-
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
             ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
-
 
         ServerCall<ReqT, RespT> callToExecute = ServerCallCircuitBreaker.decorate(
                 call, circuitBreaker, successStatusPredicate);

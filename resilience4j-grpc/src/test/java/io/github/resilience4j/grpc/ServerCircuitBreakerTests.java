@@ -17,7 +17,7 @@
 package io.github.resilience4j.grpc;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.grpc.circuitbreaker.server.CircuitBreakerServerDecorators;
+import io.github.resilience4j.grpc.circuitbreaker.server.interceptor.ServerCircuitBreakerInterceptors;
 import io.grpc.BindableService;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -38,7 +38,6 @@ public class ServerCircuitBreakerTests {
 
     @Rule
     public GrpcServerRule serverRule = new GrpcServerRule();
-
 
     private BindableService service = new SimpleServiceGrpc.SimpleServiceImplBase() {
         @Override
@@ -65,9 +64,9 @@ public class ServerCircuitBreakerTests {
             status.isOk() || status.getCode() == Status.INVALID_ARGUMENT.getCode();
 
         serverRule.getServiceRegistry().addService(
-                CircuitBreakerServerDecorators.forBindableService(service)
-                        .withCircuitBreaker(serviceCircuitBreaker, isValidStatus)
-                        .withCircuitBreakerForMethod(
+                ServerCircuitBreakerInterceptors.decoratorFor(service)
+                        .interceptAll(serviceCircuitBreaker, isValidStatus)
+                        .interceptMethod(
                                 SimpleServiceGrpc.getUnaryRpcMethod(),
                                 methodCircuitBreaker,
                                 isValidStatus)
@@ -116,9 +115,9 @@ public class ServerCircuitBreakerTests {
         CircuitBreaker serviceCircuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
 
         serverRule.getServiceRegistry().addService(
-                CircuitBreakerServerDecorators.forBindableService(service)
-                        .withCircuitBreaker(serviceCircuitBreaker)
-                        .withCircuitBreakerForMethod(
+                ServerCircuitBreakerInterceptors.decoratorFor(service)
+                        .interceptAll(serviceCircuitBreaker)
+                        .interceptMethod(
                                 SimpleServiceGrpc.getUnaryRpcMethod(),
                                 methodCircuitBreaker,
                                 status -> status.getCode() != Status.INVALID_ARGUMENT.getCode())

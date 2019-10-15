@@ -32,8 +32,11 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
 
-    protected ServerCallCircuitBreaker(
-            ServerCall<ReqT, RespT> delegate, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+    private ServerCallCircuitBreaker(
+            ServerCall<ReqT, RespT> delegate,
+            CircuitBreaker circuitBreaker,
+            Predicate<Status> successStatusPredicate) {
+
         super(delegate);
         this.circuitBreaker = circuitBreaker;
         this.successStatusPredicate = successStatusPredicate;
@@ -41,7 +44,7 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
 
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(
             ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker){
-        return new ServerCallCircuitBreaker<>(call, circuitBreaker, Status::isOk);
+        return decorate(call, circuitBreaker, Status::isOk);
     }
 
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(

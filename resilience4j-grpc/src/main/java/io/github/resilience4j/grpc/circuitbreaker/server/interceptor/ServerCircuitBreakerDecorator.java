@@ -14,11 +14,9 @@
  *  limitations under the License.
  *
  */
-package io.github.resilience4j.grpc.circuitbreaker.server;
+package io.github.resilience4j.grpc.circuitbreaker.server.interceptor;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.grpc.circuitbreaker.server.interceptor.ServiceInterceptor;
-import io.github.resilience4j.grpc.circuitbreaker.server.interceptor.ServiceMethodInterceptor;
 import io.grpc.MethodDescriptor;
 import io.grpc.ServerInterceptor;
 import io.grpc.ServerServiceDefinition;
@@ -28,36 +26,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-public abstract class ServerCircuitBreakerDecorator<T extends ServerCircuitBreakerDecorator<T>> {
+public abstract class ServerCircuitBreakerDecorator {
 
     protected final List<ServerInterceptor> interceptors = new ArrayList<>();
 
-    public T withCircuitBreakerForMethod(
+    public ServerCircuitBreakerDecorator interceptMethod(
             MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker) {
-        return withCircuitBreakerForMethod(methodDescriptor, circuitBreaker, Status::isOk);
+        return interceptMethod(methodDescriptor, circuitBreaker, Status::isOk);
     }
 
-    public T withCircuitBreakerForMethod(
+    public ServerCircuitBreakerDecorator interceptMethod(
             MethodDescriptor<?, ?> methodDescriptor,
             CircuitBreaker circuitBreaker,
             Predicate<Status> successStatusPredicate) {
-        interceptors.add(ServiceMethodInterceptor.of(methodDescriptor, circuitBreaker, successStatusPredicate));
-        return thisT();
+        interceptors.add(ServerCircuitBreakerInterceptors
+                .forMethod(methodDescriptor, circuitBreaker, successStatusPredicate));
+
+        return this;
     }
 
-    public T withCircuitBreaker(CircuitBreaker circuitBreaker) {
-        return withCircuitBreaker(circuitBreaker, Status::isOk);
+    public ServerCircuitBreakerDecorator interceptAll(CircuitBreaker circuitBreaker) {
+        return interceptAll(circuitBreaker, Status::isOk);
     }
 
-    public T withCircuitBreaker(
+    public ServerCircuitBreakerDecorator interceptAll(
             CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
-        interceptors.add(ServiceInterceptor.of(circuitBreaker, successStatusPredicate));
-        return thisT();
-    }
-
-    @SuppressWarnings("unchecked")
-    private T thisT(){
-        return (T) this;
+        interceptors.add(ServerCircuitBreakerInterceptors.from(circuitBreaker, successStatusPredicate));
+        return this;
     }
 
     abstract public ServerServiceDefinition build();
