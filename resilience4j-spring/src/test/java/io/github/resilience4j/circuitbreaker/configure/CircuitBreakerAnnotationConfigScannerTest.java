@@ -1,17 +1,15 @@
 /*
  * Copyright 2019 Olov Andersson
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
@@ -37,31 +35,31 @@ public class CircuitBreakerAnnotationConfigScannerTest {
     ConfigurableEnvironment env;
     MutablePropertySources propertySources = new MutablePropertySources();
     CircuitBreakerAnnotationConfigScanner scanner;
-    
+
     @Before
     public void setUp() {
         env = mock(ConfigurableEnvironment.class);
         when(env.getPropertySources()).thenReturn(propertySources);
         scanner = new CircuitBreakerAnnotationConfigScanner(env);
     }
-    
-	@Test
-	public void testTwoExceptionsOnMethodAnnotationConfigUsed() {
-		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-		BeanDefinition beanDefinition = new GenericBeanDefinition();
-		beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
-		beanFactory.registerBeanDefinition("foo", beanDefinition);
-		scanner.postProcessBeanFactory(beanFactory);
 
-		PropertySource<?> propertySource = propertySources.get("circuitBreakerAnnotationConfig");
-		assertNotNull(propertySource);
-		assertEquals(IllegalArgumentException.class.getName(), propertySource.getProperty(getExceptionsPropertyName("methodbreaker", "ignoreExceptions", 0)));
-		assertEquals(NullPointerException.class.getName(), propertySource.getProperty(getExceptionsPropertyName("methodbreaker", "ignoreExceptions", 1)));
-	}
-	
-	@Test
-	public void testClassAndMethodAnnotatedConfigUsed() {
-	    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+    @Test
+    public void testTwoExceptionsOnMethodAnnotationConfigUsed() {
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        BeanDefinition beanDefinition = new GenericBeanDefinition();
+        beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
+        beanFactory.registerBeanDefinition("foo", beanDefinition);
+        scanner.postProcessBeanFactory(beanFactory);
+
+        PropertySource<?> propertySource = propertySources.get("circuitBreakerAnnotationConfig");
+        assertNotNull(propertySource);
+        assertEquals(IllegalArgumentException.class.getName(), propertySource.getProperty(getExceptionsPropertyName("methodbreaker", "ignoreExceptions", 0)));
+        assertEquals(NullPointerException.class.getName(), propertySource.getProperty(getExceptionsPropertyName("methodbreaker", "ignoreExceptions", 1)));
+    }
+
+    @Test
+    public void testClassAndMethodAnnotatedConfigUsed() {
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new GenericBeanDefinition();
         beanDefinition.setBeanClassName(ClassAndMethodAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("foo", beanDefinition);
@@ -71,11 +69,11 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         assertNotNull(propertySource);
         assertEquals(UnsupportedOperationException.class.getName(), propertySource.getProperty(getRecordExceptionsPropertyName("classbreaker")));
         assertEquals(IllegalArgumentException.class.getName(), propertySource.getProperty(getIgnoreExceptionsPropertyName("methodbreaker")));
-	}
-	
-	@Test(expected = IllegalArgumentException.class)
-	public void testConflictingAnnotationsThrowsIllegalArgumentException() {
-	    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConflictingAnnotationsThrowsIllegalArgumentException() {
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new GenericBeanDefinition();
         beanDefinition.setBeanClassName(ClassAndMethodAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("foo", beanDefinition);
@@ -83,9 +81,9 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         beanDefinition.setBeanClassName(MethodAnnotatedBean.class.getName());
         beanFactory.registerBeanDefinition("bar", beanDefinition);
         scanner.postProcessBeanFactory(beanFactory);
-	}
-	
-   @Test
+    }
+
+    @Test
     public void testNonConflictingAnnotationsDeclaredTwiceAreAllowed() {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new GenericBeanDefinition();
@@ -96,8 +94,8 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         beanFactory.registerBeanDefinition("bar", beanDefinition);
         scanner.postProcessBeanFactory(beanFactory);
     }
-	
-	@Test
+
+    @Test
     public void testInterfaceMethodAnnotationUsed() {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new GenericBeanDefinition();
@@ -109,8 +107,8 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         assertNotNull(propertySource);
         assertEquals(NullPointerException.class.getName(), propertySource.getProperty(getRecordExceptionsPropertyName("interfacemethodbreaker")));
     }
-	
-   @Test
+
+    @Test
     public void testInterfaceTypeAnnotationUsed() {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         BeanDefinition beanDefinition = new GenericBeanDefinition();
@@ -123,7 +121,7 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         assertNotNull(propertySource);
         assertEquals(IllegalStateException.class.getName(), propertySource.getProperty(getIgnoreExceptionsPropertyName("interfacetypebreaker")));
     }
-	
+
     private String getIgnoreExceptionsPropertyName(String instanceName) {
         return getExceptionsPropertyName(instanceName, "ignoreExceptions", 0);
     }
@@ -146,7 +144,7 @@ public class CircuitBreakerAnnotationConfigScannerTest {
 
     @CircuitBreaker(name = "classbreaker", recordExceptions = {UnsupportedOperationException.class})
     public static class ClassAndMethodAnnotatedBean {
-        
+
         public String breakerMethod1() {
             return null;
         }
@@ -155,17 +153,17 @@ public class CircuitBreakerAnnotationConfigScannerTest {
         public void breakerMethod2() {
         }
     }
-    
+
     public static interface MethodAnnotatedInterface {
-        @CircuitBreaker( name = "interfacemethodbreaker", recordExceptions = {NullPointerException.class})
+        @CircuitBreaker(name = "interfacemethodbreaker", recordExceptions = {NullPointerException.class})
         void breakerMethod();
     }
-	
+
     @CircuitBreaker(name = "interfacetypebreaker", ignoreExceptions = {IllegalStateException.class})
     public static interface TypeAnnotatedInterface {
         void breakerMethod();
     }
-    
+
     public static class InterfaceMethodAnnotatedBean implements MethodAnnotatedInterface {
         @Override
         public void breakerMethod() {
@@ -174,11 +172,11 @@ public class CircuitBreakerAnnotationConfigScannerTest {
 
     public static abstract class AbstractInterfaceTypedAnnotatedBean implements TypeAnnotatedInterface {
     }
-    
+
     public static class InterfaceTypeAnnotatedBean extends AbstractInterfaceTypedAnnotatedBean {
         @Override
         public void breakerMethod() {
         }
     }
-    
+
 }
