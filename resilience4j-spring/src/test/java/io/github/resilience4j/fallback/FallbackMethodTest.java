@@ -94,11 +94,20 @@ public class FallbackMethodTest {
     }
 
     @Test
-    public void rethrownRecoveryMethodExceptionShouldNotBeWrapped() throws Throwable {
+    public void rethrownRecoveryMethodRuntimeExceptionShouldNotBeWrapped() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
         FallbackMethod recoveryMethod = FallbackMethod.create("rethrowingFallbackMethod", testMethod, new Object[]{"test"}, target);
         RethrowException exception = new RethrowException();
+        assertThatThrownBy(() -> recoveryMethod.fallback(exception)).isSameAs(exception);
+    }
+    
+    @Test
+    public void rethrownRecoveryMethodCheckedExceptionShouldNotBeWrapped() throws Throwable {
+        FallbackMethodTest target = new FallbackMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+        FallbackMethod recoveryMethod = FallbackMethod.create("rethrowingFallbackMethodChecked", testMethod, new Object[]{"test"}, target);
+        RethrowCheckedException exception = new RethrowCheckedException();
         assertThatThrownBy(() -> recoveryMethod.fallback(exception)).isSameAs(exception);
     }
     
@@ -140,5 +149,9 @@ public class FallbackMethodTest {
             throw (RethrowException) exception;
         }
         return "normal recovery result";
+    }
+    
+    public String rethrowingFallbackMethodChecked(String parameter, Exception exception) throws Exception {
+        throw exception;
     }
 }
