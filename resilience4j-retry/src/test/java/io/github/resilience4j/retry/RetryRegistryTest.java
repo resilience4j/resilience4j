@@ -75,7 +75,7 @@ public class RetryRegistryTest {
 	@Test
 	public void noTagsByDefault() {
 		Retry retry = retryRegistry.retry("testName");
-		Assertions.assertThat(retry.getTags()).hasSize(0);
+		assertThat(retry.getTags()).hasSize(0);
 	}
 
 	@Test
@@ -86,7 +86,7 @@ public class RetryRegistryTest {
 		RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, retryTags);
 		Retry retry = retryRegistry.retry("testName");
 
-		Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+		assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
 	}
 
 	@Test
@@ -94,7 +94,7 @@ public class RetryRegistryTest {
 		io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
 		Retry retry = retryRegistry.retry("testName", retryTags);
 
-		Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+		assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
 	}
 
 	@Test
@@ -105,8 +105,8 @@ public class RetryRegistryTest {
 		io.vavr.collection.Map<String, String> retryTags2 = io.vavr.collection.HashMap.of("key3","value3", "key4", "value4");
 		Retry retry2 = retryRegistry.retry("otherTestName", config, retryTags2);
 
-		Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
-		Assertions.assertThat(retry2.getTags()).containsOnlyElementsOf(retryTags2);
+		assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+		assertThat(retry2.getTags()).containsOnlyElementsOf(retryTags2);
 	}
 
 	@Test
@@ -119,7 +119,7 @@ public class RetryRegistryTest {
 		Retry retry = retryRegistry.retry("testName", retryConfig, instanceTags);
 
 		io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap.of("key1","value3", "key2", "value2", "key4", "value4");
-		Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
+		assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
 	}
 
 	@Test
