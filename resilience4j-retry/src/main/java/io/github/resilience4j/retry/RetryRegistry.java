@@ -19,6 +19,7 @@ package io.github.resilience4j.retry;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -46,6 +47,18 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	Retry retry(String name);
 
 	/**
+	 * Returns a managed {@link Retry} or creates a new one with the default Retry configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name the name of the Retry
+	 * @param tags   tags added to the Retry
+	 * @return The {@link Retry}
+	 */
+	Retry retry(String name, io.vavr.collection.Map<String, String> tags);
+
+	/**
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
 	 *
 	 * @param name        the name of the Retry
@@ -53,6 +66,19 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 * @return The {@link Retry}
 	 */
 	Retry retry(String name, RetryConfig config);
+
+	/**
+	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name   the name of the Retry
+	 * @param config a custom Retry configuration
+	 * @param tags   tags added to the Retry
+	 * @return The {@link Retry}
+	 */
+	Retry retry(String name, RetryConfig config, io.vavr.collection.Map<String, String> tags);
 
 	/**
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
@@ -66,12 +92,37 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	/**
 	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
 	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name                the name of the Retry
+	 * @param retryConfigSupplier a supplier of a custom Retry configuration
+	 * @param tags       tags added to the Retry
+	 * @return The {@link Retry}
+	 */
+	Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier, io.vavr.collection.Map<String, String> tags);
+
+	/**
+	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
+	 *
 	 * @param name       the name of the Retry
 	 * @param configName a custom Retry configuration name
 	 * @return The {@link Retry}
 	 */
 	Retry retry(String name, String configName);
 
+	/**
+	 * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name       the name of the Retry
+	 * @param configName a custom Retry configuration name
+	 * @param tags       tags added to the Retry
+	 * @return The {@link Retry}
+	 */
+	Retry retry(String name, String configName, io.vavr.collection.Map<String, String> tags);
 
 	/**
 	 * Creates a RetryRegistry with a custom default Retry configuration.
@@ -121,7 +172,20 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
 	 * @return a RetryRegistry with a Map of shared Retry configurations.
 	 */
 	static RetryRegistry of(Map<String, RetryConfig> configs) {
-		return new InMemoryRetryRegistry(configs);
+		return of(configs, HashMap.empty());
+	}
+
+	/**
+	 * Creates a RetryRegistry with a Map of shared Retry configurations.
+	 *
+	 * Tags added to the registry will be added to every instance created by this registry.
+	 *
+	 * @param configs a Map of shared Retry configurations
+	 * @param tags default tags to add to the registry
+	 * @return a RetryRegistry with a Map of shared Retry configurations.
+	 */
+	static RetryRegistry of(Map<String, RetryConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		return new InMemoryRetryRegistry(configs, tags);
 	}
 
 	/**

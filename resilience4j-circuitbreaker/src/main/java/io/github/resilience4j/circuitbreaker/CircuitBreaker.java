@@ -186,6 +186,13 @@ public interface CircuitBreaker {
     Metrics getMetrics();
 
     /**
+     * Returns an unmodifiable map with tags assigned to this Retry.
+     *
+     * @return the tags assigned to this Retry in an unmodifiable map
+     */
+    io.vavr.collection.Map<String, String> getTags();
+
+    /**
      * Returns an EventPublisher which can be used to register event consumers.
      *
      * @return an EventPublisher
@@ -950,6 +957,22 @@ public interface CircuitBreaker {
     /**
      * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
      *
+     * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+     * the two collide the tags passed with this method will override the tags of the registry.
+     *
+     * @param name the name of the CircuitBreaker
+     * @param circuitBreakerConfig a custom CircuitBreaker configuration
+     * @param tags tags added to the Retry
+     *
+     * @return a CircuitBreaker with a custom CircuitBreaker configuration.
+     */
+    static CircuitBreaker of(String name, CircuitBreakerConfig circuitBreakerConfig, io.vavr.collection.Map<String, String> tags){
+        return new CircuitBreakerStateMachine(name, circuitBreakerConfig, tags);
+    }
+
+    /**
+     * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
+     *
      * @param name      the name of the CircuitBreaker
      * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
      *
@@ -957,5 +980,21 @@ public interface CircuitBreaker {
      */
     static CircuitBreaker of(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier){
         return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier);
+    }
+
+    /**
+     * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
+     *
+     * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+     * the two collide the tags passed with this method will override the tags of the registry.
+     *
+     * @param name      the name of the CircuitBreaker
+     * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
+     * @param tags tags added to the CircuitBreaker
+     *
+     * @return a CircuitBreaker with a custom CircuitBreaker configuration.
+     */
+    static CircuitBreaker of(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier, io.vavr.collection.Map<String, String> tags){
+        return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier, tags);
     }
 }

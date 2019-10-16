@@ -22,6 +22,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -42,17 +43,33 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 		this(RetryConfig.ofDefaults());
 	}
 
+	public InMemoryRetryRegistry(io.vavr.collection.Map<String, String> tags) {
+		this(RetryConfig.ofDefaults(), tags);
+	}
+
 	public InMemoryRetryRegistry(Map<String, RetryConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()));
+		this(configs, HashMap.empty());
+	}
+
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), tags);
 		this.configurations.putAll(configs);
 	}
 
 	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, RegistryEventConsumer<Retry> registryEventConsumer) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumer);
+		this(configs, registryEventConsumer, HashMap.empty());
+	}
+
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, RegistryEventConsumer<Retry> registryEventConsumer, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumer, tags);
 		this.configurations.putAll(configs);
 	}
 
 	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
+		this(configs, registryEventConsumers, HashMap.empty());
+	}
+
+	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
 		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumers);
 		this.configurations.putAll(configs);
 	}
@@ -63,15 +80,27 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 * @param defaultConfig The default config.
 	 */
 	public InMemoryRetryRegistry(RetryConfig defaultConfig) {
-		super(defaultConfig);
+		this(defaultConfig, HashMap.empty());
+	}
+
+	public InMemoryRetryRegistry(RetryConfig defaultConfig, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, tags);
 	}
 
 	public InMemoryRetryRegistry(RetryConfig defaultConfig, RegistryEventConsumer<Retry> registryEventConsumer) {
-		super(defaultConfig, registryEventConsumer);
+		this(defaultConfig, registryEventConsumer, HashMap.empty());
+	}
+
+	public InMemoryRetryRegistry(RetryConfig defaultConfig, RegistryEventConsumer<Retry> registryEventConsumer, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, registryEventConsumer, tags);
 	}
 
 	public InMemoryRetryRegistry(RetryConfig defaultConfig, List<RegistryEventConsumer<Retry>> registryEventConsumers) {
-		super(defaultConfig, registryEventConsumers);
+		this(defaultConfig, registryEventConsumers, HashMap.empty());
+	}
+
+	public InMemoryRetryRegistry(RetryConfig defaultConfig, List<RegistryEventConsumer<Retry>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, registryEventConsumers, tags);
 	}
 
 	/**
@@ -94,8 +123,21 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 * {@inheritDoc}
 	 */
 	@Override
+	public Retry retry(String name, io.vavr.collection.Map<String, String> tags) {
+		return retry(name, getDefaultConfig(), tags);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public Retry retry(String name, RetryConfig config) {
-		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+		return retry(name, config, HashMap.empty());
+	}
+
+	@Override
+	public Retry retry(String name, RetryConfig config, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -103,7 +145,12 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 */
 	@Override
 	public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier) {
-		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
+		return retry(name, retryConfigSupplier, HashMap.empty());
+	}
+
+	@Override
+	public Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> Retry.of(name, Objects.requireNonNull(Objects.requireNonNull(retryConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -111,7 +158,12 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	 */
 	@Override
 	public Retry retry(String name, String configName) {
+		return retry(name, configName, HashMap.empty());
+	}
+
+	@Override
+	public Retry retry(String name, String configName, io.vavr.collection.Map<String, String> tags) {
 		return computeIfAbsent(name, () -> Retry.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
 	}
 }

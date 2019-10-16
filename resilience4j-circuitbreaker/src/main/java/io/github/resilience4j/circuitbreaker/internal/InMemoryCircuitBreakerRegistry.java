@@ -25,6 +25,7 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -42,11 +43,19 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 * The constructor with default default.
 	 */
 	public InMemoryCircuitBreakerRegistry() {
-		this(CircuitBreakerConfig.ofDefaults());
+		this(HashMap.empty());
+	}
+
+	public InMemoryCircuitBreakerRegistry(io.vavr.collection.Map<String, String> tags) {
+		this(CircuitBreakerConfig.ofDefaults(), tags);
 	}
 
 	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()));
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), HashMap.empty());
+	}
+
+	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), tags);
 		this.configurations.putAll(configs);
 	}
 
@@ -67,6 +76,16 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig) {
 		super(defaultConfig);
+	}
+
+	/**
+	 * The constructor with custom default config.
+	 *
+	 * @param defaultConfig The default config.
+	 * @param tags The tags to add to the CircuitBreaker
+	 */
+	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, tags);
 	}
 
 	public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig, RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
@@ -93,12 +112,22 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 		return circuitBreaker(name, getDefaultConfig());
 	}
 
+	@Override
+	public CircuitBreaker circuitBreaker(String name, io.vavr.collection.Map<String, String> tags) {
+		return circuitBreaker(name, getDefaultConfig(), tags);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config) {
-		return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+		return circuitBreaker(name, config, HashMap.empty());
+	}
+
+	@Override
+	public CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -106,8 +135,13 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name, String configName) {
+		return circuitBreaker(name, configName, HashMap.empty());
+	}
+
+	@Override
+	public CircuitBreaker circuitBreaker(String name, String configName, io.vavr.collection.Map<String, String> tags) {
 		return computeIfAbsent(name, () -> CircuitBreaker.of(name, getConfiguration(configName)
-						.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
 	}
 
 	/**
@@ -115,8 +149,11 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	 */
 	@Override
 	public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier) {
-		return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(Objects.requireNonNull(circuitBreakerConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
+		return circuitBreaker(name, circuitBreakerConfigSupplier, HashMap.empty());
 	}
 
-
+	@Override
+	public CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> CircuitBreaker.of(name, Objects.requireNonNull(Objects.requireNonNull(circuitBreakerConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
+	}
 }

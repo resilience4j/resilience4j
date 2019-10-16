@@ -30,6 +30,8 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.lang.Nullable;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ import static java.util.Objects.requireNonNull;
 public class SemaphoreBulkhead implements Bulkhead {
 
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+    private static final String TAGS_MUST_NOTE_BE_NULL = "Tags must not be null";
 
     private final String name;
     private final Semaphore semaphore;
@@ -52,6 +55,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final Object configChangesLock = new Object();
     @SuppressWarnings("squid:S3077") // this object is immutable and we replace ref entirely during config change.
     private volatile BulkheadConfig config;
+    private final Map<String, String> tags;
 
     /**
      * Creates a bulkhead using a configuration supplied
@@ -60,8 +64,20 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param bulkheadConfig custom bulkhead configuration
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
+        this(name, bulkheadConfig, HashMap.empty());
+    }
+
+    /**
+     * Creates a bulkhead using a configuration supplied
+     *
+     * @param name           the name of this bulkhead
+     * @param bulkheadConfig custom bulkhead configuration
+     * @param tags           the tags to add to the Bulkdhead
+     */
+    public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig, Map<String, String> tags) {
         this.name = name;
         this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
+        this.tags = requireNonNull(tags, TAGS_MUST_NOTE_BE_NULL);
         // init semaphore
         this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
 
@@ -75,7 +91,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name the name of this bulkhead
      */
     public SemaphoreBulkhead(String name) {
-        this(name, BulkheadConfig.ofDefaults());
+        this(name, BulkheadConfig.ofDefaults(), HashMap.empty());
     }
 
     /**
@@ -85,7 +101,18 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param configSupplier BulkheadConfig supplier
      */
     public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
-        this(name, configSupplier.get());
+        this(name, configSupplier.get(), HashMap.empty());
+    }
+
+    /**
+     * Create a bulkhead using a configuration supplier
+     *
+     * @param name           the name of this bulkhead
+     * @param configSupplier BulkheadConfig supplier
+     * @param tags           tags to add to the Bulkhead
+     */
+    public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier, Map<String, String> tags) {
+        this(name, configSupplier.get(), tags);
     }
 
     /**
@@ -173,6 +200,14 @@ public class SemaphoreBulkhead implements Bulkhead {
     @Override
     public Metrics getMetrics() {
         return metrics;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     /**

@@ -118,6 +118,58 @@ public class RateLimiterRegistryTest {
                 .isInstanceOf(ConfigurationNotFoundException.class);
     }
 
+    @Test
+    public void noTagsByDefault() {
+        RateLimiter rateLimiter = RateLimiterRegistry.ofDefaults().rateLimiter("testName");
+        assertThat(rateLimiter.getTags()).hasSize(0);
+    }
+
+    @Test
+    public void tagsOfRegistryAddedToInstance() {
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.ofDefaults();
+        Map<String, RateLimiterConfig> ratelimiterConfigs = Collections.singletonMap("default", rateLimiterConfig);
+        io.vavr.collection.Map<String, String> rateLimiterTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(ratelimiterConfigs, rateLimiterTags);
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName");
+
+        assertThat(rateLimiter.getTags()).containsOnlyElementsOf(rateLimiterTags);
+    }
+
+    @Test
+    public void tagsAddedToInstance() {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        RateLimiter circuitBreaker = rateLimiterRegistry.rateLimiter("testName", retryTags);
+
+        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(retryTags);
+    }
+
+    @Test
+    public void tagsOfRetriesShouldNotBeMixed() {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.ofDefaults();
+        io.vavr.collection.Map<String, String> rateLimiterTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName", rateLimiterConfig, rateLimiterTags);
+        io.vavr.collection.Map<String, String> rateLimiterTags2 = io.vavr.collection.HashMap.of("key3","value3", "key4", "value4");
+        RateLimiter rateLimiter2 = rateLimiterRegistry.rateLimiter("otherTestName", rateLimiterConfig, rateLimiterTags2);
+
+        assertThat(rateLimiter.getTags()).containsOnlyElementsOf(rateLimiterTags);
+        assertThat(rateLimiter2.getTags()).containsOnlyElementsOf(rateLimiterTags2);
+    }
+
+    @Test
+    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+        RateLimiterConfig circuitBreakerConfig = RateLimiterConfig.ofDefaults();
+        Map<String, RateLimiterConfig> rateLimiterConfigs = Collections.singletonMap("default", circuitBreakerConfig);
+        io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap.of("key1","value3", "key4", "value4");
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(rateLimiterConfigs, registryTags);
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName", circuitBreakerConfig, instanceTags);
+
+        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap.of("key1","value3", "key2", "value2", "key4", "value4");
+        assertThat(rateLimiter.getTags()).containsOnlyElementsOf(expectedTags);
+    }
+
     private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<RateLimiter> eventPublisher) {
         if (eventPublisher instanceof EventProcessor<?>) {
             return Optional.of((EventProcessor<?>) eventPublisher);

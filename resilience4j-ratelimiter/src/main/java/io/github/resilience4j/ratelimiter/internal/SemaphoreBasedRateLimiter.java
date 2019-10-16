@@ -23,6 +23,8 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import io.vavr.control.Option;
 
 import java.time.Duration;
@@ -49,6 +51,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final ScheduledExecutorService scheduler;
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
+    private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
 
     /**
@@ -58,7 +61,18 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param rateLimiterConfig The RateLimiter configuration.
      */
     public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
-        this(name, rateLimiterConfig, null);
+        this(name, rateLimiterConfig, HashMap.empty());
+    }
+
+    /**
+     * Creates a RateLimiter.
+     *
+     * @param name              the name of the RateLimiter
+     * @param rateLimiterConfig The RateLimiter configuration.
+     * @param tags              tags to assign to the RateLimiter
+     */
+    public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig, Map<String, String> tags) {
+        this(name, rateLimiterConfig, null, tags);
     }
 
     /**
@@ -70,10 +84,24 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
                                      @Nullable ScheduledExecutorService scheduler) {
+        this(name, rateLimiterConfig, scheduler, HashMap.empty());
+    }
+
+    /**
+     * Creates a RateLimiter.
+     *
+     * @param name              the name of the RateLimiter
+     * @param rateLimiterConfig The RateLimiter configuration.
+     * @param scheduler         executor that will refresh permissions
+     * @param tags              tags to assign to the RateLimiter
+     */
+    public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
+                                     @Nullable ScheduledExecutorService scheduler, Map<String, String> tags) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         this.rateLimiterConfig = new AtomicReference<>(requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 
         this.scheduler = Option.of(scheduler).getOrElse(this::configureScheduler);
+        this.tags = tags;
         this.semaphore = new Semaphore(this.rateLimiterConfig.get().getLimitForPeriod(), true);
         this.metrics = this.new SemaphoreBasedRateLimiterMetrics();
 
@@ -199,6 +227,11 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
                 + "name='" + name + '\''
                 + ", rateLimiterConfig=" + rateLimiterConfig
                 + '}';
+    }
+
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     /**
