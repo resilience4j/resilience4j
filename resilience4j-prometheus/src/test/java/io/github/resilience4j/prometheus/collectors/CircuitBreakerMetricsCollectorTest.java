@@ -232,4 +232,28 @@ public class CircuitBreakerMetricsCollectorTest {
             new String[]{"backendA", "closed"}
         )).isNotNull();
     }
+
+    @Test
+    public void customMetricNameBucketsOverrideDefaultOnes() {
+        CollectorRegistry registry = new CollectorRegistry();
+
+        CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(
+            custom().buckets(new double[]{.005, .01})
+                    .build(),
+            circuitBreakerRegistry).register(registry);
+
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+
+        assertThat(registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+                new String[]{"name", "kind", "le"},
+                new String[]{circuitBreaker.getName(), "successful", "0.01"}
+        )).isEqualTo(1d);
+
+        assertThat(registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+                new String[]{"name", "kind", "le"},
+                new String[]{circuitBreaker.getName(), "successful", "0.025"}
+        )).isNull();
+    }
 }

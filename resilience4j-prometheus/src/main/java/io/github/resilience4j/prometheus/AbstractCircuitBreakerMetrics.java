@@ -45,6 +45,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         this.names = requireNonNull(names);
         callsHistogram = Histogram.build(names.getCallsMetricName(), "Total number of calls by kind")
                 .labelNames("name", "kind")
+                .buckets(names.getBuckets())
                 .create().register(collectorRegistry);
     }
 
@@ -114,6 +115,8 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         public static final String DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE = "resilience4j_circuitbreaker_failure_rate";
         public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE = "resilience4j_circuitbreaker_slow_call_rate";
 
+        public static final double[] DEFAULT_BUCKETS = new double[]{.005, .01, .025, .05, .075, .1, .25, .5, .75, 1, 2.5, 5, 7.5, 10};
+
         /**
          * Returns a builder for creating custom metric names.
          * Note that names have default values, so only desired metrics can be renamed.
@@ -133,6 +136,8 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
         private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
+
+        private double[] buckets = DEFAULT_BUCKETS;
 
         private MetricNames() {}
 
@@ -164,6 +169,11 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         /** Returns the metric name for state, defaults to {@value DEFAULT_CIRCUIT_BREAKER_STATE}. */
         public String getStateMetricName() {
             return stateMetricName;
+        }
+
+        /** Returns the Histogram buckets, defaults to {@link MetricNames#DEFAULT_BUCKETS}. */
+        public double[] getBuckets() {
+            return buckets;
         }
 
         /** Helps building custom instance of {@link MetricNames}. */
@@ -203,6 +213,12 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
             /** Overrides the default metric name {@value MetricNames#DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE} with a given one. */
             public Builder slowCallRateMetricName(String slowCallRateMetricName) {
                 metricNames.slowCallRateMetricName = requireNonNull(slowCallRateMetricName);
+                return this;
+            }
+
+            /** Overrides the default Histogram buckets {@link MetricNames#DEFAULT_BUCKETS} with a given one. */
+            public Builder buckets(double[] buckets) {
+                metricNames.buckets = requireNonNull(buckets);
                 return this;
             }
 
