@@ -51,7 +51,7 @@ public final class InMemoryBulkheadRegistry extends AbstractRegistry<Bulkhead, B
 	}
 
 	public InMemoryBulkheadRegistry(Map<String, BulkheadConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()), HashMap.empty());
+		this(configs, HashMap.empty());
 	}
 
 	public InMemoryBulkheadRegistry(Map<String, BulkheadConfig> configs, io.vavr.collection.Map<String, String> tags) {

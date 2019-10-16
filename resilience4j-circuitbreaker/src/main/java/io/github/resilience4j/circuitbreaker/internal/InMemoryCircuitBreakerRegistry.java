@@ -51,7 +51,7 @@ public final class InMemoryCircuitBreakerRegistry extends AbstractRegistry<Circu
 	}
 
 	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()), HashMap.empty());
+		this(configs, HashMap.empty());
 	}
 
 	public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs, io.vavr.collection.Map<String, String> tags) {
