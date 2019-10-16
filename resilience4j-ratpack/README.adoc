@@ -2,7 +2,7 @@
 
 This add-on provides integration with https://ratpack.io[Ratpack] libraries.
 
-NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_ratpack_starter[Usage Guide]*
+NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/getting-started-5[Usage Guide]*
 
 == License
 
