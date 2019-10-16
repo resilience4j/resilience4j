@@ -19,6 +19,7 @@ import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerPropert
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.service.test.AnnotatedConfigDummyService;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
 import io.prometheus.client.CollectorRegistry;
@@ -98,7 +99,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		// Test Actuator endpoints
 
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
-		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dynamicBackend");
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(7).containsExactly("backendA", "backendB", "backendC", "backendD", "backendSharedA", "backendSharedB", "dynamicBackend");
 
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
@@ -143,4 +144,22 @@ public class CircuitBreakerAutoConfigurationTest {
 		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold()).isEqualTo(defaultFailureRate);
 		assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState()).isEqualTo(defaultWaitDuration);
 	}
+	
+    @Test
+    public void testCircuitBreakerAnnotationConfiguration() throws Exception {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(AnnotatedConfigDummyService.BACKEND);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new UnusedException())).isFalse();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new UnusedException())).isFalse();
+    }
+    
+    @Test
+    public void testCircuitBreakerAnnotationConfigurationOverridenByPropertyFile() throws Exception {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(AnnotatedConfigDummyService.PROPERTY_OVERRIDE_BACKEND);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new UnusedException())).isFalse();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new UnusedException())).isFalse();
+    }
 }

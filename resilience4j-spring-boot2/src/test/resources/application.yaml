@@ -68,6 +68,11 @@ resilience4j.circuitbreaker:
       baseConfig: default
       slidingWindowSize: 18
       permittedNumberOfCallsInHalfOpenState: 6
+    backendD:
+      recordExceptions:
+        - io.github.resilience4j.circuitbreaker.RecordedException
+      ignoreExceptions:
+        - io.github.resilience4j.circuitbreaker.IgnoredException
 
 
 resilience4j.ratelimiter:

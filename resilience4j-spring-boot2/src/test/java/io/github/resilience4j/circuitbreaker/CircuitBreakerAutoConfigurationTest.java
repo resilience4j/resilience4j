@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerPropert
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.service.test.AnnotatedConfigDummyService;
 import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
@@ -60,6 +61,9 @@ public class CircuitBreakerAutoConfigurationTest {
     @Autowired
     DummyService dummyService;
 
+    @Autowired
+    AnnotatedConfigDummyService annotatedConfigDummyService;
+    
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -220,7 +224,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
         // expect circuitbreakers actuator endpoint contains both circuitbreakers
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient");
+        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(7).containsExactly("backendA", "backendB", "backendC", "backendD", "backendSharedA", "backendSharedB", "dummyFeignClient");
 
         // expect circuitbreaker-event actuator endpoint recorded both events
         CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents");
@@ -275,7 +279,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
         // expect circuitbreakers actuator endpoint contains all circuitbreakers
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient");
+        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(7).containsExactly("backendA", "backendB", "backendC", "backendD", "backendSharedA", "backendSharedB", "dummyFeignClient");
 
         // expect circuitbreaker-event actuator endpoint recorded both events
         CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents");
@@ -295,6 +299,24 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
     }
 
+    @Test
+    public void testCircuitBreakerAnnotationConfiguration() throws Exception {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(AnnotatedConfigDummyService.BACKEND);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new UnusedException())).isFalse();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new UnusedException())).isFalse();
+    }
+    
+    @Test
+    public void testCircuitBreakerAnnotationConfigurationOverridenByPropertyFile() throws Exception {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(AnnotatedConfigDummyService.PROPERTY_OVERRIDE_BACKEND);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new IgnoredException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate().test(new UnusedException())).isFalse();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate().test(new UnusedException())).isFalse();
+    }
+    
     private CircuitBreakerEventsEndpointResponse circuitBreakerEvents(String s) {
         return restTemplate.getForEntity(s, CircuitBreakerEventsEndpointResponse.class).getBody();
     }

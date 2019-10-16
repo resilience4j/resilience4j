@@ -53,6 +53,12 @@ resilience4j.circuitbreaker:
       slidingWindowSize: 6
     backendSharedB:
       baseConfig: default
+  instances:
+    backendD:
+      recordExceptions:
+        - io.github.resilience4j.circuitbreaker.RecordedException
+      ignoreExceptions:
+        - io.github.resilience4j.circuitbreaker.IgnoredException
 
 resilience4j.ratelimiter:
   rateLimiterAspectOrder: 401
