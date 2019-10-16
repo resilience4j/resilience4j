@@ -138,7 +138,7 @@ public class FallbackMethod {
      * @throws IllegalAccessException exception
      * @throws InvocationTargetException exception
      */
-    private Object invoke(Method fallback, Throwable throwable) throws IllegalAccessException, InvocationTargetException {
+    private Object invoke(Method fallback, Throwable throwable) throws Throwable {
         boolean accessible = fallback.isAccessible();
         try {
             if (!accessible) {
@@ -156,7 +156,12 @@ public class FallbackMethod {
             } else {
                 return fallback.invoke(target, throwable);
             }
-        } finally {
+        }
+        catch(InvocationTargetException e) {
+            // We want the original fallback-method exception to propagate instead:
+            throw e.getCause();
+        }
+        finally {
             if (!accessible) {
                 fallback.setAccessible(false);
             }

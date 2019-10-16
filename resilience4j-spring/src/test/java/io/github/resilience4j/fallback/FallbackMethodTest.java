@@ -93,6 +93,15 @@ public class FallbackMethodTest {
                 .hasMessage("class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
     }
 
+    @Test
+    public void rethrownRecoveryMethodExceptionShouldNotBeWrapped() throws Throwable {
+        FallbackMethodTest target = new FallbackMethodTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+        FallbackMethod recoveryMethod = FallbackMethod.create("rethrowingFallbackMethod", testMethod, new Object[]{"test"}, target);
+        RethrowException exception = new RethrowException();
+        assertThatThrownBy(() -> recoveryMethod.fallback(exception)).isSameAs(exception);
+    }
+    
     public String testMethod(String parameter) {
         return "test";
     }
@@ -123,5 +132,13 @@ public class FallbackMethodTest {
 
     public String duplicateException(IllegalArgumentException exception) {
         return "recovered-IllegalArgumentException";
+    }
+    
+    public String rethrowingFallbackMethod(String parameter, Exception exception) {
+        // To illustrate the typical use case:
+        if(exception instanceof RethrowException) {
+            throw (RethrowException) exception;
+        }
+        return "normal recovery result";
     }
 }
