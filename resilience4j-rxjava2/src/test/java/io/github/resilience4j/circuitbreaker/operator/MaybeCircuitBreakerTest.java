@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 /**
@@ -25,8 +26,8 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult(1);
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -40,8 +41,8 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
 
@@ -56,8 +57,8 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -70,9 +71,9 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
                 .test()
                 .cancel();
 
-        verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().releasePermission();
+        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
 }

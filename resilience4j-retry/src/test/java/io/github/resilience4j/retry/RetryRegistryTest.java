@@ -22,7 +22,6 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,41 +49,45 @@ public class RetryRegistryTest {
 	@Test
 	public void shouldReturnTheCorrectName() {
 		Retry retry = retryRegistry.retry("testName");
-		Assertions.assertThat(retry).isNotNull();
-		Assertions.assertThat(retry.getName()).isEqualTo("testName");
+
+		assertThat(retry).isNotNull();
+		assertThat(retry.getName()).isEqualTo("testName");
 	}
 
 	@Test
 	public void shouldBeTheSameRetry() {
 		Retry retry = retryRegistry.retry("testName");
 		Retry retry2 = retryRegistry.retry("testName");
-		Assertions.assertThat(retry).isSameAs(retry2);
-		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+
+		assertThat(retry).isSameAs(retry2);
+		assertThat(retryRegistry.getAllRetries()).hasSize(1);
 	}
 
 	@Test
 	public void shouldBeNotTheSameRetry() {
-
 		Retry retry = retryRegistry.retry("testName");
 		Retry retry2 = retryRegistry.retry("otherTestName");
-		Assertions.assertThat(retry).isNotSameAs(retry2);
-		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(2);
+
+		assertThat(retry).isNotSameAs(retry2);
+		assertThat(retryRegistry.getAllRetries()).hasSize(2);
 	}
 
 	@Test
 	public void canBuildRetryFromRegistryWithConfig() {
 		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
 		Retry retry = retryRegistry.retry("testName", config);
-		Assertions.assertThat(retry).isNotNull();
-		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+
+		assertThat(retry).isNotNull();
+		assertThat(retryRegistry.getAllRetries()).hasSize(1);
 	}
 
 	@Test
 	public void canBuildRetryFromRegistryWithConfigSupplier() {
 		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
 		Retry retry = retryRegistry.retry("testName", () -> config);
-		Assertions.assertThat(retry).isNotNull();
-		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+
+		assertThat(retry).isNotNull();
+		assertThat(retryRegistry.getAllRetries()).hasSize(1);
 	}
 
 	@Test
@@ -92,8 +95,9 @@ public class RetryRegistryTest {
 		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
 		retryRegistry = RetryRegistry.of(config);
 		Retry retry = retryRegistry.retry("testName", () -> config);
-		Assertions.assertThat(retry).isNotNull();
-		Assertions.assertThat(retryRegistry.getAllRetries()).hasSize(1);
+
+		assertThat(retry).isNotNull();
+		assertThat(retryRegistry.getAllRetries()).hasSize(1);
 	}
 
 	@Test
@@ -154,7 +158,6 @@ public class RetryRegistryTest {
 	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
 		Map<String, RetryConfig> configs = new HashMap<>();
 		configs.put("custom", RetryConfig.ofDefaults());
-
 		List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
 		registryEventConsumers.add(new NoOpRetryEventConsumer());
 		registryEventConsumers.add(new NoOpRetryEventConsumer());
@@ -164,7 +167,6 @@ public class RetryRegistryTest {
 		getEventProcessor(retryRegistry.getEventPublisher())
 				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
 	}
-
 
 	@Test
 	public void testWithNotExistingConfig() {
@@ -183,12 +185,8 @@ public class RetryRegistryTest {
 		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
 	}
 
-	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Retry> eventPublisher) {
-		if (eventPublisher instanceof EventProcessor<?>) {
-			return Optional.of((EventProcessor<?>) eventPublisher);
-		}
-
-		return Optional.empty();
+	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Retry> ep) {
+		return ep instanceof EventProcessor<?> ? Optional.of((EventProcessor<?>) ep) : Optional.empty();
 	}
 
 	private static class NoOpRetryEventConsumer implements RegistryEventConsumer<Retry> {

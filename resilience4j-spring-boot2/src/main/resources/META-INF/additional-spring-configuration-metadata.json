@@ -1,6 +1,18 @@
 {
   "properties": [
     {
+      "name": "management.health.circuitbreakers.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable CircuitBreakers health check.",
+      "defaultValue": false
+    },
+    {
+    "name": "management.health.ratelimiters.enabled",
+    "type": "java.lang.Boolean",
+    "description": "Whether to enable RateLimiters health check.",
+    "defaultValue": false
+    },
+    {
       "name": "resilience4j.bulkhead.metrics.enabled",
       "type": "java.lang.Boolean",
       "description": "Whether to enable the bulkhead-metrics.",

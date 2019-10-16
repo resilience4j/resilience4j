@@ -25,7 +25,7 @@ import io.github.resilience4j.metrics.AbstractBulkheadMetricsTest;
 public class BulkheadMetricsPublisherTest extends AbstractBulkheadMetricsTest {
 
     @Override
-    protected Bulkhead given(String prefix, MetricRegistry metricRegistry) {
+    protected Bulkhead givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
         BulkheadRegistry bulkheadRegistry =
                 BulkheadRegistry.of(BulkheadConfig.ofDefaults(), new BulkheadMetricsPublisher(prefix, metricRegistry));
 
@@ -33,7 +33,7 @@ public class BulkheadMetricsPublisherTest extends AbstractBulkheadMetricsTest {
     }
 
     @Override
-    protected Bulkhead given(MetricRegistry metricRegistry) {
+    protected Bulkhead givenMetricRegistry(MetricRegistry metricRegistry) {
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(BulkheadConfig.ofDefaults(), new BulkheadMetricsPublisher(metricRegistry));
 
         return bulkheadRegistry.bulkhead("testBulkhead");

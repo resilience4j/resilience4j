@@ -26,87 +26,68 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class EventPublisherTest {
-
 
     private HelloWorldService helloWorldService;
     private long sleptTime = 0L;
 
     @Before
     public void setUp(){
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+        helloWorldService = mock(HelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
 
     @Test
     public void shouldReturnAfterThreeAttempts() {
-        // Given the HelloWorldService throws an exception
-        BDDMockito.willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
-
-        // Create a Retry with default configuration
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
-        // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
-        // When
         Try<Void> result = Try.run(retryableRunnable);
 
-        // Then the helloWorldService should be invoked 3 times
-        BDDMockito.then(helloWorldService).should(Mockito.times(3)).sayHelloWorld();
-        // and the result should be a failure
-        Assertions.assertThat(result.isFailure()).isTrue();
-        // and the returned exception should be of type RuntimeException
-        Assertions.assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
-
+        then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
         testSubscriber.assertValueCount(3)
                 .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.RETRY, RetryEvent.Type.ERROR);
     }
 
     @Test
     public void shouldReturnAfterTwoAttempts() {
-        // Given the HelloWorldService throws an exception
-        BDDMockito.willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService).sayHelloWorld();
-
-        // Create a Retry with default configuration
+        willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
-        // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
-        // When
         Try<Void> result = Try.run(retryableRunnable);
 
-        // Then the helloWorldService should be invoked 2 times
-        BDDMockito.then(helloWorldService).should(Mockito.times(2)).sayHelloWorld();
-        // and the result should be a sucess
-        Assertions.assertThat(result.isSuccess()).isTrue();
-        Assertions.assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
-
+        then(helloWorldService).should(times(2)).sayHelloWorld();
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
         testSubscriber.assertValueCount(2).assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.SUCCESS);
     }
 
     @Test
     public void shouldIgnoreError() {
-        // Given the HelloWorldService throws an exception
-        BDDMockito.willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService).sayHelloWorld();
-
-        // Create a Retry with default configuration
+        willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig.custom()
                 .retryOnException(t -> t instanceof IOException)
                 .maxAttempts(3).build();
@@ -114,18 +95,13 @@ public class EventPublisherTest {
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
                 .map(RetryEvent::getEventType)
                 .test();
-        // Decorate the invocation of the HelloWorldService
         CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
-        // When
         Try<Void> result = Try.run(retryableRunnable);
 
-        // Then the helloWorldService should be invoked 2 times
-        BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
-        // and the result should be a sucess
-        Assertions.assertThat(result.isFailure()).isTrue();
-        Assertions.assertThat(sleptTime).isEqualTo(0);
-
+        then(helloWorldService).should().sayHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(sleptTime).isEqualTo(0);
         testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.IGNORED_ERROR);
     }
 }

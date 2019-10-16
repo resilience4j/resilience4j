@@ -24,8 +24,6 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +33,9 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 public class ThreadPoolBulkheadTest {
@@ -45,7 +46,7 @@ public class ThreadPoolBulkheadTest {
     @Before
     public void setUp() {
         Awaitility.reset();
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+        helloWorldService = mock(HelloWorldService.class);
         config = ThreadPoolBulkheadConfig.custom()
                 .maxThreadPoolSize(1)
                 .coreThreadPoolSize(1)
@@ -55,13 +56,10 @@ public class ThreadPoolBulkheadTest {
 
     @Test
     public void shouldExecuteSupplierAndFailWithBulkHeadFull() {
-
-        // Given
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("testSupplier", config);
-
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final Exception exception = new Exception();
-        // When
+
         new Thread(() -> {
             try {
                 final AtomicInteger counter = new AtomicInteger(0);
@@ -86,22 +84,19 @@ public class ThreadPoolBulkheadTest {
                 exception.initCause(e);
             }
         }).start();
+
         final AtomicInteger counter = new AtomicInteger(0);
         Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
-        // Then
         assertThat(exception.getCause().getMessage()).contains("Bulkhead 'testSupplier' is full and does not permit further calls");
     }
 
 
     @Test
     public void shouldExecuteCallableAndFailWithBulkHeadFull() throws InterruptedException {
-
-        // Given
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
-
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
-        // When
+
         Thread first = new Thread(() -> {
             try {
                 bulkhead.executeSupplier(() -> Try.run(() -> Thread.sleep(200)));
@@ -143,19 +138,13 @@ public class ThreadPoolBulkheadTest {
 
     @Test
     public void shouldExecuteSupplierAndReturnWithSuccess() throws ExecutionException, InterruptedException {
-
-        // Given
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        // When
         CompletionStage<String> result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
 
-
-        // Then
         assertThat(result.toCompletableFuture().get()).isEqualTo("Hello world");
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
@@ -167,15 +156,11 @@ public class ThreadPoolBulkheadTest {
 
     @Test
     public void testCreateThreadsUsingNameForPrefix() throws ExecutionException, InterruptedException {
-
-        // Given
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);
         Supplier<String> getThreadName = () -> Thread.currentThread().getName();
 
-        // When
         CompletionStage<String> result = bulkhead.executeSupplier(getThreadName);
 
-        // Then
         assertThat(result.toCompletableFuture().get()).isEqualTo("bulkhead-TEST-1");
     }
 

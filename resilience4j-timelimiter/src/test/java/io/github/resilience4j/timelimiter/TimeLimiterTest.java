@@ -1,13 +1,13 @@
 package io.github.resilience4j.timelimiter;
 
 import io.vavr.control.Try;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.*;
 
@@ -73,11 +73,11 @@ public class TimeLimiterTest {
         Supplier<Future<Integer>> supplier = () -> mockFuture;
         when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenReturn(42);
 
-        Integer result = timeLimiter.executeFutureSupplier(supplier);
-        Assertions.assertThat(result).isEqualTo(42);
+        int result = timeLimiter.executeFutureSupplier(supplier);
+        assertThat(result).isEqualTo(42);
 
-        result = timeLimiter.decorateFutureSupplier(supplier).call();
-        Assertions.assertThat(result).isEqualTo(42);
+        int result2 = timeLimiter.decorateFutureSupplier(supplier).call();
+        assertThat(result2).isEqualTo(42);
     }
 
     @Test
@@ -90,6 +90,6 @@ public class TimeLimiterTest {
 
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
 
-        Assertions.assertThat(decoratedResult.getCause() instanceof RuntimeException).isTrue();
+        assertThat(decoratedResult.getCause() instanceof RuntimeException).isTrue();
     }
 }

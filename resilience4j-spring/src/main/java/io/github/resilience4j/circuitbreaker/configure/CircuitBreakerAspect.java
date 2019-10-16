@@ -119,9 +119,8 @@ public class CircuitBreakerAspect implements Ordered {
 		io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' and wait interval '{}' for method: '{}'",
-					backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
-					circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState(), methodName);
+			logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' for method: '{}'",
+					backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(), methodName);
 		}
 
 		return circuitBreaker;
