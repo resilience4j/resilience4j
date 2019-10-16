@@ -20,11 +20,11 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.*;
+import io.github.resilience4j.retry.utils.MaxRetriesExceeded;
 import io.vavr.CheckedConsumer;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
@@ -139,12 +139,18 @@ public class RetryImpl<T> implements Retry {
         @Override
 		public void onSuccess() {
 			int currentNumOfAttempts = numOfAttempts.get();
-			if (currentNumOfAttempts > 0) {
+			if (currentNumOfAttempts > 0 && !(currentNumOfAttempts >= maxAttempts)) {
 				succeededAfterRetryCounter.increment();
 				Throwable throwable = Option.of(lastException.get()).getOrElse(lastRuntimeException.get());
 				publishRetryEvent(() -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
 			} else {
-				succeededWithoutRetryCounter.increment();
+				if (currentNumOfAttempts >= maxAttempts) {
+					failedAfterRetryCounter.increment();
+					Throwable throwable = Option.of(lastException.get()).getOrElse(lastRuntimeException.get());
+					publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts, throwable != null ? throwable : new MaxRetriesExceeded("max retries is reached out for the result predicate check")));
+				} else {
+					succeededWithoutRetryCounter.increment();
+				}
 			}
 		}
 
@@ -228,11 +234,17 @@ public class RetryImpl<T> implements Retry {
 		@Override
 		public void onSuccess() {
 			int currentNumOfAttempts = numOfAttempts.get();
-			if (currentNumOfAttempts > 0) {
+			if (currentNumOfAttempts > 0 && !(currentNumOfAttempts >= maxAttempts)) {
 				succeededAfterRetryCounter.increment();
 				publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts, lastException.get()));
 			} else {
-				succeededWithoutRetryCounter.increment();
+				if (currentNumOfAttempts >= maxAttempts) {
+					failedAfterRetryCounter.increment();
+					publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts, lastException.get() != null ? lastException.get() : new MaxRetriesExceeded("max retries is reached out for the result predicate check")));
+				} else {
+					succeededWithoutRetryCounter.increment();
+
+				}
 			}
 		}
 
