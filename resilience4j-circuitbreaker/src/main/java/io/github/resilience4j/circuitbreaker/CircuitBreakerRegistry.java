@@ -22,6 +22,7 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -48,6 +49,18 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	CircuitBreaker circuitBreaker(String name);
 
 	/**
+	 * Returns a managed {@link CircuitBreaker} or creates a new one with the default CircuitBreaker configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name the name of the CircuitBreaker
+	 * @param tags tags added to the CircuitBreaker
+	 * @return The {@link CircuitBreaker}
+	 */
+	CircuitBreaker circuitBreaker(String name, io.vavr.collection.Map<String, String> tags);
+
+	/**
 	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
 	 *
 	 * @param name                 the name of the CircuitBreaker
@@ -56,6 +69,18 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	 */
 	CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config);
 
+	/**
+	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name                 the name of the CircuitBreaker
+	 * @param config a custom CircuitBreaker configuration
+	 * @param tags tags added to the CircuitBreaker
+	 * @return The {@link CircuitBreaker}
+	 */
+	CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config, io.vavr.collection.Map<String, String> tags);
 
 	/**
 	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
@@ -69,11 +94,37 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	/**
 	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
 	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name       the name of the CircuitBreaker
+	 * @param configName a custom CircuitBreaker configuration name
+	 * @param tags tags added to the CircuitBreaker
+	 * @return The {@link CircuitBreaker}
+	 */
+	CircuitBreaker circuitBreaker(String name, String configName, io.vavr.collection.Map<String, String> tags);
+
+	/**
+	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
+	 *
 	 * @param name                         the name of the CircuitBreaker
 	 * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
 	 * @return The {@link CircuitBreaker}
 	 */
 	CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier);
+
+	/**
+	 * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name                         the name of the CircuitBreaker
+	 * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
+	 * @param tags                         tags added to the CircuitBreaker
+	 * @return The {@link CircuitBreaker}
+	 */
+	CircuitBreaker circuitBreaker(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier, io.vavr.collection.Map<String, String> tags);
 
 	/**
 	 * Creates a CircuitBreakerRegistry with a custom default CircuitBreaker configuration.
@@ -114,7 +165,20 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 	 * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
 	 */
 	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs) {
-		return new InMemoryCircuitBreakerRegistry(configs);
+		return of(configs, HashMap.empty());
+	}
+
+	/**
+	 * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
+	 *
+	 * Tags added to the registry will be added to every instance created by this registry.
+	 *
+	 * @param configs a Map of shared CircuitBreaker configurations
+	 * @param tags default tags to add to the registry
+	 * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
+	 */
+	static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		return new InMemoryCircuitBreakerRegistry(configs, tags);
 	}
 
 	/**

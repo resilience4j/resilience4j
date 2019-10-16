@@ -27,6 +27,8 @@ import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
@@ -54,7 +56,19 @@ public interface RateLimiter {
 	 * @return The {@link RateLimiter}
 	 */
 	static RateLimiter of(String name, RateLimiterConfig rateLimiterConfig) {
-		return new AtomicRateLimiter(name, rateLimiterConfig);
+		return of(name, rateLimiterConfig, HashMap.empty());
+	}
+
+	/**
+	 * Creates a RateLimiter with a custom RateLimiter configuration.
+	 *
+	 * @param name              the name of the RateLimiter
+	 * @param rateLimiterConfig a custom RateLimiter configuration
+	 * @param tags              tags to assign to the RateLimiter
+	 * @return The {@link RateLimiter}
+	 */
+	static RateLimiter of(String name, RateLimiterConfig rateLimiterConfig, Map<String, String> tags) {
+		return new AtomicRateLimiter(name, rateLimiterConfig, tags);
 	}
 
 	/**
@@ -65,7 +79,19 @@ public interface RateLimiter {
 	 * @return The {@link RateLimiter}
 	 */
 	static RateLimiter of(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
-		return new AtomicRateLimiter(name, rateLimiterConfigSupplier.get());
+		return of(name, rateLimiterConfigSupplier.get(), HashMap.empty());
+	}
+
+	/**
+	 * Creates a RateLimiter with a custom RateLimiterConfig configuration.
+	 *
+	 * @param name                      the name of the RateLimiter
+	 * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
+	 * @param tags                      tags to assign to the RateLimiter
+	 * @return The {@link RateLimiter}
+	 */
+	static RateLimiter of(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier, Map<String, String> tags) {
+		return new AtomicRateLimiter(name, rateLimiterConfigSupplier.get(), tags);
 	}
 
 	/**
@@ -370,6 +396,13 @@ public interface RateLimiter {
 	 * @return the RateLimiterConfig of this RateLimiter
 	 */
 	RateLimiterConfig getRateLimiterConfig();
+
+	/**
+	 * Returns an unmodifiable map with tags assigned to this RateLimiter.
+	 *
+	 * @return the tags assigned to this Retry in an unmodifiable map
+	 */
+	Map<String, String> getTags();
 
 	/**
 	 * Get the Metrics of this RateLimiter.

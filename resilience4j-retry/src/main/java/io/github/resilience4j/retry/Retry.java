@@ -24,6 +24,8 @@ import io.github.resilience4j.retry.internal.RetryImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
@@ -45,7 +47,19 @@ public interface Retry {
 	 * @return a Retry with a custom Retry configuration.
 	 */
 	static Retry of(String name, RetryConfig retryConfig) {
-		return new RetryImpl(name, retryConfig);
+		return of(name, retryConfig, HashMap.empty());
+	}
+
+	/**
+	 * Creates a Retry with a custom Retry configuration.
+	 *
+	 * @param name        the ID of the Retry
+	 * @param retryConfig a custom Retry configuration
+	 * @param tags        tags to assign to the Retry
+	 * @return a Retry with a custom Retry configuration.
+	 */
+	static Retry of(String name, RetryConfig retryConfig, Map<String, String> tags) {
+		return new RetryImpl(name, retryConfig, tags);
 	}
 
 	/**
@@ -56,7 +70,19 @@ public interface Retry {
 	 * @return a Retry with a custom Retry configuration.
 	 */
 	static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier) {
-		return new RetryImpl(name, retryConfigSupplier.get());
+		return of(name, retryConfigSupplier.get(), HashMap.empty());
+	}
+
+	/**
+	 * Creates a Retry with a custom Retry configuration.
+	 *
+	 * @param name                the ID of the Retry
+	 * @param retryConfigSupplier a supplier of a custom Retry configuration
+	 * @param tags                tags to assign to the Retry
+	 * @return a Retry with a custom Retry configuration.
+	 */
+	static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier, Map<String, String> tags) {
+		return new RetryImpl(name, retryConfigSupplier.get(), tags);
 	}
 
 	/**
@@ -66,7 +92,7 @@ public interface Retry {
 	 * @return a Retry with default configuration
 	 */
 	static Retry ofDefaults(String name) {
-		return new RetryImpl(name, RetryConfig.ofDefaults());
+		return of(name, RetryConfig.ofDefaults(), HashMap.empty());
 	}
 
 	/**
@@ -349,6 +375,13 @@ public interface Retry {
 	 * @return the RetryConfig of this Retry
 	 */
 	RetryConfig getRetryConfig();
+
+	/**
+	 * Returns an unmodifiable map with tags assigned to this Retry.
+	 *
+	 * @return the tags assigned to this Retry in an unmodifiable map
+	 */
+	Map<String, String> getTags();
 
 	/**
 	 * Returns an EventPublisher can be used to register event consumers.

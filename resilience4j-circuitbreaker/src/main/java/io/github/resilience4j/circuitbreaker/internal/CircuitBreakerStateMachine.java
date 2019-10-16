@@ -24,6 +24,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +58,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final String name;
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
+    private final Map<String, String> tags;
     private final CircuitBreakerEventProcessor eventProcessor;
     private final Clock clock;
     private final SchedulerFactory schedulerFactory;
@@ -68,13 +71,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param clock A Clock which can be mocked in tests.
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
-    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
+    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory, io.vavr.collection.Map<String, String> tags) {
         this.name = name;
         this.circuitBreakerConfig = Objects.requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;
         this.schedulerFactory = schedulerFactory;
+        this.tags = Objects.requireNonNull(tags, "Tags must not be null");;
     }
 
     /**
@@ -85,7 +89,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, SchedulerFactory schedulerFactory) {
-        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory);
+        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory, HashMap.empty());
     }
 
     /**
@@ -95,7 +99,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
-        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance());
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), HashMap.empty());
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, io.vavr.collection.Map<String, String> tags) {
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), tags);
     }
 
     /**
@@ -106,6 +120,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
        this(name, circuitBreakerConfig, Clock.systemUTC());
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param tags                 Tags to add to the CircuitBreaker.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, io.vavr.collection.Map<String, String> tags) {
+        this(name, circuitBreakerConfig, Clock.systemUTC(), tags);
     }
 
     /**
@@ -125,6 +150,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
         this(name, circuitBreakerConfig.get());
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
+     */
+    public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig, io.vavr.collection.Map<String, String> tags) {
+        this(name, circuitBreakerConfig.get(), tags);
     }
 
     @Override
@@ -219,6 +254,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public Metrics getMetrics() {
         return this.stateReference.get().getMetrics();
+    }
+
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     /**

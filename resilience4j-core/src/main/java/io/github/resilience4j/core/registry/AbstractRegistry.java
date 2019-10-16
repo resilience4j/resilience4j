@@ -21,6 +21,8 @@ package io.github.resilience4j.core.registry;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,25 +42,41 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 	protected static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
 	protected static final String CONSUMER_MUST_NOT_BE_NULL = "EventConsumers must not be null";
 	protected static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
+	protected static final String TAGS_MUST_NOT_BE_NULL = "Tags must not be null";
 
 	protected final ConcurrentMap<String, E> entryMap;
 
 	protected final ConcurrentMap<String, C> configurations;
+	/** Global tags which must be added to each instance created by this registry. */
+	protected final Map<String, String> registryTags;
 
 	private final RegistryEventProcessor eventProcessor;
 
 	public AbstractRegistry(C defaultConfig) {
-		this(defaultConfig, new ArrayList<>());
+		this(defaultConfig, HashMap.empty());
+	}
+
+	public AbstractRegistry(C defaultConfig, Map<String, String> registryTags) {
+		this(defaultConfig, new ArrayList<>(), registryTags);
 	}
 
 	public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer) {
-		this(defaultConfig, Collections.singletonList(Objects.requireNonNull(registryEventConsumer, CONSUMER_MUST_NOT_BE_NULL)));
+		this(defaultConfig, registryEventConsumer, HashMap.empty());
+	}
+
+	public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer, Map<String, String> tags) {
+		this(defaultConfig, Collections.singletonList(Objects.requireNonNull(registryEventConsumer, CONSUMER_MUST_NOT_BE_NULL)), tags);
 	}
 
 	public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers) {
+		this(defaultConfig, registryEventConsumers, HashMap.empty());
+	}
+
+	public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers, Map<String, String> tags) {
 		this.configurations = new ConcurrentHashMap<>();
 		this.entryMap = new ConcurrentHashMap<>();
 		this.eventProcessor = new RegistryEventProcessor(Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
+		this.registryTags = Objects.requireNonNull(tags, TAGS_MUST_NOT_BE_NULL);
 		this.configurations.put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
 	}
 
@@ -146,6 +164,17 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 		public void consumeEvent(RegistryEvent event) {
 			super.processEvent(event);
 		}
+	}
+
+	/**
+	 * Creates map with all tags (registry and instance). When tags (keys) of the two collide the tags passed with
+	 * this method will override the tags of the registry.
+	 *
+	 * @param tags Tags of the instance.
+	 * @return Map containing all tags
+	 */
+	protected io.vavr.collection.Map getAllTags(io.vavr.collection.Map<String, String> tags) {
+		return Objects.requireNonNull(tags, TAGS_MUST_NOT_BE_NULL).merge(registryTags);
 	}
 
 }
