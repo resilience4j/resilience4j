@@ -56,6 +56,34 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     @Override
+    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier) {
+        return () -> CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<T> future = supplier.get().toCompletableFuture();
+            try {
+                return future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                onError(e);
+                if(getTimeLimiterConfig().shouldCancelRunningFuture()) {
+                    future.cancel(true);
+                }
+                throw new CompletionException(e);
+            } catch (ExecutionException e) {
+                Throwable t = e.getCause();
+                if (t == null) {
+                    onError(e);
+                    throw new CompletionException(e);
+                } else {
+                    onError(t);
+                    throw new CompletionException(t);
+                }
+            } catch (InterruptedException e) {
+                onError(e);
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    @Override
     public String getName() {
         return name;
     }

@@ -8,8 +8,7 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -75,6 +74,11 @@ public interface TimeLimiter {
         return timeLimiter.decorateFutureSupplier(futureSupplier);
     }
 
+    static <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
+            TimeLimiter timeLimiter, Supplier<F> supplier) {
+        return timeLimiter.decorateCompletionStage(supplier);
+    }
+
     String getName();
 
     /**
@@ -97,6 +101,10 @@ public interface TimeLimiter {
         return decorateFutureSupplier(this, futureSupplier).call();
     }
 
+    default <T, F extends CompletionStage<T>> CompletionStage<T> executeCompletionStage(Supplier<F> supplier) {
+        return decorateCompletionStage(this, supplier).get();
+    }
+
     /**
      * Creates a Callback that is restricted by a TimeLimiter.
      *
@@ -106,6 +114,8 @@ public interface TimeLimiter {
      * @return a future supplier which is restricted by a {@link TimeLimiter}.
      */
     <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier);
+
+    <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier);
 
     /**
      * Returns an EventPublisher which can be used to register event consumers.

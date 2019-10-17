@@ -42,6 +42,31 @@ public class TimeLimiterTest {
     }
 
     @Test
+    public void shouldThrowTimeoutExceptionAndInvokeCancelWithCompletionStage() throws Exception {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
+
+        @SuppressWarnings("unchecked")
+        CompletionStage<Integer> mockFuture = (CompletionStage<Integer>) mock(CompletionStage.class);
+        @SuppressWarnings("unchecked")
+        CompletableFuture<Integer> completableFuture = (CompletableFuture<Integer>) mock(CompletableFuture.class);
+
+        Supplier<CompletionStage<Integer>> supplier = () -> mockFuture;
+        when(mockFuture.toCompletableFuture()).thenReturn(completableFuture);
+        when(completableFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+
+        CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, supplier).get();
+
+        Try<Integer> decoratedResult = Try.of(() -> decorated.toCompletableFuture().get());
+
+        then(decoratedResult.isFailure()).isTrue();
+        then(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
+                .hasCauseInstanceOf(TimeoutException.class);
+
+        verify(completableFuture).cancel(true);
+    }
+
+    @Test
     public void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
@@ -63,6 +88,32 @@ public class TimeLimiterTest {
     }
 
     @Test
+    public void shouldThrowTimeoutExceptionAndNotInvokeCancelWithCompletionStage() throws Exception {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
+                .cancelRunningFuture(false).build());
+
+        @SuppressWarnings("unchecked")
+        CompletionStage<Integer> mockFuture = (CompletionStage<Integer>) mock(CompletionStage.class);
+        @SuppressWarnings("unchecked")
+        CompletableFuture<Integer> completableFuture = (CompletableFuture<Integer>) mock(CompletableFuture.class);
+
+        Supplier<CompletionStage<Integer>> supplier = () -> mockFuture;
+        when(mockFuture.toCompletableFuture()).thenReturn(completableFuture);
+        when(completableFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+
+        CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, supplier).get();
+
+        Try<Integer> decoratedResult = Try.of(() -> decorated.toCompletableFuture().get());
+
+        then(decoratedResult.isFailure()).isTrue();
+        then(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
+                .hasCauseInstanceOf(TimeoutException.class);
+
+        verify(completableFuture, times(0)).cancel(true);
+    }
+
+    @Test
     public void shouldReturnResult() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
@@ -77,6 +128,27 @@ public class TimeLimiterTest {
         assertThat(result).isEqualTo(42);
 
         int result2 = timeLimiter.decorateFutureSupplier(supplier).call();
+        assertThat(result2).isEqualTo(42);
+    }
+
+    @Test
+    public void shouldReturnResultWithCompletionStage() throws Exception {
+        Duration timeoutDuration = Duration.ofSeconds(1);
+        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
+
+        @SuppressWarnings("unchecked")
+        CompletionStage<Integer> mockFuture = (CompletionStage<Integer>) mock(CompletionStage.class);
+        @SuppressWarnings("unchecked")
+        CompletableFuture<Integer> completableFuture = (CompletableFuture<Integer>) mock(CompletableFuture.class);
+
+        Supplier<CompletionStage<Integer>> supplier = () -> mockFuture;
+        when(mockFuture.toCompletableFuture()).thenReturn(completableFuture);
+        when(completableFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenReturn(42);
+
+        int result = timeLimiter.executeCompletionStage(supplier).toCompletableFuture().get();
+        assertThat(result).isEqualTo(42);
+
+        int result2 = timeLimiter.decorateCompletionStage(supplier).get().toCompletableFuture().get();
         assertThat(result2).isEqualTo(42);
     }
 
