@@ -15,10 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -26,14 +22,15 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRetryMetricsTest {
 

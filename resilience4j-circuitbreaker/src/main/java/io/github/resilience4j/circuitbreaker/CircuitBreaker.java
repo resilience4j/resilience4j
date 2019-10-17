@@ -18,23 +18,13 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.EventConsumer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.Tuple;
-import io.vavr.Tuple2;
+import io.vavr.*;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -48,18 +38,18 @@ import java.util.stream.Collectors;
 
 /**
  * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
- *
+ * <p>
  * A {@link CircuitBreaker} manages the state of a backend system. The CircuitBreaker is implemented
  * via a finite state machine with five states: CLOSED, OPEN, HALF_OPEN, DISABLED AND FORCED_OPEN.
  * The CircuitBreaker does not know anything about the backend's state by itself, but uses the
  * information provided by the decorators via {@link CircuitBreaker#onSuccess} and {@link
  * CircuitBreaker#onError} events. Before communicating with the backend, the permission to do so
  * must be obtained via the method {@link CircuitBreaker#tryAcquirePermission()}.
- *
+ * <p>
  * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is above a
  * (configurable) threshold. Then, all access to the backend is rejected for a (configurable) time
  * duration. No further calls are permitted.
- *
+ * <p>
  * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and
  * allows a number of calls to see if the backend is still unavailable or has become available
  * again. If the failure rate is above the configured threshold, the state changes back to OPEN. If
@@ -71,8 +61,8 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param supplier       the original supplier
+     * @param <T>            the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker,
@@ -99,8 +89,8 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the original supplier
-     * @param <T> the type of the returned CompletionStage's result
+     * @param supplier       the original supplier
+     * @param <T>            the type of the returned CompletionStage's result
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
@@ -146,7 +136,7 @@ public interface CircuitBreaker {
      * Returns a runnable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param runnable the original runnable
+     * @param runnable       the original runnable
      * @return a runnable which is decorated by a CircuitBreaker.
      */
     static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker,
@@ -171,8 +161,8 @@ public interface CircuitBreaker {
      * Returns a callable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param callable       the original Callable
+     * @param <T>            the result type of callable
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable) {
@@ -197,8 +187,8 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param supplier       the original supplier
+     * @param <T>            the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier) {
@@ -223,8 +213,8 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param supplier       the original supplier
+     * @param <T>            the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(CircuitBreaker circuitBreaker,
@@ -253,8 +243,8 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
+     * @param supplier       the original function
+     * @param <T>            the type of results supplied by this supplier
      * @return a retryable function
      */
     static <T> Supplier<Try<T>> decorateTrySupplier(CircuitBreaker circuitBreaker,
@@ -283,8 +273,8 @@ public interface CircuitBreaker {
      * Returns a consumer which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param consumer       the original consumer
+     * @param <T>            the type of the input to the consumer
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer) {
@@ -308,8 +298,8 @@ public interface CircuitBreaker {
      * Returns a consumer which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param consumer       the original consumer
+     * @param <T>            the type of the input to the consumer
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker,
@@ -334,7 +324,7 @@ public interface CircuitBreaker {
      * Returns a runnable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param runnable the original runnable
+     * @param runnable       the original runnable
      * @return a runnable which is decorated by a CircuitBreaker.
      */
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable) {
@@ -358,9 +348,9 @@ public interface CircuitBreaker {
      * Returns a function which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
+     * @param function       the original function
+     * @param <T>            the type of the input to the function
+     * @param <R>            the type of the result of the function
      * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> Function<T, R> decorateFunction(CircuitBreaker circuitBreaker,
@@ -386,9 +376,9 @@ public interface CircuitBreaker {
      * Returns a function which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
+     * @param function       the original function
+     * @param <T>            the type of the input to the function
+     * @param <R>            the type of the result of the function
      * @return a function which is decorated by a CircuitBreaker.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker,
@@ -423,7 +413,7 @@ public interface CircuitBreaker {
     /**
      * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig a custom CircuitBreaker configuration
      * @return a CircuitBreaker with a custom CircuitBreaker configuration.
      */
@@ -434,7 +424,7 @@ public interface CircuitBreaker {
     /**
      * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                         the name of the CircuitBreaker
      * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
      * @return a CircuitBreaker with a custom CircuitBreaker configuration.
      */
@@ -446,7 +436,7 @@ public interface CircuitBreaker {
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
      * If a call is not permitted, the number of not permitted calls is increased.
-     *
+     * <p>
      * Returns false when the state is OPEN or FORCED_OPEN. Returns true when the state is CLOSED or
      * DISABLED. Returns true when the state is HALF_OPEN and further test calls are allowed.
      * Returns false when the state is HALF_OPEN and the number of test calls has been reached. If
@@ -460,11 +450,11 @@ public interface CircuitBreaker {
 
     /**
      * Releases a permission.
-     *
+     * <p>
      * Should only be used when a permission was acquired but not used. Otherwise use {@link
      * CircuitBreaker#onSuccess(long, TimeUnit)} or {@link CircuitBreaker#onError(long, TimeUnit,
      * Throwable)} to signal a completed or failed call.
-     *
+     * <p>
      * If the state is HALF_OPEN, the number of allowed test calls is increased by one.
      */
     void releasePermission();
@@ -472,7 +462,7 @@ public interface CircuitBreaker {
     /**
      * Try to obtain a permission to execute a call. If a call is not permitted, the number of not
      * permitted calls is increased.
-     *
+     * <p>
      * Throws a CallNotPermittedException when the state is OPEN or FORCED_OPEN. Returns when the
      * state is CLOSED or DISABLED. Returns when the state is HALF_OPEN and further test calls are
      * allowed. Throws a CallNotPermittedException when the state is HALF_OPEN and the number of
@@ -481,31 +471,31 @@ public interface CircuitBreaker {
      * the call is cancelled before it is invoked, you have to release the permission again.
      *
      * @throws CallNotPermittedException when CircuitBreaker is OPEN or HALF_OPEN and no further
-     *     test calls are permitted.
+     *                                   test calls are permitted.
      */
     void acquirePermission();
 
     /**
      * Records a failed call. This method must be invoked when a call failed.
      *
-     * @param duration The elapsed time duration of the call
+     * @param duration     The elapsed time duration of the call
      * @param durationUnit The duration unit
-     * @param throwable The throwable which must be recorded
+     * @param throwable    The throwable which must be recorded
      */
     void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
     /**
      * Records a successful call.
      *
-     * @param duration The elapsed time duration of the call
+     * @param duration     The elapsed time duration of the call
      * @param durationUnit The duration unit This method must be invoked when a call was
-     *     successful.
+     *                     successful.
      */
     void onSuccess(long duration, TimeUnit durationUnit);
 
     /**
      * Returns the circuit breaker to its original closed state, losing statistics.
-     *
+     * <p>
      * Should only be used, when you want to want to fully reset the circuit breaker without
      * creating a new one.
      */
@@ -513,7 +503,7 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to CLOSED state.
-     *
+     * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
      */
@@ -521,7 +511,7 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to OPEN state.
-     *
+     * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
      */
@@ -529,7 +519,7 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to HALF_OPEN state.
-     *
+     * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
      */
@@ -538,7 +528,7 @@ public interface CircuitBreaker {
     /**
      * Transitions the state machine to a DISABLED state, stopping state transition, metrics and
      * event publishing.
-     *
+     * <p>
      * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
      * To recover from this state you must force a new state transition
      */
@@ -547,7 +537,7 @@ public interface CircuitBreaker {
     /**
      * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and
      * event publishing.
-     *
+     * <p>
      * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
      * To recover from this state you must force a new state transition
      */
@@ -592,7 +582,7 @@ public interface CircuitBreaker {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
@@ -603,7 +593,7 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Supplier<T> decorateSupplier(Supplier<T> supplier) {
@@ -614,7 +604,7 @@ public interface CircuitBreaker {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Either<Exception, T> executeEitherSupplier(
@@ -626,7 +616,7 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Supplier<Try<T>> decorateTrySupplier(Supplier<Try<T>> supplier) {
@@ -637,7 +627,7 @@ public interface CircuitBreaker {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
@@ -648,7 +638,7 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Supplier<Either<Exception, T>> decorateEitherSupplier(
@@ -660,7 +650,7 @@ public interface CircuitBreaker {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
      * @throws Exception if unable to compute a result
      */
@@ -672,7 +662,7 @@ public interface CircuitBreaker {
      * Returns a callable which is decorated by a CircuitBreaker.
      *
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Callable<T> decorateCallable(Callable<T> callable) {
@@ -702,7 +692,7 @@ public interface CircuitBreaker {
      * Decorates and executes the decorated CompletionStage.
      *
      * @param supplier the original CompletionStage
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier) {
@@ -713,7 +703,7 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param supplier the original supplier
-     * @param <T> the type of the returned CompletionStage's result
+     * @param <T>      the type of the returned CompletionStage's result
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> Supplier<CompletionStage<T>> decorateCompletionStage(
@@ -725,7 +715,7 @@ public interface CircuitBreaker {
      * Decorates and executes the decorated Supplier.
      *
      * @param checkedSupplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>             the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      * @throws Throwable if something goes wrong applying this function to the given arguments
      */
@@ -737,7 +727,7 @@ public interface CircuitBreaker {
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
      * @param checkedSupplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>             the type of results supplied by this supplier
      * @return a supplier which is decorated by a CircuitBreaker.
      */
     default <T> CheckedFunction0<T> decorateCheckedSupplier(CheckedFunction0<T> checkedSupplier) {
@@ -767,7 +757,7 @@ public interface CircuitBreaker {
      * Returns a consumer which is decorated by a CircuitBreaker.
      *
      * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param <T>      the type of the input to the consumer
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     default <T> Consumer<T> decorateConsumer(Consumer<T> consumer) {
@@ -778,7 +768,7 @@ public interface CircuitBreaker {
      * Returns a consumer which is decorated by a CircuitBreaker.
      *
      * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param <T>      the type of the input to the consumer
      * @return a consumer which is decorated by a CircuitBreaker.
      */
     default <T> CheckedConsumer<T> decorateCheckedConsumer(CheckedConsumer<T> consumer) {
@@ -972,7 +962,7 @@ public interface CircuitBreaker {
 
         /**
          * Returns the current number of not permitted calls, when the state is OPEN.
-         *
+         * <p>
          * The number of denied calls is always 0, when the CircuitBreaker state is CLOSED or
          * HALF_OPEN. The number of denied calls is only increased when the CircuitBreaker state is
          * OPEN.

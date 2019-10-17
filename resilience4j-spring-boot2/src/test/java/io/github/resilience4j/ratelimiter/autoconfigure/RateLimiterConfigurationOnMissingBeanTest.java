@@ -1,7 +1,5 @@
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import static org.junit.Assert.assertEquals;
-
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -13,7 +11,6 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +20,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {

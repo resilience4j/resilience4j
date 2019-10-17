@@ -16,15 +16,10 @@
 
 package io.github.resilience4j.reactor.retry;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import java.io.IOException;
-import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
@@ -32,6 +27,12 @@ import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.io.IOException;
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
 
 public class RetryOperatorTest {

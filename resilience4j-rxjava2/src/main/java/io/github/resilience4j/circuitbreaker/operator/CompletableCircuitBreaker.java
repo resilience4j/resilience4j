@@ -15,14 +15,15 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-
 import io.github.resilience4j.AbstractCompletableObserver;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
 import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class CompletableCircuitBreaker extends Completable {
 

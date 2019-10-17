@@ -15,13 +15,14 @@
  */
 package io.github.resilience4j.reactor.bulkhead.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.reactor.AbstractSubscriber;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A Reactor {@link Subscriber} to wrap another subscriber in a bulkhead.

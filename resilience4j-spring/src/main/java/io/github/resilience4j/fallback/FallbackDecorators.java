@@ -16,6 +16,7 @@
 package io.github.resilience4j.fallback;
 
 import io.vavr.CheckedFunction0;
+
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public class FallbackDecorators {
      * supplier
      *
      * @param recoveryMethod fallbackMethod method that handles supplier's exception
-     * @param supplier original function
+     * @param supplier       original function
      * @return a function which is decorated by a {@link FallbackMethod}
      */
     public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,

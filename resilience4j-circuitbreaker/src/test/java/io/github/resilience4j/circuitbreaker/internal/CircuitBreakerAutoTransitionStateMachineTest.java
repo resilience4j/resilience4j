@@ -18,20 +18,19 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
+import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 public class CircuitBreakerAutoTransitionStateMachineTest {
 

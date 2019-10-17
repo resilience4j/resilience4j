@@ -15,13 +15,6 @@
  */
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_QUEUE_CAPACITY;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.CURRENT_THREAD_POOL_SIZE;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX_THREAD_POOL;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -31,7 +24,12 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.vavr.collection.Array;
+
 import java.util.Map;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link Bulkhead.Metrics} as Dropwizard Metrics Gauges.
@@ -64,9 +62,9 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified
      * metrics names prefix and a {@link BulkheadRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix           the prefix of metrics names
      * @param bulkheadRegistry the registry of bulkheads
-     * @param metricRegistry the metric registry
+     * @param metricRegistry   the metric registry
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix,
         ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
@@ -78,7 +76,7 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified
      * metrics names prefix and a {@link BulkheadRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix           the prefix of metrics names
      * @param bulkheadRegistry the registry of bulkheads
      */
     public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix,

@@ -13,13 +13,14 @@ import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 public class CombinedOperatorsTest {
 

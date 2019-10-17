@@ -16,14 +16,15 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
 

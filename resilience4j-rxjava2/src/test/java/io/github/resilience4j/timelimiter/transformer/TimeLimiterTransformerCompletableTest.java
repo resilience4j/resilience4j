@@ -16,11 +16,6 @@
 
 package io.github.resilience4j.timelimiter.transformer;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-
 import io.github.resilience4j.TestSchedulerRule;
 import io.github.resilience4j.test.HelloWorldService;
 import io.github.resilience4j.timelimiter.TimeLimiter;
@@ -29,11 +24,17 @@ import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
+import org.junit.Rule;
+import org.junit.Test;
+
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.Rule;
-import org.junit.Test;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 public class TimeLimiterTransformerCompletableTest {
 

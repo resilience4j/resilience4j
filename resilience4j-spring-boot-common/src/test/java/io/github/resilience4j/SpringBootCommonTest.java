@@ -15,9 +15,6 @@
  */
 package io.github.resilience4j;
 
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.autoconfigure.AbstractBulkheadConfigurationOnMissingBean;
@@ -36,10 +33,14 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
-import org.junit.Test;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author romeh

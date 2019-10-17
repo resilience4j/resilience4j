@@ -1,13 +1,14 @@
 package io.github.resilience4j.core.registry;
 
-import static io.github.resilience4j.core.registry.RegistryEvent.Type;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.junit.Test;
+
+import static io.github.resilience4j.core.registry.RegistryEvent.Type;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class AbstractRegistryTest {

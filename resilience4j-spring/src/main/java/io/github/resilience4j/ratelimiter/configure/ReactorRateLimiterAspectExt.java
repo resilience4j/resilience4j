@@ -46,8 +46,8 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
      * {@link RateLimiter} for details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param rateLimiter the configured rateLimiter
-     * @param methodName the method name
+     * @param rateLimiter         the configured rateLimiter
+     * @param methodName          the method name
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */

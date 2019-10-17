@@ -16,19 +16,17 @@
 
 package io.github.resilience4j.metrics.publisher;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.FAILED;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.SUCCESSFUL;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMEOUT;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 public class TimeLimiterMetricsPublisher extends AbstractMetricsPublisher<TimeLimiter> {
 

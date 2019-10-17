@@ -6,6 +6,7 @@ import io.github.resilience4j.metrics.internal.TimerImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -16,7 +17,7 @@ public interface Timer {
     /**
      * Creates a timer of a provided MetricRegistry
      *
-     * @param name the name of the timer
+     * @param name           the name of the timer
      * @param metricRegistry the MetricRegistry
      * @return a Timer instance
      */
@@ -37,7 +38,7 @@ public interface Timer {
     /**
      * Creates a timed checked supplier.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param supplier the original supplier
      * @return a timed supplier
      */
@@ -59,7 +60,7 @@ public interface Timer {
     /**
      * Creates a timed runnable.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param runnable the original runnable
      * @return a timed runnable
      */
@@ -79,7 +80,7 @@ public interface Timer {
     /**
      * Creates a timed checked supplier.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param supplier the original supplier
      * @return a timed supplier
      */
@@ -100,7 +101,7 @@ public interface Timer {
     /**
      * Creates a timed Callable.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param callable the original Callable
      * @return a timed Callable
      */
@@ -121,7 +122,7 @@ public interface Timer {
     /**
      * Creates a timed runnable.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param runnable the original runnable
      * @return a timed runnable
      */
@@ -141,7 +142,7 @@ public interface Timer {
     /**
      * Creates a timed function.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param function the original function
      * @return a timed function
      */
@@ -162,7 +163,7 @@ public interface Timer {
     /**
      * Creates a timed function.
      *
-     * @param timer the timer to use
+     * @param timer    the timer to use
      * @param function the original function
      * @return a timed function
      */
@@ -182,7 +183,7 @@ public interface Timer {
     }
 
     /**
-     * @param timer the timer to use
+     * @param timer         the timer to use
      * @param stageSupplier the CompletionStage Supplier
      * @return a decorated completion stage
      */
@@ -250,7 +251,7 @@ public interface Timer {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the type of results supplied by this Callable
+     * @param <T>      the type of results supplied by this Callable
      * @return the result of the decorated Callable.
      */
     default <T> T executeCallable(Callable<T> callable) throws Exception {
@@ -261,7 +262,7 @@ public interface Timer {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
@@ -272,7 +273,7 @@ public interface Timer {
      * Decorates and executes the decorated CompletionStage Supplier.
      *
      * @param supplier the CompletionStage Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> CompletionStage<T> executeCompletionStageSupplier(
@@ -322,24 +323,24 @@ public interface Timer {
         /**
          * Returns the fifteen-minute exponentially-weighted moving average rate at which events
          * have occurred since the meter was created.
-         *
+         * <p>
          * This rate has the same exponential decay factor as the fifteen-minute load average in the
          * {@code top} Unix command.
          *
          * @return the fifteen-minute exponentially-weighted moving average rate at which events
-         *     have occurred since the meter was created
+         * have occurred since the meter was created
          */
         double getFifteenMinuteRate();
 
         /**
          * Returns the five-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
-         *
+         * <p>
          * This rate has the same exponential decay factor as the five-minute load average in the
          * {@code top} Unix command.
          *
          * @return the five-minute exponentially-weighted moving average rate at which events have
-         *     occurred since the meter was created
+         * occurred since the meter was created
          */
         double getFiveMinuteRate();
 
@@ -353,12 +354,12 @@ public interface Timer {
         /**
          * Returns the one-minute exponentially-weighted moving average rate at which events have
          * occurred since the meter was created.
-         *
+         * <p>
          * This rate has the same exponential decay factor as the one-minute load average in the
          * {@code top} Unix command.
          *
          * @return the one-minute exponentially-weighted moving average rate at which events have
-         *     occurred since the meter was created
+         * occurred since the meter was created
          */
         double getOneMinuteRate();
 

@@ -18,22 +18,10 @@
  */
 package io.github.resilience4j.retrofit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.reactivex.Single;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,6 +31,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Tests the integration of the Retrofit HTTP client and {@link RateLimiter}

@@ -26,7 +26,7 @@ public interface FallbackDecorator {
 
     /**
      * @param recoveryMethod fallbackMethod method.
-     * @param supplier target function should be decorated.
+     * @param supplier       target function should be decorated.
      * @return decorated function
      */
     CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod,

@@ -15,23 +15,16 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import java.util.Set;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx circuit breaker logic support for the spring AOP conditional on the presence of Rx classes
@@ -57,8 +50,8 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
     /**
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param circuitBreaker the configured circuitBreaker
-     * @param methodName the method name
+     * @param circuitBreaker      the configured circuitBreaker
+     * @param methodName          the method name
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */

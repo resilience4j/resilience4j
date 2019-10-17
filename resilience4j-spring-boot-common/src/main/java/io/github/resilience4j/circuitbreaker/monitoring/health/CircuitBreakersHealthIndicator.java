@@ -16,17 +16,18 @@
 package io.github.resilience4j.circuitbreaker.monitoring.health;
 
 
-import static io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.InstanceProperties;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.InstanceProperties;
 
 /**
  * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the

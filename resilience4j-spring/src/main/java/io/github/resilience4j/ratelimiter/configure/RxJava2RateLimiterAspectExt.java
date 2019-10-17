@@ -15,23 +15,16 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import java.util.Set;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * the Rx RateLimiter logic support for the spring AOP conditional on the presence of Rx classes on
@@ -56,8 +49,8 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
     /**
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param rateLimiter the configured rateLimiter
-     * @param methodName the method name
+     * @param rateLimiter         the configured rateLimiter
+     * @param methodName          the method name
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */

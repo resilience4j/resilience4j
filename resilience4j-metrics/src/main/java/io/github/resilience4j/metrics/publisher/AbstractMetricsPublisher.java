@@ -16,16 +16,17 @@
 
 package io.github.resilience4j.metrics.publisher;
 
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static java.util.Objects.requireNonNull;
 
 abstract class AbstractMetricsPublisher<E> implements MetricSet, MetricsPublisher<E> {
 

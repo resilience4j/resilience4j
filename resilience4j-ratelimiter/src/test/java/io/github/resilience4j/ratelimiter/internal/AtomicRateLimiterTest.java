@@ -18,23 +18,24 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.equalTo;
-
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(AtomicRateLimiter.class)

@@ -18,19 +18,18 @@
  */
 package io.github.resilience4j.cache;
 
-import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.mock;
-
 import io.github.resilience4j.cache.event.CacheEvent;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vavr.CheckedFunction1;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.function.Function;
+
+import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.mock;
 
 public class CacheTest {
 

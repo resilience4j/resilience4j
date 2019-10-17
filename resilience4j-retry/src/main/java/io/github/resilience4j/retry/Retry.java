@@ -19,22 +19,15 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.event.RetryOnErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnRetryEvent;
-import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
+import io.github.resilience4j.retry.event.*;
 import io.github.resilience4j.retry.internal.RetryImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -46,7 +39,7 @@ public interface Retry {
     /**
      * Creates a Retry with a custom Retry configuration.
      *
-     * @param name the ID of the Retry
+     * @param name        the ID of the Retry
      * @param retryConfig a custom Retry configuration
      * @return a Retry with a custom Retry configuration.
      */
@@ -57,7 +50,7 @@ public interface Retry {
     /**
      * Creates a Retry with a custom Retry configuration.
      *
-     * @param name the ID of the Retry
+     * @param name                the ID of the Retry
      * @param retryConfigSupplier a supplier of a custom Retry configuration
      * @return a Retry with a custom Retry configuration.
      */
@@ -78,10 +71,10 @@ public interface Retry {
     /**
      * Decorates CompletionStageSupplier with Retry
      *
-     * @param retry the retry context
+     * @param retry     the retry context
      * @param scheduler execution service to use to schedule retries
-     * @param supplier completion stage supplier
-     * @param <T> type of completion stage result
+     * @param supplier  completion stage supplier
+     * @param <T>       type of completion stage result
      * @return decorated supplier
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(
@@ -103,9 +96,9 @@ public interface Retry {
     /**
      * Creates a retryable supplier.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a retryable function
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry,
@@ -130,7 +123,7 @@ public interface Retry {
     /**
      * Creates a retryable runnable.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param runnable the original runnable
      * @return a retryable runnable
      */
@@ -152,10 +145,10 @@ public interface Retry {
     /**
      * Creates a retryable function.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the result type of the function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the result type of the function
      * @return a retryable function
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry,
@@ -180,9 +173,9 @@ public interface Retry {
     /**
      * Creates a retryable supplier.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a retryable function
      */
     static <T> Supplier<T> decorateSupplier(Retry retry, Supplier<T> supplier) {
@@ -206,9 +199,9 @@ public interface Retry {
     /**
      * Creates a retryable supplier.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a retryable function
      */
     static <E extends Exception, T> Supplier<Either<E, T>> decorateEitherSupplier(Retry retry,
@@ -238,9 +231,9 @@ public interface Retry {
     /**
      * Creates a retryable supplier.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a retryable function
      */
     static <T> Supplier<Try<T>> decorateTrySupplier(Retry retry, Supplier<Try<T>> supplier) {
@@ -273,9 +266,9 @@ public interface Retry {
     /**
      * Creates a retryable callable.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param supplier the original function
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a retryable function
      */
     static <T> Callable<T> decorateCallable(Retry retry, Callable<T> supplier) {
@@ -299,7 +292,7 @@ public interface Retry {
     /**
      * Creates a retryable runnable.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param runnable the original runnable
      * @return a retryable runnable
      */
@@ -321,10 +314,10 @@ public interface Retry {
     /**
      * Creates a retryable function.
      *
-     * @param retry the retry context
+     * @param retry    the retry context
      * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the result type of the function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the result type of the function
      * @return a retryable function
      */
     static <T, R> Function<T, R> decorateFunction(Retry retry, Function<T, R> function) {
@@ -384,7 +377,7 @@ public interface Retry {
      * Decorates and executes the decorated Supplier.
      *
      * @param checkedSupplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>             the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      * @throws Throwable if something goes wrong applying this function to the given arguments
      */
@@ -396,7 +389,7 @@ public interface Retry {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
@@ -407,7 +400,7 @@ public interface Retry {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <E extends Exception, T> Either<E, T> executeEitherSupplier(
@@ -419,7 +412,7 @@ public interface Retry {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
@@ -430,7 +423,7 @@ public interface Retry {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
      * @throws Exception if unable to compute a result
      */
@@ -451,8 +444,8 @@ public interface Retry {
      * Decorates and executes the decorated CompletionStage.
      *
      * @param scheduler execution service to use to schedule retries
-     * @param supplier the original CompletionStage
-     * @param <T> the type of results supplied by this supplier
+     * @param supplier  the original CompletionStage
+     * @param <T>       the type of results supplied by this supplier
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(ScheduledExecutorService scheduler,

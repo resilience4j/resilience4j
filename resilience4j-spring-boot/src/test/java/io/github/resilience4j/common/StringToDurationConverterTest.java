@@ -1,10 +1,11 @@
 package io.github.resilience4j.common;
 
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import org.junit.Test;
 
 import java.time.Duration;
-import org.junit.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * String to duration test

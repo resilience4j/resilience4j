@@ -15,16 +15,17 @@
  */
 package io.github.resilience4j.common.retry.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
-import java.time.Duration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RetryConfigurationPropertiesTest {

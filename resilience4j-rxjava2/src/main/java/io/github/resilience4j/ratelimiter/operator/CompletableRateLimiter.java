@@ -21,6 +21,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
 import java.util.concurrent.TimeUnit;
 
 class CompletableRateLimiter extends Completable {

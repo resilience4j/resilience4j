@@ -20,6 +20,7 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.Seq;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -44,10 +45,10 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * Creates a RetryRegistry with a custom default Retry configuration and a Retry registry event
      * consumer.
      *
-     * @param retryConfig a custom default Retry configuration.
+     * @param retryConfig           a custom default Retry configuration.
      * @param registryEventConsumer a Retry registry event consumer.
      * @return a RetryRegistry with a custom Retry configuration and a Retry registry event
-     *     consumer.
+     * consumer.
      */
     static RetryRegistry of(RetryConfig retryConfig,
         RegistryEventConsumer<Retry> registryEventConsumer) {
@@ -58,10 +59,10 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * Creates a RetryRegistry with a custom default Retry configuration and a list of Retry
      * registry event consumers.
      *
-     * @param retryConfig a custom default Retry configuration.
+     * @param retryConfig            a custom default Retry configuration.
      * @param registryEventConsumers a list of Retry registry event consumers.
      * @return a RetryRegistry with a custom Retry configuration and list of Retry registry event
-     *     consumers.
+     * consumers.
      */
     static RetryRegistry of(RetryConfig retryConfig,
         List<RegistryEventConsumer<Retry>> registryEventConsumers) {
@@ -91,10 +92,10 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * Creates a RetryRegistry with a Map of shared Retry configurations and a Retry registry event
      * consumer.
      *
-     * @param configs a Map of shared Retry configurations.
+     * @param configs               a Map of shared Retry configurations.
      * @param registryEventConsumer a Retry registry event consumer.
      * @return a RetryRegistry with a Map of shared Retry configurations and a Retry registry event
-     *     consumer.
+     * consumer.
      */
     static RetryRegistry of(Map<String, RetryConfig> configs,
         RegistryEventConsumer<Retry> registryEventConsumer) {
@@ -105,10 +106,10 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * Creates a RetryRegistry with a Map of shared Retry configurations and a list of Retry
      * registry event consumers.
      *
-     * @param configs a Map of shared Retry configurations.
+     * @param configs                a Map of shared Retry configurations.
      * @param registryEventConsumers a list of Retry registry event consumers.
      * @return a RetryRegistry with a Map of shared Retry configurations and a list of Retry
-     *     registry event consumers.
+     * registry event consumers.
      */
     static RetryRegistry of(Map<String, RetryConfig> configs,
         List<RegistryEventConsumer<Retry>> registryEventConsumers) {
@@ -133,7 +134,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
     /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
      *
-     * @param name the name of the Retry
+     * @param name   the name of the Retry
      * @param config a custom Retry configuration
      * @return The {@link Retry}
      */
@@ -142,7 +143,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
     /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
      *
-     * @param name the name of the Retry
+     * @param name                the name of the Retry
      * @param retryConfigSupplier a supplier of a custom Retry configuration
      * @return The {@link Retry}
      */
@@ -151,7 +152,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
     /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
      *
-     * @param name the name of the Retry
+     * @param name       the name of the Retry
      * @param configName a custom Retry configuration name
      * @return The {@link Retry}
      */

@@ -22,12 +22,13 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
+import org.hibernate.validator.constraints.time.DurationMin;
+
+import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
-import javax.validation.constraints.Min;
-import org.hibernate.validator.constraints.time.DurationMin;
 
 /**
  * Main spring properties for retry configuration
@@ -156,7 +157,7 @@ public class RetryConfigurationProperties {
      * decide which retry delay policy will be configured based into the configured properties
      *
      * @param properties the backend retry properties
-     * @param builder the retry config builder
+     * @param builder    the retry config builder
      */
     private void configureRetryIntervalFunction(InstanceProperties properties,
         RetryConfig.Builder<Object> builder) {

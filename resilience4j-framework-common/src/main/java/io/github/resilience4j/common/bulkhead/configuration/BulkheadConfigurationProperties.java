@@ -19,11 +19,12 @@ import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+import org.hibernate.validator.constraints.time.DurationMin;
+
+import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import javax.validation.constraints.Min;
-import org.hibernate.validator.constraints.time.DurationMin;
 
 public class BulkheadConfigurationProperties {
 

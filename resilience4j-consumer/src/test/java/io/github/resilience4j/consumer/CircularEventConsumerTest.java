@@ -18,15 +18,16 @@
  */
 package io.github.resilience4j.consumer;
 
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+
+import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircularEventConsumerTest {
 

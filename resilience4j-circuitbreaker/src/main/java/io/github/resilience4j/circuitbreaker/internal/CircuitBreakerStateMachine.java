@@ -18,27 +18,15 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.DISABLED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
-
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -51,8 +39,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
+import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -71,10 +62,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
-     * @param clock A Clock which can be mocked in tests.
-     * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
+     * @param clock                A Clock which can be mocked in tests.
+     * @param schedulerFactory     A SchedulerFactory which can be mocked in tests.
      */
     private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         Clock clock, SchedulerFactory schedulerFactory) {
@@ -90,9 +81,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
-     * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
+     * @param schedulerFactory     A SchedulerFactory which can be mocked in tests.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         SchedulerFactory schedulerFactory) {
@@ -102,7 +93,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
@@ -113,7 +104,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
@@ -132,7 +123,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Creates a circuitBreaker.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
      */
     public CircuitBreakerStateMachine(String name,
@@ -536,7 +527,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * has elapsed and transitions the state machine to HALF_OPEN state.
          *
          * @return false, if the wait duration has not elapsed. true, if the wait duration has
-         *     elapsed.
+         * elapsed.
          */
         @Override
         public boolean tryAcquirePermission() {
@@ -738,7 +729,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         /**
          * Checks if test request is allowed.
-         *
+         * <p>
          * Returns true, if test request counter is not zero. Returns false, if test request counter
          * is zero.
          *

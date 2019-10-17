@@ -22,6 +22,7 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -46,9 +47,9 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumer.
      *
      * @param defaultRateLimiterConfig a custom default RateLimiter configuration.
-     * @param registryEventConsumer a RateLimiter registry event consumer.
+     * @param registryEventConsumer    a RateLimiter registry event consumer.
      * @return a RateLimiterRegistry with a custom RateLimiter configuration and a RateLimiter
-     *     registry event consumer.
+     * registry event consumer.
      */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig,
         RegistryEventConsumer<RateLimiter> registryEventConsumer) {
@@ -60,9 +61,9 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumers.
      *
      * @param defaultRateLimiterConfig a custom default RateLimiter configuration.
-     * @param registryEventConsumers a list of RateLimiter registry event consumers.
+     * @param registryEventConsumers   a list of RateLimiter registry event consumers.
      * @return a RateLimiterRegistry with a custom RateLimiter configuration and a list of
-     *     RateLimiter registry event consumers.
+     * RateLimiter registry event consumers.
      */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig,
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
@@ -93,10 +94,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * Creates a RateLimiterRegistry with a Map of shared RateLimiter configurations and a
      * RateLimiter registry event consumer.
      *
-     * @param configs a Map of shared RateLimiter configurations.
+     * @param configs               a Map of shared RateLimiter configurations.
      * @param registryEventConsumer a RateLimiter registry event consumer.
      * @return a RateLimiterRegistry with a Map of shared RateLimiter configurations and a
-     *     RateLimiter registry event consumer.
+     * RateLimiter registry event consumer.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
         RegistryEventConsumer<RateLimiter> registryEventConsumer) {
@@ -107,10 +108,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * Creates a RateLimiterRegistry with a Map of shared RateLimiter configurations and a list of
      * RateLimiter registry event consumers.
      *
-     * @param configs a Map of shared RateLimiter configurations.
+     * @param configs                a Map of shared RateLimiter configurations.
      * @param registryEventConsumers a list of RateLimiter registry event consumers.
      * @return a RateLimiterRegistry with a Map of shared RateLimiter configurations and a list of
-     *     RateLimiter registry event consumers.
+     * RateLimiter registry event consumers.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
@@ -137,7 +138,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter
      * configuration.
      *
-     * @param name the name of the RateLimiter
+     * @param name              the name of the RateLimiter
      * @param rateLimiterConfig a custom RateLimiter configuration
      * @return The {@link RateLimiter}
      */
@@ -147,7 +148,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom
      * RateLimiterConfig configuration.
      *
-     * @param name the name of the RateLimiterConfig
+     * @param name                      the name of the RateLimiterConfig
      * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
      * @return The {@link RateLimiterConfig}
      */
@@ -157,7 +158,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter
      * configuration.
      *
-     * @param name the name of the RateLimiter
+     * @param name       the name of the RateLimiter
      * @param configName a custom RateLimiter configuration name
      * @return The {@link RateLimiter}
      */

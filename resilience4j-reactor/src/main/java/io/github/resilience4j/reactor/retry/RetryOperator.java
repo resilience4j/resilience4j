@@ -17,11 +17,12 @@ package io.github.resilience4j.reactor.retry;
 
 import io.github.resilience4j.reactor.IllegalPublisherException;
 import io.github.resilience4j.retry.Retry;
-import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * A Reactor Retry operator which wraps a reactive type in a Retry.
@@ -39,7 +40,7 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
     /**
      * Creates a retry.
      *
-     * @param <T> the value type of the upstream and downstream
+     * @param <T>   the value type of the upstream and downstream
      * @param retry the retry
      * @return a RetryOperator
      */

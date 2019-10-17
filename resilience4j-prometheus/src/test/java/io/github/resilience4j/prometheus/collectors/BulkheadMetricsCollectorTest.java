@@ -15,15 +15,15 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Before;
 import org.junit.Test;
+
+import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulkheadMetricsCollectorTest {
 

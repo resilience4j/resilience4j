@@ -18,20 +18,21 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.BDDAssertions.assertThat;
-
 import com.statemachinesystems.mockclock.MockClock;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.IllegalStateTransitionException;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.time.Duration;
 import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
-import org.junit.Before;
-import org.junit.Test;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.assertThat;
 
 public class CircuitBreakerStateMachineTest {
 

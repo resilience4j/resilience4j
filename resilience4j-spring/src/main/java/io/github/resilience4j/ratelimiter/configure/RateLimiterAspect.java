@@ -22,11 +22,6 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -38,13 +33,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link RateLimiter}
  * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
  * reactive type, CompletionStage type, or value type.
- *
+ * <p>
  * The RateLimiterRegistry is used to retrieve an instance of a RateLimiter for a specific backend.
- *
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}RateLimiter(name = "myService")
@@ -55,9 +56,9 @@ import org.springframework.util.StringUtils;
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
  * through a a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given
  * config.
- *
+ * <p>
  * The fallbackMethod parameter signature must match either:
- *
+ * <p>
  * 1) The method parameter signature on the annotated method or 2) The method parameter signature
  * with a matching exception type as the last parameter on the annotated method
  */
@@ -177,7 +178,7 @@ public class RateLimiterAspect implements Ordered {
      * handle the asynchronous completable future flow
      *
      * @param proceedingJoinPoint AOPJoinPoint
-     * @param rateLimiter configured rate limiter
+     * @param rateLimiter         configured rate limiter
      * @return CompletionStage
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,

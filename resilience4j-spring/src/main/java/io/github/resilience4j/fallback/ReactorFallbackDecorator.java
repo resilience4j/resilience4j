@@ -15,14 +15,15 @@
  */
 package io.github.resilience4j.fallback;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
 import io.vavr.CheckedFunction0;
-import java.util.Set;
-import java.util.function.Function;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Set;
+import java.util.function.Function;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * fallbackMethod decorator for {@link Flux} and {@link Mono}

@@ -29,8 +29,6 @@ import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStatesEndpointResponse;
 import io.github.resilience4j.reactor.adapter.ReactorAdapter;
 import io.vavr.collection.Seq;
-import java.util.Comparator;
-import javax.inject.Inject;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
 import ratpack.func.Function;
@@ -38,6 +36,9 @@ import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
 import reactor.core.publisher.Flux;
+
+import javax.inject.Inject;
+import java.util.Comparator;
 
 /**
  * Provides event and stream event endpoints for circuitbreaker events.

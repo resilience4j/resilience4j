@@ -16,18 +16,17 @@
 
 package io.github.resilience4j.metrics.publisher;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PERMISSIONS;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 public class RateLimiterMetricsPublisher extends AbstractMetricsPublisher<RateLimiter> {
 

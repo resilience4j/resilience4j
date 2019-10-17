@@ -19,9 +19,10 @@ package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
-import java.util.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+
+import java.util.List;
 
 
 @Endpoint(id = "circuitbreakers")

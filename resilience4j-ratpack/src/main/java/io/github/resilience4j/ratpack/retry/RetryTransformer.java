@@ -36,7 +36,7 @@ public class RetryTransformer<T> extends AbstractTransformer<T> {
      * error.
      *
      * @param retry the retry to use
-     * @param <T> the type of object
+     * @param <T>   the type of object
      * @return the transformer
      */
     public static <T> RetryTransformer<T> of(Retry retry) {

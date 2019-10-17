@@ -1,9 +1,9 @@
 package io.github.resilience4j.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AnnotationExtractorTest {
 

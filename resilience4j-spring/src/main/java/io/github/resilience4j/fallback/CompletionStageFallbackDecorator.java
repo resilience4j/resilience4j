@@ -16,6 +16,7 @@
 package io.github.resilience4j.fallback;
 
 import io.vavr.CheckedFunction0;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 

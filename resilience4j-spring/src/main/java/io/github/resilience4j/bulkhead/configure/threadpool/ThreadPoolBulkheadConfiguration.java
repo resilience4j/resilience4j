@@ -23,14 +23,15 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 /**
  * {@link Configuration Configuration} for {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead}
@@ -40,7 +41,7 @@ public class ThreadPoolBulkheadConfiguration {
 
     /**
      * @param bulkheadConfigurationProperties bulk head spring configuration properties
-     * @param bulkheadEventConsumerRegistry the bulk head event consumer registry
+     * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
      * @return the ThreadPoolBulkheadRegistry with all needed setup in place
      */
     @Bean
@@ -89,7 +90,7 @@ public class ThreadPoolBulkheadConfiguration {
      * Registers the post creation consumer function that registers the consumer events to the
      * bulkheads.
      *
-     * @param bulkheadRegistry The BulkHead registry.
+     * @param bulkheadRegistry      The BulkHead registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,

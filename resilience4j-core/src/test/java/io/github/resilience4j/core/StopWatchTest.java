@@ -18,14 +18,15 @@
  */
 package io.github.resilience4j.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.statemachinesystems.mockclock.MockClock;
-import java.time.Duration;
-import java.time.ZoneId;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.ZoneId;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class StopWatchTest {
 

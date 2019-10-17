@@ -19,11 +19,12 @@
 package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
 /**
  * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with

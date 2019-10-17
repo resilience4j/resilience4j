@@ -21,25 +21,17 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.configure.ReactorRetryAspectExt;
-import io.github.resilience4j.retry.configure.RetryAspect;
-import io.github.resilience4j.retry.configure.RetryAspectExt;
-import io.github.resilience4j.retry.configure.RetryConfiguration;
-import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
-import io.github.resilience4j.retry.configure.RxJava2RetryAspectExt;
+import io.github.resilience4j.retry.configure.*;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link Configuration Configuration} for resilience4j-retry.
@@ -55,9 +47,9 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     }
 
     /**
-     * @param retryConfigurationProperties retryConfigurationProperties retry configuration
-     *     spring properties
-     * @param retryEventConsumerRegistry the event retry registry
+     * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring
+     *                                     properties
+     * @param retryEventConsumerRegistry   the event retry registry
      * @return the retry definition registry
      */
     @Bean
@@ -79,7 +71,7 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 
     /**
      * @param retryConfigurationProperties retry configuration spring properties
-     * @param retryRegistry retry in memory registry
+     * @param retryRegistry                retry in memory registry
      * @return the spring retry AOP aspect
      */
     @Bean

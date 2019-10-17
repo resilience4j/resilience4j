@@ -1,8 +1,8 @@
 package io.github.resilience4j;
 
-import static java.util.Objects.requireNonNull;
-
 import io.reactivex.SingleObserver;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractSingleObserver<T> extends AbstractDisposable implements
     SingleObserver<T> {

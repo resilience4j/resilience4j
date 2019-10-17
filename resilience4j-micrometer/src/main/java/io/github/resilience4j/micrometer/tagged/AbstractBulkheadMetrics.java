@@ -16,14 +16,15 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 abstract class AbstractBulkheadMetrics extends AbstractMetrics {
 
@@ -119,7 +120,7 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
              * with a given one.
              *
              * @param availableConcurrentCallsMetricName The available concurrent calls metric
-             *     name.
+             *                                           name.
              * @return The builder.
              */
             public Builder availableConcurrentCallsMetricName(
@@ -133,8 +134,8 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
              * Overrides the default metric name {@value TaggedBulkheadMetrics.MetricNames#DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME}
              * with a given one.
              *
-             * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls
-             *     metric name.
+             * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls metric
+             *                                            name.
              * @return The builder.
              */
             public Builder maxAllowedConcurrentCallsMetricName(

@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.ratpack.circuitbreaker;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -25,24 +23,27 @@ import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
+
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link CircuitBreaker}. It will
  * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link
  * reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
- *
+ * <p>
  * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific
  * name.
- *
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}CircuitBreaker(name = "myService")
@@ -53,16 +54,16 @@ import reactor.core.publisher.Mono;
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
  * through a a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the given
  * config.
- *
+ * <p>
  * The fallbackMethod parameter signature must match either:
- *
+ * <p>
  * 1) The method parameter signature on the annotated method or 2) The method parameter signature
  * with a matching exception type as the last parameter on the annotated method
- *
+ * <p>
  * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage}, {@link
  * reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value. Other
  * reactive types are not supported.
- *
+ * <p>
  * If the return value is one of the reactive types listed above, it must match the return value
  * type of the annotated method.
  */

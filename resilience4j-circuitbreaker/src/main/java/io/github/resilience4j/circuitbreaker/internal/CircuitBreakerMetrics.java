@@ -19,16 +19,17 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 
-import static io.github.resilience4j.core.metrics.Metrics.Outcome;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.Metrics;
 import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+
+import static io.github.resilience4j.core.metrics.Metrics.Outcome;
 
 class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 

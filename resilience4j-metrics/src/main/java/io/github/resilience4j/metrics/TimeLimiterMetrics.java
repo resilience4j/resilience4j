@@ -18,15 +18,6 @@
  */
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.FAILED;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.ITERABLE_NULL;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.PREFIX_NULL;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.SUCCESSFUL;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMEOUT;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -34,7 +25,12 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.vavr.collection.Array;
+
 import java.util.Map;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.timelimiter.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports TimeLimiter's events as Dropwizard Metrics.
@@ -69,9 +65,9 @@ public class TimeLimiterMetrics implements MetricSet {
      * Creates a new instance {@link TimeLimiterMetrics} with specified metrics names prefix and a
      * {@link TimeLimiterRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix              the prefix of metrics names
      * @param timeLimiterRegistry the registry of time limiters
-     * @param metricRegistry the metric registry
+     * @param metricRegistry      the metric registry
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix,
         TimeLimiterRegistry timeLimiterRegistry, MetricRegistry metricRegistry) {
@@ -83,7 +79,7 @@ public class TimeLimiterMetrics implements MetricSet {
      * Creates a new instance {@link TimeLimiterMetrics} with specified metrics names prefix and a
      * {@link TimeLimiterRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix              the prefix of metrics names
      * @param timeLimiterRegistry the registry of time limiters
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(String prefix,
@@ -97,7 +93,7 @@ public class TimeLimiterMetrics implements MetricSet {
      * source.
      *
      * @param timeLimiterRegistry the registry of time limiters
-     * @param metricRegistry the metric registry
+     * @param metricRegistry      the metric registry
      */
     public static TimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry,
         MetricRegistry metricRegistry) {

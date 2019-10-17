@@ -18,10 +18,11 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.junit.Test;
 
 import java.time.Duration;
-import org.junit.Test;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class BulkheadConfigTest {
 

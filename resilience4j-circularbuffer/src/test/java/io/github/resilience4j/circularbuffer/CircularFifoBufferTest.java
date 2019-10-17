@@ -19,12 +19,13 @@
 package io.github.resilience4j.circularbuffer;
 
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.vavr.collection.List;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircularFifoBufferTest {
 

@@ -19,12 +19,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspectExt;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
-import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
-import io.github.resilience4j.bulkhead.configure.ReactorBulkheadAspectExt;
-import io.github.resilience4j.bulkhead.configure.RxJava2BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
@@ -35,15 +30,12 @@ import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMiss
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link Configuration Configuration} for resilience4j-bulkhead.

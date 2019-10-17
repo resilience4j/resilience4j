@@ -18,9 +18,9 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import static java.util.Objects.requireNonNull;
-
 import java.time.Duration;
+
+import static java.util.Objects.requireNonNull;
 
 public class RateLimiterConfig {
 

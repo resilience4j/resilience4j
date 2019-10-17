@@ -1,8 +1,8 @@
 package io.github.resilience4j;
 
-import static java.util.Objects.requireNonNull;
-
 import io.reactivex.CompletableObserver;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractCompletableObserver extends AbstractDisposable implements
     CompletableObserver {

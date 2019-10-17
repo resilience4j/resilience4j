@@ -18,13 +18,14 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FixedThreadPoolBulkheadTest {
 

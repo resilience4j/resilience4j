@@ -15,17 +15,18 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.prometheus.LabelNames;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
+
 import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects bulkhead exposed {@link Metrics}.
@@ -45,7 +46,7 @@ public class ThreadPoolBulkheadMetricsCollector extends Collector {
      * Creates a new collector with custom metric names and using given {@code supplier} as source
      * of bulkheads.
      *
-     * @param names the custom metric names
+     * @param names            the custom metric names
      * @param bulkheadRegistry the source of bulkheads
      */
     public static ThreadPoolBulkheadMetricsCollector ofBulkheadRegistry(MetricNames names,

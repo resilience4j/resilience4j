@@ -15,11 +15,7 @@
  */
 package io.github.resilience4j.common.retry.monitoring.endpoint;
 
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.event.RetryOnErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnRetryEvent;
-import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
+import io.github.resilience4j.retry.event.*;
 
 /**
  * retry event DTO factory

@@ -16,16 +16,13 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.*;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
 

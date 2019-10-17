@@ -18,16 +18,17 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-
 import io.vavr.control.Try;
+import org.junit.Test;
+import org.slf4j.Logger;
+
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import org.junit.Test;
-import org.slf4j.Logger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 
 public class TimeLimiterEventPublisherTest {

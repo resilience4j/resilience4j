@@ -1,21 +1,19 @@
 package io.github.resilience4j.bulkhead.operator;
 
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link SingleBulkhead} using {@link BulkheadOperator}.

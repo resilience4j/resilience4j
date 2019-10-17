@@ -16,16 +16,17 @@
 
 package io.github.resilience4j.prometheus;
 
-import static java.util.Arrays.asList;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
 import io.prometheus.client.Histogram;
+
 import java.util.Collections;
 import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractCircuitBreakerMetrics extends Collector {
 

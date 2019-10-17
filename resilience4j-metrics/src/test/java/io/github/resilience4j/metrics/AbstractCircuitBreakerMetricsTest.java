@@ -16,16 +16,16 @@
 
 package io.github.resilience4j.metrics;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public abstract class AbstractCircuitBreakerMetricsTest {
 

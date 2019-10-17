@@ -28,10 +28,11 @@ import io.github.resilience4j.core.EventProcessor;
 import io.vavr.CheckedFunction0;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Supplier;
 
 public class CacheImpl<K, V> implements Cache<K, V> {
 

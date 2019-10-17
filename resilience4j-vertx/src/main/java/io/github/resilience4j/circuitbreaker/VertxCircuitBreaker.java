@@ -18,11 +18,12 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-
 import io.vertx.core.Future;
+
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 /**
  * CircuitBreaker decorators for Vert.x
@@ -33,8 +34,8 @@ public interface VertxCircuitBreaker {
      * Decorates and executes the decorated Future.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the Future Supplier
-     * @param <T> the type of results returned by this Future
+     * @param supplier       the Future Supplier
+     * @param <T>            the type of results returned by this Future
      * @return a future which is decorated by a CircuitBreaker.
      */
     static <T> Future<T> executeFuture(CircuitBreaker circuitBreaker,
@@ -46,8 +47,8 @@ public interface VertxCircuitBreaker {
      * Returns a Future which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
-     * @param supplier the Future supplier
-     * @param <T> the type of the returned Future's result
+     * @param supplier       the Future supplier
+     * @param <T>            the type of the returned Future's result
      * @return a future which is decorated by a CircuitBreaker.
      */
     static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker,

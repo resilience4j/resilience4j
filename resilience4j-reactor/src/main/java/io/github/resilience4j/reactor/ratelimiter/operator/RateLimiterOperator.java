@@ -18,10 +18,11 @@ package io.github.resilience4j.reactor.ratelimiter.operator;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.reactor.IllegalPublisherException;
-import java.util.function.UnaryOperator;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.function.UnaryOperator;
 
 
 /**
@@ -42,7 +43,7 @@ public class RateLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
     /**
      * Creates a RateLimiterOperator.
      *
-     * @param <T> the value type of the upstream and downstream
+     * @param <T>         the value type of the upstream and downstream
      * @param rateLimiter the Rate limiter
      * @return a RateLimiterOperator
      */

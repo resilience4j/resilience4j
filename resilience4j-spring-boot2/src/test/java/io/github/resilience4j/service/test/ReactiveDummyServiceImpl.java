@@ -17,16 +17,13 @@ package io.github.resilience4j.service.test;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import java.io.IOException;
+import io.reactivex.*;
 import org.assertj.core.util.Arrays;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
 
 /**
  * reactive test service for Reactor and RxJava API type for the circuit breaker annotation AOP

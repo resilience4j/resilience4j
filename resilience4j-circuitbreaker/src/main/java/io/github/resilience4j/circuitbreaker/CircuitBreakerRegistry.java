@@ -23,6 +23,7 @@ import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegi
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -47,10 +48,10 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Creates a CircuitBreakerRegistry with a custom default CircuitBreaker configuration and a
      * CircuitBreaker registry event consumer.
      *
-     * @param circuitBreakerConfig a custom default CircuitBreaker configuration.
+     * @param circuitBreakerConfig  a custom default CircuitBreaker configuration.
      * @param registryEventConsumer a CircuitBreaker registry event consumer.
      * @return a CircuitBreakerRegistry with a custom CircuitBreaker configuration and a
-     *     CircuitBreaker registry event consumer.
+     * CircuitBreaker registry event consumer.
      */
     static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig,
         RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
@@ -61,10 +62,10 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Creates a CircuitBreakerRegistry with a custom default CircuitBreaker configuration and a
      * list of CircuitBreaker registry event consumers.
      *
-     * @param circuitBreakerConfig a custom default CircuitBreaker configuration.
+     * @param circuitBreakerConfig   a custom default CircuitBreaker configuration.
      * @param registryEventConsumers a list of CircuitBreaker registry event consumers.
      * @return a CircuitBreakerRegistry with a custom CircuitBreaker configuration and list of
-     *     CircuitBreaker registry event consumers.
+     * CircuitBreaker registry event consumers.
      */
     static CircuitBreakerRegistry of(CircuitBreakerConfig circuitBreakerConfig,
         List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
@@ -85,10 +86,10 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
      * CircuitBreaker registry event consumer.
      *
-     * @param configs a Map of shared CircuitBreaker configurations.
+     * @param configs               a Map of shared CircuitBreaker configurations.
      * @param registryEventConsumer a CircuitBreaker registry event consumer.
      * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
-     *     CircuitBreaker registry event consumer.
+     * CircuitBreaker registry event consumer.
      */
     static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs,
         RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
@@ -99,10 +100,10 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
      * list of CircuitBreaker registry event consumers.
      *
-     * @param configs a Map of shared CircuitBreaker configurations.
+     * @param configs                a Map of shared CircuitBreaker configurations.
      * @param registryEventConsumers a list of CircuitBreaker registry event consumers.
      * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
-     *     list of CircuitBreaker registry event consumers.
+     * list of CircuitBreaker registry event consumers.
      */
     static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs,
         List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
@@ -138,7 +139,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker
      * configuration.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name   the name of the CircuitBreaker
      * @param config a custom CircuitBreaker configuration
      * @return The {@link CircuitBreaker}
      */
@@ -148,7 +149,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker
      * configuration.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name       the name of the CircuitBreaker
      * @param configName a custom CircuitBreaker configuration name
      * @return The {@link CircuitBreaker}
      */
@@ -158,7 +159,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker
      * configuration.
      *
-     * @param name the name of the CircuitBreaker
+     * @param name                         the name of the CircuitBreaker
      * @param circuitBreakerConfigSupplier a supplier of a custom CircuitBreaker configuration
      * @return The {@link CircuitBreaker}
      */

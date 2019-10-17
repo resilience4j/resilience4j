@@ -19,8 +19,6 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -32,9 +30,12 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A Bulkhead implementation based on a semaphore.
@@ -56,7 +57,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     /**
      * Creates a bulkhead using a configuration supplied
      *
-     * @param name the name of this bulkhead
+     * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
@@ -81,7 +82,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     /**
      * Create a bulkhead using a configuration supplier
      *
-     * @param name the name of this bulkhead
+     * @param name           the name of this bulkhead
      * @param configSupplier BulkheadConfig supplier
      */
     public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {

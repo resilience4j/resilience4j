@@ -1,11 +1,12 @@
 package io.github.resilience4j.core.predicate;
 
-import static org.assertj.core.api.BDDAssertions.then;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Predicate;
-import org.junit.Test;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class PredicateCreatorTest {
 

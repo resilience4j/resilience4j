@@ -24,11 +24,6 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import io.vavr.CheckedFunction0;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -39,6 +34,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead}
@@ -135,9 +136,9 @@ public class BulkheadAspect implements Ordered {
      * entry logic for semaphore bulkhead execution
      *
      * @param proceedingJoinPoint AOP proceedingJoinPoint
-     * @param methodName AOP method name
-     * @param bulkhead the configured bulkhead
-     * @param returnType the AOP method return type
+     * @param methodName          AOP method name
+     * @param bulkhead            the configured bulkhead
+     * @param returnType          the AOP method return type
      * @return the result Object of the method call
      */
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
@@ -194,7 +195,7 @@ public class BulkheadAspect implements Ordered {
      * Sync bulkhead execution
      *
      * @param proceedingJoinPoint AOP proceedingJoinPoint
-     * @param bulkhead the configured bulkhead for that backend call
+     * @param bulkhead            the configured bulkhead for that backend call
      * @return the result object
      */
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
@@ -206,7 +207,7 @@ public class BulkheadAspect implements Ordered {
      * handle the asynchronous completable future flow
      *
      * @param proceedingJoinPoint AOPJoinPoint
-     * @param bulkhead configured bulkhead
+     * @param bulkhead            configured bulkhead
      * @return CompletionStage
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
@@ -225,9 +226,9 @@ public class BulkheadAspect implements Ordered {
      * io.github.resilience4j.bulkhead.ThreadPoolBulkhead} for more information
      *
      * @param proceedingJoinPoint AOP proceedingJoinPoint
-     * @param methodName AOP method name
-     * @param returnType AOP method return type
-     * @param backend backend name
+     * @param methodName          AOP method name
+     * @param returnType          AOP method return type
+     * @param backend             backend name
      * @return result Object which will be CompletableFuture instance
      */
     private Object proceedInThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint,

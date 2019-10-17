@@ -16,10 +16,10 @@
 
 package io.github.resilience4j.ratpack;
 
-import static ratpack.util.Exceptions.uncheck;
-
 import io.github.resilience4j.core.lang.Nullable;
 import ratpack.func.Function;
+
+import static ratpack.util.Exceptions.uncheck;
 
 public class EndpointsConfig {
 

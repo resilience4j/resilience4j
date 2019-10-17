@@ -18,9 +18,6 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
@@ -29,22 +26,21 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.time.Duration;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class CircuitBreakerTest {
 

@@ -18,22 +18,18 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import static java.lang.reflect.Array.newInstance;
-import static java.util.Objects.requireNonNull;
-
-import java.util.AbstractQueue;
-import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
+
+import static java.lang.reflect.Array.newInstance;
+import static java.util.Objects.requireNonNull;
 
 /**
  * The purpose of this queue is to store the N most recently inserted elements. If the {@link
  * ConcurrentEvictingQueue} is already full {@code ConcurrentEvictingQueue.size() == capacity}, the
  * oldest element (the head) will be evicted, and then the new element added at the tail.
- *
+ * <p>
  * In order to achieve thread-safety it utilizes capability-based locking features of {@link
  * StampedLock}. All spins optimistic/pessimistic reads and writes are encapsulated in following
  * methods:
@@ -43,13 +39,13 @@ import java.util.function.Supplier;
  * <li> {@link ConcurrentEvictingQueue#readConcurrentlyWithoutSpin(Supplier)}</li>
  * <li> {@link ConcurrentEvictingQueue#writeConcurrently(Supplier)}</li>
  * </ul>
- *
+ * <p>
  * All other logic just relies on this utility methods.
- *
+ * <p>
  * Also please take into account that {@link ConcurrentEvictingQueue#size}
  * and {@link ConcurrentEvictingQueue#modificationsCount} are {@code volatile} fields,
  * so we can read them and compare against them without any additional synchronizations.
- *
+ * <p>
  * This class IS thread-safe, and does NOT accept null elements.
  */
 public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
@@ -222,15 +218,15 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
      * array-based and collection-based APIs.  Further, this method allows precise control over the
      * runtime type of the output array, and may, under certain circumstances, be used to save
      * allocation costs.
-     *
+     * <p>
      * Note that {@code toArray(new Object[0])} is identical in function to {@code toArray()}.
      *
-     * @param destination the array into which the elements of the queue are to be stored, if it
-     *     is big enough; otherwise, a new array of the same runtime type is allocated for this
-     *     purpose
+     * @param destination the array into which the elements of the queue are to be stored, if it is
+     *                    big enough; otherwise, a new array of the same runtime type is allocated
+     *                    for this purpose
      * @return an array containing all of the elements in this queue
-     * @throws ArrayStoreException if the runtime type of the specified array is not a supertype
-     *     of the runtime type of every element in this queue
+     * @throws ArrayStoreException  if the runtime type of the specified array is not a supertype of
+     *                              the runtime type of every element in this queue
      * @throws NullPointerException if the specified array is null
      */
     @Override

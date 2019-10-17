@@ -14,13 +14,14 @@
  */
 package io.github.resilience4j.utils;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.context.annotation.ConditionContext;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.springframework.context.annotation.ConditionContext;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * common Aspect util methods
@@ -31,8 +32,8 @@ public class AspectUtil {
     }
 
     /**
-     * @param context the spring condition context
-     * @param classToCheck the class to check in spring class loader
+     * @param context           the spring condition context
+     * @param classToCheck      the class to check in spring class loader
      * @param exceptionConsumer the custom exception consumer
      * @return true or false if the class is found or not
      */

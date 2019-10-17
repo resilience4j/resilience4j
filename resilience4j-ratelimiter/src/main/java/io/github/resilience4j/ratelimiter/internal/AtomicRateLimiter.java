@@ -18,19 +18,20 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static java.lang.Long.min;
-import static java.lang.System.nanoTime;
-import static java.lang.Thread.currentThread;
-import static java.util.concurrent.locks.LockSupport.parkNanos;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
+
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
+
+import static java.lang.Long.min;
+import static java.lang.System.nanoTime;
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
@@ -164,9 +165,9 @@ public class AtomicRateLimiter implements RateLimiter {
      * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
      *
      * @param current the expected value
-     * @param next the new value
+     * @param next    the new value
      * @return {@code true} if successful. False return indicates that the actual value was not
-     *     equal to the expected value.
+     * equal to the expected value.
      */
     private boolean compareAndSet(final State current, final State next) {
         if (state.compareAndSet(current, next)) {
@@ -182,7 +183,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * to wait long enough.
      *
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param activeState current state of {@link AtomicRateLimiter}
+     * @param activeState    current state of {@link AtomicRateLimiter}
      * @return next {@link State}
      */
     private State calculateNextState(final long timeoutInNanos, final State activeState) {
@@ -213,13 +214,13 @@ public class AtomicRateLimiter implements RateLimiter {
      * Calculates time to wait for next permission as [time to the next cycle] + [duration of full
      * cycles until reserved permissions expire]
      *
-     * @param cyclePeriodInNanos current configuration values
-     * @param permissionsPerCycle current configuration values
+     * @param cyclePeriodInNanos   current configuration values
+     * @param permissionsPerCycle  current configuration values
      * @param availablePermissions currently available permissions, can be negative if some
-     *     permissions have been reserved
-     * @param currentNanos current time in nanoseconds
-     * @param currentCycle current {@link AtomicRateLimiter} cycle    @return nanoseconds to
-     *     wait for the next permission
+     *                             permissions have been reserved
+     * @param currentNanos         current time in nanoseconds
+     * @param currentCycle         current {@link AtomicRateLimiter} cycle    @return nanoseconds to
+     *                             wait for the next permission
      */
     private long nanosToWaitForPermission(final long cyclePeriodInNanos,
         final int permissionsPerCycle,
@@ -239,9 +240,9 @@ public class AtomicRateLimiter implements RateLimiter {
      * permission.
      *
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param cycle cycle for new {@link State}
-     * @param permissions permissions for new {@link State}
-     * @param nanosToWait nanoseconds to wait for the next permission
+     * @param cycle          cycle for new {@link State}
+     * @param permissions    permissions for new {@link State}
+     * @param nanosToWait    nanoseconds to wait for the next permission
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
     private State reservePermissions(final RateLimiterConfig config, final long timeoutInNanos,
@@ -259,9 +260,9 @@ public class AtomicRateLimiter implements RateLimiter {
      * longer then timeoutInNanos.
      *
      * @param timeoutInNanos max time that caller can wait
-     * @param nanosToWait nanoseconds caller need to wait
+     * @param nanosToWait    nanoseconds caller need to wait
      * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and
-     *     not exceed timeout
+     * not exceed timeout
      */
     private boolean waitForPermissionIfNecessary(final long timeoutInNanos,
         final long nanosToWait) {

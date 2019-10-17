@@ -15,11 +15,12 @@
  */
 package io.github.resilience4j.fallback;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 import java.lang.reflect.Method;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class FallbackMethodTest {

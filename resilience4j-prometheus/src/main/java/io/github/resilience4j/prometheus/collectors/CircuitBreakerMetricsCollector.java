@@ -15,14 +15,15 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics;
+
 import java.util.Collections;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects circuit breaker exposed {@link Metrics}.
@@ -47,7 +48,7 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      * Creates a new collector with custom metric names and using given {@code supplier} as source
      * of circuit breakers.
      *
-     * @param names the custom metric names
+     * @param names                  the custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      */
     public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names,

@@ -18,12 +18,6 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedConsumer;
@@ -32,6 +26,11 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -39,10 +38,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 public class BulkheadTest {
 

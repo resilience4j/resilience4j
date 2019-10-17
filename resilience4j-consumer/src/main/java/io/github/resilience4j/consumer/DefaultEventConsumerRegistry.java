@@ -17,6 +17,7 @@ package io.github.resilience4j.consumer;
 
 import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 

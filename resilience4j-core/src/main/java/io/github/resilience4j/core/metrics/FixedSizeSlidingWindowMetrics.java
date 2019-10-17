@@ -24,14 +24,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * A {@link Metrics} implementation is backed by a sliding window that aggregates only the last
  * {@code N} calls.
- *
+ * <p>
  * The sliding window is implemented with a circular array of {@code N} measurements. If the time
  * window size is 10, the circular array has always 10 measurements.
- *
+ * <p>
  * The sliding window incrementally updates a total aggregation. The total aggregation is updated
  * incrementally when a new call outcome is recorded. When the oldest measurement is evicted, the
  * measurement is subtracted from the total aggregation. (Subtract-on-Evict)
- *
+ * <p>
  * The time to retrieve a Snapshot is constant 0(1), since the Snapshot is pre-aggregated and is
  * independent of the window size. The space requirement (memory consumption) of this implementation
  * should be O(n).

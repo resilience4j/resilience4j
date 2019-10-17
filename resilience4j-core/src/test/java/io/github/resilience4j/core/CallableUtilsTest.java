@@ -1,10 +1,11 @@
 package io.github.resilience4j.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CallableUtilsTest {
 

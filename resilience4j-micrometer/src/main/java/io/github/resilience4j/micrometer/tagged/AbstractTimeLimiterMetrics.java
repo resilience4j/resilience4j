@@ -16,15 +16,16 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
 

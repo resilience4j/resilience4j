@@ -17,22 +17,10 @@
 package io.github.resilience4j.timelimiter.transformer;
 
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.MaybeTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
-import java.util.concurrent.TimeUnit;
+import io.reactivex.*;
 import org.reactivestreams.Publisher;
+
+import java.util.concurrent.TimeUnit;
 
 public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>,
     ObservableTransformer<T, T>,
@@ -48,7 +36,7 @@ public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>,
      * Creates a TimeLimiterTransformer.
      *
      * @param timeLimiter the TimeLimiter
-     * @param <T> the value type of the upstream and downstream
+     * @param <T>         the value type of the upstream and downstream
      * @return a TimeLimiterTransformer
      */
     public static <T> TimeLimiterTransformer<T> of(TimeLimiter timeLimiter) {

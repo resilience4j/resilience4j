@@ -24,9 +24,10 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent.Type;
 import io.reactivex.subscribers.TestSubscriber;
-import java.text.MessageFormat;
 import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.StringResult1;
+
+import java.text.MessageFormat;
 
 
 @JCStressTest

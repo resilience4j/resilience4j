@@ -18,26 +18,15 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.API.Match;
-import static io.vavr.Predicates.instanceOf;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -49,9 +38,15 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static io.vavr.API.*;
+import static io.vavr.Predicates.instanceOf;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 
 @SuppressWarnings("unchecked")

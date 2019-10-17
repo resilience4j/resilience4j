@@ -16,23 +16,18 @@
 
 package io.github.resilience4j.prometheus.publisher;
 
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS;
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_STATE;
-import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.custom;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.prometheus.client.CollectorRegistry;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsPublisherTest {
 

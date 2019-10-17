@@ -15,18 +15,19 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
+import static java.util.Objects.requireNonNull;
 
 class FlowableRateLimiter<T> extends Flowable<T> {
 

@@ -2,12 +2,13 @@ package io.github.resilience4j.service.test.bulkhead;
 
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.reactivex.Flowable;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Bulkhead(name = BulkheadReactiveDummyService.BACKEND)
 @Component

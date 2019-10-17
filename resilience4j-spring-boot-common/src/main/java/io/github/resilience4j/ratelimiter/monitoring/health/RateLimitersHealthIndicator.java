@@ -15,18 +15,19 @@
  */
 package io.github.resilience4j.ratelimiter.monitoring.health;
 
-import static io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties.InstanceProperties;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties.InstanceProperties;
 
 public class RateLimitersHealthIndicator implements HealthIndicator {
 

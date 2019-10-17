@@ -18,12 +18,6 @@
  */
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.AVAILABLE_PERMISSIONS;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.ratelimiter.utils.MetricNames.WAITING_THREADS;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -31,7 +25,12 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.vavr.collection.Array;
+
 import java.util.Map;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.ratelimiter.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link RateLimiter.Metrics} as Dropwizard Metrics Gauges.
@@ -67,9 +66,9 @@ public class RateLimiterMetrics implements MetricSet {
      * Creates a new instance {@link RateLimiterMetrics} with specified metrics names prefix and a
      * {@link RateLimiterRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix              the prefix of metrics names
      * @param rateLimiterRegistry the registry of rate limiters
-     * @param metricRegistry the metric registry
+     * @param metricRegistry      the metric registry
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(String prefix,
         RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
@@ -81,7 +80,7 @@ public class RateLimiterMetrics implements MetricSet {
      * Creates a new instance {@link RateLimiterMetrics} with specified metrics names prefix and a
      * {@link RateLimiterRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix              the prefix of metrics names
      * @param rateLimiterRegistry the registry of rate limiters
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(String prefix,
@@ -95,7 +94,7 @@ public class RateLimiterMetrics implements MetricSet {
      * source.
      *
      * @param rateLimiterRegistry the registry of rate limiters
-     * @param metricRegistry the metric registry
+     * @param metricRegistry      the metric registry
      */
     public static RateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry,
         MetricRegistry metricRegistry) {

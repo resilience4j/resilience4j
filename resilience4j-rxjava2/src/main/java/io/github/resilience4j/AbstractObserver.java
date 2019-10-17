@@ -1,9 +1,10 @@
 package io.github.resilience4j;
 
-import static java.util.Objects.requireNonNull;
-
 import io.reactivex.Observer;
+
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractObserver<T> extends AbstractDisposable implements Observer<T> {
 

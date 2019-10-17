@@ -18,11 +18,12 @@
  */
 package io.github.resilience4j.retrofit.internal;
 
-import java.io.IOException;
 import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import java.io.IOException;
 
 /**
  * Simple decorator class that implements Call&lt;T&gt; and delegates all calls the the Call

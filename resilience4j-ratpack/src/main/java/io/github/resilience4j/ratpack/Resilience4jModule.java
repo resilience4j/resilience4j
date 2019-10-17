@@ -38,16 +38,8 @@ import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfig
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.metrics.BulkheadMetrics;
-import io.github.resilience4j.metrics.CircuitBreakerMetrics;
-import io.github.resilience4j.metrics.RateLimiterMetrics;
-import io.github.resilience4j.metrics.RetryMetrics;
-import io.github.resilience4j.metrics.ThreadPoolBulkheadMetrics;
-import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.RetryMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
+import io.github.resilience4j.metrics.*;
+import io.github.resilience4j.prometheus.collectors.*;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -65,10 +57,6 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.prometheus.client.CollectorRegistry;
-import java.util.Map;
-import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Provider;
 import ratpack.dropwizard.metrics.DropwizardMetricsModule;
 import ratpack.guice.ConfigurableModule;
 import ratpack.handling.HandlerDecorator;
@@ -76,6 +64,11 @@ import ratpack.handling.Handlers;
 import ratpack.registry.Registry;
 import ratpack.service.Service;
 import ratpack.service.StartEvent;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * This module registers class and method interceptors for bulkheads, circuit breakers, rate

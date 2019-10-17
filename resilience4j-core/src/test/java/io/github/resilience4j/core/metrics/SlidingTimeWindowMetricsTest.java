@@ -18,12 +18,13 @@
  */
 package io.github.resilience4j.core.metrics;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.statemachinesystems.mockclock.MockClock;
+import org.junit.Test;
+
 import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SlidingTimeWindowMetricsTest {
 

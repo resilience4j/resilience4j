@@ -2,10 +2,11 @@ package io.github.resilience4j.service.test;
 
 
 import io.github.resilience4j.retry.annotation.Retry;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import org.springframework.stereotype.Component;
 
 @Component
 public class RetryDummyServiceImpl implements RetryDummyService {

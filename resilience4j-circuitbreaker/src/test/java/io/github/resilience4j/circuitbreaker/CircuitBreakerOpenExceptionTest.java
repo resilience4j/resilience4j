@@ -1,9 +1,9 @@
 package io.github.resilience4j.circuitbreaker;
 
+import org.junit.Test;
+
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.Test;
 
 public class CircuitBreakerOpenExceptionTest {
 

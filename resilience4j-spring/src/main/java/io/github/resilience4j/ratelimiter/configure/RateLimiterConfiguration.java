@@ -28,16 +28,17 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link org.springframework.context.annotation.Configuration Configuration} for resilience4j
@@ -91,7 +92,7 @@ public class RateLimiterConfiguration {
      * Registers the post creation consumer function that registers the consumer events to the rate
      * limiters.
      *
-     * @param rateLimiterRegistry The rate limiter registry.
+     * @param rateLimiterRegistry   The rate limiter registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,

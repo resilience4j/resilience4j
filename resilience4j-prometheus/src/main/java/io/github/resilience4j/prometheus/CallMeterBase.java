@@ -21,7 +21,7 @@ public interface CallMeterBase {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the type of results supplied by this Callable
+     * @param <T>      the type of results supplied by this Callable
      * @return the result of the decorated Callable.
      */
     default <T> T executeCallable(Callable<T> callable) throws Exception {
@@ -32,7 +32,7 @@ public interface CallMeterBase {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
@@ -43,7 +43,7 @@ public interface CallMeterBase {
      * Decorates and executes the decorated CompletionStage Supplier.
      *
      * @param supplier the CompletionStage Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> CompletionStage<T> executeCompletionStageSupplier(

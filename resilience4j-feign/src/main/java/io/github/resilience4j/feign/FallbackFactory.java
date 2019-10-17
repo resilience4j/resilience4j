@@ -17,6 +17,7 @@
 package io.github.resilience4j.feign;
 
 import io.vavr.CheckedFunction1;
+
 import java.lang.reflect.Method;
 import java.util.function.Function;
 import java.util.function.Predicate;

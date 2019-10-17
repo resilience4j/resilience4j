@@ -18,20 +18,6 @@
  */
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILURE_RATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.NOT_PERMITTED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_CALL_RATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_FAILED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_SUCCESS;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.STATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SUCCESSFUL;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -39,7 +25,12 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.vavr.collection.Array;
+
 import java.util.Map;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link CircuitBreaker.Metrics} as Dropwizard Metrics Gauges.
@@ -92,7 +83,7 @@ public class CircuitBreakerMetrics implements MetricSet {
      * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified
      * metrics names prefix and a {@link CircuitBreakerRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix                 the prefix of metrics names
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix,
@@ -105,7 +96,7 @@ public class CircuitBreakerMetrics implements MetricSet {
      * Creates a new instance CircuitBreakerMetrics {@link CircuitBreakerMetrics} with specified
      * metrics names prefix and a {@link CircuitBreakerRegistry} as a source.
      *
-     * @param prefix the prefix of metrics names
+     * @param prefix                 the prefix of metrics names
      * @param circuitBreakerRegistry the registry of circuit breakers
      */
     public static CircuitBreakerMetrics ofCircuitBreakerRegistry(String prefix,

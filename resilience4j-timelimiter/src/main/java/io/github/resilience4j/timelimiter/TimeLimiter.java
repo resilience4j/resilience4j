@@ -6,6 +6,7 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
+
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -40,7 +41,7 @@ public interface TimeLimiter {
     /**
      * Creates a TimeLimiter decorator with a TimeLimiterConfig configuration.
      *
-     * @param name the name of the TimeLimiter
+     * @param name              the name of the TimeLimiter
      * @param timeLimiterConfig the TimeLimiterConfig
      * @return The {@link TimeLimiter}
      */
@@ -64,10 +65,10 @@ public interface TimeLimiter {
     /**
      * Creates a Callback that is restricted by a TimeLimiter.
      *
-     * @param timeLimiter the TimeLimiter
+     * @param timeLimiter    the TimeLimiter
      * @param futureSupplier the original future supplier
-     * @param <T> the type of results supplied by the supplier
-     * @param <F> the future type supplied
+     * @param <T>            the type of results supplied by the supplier
+     * @param <F>            the future type supplied
      * @return a future supplier which is restricted by a {@link TimeLimiter}.
      */
     static <T, F extends Future<T>> Callable<T> decorateFutureSupplier(TimeLimiter timeLimiter,
@@ -88,8 +89,8 @@ public interface TimeLimiter {
      * Decorates and executes the Future Supplier.
      *
      * @param futureSupplier the original future supplier
-     * @param <T> the result type of the future
-     * @param <F> the type of Future
+     * @param <T>            the result type of the future
+     * @param <F>            the type of Future
      * @return the result of the Future.
      * @throws Exception if unable to compute a result
      */
@@ -102,8 +103,8 @@ public interface TimeLimiter {
      * Creates a Callback that is restricted by a TimeLimiter.
      *
      * @param futureSupplier the original future supplier
-     * @param <T> the type of results supplied by the supplier
-     * @param <F> the future type supplied
+     * @param <T>            the type of results supplied by the supplier
+     * @param <F>            the future type supplied
      * @return a future supplier which is restricted by a {@link TimeLimiter}.
      */
     <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier);
@@ -117,7 +118,7 @@ public interface TimeLimiter {
 
     /**
      * Records a successful call.
-     *
+     * <p>
      * This method must be invoked when a call was successful.
      */
     void onSuccess();

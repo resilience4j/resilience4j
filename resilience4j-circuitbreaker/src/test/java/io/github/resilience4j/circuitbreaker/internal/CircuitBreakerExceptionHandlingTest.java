@@ -1,13 +1,14 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerExceptionHandlingTest {
 

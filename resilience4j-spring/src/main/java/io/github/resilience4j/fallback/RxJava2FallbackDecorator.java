@@ -15,20 +15,13 @@
  */
 package io.github.resilience4j.fallback;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
+import io.reactivex.*;
 import io.vavr.CheckedFunction0;
+
 import java.util.Set;
 import java.util.function.Function;
+
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
  * fallbackMethod decorator for {@link ObservableSource}, {@link SingleSource}, {@link

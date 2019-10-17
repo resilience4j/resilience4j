@@ -16,26 +16,17 @@
 
 package io.github.resilience4j.metrics.publisher;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.BUFFERED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.FAILURE_RATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.NOT_PERMITTED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_CALL_RATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_FAILED;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SLOW_SUCCESS;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.STATE;
-import static io.github.resilience4j.circuitbreaker.utils.MetricNames.SUCCESSFUL;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.circuitbreaker.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<CircuitBreaker> {
 

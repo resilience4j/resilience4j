@@ -18,13 +18,14 @@
  */
 package io.github.resilience4j.circuitbreaker.event;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.time.Duration;
-import org.junit.Test;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
+import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerEventTest {
 

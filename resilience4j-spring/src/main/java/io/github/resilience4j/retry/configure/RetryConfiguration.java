@@ -27,16 +27,17 @@ import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link Configuration Configuration} for resilience4j-retry.
@@ -45,9 +46,9 @@ import org.springframework.context.annotation.Primary;
 public class RetryConfiguration {
 
     /**
-     * @param retryConfigurationProperties retryConfigurationProperties retry configuration
-     *     spring properties
-     * @param retryEventConsumerRegistry the event retry registry
+     * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring
+     *                                     properties
+     * @param retryEventConsumerRegistry   the event retry registry
      * @return the retry definition registry
      */
     @Bean
@@ -91,7 +92,7 @@ public class RetryConfiguration {
      * Registers the post creation consumer function that registers the consumer events to the
      * retries.
      *
-     * @param retryRegistry The retry registry.
+     * @param retryRegistry         The retry registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(RetryRegistry retryRegistry,
@@ -115,7 +116,7 @@ public class RetryConfiguration {
 
     /**
      * @param retryConfigurationProperties retry configuration spring properties
-     * @param retryRegistry retry in memory registry
+     * @param retryRegistry                retry in memory registry
      * @return the spring retry AOP aspect
      */
     @Bean

@@ -1,25 +1,16 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.ERROR;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.IGNORED_ERROR;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.NOT_PERMITTED;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.RESET;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.STATE_TRANSITION;
-import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.SUCCESS;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTOFactory;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.time.Duration;
-import org.junit.Test;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
+import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerEventDTOFactoryTest {
 

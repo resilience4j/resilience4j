@@ -15,13 +15,7 @@
  */
 package io.github.resilience4j.common.circuitbreaker.monitoring.endpoint;
 
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnIgnoredErrorEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnResetEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.circuitbreaker.event.*;
 
 public class CircuitBreakerEventDTOFactory {
 

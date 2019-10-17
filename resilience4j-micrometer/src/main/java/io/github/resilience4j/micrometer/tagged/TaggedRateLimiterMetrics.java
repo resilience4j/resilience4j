@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register RateLimiter exposed {@link Metrics metrics}.
@@ -49,7 +49,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
     /**
      * Creates a new binder that uses given {@code registry} as source of rate limiters.
      *
-     * @param names custom metric names
+     * @param names               custom metric names
      * @param rateLimiterRegistry the source of rate limiters
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */

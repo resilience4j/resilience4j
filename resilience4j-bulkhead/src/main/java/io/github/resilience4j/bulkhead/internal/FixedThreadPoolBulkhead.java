@@ -19,8 +19,6 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
@@ -31,14 +29,11 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.Nullable;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+
+import java.util.concurrent.*;
 import java.util.function.Supplier;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A Bulkhead implementation based on a fixed ThreadPoolExecutor. which is based into the thread
@@ -59,7 +54,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     /**
      * Creates a bulkhead using a configuration supplied
      *
-     * @param name the name of this bulkhead
+     * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
      */
     public FixedThreadPoolBulkhead(String name, @Nullable ThreadPoolBulkheadConfig bulkheadConfig) {
@@ -89,7 +84,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     /**
      * Create a bulkhead using a configuration supplier
      *
-     * @param name the name of this bulkhead
+     * @param name           the name of this bulkhead
      * @param configSupplier BulkheadConfig supplier
      */
     public FixedThreadPoolBulkhead(String name, Supplier<ThreadPoolBulkheadConfig> configSupplier) {
@@ -98,7 +93,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
 
     /**
      * @param callable the callable to execute through bulk head thread pool
-     * @param <T> the result type
+     * @param <T>      the result type
      * @return the callable returned result
      */
     @Override

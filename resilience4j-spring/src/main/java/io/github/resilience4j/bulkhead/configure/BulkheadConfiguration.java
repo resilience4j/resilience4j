@@ -30,17 +30,14 @@ import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 
 /**
  * {@link Configuration Configuration} for resilience4j-bulkhead.
@@ -51,7 +48,7 @@ public class BulkheadConfiguration {
 
     /**
      * @param bulkheadConfigurationProperties bulk head spring configuration properties
-     * @param bulkheadEventConsumerRegistry the bulk head event consumer registry
+     * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
      * @return the BulkheadRegistry with all needed setup in place
      */
     @Bean
@@ -98,7 +95,7 @@ public class BulkheadConfiguration {
      * Registers the post creation consumer function that registers the consumer events to the
      * bulkheads.
      *
-     * @param bulkheadRegistry The BulkHead registry.
+     * @param bulkheadRegistry      The BulkHead registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(BulkheadRegistry bulkheadRegistry,

@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import java.time.Duration;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
+
+import java.time.Duration;
+
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 class FluxRateLimiter<T> extends FluxOperator<T, T> {
 

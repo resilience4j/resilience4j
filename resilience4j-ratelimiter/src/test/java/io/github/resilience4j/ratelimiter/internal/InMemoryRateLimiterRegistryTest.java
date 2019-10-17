@@ -18,22 +18,20 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import java.time.Duration;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.time.Duration;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 public class InMemoryRateLimiterRegistryTest {
 

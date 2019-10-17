@@ -1,10 +1,10 @@
 package io.github.resilience4j.prometheus;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 import io.prometheus.client.CollectorRegistry;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 public class CallMeterTest {
 

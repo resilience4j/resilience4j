@@ -20,11 +20,12 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+
+import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import javax.validation.constraints.Min;
 
 public class RateLimiterConfigurationProperties {
 

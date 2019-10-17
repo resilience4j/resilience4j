@@ -16,21 +16,22 @@
 
 package io.github.resilience4j.reactor.timelimiter;
 
+import io.github.resilience4j.test.HelloWorldService;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import org.junit.Test;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
-
-import io.github.resilience4j.test.HelloWorldService;
-import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-import org.junit.Test;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 
 public class TimeLimiterOperatorTest {

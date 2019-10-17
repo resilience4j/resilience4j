@@ -15,9 +15,6 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -26,11 +23,6 @@ import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventD
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
 import io.github.resilience4j.service.test.BulkheadDummyService;
 import io.github.resilience4j.service.test.TestApplication;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +31,15 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,

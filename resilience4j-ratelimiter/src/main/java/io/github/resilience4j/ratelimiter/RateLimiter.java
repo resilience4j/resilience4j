@@ -29,6 +29,7 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -49,7 +50,7 @@ public interface RateLimiter {
     /**
      * Creates a RateLimiter with a custom RateLimiter configuration.
      *
-     * @param name the name of the RateLimiter
+     * @param name              the name of the RateLimiter
      * @param rateLimiterConfig a custom RateLimiter configuration
      * @return The {@link RateLimiter}
      */
@@ -60,7 +61,7 @@ public interface RateLimiter {
     /**
      * Creates a RateLimiter with a custom RateLimiterConfig configuration.
      *
-     * @param name the name of the RateLimiter
+     * @param name                      the name of the RateLimiter
      * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
      * @return The {@link RateLimiter}
      */
@@ -82,8 +83,8 @@ public interface RateLimiter {
      * Returns a supplier which is decorated by a rateLimiter.
      *
      * @param rateLimiter the rateLimiter
-     * @param supplier the original supplier
-     * @param <T> the type of the returned CompletionStage's result
+     * @param supplier    the original supplier
+     * @param <T>         the type of the returned CompletionStage's result
      * @return a supplier which is decorated by a RateLimiter.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(RateLimiter rateLimiter,
@@ -114,8 +115,8 @@ public interface RateLimiter {
      * Creates a supplier which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied supplier
+     * @param supplier    the original supplier
+     * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter,
@@ -130,7 +131,7 @@ public interface RateLimiter {
      * Creates a runnable which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param runnable the original runnable
+     * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
     static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter,
@@ -146,9 +147,9 @@ public interface RateLimiter {
      * Creates a function which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param function the original function
-     * @param <T> the type of function argument
-     * @param <R> the type of function results
+     * @param function    the original function
+     * @param <T>         the type of function argument
+     * @param <R>         the type of function results
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
@@ -163,8 +164,8 @@ public interface RateLimiter {
      * Creates a supplier which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied supplier
+     * @param supplier    the original supplier
+     * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, Supplier<T> supplier) {
@@ -178,8 +179,8 @@ public interface RateLimiter {
      * Creates a supplier which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied supplier
+     * @param supplier    the original supplier
+     * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter,
@@ -198,8 +199,8 @@ public interface RateLimiter {
      * Creates a supplier which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied supplier
+     * @param supplier    the original supplier
+     * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
     static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter,
@@ -225,8 +226,8 @@ public interface RateLimiter {
      * Creates a consumer which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param consumer    the original consumer
+     * @param <T>         the type of the input to the consumer
      * @return a consumer which is restricted by a RateLimiter.
      */
     static <T> Consumer<T> decorateConsumer(RateLimiter rateLimiter, Consumer<T> consumer) {
@@ -240,7 +241,7 @@ public interface RateLimiter {
      * Creates a runnable which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param runnable the original runnable
+     * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
     static Runnable decorateRunnable(RateLimiter rateLimiter, Runnable runnable) {
@@ -254,9 +255,9 @@ public interface RateLimiter {
      * Creates a function which is restricted by a RateLimiter.
      *
      * @param rateLimiter the RateLimiter
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
+     * @param function    the original function
+     * @param <T>         the type of the input to the function
+     * @param <R>         the type of the result of the function
      * @return a function which is restricted by a RateLimiter.
      */
     static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter,
@@ -271,9 +272,9 @@ public interface RateLimiter {
      * Will wait for permission within default timeout duration.
      *
      * @param rateLimiter the RateLimiter to get permission from
-     * @throws RequestNotPermitted if waiting time elapsed before a permit was acquired.
-     * @throws AcquirePermissionCancelledException if thread was interrupted during permission
-     *     wait
+     * @throws RequestNotPermitted                 if waiting time elapsed before a permit was
+     *                                             acquired.
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
      */
     static void waitForPermission(final RateLimiter rateLimiter) {
         boolean permission = rateLimiter.acquirePermission();
@@ -289,7 +290,7 @@ public interface RateLimiter {
      * Decorates and executes the decorated CompletionStage.
      *
      * @param supplier the original CompletionStage
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier) {
@@ -323,7 +324,7 @@ public interface RateLimiter {
      * interrupt status will be set.
      *
      * @return {@code true} if a permit was acquired and {@code false} if waiting timeoutDuration
-     *     elapsed before a permit was acquired
+     * elapsed before a permit was acquired
      */
     boolean acquirePermission();
 
@@ -333,7 +334,7 @@ public interface RateLimiter {
      * {@link RateLimiterConfig#getTimeoutDuration()} is less then time to wait for permission.
      *
      * @return {@code long} amount of nanoseconds you should wait for reserved permission. if
-     *     negative, it means you failed to reserve.
+     * negative, it means you failed to reserve.
      */
     long reservePermission();
 
@@ -369,7 +370,7 @@ public interface RateLimiter {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
@@ -380,7 +381,7 @@ public interface RateLimiter {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
@@ -391,7 +392,7 @@ public interface RateLimiter {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Either<Exception, T> executeEitherSupplier(
@@ -403,7 +404,7 @@ public interface RateLimiter {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
      * @throws Exception if unable to compute a result
      */
@@ -424,7 +425,7 @@ public interface RateLimiter {
      * Decorates and executes the decorated Supplier.
      *
      * @param checkedSupplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>             the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      * @throws Throwable if something goes wrong applying this function to the given arguments
      */

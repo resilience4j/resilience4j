@@ -1,8 +1,8 @@
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class IllegalStateTransitionExceptionTest {
 

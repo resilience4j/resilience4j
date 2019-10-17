@@ -16,14 +16,15 @@
 package io.github.resilience4j.fallback;
 
 import io.github.resilience4j.core.lang.Nullable;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * Reflection utility for invoking a fallback method. Fallback method should have same return type
@@ -52,11 +53,11 @@ public class FallbackMethod {
     /**
      * create a fallbackMethod method.
      *
-     * @param recoveryMethods configured and found recovery methods for this invocation
+     * @param recoveryMethods          configured and found recovery methods for this invocation
      * @param originalMethodReturnType the return type of the original source method
-     * @param args arguments those were passed to the original method. They will be passed to
-     *     the fallbackMethod method.
-     * @param target target object the fallbackMethod method will be invoked
+     * @param args                     arguments those were passed to the original method. They will
+     *                                 be passed to the fallbackMethod method.
+     * @param target                   target object the fallbackMethod method will be invoked
      */
     private FallbackMethod(Map<Class<?>, Method> recoveryMethods, Class<?> originalMethodReturnType,
         Object[] args, Object target) {
@@ -69,9 +70,9 @@ public class FallbackMethod {
 
     /**
      * @param fallbackMethodName the configured recovery method name
-     * @param originalMethod the original method which has fallback method configured
-     * @param args the original method arguments
-     * @param target the target class that own the original method and recovery method
+     * @param originalMethod     the original method which has fallback method configured
+     * @param args               the original method arguments
+     * @param target             the target class that own the original method and recovery method
      * @return FallbackMethod instance
      */
     public static FallbackMethod create(String fallbackMethodName, Method originalMethod,
@@ -95,11 +96,11 @@ public class FallbackMethod {
 
     /**
      * @param fallbackMethodName fallback method name
-     * @param params original method parameters
+     * @param params             original method parameters
      * @param originalReturnType original method return type
-     * @param targetClass the owner class
+     * @param targetClass        the owner class
      * @return Map<Class < ?>, Method>  map of all configure fallback methods for the original
-     *     method that match the fallback method name
+     * method that match the fallback method name
      */
     private static Map<Class<?>, Method> extractMethods(String fallbackMethodName,
         Class<?>[] params, Class<?> originalReturnType, Class<?> targetClass) {
@@ -197,7 +198,7 @@ public class FallbackMethod {
     /**
      * invoke the fallback method logic
      *
-     * @param fallback fallback method
+     * @param fallback  fallback method
      * @param throwable the thrown exception
      * @return the result object if any
      */

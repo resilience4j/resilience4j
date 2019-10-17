@@ -16,24 +16,22 @@
  */
 package io.github.resilience4j.feign;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import io.github.resilience4j.feign.test.TestFeignDecorator;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceImpl;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 
 public class DecoratorInvocationHandlerTest {
 

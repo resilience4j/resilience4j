@@ -15,9 +15,6 @@
  */
 package io.github.resilience4j.retry;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
@@ -25,15 +22,15 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class RetryRegistryTest {

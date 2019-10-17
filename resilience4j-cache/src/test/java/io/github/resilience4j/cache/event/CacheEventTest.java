@@ -18,11 +18,12 @@
  */
 package io.github.resilience4j.cache.event;
 
-import static io.github.resilience4j.cache.event.CacheEvent.Type;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.io.IOException;
-import org.junit.Test;
+
+import static io.github.resilience4j.cache.event.CacheEvent.Type;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CacheEventTest {
 

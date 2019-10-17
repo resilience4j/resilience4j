@@ -21,6 +21,7 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
+
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -154,8 +155,7 @@ public class RetryConfig {
          * Configures a Predicate which evaluates if an result should be retried. The Predicate must
          * return true if the result should be retried, otherwise it must return false.
          *
-         * @param predicate the Predicate which evaluates if an result should be retried or
-         *     not.
+         * @param predicate the Predicate which evaluates if an result should be retried or not.
          * @return the RetryConfig.Builder
          */
         public Builder<T> retryOnResult(Predicate<T> predicate) {
@@ -179,8 +179,7 @@ public class RetryConfig {
          * Configures a Predicate which evaluates if an exception should be retried. The Predicate
          * must return true if the exception should be retried, otherwise it must return false.
          *
-         * @param predicate the Predicate which evaluates if an exception should be retried or
-         *     not.
+         * @param predicate the Predicate which evaluates if an exception should be retried or not.
          * @return the RetryConfig.Builder
          */
         public Builder<T> retryOnException(Predicate<Throwable> predicate) {
@@ -196,12 +195,12 @@ public class RetryConfig {
          * @param errorClasses the error classes that are retried
          * @return the RetryConfig.Builder
          * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over retrying an
-         *     exception.
-         *     <p>
-         *     Example: retryOnExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-         *     would retry all Errors and checked Exceptions, and ignore unchecked
-         *     <p>
-         *     For a more sophisticated exception management use the
+         * exception.
+         * <p>
+         * Example: retryOnExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
+         * would retry all Errors and checked Exceptions, and ignore unchecked
+         * <p>
+         * For a more sophisticated exception management use the
          * @see #retryOnException(Predicate) method
          */
         @SuppressWarnings("unchecked")
@@ -220,15 +219,15 @@ public class RetryConfig {
          * @param errorClasses the error classes that are retried
          * @return the RetryConfig.Builder
          * @see #retryExceptions(Class[]) . Ignoring an exception has priority over retrying an
-         *     exception.
-         *     <p>
-         *     Example: ignoreExceptions(Throwable.class) and retryOnExceptions(Exception.class)
-         *     would capture nothing
-         *     <p>
-         *     Example: ignoreExceptions(Exception.class) and retryOnExceptions(Throwable.class)
-         *     would capture Errors
-         *     <p>
-         *     For a more sophisticated exception management use the
+         * exception.
+         * <p>
+         * Example: ignoreExceptions(Throwable.class) and retryOnExceptions(Exception.class) would
+         * capture nothing
+         * <p>
+         * Example: ignoreExceptions(Exception.class) and retryOnExceptions(Throwable.class) would
+         * capture Errors
+         * <p>
+         * For a more sophisticated exception management use the
          * @see #retryOnException(Predicate) method
          */
         @SuppressWarnings("unchecked")

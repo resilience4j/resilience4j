@@ -21,10 +21,11 @@ import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.vavr.collection.List;
-import java.util.Comparator;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
+
+import java.util.Comparator;
 
 @Endpoint(id = "ratelimiterevents")
 public class RateLimiterEventsEndpoint {

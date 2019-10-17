@@ -18,11 +18,6 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
-import static io.vavr.API.$;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -34,16 +29,22 @@ import io.vavr.CheckedFunction0;
 import io.vavr.Predicates;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
+
+import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
+import static io.vavr.API.$;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SupplierRetryTest {
 

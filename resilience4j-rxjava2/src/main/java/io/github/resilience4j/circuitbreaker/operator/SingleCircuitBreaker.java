@@ -15,14 +15,15 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-
 import io.github.resilience4j.AbstractSingleObserver;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
 import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class SingleCircuitBreaker<T> extends Single<T> {
 

@@ -17,20 +17,7 @@
 package io.github.resilience4j.retry.transformer;
 
 import io.github.resilience4j.retry.Retry;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.MaybeTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
+import io.reactivex.*;
 import org.reactivestreams.Publisher;
 
 public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
@@ -46,7 +33,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
      * Creates a RetryOperator.
      *
      * @param retry the Retry
-     * @param <T> the value type of the upstream and downstream
+     * @param <T>   the value type of the upstream and downstream
      * @return a RetryOperator
      */
     public static <T> RetryTransformer<T> of(Retry retry) {

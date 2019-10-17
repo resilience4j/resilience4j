@@ -15,25 +15,12 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.MaybeTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
+import io.reactivex.*;
 import org.reactivestreams.Publisher;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission

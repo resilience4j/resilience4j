@@ -18,21 +18,22 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.test.VertxHelloWorldService;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 @RunWith(VertxUnitRunner.class)

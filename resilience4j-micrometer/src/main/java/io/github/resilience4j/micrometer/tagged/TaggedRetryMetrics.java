@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static io.github.resilience4j.retry.Retry.Metrics;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import static io.github.resilience4j.retry.Retry.Metrics;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register Retry exposed {@link Metrics metrics}.
@@ -48,7 +48,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
-     * @param names custom metric names
+     * @param names         custom metric names
      * @param retryRegistry the source of retries
      * @return The {@link TaggedRetryMetrics} instance.
      */

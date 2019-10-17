@@ -1,23 +1,15 @@
 package io.github.resilience4j.timelimiter;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.vavr.control.Try;
-import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.*;
 
 public class TimeLimiterTest {
 

@@ -46,8 +46,8 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
      * io.github.resilience4j.retry.Retry} for details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param retry the configured retry
-     * @param methodName the method name
+     * @param retry               the configured retry
+     * @param methodName          the method name
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */

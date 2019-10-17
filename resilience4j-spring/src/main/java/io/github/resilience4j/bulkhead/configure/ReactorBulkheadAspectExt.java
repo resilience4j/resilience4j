@@ -46,8 +46,8 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
      * {@link Bulkhead} for details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param bulkhead the configured bulkhead
-     * @param methodName the method name
+     * @param bulkhead            the configured bulkhead
+     * @param methodName          the method name
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */

@@ -18,10 +18,11 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.IllegalPublisherException;
-import java.util.function.UnaryOperator;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.function.UnaryOperator;
 
 /**
  * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a
@@ -41,7 +42,7 @@ public class CircuitBreakerOperator<T> implements UnaryOperator<Publisher<T>> {
     /**
      * Creates a CircuitBreakerOperator.
      *
-     * @param <T> the value type of the upstream and downstream
+     * @param <T>            the value type of the upstream and downstream
      * @param circuitBreaker the circuit breaker
      * @return a CircuitBreakerOperator
      */

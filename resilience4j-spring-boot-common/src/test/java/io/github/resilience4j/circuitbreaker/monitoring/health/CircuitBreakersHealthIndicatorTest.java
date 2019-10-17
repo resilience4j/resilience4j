@@ -1,26 +1,25 @@
 package io.github.resilience4j.circuitbreaker.monitoring.health;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.vavr.collection.Array;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.boot.actuate.health.Status;
+
+import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author bstorozhuk

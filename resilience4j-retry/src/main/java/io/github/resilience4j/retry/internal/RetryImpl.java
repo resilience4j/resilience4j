@@ -23,14 +23,11 @@ import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.event.RetryEvent;
-import io.github.resilience4j.retry.event.RetryOnErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
-import io.github.resilience4j.retry.event.RetryOnRetryEvent;
-import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
+import io.github.resilience4j.retry.event.*;
 import io.vavr.CheckedConsumer;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
+
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;

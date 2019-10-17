@@ -16,16 +16,17 @@
 
 package io.github.resilience4j;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.bulkhead.autoconfigure.AbstractRefreshScopedBulkheadConfiguration;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractRefreshScopedCircuitBreakerConfiguration;
 import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRefreshScopedRateLimiterConfiguration;
 import io.github.resilience4j.retry.autoconfigure.AbstractRefreshScopedRetryConfiguration;
-import java.util.Arrays;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SpringCloudCommonTest {
 

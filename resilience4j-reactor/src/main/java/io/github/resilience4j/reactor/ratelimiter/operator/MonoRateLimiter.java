@@ -15,14 +15,15 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import java.time.Duration;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
+
+import java.time.Duration;
+
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 class MonoRateLimiter<T> extends MonoOperator<T, T> {
 

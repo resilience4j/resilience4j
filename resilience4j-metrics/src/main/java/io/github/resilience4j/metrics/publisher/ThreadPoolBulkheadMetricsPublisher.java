@@ -16,18 +16,17 @@
 
 package io.github.resilience4j.metrics.publisher;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_QUEUE_CAPACITY;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.CURRENT_THREAD_POOL_SIZE;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX_THREAD_POOL;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 public class ThreadPoolBulkheadMetricsPublisher extends
     AbstractMetricsPublisher<ThreadPoolBulkhead> {

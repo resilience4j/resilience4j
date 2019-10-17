@@ -22,10 +22,11 @@ import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.vavr.collection.List;
-import java.util.Comparator;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
+
+import java.util.Comparator;
 
 
 /**
@@ -62,7 +63,7 @@ public class RetryEventsEndpoint {
     }
 
     /**
-     * @param name backend name
+     * @param name      backend name
      * @param eventType retry event type
      * @return the matching generated retry events
      */

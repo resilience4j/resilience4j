@@ -15,10 +15,11 @@
  */
 package io.github.resilience4j.common.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.time.Duration;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * unit test for spring confg merge properties

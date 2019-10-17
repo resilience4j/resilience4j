@@ -16,11 +16,11 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
+
+import static java.util.Objects.requireNonNull;
 
 public class TaggedBulkheadMetricsPublisher
     extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {

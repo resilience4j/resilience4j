@@ -1,15 +1,12 @@
 package io.github.resilience4j;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import java.util.concurrent.CompletionStage;
+import io.reactivex.*;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.concurrent.CompletionStage;
 
 @Component
 public class CircuitBreakerDummyService implements TestDummyService {

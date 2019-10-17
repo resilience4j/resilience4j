@@ -1,17 +1,18 @@
 package io.github.resilience4j.ratelimiter.operator;
 
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Maybe;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 
 /**
  * Unit test for {@link MaybeRateLimiter}.

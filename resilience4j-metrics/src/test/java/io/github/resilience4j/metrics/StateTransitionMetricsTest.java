@@ -1,20 +1,21 @@
 package io.github.resilience4j.metrics;
 
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.metrics.publisher.CircuitBreakerMetricsPublisher;
+import org.junit.Test;
+
 import java.time.Duration;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 public class StateTransitionMetricsTest {
 

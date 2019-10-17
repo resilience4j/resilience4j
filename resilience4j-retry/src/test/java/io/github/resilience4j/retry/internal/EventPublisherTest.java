@@ -18,8 +18,6 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
-
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -28,12 +26,15 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.subscribers.TestSubscriber;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
-import java.io.IOException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import java.io.IOException;
+
+import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 
 public class EventPublisherTest {
 

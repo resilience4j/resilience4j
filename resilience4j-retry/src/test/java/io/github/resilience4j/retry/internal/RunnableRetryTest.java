@@ -18,10 +18,6 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.API.Match;
-
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -30,12 +26,15 @@ import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedRunnable;
 import io.vavr.Predicates;
 import io.vavr.control.Try;
-import java.time.Duration;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import java.time.Duration;
+
+import static io.vavr.API.*;
 
 public class RunnableRetryTest {
 

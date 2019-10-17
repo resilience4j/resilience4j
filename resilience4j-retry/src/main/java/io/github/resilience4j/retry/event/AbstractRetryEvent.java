@@ -19,6 +19,7 @@
 package io.github.resilience4j.retry.event;
 
 import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.ZonedDateTime;
 
 abstract class AbstractRetryEvent implements RetryEvent {

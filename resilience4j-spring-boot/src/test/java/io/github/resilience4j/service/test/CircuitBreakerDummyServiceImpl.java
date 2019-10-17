@@ -2,8 +2,9 @@ package io.github.resilience4j.service.test;
 
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import java.io.IOException;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 @CircuitBreaker(name = DummyService.BACKEND)
 @Component("circuitBreakerDummyService")

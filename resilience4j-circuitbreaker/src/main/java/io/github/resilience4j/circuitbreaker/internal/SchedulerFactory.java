@@ -1,6 +1,7 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
 import io.vavr.Lazy;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 

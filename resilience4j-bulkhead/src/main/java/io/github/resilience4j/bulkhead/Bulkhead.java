@@ -31,6 +31,7 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -40,17 +41,17 @@ import java.util.function.Supplier;
 
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
- *
+ * <p>
  * A {@link Bulkhead} represent an entity limiting the amount of parallel operations. It does not
  * assume nor does it mandate usage of any particular concurrency and/or io model. These details are
  * left for the client to manage. This bulkhead, depending on the underlying concurrency/io model
  * can be used to shed load, and, where it makes sense, limit resource use (i.e. limit amount of
  * threads/actors involved in a particular flow, etc).
- *
+ * <p>
  * In order to execute an operation protected by this bulkhead, a permission must be obtained by
  * calling {@link Bulkhead#tryAcquirePermission()} ()} If the bulkhead is full, no additional
  * operations will be permitted to execute until space is available.
- *
+ * <p>
  * Once the operation is complete, regardless of the result, client needs to call {@link
  * Bulkhead#onComplete()} in order to maintain integrity of internal bulkhead state.
  */
@@ -61,7 +62,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the Bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Bulkhead bulkhead,
@@ -81,7 +82,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of the returned CompletionStage's result
+     * @param <T>      the type of the returned CompletionStage's result
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(Bulkhead bulkhead,
@@ -139,7 +140,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Callable<T> decorateCallable(Bulkhead bulkhead, Callable<T> callable) {
@@ -158,7 +159,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<T> decorateSupplier(Bulkhead bulkhead, Supplier<T> supplier) {
@@ -177,7 +178,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<Try<T>> decorateTrySupplier(Bulkhead bulkhead, Supplier<Try<T>> supplier) {
@@ -199,7 +200,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead,
@@ -223,7 +224,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param <T>      the type of the input to the consumer
      * @return a consumer which is decorated by a Bulkhead.
      */
     static <T> Consumer<T> decorateConsumer(Bulkhead bulkhead, Consumer<T> consumer) {
@@ -242,7 +243,7 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
+     * @param <T>      the type of the input to the consumer
      * @return a consumer which is decorated by a Bulkhead.
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead,
@@ -280,8 +281,8 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the type of the result of the function
      * @return a function which is decorated by a bulkhead.
      */
     static <T, R> Function<T, R> decorateFunction(Bulkhead bulkhead, Function<T, R> function) {
@@ -300,8 +301,8 @@ public interface Bulkhead {
      *
      * @param bulkhead the bulkhead
      * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the type of the result of the function
      * @return a function which is decorated by a bulkhead.
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Bulkhead bulkhead,
@@ -329,7 +330,7 @@ public interface Bulkhead {
     /**
      * Creates a bulkhead with a custom configuration
      *
-     * @param name the name of the bulkhead
+     * @param name   the name of the bulkhead
      * @param config a custom BulkheadConfig configuration
      * @return a Bulkhead instance
      */
@@ -340,7 +341,7 @@ public interface Bulkhead {
     /**
      * Creates a bulkhead with a custom configuration
      *
-     * @param name the name of the bulkhead
+     * @param name                   the name of the bulkhead
      * @param bulkheadConfigSupplier custom configuration supplier
      * @return a Bulkhead instance
      */
@@ -370,16 +371,15 @@ public interface Bulkhead {
      * If the current thread is {@linkplain Thread#interrupt interrupted} while waiting for a permit
      * then it won't throw {@linkplain InterruptedException}, but its interrupt status will be set.
      *
-     * @throws BulkheadFullException when the Bulkhead is full and no further calls are
-     *     permitted.
-     * @throws AcquirePermissionCancelledException if thread was interrupted during permission
-     *     wait
+     * @throws BulkheadFullException               when the Bulkhead is full and no further calls
+     *                                             are permitted.
+     * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
      */
     void acquirePermission();
 
     /**
      * Releases a permission and increases the number of available permits by one.
-     *
+     * <p>
      * Should only be used when a permission was acquired but not used. Otherwise use {@link
      * Bulkhead#onComplete()} to signal a completed call and release a permission.
      */
@@ -423,7 +423,7 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
@@ -434,7 +434,7 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
@@ -445,7 +445,7 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
     default <T> Either<Exception, T> executeEitherSupplier(
@@ -457,7 +457,7 @@ public interface Bulkhead {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
      * @throws Exception if unable to compute a result
      */
@@ -478,7 +478,7 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param checkedSupplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>             the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      * @throws Throwable if something goes wrong applying this function to the given arguments
      */
@@ -490,7 +490,7 @@ public interface Bulkhead {
      * Decorates and executes the decorated CompletionStage.
      *
      * @param supplier the original CompletionStage
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier) {

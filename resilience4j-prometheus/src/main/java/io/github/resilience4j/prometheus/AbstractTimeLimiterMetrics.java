@@ -16,11 +16,11 @@
 
 package io.github.resilience4j.prometheus;
 
-import static java.util.Objects.requireNonNull;
-
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractTimeLimiterMetrics extends Collector {
 

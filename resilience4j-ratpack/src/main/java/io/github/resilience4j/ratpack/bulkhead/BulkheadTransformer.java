@@ -37,7 +37,7 @@ public class BulkheadTransformer<T> extends AbstractTransformer<T> {
      * error on reaching limit of concurrent calls.
      *
      * @param bulkhead the bulkhead to use
-     * @param <T> the type of object
+     * @param <T>      the type of object
      * @return the transformer
      */
     public static <T> BulkheadTransformer<T> of(Bulkhead bulkhead) {

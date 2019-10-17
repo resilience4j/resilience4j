@@ -22,6 +22,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEvent;
+
 import java.util.Optional;
 
 /**
@@ -32,7 +33,7 @@ public interface Registry<E, C> {
     /**
      * Adds a configuration to the registry
      *
-     * @param configName the configuration name
+     * @param configName    the configuration name
      * @param configuration the added configuration
      */
     void addConfiguration(String configName, C configuration);
@@ -54,7 +55,7 @@ public interface Registry<E, C> {
     /**
      * Replace an existing entry in the Registry by a new one.
      *
-     * @param name the existing name
+     * @param name     the existing name
      * @param newEntry a new entry
      */
     Optional<E> replace(String name, E newEntry);

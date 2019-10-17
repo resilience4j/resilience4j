@@ -22,8 +22,6 @@ import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.vavr.collection.Seq;
-import java.util.Comparator;
-import javax.inject.Inject;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
 import ratpack.func.Function;
@@ -31,6 +29,9 @@ import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
 import reactor.core.publisher.Flux;
+
+import javax.inject.Inject;
+import java.util.Comparator;
 
 /**
  * Provides event and stream event endpoints for bulkhead events.

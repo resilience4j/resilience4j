@@ -18,21 +18,22 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
-
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.control.Option;
+
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore} and scheduler that will refresh
@@ -53,7 +54,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * Creates a RateLimiter.
      *
-     * @param name the name of the RateLimiter
+     * @param name              the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
      */
     public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
@@ -63,9 +64,9 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     /**
      * Creates a RateLimiter.
      *
-     * @param name the name of the RateLimiter
+     * @param name              the name of the RateLimiter
      * @param rateLimiterConfig The RateLimiter configuration.
-     * @param scheduler executor that will refresh permissions
+     * @param scheduler         executor that will refresh permissions
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
         @Nullable ScheduledExecutorService scheduler) {

@@ -31,7 +31,7 @@ public class ConfigUtils {
     /**
      * merge only properties that are not part of retry config if any match the conditions of merge
      *
-     * @param baseProperties base config properties
+     * @param baseProperties     base config properties
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
@@ -54,7 +54,7 @@ public class ConfigUtils {
     /**
      * merge only properties that are not part of retry config if any match the conditions of merge
      *
-     * @param baseProperties base config properties
+     * @param baseProperties     base config properties
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
@@ -71,7 +71,7 @@ public class ConfigUtils {
     /**
      * merge only properties that are not part of retry config if any match the conditions of merge
      *
-     * @param baseProperties base config properties
+     * @param baseProperties     base config properties
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(
@@ -99,7 +99,7 @@ public class ConfigUtils {
     /**
      * merge only properties that are not part of retry config if any match the conditions of merge
      *
-     * @param baseProperties base config properties
+     * @param baseProperties     base config properties
      * @param instanceProperties instance properties
      */
     public static void mergePropertiesIfAny(

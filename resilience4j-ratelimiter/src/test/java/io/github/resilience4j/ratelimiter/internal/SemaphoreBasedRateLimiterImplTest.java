@@ -18,33 +18,29 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.control.Try.run;
-import static java.lang.Thread.State.RUNNABLE;
-import static java.lang.Thread.State.TERMINATED;
-import static java.lang.Thread.State.TIMED_WAITING;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
+
+import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static io.vavr.control.Try.run;
+import static java.lang.Thread.State.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 
 public class SemaphoreBasedRateLimiterImplTest {

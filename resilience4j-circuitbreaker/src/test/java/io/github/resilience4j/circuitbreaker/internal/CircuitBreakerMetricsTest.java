@@ -18,12 +18,13 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
+
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import java.util.concurrent.TimeUnit;
-import org.junit.Test;
 
 public class CircuitBreakerMetricsTest {
 

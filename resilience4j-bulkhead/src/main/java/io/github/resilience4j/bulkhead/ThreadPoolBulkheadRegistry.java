@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegist
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -39,7 +40,7 @@ public interface ThreadPoolBulkheadRegistry extends
      *
      * @param bulkheadConfig a custom ThreadPoolBulkhead configuration
      * @return a ThreadPoolBulkheadRegistry instance backed by a custom ThreadPoolBulkhead
-     *     configuration
+     * configuration
      */
     static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig) {
         return new InMemoryThreadPoolBulkheadRegistry(bulkheadConfig);
@@ -49,10 +50,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a custom default ThreadPoolBulkhead configuration
      * and a ThreadPoolBulkhead registry event consumer.
      *
-     * @param bulkheadConfig a custom default ThreadPoolBulkhead configuration.
+     * @param bulkheadConfig        a custom default ThreadPoolBulkhead configuration.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
      * @return a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration and a
-     *     ThreadPoolBulkhead registry event consumer.
+     * ThreadPoolBulkhead registry event consumer.
      */
     static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig,
         RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
@@ -63,10 +64,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a custom default ThreadPoolBulkhead configuration
      * and a list of ThreadPoolBulkhead registry event consumers.
      *
-     * @param bulkheadConfig a custom default ThreadPoolBulkhead configuration.
+     * @param bulkheadConfig         a custom default ThreadPoolBulkhead configuration.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
      * @return a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration and a
-     *     list of ThreadPoolBulkhead registry event consumers.
+     * list of ThreadPoolBulkhead registry event consumers.
      */
     static ThreadPoolBulkheadRegistry of(ThreadPoolBulkheadConfig bulkheadConfig,
         List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
@@ -77,7 +78,7 @@ public interface ThreadPoolBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a default ThreadPoolBulkhead configuration
      *
      * @return a ThreadPoolBulkheadRegistry instance backed by a default ThreadPoolBulkhead
-     *     configuration
+     * configuration
      */
     static ThreadPoolBulkheadRegistry ofDefaults() {
         return new InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig.ofDefaults());
@@ -97,10 +98,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
      * and a ThreadPoolBulkhead registry event consumer.
      *
-     * @param configs a Map of shared ThreadPoolBulkhead configurations.
+     * @param configs               a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
-     *     and a ThreadPoolBulkhead registry event consumer.
+     * and a ThreadPoolBulkhead registry event consumer.
      */
     static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs,
         RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
@@ -111,10 +112,10 @@ public interface ThreadPoolBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
      * and a list of ThreadPoolBulkhead registry event consumers.
      *
-     * @param configs a Map of shared ThreadPoolBulkhead configurations.
+     * @param configs                a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
-     *     and a list of ThreadPoolBulkhead registry event consumers.
+     * and a list of ThreadPoolBulkhead registry event consumers.
      */
     static ThreadPoolBulkheadRegistry of(Map<String, ThreadPoolBulkheadConfig> configs,
         List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
@@ -141,7 +142,7 @@ public interface ThreadPoolBulkheadRegistry extends
      * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
      * ThreadPoolBulkhead configuration.
      *
-     * @param name the name of the ThreadPoolBulkhead
+     * @param name   the name of the ThreadPoolBulkhead
      * @param config a custom ThreadPoolBulkheadConfig configuration
      * @return The {@link ThreadPoolBulkhead}
      */
@@ -151,7 +152,7 @@ public interface ThreadPoolBulkheadRegistry extends
      * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
      * ThreadPoolBulkhead configuration.
      *
-     * @param name the name of the ThreadPoolBulkhead
+     * @param name                   the name of the ThreadPoolBulkhead
      * @param bulkheadConfigSupplier a custom ThreadPoolBulkhead configuration supplier
      * @return The {@link ThreadPoolBulkhead}
      */
@@ -162,7 +163,7 @@ public interface ThreadPoolBulkheadRegistry extends
      * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
      * ThreadPoolBulkhead configuration.
      *
-     * @param name the name of the ThreadPoolBulkhead
+     * @param name       the name of the ThreadPoolBulkhead
      * @param configName a custom ThreadPoolBulkhead configuration name
      * @return The {@link ThreadPoolBulkhead}
      */

@@ -18,6 +18,7 @@ package io.github.resilience4j.common.circuitbreaker.monitoring.endpoint;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
 
 class CircuitBreakerEventDTOBuilder {

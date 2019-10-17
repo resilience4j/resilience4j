@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.reactor.circuitbreaker.operator;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
 

@@ -15,17 +15,18 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static java.util.Arrays.asList;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.prometheus.LabelNames;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
+
 import java.util.Collections;
 import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects Retry exposed {@link Metrics}.
@@ -44,7 +45,7 @@ public class RetryMetricsCollector extends Collector {
      * Creates a new collector with custom metric names and using given {@code supplier} as source
      * of retries.
      *
-     * @param names the custom metric names
+     * @param names         the custom metric names
      * @param retryRegistry the source of retries
      */
     public static RetryMetricsCollector ofRetryRegistry(MetricNames names,

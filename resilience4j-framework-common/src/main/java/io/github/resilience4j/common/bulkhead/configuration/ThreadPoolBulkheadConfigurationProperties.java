@@ -20,10 +20,11 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+
+import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import javax.validation.constraints.Min;
 
 public class ThreadPoolBulkheadConfigurationProperties {
 

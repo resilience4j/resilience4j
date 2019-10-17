@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
+
 import java.time.Duration;
 import java.util.function.Predicate;
 
@@ -255,7 +256,7 @@ public class CircuitBreakerConfig {
          * open, before it switches to half open. Default value is 60 seconds.
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the
-         *     CircuitBreaker should stay open
+         *                                CircuitBreaker should stay open
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder waitDurationInOpenState(Duration waitDurationInOpenState) {
@@ -271,8 +272,7 @@ public class CircuitBreakerConfig {
          * Configures the duration threshold above which calls are considered as slow and increase
          * the slow calls percentage. Default value is 60 seconds.
          *
-         * @param slowCallDurationThreshold the duration above which calls are considered as
-         *     slow
+         * @param slowCallDurationThreshold the duration above which calls are considered as slow
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slowCallDurationThreshold(Duration slowCallDurationThreshold) {
@@ -290,7 +290,7 @@ public class CircuitBreakerConfig {
          * The size must be greater than 0. Default size is 10.
          *
          * @param permittedNumberOfCallsInHalfOpenState the permitted number of calls when the
-         *     CircuitBreaker is half open
+         *                                              CircuitBreaker is half open
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder permittedNumberOfCallsInHalfOpenState(
@@ -338,7 +338,7 @@ public class CircuitBreakerConfig {
          * example, if {@code minimumNumberOfCalls} is 10, then at least 10 calls must be recorded,
          * before the failure rate can be calculated. If only 9 calls have been recorded the
          * CircuitBreaker will not transition to open even if all 9 calls have failed.
-         *
+         * <p>
          * If {@code slidingWindowSize} is 100 and {@code slidingWindowType} is COUNT_BASED, the
          * last 100 calls are recorded and aggregated. If {@code slidingWindowSize} is 10 and {@code
          * slidingWindowType} is TIME_BASED, the calls of the last 10 seconds are recorded and
@@ -348,16 +348,16 @@ public class CircuitBreakerConfig {
          * must be greater than 0. If the slidingWindowType is COUNT_BASED, the {@code
          * minimumNumberOfCalls} cannot be greater than {@code slidingWindowSize}. If the
          * slidingWindowType is TIME_BASED, you can pick whatever you want.
-         *
+         * <p>
          * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is
          * COUNT_BASED.
          *
-         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is
-         *     closed.
-         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before
-         *     the failure rate can be calculated.
-         * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
-         *     TIME_BASED.
+         * @param slidingWindowSize    the size of the sliding window when the CircuitBreaker is
+         *                             closed.
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the
+         *                             failure rate can be calculated.
+         * @param slidingWindowType    the type of the sliding window. Either COUNT_BASED or
+         *                             TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls,
@@ -382,7 +382,7 @@ public class CircuitBreakerConfig {
          * Configures the size of the sliding window which is used to record the outcome of calls
          * when the CircuitBreaker is closed. {@code slidingWindowSize} configures the size of the
          * sliding window. Sliding window can either be count-based or time-based.
-         *
+         * <p>
          * If {@code slidingWindowType} is COUNT_BASED, the last {@code slidingWindowSize} calls are
          * recorded and aggregated. If {@code slidingWindowType} is TIME_BASED, the calls of the
          * last {@code slidingWindowSize} seconds are recorded and aggregated.
@@ -391,11 +391,11 @@ public class CircuitBreakerConfig {
          * must be greater than 0. If the slidingWindowType is COUNT_BASED, the {@code
          * minimumNumberOfCalls} cannot be greater than {@code slidingWindowSize}. If the
          * slidingWindowType is TIME_BASED, you can pick whatever you want.
-         *
+         * <p>
          * Default slidingWindowSize is 100.
          *
          * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is
-         *     closed.
+         *                          closed.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slidingWindowSize(int slidingWindowSize) {
@@ -412,11 +412,11 @@ public class CircuitBreakerConfig {
          * minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure
          * rate can be calculated. If only 9 calls have been recorded the CircuitBreaker will not
          * transition to open even if all 9 calls have failed.
-         *
+         * <p>
          * Default minimumNumberOfCalls is 100
          *
-         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before
-         *     the failure rate can be calculated.
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the
+         *                             failure rate can be calculated.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder minimumNumberOfCalls(int minimumNumberOfCalls) {
@@ -431,15 +431,15 @@ public class CircuitBreakerConfig {
          * Configures the type of the sliding window which is used to record the outcome of calls
          * when the CircuitBreaker is closed. Sliding window can either be count-based or
          * time-based.
-         *
+         * <p>
          * If {@code slidingWindowType} is COUNT_BASED, the last {@code slidingWindowSize} calls are
          * recorded and aggregated. If {@code slidingWindowType} is TIME_BASED, the calls of the
          * last {@code slidingWindowSize} seconds are recorded and aggregated.
-         *
+         * <p>
          * Default slidingWindowType is COUNT_BASED.
          *
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
-         *     TIME_BASED.
+         *                          TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
@@ -463,8 +463,7 @@ public class CircuitBreakerConfig {
          * as a success, unless the exception is explicitly ignored by {@link
          * #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
          *
-         * @param predicate the Predicate which evaluates if an exception should count as a
-         *     failure
+         * @param predicate the Predicate which evaluates if an exception should count as a failure
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder recordException(Predicate<Throwable> predicate) {
@@ -477,8 +476,7 @@ public class CircuitBreakerConfig {
          * count as a failure nor success. The Predicate must return true if the exception should be
          * ignored . The Predicate must return false, if the exception should count as a failure.
          *
-         * @param predicate the Predicate which evaluates if an exception should count as a
-         *     failure
+         * @param predicate the Predicate which evaluates if an exception should count as a failure
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder ignoreException(Predicate<Throwable> predicate) {
@@ -494,12 +492,12 @@ public class CircuitBreakerConfig {
          * @param errorClasses the error classes that are recorded
          * @return the CircuitBreakerConfig.Builder
          * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an
-         *     exception.
-         *     <p>
-         *     Example: recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
-         *     would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
-         *     <p>
-         *     For a more sophisticated exception management use the
+         * exception.
+         * <p>
+         * Example: recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
+         * would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
+         * <p>
+         * For a more sophisticated exception management use the
          * @see #recordException(Predicate) method
          */
         @SuppressWarnings("unchecked")
@@ -518,15 +516,15 @@ public class CircuitBreakerConfig {
          * @param errorClasses the error classes that are ignored
          * @return the CircuitBreakerConfig.Builder
          * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an
-         *     exception.
-         *     <p>
-         *     Example: ignoreExceptions(Throwable.class) and recordExceptions(Exception.class)
-         *     would capture nothing.
-         *     <p>
-         *     Example: ignoreExceptions(Exception.class) and recordExceptions(Throwable.class)
-         *     would capture Errors.
-         *     <p>
-         *     For a more sophisticated exception management use the
+         * exception.
+         * <p>
+         * Example: ignoreExceptions(Throwable.class) and recordExceptions(Exception.class) would
+         * capture nothing.
+         * <p>
+         * Example: ignoreExceptions(Exception.class) and recordExceptions(Throwable.class) would
+         * capture Errors.
+         * <p>
+         * For a more sophisticated exception management use the
          * @see #ignoreException(Predicate) method
          */
         @SuppressWarnings("unchecked")

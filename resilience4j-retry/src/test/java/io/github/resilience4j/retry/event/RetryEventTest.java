@@ -18,11 +18,12 @@
  */
 package io.github.resilience4j.retry.event;
 
-import static io.github.resilience4j.retry.event.RetryEvent.Type;
-
-import java.io.IOException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
+
+import java.io.IOException;
+
+import static io.github.resilience4j.retry.event.RetryEvent.Type;
 
 public class RetryEventTest {
 

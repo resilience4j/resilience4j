@@ -16,16 +16,17 @@
  */
 package io.github.resilience4j.feign;
 
-import static feign.Util.checkNotNull;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.vavr.CheckedFunction1;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+
+import static feign.Util.checkNotNull;
 
 /**
  * An instance of {@link InvocationHandler} that uses {@link FeignDecorator}s to enhance the
@@ -50,13 +51,13 @@ class DecoratorInvocationHandler implements InvocationHandler {
      * will therefore invoke the decorator which, in turn, may invoke the corresponding {@link
      * MethodHandler}.
      *
-     * @param dispatch a map of the methods from the feign interface to the {@link
-     *     MethodHandler}s.
+     * @param dispatch            a map of the methods from the feign interface to the {@link
+     *                            MethodHandler}s.
      * @param invocationDecorator the {@link FeignDecorator} with which to decorate the {@link
-     *     MethodHandler}s.
-     * @param target the target feign interface.
+     *                            MethodHandler}s.
+     * @param target              the target feign interface.
      * @return a new map where the {@link MethodHandler}s are decorated with the {@link
-     *     FeignDecorator}.
+     * FeignDecorator}.
      */
     private Map<Method, CheckedFunction1<Object[], Object>> decorateMethodHandlers(
         Map<Method, MethodHandler> dispatch,

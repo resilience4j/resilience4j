@@ -19,9 +19,10 @@ package io.github.resilience4j.retry.monitoring.endpoint;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import java.util.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+
+import java.util.List;
 
 
 /**

@@ -1,10 +1,11 @@
 package io.github.resilience4j.utils;
 
 import io.github.resilience4j.core.lang.Nullable;
-import java.lang.annotation.Annotation;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.annotation.Annotation;
+import java.util.Objects;
 
 public class AnnotationExtractor {
 
@@ -16,9 +17,9 @@ public class AnnotationExtractor {
     /**
      * extract annotation from target class
      *
-     * @param targetClass target class
+     * @param targetClass     target class
      * @param annotationClass annotation class
-     * @param <T> The annotation type.
+     * @param <T>             The annotation type.
      * @return annotation
      */
     @Nullable
@@ -41,7 +42,7 @@ public class AnnotationExtractor {
     /**
      * Extracts the annotation from the target implementation of the Proxy(ies)
      *
-     * @param targetProxy The proxy class
+     * @param targetProxy     The proxy class
      * @param annotationClass The annotation to extract
      */
     @Nullable

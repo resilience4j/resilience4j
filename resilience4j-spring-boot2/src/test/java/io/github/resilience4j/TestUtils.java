@@ -1,10 +1,11 @@
 package io.github.resilience4j;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.lang.reflect.Method;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+
+import java.lang.reflect.Method;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class TestUtils {

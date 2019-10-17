@@ -22,12 +22,13 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.StopWatch;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /**
  * Decorates a Retrofit {@link Call} to inform a {@link CircuitBreaker} when an exception is thrown.
@@ -43,11 +44,11 @@ public interface RetrofitCircuitBreaker {
     /**
      * Decorate {@link Call}s allow {@link CircuitBreaker} functionality.
      *
-     * @param circuitBreaker {@link CircuitBreaker} to apply
-     * @param call Call to decorate
+     * @param circuitBreaker  {@link CircuitBreaker} to apply
+     * @param call            Call to decorate
      * @param responseSuccess determines whether the response should be considered an expected
-     *     response
-     * @param <T> Response type of call
+     *                        response
+     * @param <T>             Response type of call
      * @return Original Call decorated with CircuitBreaker
      */
     static <T> Call<T> decorateCall(final CircuitBreaker circuitBreaker, final Call<T> call,

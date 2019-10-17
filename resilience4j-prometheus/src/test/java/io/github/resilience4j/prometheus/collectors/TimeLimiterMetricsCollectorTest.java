@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_CALLS_METRIC_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.prometheus.client.CollectorRegistry;
-import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.TimeoutException;
+
+import static io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_CALLS_METRIC_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimeLimiterMetricsCollectorTest {
 

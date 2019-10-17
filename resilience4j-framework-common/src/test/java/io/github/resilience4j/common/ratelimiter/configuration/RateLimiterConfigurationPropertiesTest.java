@@ -15,13 +15,14 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import java.time.Duration;
 import org.junit.Test;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * test custom init of rate limiter properties

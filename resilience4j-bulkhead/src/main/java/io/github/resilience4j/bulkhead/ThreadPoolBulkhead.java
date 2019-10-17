@@ -24,6 +24,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.FixedThreadPoolBulkhead;
 import io.github.resilience4j.core.EventConsumer;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
@@ -38,7 +39,7 @@ public interface ThreadPoolBulkhead {
      *
      * @param bulkhead the bulkhead
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Callable<CompletionStage<T>> decorateCallable(ThreadPoolBulkhead bulkhead,
@@ -51,7 +52,7 @@ public interface ThreadPoolBulkhead {
      *
      * @param bulkhead the bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<CompletionStage<T>> decorateSupplier(ThreadPoolBulkhead bulkhead,
@@ -83,7 +84,7 @@ public interface ThreadPoolBulkhead {
     /**
      * Creates a bulkhead with a custom configuration
      *
-     * @param name the name of the bulkhead
+     * @param name   the name of the bulkhead
      * @param config a custom BulkheadConfig configuration
      * @return a Bulkhead instance
      */
@@ -94,7 +95,7 @@ public interface ThreadPoolBulkhead {
     /**
      * Creates a bulkhead with a custom configuration
      *
-     * @param name the name of the bulkhead
+     * @param name                   the name of the bulkhead
      * @param bulkheadConfigSupplier custom configuration supplier
      * @return a Bulkhead instance
      */
@@ -108,7 +109,7 @@ public interface ThreadPoolBulkhead {
      * results of the task.
      *
      * @param task the task to submit
-     * @param <T> the type of the task's result
+     * @param <T>  the type of the task's result
      * @return a CompletableFuture representing listenable future completion of the task
      * @throws BulkheadFullException if the no permits
      */
@@ -155,7 +156,7 @@ public interface ThreadPoolBulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      * @throws BulkheadFullException if the no permits
      */
@@ -167,7 +168,7 @@ public interface ThreadPoolBulkhead {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     * @param <T> the result type of callable
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
      * @throws Exception if unable to compute a result
      */

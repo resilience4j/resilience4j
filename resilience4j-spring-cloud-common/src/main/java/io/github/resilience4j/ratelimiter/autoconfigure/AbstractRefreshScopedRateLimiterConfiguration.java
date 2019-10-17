@@ -22,7 +22,7 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
     }
 
     /**
-     * @param rateLimiterProperties ratelimiter spring configuration properties
+     * @param rateLimiterProperties             ratelimiter spring configuration properties
      * @param rateLimiterEventsConsumerRegistry the ratelimiter event consumer registry
      * @return the RefreshScoped RateLimiterRegistry
      */

@@ -21,11 +21,6 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -37,14 +32,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker}
  * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
  * reactive type, CompletionStage type, or value type.
- *
+ * <p>
  * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific
  * name.
- *
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}CircuitBreaker(name = "myService")
@@ -55,9 +56,9 @@ import org.springframework.util.StringUtils;
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
  * through a a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the given
  * config.
- *
+ * <p>
  * The fallbackMethod parameter signature must match either:
- *
+ * <p>
  * 1) The method parameter signature on the annotated method or 2) The method parameter signature
  * with a matching exception type as the last parameter on the annotated method
  */

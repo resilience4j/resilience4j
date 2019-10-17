@@ -15,17 +15,18 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.prometheus.LabelNames;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
+
 import java.util.List;
+
+import static io.github.resilience4j.ratelimiter.RateLimiter.Metrics;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects RateLimiter exposed {@link Metrics}.
@@ -45,7 +46,7 @@ public class RateLimiterMetricsCollector extends Collector {
      * Creates a new collector with custom metric names and using given {@code supplier} as source
      * of rate limiters.
      *
-     * @param names the custom metric names
+     * @param names               the custom metric names
      * @param rateLimiterRegistry the source of rate limiters
      */
     public static RateLimiterMetricsCollector ofRateLimiterRegistry(MetricNames names,

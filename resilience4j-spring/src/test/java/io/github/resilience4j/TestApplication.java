@@ -25,11 +25,12 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
-import java.time.Duration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 @SpringBootApplication
 @Configuration

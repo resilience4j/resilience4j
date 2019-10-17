@@ -21,25 +21,17 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratelimiter.configure.ReactorRateLimiterAspectExt;
-import io.github.resilience4j.ratelimiter.configure.RxJava2RateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.*;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 @Configuration
 @Import(FallbackConfigurationOnMissingBean.class)

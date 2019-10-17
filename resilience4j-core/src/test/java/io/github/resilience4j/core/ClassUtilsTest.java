@@ -1,10 +1,11 @@
 package io.github.resilience4j.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 import java.util.function.Predicate;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ClassUtilsTest {
 

@@ -15,19 +15,15 @@
  */
 package io.github.resilience4j;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedRetryMetricsPublisher;
-import io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetricsPublisher;
+import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)

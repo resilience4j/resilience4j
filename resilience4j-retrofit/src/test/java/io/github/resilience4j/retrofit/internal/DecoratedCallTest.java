@@ -1,14 +1,15 @@
 package io.github.resilience4j.retrofit.internal;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-
-import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 import retrofit2.Call;
+
+import java.io.IOException;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 
 @RunWith(JUnit4.class)
 public class DecoratedCallTest {

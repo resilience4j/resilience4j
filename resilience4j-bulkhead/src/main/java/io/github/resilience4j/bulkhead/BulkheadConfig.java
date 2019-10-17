@@ -18,8 +18,8 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import java.time.Duration;
 import javax.annotation.concurrent.Immutable;
+import java.time.Duration;
 
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}

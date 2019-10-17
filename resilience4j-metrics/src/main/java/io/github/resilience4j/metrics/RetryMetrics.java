@@ -1,13 +1,5 @@
 package io.github.resilience4j.metrics;
 
-import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.retry.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
-import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
-import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
-import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITH_RETRY;
-import static java.util.Objects.requireNonNull;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -15,7 +7,12 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.vavr.collection.Array;
+
 import java.util.Map;
+
+import static com.codahale.metrics.MetricRegistry.name;
+import static io.github.resilience4j.retry.utils.MetricNames.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link Retry.Metrics} as Dropwizard Metrics Gauges.

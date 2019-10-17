@@ -29,7 +29,7 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
 
     /**
      * @param bulkheadConfigurationProperties bulkhead spring configuration properties
-     * @param bulkheadEventConsumerRegistry the bulkhead event consumer registry
+     * @param bulkheadEventConsumerRegistry   the bulkhead event consumer registry
      * @return the RefreshScoped BulkheadRegistry
      */
     @Bean
@@ -45,9 +45,9 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     }
 
     /**
-     * @param threadPoolBulkheadConfigurationProperties thread pool bulkhead spring
-     *     configuration properties
-     * @param bulkheadEventConsumerRegistry the bulk head event consumer registry
+     * @param threadPoolBulkheadConfigurationProperties thread pool bulkhead spring configuration
+     *                                                  properties
+     * @param bulkheadEventConsumerRegistry             the bulk head event consumer registry
      * @return the RefreshScoped ThreadPoolBulkheadRegistry
      */
     @Bean

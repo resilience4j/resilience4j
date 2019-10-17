@@ -18,23 +18,24 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
-
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
+
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 
 public class ThreadPoolBulkheadTest {
 

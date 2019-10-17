@@ -15,13 +15,14 @@
  */
 package io.github.resilience4j.prometheus.collectors;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.prometheus.AbstractTimeLimiterMetrics;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+
 import java.util.Collections;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects TimeLimiter exposed events.
@@ -44,7 +45,7 @@ public class TimeLimiterMetricsCollector extends AbstractTimeLimiterMetrics {
      * Creates a new collector with custom metric names and using given {@code supplier} as source
      * of time limiters.
      *
-     * @param names the custom metric names
+     * @param names               the custom metric names
      * @param timeLimiterRegistry the source of time limiters
      */
     public static TimeLimiterMetricsCollector ofTimeLimiterRegistry(MetricNames names,

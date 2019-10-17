@@ -1,15 +1,12 @@
 package io.github.resilience4j.retry;
 
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.checkAttempt;
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.checkInterval;
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.checkMultiplier;
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.checkRandomizationFactor;
-import static io.github.resilience4j.retry.IntervalFunctionCompanion.randomize;
-import static java.util.Objects.requireNonNull;
-
 import io.vavr.collection.Stream;
+
 import java.time.Duration;
 import java.util.function.Function;
+
+import static io.github.resilience4j.retry.IntervalFunctionCompanion.*;
+import static java.util.Objects.requireNonNull;
 
 @FunctionalInterface
 public interface IntervalFunction extends Function<Integer, Long> {

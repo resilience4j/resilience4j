@@ -21,14 +21,6 @@ import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -40,13 +32,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.*;
+
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry}
  * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
  * reactive type, CompletionStage type, or value type.
- *
+ * <p>
  * The RetryRegistry is used to retrieve an instance of a Retry for a specific name.
- *
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}Retry(name = "myService")
@@ -56,9 +53,9 @@ import org.springframework.util.StringUtils;
  * </code></pre>
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
  * through a a {@link io.github.resilience4j.retry.Retry} according to the given config.
- *
+ * <p>
  * The fallbackMethod parameter signature must match either:
- *
+ * <p>
  * 1) The method parameter signature on the annotated method or 2) The method parameter signature
  * with a matching exception type as the last parameter on the annotated method
  */
@@ -76,9 +73,9 @@ public class RetryAspect implements Ordered {
 
     /**
      * @param retryConfigurationProperties spring retry config properties
-     * @param retryRegistry retry definition registry
-     * @param retryAspectExtList a list of retry aspect extensions
-     * @param fallbackDecorators the fallback decorators
+     * @param retryRegistry                retry definition registry
+     * @param retryAspectExtList           a list of retry aspect extensions
+     * @param fallbackDecorators           the fallback decorators
      */
     public RetryAspect(RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
@@ -138,7 +135,7 @@ public class RetryAspect implements Ordered {
 
     /**
      * @param methodName the retry method name
-     * @param backend the retry backend name
+     * @param backend    the retry backend name
      * @return the configured retry
      */
     private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
@@ -170,7 +167,7 @@ public class RetryAspect implements Ordered {
 
     /**
      * @param proceedingJoinPoint the AOP logic joint point
-     * @param retry the configured sync retry
+     * @param retry               the configured sync retry
      * @return the result object if any
      */
     private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
@@ -180,7 +177,7 @@ public class RetryAspect implements Ordered {
 
     /**
      * @param proceedingJoinPoint the AOP logic joint point
-     * @param retry the configured async retry
+     * @param retry               the configured async retry
      * @return the result object if any
      */
     @SuppressWarnings("unchecked")

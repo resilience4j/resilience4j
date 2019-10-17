@@ -19,13 +19,14 @@
 package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.function.Predicate;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.function.Predicate;
 
 /**
  * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with
@@ -55,9 +56,9 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
     /**
      * Create a circuit-breaking call adapter that decorates retrofit calls
      *
-     * @param circuitBreaker circuit breaker to use
+     * @param circuitBreaker  circuit breaker to use
      * @param successResponse {@link Predicate} that determines whether the {@link Call} {@link
-     *     Response} should be considered successful
+     *                        Response} should be considered successful
      * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
      */
     public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker,

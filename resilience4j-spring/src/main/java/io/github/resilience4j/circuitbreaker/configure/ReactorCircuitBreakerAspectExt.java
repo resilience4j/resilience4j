@@ -48,8 +48,8 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
      * details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param circuitBreaker the configured circuitBreaker
-     * @param methodName the method name
+     * @param circuitBreaker      the configured circuitBreaker
+     * @param methodName          the method name
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */

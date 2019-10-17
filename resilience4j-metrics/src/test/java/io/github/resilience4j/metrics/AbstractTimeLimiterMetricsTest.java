@@ -16,15 +16,16 @@
 
 package io.github.resilience4j.metrics;
 
-import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
-
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 public abstract class AbstractTimeLimiterMetricsTest {
 

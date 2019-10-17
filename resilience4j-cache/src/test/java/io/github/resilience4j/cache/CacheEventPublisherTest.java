@@ -18,16 +18,14 @@
  */
 package io.github.resilience4j.cache;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.times;
-import static org.mockito.Mockito.mock;
-
 import io.vavr.CheckedFunction1;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.mock;
 
 public class CacheEventPublisherTest {
 

@@ -18,25 +18,14 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_FAILURE_RATE_THRESHOLD;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_MINIMUM_NUMBER_OF_CALLS;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_SLIDING_WINDOW_SIZE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_SLIDING_WINDOW_TYPE;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_SLOW_CALL_DURATION_THRESHOLD;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_SLOW_CALL_RATE_THRESHOLD;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.ofDefaults;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.function.Predicate;
-import org.junit.Test;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class CircuitBreakerConfigTest {
 

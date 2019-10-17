@@ -26,6 +26,7 @@ import io.github.resilience4j.cache.internal.CacheImpl;
 import io.github.resilience4j.core.EventConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
+
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -37,8 +38,8 @@ public interface Cache<K, V> {
      * Creates a Retry with default configuration.
      *
      * @param cache the wrapped JCache instance
-     * @param <K> the type of key
-     * @param <V> the type of value
+     * @param <K>   the type of key
+     * @param <V>   the type of value
      * @return a Cache
      */
     static <K, V> Cache<K, V> of(javax.cache.Cache<K, V> cache) {
@@ -50,10 +51,10 @@ public interface Cache<K, V> {
      * Creates a functions which returns a value from a cache, if it exists. Otherwise it calls the
      * Supplier.
      *
-     * @param cache the Cache
+     * @param cache    the Cache
      * @param supplier the original Supplier
-     * @param <K> the type of key
-     * @param <R> the type of value
+     * @param <K>      the type of key
+     * @param <R>      the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> CheckedFunction1<K, R> decorateCheckedSupplier(Cache<K, R> cache,
@@ -65,10 +66,10 @@ public interface Cache<K, V> {
      * Creates a functions which returns a value from a cache, if it exists. Otherwise it calls the
      * Supplier.
      *
-     * @param cache the Cache
+     * @param cache    the Cache
      * @param supplier the original Supplier
-     * @param <K> the type of key
-     * @param <R> the type of value
+     * @param <K>      the type of key
+     * @param <R>      the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> Function<K, R> decorateSupplier(Cache<K, R> cache, Supplier<R> supplier) {
@@ -79,10 +80,10 @@ public interface Cache<K, V> {
      * Creates a functions which returns a value from a cache, if it exists. Otherwise it calls the
      * Callable.
      *
-     * @param cache the Cache
+     * @param cache    the Cache
      * @param callable the original Callable
-     * @param <K> the type of key
-     * @param <R> the type of value
+     * @param <K>      the type of key
+     * @param <R>      the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> CheckedFunction1<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable) {
@@ -106,7 +107,7 @@ public interface Cache<K, V> {
      * the given supplier and puts it into the cache. Otherwise it returns the cached value. If the
      * function itself throws an (unchecked) exception, the exception is rethrown.
      *
-     * @param key key with which the specified value is to be associated
+     * @param key      key with which the specified value is to be associated
      * @param supplier value to be associated with the specified key
      * @return cached value
      */

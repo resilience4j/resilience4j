@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j.ratelimiter.operator;
 
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
-
 import io.github.resilience4j.AbstractObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
+
 import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 class ObserverRateLimiter<T> extends Observable<T> {
 

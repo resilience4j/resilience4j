@@ -1,19 +1,18 @@
 package io.github.resilience4j.circuitbreaker.operator;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.reactivex.Single;
+import org.junit.Test;
+import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.reactivex.Single;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import org.junit.Test;
-import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link SingleCircuitBreaker}.

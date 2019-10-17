@@ -16,16 +16,6 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS;
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.DEFAULT_CIRCUIT_BREAKER_STATE;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -34,16 +24,18 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.*;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedCircuitBreakerMetricsPublisherTest {
 

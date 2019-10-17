@@ -15,17 +15,18 @@
  */
 package io.github.resilience4j.circuitbreaker.operator;
 
-import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.AbstractSubscriber;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Flowable;
 import io.reactivex.internal.subscriptions.EmptySubscription;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
+import static java.util.Objects.requireNonNull;
 
 class FlowableCircuitBreaker<T> extends Flowable<T> {
 

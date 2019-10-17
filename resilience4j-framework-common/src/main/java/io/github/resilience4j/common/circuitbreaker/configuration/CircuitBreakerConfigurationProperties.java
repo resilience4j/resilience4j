@@ -16,25 +16,24 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+import org.hibernate.validator.constraints.time.DurationMin;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import org.hibernate.validator.constraints.time.DurationMin;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 
 public class CircuitBreakerConfigurationProperties {
 
@@ -337,7 +336,7 @@ public class CircuitBreakerConfigurationProperties {
          * Returns if we should automatically transition to half open after the timer has run out.
          *
          * @return setAutomaticTransitionFromOpenToHalfOpenEnabled if we should automatically go to
-         *     half open or not
+         * half open or not
          */
         public Boolean getAutomaticTransitionFromOpenToHalfOpenEnabled() {
             return this.automaticTransitionFromOpenToHalfOpenEnabled;
@@ -346,8 +345,9 @@ public class CircuitBreakerConfigurationProperties {
         /**
          * Sets if we should automatically transition to half open after the timer has run out.
          *
-         * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition
-         *     to half open after the timer has run out.
+         * @param automaticTransitionFromOpenToHalfOpenEnabled The flag for automatic transition to
+         *                                                     half open after the timer has run
+         *                                                     out.
          */
         public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(
             Boolean automaticTransitionFromOpenToHalfOpenEnabled) {

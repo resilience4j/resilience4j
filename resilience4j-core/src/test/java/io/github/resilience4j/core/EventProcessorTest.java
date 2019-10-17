@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.core;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
 
 public class EventProcessorTest {
 

@@ -19,14 +19,10 @@
 package io.github.resilience4j.circularbuffer.concurrent;
 
 import io.github.resilience4j.circularbuffer.ConcurrentEvictingQueue;
-import java.util.Arrays;
-import org.openjdk.jcstress.annotations.Actor;
-import org.openjdk.jcstress.annotations.Arbiter;
-import org.openjdk.jcstress.annotations.Expect;
-import org.openjdk.jcstress.annotations.JCStressTest;
-import org.openjdk.jcstress.annotations.Outcome;
-import org.openjdk.jcstress.annotations.State;
+import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.StringResult2;
+
+import java.util.Arrays;
 
 @JCStressTest
 @State

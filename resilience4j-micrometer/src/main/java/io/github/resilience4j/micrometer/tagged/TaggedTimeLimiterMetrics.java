@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register TimeLimiter exposed events.
@@ -48,7 +48,7 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
     /**
      * Creates a new binder that uses given {@code registry} as source of time limiters.
      *
-     * @param names custom metric names
+     * @param names               custom metric names
      * @param timeLimiterRegistry the source of time limiters
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */

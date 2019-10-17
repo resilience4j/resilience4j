@@ -1,10 +1,10 @@
 package io.github.resilience4j.metrics.internal;
 
-import static com.codahale.metrics.MetricRegistry.name;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Snapshot;
 import io.github.resilience4j.metrics.Timer;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 public class TimerImpl implements Timer {
 

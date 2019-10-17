@@ -16,14 +16,14 @@
 
 package io.github.resilience4j.ratpack;
 
-import static ratpack.util.Exceptions.uncheck;
-
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import ratpack.func.Function;
+
+import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
 

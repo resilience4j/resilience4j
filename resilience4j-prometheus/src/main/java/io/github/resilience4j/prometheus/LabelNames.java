@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.prometheus;
 
-import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableList;
-
 import java.util.Arrays;
 import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Common constants for metric binder implementations based on tags.

@@ -16,11 +16,6 @@
 
 package io.github.resilience4j.micrometer.tagged;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
@@ -28,14 +23,16 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedBulkheadMetricsPublisherTest {
 

@@ -16,15 +16,6 @@
  */
 package io.github.resilience4j.feign;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofSeconds;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
@@ -34,6 +25,10 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}

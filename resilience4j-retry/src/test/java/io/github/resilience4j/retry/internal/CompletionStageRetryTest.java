@@ -18,25 +18,26 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
 import io.vavr.control.Try;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Supplier;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
+
+import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class CompletionStageRetryTest {
 

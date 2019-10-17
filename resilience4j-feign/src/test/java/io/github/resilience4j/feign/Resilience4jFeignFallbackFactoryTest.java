@@ -16,27 +16,22 @@
  */
 package io.github.resilience4j.feign;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceFallbackWithException;
-import java.util.function.Function;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.function.Function;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests on fallback factories.

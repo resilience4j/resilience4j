@@ -18,17 +18,17 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.BDDMockito;
 import org.slf4j.Logger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class BulkheadEventPublisherTest {
 

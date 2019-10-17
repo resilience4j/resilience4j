@@ -16,16 +16,17 @@
 package io.github.resilience4j.prometheus.collectors;
 
 
-import static io.github.resilience4j.prometheus.collectors.RetryMetricsCollector.MetricNames.DEFAULT_RETRY_CALLS;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.prometheus.client.CollectorRegistry;
 import io.vavr.control.Try;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.function.Supplier;
+
+import static io.github.resilience4j.prometheus.collectors.RetryMetricsCollector.MetricNames.DEFAULT_RETRY_CALLS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RetryMetricsCollectorTest {
 

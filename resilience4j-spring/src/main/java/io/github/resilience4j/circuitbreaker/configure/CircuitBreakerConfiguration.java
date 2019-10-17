@@ -27,16 +27,17 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link org.springframework.context.annotation.Configuration Configuration} for
@@ -140,7 +141,7 @@ public class CircuitBreakerConfiguration {
      * circuit breakers.
      *
      * @param circuitBreakerRegistry The circuit breaker registry.
-     * @param eventConsumerRegistry The event consumer registry.
+     * @param eventConsumerRegistry  The event consumer registry.
      */
     public void registerEventConsumer(CircuitBreakerRegistry circuitBreakerRegistry,
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {

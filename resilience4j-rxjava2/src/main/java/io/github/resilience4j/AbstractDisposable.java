@@ -17,6 +17,7 @@ package io.github.resilience4j;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class AbstractDisposable implements Disposable {

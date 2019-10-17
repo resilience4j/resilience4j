@@ -15,11 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -27,14 +22,16 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRateLimiterMetricsTest {
 

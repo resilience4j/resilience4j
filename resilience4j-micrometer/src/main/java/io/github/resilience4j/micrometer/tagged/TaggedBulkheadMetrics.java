@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.Bulkhead.Metrics;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register Bulkhead exposed {@link Metrics metrics}.
@@ -49,7 +49,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
      * Creates a new binder defining custom metric names and using given {@code registry} as source
      * of bulkheads.
      *
-     * @param names custom names of the metrics
+     * @param names            custom names of the metrics
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedBulkheadMetrics} instance.
      */

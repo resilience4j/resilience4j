@@ -15,13 +15,13 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static java.util.Objects.requireNonNull;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A micrometer binder that is used to register CircuitBreaker exposed {@link Metrics metrics}.
@@ -51,7 +51,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
      *
-     * @param metricNames custom metric names
+     * @param metricNames            custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */

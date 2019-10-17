@@ -6,6 +6,7 @@ import io.prometheus.client.Histogram;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -31,8 +32,8 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates call meter with the given name and registers it in the specified collector registry
      *
-     * @param name - metric name
-     * @param help - metric help
+     * @param name     - metric name
+     * @param help     - metric help
      * @param registry - collector registry
      * @return the call meter
      */
@@ -52,7 +53,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed checked supplier.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param supplier the original supplier
      * @return a timed supplier
      */
@@ -74,7 +75,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed runnable.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param runnable the original runnable
      * @return a timed runnable
      */
@@ -94,7 +95,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed checked supplier.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param supplier the original supplier
      * @return a timed supplier
      */
@@ -115,7 +116,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed Callable.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param callable the original Callable
      * @return a timed Callable
      */
@@ -136,7 +137,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed runnable.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param runnable the original runnable
      * @return a timed runnable
      */
@@ -156,7 +157,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed function.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param function the original function
      * @return a timed function
      */
@@ -177,7 +178,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Creates a timed function.
      *
-     * @param meter the call meter to use
+     * @param meter    the call meter to use
      * @param function the original function
      * @return a timed function
      */
@@ -199,7 +200,7 @@ public interface CallMeter extends CallMeterBase {
     /**
      * Decorates completion stage supplier with call meter
      *
-     * @param meter the call meter to use
+     * @param meter         the call meter to use
      * @param stageSupplier the CompletionStage Supplier
      * @return a decorated completion stage
      */

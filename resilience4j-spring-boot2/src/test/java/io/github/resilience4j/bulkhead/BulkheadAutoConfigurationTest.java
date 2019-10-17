@@ -15,10 +15,6 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.CompletableFuture.runAsync;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
@@ -32,12 +28,6 @@ import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.TestApplication;
 import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
 import io.github.resilience4j.service.test.bulkhead.BulkheadReactiveDummyService;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,6 +38,17 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.CompletableFuture.runAsync;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,

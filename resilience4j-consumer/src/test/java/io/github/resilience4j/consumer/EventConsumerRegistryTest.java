@@ -18,11 +18,11 @@
  */
 package io.github.resilience4j.consumer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.core.EventConsumer;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventConsumerRegistryTest {
 

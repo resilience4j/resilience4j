@@ -1,6 +1,7 @@
 package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
+
 import java.lang.reflect.Constructor;
 import java.util.function.Predicate;
 

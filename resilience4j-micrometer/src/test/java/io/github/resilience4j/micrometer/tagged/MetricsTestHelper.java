@@ -18,6 +18,7 @@ package io.github.resilience4j.micrometer.tagged;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Timer;
+
 import java.util.Collection;
 import java.util.Optional;
 

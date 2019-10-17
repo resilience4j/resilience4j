@@ -1,11 +1,12 @@
 package io.github.resilience4j.timelimiter;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
-import java.time.Duration;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class TimeLimiterConfigTest {
 

@@ -1,21 +1,22 @@
 package io.github.resilience4j.ratelimiter.monitoring.health;
 
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.collection.Array;
-import java.time.Duration;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Optional;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.boot.actuate.health.Status;
+
+import java.time.Duration;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Optional;
+
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author bstorozhuk

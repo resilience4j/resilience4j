@@ -19,6 +19,7 @@ package io.github.resilience4j.prometheus.publisher;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.metrics.MetricsPublisher;
 import io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -27,9 +27,6 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.vavr.collection.Seq;
-import java.util.Comparator;
-import java.util.List;
-import javax.inject.Inject;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
 import ratpack.func.Function;
@@ -37,6 +34,10 @@ import ratpack.handling.Chain;
 import ratpack.jackson.Jackson;
 import ratpack.sse.ServerSentEvents;
 import reactor.core.publisher.Flux;
+
+import javax.inject.Inject;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Provides event and stream event endpoints for circuitbreaker events.

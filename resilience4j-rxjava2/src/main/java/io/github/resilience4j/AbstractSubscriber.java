@@ -15,15 +15,16 @@
  */
 package io.github.resilience4j;
 
-import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
-import static java.util.Objects.requireNonNull;
-
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.subscriptions.SubscriptionHelper;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static io.reactivex.internal.subscriptions.SubscriptionHelper.CANCELLED;
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractSubscriber<T> implements Subscriber<T>, Subscription, Disposable {
 

@@ -1,8 +1,8 @@
 package io.github.resilience4j;
 
-import static java.util.Objects.requireNonNull;
-
 import io.reactivex.MaybeObserver;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractMaybeObserver<T> extends AbstractDisposable implements
     MaybeObserver<T> {

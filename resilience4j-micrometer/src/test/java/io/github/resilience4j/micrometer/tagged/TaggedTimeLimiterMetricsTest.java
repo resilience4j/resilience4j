@@ -15,24 +15,25 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import org.junit.Before;
-import org.junit.Test;
+
+import static io.github.resilience4j.micrometer.tagged.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedTimeLimiterMetricsTest {
 

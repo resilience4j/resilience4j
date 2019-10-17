@@ -23,7 +23,7 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
 
     /**
      * @param retryConfigurationProperties retry spring configuration properties
-     * @param retryEventConsumerRegistry the retry event consumer registry
+     * @param retryEventConsumerRegistry   the retry event consumer registry
      * @return the RefreshScoped RetryRegistry
      */
     @Bean

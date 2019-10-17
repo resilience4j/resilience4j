@@ -24,12 +24,13 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
 import io.vavr.CheckedFunction0;
 import io.vavr.control.Try;
-import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import java.io.IOException;
 
 /**
  * Decorates a Retrofit {@link Call} to check with a {@link RateLimiter} if a call can be made.
@@ -47,8 +48,8 @@ public interface RetrofitRateLimiter {
      * Decorate {@link Call}s allow {@link CircuitBreaker} functionality.
      *
      * @param rateLimiter {@link RateLimiter} to apply
-     * @param call Call to decorate
-     * @param <T> Response type of call
+     * @param call        Call to decorate
+     * @param <T>         Response type of call
      * @return Original Call decorated with CircuitBreaker
      */
     static <T> Call<T> decorateCall(final RateLimiter rateLimiter, final Call<T> call) {

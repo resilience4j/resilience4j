@@ -1,7 +1,5 @@
 package io.github.resilience4j;
 
-import static org.junit.Assert.assertTrue;
-
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadAutoConfiguration;
 import io.github.resilience4j.bulkhead.autoconfigure.RefreshScopedBulkheadAutoConfiguration;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
@@ -17,6 +15,8 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.type.MethodMetadata;
+
+import static org.junit.Assert.assertTrue;
 
 public class RefreshScopedAutoConfigurationTest {
 

@@ -18,17 +18,18 @@
  */
 package io.github.resilience4j.metrics;
 
-import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
-
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.vavr.control.Try;
+import org.junit.Test;
+
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import org.junit.Test;
+
+import static io.github.resilience4j.metrics.assertion.MetricRegistryAssert.assertThat;
 
 public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
 

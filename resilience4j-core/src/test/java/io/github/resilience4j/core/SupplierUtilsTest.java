@@ -1,9 +1,10 @@
 package io.github.resilience4j.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.util.function.Supplier;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SupplierUtilsTest {
 

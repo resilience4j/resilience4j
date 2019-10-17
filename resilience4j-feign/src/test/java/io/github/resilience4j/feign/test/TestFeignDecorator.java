@@ -4,6 +4,7 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.feign.FeignDecorator;
 import io.vavr.CheckedFunction1;
+
 import java.lang.reflect.Method;
 
 public class TestFeignDecorator implements FeignDecorator {

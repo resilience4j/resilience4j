@@ -22,20 +22,21 @@ import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import ratpack.exec.Promise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link Retry}. It will handle
  * methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link
  * reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
- *
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}RateLimiter(name = "myService")
@@ -45,16 +46,16 @@ import reactor.core.publisher.Mono;
  * </code></pre>
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
  * through a a {@link io.github.resilience4j.retry.Retry} according to the given config.
- *
+ * <p>
  * The method parameter signature must match either:
- *
+ * <p>
  * 1) The method parameter signature on the annotated method or 2) The method parameter signature
  * with a matching exception type as the last parameter on the annotated method
- *
+ * <p>
  * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage}, {@link
  * reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value. Other
  * reactive types are not supported.
- *
+ * <p>
  * If the return value is one of the reactive types listed above, it must match the return value
  * type of the annotated method.
  */

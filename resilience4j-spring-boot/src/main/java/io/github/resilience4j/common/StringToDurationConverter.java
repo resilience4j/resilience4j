@@ -16,14 +16,15 @@
 package io.github.resilience4j.common;
 
 import io.github.resilience4j.core.lang.Nullable;
-import java.time.Duration;
-import java.time.format.DateTimeParseException;
-import java.util.Optional;
-import java.util.function.LongFunction;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
+
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
+import java.util.Optional;
+import java.util.function.LongFunction;
 
 
 /**
