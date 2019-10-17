@@ -111,7 +111,6 @@ public class CircuitBreakerConfig {
     /**
      * Returns an interval function which controls how long the CircuitBreaker should stay open, before it switches to half open.
      *
-     *
      * @return the CircuitBreakerConfig.Builder
      */
     public IntervalFunction getWaitIntervalFunctionInOpenState() { return waitIntervalFunctionInOpenState; }
@@ -205,12 +204,13 @@ public class CircuitBreakerConfig {
 
         /**
          * Configures the failure rate threshold in percentage.
-         * If the failure rate is equal or greater than the threshold the CircuitBreaker transitions to open and starts short-circuiting calls.
+         * If the failure rate is equal to or greater than the threshold, the CircuitBreaker transitions to open and starts short-circuiting calls.
          * <p>
          * The threshold must be greater than 0 and not greater than 100. Default value is 50 percentage.
          *
          * @param failureRateThreshold the failure rate threshold in percentage
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code failureRateThreshold <= 0 || failureRateThreshold > 100}
          */
         public Builder failureRateThreshold(float failureRateThreshold) {
             if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
@@ -222,7 +222,7 @@ public class CircuitBreakerConfig {
 
         /**
          * Configures a threshold in percentage. The CircuitBreaker considers a call as slow when the call duration is greater than {@link #slowCallDurationThreshold(Duration)}.
-         * When the percentage of slow calls is equal or greater the threshold, the CircuitBreaker transitions to open and starts short-circuiting calls.
+         * When the percentage of slow calls is equal to or greater than the threshold, the CircuitBreaker transitions to open and starts short-circuiting calls.
          *
          * <p>
          * The threshold must be greater than 0 and not greater than 100.
@@ -230,6 +230,7 @@ public class CircuitBreakerConfig {
          *
          * @param slowCallRateThreshold the slow calls threshold in percentage
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code slowCallRateThreshold <= 0 || slowCallRateThreshold > 100}
          */
         public Builder slowCallRateThreshold(float slowCallRateThreshold) {
             if (slowCallRateThreshold <= 0 || slowCallRateThreshold > 100) {
@@ -243,6 +244,7 @@ public class CircuitBreakerConfig {
          * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
          * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already known (the circuit breaker is short-circuiting calls).
          *
+         * @param writableStackTraceEnabled the flag to enable writable stack traces.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
@@ -256,6 +258,7 @@ public class CircuitBreakerConfig {
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the CircuitBreaker should stay open
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code waitDurationInOpenState.toMillis() < 1}
          */
         public Builder waitDurationInOpenState(Duration waitDurationInOpenState) {
             long waitDurationInMillis = waitDurationInOpenState.toMillis();
@@ -286,6 +289,7 @@ public class CircuitBreakerConfig {
          *
          * @param slowCallDurationThreshold the duration above which calls are considered as slow
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code slowCallDurationThreshold.toNanos() < 1}
          */
         public Builder slowCallDurationThreshold(Duration slowCallDurationThreshold) {
             if (slowCallDurationThreshold.toNanos() < 1) {
@@ -302,6 +306,7 @@ public class CircuitBreakerConfig {
          *
          * @param permittedNumberOfCallsInHalfOpenState the permitted number of calls when the CircuitBreaker is half open
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code permittedNumberOfCallsInHalfOpenState < 1}
          */
         public Builder permittedNumberOfCallsInHalfOpenState(int permittedNumberOfCallsInHalfOpenState) {
             if (permittedNumberOfCallsInHalfOpenState < 1) {
@@ -336,18 +341,19 @@ public class CircuitBreakerConfig {
 
         /**
          * Configures the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
-         * {@code slidingWindowSize} configures the size of the sliding window. Sliding window can either be count-based or time-based.
+         * {@code slidingWindowSize} configures the size of the sliding window. Sliding window can either be count-based or time-based, specified by {@code slidingWindowType}.
          * {@code minimumNumberOfCalls} configures the minimum number of calls which are required (per sliding window period) before the CircuitBreaker can calculate the error rate.
          * For example, if {@code minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure rate can be calculated.
-         * If only 9 calls have been recorded the CircuitBreaker will not transition to open even if all 9 calls have failed.
-         *
+         * If only 9 calls have been recorded, the CircuitBreaker will not transition to open, even if all 9 calls have failed.
+         * <p>
          * If {@code slidingWindowSize} is 100 and {@code slidingWindowType} is COUNT_BASED, the last 100 calls are recorded and aggregated.
          * If {@code slidingWindowSize} is 10 and {@code slidingWindowType} is TIME_BASED, the calls of the last 10 seconds are recorded and aggregated.
          * <p>
          * The {@code slidingWindowSize} must be greater than 0.
          * The {@code minimumNumberOfCalls} must be greater than 0.
-         * If the slidingWindowType is COUNT_BASED, the {@code minimumNumberOfCalls} cannot be greater than {@code slidingWindowSize}.
-         * If the slidingWindowType is TIME_BASED, you can pick whatever you want.
+         * If the {@code slidingWindowType} is COUNT_BASED, the {@code minimumNumberOfCalls} may not be greater than {@code slidingWindowSize}.
+         * If a greater value is provided, {@code minimumNumberOfCalls} will be equal to {@code slidingWindowSize}.
+         * If the {@code slidingWindowType} is TIME_BASED, the {@code minimumNumberOfCalls} may be any amount.
          *
          * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is COUNT_BASED.
          *
@@ -355,6 +361,7 @@ public class CircuitBreakerConfig {
          * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the failure rate can be calculated.
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code slidingWindowSize < 1 || minimumNumberOfCalls < 1}
          */
         public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls, SlidingWindowType slidingWindowType) {
             if (slidingWindowSize < 1) {
@@ -375,20 +382,16 @@ public class CircuitBreakerConfig {
 
         /**
          * Configures the size of the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
-         * {@code slidingWindowSize} configures the size of the sliding window. Sliding window can either be count-based or time-based.
-         *
-         * If {@code slidingWindowType} is COUNT_BASED, the last {@code slidingWindowSize} calls are recorded and aggregated.
-         * If {@code slidingWindowType} is TIME_BASED, the calls of the last {@code slidingWindowSize} seconds are recorded and aggregated.
+         * {@code slidingWindowSize} configures the size of the sliding window.
          * <p>
          * The {@code slidingWindowSize} must be greater than 0.
-         * The {@code minimumNumberOfCalls} must be greater than 0.
-         * If the slidingWindowType is COUNT_BASED, the {@code minimumNumberOfCalls} cannot be greater than {@code slidingWindowSize}.
-         * If the slidingWindowType is TIME_BASED, you can pick whatever you want.
-         *
+         * <p>
          * Default slidingWindowSize is 100.
          *
          * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is closed.
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code slidingWindowSize < 1}
+         * @see #slidingWindow(int, int, SlidingWindowType)
          */
         public Builder slidingWindowSize(int slidingWindowSize) {
             if (slidingWindowSize < 1) {
@@ -399,14 +402,16 @@ public class CircuitBreakerConfig {
         }
 
         /**
-         * Configures configures the minimum number of calls which are required (per sliding window period) before the CircuitBreaker can calculate the error rate.
+         * Configures the minimum number of calls which are required (per sliding window period) before the CircuitBreaker can calculate the error rate.
          * For example, if {@code minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure rate can be calculated.
-         * If only 9 calls have been recorded the CircuitBreaker will not transition to open even if all 9 calls have failed.
+         * If only 9 calls have been recorded, the CircuitBreaker will not transition to open, even if all 9 calls have failed.
          *
          * Default minimumNumberOfCalls is 100
          *
          * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the failure rate can be calculated.
          * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code minimumNumberOfCalls < 1}
+         * @see #slidingWindow(int, int, SlidingWindowType)
          */
         public Builder minimumNumberOfCalls(int minimumNumberOfCalls) {
             if (minimumNumberOfCalls < 1) {
@@ -420,13 +425,11 @@ public class CircuitBreakerConfig {
          * Configures the type of the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
          * Sliding window can either be count-based or time-based.
          *
-         * If {@code slidingWindowType} is COUNT_BASED, the last {@code slidingWindowSize} calls are recorded and aggregated.
-         * If {@code slidingWindowType} is TIME_BASED, the calls of the last {@code slidingWindowSize} seconds are recorded and aggregated.
-         *
          * Default slidingWindowType is COUNT_BASED.
          *
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
+         * @see #slidingWindow(int, int, SlidingWindowType)
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
@@ -457,7 +460,7 @@ public class CircuitBreakerConfig {
 
         /**
          * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
-         * The Predicate must return true if the exception should be ignored .
+         * The Predicate must return true if the exception should be ignored.
          * The Predicate must return false, if the exception should count as a failure.
          *
          * @param predicate the Predicate which evaluates if an exception should count as a failure
@@ -471,6 +474,7 @@ public class CircuitBreakerConfig {
         /**
          * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
          * Any exception matching or inheriting from one of the list should count as a failure, unless ignored via
+         * {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
          *
          * @param errorClasses the error classes that are recorded
          * @return the CircuitBreakerConfig.Builder
@@ -493,6 +497,7 @@ public class CircuitBreakerConfig {
         /**
          * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
          * Any exception matching or inheriting from one of the list will not count as a failure nor success, even if marked via
+         * {@link #recordExceptions(Class[])} or {@link #recordException(Predicate)}.
          *
          * @param errorClasses the error classes that are ignored
          * @return the CircuitBreakerConfig.Builder
@@ -529,6 +534,7 @@ public class CircuitBreakerConfig {
         /**
          * Enables automatic transition from OPEN to HALF_OPEN state once the waitDurationInOpenState has passed.
          *
+         * @param enableAutomaticTransitionFromOpenToHalfOpen the flag to enable the automatic transitioning.
          * @return the CircuitBreakerConfig.Builder
          */
         public Builder automaticTransitionFromOpenToHalfOpenEnabled(boolean enableAutomaticTransitionFromOpenToHalfOpen) {
