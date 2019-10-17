@@ -325,6 +325,12 @@ RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
 
 NOTE: You can also consume events from other components. Find out more in our *https://resilience4j.readme.io/[User Guide]*
 
+== Talks
+* https://youtu.be/KosSsZEqS-k[Tomasz Skowroński at Cloud Native Warsaw: Resilience patterns in the post-Hystrix world]
+* https://www.youtube.com/watch?v=NHVxrLb3jFI[David Caron at SpringOne: Building Robust and Resilient Apps Using Spring Boot and Resilience4j
+]
+* https://www.youtube.com/watch?v=gvDvOWtPLVY[Tomasz Skowroński at DevoxxPL: Hystrix is dead, now what?]
+
 == Companies that use Resilience4j
 
 * Deutsche Telekom (In an application with over 400 million request per day)
