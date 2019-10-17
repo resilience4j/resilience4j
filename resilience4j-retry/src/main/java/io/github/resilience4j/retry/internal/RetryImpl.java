@@ -139,7 +139,7 @@ public class RetryImpl<T> implements Retry {
         @Override
 		public void onSuccess() {
 			int currentNumOfAttempts = numOfAttempts.get();
-			if (currentNumOfAttempts > 0 && !(currentNumOfAttempts >= maxAttempts)) {
+			if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
 				succeededAfterRetryCounter.increment();
 				Throwable throwable = Option.of(lastException.get()).getOrElse(lastRuntimeException.get());
 				publishRetryEvent(() -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
@@ -234,7 +234,7 @@ public class RetryImpl<T> implements Retry {
 		@Override
 		public void onSuccess() {
 			int currentNumOfAttempts = numOfAttempts.get();
-			if (currentNumOfAttempts > 0 && !(currentNumOfAttempts >= maxAttempts)) {
+			if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
 				succeededAfterRetryCounter.increment();
 				publishRetryEvent(() -> new RetryOnSuccessEvent(name, currentNumOfAttempts, lastException.get()));
 			} else {
