@@ -25,6 +25,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.*;
 import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -238,9 +239,9 @@ public class CircuitBreakerMetricsCollectorTest {
         CollectorRegistry registry = new CollectorRegistry();
 
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(
-            custom().buckets(new double[]{.005, .01})
-                    .build(),
-            circuitBreakerRegistry).register(registry);
+                MetricNames.ofDefaults(),
+                MetricOptions.custom().buckets(new double[]{.005, .01}).build(),
+                circuitBreakerRegistry).register(registry);
 
         circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
 
