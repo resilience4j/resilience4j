@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
-public class CircuitBreakerUtilIIsCallPermittedTest {
+public class CircuitBreakerUtilIsCallPermittedTest {
 
     private static final boolean CALL_NOT_PERMITTED = false;
     private static final boolean CALL_PERMITTED = true;
