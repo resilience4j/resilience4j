@@ -8,8 +8,10 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 public class TimeLimiterTest {
 
@@ -17,8 +19,8 @@ public class TimeLimiterTest {
     public void shouldReturnCorrectTimeoutDuration() {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
-        then(timeLimiter).isNotNull();
-        then(timeLimiter.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(timeoutDuration);
+        assertThat(timeLimiter).isNotNull();
+        assertThat(timeLimiter.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(timeoutDuration);
     }
 
     @Test
@@ -30,40 +32,37 @@ public class TimeLimiterTest {
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).willThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
 
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        assertThat(decoratedResult.isFailure()).isTrue();
+        assertThat(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
 
-        verify(mockFuture).cancel(true);
+        then(mockFuture).should().cancel(true);
     }
 
     @Test
-    public void shouldThrowTimeoutExceptionAndInvokeCancelWithCompletionStage() throws Exception {
+    public void shouldThrowTimeoutExceptionWithCompletionStage() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
-        @SuppressWarnings("unchecked")
-        CompletionStage<Integer> mockFuture = (CompletionStage<Integer>) mock(CompletionStage.class);
-        @SuppressWarnings("unchecked")
-        CompletableFuture<Integer> completableFuture = (CompletableFuture<Integer>) mock(CompletableFuture.class);
-
-        Supplier<CompletionStage<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.toCompletableFuture()).thenReturn(completableFuture);
-        when(completableFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+        Supplier<CompletionStage<Integer>> supplier = () -> CompletableFuture.supplyAsync(() -> {
+            try {
+                // sleep for timeout.
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                // nothing
+            }
+            return 0;
+        });
 
         CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, supplier).get();
-
-        Try<Integer> decoratedResult = Try.of(() -> decorated.toCompletableFuture().get());
-
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
-                .hasCauseInstanceOf(TimeoutException.class);
-
-        verify(completableFuture).cancel(true);
+        Try<Integer> decoratedResult = Try.ofCallable(() -> decorated.toCompletableFuture().get());
+        assertThat(decoratedResult.isFailure()).isTrue();
+        assertThat(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
+                .hasCauseExactlyInstanceOf(TimeoutException.class);
     }
 
     @Test
@@ -76,41 +75,15 @@ public class TimeLimiterTest {
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).willThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
 
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        assertThat(decoratedResult.isFailure()).isTrue();
+        assertThat(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
 
-        verify(mockFuture, times(0)).cancel(true);
-    }
-
-    @Test
-    public void shouldThrowTimeoutExceptionAndNotInvokeCancelWithCompletionStage() throws Exception {
-        Duration timeoutDuration = Duration.ofSeconds(1);
-        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
-                .cancelRunningFuture(false).build());
-
-        @SuppressWarnings("unchecked")
-        CompletionStage<Integer> mockFuture = (CompletionStage<Integer>) mock(CompletionStage.class);
-        @SuppressWarnings("unchecked")
-        CompletableFuture<Integer> completableFuture = (CompletableFuture<Integer>) mock(CompletableFuture.class);
-
-        Supplier<CompletionStage<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.toCompletableFuture()).thenReturn(completableFuture);
-        when(completableFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenThrow(new TimeoutException());
-
-        CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, supplier).get();
-
-        Try<Integer> decoratedResult = Try.of(() -> decorated.toCompletableFuture().get());
-
-        then(decoratedResult.isFailure()).isTrue();
-        then(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
-                .hasCauseInstanceOf(TimeoutException.class);
-
-        verify(completableFuture, times(0)).cancel(true);
+        then(mockFuture).should(never()).cancel(true);
     }
 
     @Test
@@ -122,7 +95,7 @@ public class TimeLimiterTest {
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenReturn(42);
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).willReturn(42);
 
         int result = timeLimiter.executeFutureSupplier(supplier);
         assertThat(result).isEqualTo(42);
@@ -136,14 +109,15 @@ public class TimeLimiterTest {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
-        @SuppressWarnings("unchecked")
-        CompletionStage<Integer> mockFuture = (CompletionStage<Integer>) mock(CompletionStage.class);
-        @SuppressWarnings("unchecked")
-        CompletableFuture<Integer> completableFuture = (CompletableFuture<Integer>) mock(CompletableFuture.class);
-
-        Supplier<CompletionStage<Integer>> supplier = () -> mockFuture;
-        when(mockFuture.toCompletableFuture()).thenReturn(completableFuture);
-        when(completableFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).thenReturn(42);
+        Supplier<CompletionStage<Integer>> supplier = () -> CompletableFuture.supplyAsync(() -> {
+            try {
+                // sleep but not timeout.
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                // nothing
+            }
+            return 42;
+        });
 
         int result = timeLimiter.executeCompletionStage(supplier).toCompletableFuture().get();
         assertThat(result).isEqualTo(42);

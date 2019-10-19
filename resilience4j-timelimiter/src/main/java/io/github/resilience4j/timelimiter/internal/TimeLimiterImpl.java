@@ -16,7 +16,7 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterImpl.class);
 
-    private String name;
+    private final String name;
     private final TimeLimiterConfig timeLimiterConfig;
     private final TimeLimiterEventProcessor eventProcessor;
 
@@ -57,28 +57,31 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     @Override
     public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier) {
-        return () -> CompletableFuture.supplyAsync(() -> {
-            CompletableFuture<T> future = supplier.get().toCompletableFuture();
-            try {
-                return future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                onError(e);
-                if(getTimeLimiterConfig().shouldCancelRunningFuture()) {
-                    future.cancel(true);
+        CompletableFuture<T> future = supplier.get().toCompletableFuture();
+        ScheduledFuture<?> timeoutFuture =
+                Timeout.of(future, getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+
+        return () -> future.whenComplete((result, throwable) -> {
+            // complete
+            if (result != null) {
+                if (!timeoutFuture.isDone()) {
+                    timeoutFuture.cancel(false);
                 }
-                throw new CompletionException(e);
-            } catch (ExecutionException e) {
-                Throwable t = e.getCause();
-                if (t == null) {
-                    onError(e);
-                    throw new CompletionException(e);
+                onSuccess();
+            }
+
+            // exceptionally
+            if (throwable != null) {
+                if (throwable instanceof ExecutionException) {
+                    Throwable cause = throwable.getCause();
+                    if (cause == null) {
+                        onError(throwable);
+                    } else {
+                        onError(cause);
+                    }
                 } else {
-                    onError(t);
-                    throw new CompletionException(t);
+                    onError(throwable);
                 }
-            } catch (InterruptedException e) {
-                onError(e);
-                throw new CompletionException(e);
             }
         });
     }
@@ -137,4 +140,38 @@ public class TimeLimiterImpl implements TimeLimiter {
             LOG.warn("Failed to handle event {}", event.getEventType(), e);
         }
     }
+
+    /**
+     * Completes CompletableFuture with {@link TimeoutException}.
+     */
+    static final class Timeout {
+
+        private static final ScheduledThreadPoolExecutor delayer;
+        static {
+            (delayer = new ScheduledThreadPoolExecutor(
+                    1, new DaemonThreadFactory())).setRemoveOnCancelPolicy(true);
+        }
+
+        private Timeout() { }
+
+        static ScheduledFuture<?> of(CompletableFuture<?> future, long delay, TimeUnit unit) {
+            return delayer.schedule(() -> {
+                if (future != null && !future.isDone()) {
+                    future.completeExceptionally(new TimeoutException());
+                }
+            }, delay, unit);
+         }
+    }
+
+    static final class DaemonThreadFactory implements ThreadFactory {
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            t.setName("TimeLimiterDelayScheduler");
+            return t;
+        }
+    }
+
 }
