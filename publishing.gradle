@@ -12,14 +12,14 @@ def url = "https://github.com/resilience4j/resilience4j"
 jar {
     manifest {
         attributes(
-            'Built-By': 'Robert Winkler',
-            'Created-By': System.properties['java.version'] + " (" + System.properties['java.vendor'] + " " + System.properties['java.vm.version'] + ")",
-            'Build-Date': project.buildDate,
-            'Build-Time': project.buildTime,
-            'Specification-Title': projectArtifactId,
-            'Specification-Version': project.version,
-            'Implementation-Title': projectArtifactId,
-            'Implementation-Version': project.version
+                'Built-By': 'Robert Winkler',
+                'Created-By': System.properties['java.version'] + " (" + System.properties['java.vendor'] + " " + System.properties['java.vm.version'] + ")",
+                'Build-Date': project.buildDate,
+                'Build-Time': project.buildTime,
+                'Specification-Title': projectArtifactId,
+                'Specification-Version': project.version,
+                'Implementation-Title': projectArtifactId,
+                'Implementation-Version': project.version
         )
         instruction 'Export-Package', '!io.github.resilience4j.*.internal,*'
         instruction 'Import-Package', "!${project.osgiManifest().symbolicName}.*,*"
@@ -83,10 +83,10 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             pom.withXml {
-                def devs = ['RobWin'     : 'Robert Winkler',
+                def devs = ['RobWin': 'Robert Winkler',
                             'storozhukBM': 'Bogdan Storozhuk',
-                            'drmaas'     : 'Dan Maas',
-                            'Romeh'      : 'Mahmoud Romeh']
+                            'drmaas': 'Dan Maas',
+                            'Romeh': 'Mahmoud Romeh']
                 def root = asNode()
 
                 root.dependencies.'*'.findAll() {

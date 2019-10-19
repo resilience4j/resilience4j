@@ -354,11 +354,11 @@ class CircuitBreakerSpec extends Specification {
 
     def buildConfig() {
         CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .waitDurationInOpenState(Duration.ofMillis(1000))
-                .permittedNumberOfCallsInHalfOpenState(2)
-                .slidingWindowSize(2)
-                .build()
+            .failureRateThreshold(50)
+            .waitDurationInOpenState(Duration.ofMillis(1000))
+            .permittedNumberOfCallsInHalfOpenState(2)
+            .slidingWindowSize(2)
+            .build()
     }
 
     static class Something {

@@ -16,6 +16,9 @@
         </value>
       </option>
     </AndroidXmlCodeStyleSettings>
+    <GroovyCodeStyleSettings>
+      <option name="ALIGN_NAMED_ARGS_IN_MAP" value="false" />
+    </GroovyCodeStyleSettings>
     <JSCodeStyleSettings version="0">
       <option name="INDENT_CHAINED_CALLS" value="false" />
     </JSCodeStyleSettings>

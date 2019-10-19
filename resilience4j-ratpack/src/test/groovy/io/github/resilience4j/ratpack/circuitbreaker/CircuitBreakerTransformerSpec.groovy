@@ -37,7 +37,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when:
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -49,7 +49,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when:
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -68,7 +68,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when:
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -80,7 +80,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when:
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -99,7 +99,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when: "the first request and retry is a failure"
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(circuitTransformer)
+                .transform(circuitTransformer)
 
         }
 
@@ -112,7 +112,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when: "the request and the retry fails again"
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }
-                    .transform(circuitTransformer)
+                .transform(circuitTransformer)
         }
 
         then: "the circuit open since the buffer has at least 2 calls and the failure threshold was met"
@@ -125,7 +125,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         sleep 1000
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { "foo" }
-                    .transform(circuitTransformer)
+                .transform(circuitTransformer)
         }
 
         then: "the circuit is now in the HALF_OPEN state"
@@ -139,7 +139,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when: "error on half open, retry swallows exception thrown"
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }.onError { exception -> Promise.value("not foo") }
-                    .transform(circuitTransformer)
+                .transform(circuitTransformer)
         }
 
         then: "the test call was ran and returned our expected error"
@@ -152,7 +152,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when: "error on half open, retry swallows exception thrown"
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { throw e }.onError { exception -> Promise.value("not foo") }
-                    .transform(circuitTransformer)
+                .transform(circuitTransformer)
         }
 
         then: "the test call was ran and returned our expected error"
@@ -167,7 +167,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         when: "trying the circuit that returns a succcess"
         r = ExecHarness.yieldSingle {
             Blocking.<String> get { "foo" }
-                    .transform(circuitTransformer)
+                .transform(circuitTransformer)
         }
 
         then: "the call was allowed and transitioned the circuit to CLOSED"
@@ -189,7 +189,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         (1..10).forEach {
             r = ExecHarness.yieldSingle {
                 Blocking.<String> get { throw e1 }
-                        .transform(transformer)
+                    .transform(transformer)
             }
         }
 
@@ -203,7 +203,7 @@ class CircuitBreakerTransformerSpec extends Specification {
         (1..10).forEach {
             r = ExecHarness.yieldSingle {
                 Blocking.<String> get { throw e2 }
-                        .transform(transformer)
+                    .transform(transformer)
             }
         }
 
@@ -216,12 +216,12 @@ class CircuitBreakerTransformerSpec extends Specification {
 
     def buildBreaker(Predicate<Throwable> predicate) {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .waitDurationInOpenState(Duration.ofMillis(1000))
-                .permittedNumberOfCallsInHalfOpenState(2)
-                .slidingWindowSize(2)
-                .recordException(predicate)
-                .build()
+            .failureRateThreshold(50)
+            .waitDurationInOpenState(Duration.ofMillis(1000))
+            .permittedNumberOfCallsInHalfOpenState(2)
+            .slidingWindowSize(2)
+            .recordException(predicate)
+            .build()
         CircuitBreaker.of("test", config)
     }
 

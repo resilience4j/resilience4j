@@ -143,11 +143,11 @@ class BulkheadSpec extends Specification {
 
         where:
         path << [
-                'promise',
-                'Flux',
-                'Mono',
-                'stage',
-                'normal'
+            'promise',
+            'Flux',
+            'Mono',
+            'stage',
+            'normal'
         ]
     }
 
@@ -296,11 +296,11 @@ class BulkheadSpec extends Specification {
 
         where:
         path << [
-                'promise',
-                'Flux',
-                'Mono',
-                'stage',
-                'normal'
+            'promise',
+            'Flux',
+            'Mono',
+            'stage',
+            'normal'
         ]
     }
 
@@ -366,19 +366,19 @@ class BulkheadSpec extends Specification {
 
         where:
         path << [
-                'promise',
-                'Flux',
-                'Mono',
-                'stage'
+            'promise',
+            'Flux',
+            'Mono',
+            'stage'
         ]
     }
 
     // 1 concurrent call
     def buildConfig() {
         BulkheadConfig.custom()
-                .maxConcurrentCalls(1)
-                .maxWaitDuration(Duration.ZERO)
-                .build()
+            .maxConcurrentCalls(1)
+            .maxWaitDuration(Duration.ZERO)
+            .build()
     }
 
     // both latches are unblocked on later calls

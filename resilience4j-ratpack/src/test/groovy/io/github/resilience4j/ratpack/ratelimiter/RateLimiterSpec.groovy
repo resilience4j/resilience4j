@@ -298,10 +298,10 @@ class RateLimiterSpec extends Specification {
     // 10 events / 1 minute
     def buildConfig() {
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(60))
-                .limitForPeriod(3)
-                .timeoutDuration(Duration.ofMillis(20))
-                .build()
+            .limitRefreshPeriod(Duration.ofSeconds(60))
+            .limitForPeriod(3)
+            .timeoutDuration(Duration.ofMillis(20))
+            .build()
     }
 
     static class Something {

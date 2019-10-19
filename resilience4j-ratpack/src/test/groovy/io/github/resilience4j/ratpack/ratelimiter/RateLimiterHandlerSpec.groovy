@@ -128,10 +128,10 @@ class RateLimiterHandlerSpec extends Specification {
     // 10 events / 10 s
     def buildConfig() {
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(10))
-                .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(20))
-                .build()
+            .limitRefreshPeriod(Duration.ofSeconds(10))
+            .limitForPeriod(10)
+            .timeoutDuration(Duration.ofMillis(20))
+            .build()
     }
 
 }
