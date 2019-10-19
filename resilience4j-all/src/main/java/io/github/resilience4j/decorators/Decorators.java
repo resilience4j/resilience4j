@@ -76,7 +76,11 @@ public interface Decorators {
 		}
 
 		public DecorateSupplier<T> withRateLimiter(RateLimiter rateLimiter) {
-			supplier = RateLimiter.decorateSupplier(rateLimiter, supplier);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateSupplier<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+			supplier = RateLimiter.decorateSupplier(rateLimiter, permits, supplier);
 			return this;
 		}
 
@@ -112,7 +116,16 @@ public interface Decorators {
 		}
 
 		public DecorateFunction<T, R> withRateLimiter(RateLimiter rateLimiter) {
-			function = RateLimiter.decorateFunction(rateLimiter, function);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateFunction<T, R> withRateLimiter(RateLimiter rateLimiter, int permits) {
+			function = RateLimiter.decorateFunction(rateLimiter, permits, function);
+			return this;
+		}
+
+		public DecorateFunction<T, R> withRateLimiter(RateLimiter rateLimiter, Function<T, Integer> permitsCalculator) {
+			function = RateLimiter.decorateFunction(rateLimiter, permitsCalculator, function);
 			return this;
 		}
 
@@ -148,7 +161,11 @@ public interface Decorators {
 		}
 
 		public DecorateRunnable withRateLimiter(RateLimiter rateLimiter) {
-			runnable = RateLimiter.decorateRunnable(rateLimiter, runnable);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateRunnable withRateLimiter(RateLimiter rateLimiter, int permits) {
+			runnable = RateLimiter.decorateRunnable(rateLimiter, permits, runnable);
 			return this;
 		}
 
@@ -185,7 +202,11 @@ public interface Decorators {
 		}
 
 		public DecorateCheckedSupplier<T> withRateLimiter(RateLimiter rateLimiter) {
-			supplier = RateLimiter.decorateCheckedSupplier(rateLimiter, supplier);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateCheckedSupplier<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+			supplier = RateLimiter.decorateCheckedSupplier(rateLimiter, permits, supplier);
 			return this;
 		}
 
@@ -225,7 +246,16 @@ public interface Decorators {
 		}
 
 		public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter) {
-			function = RateLimiter.decorateCheckedFunction(rateLimiter, function);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter, int permits) {
+			function = RateLimiter.decorateCheckedFunction(rateLimiter, permits, function);
+			return this;
+		}
+
+		public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter, Function<T, Integer> permitsCalculator) {
+			function = RateLimiter.decorateCheckedFunction(rateLimiter, permitsCalculator, function);
 			return this;
 		}
 
@@ -262,6 +292,11 @@ public interface Decorators {
 
 		public DecorateCheckedRunnable withRateLimiter(RateLimiter rateLimiter) {
 			runnable = RateLimiter.decorateCheckedRunnable(rateLimiter, runnable);
+			return this;
+		}
+
+		public DecorateCheckedRunnable withRateLimiter(RateLimiter rateLimiter, int permits) {
+			runnable = RateLimiter.decorateCheckedRunnable(rateLimiter, permits, runnable);
 			return this;
 		}
 
@@ -303,7 +338,11 @@ public interface Decorators {
 		}
 
 		public DecorateCompletionStage<T> withRateLimiter(RateLimiter rateLimiter) {
-			stageSupplier = RateLimiter.decorateCompletionStage(rateLimiter, stageSupplier);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateCompletionStage<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+			stageSupplier = RateLimiter.decorateCompletionStage(rateLimiter, permits, stageSupplier);
 			return this;
 		}
 
@@ -330,7 +369,16 @@ public interface Decorators {
 		}
 
 		public DecorateConsumer<T> withRateLimiter(RateLimiter rateLimiter) {
-			consumer = RateLimiter.decorateConsumer(rateLimiter, consumer);
+			return withRateLimiter(rateLimiter, 1);
+		}
+
+		public DecorateConsumer<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+			consumer = RateLimiter.decorateConsumer(rateLimiter, permits, consumer);
+			return this;
+		}
+
+		public DecorateConsumer<T> withRateLimiter(RateLimiter rateLimiter, Function<T, Integer> permitsCalculator) {
+			consumer = RateLimiter.decorateConsumer(rateLimiter, permitsCalculator, consumer);
 			return this;
 		}
 
