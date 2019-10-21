@@ -242,6 +242,23 @@ public class CircuitBreakerAutoConfigurationTest {
 
     }
 
+
+    @Test
+    public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
+        //when
+        final CircuitBreaker backendC = circuitBreakerRegistry.getAllCircuitBreakers()
+                .filter(circuitBreaker -> circuitBreaker.getName().equalsIgnoreCase("backendC"))
+                .get();
+        //then
+        assertThat(backendC).isNotNull();
+        CircuitBreakerConfig backendConfig = backendC.getCircuitBreakerConfig();
+
+        assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
+        assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
+        assertThat(backendConfig.getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(1L));
+
+    }
+
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
      * that the CircuitBreaker records successful and failed calls.
