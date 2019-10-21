@@ -80,12 +80,12 @@ public class RateLimiterTest {
     public void decorateCheckedSupplier() throws Throwable {
         CheckedFunction0 supplier = mock(CheckedFunction0.class);
         CheckedFunction0 decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try decoratedSupplierResult = Try.of(decorated);
         assertThat(decoratedSupplierResult.isFailure()).isTrue();
         assertThat(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(supplier).should(never()).apply();
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondSupplierResult = Try.of(decorated);
 
@@ -97,12 +97,12 @@ public class RateLimiterTest {
     public void decorateCheckedRunnable() throws Throwable {
         CheckedRunnable runnable = mock(CheckedRunnable.class);
         CheckedRunnable decorated = RateLimiter.decorateCheckedRunnable(limit, runnable);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try decoratedRunnableResult = Try.run(decorated);
         assertThat(decoratedRunnableResult.isFailure()).isTrue();
         assertThat(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(runnable).should(never()).run();
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondRunnableResult = Try.run(decorated);
 
@@ -114,12 +114,12 @@ public class RateLimiterTest {
     public void decorateCheckedFunction() throws Throwable {
         CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
         CheckedFunction1<Integer, String> decorated = RateLimiter.decorateCheckedFunction(limit, function);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try<String> decoratedFunctionResult = Try.success(1).mapTry(decorated);
         assertThat(decoratedFunctionResult.isFailure()).isTrue();
         assertThat(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(function).should(never()).apply(any());
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondFunctionResult = Try.success(1).mapTry(decorated);
 
@@ -131,12 +131,12 @@ public class RateLimiterTest {
     public void decorateSupplier() {
         Supplier supplier = mock(Supplier.class);
         Supplier decorated = RateLimiter.decorateSupplier(limit, supplier);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try decoratedSupplierResult = Try.success(decorated).map(Supplier::get);
         assertThat(decoratedSupplierResult.isFailure()).isTrue();
         assertThat(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(supplier).should(never()).get();
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondSupplierResult = Try.success(decorated).map(Supplier::get);
 
@@ -148,12 +148,12 @@ public class RateLimiterTest {
     public void decorateConsumer() {
         Consumer<Integer> consumer = mock(Consumer.class);
         Consumer<Integer> decorated = RateLimiter.decorateConsumer(limit, consumer);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try<Integer> decoratedConsumerResult = Try.success(1).andThen(decorated);
         assertThat(decoratedConsumerResult.isFailure()).isTrue();
         assertThat(decoratedConsumerResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(consumer).should(never()).accept(any());
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondConsumerResult = Try.success(1).andThen(decorated);
 
@@ -165,12 +165,12 @@ public class RateLimiterTest {
     public void decorateRunnable() {
         Runnable runnable = mock(Runnable.class);
         Runnable decorated = RateLimiter.decorateRunnable(limit, runnable);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try decoratedRunnableResult = Try.success(decorated).andThen(Runnable::run);
         assertThat(decoratedRunnableResult.isFailure()).isTrue();
         assertThat(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(runnable).should(never()).run();
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondRunnableResult = Try.success(decorated).andThen(Runnable::run);
 
@@ -182,12 +182,12 @@ public class RateLimiterTest {
     public void decorateFunction() {
         Function<Integer, String> function = mock(Function.class);
         Function<Integer, String> decorated = RateLimiter.decorateFunction(limit, function);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         Try<String> decoratedFunctionResult = Try.success(1).map(decorated);
         assertThat(decoratedFunctionResult.isFailure()).isTrue();
         assertThat(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
         then(function).should(never()).apply(any());
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try secondFunctionResult = Try.success(1).map(decorated);
 
@@ -201,7 +201,7 @@ public class RateLimiterTest {
         given(supplier.get()).willReturn("Resource");
         Supplier<CompletionStage<String>> completionStage = () -> supplyAsync(supplier);
         Supplier<CompletionStage<String>> decorated = RateLimiter.decorateCompletionStage(limit, completionStage);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
         AtomicReference<Throwable> error = new AtomicReference<>(null);
         CompletableFuture<String> notPermittedFuture = decorated.get()
             .whenComplete((v, e) -> error.set(e))
@@ -215,7 +215,7 @@ public class RateLimiterTest {
         assertThat(error.get()).isExactlyInstanceOf(RequestNotPermitted.class);
         then(supplier).should(never()).get();
 
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
         AtomicReference<Throwable> shouldBeEmpty = new AtomicReference<>(null);
         CompletableFuture<String> success = decorated.get()
             .whenComplete((v, e) -> error.set(e))
@@ -231,25 +231,25 @@ public class RateLimiterTest {
 
     @Test
     public void waitForPermissionWithOne() {
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         RateLimiter.waitForPermission(limit);
 
-        then(limit).should().acquirePermission();
+        then(limit).should().acquirePermission(1);
     }
 
     @Test(expected = RequestNotPermitted.class)
     public void waitForPermissionWithoutOne() {
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
 
         RateLimiter.waitForPermission(limit);
 
-        then(limit).should().acquirePermission();
+        then(limit).should().acquirePermission(1);
     }
 
     @Test
     public void waitForPermissionWithInterruption() {
-        when(limit.acquirePermission())
+        when(limit.acquirePermission(1))
             .then(invocation -> {
                 LockSupport.parkNanos(5_000_000_000L);
                 return null;
@@ -287,7 +287,7 @@ public class RateLimiterTest {
     public void decorateTrySupplier() {
         Supplier<Try<String>> supplier = mock(Supplier.class);
         given(supplier.get()).willReturn(Try.success("Resource"));
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Try<String> result = RateLimiter.decorateTrySupplier(limit, supplier).get();
 
@@ -299,7 +299,7 @@ public class RateLimiterTest {
     public void decorateEitherSupplier() {
         Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
         given(supplier.get()).willReturn(Either.right("Resource"));
-        given(limit.acquirePermission()).willReturn(true);
+        given(limit.acquirePermission(1)).willReturn(true);
 
         Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
 
@@ -310,7 +310,7 @@ public class RateLimiterTest {
     @Test
     public void shouldExecuteTrySupplierAndReturnRequestNotPermitted() {
         Supplier<Try<String>> supplier = mock(Supplier.class);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
 
         Try<String> result = RateLimiter.decorateTrySupplier(limit, supplier).get();
 
@@ -322,7 +322,7 @@ public class RateLimiterTest {
     @Test
     public void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() {
         Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
-        given(limit.acquirePermission()).willReturn(false);
+        given(limit.acquirePermission(1)).willReturn(false);
 
         Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
 

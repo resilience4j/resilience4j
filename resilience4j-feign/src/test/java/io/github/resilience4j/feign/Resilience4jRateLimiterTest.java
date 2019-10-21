@@ -52,7 +52,7 @@ public class Resilience4jRateLimiterTest {
     public void testSuccessfulCall() throws Exception {
         setupStub(200);
 
-        when(rateLimiter.acquirePermission()).thenReturn(true);
+        when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
         testService.greeting();
 
@@ -63,7 +63,7 @@ public class Resilience4jRateLimiterTest {
     public void testRateLimiterLimiting() {
         setupStub(200);
 
-        when(rateLimiter.acquirePermission()).thenReturn(false);
+        when(rateLimiter.acquirePermission(1)).thenReturn(false);
         RateLimiterConfig config = RateLimiterConfig.ofDefaults();
         when(rateLimiter.getRateLimiterConfig()).thenReturn(config);
 
@@ -76,7 +76,7 @@ public class Resilience4jRateLimiterTest {
     public void testFailedHttpCall() {
         setupStub(400);
 
-        when(rateLimiter.acquirePermission()).thenReturn(true);
+        when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
         testService.greeting();
     }
