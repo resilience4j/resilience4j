@@ -26,6 +26,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.*;
 import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -235,5 +236,32 @@ public class CircuitBreakerMetricsPublisherTest {
                 new String[]{"name", "state"},
                 new String[]{"backendA", "closed"}
         )).isNotNull();
+    }
+
+    @Test
+    public void customMetricNameBucketsOverrideDefaultOnes() {
+        CollectorRegistry registry = new CollectorRegistry();
+
+        CircuitBreakerMetricsPublisher circuitBreakerMetricsPublisher = new CircuitBreakerMetricsPublisher(
+                MetricNames.ofDefaults(),
+                MetricOptions.custom().buckets(new double[]{.005, .01}).build());
+
+        circuitBreakerMetricsPublisher.register(registry);
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults(), circuitBreakerMetricsPublisher);
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA");
+
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+
+        assertThat(registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+                new String[]{"name", "kind", "le"},
+                new String[]{circuitBreaker.getName(), "successful", "0.01"}
+        )).isEqualTo(1d);
+
+        assertThat(registry.getSampleValue(
+                DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+                new String[]{"name", "kind", "le"},
+                new String[]{circuitBreaker.getName(), "successful", "0.025"}
+        )).isNull();
     }
 }

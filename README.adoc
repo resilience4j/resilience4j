@@ -4,6 +4,13 @@
 :icons:
 :toc: macro
 :numbered: 1
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
 
 image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://dev.azure.com/resilience4j/resilience4j/_apis/build/status/resilience4j.resilience4j?branchName=master["Build Status", link="https://dev.azure.com/resilience4j/resilience4j/_build/latest?definitionId=1&branchName=master"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
@@ -14,6 +21,8 @@ toc::[]
 == Introduction
 
 Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses http://www.vavr.io/[Vavr], which does not have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
+
+WARNING: Netflix Hystrix is no longer in active development, and is currently in maintenance mode.
 
 Resilience4j provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retry or Bulkhead. You can stack more than one decorator on any functional interface, lambda expression or method reference. The advantage is that you have the choice to select the decorators you need and nothing else.
 
@@ -34,7 +43,7 @@ String result = Try.ofSupplier(decoratedSupplier)
 String result = circuitBreaker.executeSupplier(supplier);
 ----
 
-With Resilience4j you don’t have to go all-in, you can pick what you need.
+NOTE: With Resilience4j you don’t have to go all-in, you can https://mvnrepository.com/artifact/io.github.resilience4j[*pick*] what you need.
 
 ==  Documentation
 
@@ -146,7 +155,10 @@ link:resilience4j-feign/README.adoc[Feign]
 
 |===
 
-Above table is based on https://github.com/App-vNext/Polly#resilience-policies[Polly: resilience policies].
+_Above table is based on https://github.com/App-vNext/Polly#resilience-policies[Polly: resilience policies]._
+
+NOTE: To find more information about resilience patterns check link:#Talks[*Talks*] section.
+Find out more about components in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*.
 
 == Spring Boot
 
@@ -201,7 +213,7 @@ Observable.fromCallable(backendService::doSomething)
     .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*
+NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*.
 
 ==== CircuitBreaker and Spring Reactor
 
@@ -214,8 +226,7 @@ Mono.fromCallable(backendService::doSomething)
     .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-
-NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*.
 
 [[ratelimiter]]
 === RateLimiter
@@ -323,24 +334,39 @@ RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
     .subscribe(event -> logger.info(...))
 ----
 
-NOTE: You can also consume events from other components. Find out more in our *https://resilience4j.readme.io/[User Guide]*
+NOTE: You can also consume events from other components. Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 
 == Talks
-* https://youtu.be/KosSsZEqS-k[Tomasz Skowroński at Cloud Native Warsaw: Resilience patterns in the post-Hystrix world]
-* https://www.youtube.com/watch?v=NHVxrLb3jFI[David Caron at SpringOne: Building Robust and Resilient Apps Using Spring Boot and Resilience4j
-]
-* https://www.youtube.com/watch?v=gvDvOWtPLVY[Tomasz Skowroński at DevoxxPL: Hystrix is dead, now what?]
+
+[cols="4*"]
+|===
+
+|0:42
+|https://www.youtube.com/watch?v=KosSsZEqS-k&t=157[Resilience patterns in the post-Hystrix world]
+|Tomasz Skowroński
+|Cloud Native Warsaw
+
+|0:52
+|https://www.youtube.com/watch?v=NHVxrLb3jFI[Building Robust and Resilient Apps Using Spring Boot and Resilience4j]
+|David Caron
+|SpringOne
+
+|0:22
+|https://www.youtube.com/watch?v=gvDvOWtPLVY&t=140[Hystrix is dead, now what?]
+|Tomasz Skowroński
+|DevoxxPL
+
+|===
 
 == Companies that use Resilience4j
 
-* Deutsche Telekom (In an application with over 400 million request per day)
-* AOL (In an application with low latency requirements)
-* Netpulse (In system with 40+ integrations)
-* wescale.de (In a B2B integration platform)
-* Topia (In an HR application built with microservices architecture)
-* Auto Trader Group plc (UK’s largest digital automotive marketplace)
-* PlayStation Network (Platform backend)
-
+* *Deutsche Telekom* (In an application with over 400 million requests per day)
+* *AOL* (In an application with low latency requirements)
+* *Netpulse* (In a system with 40+ integrations)
+* *wescale.de* (In a B2B integration platform)
+* *Topia* (In an HR application built with microservices architecture)
+* *Auto Trader Group plc* (The largest Britain digital automotive marketplace)
+* *PlayStation Network* (A platform backend)
 
 == License
 

@@ -65,6 +65,6 @@ public class FeignDecoratorsTest {
         assertThat(result)
                 .describedAs("Returned result is correct")
                 .isEqualTo("test01");
-        verify(rateLimiter, times(1)).acquirePermission();
+        verify(rateLimiter, times(1)).acquirePermission(1);
     }
 }
