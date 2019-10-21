@@ -33,7 +33,11 @@ public class CircuitBreakerMetricsPublisher extends AbstractCircuitBreakerMetric
     }
 
     public CircuitBreakerMetricsPublisher(MetricNames names) {
-        super(names);
+        this(names, MetricOptions.ofDefaults());
+    }
+
+    public CircuitBreakerMetricsPublisher(MetricNames names, MetricOptions options) {
+        super(names, options);
     }
 
     @Override
