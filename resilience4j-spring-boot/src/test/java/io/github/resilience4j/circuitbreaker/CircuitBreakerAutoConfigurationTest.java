@@ -64,6 +64,23 @@ public class CircuitBreakerAutoConfigurationTest {
 		CollectorRegistry.defaultRegistry.clear();
 	}
 
+
+	@Test
+	public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
+		//when
+		final CircuitBreaker backendC = circuitBreakerRegistry.getAllCircuitBreakers()
+				.filter(circuitBreaker -> circuitBreaker.getName().equalsIgnoreCase("backendC"))
+				.get();
+		//then
+		assertThat(backendC).isNotNull();
+		CircuitBreakerConfig backendConfig = backendC.getCircuitBreakerConfig();
+
+		assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
+		assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
+		assertThat(backendConfig.getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(1L));
+
+	}
+
 	/**
 	 * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
 	 * that the CircuitBreaker records successful and failed calls.
@@ -98,7 +115,7 @@ public class CircuitBreakerAutoConfigurationTest {
 		// Test Actuator endpoints
 
 		ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/circuitbreaker", CircuitBreakerEndpointResponse.class);
-		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dynamicBackend");
+		assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6).containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB", "dynamicBackend");
 
 		ResponseEntity<CircuitBreakerEventsEndpointResponse> circuitBreakerEventList = restTemplate.getForEntity("/circuitbreaker/events", CircuitBreakerEventsEndpointResponse.class);
 		assertThat(circuitBreakerEventList.getBody().getCircuitBreakerEvents()).hasSize(2);
