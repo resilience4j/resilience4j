@@ -49,6 +49,18 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	Bulkhead bulkhead(String name);
 
 	/**
+	 * Returns a managed {@link Bulkhead} or creates a new one with default configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name the name of the Bulkhead
+	 * @param tags tags to add to the bulkhead
+	 * @return The {@link Bulkhead}
+	 */
+	Bulkhead bulkhead(String name, io.vavr.collection.Map<String, String> tags);
+
+	/**
 	 * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
 	 *
 	 * @param name           the name of the Bulkhead
@@ -56,6 +68,19 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 * @return The {@link Bulkhead}
 	 */
 	Bulkhead bulkhead(String name, BulkheadConfig config);
+
+	/**
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name   the name of the Bulkhead
+	 * @param config a custom Bulkhead configuration
+	 * @param tags   tags added to the bulkhead
+	 * @return The {@link Bulkhead}
+	 */
+	Bulkhead bulkhead(String name, BulkheadConfig config, io.vavr.collection.Map<String, String> tags);
 
 	/**
 	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
@@ -69,11 +94,37 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	/**
 	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
 	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name                   the name of the Bulkhead
+	 * @param bulkheadConfigSupplier a custom Bulkhead configuration supplier
+	 * @param tags                   tags to add to the Bulkhead
+	 * @return The {@link Bulkhead}
+	 */
+	Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier, io.vavr.collection.Map<String, String> tags);
+
+	/**
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
+	 *
 	 * @param name       the name of the Bulkhead
 	 * @param configName a custom Bulkhead configuration name
 	 * @return The {@link Bulkhead}
 	 */
 	Bulkhead bulkhead(String name, String configName);
+
+	/**
+	 * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead configuration.
+	 *
+	 * The {@code tags} passed will be appended to the tags already configured for the registry. When tags (keys) of
+	 * the two collide the tags passed with this method will override the tags of the registry.
+	 *
+	 * @param name       the name of the Bulkhead
+	 * @param configName a custom Bulkhead configuration name
+	 * @param tags       tags to add to the Bulkhead
+	 * @return The {@link Bulkhead}
+	 */
+	Bulkhead bulkhead(String name, String configName, io.vavr.collection.Map<String, String> tags);
 
 	/**
 	 * Creates a BulkheadRegistry with a custom Bulkhead configuration.
@@ -83,6 +134,19 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 */
 	static BulkheadRegistry of(BulkheadConfig bulkheadConfig) {
 		return new InMemoryBulkheadRegistry(bulkheadConfig);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a custom Bulkhead configuration.
+	 *
+	 * Tags added to the registry will be added to every instance created by this registry.
+	 *
+	 * @param bulkheadConfig a custom Bulkhead configuration
+	 * @param tags           default tags to add to the registry
+	 * @return a BulkheadRegistry instance backed by a custom Bulkhead configuration
+	 */
+	static BulkheadRegistry of(BulkheadConfig bulkheadConfig, io.vavr.collection.Map<String, String> tags) {
+		return new InMemoryBulkheadRegistry(bulkheadConfig, tags);
 	}
 
 	/**
@@ -115,6 +179,19 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
 	 */
 	static BulkheadRegistry of(Map<String, BulkheadConfig> configs) {
 		return new InMemoryBulkheadRegistry(configs);
+	}
+
+	/**
+	 * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations.
+	 *
+	 * Tags added to the registry will be added to every instance created by this registry.
+	 *
+	 * @param configs a Map of shared Bulkhead configurations
+	 * @param tags    default tags to add to the registry
+	 * @return a RetryRegistry with a Map of shared Bulkhead configurations.
+	 */
+	static BulkheadRegistry of(Map<String, BulkheadConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		return new InMemoryBulkheadRegistry(configs, tags);
 	}
 
 	/**

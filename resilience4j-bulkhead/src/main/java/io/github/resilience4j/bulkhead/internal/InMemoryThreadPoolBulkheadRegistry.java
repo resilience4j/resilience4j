@@ -25,6 +25,7 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -42,23 +43,41 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 * The constructor with default default.
 	 */
 	public InMemoryThreadPoolBulkheadRegistry() {
-		this(ThreadPoolBulkheadConfig.ofDefaults());
+		this(HashMap.empty());
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(io.vavr.collection.Map<String, String> tags) {
+		this(ThreadPoolBulkheadConfig.ofDefaults(), tags);
 	}
 
 	public InMemoryThreadPoolBulkheadRegistry(Map<String, ThreadPoolBulkheadConfig> configs) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()));
+		this(configs, HashMap.empty());
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(Map<String, ThreadPoolBulkheadConfig> configs, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()), tags);
 		this.configurations.putAll(configs);
 	}
 
 	public InMemoryThreadPoolBulkheadRegistry(
 			Map<String, ThreadPoolBulkheadConfig> configs, RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()), registryEventConsumer);
+		this(configs, registryEventConsumer, HashMap.empty());
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(
+			Map<String, ThreadPoolBulkheadConfig> configs, RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()), registryEventConsumer, tags);
 		this.configurations.putAll(configs);
 	}
 
 	public InMemoryThreadPoolBulkheadRegistry(
 			Map<String, ThreadPoolBulkheadConfig> configs, List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()), registryEventConsumers);
+		this(configs, registryEventConsumers, HashMap.empty());
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(
+			Map<String, ThreadPoolBulkheadConfig> configs, List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
+		this(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()), registryEventConsumers, tags);
 		this.configurations.putAll(configs);
 	}
 
@@ -71,14 +90,28 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 		super(defaultConfig);
 	}
 
+	public InMemoryThreadPoolBulkheadRegistry(ThreadPoolBulkheadConfig defaultConfig, io.vavr.collection.Map<String, String> tags ) {
+		super(defaultConfig, tags);
+	}
+
 	public InMemoryThreadPoolBulkheadRegistry(
 			ThreadPoolBulkheadConfig defaultConfig, RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
 		super(defaultConfig, registryEventConsumer);
 	}
 
 	public InMemoryThreadPoolBulkheadRegistry(
+			ThreadPoolBulkheadConfig defaultConfig, RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, registryEventConsumer, tags);
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(
 			ThreadPoolBulkheadConfig defaultConfig, List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers) {
 		super(defaultConfig, registryEventConsumers);
+	}
+
+	public InMemoryThreadPoolBulkheadRegistry(
+			ThreadPoolBulkheadConfig defaultConfig, List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
+		super(defaultConfig, registryEventConsumers, tags);
 	}
 
 	/**
@@ -94,7 +127,15 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name) {
-		return bulkhead(name, getDefaultConfig());
+		return bulkhead(name, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ThreadPoolBulkhead bulkhead(String name, io.vavr.collection.Map<String, String> tags) {
+		return bulkhead(name, getDefaultConfig(), tags);
 	}
 
 	/**
@@ -102,7 +143,15 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config) {
-		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+		return bulkhead(name, config, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ThreadPoolBulkhead bulkhead(String name, ThreadPoolBulkheadConfig config, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -110,7 +159,15 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier) {
-		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
+		return bulkhead(name, bulkheadConfigSupplier, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ThreadPoolBulkhead bulkhead(String name, Supplier<ThreadPoolBulkheadConfig> bulkheadConfigSupplier, io.vavr.collection.Map<String, String> tags) {
+		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
 	}
 
 	/**
@@ -118,7 +175,15 @@ public final class InMemoryThreadPoolBulkheadRegistry extends AbstractRegistry<T
 	 */
 	@Override
 	public ThreadPoolBulkhead bulkhead(String name, String configName) {
+		return bulkhead(name, configName, HashMap.empty());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public ThreadPoolBulkhead bulkhead(String name, String configName, io.vavr.collection.Map<String, String> tags) {
 		return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
-				.orElseThrow(() -> new ConfigurationNotFoundException(configName))));
+				.orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
 	}
 }

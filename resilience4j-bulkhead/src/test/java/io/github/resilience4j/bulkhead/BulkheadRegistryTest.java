@@ -24,6 +24,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -82,6 +83,56 @@ public class BulkheadRegistryTest {
 
 		assertThat(bulkhead1).isNotSameAs(bulkhead2);
 		assertThat(registry.getAllBulkheads()).hasSize(2);
+	}
+
+	@Test
+	public void noTagsByDefault() {
+		Bulkhead retry = registry.bulkhead("testName");
+		assertThat(retry.getTags()).hasSize(0);
+	}
+
+	@Test
+	public void tagsOfRegistryAddedToInstance() {
+		BulkheadConfig bulkheadConfig = BulkheadConfig.ofDefaults();
+		Map<String, BulkheadConfig> bulkheadConfigs = Collections.singletonMap("default", bulkheadConfig);
+		io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(bulkheadConfigs, bulkheadTags);
+		Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
+
+		assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+	}
+
+	@Test
+	public void tagsAddedToInstance() {
+		io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+		Bulkhead bulkhead = registry.bulkhead("testName", bulkheadTags);
+
+		assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+	}
+
+	@Test
+	public void tagsOfRetriesShouldNotBeMixed() {
+		BulkheadConfig config = BulkheadConfig.ofDefaults();
+		io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+		Bulkhead bulkhead = registry.bulkhead("testName", config, bulkheadTags);
+		io.vavr.collection.Map<String, String> bulkheadTags2 = io.vavr.collection.HashMap.of("key3","value3", "key4", "value4");
+		Bulkhead bulkhead2 = registry.bulkhead("otherTestName", config, bulkheadTags2);
+
+		Assertions.assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+		Assertions.assertThat(bulkhead2.getTags()).containsOnlyElementsOf(bulkheadTags2);
+	}
+
+	@Test
+	public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+		BulkheadConfig bulkheadConfig = BulkheadConfig.ofDefaults();
+		Map<String, BulkheadConfig> bulkheadConfigs = Collections.singletonMap("default", bulkheadConfig);
+		io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+		io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap.of("key1","value3", "key4", "value4");
+		BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(bulkheadConfigs, registryTags);
+		Bulkhead retry = bulkheadRegistry.bulkhead("testName", bulkheadConfig, instanceTags);
+
+		io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap.of("key1","value3", "key2", "value2", "key4", "value4");
+		Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
 	}
 
 	@Test

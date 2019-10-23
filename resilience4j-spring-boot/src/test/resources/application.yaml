@@ -48,6 +48,15 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 50
       eventConsumerBufferSize: 10
       registerHealthIndicator: false
+    backendC:
+      slidingWindowSize: 10
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      permittedNumberOfCallsInHalfOpenState: 5
+      waitDurationInOpenState: 1000
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 20
+      registerHealthIndicator: false
     backendSharedA:
       baseConfig: default
       slidingWindowSize: 6

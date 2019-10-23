@@ -261,13 +261,13 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
     public void constructionWithNullName() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(NAME_MUST_NOT_BE_NULL);
-        new SemaphoreBasedRateLimiter(null, config, null);
+        new SemaphoreBasedRateLimiter(null, config, (ScheduledExecutorService) null);
     }
 
     @Test
     public void constructionWithNullConfig() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
-        new SemaphoreBasedRateLimiter("test", null, null);
+        new SemaphoreBasedRateLimiter("test", null, (ScheduledExecutorService) null);
     }
 }
