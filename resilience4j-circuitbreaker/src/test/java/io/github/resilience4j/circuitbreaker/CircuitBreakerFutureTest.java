@@ -33,7 +33,7 @@ public class CircuitBreakerFutureTest {
 
         final Future<String> future = executor.submit(() -> "Hello World");
 
-        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture(circuitBreaker, future);
+        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
         String value = decoratedFuture.get();
 
         assertThat(value).isEqualTo("Hello World");
@@ -53,7 +53,7 @@ public class CircuitBreakerFutureTest {
             throw new RuntimeException("BAM!");
         });
 
-        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture(circuitBreaker, future);
+        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
         Throwable thrown = catchThrowable(() -> decoratedFuture.get());
 
@@ -76,7 +76,7 @@ public class CircuitBreakerFutureTest {
             return null;
         });
 
-        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture(circuitBreaker, future);
+        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
         Throwable thrown = catchThrowable(() -> decoratedFuture.get(5, TimeUnit.SECONDS));
 
@@ -96,7 +96,7 @@ public class CircuitBreakerFutureTest {
         final Future<String> future = executor.submit(() -> "Hello World");
         future.cancel(true);
 
-        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture(circuitBreaker, future);
+        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
         Throwable thrown = catchThrowable(() -> decoratedFuture.get(5, TimeUnit.SECONDS));
 
         assertThat(thrown).isInstanceOf(CancellationException.class);
@@ -114,7 +114,7 @@ public class CircuitBreakerFutureTest {
         circuitBreaker.transitionToOpenState();
 
         final Future<String> future = executor.submit(() -> "Hello World");
-        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture(circuitBreaker, future);
+        CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
         Throwable thrown = catchThrowable(() -> decoratedFuture.get(5, TimeUnit.SECONDS));
 

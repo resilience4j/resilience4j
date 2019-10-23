@@ -645,7 +645,7 @@ public interface CircuitBreaker {
                    throw e;
                }
                final Future<T> future = val;
-               return new CircuitBreakerFuture(circuitBreaker, future, start, true);
+               return new CircuitBreakerFuture<>(circuitBreaker, future, start, true);
            }
        };
     }
