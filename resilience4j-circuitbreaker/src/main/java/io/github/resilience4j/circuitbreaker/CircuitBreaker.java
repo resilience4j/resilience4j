@@ -27,10 +27,8 @@ import io.vavr.control.Try;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -315,6 +313,17 @@ public interface CircuitBreaker {
      */
     default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier){
         return decorateCompletionStage(this, supplier).get();
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a CircuitBreaker.
+     *
+     * @param supplier the original supplier
+     * @param <T>      the type of the returned CompletionStage's result
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<Future<T>> decorateFuture(Supplier<Future<T>> supplier) {
+        return decorateFuture(this, supplier);
     }
 
     /**
@@ -611,6 +620,34 @@ public interface CircuitBreaker {
                 throw exception;
             }
         };
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier       the original supplier
+     * @param <T>            the type of the returned Future's result
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker, Supplier<Future<T>> supplier) {
+       return () -> {
+           if (!circuitBreaker.tryAcquirePermission()) {
+               throw CallNotPermittedException.createCallNotPermittedException(circuitBreaker);
+           } else {
+               final long start = System.nanoTime();
+               Future<T> val = null;
+               try {
+                   val = supplier.get();
+               } catch (Exception e) {
+                   long durationInNanos = System.nanoTime() - start;
+                   circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
+                   throw e;
+               }
+               final Future<T> future = val;
+               return new CircuitBreakerFuture(circuitBreaker, future, start, true);
+           }
+       };
     }
 
     /**
@@ -957,5 +994,101 @@ public interface CircuitBreaker {
      */
     static CircuitBreaker of(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier){
         return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier);
+    }
+
+    /**
+     * This class decorates future to add CircuitBreaking functionality around invocation.
+     * @param <T>
+     */
+    final class CircuitBreakerFuture<T> implements Future<T>{
+        private CircuitBreaker circuitBreaker;
+        private Future<T> future;
+        private long start;
+        private boolean isPermissionAcquired;
+
+        CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future, long start, boolean isPermissionAcquired){
+            Objects.requireNonNull(future, "Non null Future is required to decorate");
+            this.circuitBreaker = circuitBreaker;
+            this.future= future;
+            this.start = start;
+            this.isPermissionAcquired= isPermissionAcquired;
+        }
+
+        CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future){
+            Objects.requireNonNull(future, "Non null Future is required to decorate");
+            this.circuitBreaker = circuitBreaker;
+            this.future= future;
+            this.start = System.nanoTime();
+            this.isPermissionAcquired = false;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return future.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return future.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return future.isDone();
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            if (!isPermissionAcquired && !circuitBreaker.tryAcquirePermission()) {
+                throw CallNotPermittedException.createCallNotPermittedException(circuitBreaker);
+            } else {
+                try {
+                    T v = future.get();
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                    return v;
+                } catch (ExecutionException e) {
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e.getCause());
+                    throw e;
+                } catch (CancellationException e) {
+                    circuitBreaker.releasePermission();
+                    throw e;
+                } catch (Exception e) {
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
+                    throw e;
+                }
+            }
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            if (!isPermissionAcquired && !circuitBreaker.tryAcquirePermission()) {
+                throw CallNotPermittedException.createCallNotPermittedException(circuitBreaker);
+            } else {
+                try {
+                    T v = future.get(timeout, unit);
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                    return v;
+                } catch (ExecutionException e) {
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e.getCause());
+                    throw e;
+                } catch (TimeoutException e) {
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
+                    throw e;
+                } catch (CancellationException e) {
+                    circuitBreaker.releasePermission();
+                    throw e;
+                } catch (Exception e) {
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
+                    throw e;
+                }
+            }
+        }
     }
 }
