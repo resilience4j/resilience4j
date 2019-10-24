@@ -74,9 +74,18 @@ public interface TimeLimiter {
         return timeLimiter.decorateFutureSupplier(futureSupplier);
     }
 
+    /**
+     * Decorate a CompletionStage supplier which is decorated by a TimeLimiter
+     * @param timeLimiter the TimeLimiter
+     * @param scheduler execution service to use to schedule timeout
+     * @param supplier the original CompletionStage supplier
+     * @param <T> the type of the returned CompletionStage's result
+     * @param <F> the CompletionStage type supplied
+     * @return a CompletionStage supplier which is decorated by a TimeLimiter
+     */
     static <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
-            TimeLimiter timeLimiter, Supplier<F> supplier) {
-        return timeLimiter.decorateCompletionStage(supplier);
+            TimeLimiter timeLimiter, ScheduledExecutorService scheduler, Supplier<F> supplier) {
+        return timeLimiter.decorateCompletionStage(scheduler, supplier);
     }
 
     String getName();
@@ -101,8 +110,17 @@ public interface TimeLimiter {
         return decorateFutureSupplier(this, futureSupplier).call();
     }
 
-    default <T, F extends CompletionStage<T>> CompletionStage<T> executeCompletionStage(Supplier<F> supplier) {
-        return decorateCompletionStage(this, supplier).get();
+    /**
+     * Decorates and executes the CompletionStage Supplier
+     * @param scheduler execution service to use to schedule timeout
+     * @param supplier the original CompletionStage supplier
+     * @param <T> the type of the returned CompletionStage's result
+     * @param <F> the CompletionStage type supplied
+     * @return the decorated CompletionStage
+     */
+    default <T, F extends CompletionStage<T>> CompletionStage<T> executeCompletionStage(
+            ScheduledExecutorService scheduler, Supplier<F> supplier) {
+        return decorateCompletionStage(this, scheduler, supplier).get();
     }
 
     /**
@@ -115,7 +133,16 @@ public interface TimeLimiter {
      */
     <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier);
 
-    <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier);
+    /**
+     * Decorate a CompletionStage supplier which is decorated by a TimeLimiter
+     * @param scheduler execution service to use to schedule timeout
+     * @param supplier the original CompletionStage supplier
+     * @param <T> the type of the returned CompletionStage's result
+     * @param <F> the CompletionStage type supplied
+     * @return a CompletionStage supplier which is decorated by a TimeLimiter
+     */
+    <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
+            ScheduledExecutorService scheduler, Supplier<F> supplier);
 
     /**
      * Returns an EventPublisher which can be used to register event consumers.

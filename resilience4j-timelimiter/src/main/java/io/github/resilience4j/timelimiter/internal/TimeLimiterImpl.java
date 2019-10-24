@@ -56,34 +56,38 @@ public class TimeLimiterImpl implements TimeLimiter {
     }
 
     @Override
-    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier) {
-        CompletableFuture<T> future = supplier.get().toCompletableFuture();
-        ScheduledFuture<?> timeoutFuture =
-                Timeout.of(future, getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
+            ScheduledExecutorService scheduler, Supplier<F> supplier) {
 
-        return () -> future.whenComplete((result, throwable) -> {
-            // complete
-            if (result != null) {
-                if (!timeoutFuture.isDone()) {
-                    timeoutFuture.cancel(false);
-                }
-                onSuccess();
-            }
+        return () -> {
+            CompletableFuture<T> future = supplier.get().toCompletableFuture();
+            ScheduledFuture<?> timeoutFuture =
+                    Timeout.of(future, scheduler, getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
 
-            // exceptionally
-            if (throwable != null) {
-                if (throwable instanceof ExecutionException) {
-                    Throwable cause = throwable.getCause();
-                    if (cause == null) {
-                        onError(throwable);
-                    } else {
-                        onError(cause);
+            return future.whenComplete((result, throwable) -> {
+                // complete
+                if (result != null) {
+                    if (!timeoutFuture.isDone()) {
+                        timeoutFuture.cancel(false);
                     }
-                } else {
-                    onError(throwable);
+                    onSuccess();
                 }
-            }
-        });
+
+                // exceptionally
+                if (throwable != null) {
+                    if (throwable instanceof ExecutionException) {
+                        Throwable cause = throwable.getCause();
+                        if (cause == null) {
+                            onError(throwable);
+                        } else {
+                            onError(cause);
+                        }
+                    } else {
+                        onError(throwable);
+                    }
+                }
+            });
+        };
     }
 
     @Override
@@ -146,16 +150,11 @@ public class TimeLimiterImpl implements TimeLimiter {
      */
     static final class Timeout {
 
-        private static final ScheduledThreadPoolExecutor delayer;
-        static {
-            (delayer = new ScheduledThreadPoolExecutor(
-                    1, new DaemonThreadFactory())).setRemoveOnCancelPolicy(true);
-        }
-
         private Timeout() { }
 
-        static ScheduledFuture<?> of(CompletableFuture<?> future, long delay, TimeUnit unit) {
-            return delayer.schedule(() -> {
+        static ScheduledFuture<?> of(
+                CompletableFuture<?> future, ScheduledExecutorService scheduler, long delay, TimeUnit unit) {
+            return scheduler.schedule(() -> {
                 if (future != null && !future.isDone()) {
                     future.completeExceptionally(new TimeoutException());
                 }

@@ -24,7 +24,7 @@ public class TimeLimiterTest {
     }
 
     @Test
-    public void shouldThrowTimeoutExceptionAndInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shouldThrowTimeoutExceptionAndInvokeCancel() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
 
@@ -47,6 +47,7 @@ public class TimeLimiterTest {
     public void shouldThrowTimeoutExceptionWithCompletionStage() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         Supplier<CompletionStage<Integer>> supplier = () -> CompletableFuture.supplyAsync(() -> {
             try {
@@ -58,7 +59,7 @@ public class TimeLimiterTest {
             return 0;
         });
 
-        CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, supplier).get();
+        CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, scheduler, supplier).get();
         Try<Integer> decoratedResult = Try.ofCallable(() -> decorated.toCompletableFuture().get());
         assertThat(decoratedResult.isFailure()).isTrue();
         assertThat(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
@@ -66,7 +67,7 @@ public class TimeLimiterTest {
     }
 
     @Test
-    public void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
                 .cancelRunningFuture(false).build());
@@ -108,6 +109,7 @@ public class TimeLimiterTest {
     public void shouldReturnResultWithCompletionStage() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         Supplier<CompletionStage<Integer>> supplier = () -> CompletableFuture.supplyAsync(() -> {
             try {
@@ -119,10 +121,10 @@ public class TimeLimiterTest {
             return 42;
         });
 
-        int result = timeLimiter.executeCompletionStage(supplier).toCompletableFuture().get();
+        int result = timeLimiter.executeCompletionStage(scheduler, supplier).toCompletableFuture().get();
         assertThat(result).isEqualTo(42);
 
-        int result2 = timeLimiter.decorateCompletionStage(supplier).get().toCompletableFuture().get();
+        int result2 = timeLimiter.decorateCompletionStage(scheduler, supplier).get().toCompletableFuture().get();
         assertThat(result2).isEqualTo(42);
     }
 
