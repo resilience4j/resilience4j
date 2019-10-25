@@ -35,7 +35,7 @@ public class RetryEventTest {
         assertThat(retryOnErrorEvent.getNumberOfRetryAttempts()).isEqualTo(2);
         assertThat(retryOnErrorEvent.getEventType()).isEqualTo(Type.ERROR);
         assertThat(retryOnErrorEvent.getLastThrowable()).isInstanceOf(IOException.class);
-        assertThat(retryOnErrorEvent.toString()).contains("Retry 'test' recorded a failed retry attempt. Number of retry attempts: '2', Last exception was: 'java.io.IOException: Bla'.");
+        assertThat(retryOnErrorEvent.toString()).contains("Retry 'test' recorded a failed retry attempt. Number of retry attempts: '2'. Giving up. Last exception was: 'java.io.IOException: Bla'.");
     }
 
     @Test
