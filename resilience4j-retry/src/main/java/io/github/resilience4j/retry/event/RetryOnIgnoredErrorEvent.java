@@ -19,13 +19,16 @@
 package io.github.resilience4j.retry.event;
 
 /**
- * A RetryEvent which informs that an error has been ignored
+ * A RetryEvent which informs that an error has been ignored. It will not be retried.
+ * <p>
+ * An error is ignored when the exception is determined to be non-retriable, as determined by the {@link io.github.resilience4j.retry.RetryConfig}.
  */
 public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
 
     public RetryOnIgnoredErrorEvent(String name, Throwable lastThrowable) {
         super(name, 0, lastThrowable);
     }
+
     @Override
     public Type getEventType() {
         return Type.IGNORED_ERROR;
