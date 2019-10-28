@@ -61,7 +61,7 @@ public class RetryTransformer<T> extends AbstractTransformer<T> {
 
                 @Override
                 public void success(T value) {
-                    context.onSuccess();
+                    context.onFinish();
                     down.success(value);
                 }
 
