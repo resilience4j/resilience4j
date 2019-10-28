@@ -120,6 +120,37 @@ public interface Retry {
 	}
 
 	/**
+	 * Decorates a Future Supplier with Retry.
+	 *
+	 * @param retry    the retry context
+	 * @param executor execution service to use to pull and wait for supplied Futures
+	 * @param supplier future supplier
+	 * @param <T>      type of future result
+	 * @return decorated supplier
+	 */
+	static <T> Supplier<Future<T>> decorateFuture(Retry retry, ExecutorService executor, Supplier<Future<T>> supplier) {
+		return () -> executor.submit(() -> {
+			Retry.AsyncContext<T> context = retry.asyncContext();
+			do try {
+				final T val = supplier.get().get();
+				final long delay = context.onResult(val);
+				if (delay <= 0) {
+					return val;
+				}
+				Thread.sleep(delay);
+
+			} catch (ExecutionException e) {
+				final long delay = context.onError(e);
+				if (delay <= 0) {
+					throw e;
+				}
+				Thread.sleep(delay);
+
+			} while (true);
+		});
+	}
+
+	/**
 	 * Creates a retryable supplier.
 	 *
 	 * @param retry    the retry context
