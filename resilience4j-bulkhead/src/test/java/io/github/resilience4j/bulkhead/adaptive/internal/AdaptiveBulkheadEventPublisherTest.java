@@ -18,22 +18,21 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import io.github.resilience4j.bulkhead.event.AdaptiveBulkheadEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 
 public class AdaptiveBulkheadEventPublisherTest {
@@ -77,7 +76,7 @@ public class AdaptiveBulkheadEventPublisherTest {
 	}
 
 
-	private void logEventType(BulkheadLimit event) {
+	private void logEventType(AdaptiveBulkheadEvent event) {
 		logger.info(event.getEventType().toString());
 	}
 

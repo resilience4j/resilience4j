@@ -1,17 +1,17 @@
 package io.github.resilience4j.bulkhead.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * unit testing for limit events
  */
-public class BulkheadLimitTest {
+public class AdaptiveBulkheadEventTest {
 
 	private Map<String, String> evntData = new HashMap<>();
 
@@ -24,7 +24,7 @@ public class BulkheadLimitTest {
 	@Test
 	public void testLimitIncreasedEvent() {
 		BulkheadOnLimitIncreasedEvent bulkheadOnLimitIncreasedEvent = new BulkheadOnLimitIncreasedEvent("test", evntData);
-		assertThat(bulkheadOnLimitIncreasedEvent.getEventType()).isEqualTo(BulkheadLimit.Type.LIMIT_INCREASED);
+		assertThat(bulkheadOnLimitIncreasedEvent.getEventType()).isEqualTo(AdaptiveBulkheadEvent.Type.LIMIT_INCREASED);
 		assertThat(bulkheadOnLimitIncreasedEvent.getBulkheadName()).isEqualTo("test");
 		assertThat(bulkheadOnLimitIncreasedEvent.toString()).contains("limit increased", "test1");
 
@@ -33,7 +33,7 @@ public class BulkheadLimitTest {
 	@Test
 	public void testLimitDecreasedEvent() {
 		BulkheadOnLimitDecreasedEvent bulkheadOnLimitDecreasedEvent = new BulkheadOnLimitDecreasedEvent("test", evntData);
-		assertThat(bulkheadOnLimitDecreasedEvent.getEventType()).isEqualTo(BulkheadLimit.Type.LIMIT_DECREASED);
+		assertThat(bulkheadOnLimitDecreasedEvent.getEventType()).isEqualTo(AdaptiveBulkheadEvent.Type.LIMIT_DECREASED);
 		assertThat(bulkheadOnLimitDecreasedEvent.getBulkheadName()).isEqualTo("test");
 		assertThat(bulkheadOnLimitDecreasedEvent.toString()).contains("limit decreased", "test1");
 
@@ -43,7 +43,7 @@ public class BulkheadLimitTest {
 	@Test
 	public void testLimitIgnoreEvent() {
 		BulkheadOnIgnoreEvent bulkheadOnIgnoreEvent = new BulkheadOnIgnoreEvent("test", evntData);
-		assertThat(bulkheadOnIgnoreEvent.getEventType()).isEqualTo(BulkheadLimit.Type.IGNORED_ERROR);
+		assertThat(bulkheadOnIgnoreEvent.getEventType()).isEqualTo(AdaptiveBulkheadEvent.Type.IGNORED_ERROR);
 		assertThat(bulkheadOnIgnoreEvent.getBulkheadName()).isEqualTo("test");
 		assertThat(bulkheadOnIgnoreEvent.toString()).contains("error is ignored", "test1");
 
@@ -53,7 +53,7 @@ public class BulkheadLimitTest {
 	@Test
 	public void testLimitSuccessEvent() {
 		BulkheadOnSuccessEvent bulkheadOnSuccessEvent = new BulkheadOnSuccessEvent("test", evntData);
-		assertThat(bulkheadOnSuccessEvent.getEventType()).isEqualTo(BulkheadLimit.Type.SUCCESS);
+		assertThat(bulkheadOnSuccessEvent.getEventType()).isEqualTo(AdaptiveBulkheadEvent.Type.SUCCESS);
 		assertThat(bulkheadOnSuccessEvent.getBulkheadName()).isEqualTo("test");
 		assertThat(bulkheadOnSuccessEvent.toString()).contains("call is succeeded", "test1");
 
@@ -63,7 +63,7 @@ public class BulkheadLimitTest {
 	@Test
 	public void testLimitOnErrorEvent() {
 		BulkheadOnErrorEvent bulkheadOnErrorEvent = new BulkheadOnErrorEvent("test", evntData);
-		assertThat(bulkheadOnErrorEvent.getEventType()).isEqualTo(BulkheadLimit.Type.ERROR);
+		assertThat(bulkheadOnErrorEvent.getEventType()).isEqualTo(AdaptiveBulkheadEvent.Type.ERROR);
 		assertThat(bulkheadOnErrorEvent.getBulkheadName()).isEqualTo("test");
 		assertThat(bulkheadOnErrorEvent.toString()).contains("call is failed", "test1");
 

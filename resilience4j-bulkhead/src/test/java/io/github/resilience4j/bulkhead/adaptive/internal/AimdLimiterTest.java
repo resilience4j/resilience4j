@@ -1,6 +1,17 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.LimitResult;
+import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import org.junit.Before;
+import org.junit.Test;
+import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.Styler;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -10,19 +21,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
-import org.knowm.xchart.style.Styler;
-
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.LimitResult;
-import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * test the adoptive bulkhead limiter logic
@@ -32,7 +31,7 @@ public class AimdLimiterTest {
 	private AdaptiveBulkheadConfig<AimdConfig> config;
 	private AimdLimiter aimdLimiter;
 	// enable if u need to see the graphs of the executions
-	private boolean drawGraphs = false;
+	private boolean drawGraphs = true;
 
 	@Before
 	public void setup() {
