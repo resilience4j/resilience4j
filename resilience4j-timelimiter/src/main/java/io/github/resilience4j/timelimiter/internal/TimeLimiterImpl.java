@@ -75,7 +75,10 @@ public class TimeLimiterImpl implements TimeLimiter {
 
                 // exceptionally
                 if (throwable != null) {
-                    if (throwable instanceof ExecutionException) {
+                    if (throwable instanceof CompletionException) {
+                        Throwable cause = throwable.getCause();
+                        onError(cause);
+                    } else if (throwable instanceof ExecutionException) {
                         Throwable cause = throwable.getCause();
                         if (cause == null) {
                             onError(throwable);
@@ -160,17 +163,6 @@ public class TimeLimiterImpl implements TimeLimiter {
                 }
             }, delay, unit);
          }
-    }
-
-    static final class DaemonThreadFactory implements ThreadFactory {
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            t.setName("TimeLimiterDelayScheduler");
-            return t;
-        }
     }
 
 }
