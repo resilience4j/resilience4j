@@ -21,7 +21,6 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.functions.NanosecondTimer;
 import io.github.resilience4j.core.functions.OnceConsumer;
 import io.vavr.*;
 import io.vavr.control.Either;
@@ -35,9 +34,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static io.github.resilience4j.core.functions.NanosecondTimer.create;
-import static io.github.resilience4j.core.functions.NanosecondTimer.now;
 
 /**
  * A CircuitBreaker instance is thread-safe can be used to decorate multiple requests.
@@ -1033,11 +1029,12 @@ public interface CircuitBreaker {
                 promise.completeExceptionally(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
                 return promise;
             } else {
-                NanosecondTimer timer = now();
+                final long start = System.nanoTime();
                 try {
-                    return new CircuitBreakerFuture<>(circuitBreaker, supplier.get(), timer);
+                    return new CircuitBreakerFuture<>(circuitBreaker, supplier.get(), start);
                 } catch (Exception e) {
-                    timer.elapsed(time -> circuitBreaker.onError(time, TimeUnit.NANOSECONDS, e));
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
                     throw e;
                 }
             }
@@ -1052,21 +1049,17 @@ public interface CircuitBreaker {
     final class CircuitBreakerFuture<T> implements Future<T> {
         final private Future<T> future;
         final private OnceConsumer<CircuitBreaker> onceToCircuitbreaker;
-        final private NanosecondTimer nanosecondTimer;
+        final private long start;
 
         CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future) {
-            this(circuitBreaker, future, now());
+            this(circuitBreaker, future, System.nanoTime());
         }
 
         CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future, long start) {
-            this(circuitBreaker, future, create(start));
-        }
-
-        CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future, NanosecondTimer timer) {
             Objects.requireNonNull(future, "Non null Future is required to decorate");
             this.onceToCircuitbreaker = OnceConsumer.of(circuitBreaker);
             this.future = future;
-            this.nanosecondTimer = timer;
+            this.start = start;
         }
 
         @Override
@@ -1088,18 +1081,16 @@ public interface CircuitBreaker {
         public T get() throws InterruptedException, ExecutionException {
             try {
                 T v = future.get();
-                onceToCircuitbreaker.applyOnce(cb -> nanosecondTimer.elapsed(
-                        time -> cb.onSuccess(time, TimeUnit.NANOSECONDS)));
+                long durationInNanos = System.nanoTime() - start;
+                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(durationInNanos, TimeUnit.NANOSECONDS));
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
                 throw e;
             } catch (Exception e) {
-                onceToCircuitbreaker.applyOnce(cb -> nanosecondTimer.elapsed(
-                        time -> cb.onError(time, TimeUnit.NANOSECONDS, e)));
+                long durationInNanos = System.nanoTime() - start;
+                onceToCircuitbreaker.applyOnce(cb -> cb.onError(durationInNanos, TimeUnit.NANOSECONDS, e));
                 throw e;
-            } finally {
-                future.cancel(true);
             }
         }
 
@@ -1107,18 +1098,16 @@ public interface CircuitBreaker {
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             try {
                 T v = future.get(timeout, unit);
-                onceToCircuitbreaker.applyOnce(cb -> nanosecondTimer.elapsed(
-                        time -> cb.onSuccess(time, TimeUnit.NANOSECONDS)));
+                long durationInNanos = System.nanoTime() - start;
+                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(durationInNanos, TimeUnit.NANOSECONDS));
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
                 throw e;
             } catch (Exception e) {
-                onceToCircuitbreaker.applyOnce(cb -> nanosecondTimer.elapsed(
-                        time -> cb.onError(time, TimeUnit.NANOSECONDS, e)));
+                long durationInNanos = System.nanoTime() - start;
+                onceToCircuitbreaker.applyOnce(cb -> cb.onError(durationInNanos, TimeUnit.NANOSECONDS, e));
                 throw e;
-            } finally {
-                future.cancel(true);
             }
         }
     }

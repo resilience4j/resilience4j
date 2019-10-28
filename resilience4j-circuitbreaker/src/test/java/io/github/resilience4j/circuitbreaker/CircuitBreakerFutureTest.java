@@ -120,10 +120,11 @@ public class CircuitBreakerFutureTest {
     }
 
     @Test
-    public void shouldDecorateFutureAndCallerRequestCancelled() {
+    public void shouldDecorateFutureAndCallerRequestCancelled() throws Exception{
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        final Future<String> future = executor.submit(() -> "Hello World");
+        //long running task
+        final Future<String> future = executor.submit(() -> {Thread.sleep(10000); return null;});
         future.cancel(true);
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
