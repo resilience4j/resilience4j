@@ -134,7 +134,7 @@ public interface Retry {
 				T result = supplier.apply();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onFinish();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -155,7 +155,7 @@ public interface Retry {
 			Retry.Context context = retry.context();
 			do try {
 				runnable.run();
-				context.onSuccess();
+				context.onFinish();
 				break;
 			} catch (Exception exception) {
 				context.onError(exception);
@@ -179,7 +179,7 @@ public interface Retry {
 				R result = function.apply(t);
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onFinish();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -203,7 +203,7 @@ public interface Retry {
 				T result = supplier.get();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onFinish();
 					return result;
 				}
 			} catch (RuntimeException runtimeException) {
@@ -228,7 +228,7 @@ public interface Retry {
 				if(result.isRight()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
-						context.onSuccess();
+						context.onFinish();
 						return result;
 					}
 				}else{
@@ -259,7 +259,7 @@ public interface Retry {
 				if(result.isSuccess()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
-						context.onSuccess();
+						context.onFinish();
 						return result;
 					}
 				}else{
@@ -294,7 +294,7 @@ public interface Retry {
 				T result = supplier.call();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onFinish();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -315,7 +315,7 @@ public interface Retry {
 			Retry.Context context = retry.context();
 			do try {
 				runnable.run();
-				context.onSuccess();
+				context.onFinish();
 				break;
 			} catch (RuntimeException runtimeException) {
 				context.onRuntimeError(runtimeException);
@@ -339,7 +339,7 @@ public interface Retry {
 				R result = function.apply(t);
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onFinish();
 					return result;
 				}
 			} catch (RuntimeException runtimeException) {
@@ -510,8 +510,14 @@ public interface Retry {
 
 		/**
 		 * Records a successful call.
+		 * @deprecated since 1.2.0
 		 */
 		void onSuccess();
+
+		/**
+		 * Records a successful call or retryable call with the needed generated retry events.
+		 */
+		void onFinish();
 
 		/**
 		 * Records an failed call.
@@ -539,8 +545,15 @@ public interface Retry {
 
 		/**
 		 * Records a successful call.
+		 * @deprecated since 1.2.0
 		 */
 		void onSuccess();
+
+
+		/**
+		 * Records a successful call or retryable call with the needed generated retry events.
+		 */
+		void onFinish();
 
 		/**
 		 * @param result the returned result from the called logic
@@ -631,7 +644,7 @@ public interface Retry {
 
 			if (delay < 1) {
 				promise.complete(result);
-				retryContext.onSuccess();
+				retryContext.onFinish();
 			} else {
 				scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
 			}

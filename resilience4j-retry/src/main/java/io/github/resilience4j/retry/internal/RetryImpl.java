@@ -137,7 +137,13 @@ public class RetryImpl<T> implements Retry {
 		}
 
         @Override
+		@Deprecated
 		public void onSuccess() {
+			onFinish();
+		}
+
+		@Override
+		public void onFinish() {
 			int currentNumOfAttempts = numOfAttempts.get();
 			if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
 				succeededAfterRetryCounter.increment();
@@ -154,7 +160,7 @@ public class RetryImpl<T> implements Retry {
 			}
 		}
 
-        @Override
+		@Override
 		public boolean onResult(T result) {
 			if (null != resultPredicate && resultPredicate.test(result)) {
 				int currentNumOfAttempts = numOfAttempts.incrementAndGet();
@@ -232,7 +238,13 @@ public class RetryImpl<T> implements Retry {
 		private final AtomicReference<Throwable> lastException = new AtomicReference<>();
 
 		@Override
+		@Deprecated
 		public void onSuccess() {
+			onFinish();
+		}
+
+		@Override
+		public void onFinish() {
 			int currentNumOfAttempts = numOfAttempts.get();
 			if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
 				succeededAfterRetryCounter.increment();
