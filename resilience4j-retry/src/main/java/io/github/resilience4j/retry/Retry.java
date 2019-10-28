@@ -142,8 +142,9 @@ public interface Retry {
 			} catch (ExecutionException e) {
 				final long delay = context.onError(e);
 				if (delay <= 0) {
-					throw e;
-				}
+					// ExecutionExceptions always wrap Exceptions
+					throw (Exception) e.getCause();
+ 				}
 				Thread.sleep(delay);
 
 			} while (true);

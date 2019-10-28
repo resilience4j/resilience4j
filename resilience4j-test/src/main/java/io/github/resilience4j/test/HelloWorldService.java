@@ -34,6 +34,8 @@ public interface HelloWorldService {
 
     Try<String> returnTry();
 
+    Future<String> returnFuture();
+
     String returnHelloWorldWithException() throws IOException;
 
     String returnHelloWorldWithName(String name);
