@@ -158,7 +158,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 
-	private class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements AdaptiveEventPublisher, EventConsumer<BulkheadLimit> {
+	private class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
 
 		@Override
 		public EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
@@ -173,7 +173,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 		@Override
-		public void consumeEvent(BulkheadLimit event) {
+		public void consumeEvent(AdaptiveBulkheadEvent event) {
 			super.processEvent(event);
 		}
 	}
@@ -183,7 +183,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		return String.format("AdaptiveBulkhead '%s'", this.name);
 	}
 
-	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
+	private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
 		if (eventProcessor.hasConsumers()) {
 			eventProcessor.consumeEvent(eventSupplier);
 		}
