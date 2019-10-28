@@ -42,15 +42,15 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
                 if (throwable != null) {
                     try {
                         ((CompletionStage) fallbackMethod.fallback((Throwable) throwable))
-                                .whenComplete((recoveryResult, recoveryThrowable) -> {
-                                    if (recoveryThrowable != null) {
-                                        promise.completeExceptionally((Throwable) recoveryThrowable);
+                                .whenComplete((fallbackResult, fallbackThrowable) -> {
+                                    if (fallbackThrowable != null) {
+                                        promise.completeExceptionally((Throwable) fallbackThrowable);
                                     } else {
-                                        promise.complete(recoveryResult);
+                                        promise.complete(fallbackResult);
                                     }
                                 });
-                    } catch (Throwable recoveryThrowable) {
-                        promise.completeExceptionally(recoveryThrowable);
+                    } catch (Throwable fallbackThrowable) {
+                        promise.completeExceptionally(fallbackThrowable);
                     }
                 } else {
                     promise.complete(result);

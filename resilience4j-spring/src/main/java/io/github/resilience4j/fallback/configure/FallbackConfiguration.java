@@ -48,7 +48,7 @@ public class FallbackConfiguration {
 	}
 
 	@Bean
-	public FallbackDecorators fallbackDecorators(List<FallbackDecorator> recoveryDecorator) {
-		return new FallbackDecorators(recoveryDecorator);
+	public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorator) {
+		return new FallbackDecorators(fallbackDecorator);
 	}
 }
