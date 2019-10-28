@@ -71,37 +71,37 @@ public class FallbackMethodParentTest {
     }
 
     @Test
-    public void recoverIgnoringParentMethod() throws Throwable {
+    public void fallbackIgnoringParentMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
-        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackParent", testMethod, new Object[]{"test"}, target);
+        FallbackMethod fallbackMethod = FallbackMethod.create("fallbackParent", testMethod, new Object[]{"test"}, target);
 
-        assertThat(recoveryMethod.fallback(new IllegalStateException("err"))).isEqualTo("proxy-recovered");
+        assertThat(fallbackMethod.fallback(new IllegalStateException("err"))).isEqualTo("proxy-recovered");
     }
 
     @Test
-    public void recoverIgnoringInterfaceMethod() throws Throwable {
+    public void fallbackIgnoringInterfaceMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
-        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackInterface", testMethod, new Object[]{"test"}, target);
+        FallbackMethod fallbackMethod = FallbackMethod.create("fallbackInterface", testMethod, new Object[]{"test"}, target);
 
-        assertThat(recoveryMethod.fallback(new IllegalArgumentException("err"))).isEqualTo("proxy-recovered");
+        assertThat(fallbackMethod.fallback(new IllegalArgumentException("err"))).isEqualTo("proxy-recovered");
     }
 
     @Test
-    public void recoverNotIgnoringInterfaceMethod() throws Throwable {
+    public void fallbackNotIgnoringInterfaceMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
-        FallbackMethod recoveryMethod = FallbackMethod.create("fallbackOnlyInterface", testMethod, new Object[]{"test"}, target);
+        FallbackMethod fallbackMethod = FallbackMethod.create("fallbackOnlyInterface", testMethod, new Object[]{"test"}, target);
 
-        assertThat(recoveryMethod.fallback(new IllegalArgumentException("err"))).isEqualTo("only-interface-recovered");
+        assertThat(fallbackMethod.fallback(new IllegalArgumentException("err"))).isEqualTo("only-interface-recovered");
     }
 
     @Test
-    public void dontRecoverAmbiguousMethod() throws Throwable {
+    public void dontFallbackAmbiguousMethod() throws Throwable {
         Proxy target = new Proxy();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 

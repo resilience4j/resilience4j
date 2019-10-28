@@ -54,12 +54,12 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
+    private <T> Function<? super Throwable, ? extends Publisher<? extends T>> reactorOnErrorResume(FallbackMethod fallbackMethod, Function<? super Throwable, ? extends Publisher<? extends T>> errorFunction) {
         return throwable -> {
             try {
-                return (Publisher<? extends T>) recoveryMethod.fallback(throwable);
-            } catch (Throwable recoverThrowable) {
-                return errorFunction.apply(recoverThrowable);
+                return (Publisher<? extends T>) fallbackMethod.fallback(throwable);
+            } catch (Throwable fallbackThrowable) {
+                return errorFunction.apply(fallbackThrowable);
             }
         };
     }
