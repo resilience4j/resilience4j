@@ -45,14 +45,14 @@ public class TimeLimiterTest {
 
     @Test
     public void shouldThrowTimeoutExceptionWithCompletionStage() throws Exception {
-        Duration timeoutDuration = Duration.ofSeconds(1);
+        Duration timeoutDuration = Duration.ofMillis(300);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
         Supplier<CompletionStage<Integer>> supplier = () -> CompletableFuture.supplyAsync(() -> {
             try {
                 // sleep for timeout.
-                Thread.sleep(1500);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 // nothing
             }
