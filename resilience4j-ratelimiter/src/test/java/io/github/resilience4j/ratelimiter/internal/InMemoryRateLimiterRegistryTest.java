@@ -30,7 +30,7 @@ import java.time.Duration;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class InMemoryRateLimiterRegistryTest {
