@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerConfigTest {
 

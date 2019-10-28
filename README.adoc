@@ -1,6 +1,5 @@
 = Fault tolerance library designed for functional programming
 :author: Robert Winkler and Bohdan Storozhuk
-:hardbreaks:
 :icons:
 :toc: macro
 :numbered: 1
@@ -12,19 +11,32 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
-image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"] image:https://dev.azure.com/resilience4j/resilience4j/_apis/build/status/resilience4j.resilience4j?branchName=master["Build Status", link="https://dev.azure.com/resilience4j/resilience4j/_build/latest?definitionId=1&branchName=master"] image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"] image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
+image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"]
+image:https://dev.azure.com/resilience4j/resilience4j/_apis/build/status/resilience4j.resilience4j?branchName=master["Build Status", link="https://dev.azure.com/resilience4j/resilience4j/_build/latest?definitionId=1&branchName=master"]
+image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"]
+image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
-image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=bugs["Bugs", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=vulnerabilities["Vulnerabilities", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=sqale_rating["Maintainability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=reliability_rating["Reliability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"] image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=security_rating["Security", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=bugs["Bugs", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=vulnerabilities["Vulnerabilities", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=sqale_rating["Maintainability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=reliability_rating["Reliability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=security_rating["Security", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 
 toc::[]
 
 == Introduction
 
-Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming. Lightweight, because the library only uses http://www.vavr.io/[Vavr], which does not have any other external library dependencies. Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
+Resilience4j is a lightweight fault tolerance library inspired by https://github.com/Netflix/Hystrix[Netflix Hystrix], but designed for Java 8 and functional programming.
+Lightweight, because the library only uses http://www.vavr.io/[Vavr], which does not have any other external library dependencies.
+Netflix Hystrix, in contrast, has a compile dependency to https://github.com/Netflix/archaius[Archaius] which has many more external library dependencies such as Guava and Apache Commons Configuration.
 
 WARNING: Netflix Hystrix is no longer in active development, and is currently in maintenance mode.
 
-Resilience4j provides higher-order functions (decorators) to enhance any functional interface, lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retry or Bulkhead. You can stack more than one decorator on any functional interface, lambda expression or method reference. The advantage is that you have the choice to select the decorators you need and nothing else.
+Resilience4j provides higher-order functions (decorators) to enhance any functional interface,
+lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retry or Bulkhead.
+You can stack more than one decorator on any functional interface, lambda expression or method reference.
+The advantage is that you have the choice to select the decorators you need and nothing else.
 
 [source,java]
 ----
@@ -43,7 +55,8 @@ String result = Try.ofSupplier(decoratedSupplier)
 String result = circuitBreaker.executeSupplier(supplier);
 ----
 
-NOTE: With Resilience4j you don’t have to go all-in, you can https://mvnrepository.com/artifact/io.github.resilience4j[*pick*] what you need.
+NOTE: With Resilience4j you don’t have to go all-in, you can
+https://mvnrepository.com/artifact/io.github.resilience4j[*pick what you need*].
 
 ==  Documentation
 
@@ -91,7 +104,7 @@ Resilience4j provides several core modules and add-on modules:
 
 == Resilience patterns
 
-[options="header"]
+[cols="<.<*", options="header"]
 |===
 |name |how does it work? | description |slogans |links
 
@@ -171,6 +184,7 @@ Setup and usage in Spring Boot 2 is demonstrated https://github.com/resilience4j
 
 The following example shows how to decorate a lambda expression (Supplier) with a CircuitBreaker and how to retry the call at most 3 times when an exception occurs.
 You can configure the wait interval between retries and also configure a custom backoff algorithm.
+
 The example uses Vavr's Try Monad to recover from an exception and invoke another lambda expression as a fallback, when even all retries have failed.
 
 [source,java]
@@ -213,7 +227,8 @@ Observable.fromCallable(backendService::doSomething)
     .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*.
+NOTE: Resilience4j also provides RxJava operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`.
+Find out more in our *https://resilience4j.readme.io/docs/getting-started-2[User Guide]*.
 
 ==== CircuitBreaker and Spring Reactor
 
@@ -226,12 +241,13 @@ Mono.fromCallable(backendService::doSomething)
     .compose(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
-NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`. Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*.
+NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`.
+Find out more in our *https://resilience4j.readme.io/docs/getting-started-1[User Guide]*.
 
 [[ratelimiter]]
 === RateLimiter
 
-The following example shows how to restrict the calling rate of some method to be not higher than 1 req/sec.
+The following example shows how to restrict the calling rate of some method to be not higher than 1 request/second.
 
 [source,java]
 ----
@@ -263,7 +279,10 @@ assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
 There are two isolation strategies and bulkhead implementations.
 
 ==== SemaphoreBulkhead
-The following example shows how to decorate a lambda expression with a Bulkhead. A Bulkhead can be used to limit the amount of parallel executions. This bulkhead abstraction should work well across a variety of threading and io models. It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread pool option.
+The following example shows how to decorate a lambda expression with a Bulkhead.
+A Bulkhead can be used to limit the amount of parallel executions.
+This bulkhead abstraction should work well across a variety of threading and io models.
+It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread pool option.
 
 [source,java]
 ----
@@ -305,11 +324,14 @@ CompletionStage<String> execution = bulkhead
 [[events]]
 == Consume emitted events
 
-`CircuitBreaker`, `RateLimiter`, `Cache`, `Bulkhead`, `TimeLimiter` and `Retry` components emit a stream of events. It can be consumed for logging, assertions and any other purpose.
+`CircuitBreaker`, `RateLimiter`, `Cache`, `Bulkhead`, `TimeLimiter` and `Retry` components emit a stream of events.
+It can be consumed for logging, assertions and any other purpose.
 
 === Examples
 
-A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error. All events contains additional information like event creation time and processing duration of the call. If you want to consume events, you have to register an event consumer.
+A `CircuitBreakerEvent` can be a state transition, a circuit breaker reset, a successful call, a recorded error or an ignored error.
+All events contains additional information like event creation time and processing duration of the call.
+If you want to consume events, you have to register an event consumer.
 
 [source,java]
 ----
@@ -324,7 +346,8 @@ circuitBreaker.getEventPublisher()
     .onEvent(event -> logger.info(...));
 ----
 
-You can use RxJava or Spring Reactor Adapters to convert the `EventPublisher` into a Reactive Stream. The advantage of a Reactive Stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
+You can use RxJava or Spring Reactor Adapters to convert the `EventPublisher` into a Reactive Stream.
+The advantage of a Reactive Stream is that you can use RxJava's `observeOn` operator to specify a different Scheduler that the CircuitBreaker will use to send notifications to its observers/consumers.
 
 [source,java]
 ----
@@ -334,7 +357,8 @@ RxJava2Adapter.toFlowable(circuitBreaker.getEventPublisher())
     .subscribe(event -> logger.info(...))
 ----
 
-NOTE: You can also consume events from other components. Find out more in our *https://resilience4j.readme.io/[User Guide]*.
+NOTE: You can also consume events from other components.
+Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 
 == Talks
 
@@ -372,8 +396,12 @@ NOTE: You can also consume events from other components. Find out more in our *h
 
 Copyright 2019 Robert Winkler, Bohdan Storozhuk, Mahmoud Romeh and Dan Maas
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.

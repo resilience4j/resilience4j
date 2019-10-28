@@ -568,6 +568,8 @@ public interface Retry {
 	/**
 	 * An EventPublisher which subscribes to the reactive stream of RetryEvents and
 	 * can be used to register event consumers.
+	 *
+	 * To understand when the handlers are called, see the documentation of the respective events.
 	 */
 	interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RetryEvent> {
 
