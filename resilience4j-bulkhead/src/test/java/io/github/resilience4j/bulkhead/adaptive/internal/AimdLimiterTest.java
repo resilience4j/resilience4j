@@ -31,7 +31,7 @@ public class AimdLimiterTest {
 	private AdaptiveBulkheadConfig<AimdConfig> config;
 	private AimdLimiter aimdLimiter;
 	// enable if u need to see the graphs of the executions
-	private boolean drawGraphs = true;
+    private boolean drawGraphs = false;
 
 	@Before
 	public void setup() {
