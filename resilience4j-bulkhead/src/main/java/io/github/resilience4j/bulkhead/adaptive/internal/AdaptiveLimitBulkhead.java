@@ -18,19 +18,6 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
@@ -40,12 +27,7 @@ import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
-import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnIgnoreEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
+import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
@@ -55,6 +37,18 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.Objects.requireNonNull;
 
 public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveLimitBulkhead.class);
@@ -133,7 +127,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public AdaptiveMetrics getMetrics() {
+	public Metrics getMetrics() {
 		return metrics;
 	}
 
@@ -147,7 +141,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		return name;
 	}
 
-	private final class InternalMetrics implements AdaptiveMetrics {
+	private final class InternalMetrics implements Metrics {
 
 		@Override
 		public double getFailureRate() {
@@ -191,7 +185,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 
-	private static class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements AdaptiveEventPublisher, EventConsumer<BulkheadLimit> {
+	private static class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
 
 		@Override
 		public EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
@@ -224,7 +218,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 		@Override
-		public void consumeEvent(BulkheadLimit event) {
+		public void consumeEvent(AdaptiveBulkheadEvent event) {
 			super.processEvent(event);
 		}
 	}
@@ -297,7 +291,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	/**
 	 * @param eventSupplier the event supplier to be pushed to consumers
 	 */
-	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
+	private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
 		if (eventProcessor.hasConsumers()) {
 			eventProcessor.consumeEvent(eventSupplier);
 		}

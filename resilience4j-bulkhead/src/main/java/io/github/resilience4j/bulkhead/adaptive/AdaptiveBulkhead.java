@@ -18,7 +18,17 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
-import java.time.Instant;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
+import io.github.resilience4j.bulkhead.event.*;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventPublisher;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -26,22 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
-import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnIgnoreEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventPublisher;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
@@ -110,14 +104,14 @@ public interface AdaptiveBulkhead {
 	AdaptiveBulkheadConfig getBulkheadConfig();
 
 	/**
-	 * Get the AdaptiveMetrics of this Bulkhead.
+	 * Get the Metrics of this Bulkhead.
 	 *
-	 * @return the AdaptiveMetrics of this Bulkhead
+	 * @return the Metrics of this Bulkhead
 	 */
-	AdaptiveMetrics getMetrics();
+	Metrics getMetrics();
 
 	/**
-	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent/BulkheadLimit events and
+	 * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent/AdaptiveBulkheadEvent events and
 	 * can be used to register event consumers.
 	 *
 	 * @return an AdaptiveEventPublisher
@@ -193,7 +187,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				return supplier.apply();
 			} catch (Exception e) {
 				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
@@ -201,7 +195,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -223,7 +217,7 @@ public interface AdaptiveBulkhead {
 			if (!bulkhead.tryAcquirePermission()) {
 				promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
 			} else {
-				long start = Instant.now().toEpochMilli();
+				long start = System.currentTimeMillis();
 				try {
 					supplier.get()
 							.whenComplete(
@@ -232,7 +226,7 @@ public interface AdaptiveBulkhead {
 											bulkhead.onError(start, TimeUnit.MILLISECONDS,throwable);
 											promise.completeExceptionally(throwable);
 										} else {
-											bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+											bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 											promise.complete(result);
 										}
 									}
@@ -260,7 +254,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				runnable.run();
 			} catch (Exception e) {
 				isFailed=true;
@@ -268,7 +262,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -288,7 +282,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				return callable.call();
 			} catch (Exception e) {
 				isFailed=true;
@@ -296,7 +290,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -316,7 +310,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				return supplier.get();
 			} catch (Exception e) {
 				isFailed=true;
@@ -324,7 +318,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -344,7 +338,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				consumer.accept(t);
 			} catch (Exception e) {
 				isFailed=true;
@@ -352,7 +346,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -372,7 +366,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				consumer.accept(t);
 			} catch (Exception e) {
 				isFailed=true;
@@ -380,7 +374,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -399,7 +393,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				runnable.run();
 			} catch (Exception e) {
 				isFailed=true;
@@ -407,7 +401,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -428,7 +422,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				return function.apply(t);
 			} catch (Exception e) {
 				isFailed=true;
@@ -436,7 +430,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -457,7 +451,7 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-				start = Instant.now().toEpochMilli();
+				start = System.currentTimeMillis();
 				return function.apply(t);
 			} catch (Exception e) {
 				isFailed=true;
@@ -465,7 +459,7 @@ public interface AdaptiveBulkhead {
 				throw e;
 			} finally {
 				if(start != 0 && !isFailed) {
-					bulkhead.onSuccess(start, TimeUnit.MILLISECONDS);
+					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 				}
 			}
 		};
@@ -518,7 +512,7 @@ public interface AdaptiveBulkhead {
 		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
 	}
 
-	interface AdaptiveMetrics extends Bulkhead.Metrics {
+	interface Metrics extends Bulkhead.Metrics {
 		/**
 		 * Returns the current total number of calls which were slower than a certain threshold.
 		 *
@@ -559,7 +553,7 @@ public interface AdaptiveBulkhead {
 	/**
 	 * An EventPublisher which can be used to register event consumers.
 	 */
-	interface AdaptiveEventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadLimit> {
+	interface AdaptiveEventPublisher extends io.github.resilience4j.core.EventPublisher<AdaptiveBulkheadEvent> {
 
 		EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
 

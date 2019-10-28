@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * adaptive bulkhead event
  */
-public interface BulkheadLimit {
+public interface AdaptiveBulkheadEvent {
 	/**
 	 * Returns the name of the bulkhead which has created the event.
 	 *
@@ -41,11 +41,11 @@ public interface BulkheadLimit {
 	 */
 	enum Type {
 		/**
-		 * A BulkheadLimit which informs that a limit has been increased
+		 * A AdaptiveBulkheadEvent which informs that a limit has been increased
 		 */
 		LIMIT_INCREASED,
 		/**
-		 * A BulkheadLimit which informs that a limit has been decreased
+		 * A AdaptiveBulkheadEvent which informs that a limit has been decreased
 		 */
 		LIMIT_DECREASED,
 		/** An adaptive bulkhead event which informs that an error has been recorded */
