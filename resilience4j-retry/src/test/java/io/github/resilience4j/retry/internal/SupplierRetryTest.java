@@ -88,6 +88,39 @@ public class SupplierRetryTest {
 		assertThat(sleptTime).isEqualTo(0);
 	}
 
+    @Test
+    public void shouldDeprecatedOnSuccessCallOnFinish() {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        final RetryConfig tryAgain = RetryConfig.<String>custom()
+                .retryOnResult(s -> s.contains("tryAgain"))
+                .maxAttempts(2).build();
+        Retry retry = Retry.of("id", tryAgain);
+
+        Supplier<String> supplier = decorateSupplierWithOnSuccess(retry, helloWorldService::returnHelloWorld);
+        String result = supplier.get();
+        then(helloWorldService).should().returnHelloWorld();
+        assertThat(result).isEqualTo("Hello world");
+        assertThat(sleptTime).isEqualTo(0);
+    }
+
+
+    private <T> Supplier<T> decorateSupplierWithOnSuccess(Retry retry, Supplier<T> supplier) {
+        return () -> {
+            Retry.Context<T> context = retry.context();
+            do try {
+                T result = supplier.get();
+                final boolean validationOfResult = context.onResult(result);
+                if (!validationOfResult) {
+                    context.onSuccess();
+                    return result;
+                }
+            } catch (RuntimeException runtimeException) {
+                context.onRuntimeError(runtimeException);
+            } while (true);
+        };
+    }
+
+
 	@Test
 	public void shouldRetryWithResult() {
 		given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
