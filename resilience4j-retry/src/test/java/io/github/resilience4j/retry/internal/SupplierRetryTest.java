@@ -111,7 +111,7 @@ public class SupplierRetryTest {
                 T result = supplier.get();
                 final boolean validationOfResult = context.onResult(result);
                 if (!validationOfResult) {
-                    context.onFinish();
+                    context.onSuccess();
                     return result;
                 }
             } catch (RuntimeException runtimeException) {
