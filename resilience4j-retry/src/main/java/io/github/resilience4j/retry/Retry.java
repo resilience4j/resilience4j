@@ -512,6 +512,7 @@ public interface Retry {
 		 * Records a successful call.
 		 * @deprecated since 1.2.0
 		 */
+		@Deprecated
 		void onSuccess();
 
 		/**
@@ -547,6 +548,7 @@ public interface Retry {
 		 * Records a successful call.
 		 * @deprecated since 1.2.0
 		 */
+		@Deprecated
 		void onSuccess();
 
 
