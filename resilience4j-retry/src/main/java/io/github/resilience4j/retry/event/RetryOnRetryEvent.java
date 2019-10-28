@@ -5,7 +5,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.time.Duration;
 
 /**
- * A RetryEvent which informs that a call is to be retried.
+ * A RetryEvent which informs that a call failed, and is to be retried.
  */
 public class RetryOnRetryEvent extends AbstractRetryEvent {
 
