@@ -1081,15 +1081,13 @@ public interface CircuitBreaker {
         public T get() throws InterruptedException, ExecutionException {
             try {
                 T v = future.get();
-                long durationInNanos = System.nanoTime() - start;
-                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(durationInNanos, TimeUnit.NANOSECONDS));
+                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS));
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
                 throw e;
             } catch (Exception e) {
-                long durationInNanos = System.nanoTime() - start;
-                onceToCircuitbreaker.applyOnce(cb -> cb.onError(durationInNanos, TimeUnit.NANOSECONDS, e));
+                onceToCircuitbreaker.applyOnce(cb -> cb.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e));
                 throw e;
             }
         }
@@ -1098,15 +1096,13 @@ public interface CircuitBreaker {
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             try {
                 T v = future.get(timeout, unit);
-                long durationInNanos = System.nanoTime() - start;
-                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(durationInNanos, TimeUnit.NANOSECONDS));
+                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS));
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
                 throw e;
             } catch (Exception e) {
-                long durationInNanos = System.nanoTime() - start;
-                onceToCircuitbreaker.applyOnce(cb -> cb.onError(durationInNanos, TimeUnit.NANOSECONDS, e));
+                onceToCircuitbreaker.applyOnce(cb -> cb.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e));
                 throw e;
             }
         }

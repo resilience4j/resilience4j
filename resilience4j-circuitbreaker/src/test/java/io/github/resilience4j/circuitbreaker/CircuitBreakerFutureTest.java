@@ -4,6 +4,7 @@ import com.jayway.awaitility.Duration;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.CircuitBreakerFuture;
 import org.junit.AfterClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +20,10 @@ import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Class CircuitBreakerFutureTest.
@@ -42,7 +47,8 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndReturnSuccess() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        final Future<String> future = executor.submit(() -> "Hello World");
+        final Future<String> future = mock(Future.class);
+        when(future.get()).thenReturn("Hello World");
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
         String value = decoratedFuture.get();
@@ -60,7 +66,8 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndCircuitBreakingLogicApplyOnceOnMultipleFutureEval() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        final Future<String> future = executor.submit(() -> "Hello World");
+        final Future<String> future = mock(Future.class);
+        when(future.get()).thenReturn("Hello World");
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
@@ -101,10 +108,8 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndThrowTimeoutException() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        final Future<String> future = executor.submit(() -> {
-            Thread.currentThread().sleep(10000);
-            return null;
-        });
+        final Future<String> future = mock(Future.class);
+        when(future.get(anyLong(), any(TimeUnit.class))).thenThrow( new TimeoutException());
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
