@@ -501,6 +501,18 @@ public interface Retry {
 	}
 
 	/**
+	 * Decorates and executes the decorated Future.
+	 *
+	 * @param executor execution service to use to pull and wait for supplied Futures
+	 * @param supplier future supplier
+	 * @param <T>      type of future result
+	 * @return the decorated Future
+	 */
+	default <T> Future<T> executeFuture(ExecutorService executor, Supplier<Future<T>> supplier) {
+		return decorateFuture(this, executor, supplier).get();
+	}
+
+	/**
 	 * Get the Metrics of this RateLimiter.
 	 *
 	 * @return the Metrics of this RateLimiter
