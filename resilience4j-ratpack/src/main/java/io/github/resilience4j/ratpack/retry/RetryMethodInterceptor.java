@@ -137,7 +137,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
                     completeFailedFuture(t2, recoveryFunction, promise);
                 }
             } else {
-                context.onFinish();
+                context.onComplete();
                 promise.complete(v);
             }
         });

@@ -142,11 +142,11 @@ public class RetryImpl<T> implements Retry {
 		@Override
 		@Deprecated
 		public void onSuccess() {
-			onFinish();
+			onComplete();
 		}
 
 		@Override
-		public void onFinish() {
+		public void onComplete() {
 			int currentNumOfAttempts = numOfAttempts.get();
 			if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
 				succeededAfterRetryCounter.increment();
@@ -246,11 +246,11 @@ public class RetryImpl<T> implements Retry {
 		@Override
 		@Deprecated
 		public void onSuccess() {
-			onFinish();
+			onComplete();
 		}
 
 		@Override
-		public void onFinish() {
+		public void onComplete() {
 			int currentNumOfAttempts = numOfAttempts.get();
 			if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
 				succeededAfterRetryCounter.increment();

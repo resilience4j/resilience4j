@@ -75,7 +75,7 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 		}
 
 		void onComplete() {
-			this.context.onFinish();
+			this.context.onComplete();
 		}
 
 		void throwExceptionToForceRetryOnResult(T value) {

@@ -87,7 +87,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         }
 
         void onComplete() {
-            this.context.onFinish();
+            this.context.onComplete();
         }
 
         void throwExceptionToForceRetryOnResult(T value) {
