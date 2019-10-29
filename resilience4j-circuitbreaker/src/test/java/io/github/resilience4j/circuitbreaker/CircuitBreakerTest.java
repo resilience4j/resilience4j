@@ -26,7 +26,6 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,38 +33,24 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 public class CircuitBreakerTest {
 
     private HelloWorldService helloWorldService;
-    private static ExecutorService executor = Executors.newCachedThreadPool();
-
-    @AfterClass
-    public static void cleanUp() {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
-    }
 
     @Before
     public void setUp(){
@@ -81,7 +66,7 @@ public class CircuitBreakerTest {
         Supplier<String> supplier = circuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld);
 
         String result = supplier.get();
-        
+
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
@@ -115,7 +100,7 @@ public class CircuitBreakerTest {
         Supplier<String> supplier = circuitBreaker.decorateSupplier(helloWorldService::returnHelloWorld);
 
         Try<String> result = Try.ofSupplier(supplier);
-        
+
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -134,7 +119,7 @@ public class CircuitBreakerTest {
         CheckedFunction0<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(helloWorldService::returnHelloWorldWithException);
 
         String result = checkedSupplier.apply();
-        
+
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
@@ -172,7 +157,7 @@ public class CircuitBreakerTest {
         Callable<String> callable = circuitBreaker.decorateCallable(helloWorldService::returnHelloWorldWithException);
 
         String result = callable.call();
-        
+
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
@@ -206,7 +191,7 @@ public class CircuitBreakerTest {
         Callable<String> callable = circuitBreaker.decorateCallable(helloWorldService::returnHelloWorldWithException);
 
         Try<String> result = Try.of(callable::call);
-        
+
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -224,7 +209,7 @@ public class CircuitBreakerTest {
         CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(helloWorldService::sayHelloWorldWithException);
 
         checkedRunnable.run();
-        
+
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -242,7 +227,7 @@ public class CircuitBreakerTest {
         });
 
         Try<Void> result = Try.run(checkedRunnable);
-     
+
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -259,7 +244,7 @@ public class CircuitBreakerTest {
         Runnable runnable = circuitBreaker.decorateRunnable(helloWorldService::sayHelloWorld);
 
         runnable.run();
-      
+
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -293,7 +278,7 @@ public class CircuitBreakerTest {
         });
 
         Try<Void> result = Try.run(runnable::run);
-       
+
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -357,7 +342,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        int numberOfBufferedCallsBefore = metrics.getNumberOfBufferedCalls(); 
+        int numberOfBufferedCallsBefore = metrics.getNumberOfBufferedCalls();
         CheckedConsumer<String> checkedConsumer = circuitBreaker.decorateCheckedConsumer((value) -> {
             throw new RuntimeException("BAM!");
         });
@@ -382,7 +367,7 @@ public class CircuitBreakerTest {
         Function<String, String> function = CircuitBreaker.decorateFunction(circuitBreaker, helloWorldService::returnHelloWorldWithName);
 
         String result = function.apply("Tom");
-        
+
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
@@ -418,7 +403,7 @@ public class CircuitBreakerTest {
         CheckedFunction1<String, String> function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, helloWorldService::returnHelloWorldWithNameWithException);
 
         String result = function.apply("Tom");
-        
+
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
@@ -487,7 +472,7 @@ public class CircuitBreakerTest {
         CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
-      
+
         Try result = Try.run(checkedRunnable);
 
         assertThat(result.isFailure()).isTrue();
@@ -513,7 +498,7 @@ public class CircuitBreakerTest {
         CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new SocketTimeoutException("BAM!");
         });
-      
+
         Try result = Try.run(checkedRunnable);
 
         assertThat(result.isFailure()).isTrue();
@@ -534,7 +519,7 @@ public class CircuitBreakerTest {
         CheckedFunction0<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(() -> {
             throw new RuntimeException("BAM!");
         });
-        
+
         Try<String> result = Try.of(checkedSupplier)
                 .recover(throwable -> "Hello Recovery");
 
@@ -621,7 +606,7 @@ public class CircuitBreakerTest {
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
                 circuitBreaker.decorateCompletionStage(completionStageSupplier);
-      
+
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier
                 .get()
                 .thenApply(value -> value + " world");
@@ -677,7 +662,7 @@ public class CircuitBreakerTest {
                 circuitBreaker.decorateCompletionStage(completionStageSupplier);
 
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
-      
+
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
                 .isInstanceOf(ExecutionException.class).hasCause(new RuntimeException("BAM! At sync stage"));
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -694,7 +679,7 @@ public class CircuitBreakerTest {
                 () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
         Supplier<CompletionStage<String>> decoratedCompletionStageSupplier =
                 circuitBreaker.decorateCompletionStage(completionStageSupplier);
-     
+
         CompletionStage<String> decoratedCompletionStage = decoratedCompletionStageSupplier.get();
 
         assertThatThrownBy(decoratedCompletionStage.toCompletableFuture()::get)
@@ -778,7 +763,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
-        
+
         Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
 
         assertThat(result).contains("Hello world");
@@ -878,7 +863,8 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
-        Future<String> future = executor.submit(() -> "Hello World");
+        Future<String> future = mock(Future.class);
+        given(future.get()).willReturn("Hello World");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         Supplier<Future<String>> supplier = circuitBreaker.decorateFuture(
@@ -891,6 +877,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get();
     }
 
     @Test
@@ -900,7 +887,8 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
-        Future<String> future = executor.submit(() -> "Hello World");
+        Future<String> future = mock(Future.class);
+        given(future.get()).willReturn("Hello World");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         Supplier<Future<String>> supplier = circuitBreaker.decorateFuture(
@@ -916,33 +904,41 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should(times(3)).get();
     }
 
     @Test
-    public void shouldDecorateFutureSupplierAndCBLogicEvalOnlyOnceWithException() {
+    public void shouldDecorateFutureSupplierAndCBLogicEvalOnlyOnceWithException() throws Exception {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //create a Future
-        given(helloWorldService.returnHelloWorldFuture()).willReturn(executor.submit(() -> {
-            throw new RuntimeException("BAM!");
-        }));
+        Future<String> future = mock(Future.class);
+        given(future.get()).willThrow(new ExecutionException(new RuntimeException("BAM!")));
+        given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         Supplier<Future<String>> supplier = circuitBreaker.decorateFuture(
                 helloWorldService::returnHelloWorldFuture);
 
         //fetching value multiple time should evaluate CB logic only once
         Future<String> decoratedFuture = supplier.get();
+
+        //evaluate future three times
+        Throwable thrown = catchThrowable(() -> decoratedFuture.get());
         catchThrowable(() -> decoratedFuture.get());
         catchThrowable(() -> decoratedFuture.get());
-        catchThrowable(() -> decoratedFuture.get());
+
+        assertThat(thrown).isInstanceOf(ExecutionException.class)
+                .hasCauseInstanceOf(RuntimeException.class);
+        assertThat(thrown.getCause().getMessage()).isEqualTo("BAM!");
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should(times(3)).get();
     }
 
     @Test
@@ -968,16 +964,16 @@ public class CircuitBreakerTest {
     }
 
     @Test
-    public void shouldDecorateFutureSupplierAndFutureReturnException() {
+    public void shouldDecorateFutureSupplierAndFutureReturnException() throws Exception{
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //create a Future
-        given(helloWorldService.returnHelloWorldFuture()).willReturn(executor.submit(() -> {
-            throw new RuntimeException("BAM!");
-        }));
+        Future<String> future = mock(Future.class);
+        given(future.get()).willThrow(new ExecutionException(new RuntimeException("BAM!")));
+        given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         Supplier<Future<String>> supplier = circuitBreaker.decorateFuture(
                 helloWorldService::returnHelloWorldFuture);
@@ -992,30 +988,22 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get();
     }
 
     @Test
-    public void shouldDecorateFutureWithSupplierAndCallCancel() {
+    public void shouldDecorateFutureWithSupplierAndCallCancel() throws Exception {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
-        //long running task
-        Future<String> future = executor.submit(() -> {
-            Thread.currentThread().sleep(10000);
-            return null;
-        });
+        Future<String> future = mock(Future.class);
+        given(future.get()).willThrow(new CancellationException());
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         Supplier<Future<String>> supplier = circuitBreaker.decorateFuture(
                 helloWorldService::returnHelloWorldFuture);
-
-        //cancel future
-        CompletableFuture.supplyAsync(() -> {
-            future.cancel(true);
-            return null;
-        });
 
         Throwable thrown = catchThrowable(() -> supplier.get().get());
 
@@ -1024,22 +1012,18 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get();
     }
 
     @Test
-    public void shouldDecorateFutureSupplierAndInterruptByTaskThread() {
+    public void shouldDecorateFutureSupplierAndInterruptByTaskThread() throws Exception {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
-        //Future throwing interrupt exception
-        Future<String> future = executor.submit(() -> {
-            Thread.currentThread().interrupt();
-            Thread.currentThread().sleep(5000);
-            return null;
-        });
-
+        Future<String> future = mock(Future.class);
+        given(future.get()).willThrow(new ExecutionException(new InterruptedException()));
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         // If interrupt is called on the Task thread than InterruptedException is thrown wrapped in
@@ -1057,67 +1041,44 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get();
     }
 
     @Test
-    public void shouldDecorateFutureSupplierAndInterruptedByCallingThread() {
+    public void shouldDecorateFutureSupplierAndInterruptedByCallingThread() throws Exception {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
-        //long task
-        final Future<String> future = executor.submit(() -> {
-            Thread.currentThread().sleep(10000);
-            return null;
-        });
-
+        Future<String> future = mock(Future.class);
+        given(future.get()).willThrow(new InterruptedException());
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
-        AtomicBoolean isDone = new AtomicBoolean(false);
-        AtomicReference thrown = new AtomicReference(null);
-
-        executor.submit(() -> {
-
-            //set interrupted status so that blocking operation throws exception
-            Thread.currentThread().interrupt();
-
-            // If interrupt is called on the Task thread than InterruptedException is thrown wrapped in
-            // ExecutionException where as if current thread gets interrupted it throws
-            // InterruptedException directly.
-            Supplier<Future<String>> decoratedFuture = circuitBreaker.decorateFuture(
+        Supplier<Future<String>> decoratedFuture = circuitBreaker.decorateFuture(
                     helloWorldService::returnHelloWorldFuture);
 
-            //should throw interrupt exception because get is a blocking operation
-            thrown.set(catchThrowable(() -> decoratedFuture.get().get()));
+        Throwable thrown = catchThrowable(() -> decoratedFuture.get().get());
 
-            isDone.set(true);
-        });
-
-        await().atMost(com.jayway.awaitility.Duration.FIVE_SECONDS).untilAtomic(isDone, is(true));
-
-        assertThat(thrown.get()).isInstanceOf(InterruptedException.class);
+        assertThat(thrown).isInstanceOf(InterruptedException.class);
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get();
     }
 
     @Test
-    public void shouldDecorateFutureSupplierTimeout() {
+    public void shouldDecorateFutureSupplierTimeout() throws Exception {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
-        //Long running Future
-        Future<String> future = executor.submit(() -> {
-            Thread.currentThread().sleep(10000);
-            return null;
-        });
-
+        Future<String> future = mock(Future.class);
+        given(future.get(anyLong(), any(TimeUnit.class))).willThrow(new TimeoutException());
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         //Decorating future likely to throw timeout exception
@@ -1131,10 +1092,11 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get(anyLong(), any(TimeUnit.class));
     }
 
     @Test
-    public void shouldReturnFailureWithCircuitBreakerOpenExceptionWithFutures() {
+    public void shouldReturnFailureWithCircuitBreakerOpenExceptionWithFutures() throws Exception {
         // Given
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .slidingWindowSize(2)
@@ -1143,9 +1105,10 @@ public class CircuitBreakerTest {
                 .waitDurationInOpenState(Duration.ofMillis(1000))
                 .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
-        given(helloWorldService.returnHelloWorldFuture()).willReturn(executor.submit(() -> {
-            throw new RuntimeException("BAM!");
-        }));
+
+        Future<String> future = mock(Future.class);
+        given(future.get()).willReturn("Hello World");
+        given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
 
         Supplier<Future<String>> futureSupplier = circuitBreaker.decorateFuture(helloWorldService::returnHelloWorldFuture);
 
@@ -1169,10 +1132,13 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+
+        then(helloWorldService).shouldHaveZeroInteractions();
+        then(future).shouldHaveZeroInteractions();
     }
 
     @Test
-    public void shouldNotRecordIOExceptionAsAFailureWithFuture() {
+    public void shouldNotRecordIOExceptionAsAFailureWithFuture() throws Exception {
         // tag::shouldNotRecordIOExceptionAsAFailure[]
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
                 .slidingWindowSize(2)
@@ -1186,9 +1152,9 @@ public class CircuitBreakerTest {
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
-        given(helloWorldService.returnHelloWorldFuture()).willReturn(executor.submit(() -> {
-            throw new SocketTimeoutException("BAM!");
-        }));
+        Future<String> future = mock(Future.class);
+        given(future.get()).willThrow(new ExecutionException(new SocketTimeoutException("BAM!")));
+        given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
         Supplier<Future<String>> futureSupplier = circuitBreaker.decorateFuture(helloWorldService::returnHelloWorldFuture);
 
         // When
@@ -1205,6 +1171,9 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         //this failure is because of HelloWorldException thrown earlier
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+
+        then(helloWorldService).should().returnHelloWorldFuture();
+        then(future).should().get();
     }
 
     @Test

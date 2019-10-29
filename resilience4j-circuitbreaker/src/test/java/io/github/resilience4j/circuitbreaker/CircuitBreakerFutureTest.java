@@ -1,25 +1,12 @@
 package io.github.resilience4j.circuitbreaker;
 
-import com.jayway.awaitility.Duration;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.CircuitBreakerFuture;
-import org.junit.AfterClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.*;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -29,19 +16,6 @@ import static org.mockito.Mockito.when;
  * Class CircuitBreakerFutureTest.
  */
 public class CircuitBreakerFutureTest {
-    private static ExecutorService executor = Executors.newCachedThreadPool();
-
-    @AfterClass
-    public static void cleanUp() {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
-    }
 
     @Test
     public void shouldDecorateFutureAndReturnSuccess() throws Exception {
@@ -86,9 +60,8 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndThrowExecutionException() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        final Future<String> future = executor.submit(() -> {
-            throw new RuntimeException("BAM!");
-        });
+        final Future<String> future = mock(Future.class);
+        when(future.get()).thenThrow(new ExecutionException(new RuntimeException("BAM!")));
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
@@ -109,7 +82,7 @@ public class CircuitBreakerFutureTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         final Future<String> future = mock(Future.class);
-        when(future.get(anyLong(), any(TimeUnit.class))).thenThrow( new TimeoutException());
+        when(future.get(anyLong(), any(TimeUnit.class))).thenThrow(new TimeoutException());
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
@@ -125,12 +98,11 @@ public class CircuitBreakerFutureTest {
     }
 
     @Test
-    public void shouldDecorateFutureAndCallerRequestCancelled() throws Exception{
+    public void shouldDecorateFutureAndCallerRequestCancelled() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        //long running task
-        final Future<String> future = executor.submit(() -> {Thread.sleep(10000); return null;});
-        future.cancel(true);
+        final Future<String> future = mock(Future.class);
+        when(future.get()).thenThrow(new CancellationException());
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
         Throwable thrown = catchThrowable(() -> decoratedFuture.get());
@@ -145,15 +117,11 @@ public class CircuitBreakerFutureTest {
     }
 
     @Test
-    public void shouldDecorateFutureAndInterruptedExceptionThrownByTaskThread() {
+    public void shouldDecorateFutureAndInterruptedExceptionThrownByTaskThread() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
-        final Future<String> future = executor.submit(() -> {
-            Thread.currentThread().interrupt();
-            //Sleep should throw InterruptedException
-            Thread.currentThread().sleep(10000);
-            return null;
-        });
+        final Future<String> future = mock(Future.class);
+        when(future.get(anyLong(), any(TimeUnit.class))).thenThrow(new ExecutionException(new InterruptedException()));
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
         Throwable thrown = catchThrowable(() -> decoratedFuture.get(5, TimeUnit.SECONDS));
@@ -175,30 +143,16 @@ public class CircuitBreakerFutureTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         //long running task
-        final Future<String> future = executor.submit(() -> {
-            Thread.currentThread().sleep(10000);
-            return null;
-        });
+        final Future<String> future = mock(Future.class);
+        when(future.get()).thenThrow(new InterruptedException());
 
         CircuitBreakerFuture<String> decoratedFuture = new CircuitBreakerFuture<>(circuitBreaker, future);
 
-        AtomicBoolean isDone = new AtomicBoolean(false);
-        AtomicReference reference = new AtomicReference(null);
-
-        executor.submit(() -> {
-            Thread.currentThread().interrupt();
-
-            //should throw interrupt exception because get is a blocking operation
-            reference.set(catchThrowable(() -> decoratedFuture.get()));
-            isDone.set(true);
-        });
-
-        await().atMost(Duration.FIVE_SECONDS).untilAtomic(isDone, is(true));
-
+        Throwable thrown = catchThrowable(() -> decoratedFuture.get());
         //If interrupt is called on the Task thread than InterruptedException is thrown wrapped in
         // ExecutionException where as if current thread gets interrupted it throws
         // InterruptedException directly.
-        assertThat(reference.get()).isInstanceOf(InterruptedException.class);
+        assertThat(thrown).isInstanceOf(InterruptedException.class);
 
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
