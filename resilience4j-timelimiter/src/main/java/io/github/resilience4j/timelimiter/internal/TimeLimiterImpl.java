@@ -16,7 +16,7 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterImpl.class);
 
-    private String name;
+    private final String name;
     private final TimeLimiterConfig timeLimiterConfig;
     private final TimeLimiterEventProcessor eventProcessor;
 
@@ -52,6 +52,44 @@ public class TimeLimiterImpl implements TimeLimiter {
                 }
                 throw (Exception) t;
             }
+        };
+    }
+
+    @Override
+    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
+            ScheduledExecutorService scheduler, Supplier<F> supplier) {
+
+        return () -> {
+            CompletableFuture<T> future = supplier.get().toCompletableFuture();
+            ScheduledFuture<?> timeoutFuture =
+                    Timeout.of(future, scheduler, getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+
+            return future.whenComplete((result, throwable) -> {
+                // complete
+                if (result != null) {
+                    if (!timeoutFuture.isDone()) {
+                        timeoutFuture.cancel(false);
+                    }
+                    onSuccess();
+                }
+
+                // exceptionally
+                if (throwable != null) {
+                    if (throwable instanceof CompletionException) {
+                        Throwable cause = throwable.getCause();
+                        onError(cause);
+                    } else if (throwable instanceof ExecutionException) {
+                        Throwable cause = throwable.getCause();
+                        if (cause == null) {
+                            onError(throwable);
+                        } else {
+                            onError(cause);
+                        }
+                    } else {
+                        onError(throwable);
+                    }
+                }
+            });
         };
     }
 
@@ -109,4 +147,22 @@ public class TimeLimiterImpl implements TimeLimiter {
             LOG.warn("Failed to handle event {}", event.getEventType(), e);
         }
     }
+
+    /**
+     * Completes CompletableFuture with {@link TimeoutException}.
+     */
+    static final class Timeout {
+
+        private Timeout() { }
+
+        static ScheduledFuture<?> of(
+                CompletableFuture<?> future, ScheduledExecutorService scheduler, long delay, TimeUnit unit) {
+            return scheduler.schedule(() -> {
+                if (future != null && !future.isDone()) {
+                    future.completeExceptionally(new TimeoutException());
+                }
+            }, delay, unit);
+         }
+    }
+
 }
