@@ -9,7 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 /**
@@ -34,6 +36,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should().get();
     }
 
     @Test
@@ -54,6 +58,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should(times(2)).get();
     }
 
     @Test
@@ -75,6 +81,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should().get();
     }
 
     @Test
@@ -95,6 +103,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should().get(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -114,6 +124,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should().get();
     }
 
     @Test
@@ -136,6 +148,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should().get(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -159,6 +173,8 @@ public class CircuitBreakerFutureTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        then(future).should().get();
     }
 
 }
