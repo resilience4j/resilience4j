@@ -61,7 +61,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     public Health health() {
         Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
                 .filter(this::isRegisterHealthIndicator)
-                .collect(Collectors.toMap(CircuitBreaker::getName, CircuitBreakersHealthIndicator::mapBackendMonitorState));
+                .collect(Collectors.toMap(CircuitBreaker::getName, this::mapBackendMonitorState));
 
         return healthAggregator.aggregate(healths);
     }
@@ -69,17 +69,25 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
                 .map(InstanceProperties::getRegisterHealthIndicator)
+                .orElse(true);
+    }
+
+    private boolean allowHealthIndicatorToFail(CircuitBreaker circuitBreaker) {
+        return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
+                .map(InstanceProperties::getAllowHealthIndicatorToFail)
                 .orElse(false);
     }
 
-    private static Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
+    private Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
         switch (circuitBreaker.getState()) {
             case CLOSED:
                 return addDetails(Health.up(), circuitBreaker).build();
             case OPEN:
-                return addDetails(Health.down(), circuitBreaker).build();
+                boolean allowHealthIndicatorToFail = allowHealthIndicatorToFail(circuitBreaker);
+
+                return addDetails(allowHealthIndicatorToFail ? Health.down() : Health.status("CIRCUIT_OPEN"), circuitBreaker).build();
             case HALF_OPEN:
-                return addDetails(Health.unknown(),circuitBreaker).build();
+                return addDetails(Health.status("CIRCUIT_HALF_OPEN"),circuitBreaker).build();
             default:
                 return addDetails(Health.unknown(), circuitBreaker).build();
         }

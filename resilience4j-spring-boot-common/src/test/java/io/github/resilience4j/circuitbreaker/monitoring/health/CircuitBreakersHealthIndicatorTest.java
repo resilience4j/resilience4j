@@ -54,6 +54,7 @@ public class CircuitBreakersHealthIndicatorTest {
         when(circuitBreaker.getName()).thenReturn("test");
         when(circuitBreakerProperties.findCircuitBreakerProperties("test")).thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
+        when(instanceProperties.getAllowHealthIndicatorToFail()).thenReturn(true);
         when(circuitBreaker.getMetrics()).thenReturn(metrics);
         when(circuitBreaker.getCircuitBreakerConfig()).thenReturn(config);
         when(circuitBreaker.getState()).thenReturn(CLOSED, OPEN, HALF_OPEN, CLOSED);
@@ -97,8 +98,9 @@ public class CircuitBreakersHealthIndicatorTest {
 
         // when
         when(registry.getAllCircuitBreakers()).thenReturn(Array.ofAll(expectedStateToCircuitBreaker.values()));
+        boolean allowHealthIndicatorToFail = true;
         expectedStateToCircuitBreaker.forEach(
-                (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties));
+                (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
 
         HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
@@ -112,7 +114,49 @@ public class CircuitBreakersHealthIndicatorTest {
         then(health.getDetails()).containsKeys(OPEN.name(), HALF_OPEN.name(), CLOSED.name());
 
         assertState(OPEN, Status.DOWN, health.getDetails());
-        assertState(HALF_OPEN, Status.UNKNOWN, health.getDetails());
+        assertState(HALF_OPEN, new Status("CIRCUIT_HALF_OPEN"), health.getDetails());
+        assertState(CLOSED, Status.UP, health.getDetails());
+
+    }
+
+    @Test
+    public void healthIndicatorMaxImpactCanBeOverridden() {
+        CircuitBreaker openCircuitBreaker = mock(CircuitBreaker.class);
+        CircuitBreaker halfOpenCircuitBreaker = mock(CircuitBreaker.class);
+        CircuitBreaker closeCircuitBreaker = mock(CircuitBreaker.class);
+
+        Map<CircuitBreaker.State, CircuitBreaker> expectedStateToCircuitBreaker = new HashMap<>();
+        expectedStateToCircuitBreaker.put(OPEN, openCircuitBreaker);
+        expectedStateToCircuitBreaker.put(HALF_OPEN, halfOpenCircuitBreaker);
+        expectedStateToCircuitBreaker.put(CLOSED, closeCircuitBreaker);
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
+                mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
+        CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(CircuitBreakerConfigurationProperties.class);
+
+        // given
+        CircuitBreakerRegistry registry = mock(CircuitBreakerRegistry.class);
+        CircuitBreakerConfig config = mock(CircuitBreakerConfig.class);
+        CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
+
+        // when
+        when(registry.getAllCircuitBreakers()).thenReturn(Array.ofAll(expectedStateToCircuitBreaker.values()));
+        boolean allowHealthIndicatorToFail = false;  // do not allow health indicator to fail
+        expectedStateToCircuitBreaker.forEach(
+                (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
+
+        HealthAggregator healthAggregator = new OrderedHealthAggregator();
+        CircuitBreakersHealthIndicator healthIndicator =
+                new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, healthAggregator);
+
+
+        // then
+        Health health = healthIndicator.health();
+
+        then(health.getStatus()).isEqualTo(Status.UP);
+        then(health.getDetails()).containsKeys(OPEN.name(), HALF_OPEN.name(), CLOSED.name());
+
+        assertState(OPEN, new Status("CIRCUIT_OPEN"), health.getDetails());
+        assertState(HALF_OPEN, new Status("CIRCUIT_HALF_OPEN"), health.getDetails());
         assertState(CLOSED, Status.UP, health.getDetails());
 
     }
@@ -120,7 +164,8 @@ public class CircuitBreakersHealthIndicatorTest {
     private void setCircuitBreakerWhen(CircuitBreaker.State givenState, CircuitBreaker circuitBreaker,
                                        CircuitBreakerConfig config, CircuitBreaker.Metrics metrics,
                                        io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
-                                       CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+                                       CircuitBreakerConfigurationProperties circuitBreakerProperties,
+                                       boolean allowHealthIndicatorToFail) {
 
         when(circuitBreaker.getName()).thenReturn(givenState.name());
         when(circuitBreaker.getState()).thenReturn(givenState);
@@ -128,6 +173,7 @@ public class CircuitBreakersHealthIndicatorTest {
         when(circuitBreaker.getMetrics()).thenReturn(metrics);
         when(circuitBreakerProperties.findCircuitBreakerProperties(givenState.name())).thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
+        when(instanceProperties.getAllowHealthIndicatorToFail()).thenReturn(allowHealthIndicatorToFail);
     }
 
     private void assertState(CircuitBreaker.State givenState, Status expectedStatus, Map<String, Object> details) {

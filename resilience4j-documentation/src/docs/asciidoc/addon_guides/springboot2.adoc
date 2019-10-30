@@ -31,7 +31,7 @@ It is often used by monitoring software to alert someone if a production system 
 
 ==== CircuitBreaker
 The starter publishes the status and metrics of all CircuitBreakers via a custom `CircuitBreakerHealthIndicator`.
-A closed CircuitBreaker state is mapped to UP, an open state to DOWN and a half-open state to UNKNOWN.
+By default, none of the circuit breaker status will map to an unhealthy state. This behaviour can be changed using the `allowHealthIndicatorToFail` property. When set to true, the circuit breaker health indicator will report DOWN when it's open.
 
 For example:
 
@@ -231,8 +231,8 @@ For example: `/actuator/metrics/resilience4j.bulkhead.available.concurrent.calls
 
 ==== RateLimiter
 The starter the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
-RateLimiterHealthIndicator changes its state DOWN only if there is some permission waiting threads
-and they won't be able to unblock until timeout.
+By default, none of the rate limiter status will map to an unhealthy state. This behaviour can be changed using the `allowHealthIndicatorToFail` property.
+When set to true, the rate limiter health indicator will report DOWN if there is some permission waiting threads and they won't be able to unblock until timeout.
 
 For example:
 
@@ -424,6 +424,7 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            allowHealthIndicatorToFail: false
             recordFailurePredicate: com.foo.FooRecordFailurePredicate
             recordExceptions:
                 - org.springframework.web.client.HttpServerErrorException
@@ -436,6 +437,7 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            allowHealthIndicatorToFail: false
             recordFailurePredicate: com.foo.FooRecordFailurePredicate
             recordExceptions:
                 - org.springframework.web.client.HttpServerErrorException
@@ -458,6 +460,7 @@ resilience4j.circuitbreaker:
             failureRateThreshold: 60
             eventConsumerBufferSize: 10
             registerHealthIndicator: true
+            allowHealthIndicatorToFail: false
     backends:
         backendA:
             baseConfig: default
@@ -521,6 +524,7 @@ resilience4j.ratelimiter:
             timeoutInMillis: 0
             subscribeForEvents: true
             registerHealthIndicator: true
+            allowHealthIndicatorToFail: false
             eventConsumerBufferSize: 100
         backendB:
             limitForPeriod: 6

@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter.monitoring.health;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
@@ -55,6 +57,12 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {
         return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
                 .map(InstanceProperties::getRegisterHealthIndicator)
+                .orElse(true);
+    }
+
+    private boolean allowHealthIndicatorToFail(RateLimiter rateLimiter) {
+        return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
+                .map(InstanceProperties::getAllowHealthIndicatorToFail)
                 .orElse(false);
     }
 
@@ -67,11 +75,14 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
         if (availablePermissions > 0 || numberOfWaitingThreads == 0) {
             return rateLimiterHealth(Status.UP, availablePermissions, numberOfWaitingThreads);
         }
+
         if (rateLimiter instanceof AtomicRateLimiter) {
             AtomicRateLimiter atomicRateLimiter = (AtomicRateLimiter) rateLimiter;
             AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter.getDetailedMetrics();
             if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
-                return rateLimiterHealth(Status.DOWN, availablePermissions, numberOfWaitingThreads);
+                boolean allowHealthIndicatorToFail = allowHealthIndicatorToFail(rateLimiter);
+
+                return rateLimiterHealth(allowHealthIndicatorToFail ? Status.DOWN : new Status("RATE_LIMITED"), availablePermissions, numberOfWaitingThreads);
             }
         }
         return rateLimiterHealth(Status.UNKNOWN, availablePermissions, numberOfWaitingThreads);

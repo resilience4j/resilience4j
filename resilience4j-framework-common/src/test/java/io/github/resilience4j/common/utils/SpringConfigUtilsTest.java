@@ -51,17 +51,19 @@ public class SpringConfigUtilsTest {
 		sharedProperties.setRingBufferSizeInClosedState(1337);
 		sharedProperties.setRingBufferSizeInHalfOpenState(1000);
 		sharedProperties.setRegisterHealthIndicator(true);
+		sharedProperties.setAllowHealthIndicatorToFail(true);
 		sharedProperties.setEventConsumerBufferSize(200);
 
 		io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties();
 		backendWithDefaultConfig.setRingBufferSizeInHalfOpenState(99);
 		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
-		assertThat(backendWithDefaultConfig.getRegisterHealthIndicator()).isNull();
+		assertThat(backendWithDefaultConfig.getAllowHealthIndicatorToFail()).isNull();
 
 		ConfigUtils.mergePropertiesIfAny(backendWithDefaultConfig, sharedProperties);
 
 		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isEqualTo(200);
 		assertThat(backendWithDefaultConfig.getRegisterHealthIndicator()).isTrue();
+		assertThat(backendWithDefaultConfig.getAllowHealthIndicatorToFail()).isTrue();
 
 
 	}

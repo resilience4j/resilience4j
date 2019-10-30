@@ -40,6 +40,11 @@ public class ConfigUtils {
 				instanceProperties.setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
 			}
 		}
+        if (instanceProperties.getAllowHealthIndicatorToFail() == null) {
+            if (baseProperties.getAllowHealthIndicatorToFail() != null) {
+                instanceProperties.setAllowHealthIndicatorToFail(baseProperties.getAllowHealthIndicatorToFail());
+            }
+        }
 		if (instanceProperties.getEventConsumerBufferSize() == null) {
 			if (baseProperties.getEventConsumerBufferSize() != null) {
 				instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
@@ -71,6 +76,11 @@ public class ConfigUtils {
 		if (instanceProperties.getRegisterHealthIndicator() == null) {
 			if (baseProperties.getRegisterHealthIndicator() != null) {
 				instanceProperties.setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+			}
+		}
+		if (instanceProperties.getAllowHealthIndicatorToFail() == null) {
+			if (baseProperties.getAllowHealthIndicatorToFail() != null) {
+				instanceProperties.setAllowHealthIndicatorToFail(baseProperties.getAllowHealthIndicatorToFail());
 			}
 		}
 		if (instanceProperties.getSubscribeForEvents() == null) {
