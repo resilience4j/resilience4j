@@ -518,7 +518,7 @@ public interface Retry {
 		/**
 		 * Records a successful call or retryable call with the needed generated retry events.
          * When there is a successful retry before reaching the max retries limit , it will generate {@link RetryOnSuccessEvent}
-         * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link io.github.resilience4j.retry.utils.MaxRetriesExceeded} if no other exception thrown
+		 * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other exception thrown
 		 */
 		void onComplete();
 
@@ -557,7 +557,7 @@ public interface Retry {
 		/**
 		 * Records a successful call or retryable call with the needed generated retry events.
          * When there is a successful retry before reaching the max retries limit , it will generate {@link RetryOnSuccessEvent}
-         * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link io.github.resilience4j.retry.utils.MaxRetriesExceeded} if no other exception thrown
+		 * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other exception thrown
 		 */
 		void onComplete();
 

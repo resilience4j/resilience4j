@@ -16,7 +16,7 @@
  *
  *
  */
-package io.github.resilience4j.retry.utils;
+package io.github.resilience4j.retry;
 
 /**
  * Max Retries reached out exception , to be thrown on result predicate check exceed the max configured retries
