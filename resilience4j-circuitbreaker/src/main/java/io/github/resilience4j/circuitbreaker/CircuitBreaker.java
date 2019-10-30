@@ -21,16 +21,15 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.functions.OnceConsumer;
 import io.vavr.*;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -401,6 +400,20 @@ public interface CircuitBreaker {
      */
     default <T> CheckedConsumer<T> decorateCheckedConsumer(CheckedConsumer<T> consumer){
         return decorateCheckedConsumer(this, consumer);
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a CircuitBreaker.
+     * The elapsed time includes {@link Future#get()} evaluation time even if the
+     * underlying call took less time to return. Any delays in evaluating Future by caller will
+     * add towards total time.
+     *
+     * @param supplier the original supplier
+     * @param <T>      the type of the returned CompletionStage's result
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> Supplier<Future<T>> decorateFuture(Supplier<Future<T>> supplier) {
+        return decorateFuture(this, supplier);
     }
 
     /**
@@ -996,5 +1009,102 @@ public interface CircuitBreaker {
      */
     static CircuitBreaker of(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier, io.vavr.collection.Map<String, String> tags){
         return new CircuitBreakerStateMachine(name, circuitBreakerConfigSupplier, tags);
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a CircuitBreaker.
+     * The elapsed time includes {@link Future#get()} evaluation time even if the
+     * underlying call took less time to return. Any delays in evaluating Future by
+     * caller will add towards total time.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier       the original supplier
+     * @param <T>            the type of the returned Future's result
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker, Supplier<Future<T>> supplier) {
+        return () -> {
+            if (!circuitBreaker.tryAcquirePermission()) {
+                CompletableFuture<T> promise = new CompletableFuture<>();
+                promise.completeExceptionally(CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
+                return promise;
+            } else {
+                final long start = System.nanoTime();
+                try {
+                    return new CircuitBreakerFuture<>(circuitBreaker, supplier.get(), start);
+                } catch (Exception e) {
+                    long durationInNanos = System.nanoTime() - start;
+                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
+                    throw e;
+                }
+            }
+        };
+    }
+
+    /**
+     * This class decorates future to add CircuitBreaking functionality around invocation.
+     *
+     * @param <T> of return type
+     */
+    final class CircuitBreakerFuture<T> implements Future<T> {
+        final private Future<T> future;
+        final private OnceConsumer<CircuitBreaker> onceToCircuitbreaker;
+        final private long start;
+
+        CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future) {
+            this(circuitBreaker, future, System.nanoTime());
+        }
+
+        CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future, long start) {
+            Objects.requireNonNull(future, "Non null Future is required to decorate");
+            this.onceToCircuitbreaker = OnceConsumer.of(circuitBreaker);
+            this.future = future;
+            this.start = start;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return future.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return future.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return future.isDone();
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            try {
+                T v = future.get();
+                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                return v;
+            } catch (CancellationException | InterruptedException e) {
+                onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
+                throw e;
+            } catch (Exception e) {
+                onceToCircuitbreaker.applyOnce(cb -> cb.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e));
+                throw e;
+            }
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            try {
+                T v = future.get(timeout, unit);
+                onceToCircuitbreaker.applyOnce(cb -> cb.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                return v;
+            } catch (CancellationException | InterruptedException e) {
+                onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
+                throw e;
+            } catch (Exception e) {
+                onceToCircuitbreaker.applyOnce(cb -> cb.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e));
+                throw e;
+            }
+        }
     }
 }
