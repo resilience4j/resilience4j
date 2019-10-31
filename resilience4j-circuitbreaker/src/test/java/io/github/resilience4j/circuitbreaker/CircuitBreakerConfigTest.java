@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -25,7 +26,7 @@ import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerConfigTest {
 
@@ -290,6 +291,19 @@ public class CircuitBreakerConfigTest {
         then(recordExceptionPredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included by 2
         then(recordExceptionPredicate.test(new ExtendsRuntimeException())).isEqualTo(true); // implicitly included by RuntimeException
         then(recordExceptionPredicate.test(new ExtendsExtendsException())).isEqualTo(true); // explicitly included
+    }
+
+    @Test
+    public void shouldCreateWaitIntervalPredicate() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .waitIntervalFunctionInOpenState((i) -> (long) i)
+            .build();
+        IntervalFunction intervalFunction =
+            circuitBreakerConfig.getWaitIntervalFunctionInOpenState();
+        then(intervalFunction).isNotNull();
+        for (int i = 0; i < 10; i++) {
+            then(intervalFunction.apply(i)).isEqualTo(i);
+        }
     }
 
     @Test

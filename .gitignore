@@ -10,3 +10,5 @@ classes
 */bin
 *.orig
 .attach_pid*
+.DS_Store
+

@@ -23,11 +23,12 @@ import io.github.resilience4j.test.HelloWorldService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 
 import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -50,20 +51,15 @@ public abstract class AbstractBulkheadMetricsTest {
         executorService.shutdown();
     }
 
-    protected abstract Bulkhead given(String prefix, MetricRegistry metricRegistry);
+    protected abstract Bulkhead givenMetricRegistry(String prefix, MetricRegistry metricRegistry);
 
-    protected abstract Bulkhead given(MetricRegistry metricRegistry);
+    protected abstract Bulkhead givenMetricRegistry(MetricRegistry metricRegistry);
 
     @Test
     public void shouldRegisterMetrics() throws Throwable {
-        // Given
-        Bulkhead bulkhead = given(metricRegistry);
-
-        // Given latch to verify bulkhead
+        Bulkhead bulkhead = givenMetricRegistry(metricRegistry);
         CountDownLatch countDownLatch = new CountDownLatch(1);
-
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).will(invocation -> {
+        given(helloWorldService.returnHelloWorld()).will(invocation -> {
             if (countDownLatch.await(10, TimeUnit.SECONDS)) {
                 return "Hello world";
             } else {
@@ -71,7 +67,6 @@ public abstract class AbstractBulkheadMetricsTest {
             }
         });
 
-        //When
         Future<String> future = executorService.submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
@@ -80,12 +75,10 @@ public abstract class AbstractBulkheadMetricsTest {
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
         assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.max_allowed_concurrent_calls").getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
-
         // Then release latch and verify result
         countDownLatch.countDown();
         assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("Hello world");
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         // Then check metrics again
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("resilience4j.bulkhead.testBulkhead.available_concurrent_calls").getValue())
@@ -96,14 +89,9 @@ public abstract class AbstractBulkheadMetricsTest {
 
     @Test
     public void shouldUseCustomPrefix() throws Throwable {
-        //Given
-        Bulkhead bulkhead = given("testPre", metricRegistry);
-
-        // Given latch to verify bulkhead
+        Bulkhead bulkhead = givenMetricRegistry("testPre", metricRegistry);
         CountDownLatch countDownLatch = new CountDownLatch(1);
-
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).will(invocation -> {
+        given(helloWorldService.returnHelloWorld()).will(invocation -> {
             if (countDownLatch.await(10, TimeUnit.SECONDS)) {
                 return "Hello world";
             } else {
@@ -111,7 +99,6 @@ public abstract class AbstractBulkheadMetricsTest {
             }
         });
 
-        //When
         Future<String> future = executorService.submit(() -> bulkhead.executeSupplier(helloWorldService::returnHelloWorld));
 
         // Then metrics are present and show value
@@ -120,12 +107,10 @@ public abstract class AbstractBulkheadMetricsTest {
                 .isIn(DEFAULT_MAX_CONCURRENT_CALLS, DEFAULT_MAX_CONCURRENT_CALLS - 1);
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);
-
         // Then release latch and verify result
         countDownLatch.countDown();
         assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("Hello world");
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
-
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         // Then check metrics again
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.available_concurrent_calls").getValue())
@@ -136,9 +121,7 @@ public abstract class AbstractBulkheadMetricsTest {
 
     @Test
     public void bulkheadConfigChangeAffectsTheMaxAllowedConcurrentCallsValue() {
-        // Given
-        Bulkhead bulkhead = given("testPre", metricRegistry);
-
+        Bulkhead bulkhead = givenMetricRegistry("testPre", metricRegistry);
         // Then make sure that configured value is reported as max allowed concurrent calls
         assertThat(metricRegistry.getGauges().get("testPre.testBulkhead.max_allowed_concurrent_calls").getValue())
                 .isEqualTo(DEFAULT_MAX_CONCURRENT_CALLS);

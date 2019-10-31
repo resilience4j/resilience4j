@@ -30,8 +30,6 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-
-@SuppressWarnings("unchecked")
 public class RateLimiterEventPublisherTest {
 
     private static final int LIMIT = 1;
@@ -63,30 +61,24 @@ public class RateLimiterEventPublisherTest {
 
     @Test
     public void shouldConsumeOnSuccessEvent() throws Throwable {
-        rateLimiter.getEventPublisher()
-            .onSuccess(event ->
-                logger.info(event.getEventType().toString()));
-
+        rateLimiter.getEventPublisher().onSuccess(
+                event -> logger.info(event.getEventType().toString()));
 
         String result = rateLimiter.executeSupplier(() -> "Hello world");
 
         assertThat(result).isEqualTo("Hello world");
-
         then(logger).should(times(1)).info("SUCCESSFUL_ACQUIRE");
     }
 
     @Test
     public void shouldConsumeOnFailureEvent() throws Throwable {
-        rateLimiter.getEventPublisher()
-                .onFailure(event ->
-                    logger.info(event.getEventType().toString()));
-
+        rateLimiter.getEventPublisher().onFailure(
+                event -> logger.info(event.getEventType().toString()));
         rateLimiter.executeSupplier(() -> "Hello world");
 
         Try.ofSupplier(RateLimiter.decorateSupplier(rateLimiter, () -> "Hello world"));
 
         then(logger).should(times(1)).info("FAILED_ACQUIRE");
     }
-
 
 }

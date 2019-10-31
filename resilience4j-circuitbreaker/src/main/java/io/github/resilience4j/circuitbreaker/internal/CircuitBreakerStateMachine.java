@@ -24,6 +24,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,6 +47,7 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
+import static java.time.temporal.ChronoUnit.MILLIS;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -55,6 +59,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final String name;
     private final AtomicReference<CircuitBreakerState> stateReference;
     private final CircuitBreakerConfig circuitBreakerConfig;
+    private final Map<String, String> tags;
     private final CircuitBreakerEventProcessor eventProcessor;
     private final Clock clock;
     private final SchedulerFactory schedulerFactory;
@@ -67,13 +72,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param clock A Clock which can be mocked in tests.
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
-    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory) {
+    private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, SchedulerFactory schedulerFactory, io.vavr.collection.Map<String, String> tags) {
         this.name = name;
         this.circuitBreakerConfig = Objects.requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;
         this.schedulerFactory = schedulerFactory;
+        this.tags = Objects.requireNonNull(tags, "Tags must not be null");;
     }
 
     /**
@@ -84,7 +90,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param schedulerFactory A SchedulerFactory which can be mocked in tests.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, SchedulerFactory schedulerFactory) {
-        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory);
+        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory, HashMap.empty());
     }
 
     /**
@@ -94,7 +100,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
-        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance());
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), HashMap.empty());
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, Clock clock, io.vavr.collection.Map<String, String> tags) {
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), tags);
     }
 
     /**
@@ -105,6 +121,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
        this(name, circuitBreakerConfig, Clock.systemUTC());
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param tags                 Tags to add to the CircuitBreaker.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig, io.vavr.collection.Map<String, String> tags) {
+        this(name, circuitBreakerConfig, Clock.systemUTC(), tags);
     }
 
     /**
@@ -124,6 +151,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig) {
         this(name, circuitBreakerConfig.get());
+    }
+
+    /**
+     * Creates a circuitBreaker.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration supplier.
+     */
+    public CircuitBreakerStateMachine(String name, Supplier<CircuitBreakerConfig> circuitBreakerConfig, io.vavr.collection.Map<String, String> tags) {
+        this(name, circuitBreakerConfig.get(), tags);
     }
 
     @Override
@@ -154,7 +191,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
         // Handle the case if the completable future throws a CompletionException wrapping the original exception
         // where original exception is the the one to retry not the CompletionException.
-        if (throwable instanceof CompletionException) {
+        if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
             Throwable cause = throwable.getCause();
             handleThrowable(duration, durationUnit, cause);
         }else{
@@ -220,6 +257,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         return this.stateReference.get().getMetrics();
     }
 
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -252,7 +294,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToForcedOpenState() {
-        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState());
+        stateTransition(FORCED_OPEN, currentState -> new ForcedOpenState(currentState.attempts() + 1));
     }
 
     @Override
@@ -262,12 +304,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void transitionToOpenState() {
-        stateTransition(OPEN, currentState -> new OpenState(currentState.getMetrics()));
+        stateTransition(OPEN, currentState -> new OpenState(currentState.attempts() + 1, currentState.getMetrics()));
     }
 
     @Override
     public void transitionToHalfOpenState() {
-        stateTransition(HALF_OPEN, currentState -> new HalfOpenState());
+        stateTransition(HALF_OPEN, currentState -> new HalfOpenState(currentState.attempts()));
     }
 
 
@@ -415,6 +457,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             checkIfThresholdsExceeded(circuitBreakerMetrics.onSuccess(duration, durationUnit));
         }
 
+        @Override
+        public int attempts() {
+            return 0;
+        }
+
         /**
          * Transitions to open state when thresholds have been exceeded.
          *
@@ -447,18 +494,20 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     private class OpenState implements CircuitBreakerState {
 
+        private final int attempts;
         private final Instant retryAfterWaitDuration;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         private final AtomicBoolean isOpen;
 
-        OpenState(CircuitBreakerMetrics circuitBreakerMetrics) {
-            final Duration waitDurationInOpenState = circuitBreakerConfig.getWaitDurationInOpenState();
-            this.retryAfterWaitDuration = clock.instant().plus(waitDurationInOpenState);
+        OpenState(final int attempts, CircuitBreakerMetrics circuitBreakerMetrics) {
+            this.attempts = attempts;
+            final long waitDurationInMillis = circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(attempts);
+            this.retryAfterWaitDuration = clock.instant().plus(waitDurationInMillis, MILLIS);
             this.circuitBreakerMetrics = circuitBreakerMetrics;
 
             if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                scheduledExecutorService.schedule(CircuitBreakerStateMachine.this::transitionToHalfOpenState, waitDurationInOpenState.toMillis(), TimeUnit.MILLISECONDS);
+                scheduledExecutorService.schedule(this::toHalfOpenState, waitDurationInMillis, TimeUnit.MILLISECONDS);
             }
             isOpen = new AtomicBoolean(true);
         }
@@ -473,9 +522,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public boolean tryAcquirePermission() {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
-                if(isOpen.compareAndSet(true, false)){
-                    transitionToHalfOpenState();
-                }
+                toHalfOpenState();
                 return true;
             }
             circuitBreakerMetrics.onCallNotPermitted();
@@ -516,6 +563,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             circuitBreakerMetrics.onSuccess(duration, durationUnit);
         }
 
+        @Override
+        public int attempts() {
+            return attempts;
+        }
+
         /**
          * Get the state of the CircuitBreaker
          */
@@ -528,6 +580,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
         }
+
+        private void toHalfOpenState() {
+            if(isOpen.compareAndSet(true, false)){
+                transitionToHalfOpenState();
+            }
+        }
+
     }
 
     private class DisabledState implements CircuitBreakerState {
@@ -572,6 +631,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // noOp
         }
 
+        @Override
+        public int attempts() {
+            return 0;
+        }
+
         /**
          * Get the state of the CircuitBreaker
          */
@@ -592,8 +656,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private class ForcedOpenState implements CircuitBreakerState {
 
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        private final int attempts;
 
-        ForcedOpenState() {
+        ForcedOpenState(int attempts) {
+            this.attempts = attempts;
             this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedOpen(circuitBreakerConfig);
         }
 
@@ -635,6 +701,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // noOp
         }
 
+        @Override
+        public int attempts() {
+            return attempts;
+        }
+
         /**
          * Get the state of the CircuitBreaker
          */
@@ -654,12 +725,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private CircuitBreakerMetrics circuitBreakerMetrics;
         private final AtomicInteger permittedNumberOfCalls;
         private final AtomicBoolean isHalfOpen;
+        private final int attempts;
 
-        HalfOpenState() {
+        HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig.getPermittedNumberOfCallsInHalfOpenState();
             this.circuitBreakerMetrics = CircuitBreakerMetrics.forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
+            this.attempts = attempts;
         }
 
         /**
@@ -701,6 +774,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public void onSuccess(long duration, TimeUnit durationUnit) {
             // CircuitBreakerMetrics is thread-safe
             checkIfThresholdsExceeded(circuitBreakerMetrics.onSuccess(duration, durationUnit));
+        }
+
+        @Override
+        public int attempts() {
+            return attempts;
         }
 
         /**
@@ -747,6 +825,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
         void onSuccess(long duration, TimeUnit durationUnit);
+
+        int attempts();
 
         CircuitBreaker.State getState();
 

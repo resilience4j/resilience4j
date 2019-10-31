@@ -29,6 +29,7 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.collection.HashMap;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
@@ -117,6 +118,13 @@ public interface Bulkhead {
      * @return the Metrics of this Bulkhead
      */
     Metrics getMetrics();
+
+    /**
+     * Returns an unmodifiable map with tags assigned to this Blukhead.
+     *
+     * @return the tags assigned to this Retry in an unmodifiable map
+     */
+    io.vavr.collection.Map<String, String> getTags();
 
     /**
      * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and
@@ -497,7 +505,19 @@ public interface Bulkhead {
      * @return a Bulkhead instance
      */
     static Bulkhead of(String name, BulkheadConfig config) {
-        return new SemaphoreBulkhead(name, config);
+        return of(name, config, HashMap.empty());
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name the name of the bulkhead
+     * @param config a custom BulkheadConfig configuration
+     * @param tags tags added to the Bulkhead
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, BulkheadConfig config, io.vavr.collection.Map<String, String> tags) {
+        return new SemaphoreBulkhead(name, config, tags);
     }
 
     /**
@@ -508,8 +528,21 @@ public interface Bulkhead {
      * @return a Bulkhead instance
      */
     static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-        return new SemaphoreBulkhead(name, bulkheadConfigSupplier);
+        return of(name, bulkheadConfigSupplier, HashMap.empty());
     }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name the name of the bulkhead
+     * @param bulkheadConfigSupplier custom configuration supplier
+     * @param tags tags added to the Bulkhead
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier, io.vavr.collection.Map<String, String> tags) {
+        return new SemaphoreBulkhead(name, bulkheadConfigSupplier, tags);
+    }
+
 
     interface Metrics {
 

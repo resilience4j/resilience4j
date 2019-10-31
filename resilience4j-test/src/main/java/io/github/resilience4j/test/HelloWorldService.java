@@ -22,10 +22,13 @@ import io.vavr.control.Either;
 import io.vavr.control.Try;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 public interface HelloWorldService {
 
     String returnHelloWorld();
+
+    Future<String> returnHelloWorldFuture();
 
     Either<HelloWorldException, String> returnEither();
 

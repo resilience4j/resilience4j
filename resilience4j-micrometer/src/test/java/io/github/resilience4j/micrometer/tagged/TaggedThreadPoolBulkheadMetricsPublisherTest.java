@@ -94,7 +94,7 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
         assertThat(successful.get().value()).isEqualTo(bulkhead.getMetrics().getMaximumThreadPoolSize());
 
         ThreadPoolBulkhead newBulkhead = ThreadPoolBulkhead.of(bulkhead.getName(), ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(10).build());
+                .maxThreadPoolSize(Runtime.getRuntime().availableProcessors() + 1).build());
 
         bulkheadRegistry.replace(bulkhead.getName(), newBulkhead);
 

@@ -8,8 +8,13 @@ import java.util.function.Function;
 import static io.github.resilience4j.retry.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Use io.github.resilience4j.core.IntervalFunction instead, this class kept for backwards
+ * compatibility
+ */
 @FunctionalInterface
-public interface IntervalFunction extends Function<Integer, Long> {
+@Deprecated
+public interface IntervalFunction extends io.github.resilience4j.core.IntervalFunction {
 
     long DEFAULT_INITIAL_INTERVAL = 500;
     double DEFAULT_MULTIPLIER = 1.5;

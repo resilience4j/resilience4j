@@ -22,9 +22,10 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -40,25 +41,19 @@ public abstract class AbstractRateLimiterMetricsTest {
         helloWorldService = mock(HelloWorldService.class);
     }
 
-    protected abstract RateLimiter given(String prefix, MetricRegistry metricRegistry);
+    protected abstract RateLimiter givenMetricRegistry(String prefix, MetricRegistry metricRegistry);
 
-    protected abstract RateLimiter given(MetricRegistry metricRegistry);
+    protected abstract RateLimiter givenMetricRegistry(MetricRegistry metricRegistry);
 
     @Test
     public void shouldRegisterMetrics() throws Throwable {
-        //Given
-        RateLimiter rateLimiter = given(metricRegistry);
+        RateLimiter rateLimiter = givenMetricRegistry(metricRegistry);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
         String value = rateLimiter.executeSupplier(helloWorldService::returnHelloWorld);
 
-        //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
                 .getValue()).isEqualTo(0);
@@ -68,19 +63,13 @@ public abstract class AbstractRateLimiterMetricsTest {
 
     @Test
     public void shouldUseCustomPrefix() throws Throwable {
-        //Given
-        RateLimiter rateLimiter = given("testPre", metricRegistry);
+        RateLimiter rateLimiter = givenMetricRegistry("testPre", metricRegistry);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        // Given the HelloWorldService returns Hello world
-        BDDMockito.given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-
-        //When
         String value = rateLimiter.executeSupplier(helloWorldService::returnHelloWorld);
 
-        //Then
         assertThat(value).isEqualTo("Hello world");
-        // Then the helloWorldService should be invoked 1 time
-        BDDMockito.then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testLimit.number_of_waiting_threads")
                 .getValue()).isEqualTo(0);

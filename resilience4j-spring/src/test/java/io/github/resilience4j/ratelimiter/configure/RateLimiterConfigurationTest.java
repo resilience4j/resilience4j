@@ -24,37 +24,29 @@ public class RateLimiterConfigurationTest {
 
 	@Test
 	public void testRateLimiterRegistry() {
-		//Given
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties1.setLimitForPeriod(2);
 		instanceProperties1.setSubscribeForEvents(true);
-
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties2.setLimitForPeriod(4);
 		instanceProperties2.setSubscribeForEvents(true);
-
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
 		rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
 		rateLimiterConfigurationProperties.getInstances().put("backend2", instanceProperties2);
 		rateLimiterConfigurationProperties.setRateLimiterAspectOrder(300);
-
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
-		//When
 		RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration.rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
 
-		//Then
 		assertThat(rateLimiterConfigurationProperties.getRateLimiterAspectOrder()).isEqualTo(300);
 		assertThat(rateLimiterRegistry.getAllRateLimiters().size()).isEqualTo(2);
 		RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("backend1");
 		assertThat(rateLimiter).isNotNull();
 		assertThat(rateLimiter.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(2);
-
 		RateLimiter rateLimiter2 = rateLimiterRegistry.rateLimiter("backend2");
 		assertThat(rateLimiter2).isNotNull();
 		assertThat(rateLimiter2.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(4);
-
 		assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(2);
 	}
 
@@ -120,15 +112,12 @@ public class RateLimiterConfigurationTest {
 	@Test
 	public void testCreateRateLimiterRegistryWithUnknownConfig() {
 		RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
-
 		io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties();
 		instanceProperties.setBaseConfig("unknownConfig");
 		rateLimiterConfigurationProperties.getInstances().put("backend", instanceProperties);
-
 		RateLimiterConfiguration rateLimiterConfiguration = new RateLimiterConfiguration();
 		DefaultEventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
-		//When
 		assertThatThrownBy(() -> rateLimiterConfiguration.rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList())))
 				.isInstanceOf(ConfigurationNotFoundException.class)
 				.hasMessage("Configuration with name 'unknownConfig' does not exist");

@@ -24,6 +24,8 @@ import io.github.resilience4j.retry.internal.RetryImpl;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
@@ -45,7 +47,19 @@ public interface Retry {
 	 * @return a Retry with a custom Retry configuration.
 	 */
 	static Retry of(String name, RetryConfig retryConfig) {
-		return new RetryImpl(name, retryConfig);
+		return of(name, retryConfig, HashMap.empty());
+	}
+
+	/**
+	 * Creates a Retry with a custom Retry configuration.
+	 *
+	 * @param name        the ID of the Retry
+	 * @param retryConfig a custom Retry configuration
+	 * @param tags        tags to assign to the Retry
+	 * @return a Retry with a custom Retry configuration.
+	 */
+	static Retry of(String name, RetryConfig retryConfig, Map<String, String> tags) {
+		return new RetryImpl(name, retryConfig, tags);
 	}
 
 	/**
@@ -56,7 +70,19 @@ public interface Retry {
 	 * @return a Retry with a custom Retry configuration.
 	 */
 	static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier) {
-		return new RetryImpl(name, retryConfigSupplier.get());
+		return of(name, retryConfigSupplier.get(), HashMap.empty());
+	}
+
+	/**
+	 * Creates a Retry with a custom Retry configuration.
+	 *
+	 * @param name                the ID of the Retry
+	 * @param retryConfigSupplier a supplier of a custom Retry configuration
+	 * @param tags                tags to assign to the Retry
+	 * @return a Retry with a custom Retry configuration.
+	 */
+	static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier, Map<String, String> tags) {
+		return new RetryImpl(name, retryConfigSupplier.get(), tags);
 	}
 
 	/**
@@ -66,7 +92,7 @@ public interface Retry {
 	 * @return a Retry with default configuration
 	 */
 	static Retry ofDefaults(String name) {
-		return new RetryImpl(name, RetryConfig.ofDefaults());
+		return of(name, RetryConfig.ofDefaults(), HashMap.empty());
 	}
 
 	/**
@@ -108,7 +134,7 @@ public interface Retry {
 				T result = supplier.apply();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -129,7 +155,7 @@ public interface Retry {
 			Retry.Context context = retry.context();
 			do try {
 				runnable.run();
-				context.onSuccess();
+				context.onComplete();
 				break;
 			} catch (Exception exception) {
 				context.onError(exception);
@@ -153,7 +179,7 @@ public interface Retry {
 				R result = function.apply(t);
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -177,7 +203,7 @@ public interface Retry {
 				T result = supplier.get();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (RuntimeException runtimeException) {
@@ -202,7 +228,7 @@ public interface Retry {
 				if(result.isRight()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
-						context.onSuccess();
+						context.onComplete();
 						return result;
 					}
 				}else{
@@ -233,7 +259,7 @@ public interface Retry {
 				if(result.isSuccess()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
-						context.onSuccess();
+						context.onComplete();
 						return result;
 					}
 				}else{
@@ -268,7 +294,7 @@ public interface Retry {
 				T result = supplier.call();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -289,7 +315,7 @@ public interface Retry {
 			Retry.Context context = retry.context();
 			do try {
 				runnable.run();
-				context.onSuccess();
+				context.onComplete();
 				break;
 			} catch (RuntimeException runtimeException) {
 				context.onRuntimeError(runtimeException);
@@ -313,7 +339,7 @@ public interface Retry {
 				R result = function.apply(t);
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (RuntimeException runtimeException) {
@@ -349,6 +375,13 @@ public interface Retry {
 	 * @return the RetryConfig of this Retry
 	 */
 	RetryConfig getRetryConfig();
+
+	/**
+	 * Returns an unmodifiable map with tags assigned to this Retry.
+	 *
+	 * @return the tags assigned to this Retry in an unmodifiable map
+	 */
+	Map<String, String> getTags();
 
 	/**
 	 * Returns an EventPublisher can be used to register event consumers.
@@ -477,8 +510,17 @@ public interface Retry {
 
 		/**
 		 * Records a successful call.
+		 * @deprecated since 1.2.0
 		 */
+		@Deprecated
 		void onSuccess();
+
+		/**
+		 * Records a successful call or retryable call with the needed generated retry events.
+         * When there is a successful retry before reaching the max retries limit , it will generate {@link RetryOnSuccessEvent}
+		 * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other exception thrown
+		 */
+		void onComplete();
 
 		/**
 		 * Records an failed call.
@@ -506,8 +548,18 @@ public interface Retry {
 
 		/**
 		 * Records a successful call.
+		 * @deprecated since 1.2.0
 		 */
+		@Deprecated
 		void onSuccess();
+
+
+		/**
+		 * Records a successful call or retryable call with the needed generated retry events.
+         * When there is a successful retry before reaching the max retries limit , it will generate {@link RetryOnSuccessEvent}
+		 * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other exception thrown
+		 */
+		void onComplete();
 
 		/**
 		 * @param result the returned result from the called logic
@@ -535,6 +587,8 @@ public interface Retry {
 	/**
 	 * An EventPublisher which subscribes to the reactive stream of RetryEvents and
 	 * can be used to register event consumers.
+	 *
+	 * To understand when the handlers are called, see the documentation of the respective events.
 	 */
 	interface EventPublisher extends io.github.resilience4j.core.EventPublisher<RetryEvent> {
 
@@ -598,7 +652,7 @@ public interface Retry {
 
 			if (delay < 1) {
 				promise.complete(result);
-				retryContext.onSuccess();
+				retryContext.onComplete();
 			} else {
 				scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
 			}

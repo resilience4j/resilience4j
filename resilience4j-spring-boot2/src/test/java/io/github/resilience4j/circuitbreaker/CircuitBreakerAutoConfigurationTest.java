@@ -220,7 +220,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
         // expect circuitbreakers actuator endpoint contains both circuitbreakers
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient");
+        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6).containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB", "dummyFeignClient");
 
         // expect circuitbreaker-event actuator endpoint recorded both events
         CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents");
@@ -239,6 +239,23 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreakerHealth.getDetails().get("backendSharedA")).isNotNull();
         assertThat(circuitBreakerHealth.getDetails().get("backendSharedB")).isNotNull();
 
+
+    }
+
+
+    @Test
+    public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
+        //when
+        final CircuitBreaker backendC = circuitBreakerRegistry.getAllCircuitBreakers()
+                .filter(circuitBreaker -> circuitBreaker.getName().equalsIgnoreCase("backendC"))
+                .get();
+        //then
+        assertThat(backendC).isNotNull();
+        CircuitBreakerConfig backendConfig = backendC.getCircuitBreakerConfig();
+
+        assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
+        assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
+        assertThat(backendConfig.getWaitDurationInOpenState()).isEqualByComparingTo(Duration.ofSeconds(1L));
 
     }
 
@@ -275,7 +292,7 @@ public class CircuitBreakerAutoConfigurationTest {
 
         // expect circuitbreakers actuator endpoint contains all circuitbreakers
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(5).containsExactly("backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient");
+        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6).containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB", "dummyFeignClient");
 
         // expect circuitbreaker-event actuator endpoint recorded both events
         CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents");

@@ -3,7 +3,7 @@
 This add-on gives simple to use and highly configurable Spring Boot 2 starter.
 With this starter you can apply rate limiters and circuit breakers to any of your beans by using annotations and configuration files.
 
-NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_spring_boot_starter[Usage Guide]*
+NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/getting-started-3[Usage Guide]*
 
 == License
 

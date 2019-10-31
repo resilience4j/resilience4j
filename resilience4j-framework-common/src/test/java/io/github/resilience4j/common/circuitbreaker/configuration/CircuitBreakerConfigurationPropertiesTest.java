@@ -86,6 +86,40 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
 	}
 
+
+	@Test
+	public void testCircuitBreakerIntervalFunctionProperties() {
+		//Given
+		CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(1000));
+		instanceProperties1.setEnableExponentialBackoff(false);
+		instanceProperties1.setEnableRandomizedWait(false);
+
+
+		CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new CircuitBreakerConfigurationProperties.InstanceProperties();
+		instanceProperties2.setEnableExponentialBackoff(true);
+		instanceProperties2.setExponentialBackoffMultiplier(1.0);
+		instanceProperties2.setWaitDurationInOpenState(Duration.ofMillis(100L));
+
+		CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+		circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+		circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
+
+		//Then
+		assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+		assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
+		final CircuitBreakerConfig circuitBreakerConfig1 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties1);
+		final CircuitBreakerConfig circuitBreakerConfig2 = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(instanceProperties2);
+		CircuitBreakerConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = circuitBreakerConfigurationProperties.getInstances().get("backend1");
+		assertThat(instancePropertiesForRetry1.getWaitDurationInOpenState().toMillis()).isEqualTo(1000);
+		assertThat(circuitBreakerConfig1).isNotNull();
+		assertThat(circuitBreakerConfig1.getWaitIntervalFunctionInOpenState()).isNotNull();
+		assertThat(circuitBreakerConfig2).isNotNull();
+		assertThat(circuitBreakerConfig2.getWaitIntervalFunctionInOpenState()).isNotNull();
+
+
+	}
+
 	@Test
 	public void testCreateCircuitBreakerRegistryWithSharedConfigs() {
 		//Given

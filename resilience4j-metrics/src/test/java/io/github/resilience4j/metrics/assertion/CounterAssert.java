@@ -17,8 +17,7 @@ public class CounterAssert extends AbstractAssert<CounterAssert, Counter> {
 
     public <T> CounterAssert hasValue(T expected) {
         isNotNull();
-        Assertions.assertThat(actual.getCount())
-                .isEqualTo(expected);
+        Assertions.assertThat(actual.getCount()).isEqualTo(expected);
         return this;
     }
 }
