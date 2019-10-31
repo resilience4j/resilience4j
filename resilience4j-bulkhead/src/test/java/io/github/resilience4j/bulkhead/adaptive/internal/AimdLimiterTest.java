@@ -1,13 +1,10 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.LimitResult;
+import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.knowm.xchart.BitmapEncoder;
@@ -16,12 +13,15 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
-import io.github.resilience4j.bulkhead.BulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.LimitResult;
-import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * test the adoptive bulkhead limiter logic
@@ -31,7 +31,7 @@ public class AimdLimiterTest {
 	private AdaptiveBulkheadConfig<AimdConfig> config;
 	private AimdLimiter aimdLimiter;
 	// enable if u need to see the graphs of the executions
-	private boolean drawGraphs = false;
+    private boolean drawGraphs = false;
 
 	@Before
 	public void setup() {
@@ -44,10 +44,6 @@ public class AimdLimiterTest {
 				.slowCallDurationThreshold(200)
 				.build()).build();
 
-		BulkheadConfig currentConfig = BulkheadConfig.custom()
-				.maxConcurrentCalls(5)
-				.maxWaitDuration(Duration.ofMillis(0))
-				.build();
 
 		bulkhead = AdaptiveBulkhead.of("test", config);
 
@@ -72,6 +68,8 @@ public class AimdLimiterTest {
 			}
 		}
 
+        assertThat(config).isNotNull();
+        assertThat(bulkhead).isNotNull();
 
 		if (drawGraphs) {
 			// Create Chart

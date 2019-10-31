@@ -31,7 +31,7 @@ public class BulkheadOnErrorEvent extends AbstractBulkheadLimitEvent {
 
 	@Override
 	public Type getEventType() {
-		return Type.LIMIT_DECREASED;
+        return Type.ERROR;
 	}
 
 	@Override

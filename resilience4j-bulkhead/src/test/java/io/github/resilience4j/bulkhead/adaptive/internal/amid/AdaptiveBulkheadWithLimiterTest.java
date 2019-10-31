@@ -1,5 +1,18 @@
 package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
+import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
+import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
+import org.junit.Before;
+import org.junit.Test;
+import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.Styler;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -10,19 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
-import org.knowm.xchart.style.Styler;
-
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * test the adoptive bulkhead limiter logic
@@ -78,6 +79,8 @@ public class AdaptiveBulkheadWithLimiterTest {
 			executorService.execute(runnable);
 		}
 
+        assertThat(config).isNotNull();
+        assertThat(bulkhead).isNotNull();
 
 		Thread.sleep(20000);
 		executorService.shutdown();

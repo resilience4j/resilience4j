@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
-import java.util.function.Predicate;
-
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
+
+import java.util.function.Predicate;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveLimitBulkhead}
@@ -157,24 +157,11 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		}
 
 		/**
-		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
-		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception
-		 * should count as a success, unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
-		 *
-		 * @param predicate the Predicate which evaluates if an exception should count as a failure
-		 * @return the Builder
-		 */
-		public final Builder recordException(Predicate<Throwable> predicate) {
-			this.recordExceptionPredicate = predicate;
-			return this;
-		}
-
-		/**
 		 * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
-		 * The Predicate must return true if the exception should be ignored .
-		 * The Predicate must return false, if the exception should count as a failure.
+		 * The Predicate must return true if the exception must be ignored .
+		 * The Predicate must return false, if the exception must count as a failure.
 		 *
-		 * @param predicate the Predicate which evaluates if an exception should count as a failure
+		 * @param predicate the Predicate which checks if an exception should count as a failure
 		 * @return the Builder
 		 */
 		public final Builder ignoreException(Predicate<Throwable> predicate) {
@@ -184,13 +171,11 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 
 		/**
 		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
-		 * Any exception matching or inheriting from one of the list should count as a failure, unless ignored via
+		 * an exception matching or inheriting from one of the list should count as a failure
 		 *
-		 * @param errorClasses the error classes that are recorded
+		 * @param errorClasses the error classes which are recorded
 		 * @return the Builder
-		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an exception.
-		 * For a more sophisticated exception management use the
-		 * @see #recordException(Predicate) method
+		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has more priority over recording an exception.
 		 */
 		@SuppressWarnings("unchecked")
 		@SafeVarargs
@@ -200,10 +185,23 @@ public class AdaptiveBulkheadConfig<T extends AbstractConfig> {
 		}
 
 		/**
-		 * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
-		 * Any exception matching or inheriting from one of the list will not count as a failure nor success, even if marked via
+		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
+		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception should count as a success
+		 * ,unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
 		 *
-		 * @param errorClasses the error classes that are ignored
+		 * @param predicate the Predicate which checks if an exception should count as a failure
+		 * @return the Builder
+		 */
+		public final Builder recordException(Predicate<Throwable> predicate) {
+			this.recordExceptionPredicate = predicate;
+			return this;
+		}
+
+		/**
+		 * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
+		 * an exception matching or inheriting from one of that list will not count as a failure nor success
+		 *
+		 * @param errorClasses the error classes which are ignored
 		 * @return the Builder
 		 * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
 		 */

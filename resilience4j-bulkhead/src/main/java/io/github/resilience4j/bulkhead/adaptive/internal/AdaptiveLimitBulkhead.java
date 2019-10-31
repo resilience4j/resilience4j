@@ -18,19 +18,6 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
@@ -38,13 +25,9 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
+import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
-import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnIgnoreEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
+import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
@@ -54,6 +37,18 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.Objects.requireNonNull;
 
 public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveLimitBulkhead.class);
@@ -113,7 +108,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
 		//noinspection unchecked
 		if (adaptationConfig.getIgnoreExceptionPredicate().test(throwable)) {
-			bulkhead.releasePermission();
+            releasePermission();
 			publishBulkheadEvent(new BulkheadOnIgnoreEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
 		} else if (adaptationConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
 			Instant finish = Instant.now();
@@ -190,7 +185,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 
-	private static class AdaptiveBulkheadEventProcessor extends EventProcessor<BulkheadLimit> implements AdaptiveEventPublisher, EventConsumer<BulkheadLimit> {
+    private static class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
 
 		@Override
 		public EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
@@ -223,7 +218,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 
 		@Override
-		public void consumeEvent(BulkheadLimit event) {
+        public void consumeEvent(AdaptiveBulkheadEvent event) {
 			super.processEvent(event);
 		}
 	}
@@ -260,7 +255,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 			if (customLimitAdapter != null) {
 				limitAdapter = customLimitAdapter;
 			}
-			if (config.getConfiguration().getSlidingWindowType() == AimdConfig.SlidingWindow.COUNT_BASED) {
+            if (config.getConfiguration().getSlidingWindowType() == AbstractConfig.SlidingWindow.COUNT_BASED) {
 				metrics = new FixedSizeSlidingWindowMetrics(config.getConfiguration().getSlidingWindowSize());
 			} else {
 				metrics = new SlidingTimeWindowMetrics(config.getConfiguration().getSlidingWindowTime());
@@ -296,7 +291,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	/**
 	 * @param eventSupplier the event supplier to be pushed to consumers
 	 */
-	private void publishBulkheadEvent(BulkheadLimit eventSupplier) {
+    private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
 		if (eventProcessor.hasConsumers()) {
 			eventProcessor.consumeEvent(eventSupplier);
 		}
@@ -400,7 +395,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	 */
 	private void handleError(long callTime, TimeUnit durationUnit, Throwable throwable) {
 		bulkhead.onComplete();
-		publishBulkheadEvent(new BulkheadOnSuccessEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
+        publishBulkheadEvent(new BulkheadOnErrorEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
 		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
 		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
