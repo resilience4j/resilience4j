@@ -134,7 +134,7 @@ public interface Retry {
 				T result = supplier.apply();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -155,7 +155,7 @@ public interface Retry {
 			Retry.Context context = retry.context();
 			do try {
 				runnable.run();
-				context.onSuccess();
+				context.onComplete();
 				break;
 			} catch (Exception exception) {
 				context.onError(exception);
@@ -179,7 +179,7 @@ public interface Retry {
 				R result = function.apply(t);
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -203,7 +203,7 @@ public interface Retry {
 				T result = supplier.get();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (RuntimeException runtimeException) {
@@ -228,7 +228,7 @@ public interface Retry {
 				if(result.isRight()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
-						context.onSuccess();
+						context.onComplete();
 						return result;
 					}
 				}else{
@@ -259,7 +259,7 @@ public interface Retry {
 				if(result.isSuccess()){
 					final boolean validationOfResult = context.onResult(result.get());
 					if (!validationOfResult) {
-						context.onSuccess();
+						context.onComplete();
 						return result;
 					}
 				}else{
@@ -294,7 +294,7 @@ public interface Retry {
 				T result = supplier.call();
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (Exception exception) {
@@ -315,7 +315,7 @@ public interface Retry {
 			Retry.Context context = retry.context();
 			do try {
 				runnable.run();
-				context.onSuccess();
+				context.onComplete();
 				break;
 			} catch (RuntimeException runtimeException) {
 				context.onRuntimeError(runtimeException);
@@ -339,7 +339,7 @@ public interface Retry {
 				R result = function.apply(t);
 				final boolean validationOfResult = context.onResult(result);
 				if (!validationOfResult) {
-					context.onSuccess();
+					context.onComplete();
 					return result;
 				}
 			} catch (RuntimeException runtimeException) {
@@ -510,8 +510,17 @@ public interface Retry {
 
 		/**
 		 * Records a successful call.
+		 * @deprecated since 1.2.0
 		 */
+		@Deprecated
 		void onSuccess();
+
+		/**
+		 * Records a successful call or retryable call with the needed generated retry events.
+         * When there is a successful retry before reaching the max retries limit , it will generate {@link RetryOnSuccessEvent}
+		 * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other exception thrown
+		 */
+		void onComplete();
 
 		/**
 		 * Records an failed call.
@@ -539,8 +548,18 @@ public interface Retry {
 
 		/**
 		 * Records a successful call.
+		 * @deprecated since 1.2.0
 		 */
+		@Deprecated
 		void onSuccess();
+
+
+		/**
+		 * Records a successful call or retryable call with the needed generated retry events.
+         * When there is a successful retry before reaching the max retries limit , it will generate {@link RetryOnSuccessEvent}
+		 * When the retry reach the max retries limit , it will generate {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other exception thrown
+		 */
+		void onComplete();
 
 		/**
 		 * @param result the returned result from the called logic
@@ -633,7 +652,7 @@ public interface Retry {
 
 			if (delay < 1) {
 				promise.complete(result);
-				retryContext.onSuccess();
+				retryContext.onComplete();
 			} else {
 				scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
 			}

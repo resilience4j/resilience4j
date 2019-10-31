@@ -233,7 +233,7 @@ public class RetryOperatorTest {
 
 		Retry.Metrics metrics = retry.getMetrics();
 		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
 	}
 
 	@Test
@@ -252,7 +252,7 @@ public class RetryOperatorTest {
 
 		Retry.Metrics metrics = retry.getMetrics();
 		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
 	}
 
 	private RetryConfig retryConfig() {
