@@ -11,7 +11,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
 
 /**
  * Unit test for {@link CompletableCircuitBreaker}.
@@ -29,7 +29,8 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertComplete();
 
         then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -43,7 +44,8 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should().onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should()
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -59,6 +61,7 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertNotComplete();
 
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 }

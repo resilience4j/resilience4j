@@ -35,6 +35,7 @@ import java.time.Duration;
 @SpringBootApplication
 @Configuration
 public class TestApplication {
+
     public static void main(String[] args) {
         SpringApplication.run(TestApplication.class, args);
     }

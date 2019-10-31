@@ -30,7 +30,7 @@ public interface RecoveryFunction<O> extends Function<Throwable, O> {
                 Throwable actual = Optional.ofNullable(t.getCause()).orElse(t);
                 fallbackValue = apply(actual);
                 if (fallbackValue instanceof Flux) {
-                    return (Flux)fallbackValue;
+                    return (Flux) fallbackValue;
                 }
             } catch (Exception e) {
                 return Flux.error(e);

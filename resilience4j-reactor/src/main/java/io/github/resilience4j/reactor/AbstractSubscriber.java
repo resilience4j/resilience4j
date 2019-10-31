@@ -39,7 +39,7 @@ public abstract class AbstractSubscriber<T> extends BaseSubscriber<T> {
      * @param subscription the subscription to optionally process
      */
     @Override
-    protected void hookOnSubscribe(Subscription subscription){
+    protected void hookOnSubscribe(Subscription subscription) {
         downstreamSubscriber.onSubscribe(this);
     }
 

@@ -18,9 +18,9 @@ class CallMeterImpl implements CallMeter {
     @Override
     public Child labels(String... labels) {
         return new CallMeterChildImpl(
-                collectors.histogram.labels(labels),
-                collectors.totalCounter.labels(labels),
-                collectors.errorCounter.labels(labels));
+            collectors.histogram.labels(labels),
+            collectors.totalCounter.labels(labels),
+            collectors.errorCounter.labels(labels));
     }
 
     @Override

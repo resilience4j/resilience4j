@@ -42,14 +42,14 @@ class FlowableRateLimiter<T> extends Flowable<T> {
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream.subscribe(new RateLimiterSubscriber(downstream)));
-            }else{
+                    .subscribe(() -> upstream.subscribe(new RateLimiterSubscriber(downstream)));
+            } else {
                 upstream.subscribe(new RateLimiterSubscriber(downstream));
             }
-        }else{
+        } else {
             downstream.onSubscribe(EmptySubscription.INSTANCE);
             downstream.onError(createRequestNotPermitted(rateLimiter));
         }

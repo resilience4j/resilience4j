@@ -33,8 +33,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j ratelimiter.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j ratelimiter.
  */
 @Configuration
 @ConditionalOnClass(RateLimiter.class)
@@ -53,7 +53,8 @@ public class RateLimiterAutoConfiguration {
     @Bean
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
-    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
+    public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(
+        EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
         return new RateLimiterEventsEndpoint(eventConsumerRegistry);
     }
 

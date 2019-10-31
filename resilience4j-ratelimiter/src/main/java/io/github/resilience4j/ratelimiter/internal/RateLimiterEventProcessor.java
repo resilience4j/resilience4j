@@ -25,7 +25,9 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 
-public class RateLimiterEventProcessor extends io.github.resilience4j.core.EventProcessor<RateLimiterEvent> implements EventConsumer<RateLimiterEvent>, RateLimiter.EventPublisher {
+public class RateLimiterEventProcessor extends
+    io.github.resilience4j.core.EventProcessor<RateLimiterEvent> implements
+    EventConsumer<RateLimiterEvent>, RateLimiter.EventPublisher {
 
     @Override
     public void consumeEvent(RateLimiterEvent event) {
@@ -33,13 +35,15 @@ public class RateLimiterEventProcessor extends io.github.resilience4j.core.Event
     }
 
     @Override
-    public RateLimiter.EventPublisher onSuccess(EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
+    public RateLimiter.EventPublisher onSuccess(
+        EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
         registerConsumer(RateLimiterOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
         return this;
     }
 
     @Override
-    public RateLimiter.EventPublisher onFailure(EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
+    public RateLimiter.EventPublisher onFailure(
+        EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
         registerConsumer(RateLimiterOnFailureEvent.class.getSimpleName(), onOnFailureEventConsumer);
         return this;
     }

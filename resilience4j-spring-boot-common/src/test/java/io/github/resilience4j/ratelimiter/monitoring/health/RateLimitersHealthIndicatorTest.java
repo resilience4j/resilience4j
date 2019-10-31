@@ -22,21 +22,26 @@ import static org.mockito.Mockito.when;
  * @author bstorozhuk
  */
 public class RateLimitersHealthIndicatorTest {
+
     @Test
     public void health() throws Exception {
         // given
         RateLimiterConfig config = mock(RateLimiterConfig.class);
-        AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(AtomicRateLimiter.AtomicRateLimiterMetrics.class);
+        AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(
+            AtomicRateLimiter.AtomicRateLimiterMetrics.class);
         AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
         RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
         io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties =
-                mock(io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
-        RateLimiterConfigurationProperties rateLimiterProperties = mock(RateLimiterConfigurationProperties.class);
+            mock(
+                io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
+        RateLimiterConfigurationProperties rateLimiterProperties = mock(
+            RateLimiterConfigurationProperties.class);
 
         //when
         when(rateLimiter.getRateLimiterConfig()).thenReturn(config);
         when(rateLimiter.getName()).thenReturn("test");
-        when(rateLimiterProperties.findRateLimiterProperties("test")).thenReturn(Optional.of(instanceProperties));
+        when(rateLimiterProperties.findRateLimiterProperties("test"))
+            .thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
         when(rateLimiter.getMetrics()).thenReturn(metrics);
         when(rateLimiter.getDetailedMetrics()).thenReturn(metrics);
@@ -54,7 +59,8 @@ public class RateLimitersHealthIndicatorTest {
         // then
         OrderedHealthAggregator healthAggregator = new OrderedHealthAggregator();
         RateLimitersHealthIndicator healthIndicator =
-                new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties, healthAggregator);
+            new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties,
+                healthAggregator);
 
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);

@@ -4,16 +4,16 @@ dependencies {
     compileOnly project(':resilience4j-timelimiter')
     compileOnly project(':resilience4j-bulkhead')
     compileOnly project(':resilience4j-retry')
-    compileOnly (libraries.reactor)
+    compileOnly(libraries.reactor)
     testCompile project(':resilience4j-test')
     testCompile project(':resilience4j-circuitbreaker')
     testCompile project(':resilience4j-ratelimiter')
     testCompile project(':resilience4j-timelimiter')
     testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-retry')
-    testCompile (libraries.reactor)
-    testCompile (libraries.reactor_test)
-    testCompile (libraries.assertj)
-    testCompile (libraries.reactive_streams_tck)
+    testCompile(libraries.reactor)
+    testCompile(libraries.reactor_test)
+    testCompile(libraries.assertj)
+    testCompile(libraries.reactive_streams_tck)
 }
-ext.moduleName='io.github.resilience4j.reactor'
+ext.moduleName = 'io.github.resilience4j.reactor'

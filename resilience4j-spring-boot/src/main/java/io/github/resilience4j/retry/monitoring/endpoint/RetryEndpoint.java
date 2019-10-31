@@ -16,14 +16,13 @@
 package io.github.resilience4j.retry.monitoring.endpoint;
 
 
-import java.util.List;
-
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEndpointResponse;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryRegistry;
+import java.util.List;
 
 
 /**
@@ -32,17 +31,17 @@ import io.github.resilience4j.retry.RetryRegistry;
 @ConfigurationProperties(prefix = "endpoints.retries")
 public class RetryEndpoint extends AbstractEndpoint {
 
-	private final RetryRegistry retryRegistry;
+    private final RetryRegistry retryRegistry;
 
-	public RetryEndpoint(RetryRegistry retryRegistry) {
-		super("retries");
-		this.retryRegistry = retryRegistry;
-	}
+    public RetryEndpoint(RetryRegistry retryRegistry) {
+        super("retries");
+        this.retryRegistry = retryRegistry;
+    }
 
-	@Override
-	public RetryEndpointResponse invoke() {
-		List<String> retries = retryRegistry.getAllRetries()
-				.map(Retry::getName).sorted().toJavaList();
-		return new RetryEndpointResponse(retries);
-	}
+    @Override
+    public RetryEndpointResponse invoke() {
+        List<String> retries = retryRegistry.getAllRetries()
+            .map(Retry::getName).sorted().toJavaList();
+        return new RetryEndpointResponse(retries);
+    }
 }

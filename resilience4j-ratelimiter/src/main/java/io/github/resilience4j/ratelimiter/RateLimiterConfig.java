@@ -23,6 +23,7 @@ import java.time.Duration;
 import static java.util.Objects.requireNonNull;
 
 public class RateLimiterConfig {
+
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
@@ -33,7 +34,8 @@ public class RateLimiterConfig {
     private final int limitForPeriod;
     private final boolean writableStackTraceEnabled;
 
-    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod, int limitForPeriod, boolean writableStackTraceEnabled) {
+    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
+        int limitForPeriod, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
@@ -64,8 +66,29 @@ public class RateLimiterConfig {
      *
      * @return a default RateLimiter configuration.
      */
-    public static RateLimiterConfig ofDefaults(){
+    public static RateLimiterConfig ofDefaults() {
         return new Builder().build();
+    }
+
+    private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
+        return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
+    }
+
+    private static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
+        requireNonNull(limitRefreshPeriod, LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL);
+        boolean refreshPeriodIsTooShort =
+            limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
+        if (refreshPeriodIsTooShort) {
+            throw new IllegalArgumentException("LimitRefreshPeriod is too short");
+        }
+        return limitRefreshPeriod;
+    }
+
+    private static int checkLimitForPeriod(final int limitForPeriod) {
+        if (limitForPeriod < 1) {
+            throw new IllegalArgumentException("LimitForPeriod should be greater than 0");
+        }
+        return limitForPeriod;
     }
 
     public Duration getTimeoutDuration() {
@@ -84,7 +107,8 @@ public class RateLimiterConfig {
         return writableStackTraceEnabled;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "RateLimiterConfig{" +
             "timeoutDuration=" + timeoutDuration +
             ", limitRefreshPeriod=" + limitRefreshPeriod +
@@ -94,7 +118,8 @@ public class RateLimiterConfig {
     }
 
     public static class Builder {
-        private Duration timeoutDuration =  Duration.ofSeconds(5);
+
+        private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
@@ -115,13 +140,15 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod, writableStackTraceEnabled);
+            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod,
+                writableStackTraceEnabled);
         }
 
         /**
-         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
-         * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
-         * known (the circuit breaker is short-circuiting calls).
+         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
+         * returns a zero length array. This may be used to reduce log spam when the circuit breaker
+         * is open as the cause of the exceptions is already known (the circuit breaker is
+         * short-circuiting calls).
          *
          * @param writableStackTraceEnabled flag to control if stack trace is writable
          * @return the BulkheadConfig.Builder
@@ -132,8 +159,7 @@ public class RateLimiterConfig {
         }
 
         /**
-         * Configures the default wait for permission duration.
-         * Default value is 5 seconds.
+         * Configures the default wait for permission duration. Default value is 5 seconds.
          *
          * @param timeoutDuration the default wait for permission duration
          * @return the RateLimiterConfig.Builder
@@ -144,10 +170,9 @@ public class RateLimiterConfig {
         }
 
         /**
-         * Configures the period of limit refresh.
-         * After each period rate limiter sets its permissions
-         * count to {@link RateLimiterConfig#limitForPeriod} value.
-         * Default value is 500 nanoseconds.
+         * Configures the period of limit refresh. After each period rate limiter sets its
+         * permissions count to {@link RateLimiterConfig#limitForPeriod} value. Default value is 500
+         * nanoseconds.
          *
          * @param limitRefreshPeriod the period of limit refresh
          * @return the RateLimiterConfig.Builder
@@ -158,10 +183,9 @@ public class RateLimiterConfig {
         }
 
         /**
-         * Configures the permissions limit for refresh period.
-         * Count of permissions available during one rate limiter period
-         * specified by {@link RateLimiterConfig#limitRefreshPeriod} value.
-         * Default value is 50.
+         * Configures the permissions limit for refresh period. Count of permissions available
+         * during one rate limiter period specified by {@link RateLimiterConfig#limitRefreshPeriod}
+         * value. Default value is 50.
          *
          * @param limitForPeriod the permissions limit for refresh period
          * @return the RateLimiterConfig.Builder
@@ -171,25 +195,5 @@ public class RateLimiterConfig {
             return this;
         }
 
-    }
-
-    private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
-        return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
-    }
-
-    private static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
-        requireNonNull(limitRefreshPeriod, LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL);
-        boolean refreshPeriodIsTooShort = limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
-        if (refreshPeriodIsTooShort) {
-            throw new IllegalArgumentException("LimitRefreshPeriod is too short");
-        }
-        return limitRefreshPeriod;
-    }
-
-    private static int checkLimitForPeriod(final int limitForPeriod) {
-        if (limitForPeriod < 1) {
-            throw new IllegalArgumentException("LimitForPeriod should be greater than 0");
-        }
-        return limitForPeriod;
     }
 }

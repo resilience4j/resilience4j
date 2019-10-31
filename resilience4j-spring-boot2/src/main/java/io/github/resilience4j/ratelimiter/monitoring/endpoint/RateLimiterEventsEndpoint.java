@@ -29,9 +29,11 @@ import java.util.Comparator;
 
 @Endpoint(id = "ratelimiterevents")
 public class RateLimiterEventsEndpoint {
+
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
 
-    public RateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
+    public RateLimiterEventsEndpoint(
+        EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
         this.eventsConsumerRegistry = eventsConsumerRegistry;
     }
 
@@ -44,26 +46,29 @@ public class RateLimiterEventsEndpoint {
     }
 
     @ReadOperation
-    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(@Selector String name) {
+    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(
+        @Selector String name) {
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name)
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
     }
 
     @ReadOperation
-    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(@Selector String name,
-                                                                                            @Selector String eventType) {
+    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(
+        @Selector String name,
+        @Selector String eventType) {
         RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name)
-                .filter(event -> event.getEventType() == targetType)
-                .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+            .filter(event -> event.getEventType() == targetType)
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
     }
 
     private List<RateLimiterEvent> getRateLimiterEvents(String name) {
-        CircularEventConsumer<RateLimiterEvent> eventConsumer = eventsConsumerRegistry.getEventConsumer(name);
-        if(eventConsumer != null){
+        CircularEventConsumer<RateLimiterEvent> eventConsumer = eventsConsumerRegistry
+            .getEventConsumer(name);
+        if (eventConsumer != null) {
             return eventConsumer.getBufferedEvents()
-                    .filter(event -> event.getRateLimiterName().equals(name));
-        }else{
+                .filter(event -> event.getRateLimiterName().equals(name));
+        } else {
             return List.empty();
         }
     }

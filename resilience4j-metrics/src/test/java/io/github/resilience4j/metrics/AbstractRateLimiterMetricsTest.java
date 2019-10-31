@@ -31,7 +31,8 @@ import static org.mockito.Mockito.times;
 
 public abstract class AbstractRateLimiterMetricsTest {
 
-    private static final int DEFAULT_LIMIT_FOR_PERIOD = RateLimiterConfig.ofDefaults().getLimitForPeriod();
+    private static final int DEFAULT_LIMIT_FOR_PERIOD = RateLimiterConfig.ofDefaults()
+        .getLimitForPeriod();
     private MetricRegistry metricRegistry;
     private HelloWorldService helloWorldService;
 
@@ -41,7 +42,8 @@ public abstract class AbstractRateLimiterMetricsTest {
         helloWorldService = mock(HelloWorldService.class);
     }
 
-    protected abstract RateLimiter givenMetricRegistry(String prefix, MetricRegistry metricRegistry);
+    protected abstract RateLimiter givenMetricRegistry(String prefix,
+        MetricRegistry metricRegistry);
 
     protected abstract RateLimiter givenMetricRegistry(MetricRegistry metricRegistry);
 
@@ -55,10 +57,12 @@ public abstract class AbstractRateLimiterMetricsTest {
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
-        assertThat(metricRegistry.getGauges().get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
-                .getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("resilience4j.ratelimiter.testLimit.available_permissions").getValue())
-                .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
+        assertThat(metricRegistry.getGauges()
+            .get("resilience4j.ratelimiter.testLimit.number_of_waiting_threads")
+            .getValue()).isEqualTo(0);
+        assertThat(metricRegistry.getGauges()
+            .get("resilience4j.ratelimiter.testLimit.available_permissions").getValue())
+            .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
     }
 
     @Test
@@ -72,8 +76,9 @@ public abstract class AbstractRateLimiterMetricsTest {
         then(helloWorldService).should(times(1)).returnHelloWorld();
         assertThat(metricRegistry.getMetrics()).hasSize(2);
         assertThat(metricRegistry.getGauges().get("testPre.testLimit.number_of_waiting_threads")
-                .getValue()).isEqualTo(0);
-        assertThat(metricRegistry.getGauges().get("testPre.testLimit.available_permissions").getValue())
-                .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
+            .getValue()).isEqualTo(0);
+        assertThat(
+            metricRegistry.getGauges().get("testPre.testLimit.available_permissions").getValue())
+            .isIn(DEFAULT_LIMIT_FOR_PERIOD, DEFAULT_LIMIT_FOR_PERIOD - 1);
     }
 }

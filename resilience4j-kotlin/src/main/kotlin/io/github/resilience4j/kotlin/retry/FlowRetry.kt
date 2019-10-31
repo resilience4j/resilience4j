@@ -21,7 +21,10 @@ package io.github.resilience4j.kotlin.retry
 import io.github.resilience4j.retry.Retry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.retryWhen
 
 
 @UseExperimental(ExperimentalCoroutinesApi::class)
@@ -35,15 +38,15 @@ fun <T> Flow<T>.retry(retry: Retry): Flow<T> {
             delay(delayMs)
             throw RetryDueToResultException()
         }
-    }.retryWhen { e,  _ ->
+    }.retryWhen { e, _ ->
 
         var shouldRetry = false
 
-        if(e is RetryDueToResultException) {
+        if (e is RetryDueToResultException) {
             shouldRetry = true
         } else {
             val delayMs = retryContext.onError(e)
-            if(delayMs >= 0) {
+            if (delayMs >= 0) {
                 delay(delayMs)
                 shouldRetry = true
             }
@@ -52,7 +55,7 @@ fun <T> Flow<T>.retry(retry: Retry): Flow<T> {
         shouldRetry
 
     }.onCompletion { e ->
-        if(e == null)
+        if (e == null)
             retryContext.onSuccess()
     }
 

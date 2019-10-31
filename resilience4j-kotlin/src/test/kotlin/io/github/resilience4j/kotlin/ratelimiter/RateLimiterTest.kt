@@ -25,17 +25,16 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class RateLimiterTest {
 
     private fun noWaitConfig() = RateLimiterConfig
-            .custom()
-            .limitRefreshPeriod(Duration.ofSeconds(10))
-            .limitForPeriod(10)
-            .timeoutDuration(Duration.ZERO)
-            .build()
+        .custom()
+        .limitRefreshPeriod(Duration.ofSeconds(10))
+        .limitForPeriod(10)
+        .timeoutDuration(Duration.ZERO)
+        .build()
 
     @Test
     fun `should execute successful function`() {

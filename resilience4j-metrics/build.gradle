@@ -1,5 +1,5 @@
 dependencies {
-    compileOnly (libraries.metrics)
+    compileOnly(libraries.metrics)
     compileOnly project(':resilience4j-bulkhead')
     compileOnly project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-retry')
@@ -13,6 +13,6 @@ dependencies {
     testCompile project(':resilience4j-retry')
     testCompile project(':resilience4j-test')
     testCompile project(':resilience4j-circuitbreaker')
-    testCompile (libraries.metrics)
+    testCompile(libraries.metrics)
 }
-ext.moduleName='io.github.resilience4j.metrics'
+ext.moduleName = 'io.github.resilience4j.metrics'

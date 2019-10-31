@@ -20,9 +20,12 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 
 public class RateLimiterEventDTO {
 
-    @Nullable private String rateLimiterName;
-    @Nullable private RateLimiterEvent.Type type;
-    @Nullable private String creationTime;
+    @Nullable
+    private String rateLimiterName;
+    @Nullable
+    private RateLimiterEvent.Type type;
+    @Nullable
+    private String creationTime;
 
     public static RateLimiterEventDTO createRateLimiterEventDTO(RateLimiterEvent rateLimiterEvent) {
         RateLimiterEventDTO dto = new RateLimiterEventDTO();

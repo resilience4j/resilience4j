@@ -34,27 +34,29 @@ import org.springframework.context.annotation.Import;
 
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-circuitbreaker.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-circuitbreaker.
  */
 @Configuration
 @ConditionalOnClass(CircuitBreaker.class)
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
-@Import({CircuitBreakerConfigurationOnMissingBean.class,  FallbackConfigurationOnMissingBean.class})
+@Import({CircuitBreakerConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
 
     @Bean
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
-    public CircuitBreakerEndpoint circuitBreakerEndpoint(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public CircuitBreakerEndpoint circuitBreakerEndpoint(
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerEndpoint(circuitBreakerRegistry);
     }
 
     @Bean
     @ConditionalOnEnabledEndpoint
     @ConditionalOnClass(value = {Endpoint.class})
-    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
     }
 

@@ -22,10 +22,11 @@ import io.vavr.collection.List;
 import io.vavr.control.Option;
 
 /**
- * A {@link CircularFifoBuffer} is a first in first out buffer with a fixed size that replaces its oldest element if full.
- * {@link CircularFifoBuffer} does NOT accept null elements.
+ * A {@link CircularFifoBuffer} is a first in first out buffer with a fixed size that replaces its
+ * oldest element if full. {@link CircularFifoBuffer} does NOT accept null elements.
  **/
 public interface CircularFifoBuffer<T> {
+
     /**
      * Returns the number of elements in this {@link CircularFifoBuffer}.
      *
@@ -48,16 +49,16 @@ public interface CircularFifoBuffer<T> {
     boolean isFull();
 
     /**
-     * Returns a list containing all of the elements in this {@link CircularFifoBuffer}.
-     * The elements are copied into an array.
+     * Returns a list containing all of the elements in this {@link CircularFifoBuffer}. The
+     * elements are copied into an array.
      *
      * @return a list containing all of the elements in this {@link CircularFifoBuffer}
      */
     List<T> toList();
 
     /**
-     * Adds element to the {@link CircularFifoBuffer}
-     * and overwrites the oldest element when {@link CircularFifoBuffer#isFull}.
+     * Adds element to the {@link CircularFifoBuffer} and overwrites the oldest element when {@link
+     * CircularFifoBuffer#isFull}.
      *
      * @param element to add
      * @throws NullPointerException if the specified element is null
@@ -65,8 +66,8 @@ public interface CircularFifoBuffer<T> {
     void add(T element);
 
     /**
-     * Retrieves and removes the head of this queue,
-     * or returns {@link Option.None} if this queue is empty.
+     * Retrieves and removes the head of this queue, or returns {@link Option.None} if this queue is
+     * empty.
      *
      * @return the head of this queue, or {@link Option.None} if this queue is empty
      */

@@ -30,25 +30,25 @@ import java.util.List;
 @Configuration
 public class FallbackConfiguration {
 
-	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	public FallbackDecorator rxJava2FallbackDecorator() {
-		return new RxJava2FallbackDecorator();
-	}
+    @Bean
+    @Conditional(value = {RxJava2OnClasspathCondition.class})
+    public FallbackDecorator rxJava2FallbackDecorator() {
+        return new RxJava2FallbackDecorator();
+    }
 
-	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
-	public FallbackDecorator reactorFallbackDecorator() {
-		return new ReactorFallbackDecorator();
-	}
+    @Bean
+    @Conditional(value = {ReactorOnClasspathCondition.class})
+    public FallbackDecorator reactorFallbackDecorator() {
+        return new ReactorFallbackDecorator();
+    }
 
-	@Bean
-	public FallbackDecorator completionStageFallbackDecorator() {
-		return new CompletionStageFallbackDecorator();
-	}
+    @Bean
+    public FallbackDecorator completionStageFallbackDecorator() {
+        return new CompletionStageFallbackDecorator();
+    }
 
-	@Bean
-	public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorator) {
-		return new FallbackDecorators(fallbackDecorator);
-	}
+    @Bean
+    public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorator) {
+        return new FallbackDecorators(fallbackDecorator);
+    }
 }

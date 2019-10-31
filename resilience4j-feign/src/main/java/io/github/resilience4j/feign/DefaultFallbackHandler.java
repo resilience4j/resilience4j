@@ -16,10 +16,10 @@
  */
 package io.github.resilience4j.feign;
 
+import io.vavr.CheckedFunction1;
+
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
-
-import io.vavr.CheckedFunction1;
 
 /**
  * A {@link FallbackHandler} simply wrapping a fallback instance of type {@param T}.
@@ -35,9 +35,10 @@ class DefaultFallbackHandler<T> implements FallbackHandler<T> {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
-                                                       Method method,
-                                                       Predicate<Exception> filter) {
+    public CheckedFunction1<Object[], Object> decorate(
+        CheckedFunction1<Object[], Object> invocationCall,
+        Method method,
+        Predicate<Exception> filter) {
         validateFallback(fallback, method);
         Method fallbackMethod = getFallbackMethod(fallback, method);
         fallbackMethod.setAccessible(true);

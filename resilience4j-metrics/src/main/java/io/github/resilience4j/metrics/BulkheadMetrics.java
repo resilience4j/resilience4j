@@ -26,9 +26,7 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_CONCURRENT_CALLS;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.MAX_ALLOWED_CONCURRENT_CALLS;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.*;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -42,7 +40,8 @@ public class BulkheadMetrics implements MetricSet {
         this(DEFAULT_PREFIX, bulkheads, new MetricRegistry());
     }
 
-    private BulkheadMetrics(String prefix, Iterable<Bulkhead> bulkheads, MetricRegistry metricRegistry) {
+    private BulkheadMetrics(String prefix, Iterable<Bulkhead> bulkheads,
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(bulkheads);
         requireNonNull(metricRegistry);
@@ -51,49 +50,54 @@ public class BulkheadMetrics implements MetricSet {
             String name = bulkhead.getName();
             //number of available concurrent calls as an integer
             metricRegistry.register(name(prefix, name, AVAILABLE_CONCURRENT_CALLS),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getAvailableConcurrentCalls());
             metricRegistry.register(name(prefix, name, MAX_ALLOWED_CONCURRENT_CALLS),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
         });
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with specified metrics names prefix and
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with specified metrics names
+     * prefix and a {@link BulkheadRegistry} as a source.
      *
      * @param prefix           the prefix of metrics names
      * @param bulkheadRegistry the registry of bulkheads
-     * @param metricRegistry  the metric registry
+     * @param metricRegistry   the metric registry
      */
-    public static BulkheadMetrics ofBulkheadRegistry(String prefix, BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+    public static BulkheadMetrics ofBulkheadRegistry(String prefix,
+        BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
         return new BulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), metricRegistry);
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with specified metrics names prefix and
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with specified metrics names
+     * prefix and a {@link BulkheadRegistry} as a source.
      *
      * @param prefix           the prefix of metrics names
      * @param bulkheadRegistry the registry of bulkheads
      */
-    public static BulkheadMetrics ofBulkheadRegistry(String prefix, BulkheadRegistry bulkheadRegistry) {
-        return new BulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), new MetricRegistry());
+    public static BulkheadMetrics ofBulkheadRegistry(String prefix,
+        BulkheadRegistry bulkheadRegistry) {
+        return new BulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(),
+            new MetricRegistry());
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with specified metrics names prefix and
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with specified metrics names
+     * prefix and a {@link BulkheadRegistry} as a source.
      *
      * @param bulkheadRegistry the registry of bulkheads
      * @param metricRegistry   the metric registry
      */
-    public static BulkheadMetrics ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
-        return new BulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(), metricRegistry);
+    public static BulkheadMetrics ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry,
+        MetricRegistry metricRegistry) {
+        return new BulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(),
+            metricRegistry);
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with a {@link
+     * BulkheadRegistry} as a source.
      *
      * @param bulkheadRegistry the registry of bulkheads
      */
@@ -102,8 +106,8 @@ public class BulkheadMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with
-     * an {@link Iterable} of bulkheads as a source.
+     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with an {@link Iterable} of
+     * bulkheads as a source.
      *
      * @param bulkheads the bulkheads
      */
@@ -112,8 +116,8 @@ public class BulkheadMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with
-     * an {@link Iterable} of bulkheads as a source.
+     * Creates a new instance BulkheadMetrics {@link BulkheadMetrics} with an {@link Iterable} of
+     * bulkheads as a source.
      *
      * @param bulkheads the bulkheads
      */
@@ -123,7 +127,8 @@ public class BulkheadMetrics implements MetricSet {
 
 
     /**
-     * Creates a new instance of BulkheadMetrics {@link BulkheadMetrics} with a bulkhead as a source.
+     * Creates a new instance of BulkheadMetrics {@link BulkheadMetrics} with a bulkhead as a
+     * source.
      *
      * @param bulkhead the circuit breaker
      */

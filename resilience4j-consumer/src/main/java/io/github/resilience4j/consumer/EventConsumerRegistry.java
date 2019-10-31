@@ -24,7 +24,7 @@ public interface EventConsumerRegistry<T> {
     /**
      * Creates a new EventConsumer and stores the instance in the registry.
      *
-     * @param id the id of the EventConsumer
+     * @param id         the id of the EventConsumer
      * @param bufferSize the size of the EventConsumer
      * @return a new EventConsumer
      */

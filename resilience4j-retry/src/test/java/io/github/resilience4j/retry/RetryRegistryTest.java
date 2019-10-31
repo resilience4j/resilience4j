@@ -34,219 +34,238 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class RetryRegistryTest {
 
-	private RetryRegistry retryRegistry;
+    private RetryRegistry retryRegistry;
 
-	@Before
-	public void setUp() {
-		retryRegistry = RetryRegistry.ofDefaults();
-	}
+    private static Optional<EventProcessor<?>> getEventProcessor(
+        Registry.EventPublisher<Retry> ep) {
+        return ep instanceof EventProcessor<?> ? Optional.of((EventProcessor<?>) ep)
+            : Optional.empty();
+    }
 
-	@Test
-	public void testCreateWithNullConfig() {
-		assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null)).isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
-	}
+    @Before
+    public void setUp() {
+        retryRegistry = RetryRegistry.ofDefaults();
+    }
 
-	@Test
-	public void shouldReturnTheCorrectName() {
-		Retry retry = retryRegistry.retry("testName");
+    @Test
+    public void testCreateWithNullConfig() {
+        assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null))
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
 
-		assertThat(retry).isNotNull();
-		assertThat(retry.getName()).isEqualTo("testName");
-	}
+    @Test
+    public void shouldReturnTheCorrectName() {
+        Retry retry = retryRegistry.retry("testName");
 
-	@Test
-	public void shouldBeTheSameRetry() {
-		Retry retry = retryRegistry.retry("testName");
-		Retry retry2 = retryRegistry.retry("testName");
+        assertThat(retry).isNotNull();
+        assertThat(retry.getName()).isEqualTo("testName");
+    }
 
-		assertThat(retry).isSameAs(retry2);
-		assertThat(retryRegistry.getAllRetries()).hasSize(1);
-	}
+    @Test
+    public void shouldBeTheSameRetry() {
+        Retry retry = retryRegistry.retry("testName");
+        Retry retry2 = retryRegistry.retry("testName");
 
-	@Test
-	public void shouldBeNotTheSameRetry() {
-		Retry retry = retryRegistry.retry("testName");
-		Retry retry2 = retryRegistry.retry("otherTestName");
+        assertThat(retry).isSameAs(retry2);
+        assertThat(retryRegistry.getAllRetries()).hasSize(1);
+    }
 
-		assertThat(retry).isNotSameAs(retry2);
-		assertThat(retryRegistry.getAllRetries()).hasSize(2);
-	}
+    @Test
+    public void shouldBeNotTheSameRetry() {
+        Retry retry = retryRegistry.retry("testName");
+        Retry retry2 = retryRegistry.retry("otherTestName");
 
-	@Test
-	public void noTagsByDefault() {
-		Retry retry = retryRegistry.retry("testName");
-		assertThat(retry.getTags()).hasSize(0);
-	}
+        assertThat(retry).isNotSameAs(retry2);
+        assertThat(retryRegistry.getAllRetries()).hasSize(2);
+    }
 
-	@Test
-	public void tagsOfRegistryAddedToInstance() {
-		RetryConfig retryConfig = RetryConfig.ofDefaults();
-		Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
-		io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
-		RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, retryTags);
-		Retry retry = retryRegistry.retry("testName");
+    @Test
+    public void noTagsByDefault() {
+        Retry retry = retryRegistry.retry("testName");
+        assertThat(retry.getTags()).hasSize(0);
+    }
 
-		assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
-	}
+    @Test
+    public void tagsOfRegistryAddedToInstance() {
+        RetryConfig retryConfig = RetryConfig.ofDefaults();
+        Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
+        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, retryTags);
+        Retry retry = retryRegistry.retry("testName");
 
-	@Test
-	public void tagsAddedToInstance() {
-		io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
-		Retry retry = retryRegistry.retry("testName", retryTags);
+        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+    }
 
-		assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
-	}
+    @Test
+    public void tagsAddedToInstance() {
+        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        Retry retry = retryRegistry.retry("testName", retryTags);
 
-	@Test
-	public void tagsOfRetriesShouldNotBeMixed() {
-		RetryConfig config = RetryConfig.ofDefaults();
-		io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
-		Retry retry = retryRegistry.retry("testName", config, retryTags);
-		io.vavr.collection.Map<String, String> retryTags2 = io.vavr.collection.HashMap.of("key3","value3", "key4", "value4");
-		Retry retry2 = retryRegistry.retry("otherTestName", config, retryTags2);
+        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+    }
 
-		assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
-		assertThat(retry2.getTags()).containsOnlyElementsOf(retryTags2);
-	}
+    @Test
+    public void tagsOfRetriesShouldNotBeMixed() {
+        RetryConfig config = RetryConfig.ofDefaults();
+        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        Retry retry = retryRegistry.retry("testName", config, retryTags);
+        io.vavr.collection.Map<String, String> retryTags2 = io.vavr.collection.HashMap
+            .of("key3", "value3", "key4", "value4");
+        Retry retry2 = retryRegistry.retry("otherTestName", config, retryTags2);
 
-	@Test
-	public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
-		RetryConfig retryConfig = RetryConfig.ofDefaults();
-		Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
-		io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
-		io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap.of("key1","value3", "key4", "value4");
-		RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, registryTags);
-		Retry retry = retryRegistry.retry("testName", retryConfig, instanceTags);
+        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+        assertThat(retry2.getTags()).containsOnlyElementsOf(retryTags2);
+    }
 
-		io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap.of("key1","value3", "key2", "value2", "key4", "value4");
-		assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
-	}
+    @Test
+    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+        RetryConfig retryConfig = RetryConfig.ofDefaults();
+        Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
+        io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
+            .of("key1", "value3", "key4", "value4");
+        RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, registryTags);
+        Retry retry = retryRegistry.retry("testName", retryConfig, instanceTags);
 
-	@Test
-	public void canBuildRetryFromRegistryWithConfig() {
-		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-		Retry retry = retryRegistry.retry("testName", config);
+        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
+            .of("key1", "value3", "key2", "value2", "key4", "value4");
+        assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
+    }
 
-		assertThat(retry).isNotNull();
-		assertThat(retryRegistry.getAllRetries()).hasSize(1);
-	}
+    @Test
+    public void canBuildRetryFromRegistryWithConfig() {
+        RetryConfig config = RetryConfig.custom().maxAttempts(1000)
+            .waitDuration(Duration.ofSeconds(300)).build();
+        Retry retry = retryRegistry.retry("testName", config);
 
-	@Test
-	public void canBuildRetryFromRegistryWithConfigSupplier() {
-		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-		Retry retry = retryRegistry.retry("testName", () -> config);
+        assertThat(retry).isNotNull();
+        assertThat(retryRegistry.getAllRetries()).hasSize(1);
+    }
 
-		assertThat(retry).isNotNull();
-		assertThat(retryRegistry.getAllRetries()).hasSize(1);
-	}
+    @Test
+    public void canBuildRetryFromRegistryWithConfigSupplier() {
+        RetryConfig config = RetryConfig.custom().maxAttempts(1000)
+            .waitDuration(Duration.ofSeconds(300)).build();
+        Retry retry = retryRegistry.retry("testName", () -> config);
 
-	@Test
-	public void canBuildRetryRegistryWithConfig() {
-		RetryConfig config = RetryConfig.custom().maxAttempts(1000).waitDuration(Duration.ofSeconds(300)).build();
-		retryRegistry = RetryRegistry.of(config);
-		Retry retry = retryRegistry.retry("testName", () -> config);
+        assertThat(retry).isNotNull();
+        assertThat(retryRegistry.getAllRetries()).hasSize(1);
+    }
 
-		assertThat(retry).isNotNull();
-		assertThat(retryRegistry.getAllRetries()).hasSize(1);
-	}
+    @Test
+    public void canBuildRetryRegistryWithConfig() {
+        RetryConfig config = RetryConfig.custom().maxAttempts(1000)
+            .waitDuration(Duration.ofSeconds(300)).build();
+        retryRegistry = RetryRegistry.of(config);
+        Retry retry = retryRegistry.retry("testName", () -> config);
 
-	@Test
-	public void testCreateWithConfigurationMap() {
-		Map<String, RetryConfig> configs = new HashMap<>();
-		configs.put("default", RetryConfig.ofDefaults());
-		configs.put("custom", RetryConfig.ofDefaults());
+        assertThat(retry).isNotNull();
+        assertThat(retryRegistry.getAllRetries()).hasSize(1);
+    }
 
-		RetryRegistry retryRegistry = RetryRegistry.of(configs);
+    @Test
+    public void testCreateWithConfigurationMap() {
+        Map<String, RetryConfig> configs = new HashMap<>();
+        configs.put("default", RetryConfig.ofDefaults());
+        configs.put("custom", RetryConfig.ofDefaults());
 
-		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
-		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
-	}
+        RetryRegistry retryRegistry = RetryRegistry.of(configs);
 
-	@Test
-	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
-		Map<String, RetryConfig> configs = new HashMap<>();
-		configs.put("custom", RetryConfig.ofDefaults());
+        assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+        assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-		RetryRegistry retryRegistry = RetryRegistry.of(configs);
+    @Test
+    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+        Map<String, RetryConfig> configs = new HashMap<>();
+        configs.put("custom", RetryConfig.ofDefaults());
 
-		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
-		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
-	}
+        RetryRegistry retryRegistry = RetryRegistry.of(configs);
 
-	@Test
-	public void testCreateWithSingleRegistryEventConsumer() {
-		RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), new NoOpRetryEventConsumer());
+        assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+        assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-		getEventProcessor(retryRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+    @Test
+    public void testCreateWithSingleRegistryEventConsumer() {
+        RetryRegistry retryRegistry = RetryRegistry
+            .of(RetryConfig.ofDefaults(), new NoOpRetryEventConsumer());
 
-	@Test
-	public void testCreateWithMultipleRegistryEventConsumer() {
-		List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
-		registryEventConsumers.add(new NoOpRetryEventConsumer());
-		registryEventConsumers.add(new NoOpRetryEventConsumer());
+        getEventProcessor(retryRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), registryEventConsumers);
+    @Test
+    public void testCreateWithMultipleRegistryEventConsumer() {
+        List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpRetryEventConsumer());
+        registryEventConsumers.add(new NoOpRetryEventConsumer());
 
-		getEventProcessor(retryRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        RetryRegistry retryRegistry = RetryRegistry
+            .of(RetryConfig.ofDefaults(), registryEventConsumers);
 
-	@Test
-	public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
-		Map<String, RetryConfig> configs = new HashMap<>();
-		configs.put("custom", RetryConfig.ofDefaults());
+        getEventProcessor(retryRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		RetryRegistry retryRegistry = RetryRegistry.of(configs, new NoOpRetryEventConsumer());
+    @Test
+    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+        Map<String, RetryConfig> configs = new HashMap<>();
+        configs.put("custom", RetryConfig.ofDefaults());
 
-		getEventProcessor(retryRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        RetryRegistry retryRegistry = RetryRegistry.of(configs, new NoOpRetryEventConsumer());
 
-	@Test
-	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
-		Map<String, RetryConfig> configs = new HashMap<>();
-		configs.put("custom", RetryConfig.ofDefaults());
-		List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
-		registryEventConsumers.add(new NoOpRetryEventConsumer());
-		registryEventConsumers.add(new NoOpRetryEventConsumer());
+        getEventProcessor(retryRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		RetryRegistry retryRegistry = RetryRegistry.of(configs, registryEventConsumers);
+    @Test
+    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+        Map<String, RetryConfig> configs = new HashMap<>();
+        configs.put("custom", RetryConfig.ofDefaults());
+        List<RegistryEventConsumer<Retry>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpRetryEventConsumer());
+        registryEventConsumers.add(new NoOpRetryEventConsumer());
 
-		getEventProcessor(retryRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        RetryRegistry retryRegistry = RetryRegistry.of(configs, registryEventConsumers);
 
-	@Test
-	public void testWithNotExistingConfig() {
-		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+        getEventProcessor(retryRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
-				.isInstanceOf(ConfigurationNotFoundException.class);
-	}
+    @Test
+    public void testWithNotExistingConfig() {
+        RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
 
-	@Test
-	public void testAddConfiguration() {
-		RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
-		retryRegistry.addConfiguration("custom", RetryConfig.custom().build());
+        assertThatThrownBy(() -> retryRegistry.retry("test", "doesNotExist"))
+            .isInstanceOf(ConfigurationNotFoundException.class);
+    }
 
-		assertThat(retryRegistry.getDefaultConfig()).isNotNull();
-		assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
-	}
+    @Test
+    public void testAddConfiguration() {
+        RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
+        retryRegistry.addConfiguration("custom", RetryConfig.custom().build());
 
-	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<Retry> ep) {
-		return ep instanceof EventProcessor<?> ? Optional.of((EventProcessor<?>) ep) : Optional.empty();
-	}
+        assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+        assertThat(retryRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-	private static class NoOpRetryEventConsumer implements RegistryEventConsumer<Retry> {
-		@Override
-		public void onEntryAddedEvent(EntryAddedEvent<Retry> entryAddedEvent) { }
+    private static class NoOpRetryEventConsumer implements RegistryEventConsumer<Retry> {
 
-		@Override
-		public void onEntryRemovedEvent(EntryRemovedEvent<Retry> entryRemoveEvent) { }
+        @Override
+        public void onEntryAddedEvent(EntryAddedEvent<Retry> entryAddedEvent) {
+        }
 
-		@Override
-		public void onEntryReplacedEvent(EntryReplacedEvent<Retry> entryReplacedEvent) { }
-	}
+        @Override
+        public void onEntryRemovedEvent(EntryRemovedEvent<Retry> entryRemoveEvent) {
+        }
+
+        @Override
+        public void onEntryReplacedEvent(EntryReplacedEvent<Retry> entryReplacedEvent) {
+        }
+    }
 }

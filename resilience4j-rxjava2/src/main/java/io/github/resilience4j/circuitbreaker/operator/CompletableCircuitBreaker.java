@@ -37,9 +37,9 @@ class CompletableCircuitBreaker extends Completable {
 
     @Override
     protected void subscribeActual(CompletableObserver downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerCompletableObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }

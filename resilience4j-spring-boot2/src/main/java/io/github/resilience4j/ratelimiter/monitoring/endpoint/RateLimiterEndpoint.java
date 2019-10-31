@@ -35,7 +35,7 @@ public class RateLimiterEndpoint {
     @ReadOperation
     public RateLimiterEndpointResponse getAllRateLimiters() {
         List<String> names = rateLimiterRegistry.getAllRateLimiters()
-                .map(RateLimiter::getName).sorted().toJavaList();
+            .map(RateLimiter::getName).sorted().toJavaList();
         return new RateLimiterEndpointResponse(names);
     }
 }

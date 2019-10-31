@@ -72,10 +72,10 @@ class RatelimiterTransformerSpec extends Specification {
     // 10 events / 1 minute
     def buildRatelimiter() {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(60))
-                .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(100))
-                .build()
+            .limitRefreshPeriod(Duration.ofSeconds(60))
+            .limitForPeriod(10)
+            .timeoutDuration(Duration.ofMillis(100))
+            .build()
         RateLimiter.of("test", config)
     }
 }

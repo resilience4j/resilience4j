@@ -24,22 +24,22 @@ import java.util.List;
  */
 public class RetryEventsEndpointResponse {
 
-	@Nullable
-	private List<RetryEventDTO> retryEvents;
+    @Nullable
+    private List<RetryEventDTO> retryEvents;
 
-	public RetryEventsEndpointResponse() {
-	}
+    public RetryEventsEndpointResponse() {
+    }
 
-	public RetryEventsEndpointResponse(List<RetryEventDTO> retryEvents) {
-		this.retryEvents = retryEvents;
-	}
+    public RetryEventsEndpointResponse(List<RetryEventDTO> retryEvents) {
+        this.retryEvents = retryEvents;
+    }
 
-	@Nullable
-	public List<RetryEventDTO> getRetryEvents() {
-		return retryEvents;
-	}
+    @Nullable
+    public List<RetryEventDTO> getRetryEvents() {
+        return retryEvents;
+    }
 
-	public void setRetryEvents(List<RetryEventDTO> retryEvents) {
-		this.retryEvents = retryEvents;
-	}
+    public void setRetryEvents(List<RetryEventDTO> retryEvents) {
+        this.retryEvents = retryEvents;
+    }
 }

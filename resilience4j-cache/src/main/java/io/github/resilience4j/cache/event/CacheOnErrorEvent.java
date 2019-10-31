@@ -42,8 +42,8 @@ public class CacheOnErrorEvent extends AbstractCacheEvent {
     @Override
     public String toString() {
         return String.format("%s: Cache '%s' recorded an error: '%s'.",
-                getCreationTime(),
-                getCacheName(),
-                getThrowable().toString());
+            getCreationTime(),
+            getCacheName(),
+            getThrowable().toString());
     }
 }

@@ -29,16 +29,23 @@ import java.lang.reflect.Type;
 import java.util.function.Predicate;
 
 /**
- * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with a
- * {@link CircuitBreaker}
+ * Creates a Retrofit {@link CallAdapter.Factory} that decorates a Call to provide integration with
+ * a {@link CircuitBreaker}
  */
 public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
 
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Response> successResponse;
 
+    private CircuitBreakerCallAdapter(final CircuitBreaker circuitBreaker,
+        final Predicate<Response> successResponse) {
+        this.circuitBreaker = circuitBreaker;
+        this.successResponse = successResponse;
+    }
+
     /**
      * Create a circuit-breaking call adapter that decorates retrofit calls
+     *
      * @param circuitBreaker circuit breaker to use
      * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
      */
@@ -48,23 +55,22 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
 
     /**
      * Create a circuit-breaking call adapter that decorates retrofit calls
-     * @param circuitBreaker circuit breaker to use
-     * @param successResponse {@link Predicate} that determines whether the {@link Call} {@link Response} should be considered successful
+     *
+     * @param circuitBreaker  circuit breaker to use
+     * @param successResponse {@link Predicate} that determines whether the {@link Call} {@link
+     *                        Response} should be considered successful
      * @return a {@link CallAdapter.Factory} that can be passed into the {@link Retrofit.Builder}
      */
-    public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker, final Predicate<Response> successResponse) {
+    public static CircuitBreakerCallAdapter of(final CircuitBreaker circuitBreaker,
+        final Predicate<Response> successResponse) {
         return new CircuitBreakerCallAdapter(circuitBreaker, successResponse);
-    }
-
-    private CircuitBreakerCallAdapter(final CircuitBreaker circuitBreaker, final Predicate<Response> successResponse) {
-        this.circuitBreaker = circuitBreaker;
-        this.successResponse = successResponse;
     }
 
     @Override
     public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
         @SuppressWarnings("unchecked")
-        CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit.nextCallAdapter(this, returnType, annotations);
+        CallAdapter<Object, Object> nextAdapter = (CallAdapter<Object, Object>) retrofit
+            .nextCallAdapter(this, returnType, annotations);
 
         return new CallAdapter<Object, Object>() {
             @Override
@@ -74,7 +80,8 @@ public final class CircuitBreakerCallAdapter extends CallAdapter.Factory {
 
             @Override
             public Object adapt(Call<Object> call) {
-                return nextAdapter.adapt(RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, successResponse));
+                return nextAdapter.adapt(
+                    RetrofitCircuitBreaker.decorateCall(circuitBreaker, call, successResponse));
             }
         };
     }

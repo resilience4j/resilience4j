@@ -34,11 +34,13 @@ public class CircuitBreakersHealthIndicatorTest {
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
         CircuitBreaker circuitBreaker = mock(CircuitBreaker.class);
         CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
-                mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
-        CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(CircuitBreakerConfigurationProperties.class);
+            mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
+        CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(
+            CircuitBreakerConfigurationProperties.class);
         HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-                new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties,
+                healthAggregator);
 
         //when
         when(config.getFailureRateThreshold()).thenReturn(30f);
@@ -52,7 +54,8 @@ public class CircuitBreakersHealthIndicatorTest {
 
         when(registry.getAllCircuitBreakers()).thenReturn(Array.of(circuitBreaker));
         when(circuitBreaker.getName()).thenReturn("test");
-        when(circuitBreakerProperties.findCircuitBreakerProperties("test")).thenReturn(Optional.of(instanceProperties));
+        when(circuitBreakerProperties.findCircuitBreakerProperties("test"))
+            .thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
         when(circuitBreaker.getMetrics()).thenReturn(metrics);
         when(circuitBreaker.getCircuitBreakerConfig()).thenReturn(config);
@@ -64,16 +67,16 @@ public class CircuitBreakersHealthIndicatorTest {
         then(health.getDetails()).containsKey("test");
         then(health.getDetails().get("test")).isInstanceOf(Health.class);
         then(((Health) health.getDetails().get("test")).getDetails())
-                .contains(
-                        entry("failureRate", "20.0%"),
-                        entry("slowCallRate", "20.0%"),
-                        entry("slowCallRateThreshold", "50.0%"),
-                        entry("failureRateThreshold", "30.0%"),
-                        entry("bufferedCalls", 100),
-                        entry("slowCalls", 20),
-                        entry("failedCalls", 20),
-                        entry("notPermittedCalls", 0L)
-                );
+            .contains(
+                entry("failureRate", "20.0%"),
+                entry("slowCallRate", "20.0%"),
+                entry("slowCallRateThreshold", "50.0%"),
+                entry("failureRateThreshold", "30.0%"),
+                entry("bufferedCalls", 100),
+                entry("slowCalls", 20),
+                entry("failedCalls", 20),
+                entry("notPermittedCalls", 0L)
+            );
     }
 
     @Test
@@ -87,8 +90,9 @@ public class CircuitBreakersHealthIndicatorTest {
         expectedStateToCircuitBreaker.put(HALF_OPEN, halfOpenCircuitBreaker);
         expectedStateToCircuitBreaker.put(CLOSED, closeCircuitBreaker);
         CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties =
-                mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
-        CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(CircuitBreakerConfigurationProperties.class);
+            mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
+        CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(
+            CircuitBreakerConfigurationProperties.class);
 
         // given
         CircuitBreakerRegistry registry = mock(CircuitBreakerRegistry.class);
@@ -96,14 +100,16 @@ public class CircuitBreakersHealthIndicatorTest {
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
 
         // when
-        when(registry.getAllCircuitBreakers()).thenReturn(Array.ofAll(expectedStateToCircuitBreaker.values()));
+        when(registry.getAllCircuitBreakers())
+            .thenReturn(Array.ofAll(expectedStateToCircuitBreaker.values()));
         expectedStateToCircuitBreaker.forEach(
-                (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties));
+            (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics,
+                instanceProperties, circuitBreakerProperties));
 
         HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-                new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, healthAggregator);
-
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties,
+                healthAggregator);
 
         // then
         Health health = healthIndicator.health();
@@ -117,28 +123,31 @@ public class CircuitBreakersHealthIndicatorTest {
 
     }
 
-    private void setCircuitBreakerWhen(CircuitBreaker.State givenState, CircuitBreaker circuitBreaker,
-                                       CircuitBreakerConfig config, CircuitBreaker.Metrics metrics,
-                                       io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
-                                       CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+    private void setCircuitBreakerWhen(CircuitBreaker.State givenState,
+        CircuitBreaker circuitBreaker,
+        CircuitBreakerConfig config, CircuitBreaker.Metrics metrics,
+        io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
 
         when(circuitBreaker.getName()).thenReturn(givenState.name());
         when(circuitBreaker.getState()).thenReturn(givenState);
         when(circuitBreaker.getCircuitBreakerConfig()).thenReturn(config);
         when(circuitBreaker.getMetrics()).thenReturn(metrics);
-        when(circuitBreakerProperties.findCircuitBreakerProperties(givenState.name())).thenReturn(Optional.of(instanceProperties));
+        when(circuitBreakerProperties.findCircuitBreakerProperties(givenState.name()))
+            .thenReturn(Optional.of(instanceProperties));
         when(instanceProperties.getRegisterHealthIndicator()).thenReturn(true);
     }
 
-    private void assertState(CircuitBreaker.State givenState, Status expectedStatus, Map<String, Object> details) {
+    private void assertState(CircuitBreaker.State givenState, Status expectedStatus,
+        Map<String, Object> details) {
 
         then(details.get(givenState.name())).isInstanceOf(Health.class);
         Health health = (Health) details.get(givenState.name());
         then(health.getStatus()).isEqualTo(expectedStatus);
         then(health.getDetails())
-                .contains(
-                        entry("state", givenState)
-                );
+            .contains(
+                entry("state", givenState)
+            );
     }
 
     private SimpleEntry<String, ?> entry(String key, Object value) {

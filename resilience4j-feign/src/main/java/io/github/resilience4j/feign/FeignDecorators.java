@@ -16,17 +16,17 @@
  */
 package io.github.resilience4j.feign;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.vavr.CheckedFunction1;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Builder to help build stacked decorators. <br>
@@ -43,14 +43,14 @@ import io.vavr.CheckedFunction1;
  *     MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
  * }
  * </pre>
- *
+ * <p>
  * The order in which decorators are applied correspond to the order in which they are declared. For
- * example, calling {@link FeignDecorators.Builder#withFallback(Object)} before
- * {@link FeignDecorators.Builder#withCircuitBreaker(CircuitBreaker)} would mean that the fallback
- * is called when the HTTP request fails, but would no longer be reachable if the CircuitBreaker
- * were open. However, reversing the order would mean that the fallback is called both when the HTTP
- * request fails and when the CircuitBreaker is open. <br>
- * So be wary of this when designing your "resilience" strategy.
+ * example, calling {@link FeignDecorators.Builder#withFallback(Object)} before {@link
+ * FeignDecorators.Builder#withCircuitBreaker(CircuitBreaker)} would mean that the fallback is
+ * called when the HTTP request fails, but would no longer be reachable if the CircuitBreaker were
+ * open. However, reversing the order would mean that the fallback is called both when the HTTP
+ * request fails and when the CircuitBreaker is open. <br> So be wary of this when designing your
+ * "resilience" strategy.
  */
 public class FeignDecorators implements FeignDecorator {
 
@@ -60,18 +60,18 @@ public class FeignDecorators implements FeignDecorator {
         this.decorators = decorators;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     @Override
     public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> fn,
-            Method method, MethodHandler methodHandler, Target<?> target) {
+        Method method, MethodHandler methodHandler, Target<?> target) {
         CheckedFunction1<Object[], Object> decoratedFn = fn;
         for (final FeignDecorator decorator : decorators) {
             decoratedFn = decorator.decorate(decoratedFn, method, methodHandler, target);
         }
         return decoratedFn;
-    }
-
-    public static Builder builder() {
-        return new Builder();
     }
 
     public static final class Builder {
@@ -85,7 +85,8 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            decorators.add((fn, m, mh, t) -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
+            decorators
+                .add((fn, m, mh, t) -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
             return this;
         }
 
@@ -105,7 +106,7 @@ public class FeignDecorators implements FeignDecorator {
          * fallback being called when the previous one fails.
          *
          * @param fallback must match the feign interface, i.e. the interface specified when calling
-         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         *                 {@link Resilience4jFeign.Builder#target(Class, String)}.
          * @return the builder
          */
         public Builder withFallback(Object fallback) {
@@ -114,11 +115,12 @@ public class FeignDecorators implements FeignDecorator {
         }
 
         /**
-         * Adds a fallback factory to the decorator chain. A factory can consume the exception thrown on error.
-         * Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+         * Adds a fallback factory to the decorator chain. A factory can consume the exception
+         * thrown on error. Multiple fallbacks can be applied with the next fallback being called
+         * when the previous one fails.
          *
-         * @param fallbackFactory must match the feign interface, i.e. the interface specified when calling
-         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param fallbackFactory must match the feign interface, i.e. the interface specified when
+         *                        calling {@link Resilience4jFeign.Builder#target(Class, String)}.
          * @return the builder
          */
         public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory) {
@@ -131,9 +133,9 @@ public class FeignDecorators implements FeignDecorator {
          * fallback being called when the previous one fails.
          *
          * @param fallback must match the feign interface, i.e. the interface specified when calling
-         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
-         * @param filter only {@link Exception}s matching the specified {@link Exception} will
-         *        trigger the fallback.
+         *                 {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter   only {@link Exception}s matching the specified {@link Exception} will
+         *                 trigger the fallback.
          * @return the builder
          */
         public Builder withFallback(Object fallback, Class<? extends Exception> filter) {
@@ -142,16 +144,18 @@ public class FeignDecorators implements FeignDecorator {
         }
 
         /**
-         * Adds a fallback factory to the decorator chain. A factory can consume the exception thrown on error.
-         * Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+         * Adds a fallback factory to the decorator chain. A factory can consume the exception
+         * thrown on error. Multiple fallbacks can be applied with the next fallback being called
+         * when the previous one fails.
          *
-         * @param fallbackFactory must match the feign interface, i.e. the interface specified when calling
-         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
-         * @param filter only {@link Exception}s matching the specified {@link Exception} will
-         *        trigger the fallback.
+         * @param fallbackFactory must match the feign interface, i.e. the interface specified when
+         *                        calling {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter          only {@link Exception}s matching the specified {@link Exception}
+         *                        will trigger the fallback.
          * @return the builder
          */
-        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory, Class<? extends Exception> filter) {
+        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory,
+            Class<? extends Exception> filter) {
             decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory), filter));
             return this;
         }
@@ -161,8 +165,8 @@ public class FeignDecorators implements FeignDecorator {
          * fallback being called when the previous one fails.
          *
          * @param fallback must match the feign interface, i.e. the interface specified when calling
-         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
-         * @param filter the filter must return <code>true</code> for the fallback to be called.
+         *                 {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter   the filter must return <code>true</code> for the fallback to be called.
          * @return the builder
          */
         public Builder withFallback(Object fallback, Predicate<Exception> filter) {
@@ -171,22 +175,25 @@ public class FeignDecorators implements FeignDecorator {
         }
 
         /**
-         * Adds a fallback to the decorator chain. A factory can consume the exception thrown on error.
-         * Multiple fallbacks can be applied with the next fallback being called when the previous one fails.
+         * Adds a fallback to the decorator chain. A factory can consume the exception thrown on
+         * error. Multiple fallbacks can be applied with the next fallback being called when the
+         * previous one fails.
          *
-         * @param fallbackFactory must match the feign interface, i.e. the interface specified when calling
-         *        {@link Resilience4jFeign.Builder#target(Class, String)}.
-         * @param filter the filter must return <code>true</code> for the fallback to be called.
+         * @param fallbackFactory must match the feign interface, i.e. the interface specified when
+         *                        calling {@link Resilience4jFeign.Builder#target(Class, String)}.
+         * @param filter          the filter must return <code>true</code> for the fallback to be
+         *                        called.
          * @return the builder
          */
-        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory, Predicate<Exception> filter) {
+        public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory,
+            Predicate<Exception> filter) {
             decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory), filter));
             return this;
         }
 
         /**
-         * Builds the decorator chain. This can then be used to setup an instance of
-         * {@link Resilience4jFeign}.
+         * Builds the decorator chain. This can then be used to setup an instance of {@link
+         * Resilience4jFeign}.
          *
          * @return the decorators.
          */

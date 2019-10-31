@@ -28,6 +28,13 @@ import static java.util.Objects.requireNonNull;
  */
 public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements MeterBinder {
 
+    private final BulkheadRegistry bulkheadRegistry;
+
+    private TaggedBulkheadMetrics(MetricNames names, BulkheadRegistry bulkheadRegistry) {
+        super(names);
+        this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
+    }
+
     /**
      * Creates a new binder that uses given {@code registry} as source of bulkheads.
      *
@@ -39,22 +46,16 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
     }
 
     /**
-     * Creates a new binder defining custom metric names and
-     * using given {@code registry} as source of bulkheads.
+     * Creates a new binder defining custom metric names and using given {@code registry} as source
+     * of bulkheads.
      *
-     * @param names custom names of the metrics
+     * @param names            custom names of the metrics
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
-    public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names, BulkheadRegistry bulkheadRegistry) {
+    public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names,
+        BulkheadRegistry bulkheadRegistry) {
         return new TaggedBulkheadMetrics(names, bulkheadRegistry);
-    }
-
-    private final BulkheadRegistry bulkheadRegistry;
-
-    private TaggedBulkheadMetrics(MetricNames names, BulkheadRegistry bulkheadRegistry) {
-        super(names);
-        this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
 
     @Override
@@ -62,8 +63,10 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
         for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
             addMetrics(registry, bulkhead);
         }
-        bulkheadRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        bulkheadRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        bulkheadRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        bulkheadRegistry.getEventPublisher()
+            .onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         bulkheadRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());
