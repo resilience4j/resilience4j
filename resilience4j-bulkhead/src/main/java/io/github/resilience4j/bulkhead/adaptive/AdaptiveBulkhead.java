@@ -18,7 +18,17 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
-import java.time.Duration;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
+import io.github.resilience4j.bulkhead.event.*;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.EventPublisher;
+import io.vavr.CheckedConsumer;
+import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedRunnable;
+
 import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -27,23 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
-import io.github.resilience4j.bulkhead.event.BulkheadLimit;
-import io.github.resilience4j.bulkhead.event.BulkheadOnErrorEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnIgnoreEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnSuccessEvent;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventPublisher;
-import io.github.resilience4j.core.lang.Nullable;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
@@ -56,8 +49,8 @@ import io.vavr.CheckedRunnable;
  * In order to execute an operation protected by this bulkhead, a permission must be obtained by calling {@link AdaptiveBulkhead#tryAcquirePermission()} ()}
  * If the bulkhead is full, no additional operations will be permitted to execute until space is available.
  * <p>
- * Once the operation is complete, regardless of the result, client needs to call {@link AdaptiveBulkhead#onSuccess(long, TimeUnit)}  in order to maintain
- * integrity of internal bulkhead state which is handled as the following :
+ * Once the operation is complete, regardless of the result (Success or Failure), client needs to call {@link AdaptiveBulkhead#onSuccess(long, TimeUnit)}
+ * or {@link AdaptiveBulkhead#onError(long, TimeUnit, Throwable)}  in order to maintain integrity of internal bulkhead state which is handled by invoking the configured adaptive limit policy.
  * <p>
  * Adaptive capacity management by default use AIMD algorithm for limit control but the user can inject custom limiter implementation by implementing {@link LimitPolicy}
  * <p>

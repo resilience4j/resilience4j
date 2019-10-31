@@ -26,6 +26,9 @@ import io.github.resilience4j.core.metrics.Snapshot;
 
 /**
  * Limit adapter interface for adoptive bulkhead {@link AdaptiveBulkhead}
+ * There is a default implementation {@link io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter}
+ * but the user can apply hiw own policy by implementation {@link LimitPolicy} and inject it to the adaptiveBulkhead by calling :
+ * {@link AdaptiveBulkhead#of(String, AdaptiveBulkheadConfig, LimitPolicy)}
  */
 @FunctionalInterface
 public interface LimitPolicy {
