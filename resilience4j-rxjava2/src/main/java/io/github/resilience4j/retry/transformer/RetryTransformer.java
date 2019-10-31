@@ -16,23 +16,9 @@
 
 package io.github.resilience4j.retry.transformer;
 
-import org.reactivestreams.Publisher;
-
 import io.github.resilience4j.retry.Retry;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.MaybeTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
+import io.reactivex.*;
+import org.reactivestreams.Publisher;
 
 public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
         SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
@@ -101,7 +87,7 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         }
 
         void onComplete() {
-            this.context.onSuccess();
+            this.context.onComplete();
         }
 
         void throwExceptionToForceRetryOnResult(T value) {
