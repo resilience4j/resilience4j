@@ -17,27 +17,14 @@
 package io.github.resilience4j.timelimiter.transformer;
 
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.MaybeTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
+import io.reactivex.*;
+import org.reactivestreams.Publisher;
 
 import java.util.concurrent.TimeUnit;
 
-import org.reactivestreams.Publisher;
-
-public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
-        SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>,
+    ObservableTransformer<T, T>,
+    SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
 
     private final TimeLimiter timeLimiter;
 
@@ -59,50 +46,50 @@ public class TimeLimiterTransformer<T> implements FlowableTransformer<T, T>, Obs
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
         return upstream
-                .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
-                .doOnNext(t -> timeLimiter.onSuccess())
-                .doOnComplete(timeLimiter::onSuccess)
-                .doOnError(timeLimiter::onError);
+            .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
+            .doOnNext(t -> timeLimiter.onSuccess())
+            .doOnComplete(timeLimiter::onSuccess)
+            .doOnError(timeLimiter::onError);
     }
 
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
         return upstream
-                .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
-                .doOnNext(t -> timeLimiter.onSuccess())
-                .doOnComplete(timeLimiter::onSuccess)
-                .doOnError(timeLimiter::onError);
+            .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
+            .doOnNext(t -> timeLimiter.onSuccess())
+            .doOnComplete(timeLimiter::onSuccess)
+            .doOnError(timeLimiter::onError);
     }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
         return upstream
-                .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
-                .doOnSuccess(t -> timeLimiter.onSuccess())
-                .doOnError(timeLimiter::onError);
+            .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
+            .doOnSuccess(t -> timeLimiter.onSuccess())
+            .doOnError(timeLimiter::onError);
     }
 
     @Override
     public CompletableSource apply(Completable upstream) {
         return upstream
-                .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
-                .doOnComplete(timeLimiter::onSuccess)
-                .doOnError(timeLimiter::onError);
+            .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
+            .doOnComplete(timeLimiter::onSuccess)
+            .doOnError(timeLimiter::onError);
     }
 
     @Override
     public MaybeSource<T> apply(Maybe<T> upstream) {
         return upstream
-                .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
-                .doOnSuccess(t -> timeLimiter.onSuccess())
-                .doOnComplete(timeLimiter::onSuccess)
-                .doOnError(timeLimiter::onError);
+            .timeout(getTimeoutInMillis(), TimeUnit.MILLISECONDS)
+            .doOnSuccess(t -> timeLimiter.onSuccess())
+            .doOnComplete(timeLimiter::onSuccess)
+            .doOnError(timeLimiter::onError);
     }
 
     private long getTimeoutInMillis() {
         return timeLimiter.getTimeLimiterConfig()
-                .getTimeoutDuration()
-                .toMillis();
+            .getTimeoutDuration()
+            .toMillis();
     }
 
 }

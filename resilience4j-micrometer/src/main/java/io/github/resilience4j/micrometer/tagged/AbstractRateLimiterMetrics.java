@@ -59,10 +59,15 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
     }
 
     public static class MetricNames {
+
         private static final String DEFAULT_PREFIX = "resilience4j.ratelimiter";
 
-        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = DEFAULT_PREFIX + ".available.permissions";
-        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = DEFAULT_PREFIX + ".waiting_threads";
+        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME =
+            DEFAULT_PREFIX + ".available.permissions";
+        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME =
+            DEFAULT_PREFIX + ".waiting_threads";
+        private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+        private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
 
         /**
          * Returns a builder for creating custom metric names.
@@ -118,7 +123,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
              * @return The builder.
              */
             public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
-                metricNames.availablePermissionsMetricName = requireNonNull(availablePermissionsMetricName);
+                metricNames.availablePermissionsMetricName = requireNonNull(
+                    availablePermissionsMetricName);
                 return this;
             }
 

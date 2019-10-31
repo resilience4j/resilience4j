@@ -39,14 +39,14 @@ class ObserverRateLimiter<T> extends Observable<T> {
     @Override
     protected void subscribeActual(Observer<? super T> downstream) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream.subscribe(new RateLimiterObserver(downstream)));
-            }else{
+                    .subscribe(() -> upstream.subscribe(new RateLimiterObserver(downstream)));
+            } else {
                 upstream.subscribe(new RateLimiterObserver(downstream));
             }
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(createRequestNotPermitted(rateLimiter));
         }

@@ -43,9 +43,9 @@ fun <T> RateLimiter.decorateSuspendFunction(block: suspend () -> T): suspend () 
     executeSuspendFunction(block)
 }
 
-internal suspend fun RateLimiter.awaitPermission(){
+internal suspend fun RateLimiter.awaitPermission() {
     val waitTimeNs = reservePermission()
-    when{
+    when {
         waitTimeNs > 0 -> delay(TimeUnit.NANOSECONDS.toMillis(waitTimeNs))
         waitTimeNs < 0 -> throw RequestNotPermitted.createRequestNotPermitted(this)
     }

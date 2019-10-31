@@ -22,7 +22,7 @@ public class ObserverRateLimiterTest {
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
@@ -41,9 +41,9 @@ public class ObserverRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Observable.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .awaitTerminalEvent(2, TimeUnit.SECONDS);
     }
 
     @Test

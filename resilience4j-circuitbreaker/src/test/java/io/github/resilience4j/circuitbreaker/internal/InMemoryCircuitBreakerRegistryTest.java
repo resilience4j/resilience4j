@@ -18,78 +18,84 @@ import static org.mockito.Mockito.mock;
 
 public class InMemoryCircuitBreakerRegistryTest {
 
-	private Logger LOGGER;
+    private Logger LOGGER;
 
-	@Before
-	public void setUp() {
-		LOGGER = mock(Logger.class);
-	}
+    @Before
+    public void setUp() {
+        LOGGER = mock(Logger.class);
+    }
 
-	@Test
-	public void testAddCircuitBreakerRegistry() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
+    @Test
+    public void testAddCircuitBreakerRegistry() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
 
-		assertThat(circuitBreakerRegistry.getConfiguration("testConfig")).isNotNull();
-	}
+        assertThat(circuitBreakerRegistry.getConfiguration("testConfig")).isNotNull();
+    }
 
-	@Test
-	public void testGetNotFoundCircuitBreakerRegistry() {
-		InMemoryCircuitBreakerRegistry circuitBreakerRegistry = (InMemoryCircuitBreakerRegistry) CircuitBreakerRegistry.ofDefaults();
+    @Test
+    public void testGetNotFoundCircuitBreakerRegistry() {
+        InMemoryCircuitBreakerRegistry circuitBreakerRegistry = (InMemoryCircuitBreakerRegistry) CircuitBreakerRegistry
+            .ofDefaults();
 
-		assertThat(circuitBreakerRegistry.getConfiguration("testNotFound")).isEmpty();
-	}
+        assertThat(circuitBreakerRegistry.getConfiguration("testNotFound")).isEmpty();
+    }
 
-	@Test
-	public void testUpdateDefaultCircuitBreakerRegistry() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+    @Test
+    public void testUpdateDefaultCircuitBreakerRegistry() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
-		assertThatThrownBy(() -> circuitBreakerRegistry.addConfiguration("default", CircuitBreakerConfig.custom().build()))
-				.isExactlyInstanceOf(IllegalArgumentException.class);
-	}
+        assertThatThrownBy(() -> circuitBreakerRegistry
+            .addConfiguration("default", CircuitBreakerConfig.custom().build()))
+            .isExactlyInstanceOf(IllegalArgumentException.class);
+    }
 
-	@Test
-	public void testCreateCircuitBreakerWithSharedConfiguration() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
+    @Test
+    public void testCreateCircuitBreakerWithSharedConfiguration() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
 
-		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				circuitBreakerRegistry.getConfiguration("testConfig").get());
+        final CircuitBreaker circuitBreaker = circuitBreakerRegistry
+            .circuitBreaker("circuitBreaker",
+                circuitBreakerRegistry.getConfiguration("testConfig").get());
 
-		assertThat(circuitBreaker).isNotNull();
-	}
+        assertThat(circuitBreaker).isNotNull();
+    }
 
 
-	@Test
-	public void testCreateCircuitBreakerWitMapConstructor() {
-		Map<String, CircuitBreakerConfig> map = new HashMap<>();
-		map.put("testBreaker", CircuitBreakerConfig.ofDefaults());
-		CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(map);
-		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
+    @Test
+    public void testCreateCircuitBreakerWitMapConstructor() {
+        Map<String, CircuitBreakerConfig> map = new HashMap<>();
+        map.put("testBreaker", CircuitBreakerConfig.ofDefaults());
+        CircuitBreakerRegistry circuitBreakerRegistry = new InMemoryCircuitBreakerRegistry(map);
+        circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.ofDefaults());
 
-		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				circuitBreakerRegistry.getConfiguration("testConfig").get());
+        final CircuitBreaker circuitBreaker = circuitBreakerRegistry
+            .circuitBreaker("circuitBreaker",
+                circuitBreakerRegistry.getConfiguration("testConfig").get());
 
-		assertThat(circuitBreaker).isNotNull();
-	}
+        assertThat(circuitBreaker).isNotNull();
+    }
 
-	@Test
-	public void testCreateCircuitBreakerWithConfigName() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		circuitBreakerRegistry.addConfiguration("testConfig", CircuitBreakerConfig.custom().slidingWindowSize(5).build());
+    @Test
+    public void testCreateCircuitBreakerWithConfigName() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        circuitBreakerRegistry.addConfiguration("testConfig",
+            CircuitBreakerConfig.custom().slidingWindowSize(5).build());
 
-		final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				"testConfig");
+        final CircuitBreaker circuitBreaker = circuitBreakerRegistry
+            .circuitBreaker("circuitBreaker",
+                "testConfig");
 
-		assertThat(circuitBreaker).isNotNull();
-		assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(5);
-	}
+        assertThat(circuitBreaker).isNotNull();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(5);
+    }
 
-	@Test
-	public void testCreateCircuitBreakerWithConfigNameNotFound() {
-		CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-		assertThatThrownBy(() -> circuitBreakerRegistry.circuitBreaker("circuitBreaker",
-				"testConfig")).isInstanceOf(ConfigurationNotFoundException.class);
-	}
+    @Test
+    public void testCreateCircuitBreakerWithConfigNameNotFound() {
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        assertThatThrownBy(() -> circuitBreakerRegistry.circuitBreaker("circuitBreaker",
+            "testConfig")).isInstanceOf(ConfigurationNotFoundException.class);
+    }
 
 }

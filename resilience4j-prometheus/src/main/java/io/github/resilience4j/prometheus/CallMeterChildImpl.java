@@ -9,7 +9,8 @@ class CallMeterChildImpl implements CallMeter.Child {
     private final Counter.Child totalCounter;
     private final Counter.Child errorCounter;
 
-    CallMeterChildImpl(Histogram.Child histogram, Counter.Child totalCounter, Counter.Child errorCounter) {
+    CallMeterChildImpl(Histogram.Child histogram, Counter.Child totalCounter,
+        Counter.Child errorCounter) {
         this.histogram = histogram;
         this.totalCounter = totalCounter;
         this.errorCounter = errorCounter;

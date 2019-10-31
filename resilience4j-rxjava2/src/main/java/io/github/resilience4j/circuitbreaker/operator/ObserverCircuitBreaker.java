@@ -37,13 +37,14 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
 
     @Override
     protected void subscribeActual(Observer<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
     }
+
     class CircuitBreakerObserver extends AbstractObserver<T> {
 
         private final long start;
@@ -65,9 +66,9 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
 
         @Override
         protected void hookOnCancel() {
-            if(eventWasEmitted.get()){
+            if (eventWasEmitted.get()) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            }else{
+            } else {
                 circuitBreaker.releasePermission();
             }
         }

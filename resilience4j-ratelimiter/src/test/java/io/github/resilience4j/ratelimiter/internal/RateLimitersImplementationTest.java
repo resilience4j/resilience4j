@@ -2,14 +2,18 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import java.time.Duration;
-import java.time.Instant;
-import static org.assertj.core.api.BDDAssertions.then;
 import org.junit.Test;
 
-/** Tests for functions that are common in all implementations should go here */
+import java.time.Duration;
+import java.time.Instant;
+
+import static org.assertj.core.api.BDDAssertions.then;
+
+/**
+ * Tests for functions that are common in all implementations should go here
+ */
 public abstract class RateLimitersImplementationTest {
-    
+
     protected abstract RateLimiter buildRateLimiter(RateLimiterConfig config);
 
     @Test
@@ -61,8 +65,9 @@ public abstract class RateLimitersImplementationTest {
         boolean retryInSecondCyclePermission = limiter.acquirePermission(5);
         then(retryInSecondCyclePermission).isTrue();
     }
-    
-    protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config, char printedWhileWaiting) {
+
+    protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,
+        char printedWhileWaiting) {
         Instant start = Instant.now();
         while (Instant.now().isBefore(start.plus(config.getLimitRefreshPeriod()))) {
             try {

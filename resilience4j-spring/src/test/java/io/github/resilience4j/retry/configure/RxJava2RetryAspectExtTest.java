@@ -15,9 +15,9 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
+import io.github.resilience4j.retry.Retry;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,36 +25,38 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.github.resilience4j.retry.Retry;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2RetryAspectExtTest {
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	RxJava2RetryAspectExt rxJava2RetryAspectExt;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
+
+    @InjectMocks
+    RxJava2RetryAspectExt rxJava2RetryAspectExt;
 
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(rxJava2RetryAspectExt.canHandleReturnType(Flowable.class)).isTrue();
-		assertThat(rxJava2RetryAspectExt.canHandleReturnType(Single.class)).isTrue();
-	}
+    @Test
+    public void testCheckTypes() {
+        assertThat(rxJava2RetryAspectExt.canHandleReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2RetryAspectExt.canHandleReturnType(Single.class)).isTrue();
+    }
 
-	@Test
-	public void testReactorTypes() throws Throwable {
-		Retry retry = Retry.ofDefaults("test");
+    @Test
+    public void testReactorTypes() throws Throwable {
+        Retry retry = Retry.ofDefaults("test");
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
-		assertThat(rxJava2RetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod")).isNotNull();
+        when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
+        assertThat(rxJava2RetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod"))
+            .isNotNull();
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
-		assertThat(rxJava2RetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod")).isNotNull();
-	}
+        when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
+        assertThat(rxJava2RetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod"))
+            .isNotNull();
+    }
 }

@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass({Bulkhead.class, RefreshScope.class})
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(BulkheadAutoConfiguration.class)
-public class RefreshScopedBulkheadAutoConfiguration extends AbstractRefreshScopedBulkheadConfiguration {
+public class RefreshScopedBulkheadAutoConfiguration extends
+    AbstractRefreshScopedBulkheadConfiguration {
 
 }

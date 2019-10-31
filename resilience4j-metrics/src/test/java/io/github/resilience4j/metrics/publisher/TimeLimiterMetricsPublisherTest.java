@@ -27,7 +27,8 @@ public class TimeLimiterMetricsPublisherTest extends AbstractTimeLimiterMetricsT
     @Override
     protected TimeLimiter given(String prefix, MetricRegistry metricRegistry) {
         TimeLimiterRegistry timeLimiterRegistry =
-                TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(), new TimeLimiterMetricsPublisher(prefix, metricRegistry));
+            TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(),
+                new TimeLimiterMetricsPublisher(prefix, metricRegistry));
 
         return timeLimiterRegistry.timeLimiter("testLimit");
     }
@@ -35,7 +36,8 @@ public class TimeLimiterMetricsPublisherTest extends AbstractTimeLimiterMetricsT
     @Override
     protected TimeLimiter given(MetricRegistry metricRegistry) {
         TimeLimiterRegistry timeLimiterRegistry =
-                TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(), new TimeLimiterMetricsPublisher(metricRegistry));
+            TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(),
+                new TimeLimiterMetricsPublisher(metricRegistry));
 
         return timeLimiterRegistry.timeLimiter("testLimit");
     }

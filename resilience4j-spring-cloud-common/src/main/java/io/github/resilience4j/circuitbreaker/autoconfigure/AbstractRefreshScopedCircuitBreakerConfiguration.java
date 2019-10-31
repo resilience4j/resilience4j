@@ -18,9 +18,11 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     protected final CircuitBreakerConfiguration circuitBreakerConfiguration;
     protected final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
-    protected AbstractRefreshScopedCircuitBreakerConfiguration(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+    protected AbstractRefreshScopedCircuitBreakerConfiguration(
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         this.circuitBreakerProperties = circuitBreakerProperties;
-        this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerProperties);
+        this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(
+            circuitBreakerProperties);
     }
 
     /**
@@ -30,13 +32,16 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean
-    public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-                                                         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+    public CircuitBreakerRegistry circuitBreakerRegistry(
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
         CircuitBreakerRegistry circuitBreakerRegistry =
-                circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
+            circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties,
+                circuitBreakerRegistryEventConsumer);
 
         // Register the event consumers
-        circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+        circuitBreakerConfiguration
+            .registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
 
         // Initialize backends that were initially configured.
         circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);

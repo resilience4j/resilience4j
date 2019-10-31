@@ -34,7 +34,7 @@ public class MonoRateLimiterTest {
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
@@ -43,10 +43,10 @@ public class MonoRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectNext("Event")
-                .verifyComplete();
+            Mono.just("Event")
+                .compose(RateLimiterOperator.of(rateLimiter)))
+            .expectNext("Event")
+            .verifyComplete();
     }
 
     @Test
@@ -54,11 +54,11 @@ public class MonoRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(IOException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.error(new IOException("BAM!"))
+                .compose(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(IOException.class)
+            .verify(Duration.ofSeconds(1));
     }
 
     @Test
@@ -66,12 +66,12 @@ public class MonoRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofMillis(50).toNanos());
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .log()
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(IOException.class)
-                .verify(Duration.ofMillis(150));
+            Mono.error(new IOException("BAM!"))
+                .log()
+                .compose(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(IOException.class)
+            .verify(Duration.ofMillis(150));
     }
 
 
@@ -80,11 +80,11 @@ public class MonoRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.just("Event")
+                .compose(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(RequestNotPermitted.class)
+            .verify(Duration.ofSeconds(1));
     }
 
     @Test
@@ -92,9 +92,9 @@ public class MonoRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.error(new IOException("BAM!"))
+                .compose(RateLimiterOperator.of(rateLimiter)))
+            .expectError(RequestNotPermitted.class)
+            .verify(Duration.ofSeconds(1));
     }
 }

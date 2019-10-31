@@ -34,8 +34,8 @@ public class CompositeRegistryEventConsumerTest {
         consumers.add(registryEventConsumer1);
         consumers.add(registryEventConsumer2);
 
-
-        CompositeRegistryEventConsumer<String> compositeRegistryEventConsumer = new CompositeRegistryEventConsumer<>(consumers);
+        CompositeRegistryEventConsumer<String> compositeRegistryEventConsumer = new CompositeRegistryEventConsumer<>(
+            consumers);
 
         TestRegistry testRegistry = new TestRegistry(compositeRegistryEventConsumer);
 
@@ -61,16 +61,16 @@ public class CompositeRegistryEventConsumerTest {
         assertThat(consumer.replacedEvents).hasSize(1);
 
         assertThat(consumer.addedEvents).extracting("addedEntry")
-                .containsExactly("entry1", "entry2");
+            .containsExactly("entry1", "entry2");
 
         assertThat(consumer.removedEvents).extracting("removedEntry")
-                .containsExactly("entry1");
+            .containsExactly("entry1");
 
         assertThat(consumer.replacedEvents).extracting("oldEntry")
-                .containsExactly("entry2");
+            .containsExactly("entry2");
 
         assertThat(consumer.replacedEvents).extracting("newEntry")
-                .containsExactly("entry3");
+            .containsExactly("entry3");
     }
 
     private static class TestRegistry extends AbstractRegistry<String, String> {

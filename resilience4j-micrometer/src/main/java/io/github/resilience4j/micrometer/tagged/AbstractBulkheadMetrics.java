@@ -66,8 +66,15 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
 
         private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
 
-        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".available.concurrent.calls";
-        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME = DEFAULT_PREFIX + ".max.allowed.concurrent.calls";
+        public static final String DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME =
+            DEFAULT_PREFIX + ".available.concurrent.calls";
+        public static final String DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME =
+            DEFAULT_PREFIX + ".max.allowed.concurrent.calls";
+        private String availableConcurrentCallsMetricName = DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
+        private String maxAllowedConcurrentCallsMetricName = DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+
+        private MetricNames() {
+        }
 
         /**
          * Returns a builder for creating custom metric names.
@@ -127,8 +134,10 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
              * @param availableConcurrentCallsMetricName The available concurrent calls metric name.
              * @return The builder.
              */
-            public Builder availableConcurrentCallsMetricName(String availableConcurrentCallsMetricName) {
-                metricNames.availableConcurrentCallsMetricName = requireNonNull(availableConcurrentCallsMetricName);
+            public Builder availableConcurrentCallsMetricName(
+                String availableConcurrentCallsMetricName) {
+                metricNames.availableConcurrentCallsMetricName = requireNonNull(
+                    availableConcurrentCallsMetricName);
                 return this;
             }
 
@@ -138,8 +147,10 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
              * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls metric name.
              * @return The builder.
              */
-            public Builder maxAllowedConcurrentCallsMetricName(String maxAllowedConcurrentCallsMetricName) {
-                metricNames.maxAllowedConcurrentCallsMetricName = requireNonNull(maxAllowedConcurrentCallsMetricName);
+            public Builder maxAllowedConcurrentCallsMetricName(
+                String maxAllowedConcurrentCallsMetricName) {
+                metricNames.maxAllowedConcurrentCallsMetricName = requireNonNull(
+                    maxAllowedConcurrentCallsMetricName);
                 return this;
             }
 

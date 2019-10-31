@@ -24,10 +24,12 @@ public class RateLimitersHealthIndicatorAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "rateLimitersHealthIndicator")
     @ConditionalOnProperty(prefix = "management.health.ratelimiters", name = "enabled")
-    public RateLimitersHealthIndicator rateLimitersHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
-                                                                   RateLimiterConfigurationProperties rateLimiterProperties,
-                                                                   HealthAggregator healthAggregator) {
-        return new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties, healthAggregator);
+    public RateLimitersHealthIndicator rateLimitersHealthIndicator(
+        RateLimiterRegistry rateLimiterRegistry,
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        HealthAggregator healthAggregator) {
+        return new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties,
+            healthAggregator);
     }
 
 }

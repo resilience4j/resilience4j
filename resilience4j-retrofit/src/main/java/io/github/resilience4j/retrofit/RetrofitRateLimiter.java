@@ -34,8 +34,8 @@ import java.io.IOException;
 
 /**
  * Decorates a Retrofit {@link Call} to check with a {@link RateLimiter} if a call can be made.
- * Returns an error response with a HTTP 429 (too many requests) code and a message which indicates that the client
- * prevented the request.
+ * Returns an error response with a HTTP 429 (too many requests) code and a message which indicates
+ * that the client prevented the request.
  *
  * <p>
  * <code>
@@ -57,6 +57,7 @@ public interface RetrofitRateLimiter {
     }
 
     class RateLimitingCall<T> extends DecoratedCall<T> {
+
         private final Call<T> call;
         private final RateLimiter rateLimiter;
 
@@ -80,7 +81,8 @@ public interface RetrofitRateLimiter {
 
         @Override
         public Response<T> execute() throws IOException {
-            CheckedFunction0<Response<T>> restrictedSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, call::execute);
+            CheckedFunction0<Response<T>> restrictedSupplier = RateLimiter
+                .decorateCheckedSupplier(rateLimiter, call::execute);
             final Try<Response<T>> response = Try.of(restrictedSupplier);
             return response.isSuccess() ? response.get() : handleFailure(response);
         }
@@ -98,7 +100,8 @@ public interface RetrofitRateLimiter {
         }
 
         private Response<T> tooManyRequestsError() {
-            return Response.error(429, ResponseBody.create(MediaType.parse("text/plain"), "Too many requests for the client"));
+            return Response.error(429, ResponseBody
+                .create(MediaType.parse("text/plain"), "Too many requests for the client"));
         }
 
         @Override

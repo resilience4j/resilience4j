@@ -31,7 +31,8 @@ public class CircuitBreakerStateDTO {
     CircuitBreakerStateDTO() {
     }
 
-    public CircuitBreakerStateDTO(String circuitBreakerName, CircuitBreaker.State currentState, CircuitBreakerMetricsDTO metrics) {
+    public CircuitBreakerStateDTO(String circuitBreakerName, CircuitBreaker.State currentState,
+        CircuitBreakerMetricsDTO metrics) {
         this.circuitBreakerName = circuitBreakerName;
         this.currentState = currentState;
         this.metrics = metrics;
@@ -54,7 +55,7 @@ public class CircuitBreakerStateDTO {
     }
 
     public CircuitBreakerMetricsDTO getMetrics() {
-        return  metrics;
+        return metrics;
     }
 
     public void setMetrics(CircuitBreakerMetricsDTO metrics) {

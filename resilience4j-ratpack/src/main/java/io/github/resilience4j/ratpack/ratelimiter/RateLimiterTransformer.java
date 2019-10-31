@@ -31,8 +31,9 @@ public class RateLimiterTransformer<T> extends AbstractTransformer<T> {
     }
 
     /**
-     * Create a new transformer that can be applied to the {@link ratpack.exec.Promise#transform(Function)} method.
-     * The Promised value will pass through the rateLimiter, potentially causing it to rateLimiter on error.
+     * Create a new transformer that can be applied to the {@link ratpack.exec.Promise#transform(Function)}
+     * method. The Promised value will pass through the rateLimiter, potentially causing it to
+     * rateLimiter on error.
      *
      * @param rateLimiter the rateLimiter to use
      * @param <T>         the type of object

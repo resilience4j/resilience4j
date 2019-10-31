@@ -23,6 +23,8 @@ import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -36,13 +38,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.API.$;
-import static io.vavr.API.Case;
-import static io.vavr.API.Match;
+import static io.vavr.API.*;
 import static io.vavr.Predicates.instanceOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,9 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @SuppressWarnings("unchecked")
@@ -113,7 +108,8 @@ public class RateLimiterTest {
     @Test
     public void decorateCheckedFunction() throws Throwable {
         CheckedFunction1<Integer, String> function = mock(CheckedFunction1.class);
-        CheckedFunction1<Integer, String> decorated = RateLimiter.decorateCheckedFunction(limit, function);
+        CheckedFunction1<Integer, String> decorated = RateLimiter
+            .decorateCheckedFunction(limit, function);
         given(limit.acquirePermission(1)).willReturn(false);
         Try<String> decoratedFunctionResult = Try.success(1).mapTry(decorated);
         assertThat(decoratedFunctionResult.isFailure()).isTrue();
@@ -200,7 +196,8 @@ public class RateLimiterTest {
         Supplier supplier = mock(Supplier.class);
         given(supplier.get()).willReturn("Resource");
         Supplier<CompletionStage<String>> completionStage = () -> supplyAsync(supplier);
-        Supplier<CompletionStage<String>> decorated = RateLimiter.decorateCompletionStage(limit, completionStage);
+        Supplier<CompletionStage<String>> decorated = RateLimiter
+            .decorateCompletionStage(limit, completionStage);
         given(limit.acquirePermission(1)).willReturn(false);
         AtomicReference<Throwable> error = new AtomicReference<>(null);
         CompletableFuture<String> notPermittedFuture = decorated.get()
@@ -301,7 +298,8 @@ public class RateLimiterTest {
         given(supplier.get()).willReturn(Either.right("Resource"));
         given(limit.acquirePermission(1)).willReturn(true);
 
-        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
+        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get)
+            .get();
 
         assertThat(result.isRight()).isTrue();
         then(supplier).should().get();
@@ -324,7 +322,8 @@ public class RateLimiterTest {
         Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
         given(limit.acquirePermission(1)).willReturn(false);
 
-        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get).get();
+        Either<Exception, String> result = RateLimiter.decorateEitherSupplier(limit, supplier::get)
+            .get();
 
         assertThat(result.isLeft()).isTrue();
         assertThat(result.getLeft()).isInstanceOf(RequestNotPermitted.class);

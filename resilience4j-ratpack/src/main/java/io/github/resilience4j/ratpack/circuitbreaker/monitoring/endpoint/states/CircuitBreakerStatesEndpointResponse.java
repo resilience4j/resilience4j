@@ -19,12 +19,13 @@ package io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states
 import java.util.List;
 
 public class CircuitBreakerStatesEndpointResponse {
+
     private List<CircuitBreakerStateDTO> circuitBreakerStates;
 
     public CircuitBreakerStatesEndpointResponse() {
     }
 
-    public CircuitBreakerStatesEndpointResponse(List<CircuitBreakerStateDTO> circuitBreakerStates){
+    public CircuitBreakerStatesEndpointResponse(List<CircuitBreakerStateDTO> circuitBreakerStates) {
         this.circuitBreakerStates = circuitBreakerStates;
     }
 

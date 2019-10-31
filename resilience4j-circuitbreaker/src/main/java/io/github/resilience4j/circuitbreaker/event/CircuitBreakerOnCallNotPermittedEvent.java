@@ -19,7 +19,8 @@
 package io.github.resilience4j.circuitbreaker.event;
 
 /**
- * A CircuitBreakerEvent which informs that a call was not permitted, because the CircuitBreaker is OPEN.
+ * A CircuitBreakerEvent which informs that a call was not permitted, because the CircuitBreaker is
+ * OPEN.
  */
 public class CircuitBreakerOnCallNotPermittedEvent extends AbstractCircuitBreakerEvent {
 
@@ -35,7 +36,7 @@ public class CircuitBreakerOnCallNotPermittedEvent extends AbstractCircuitBreake
     @Override
     public String toString() {
         return String.format("%s: CircuitBreaker '%s' recorded a call which was not permitted.",
-                getCreationTime(),
-                getCircuitBreakerName());
+            getCreationTime(),
+            getCircuitBreakerName());
     }
 }

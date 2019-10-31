@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass({RateLimiter.class, RefreshScope.class})
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(RateLimiterAutoConfiguration.class)
-public class RefreshScopedRateLimiterAutoConfiguration extends AbstractRefreshScopedRateLimiterConfiguration {
+public class RefreshScopedRateLimiterAutoConfiguration extends
+    AbstractRefreshScopedRateLimiterConfiguration {
 
 }

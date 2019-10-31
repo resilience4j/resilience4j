@@ -23,7 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedRateLimiterMetricsPublisher
-        extends AbstractRateLimiterMetrics implements MetricsPublisher<RateLimiter> {
+    extends AbstractRateLimiterMetrics implements MetricsPublisher<RateLimiter> {
 
     private final MeterRegistry meterRegistry;
 

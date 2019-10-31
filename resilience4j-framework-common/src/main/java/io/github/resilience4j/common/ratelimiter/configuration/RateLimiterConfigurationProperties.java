@@ -29,254 +29,253 @@ import java.util.Optional;
 
 public class RateLimiterConfigurationProperties {
 
-	private Map<String, InstanceProperties> instances = new HashMap<>();
-	private Map<String, InstanceProperties> configs = new HashMap<>();
+    private Map<String, InstanceProperties> instances = new HashMap<>();
+    private Map<String, InstanceProperties> configs = new HashMap<>();
 
-	public Optional<InstanceProperties> findRateLimiterProperties(String name) {
-		InstanceProperties instanceProperties = instances.get(name);
-		if(instanceProperties == null){
-			instanceProperties = configs.get("default");
-		}
-		return Optional.ofNullable(instanceProperties);
-	}
+    public Optional<InstanceProperties> findRateLimiterProperties(String name) {
+        InstanceProperties instanceProperties = instances.get(name);
+        if (instanceProperties == null) {
+            instanceProperties = configs.get("default");
+        }
+        return Optional.ofNullable(instanceProperties);
+    }
 
-	public RateLimiterConfig createRateLimiterConfig(@Nullable InstanceProperties instanceProperties) {
-		if (instanceProperties == null) {
-			return RateLimiterConfig.ofDefaults();
-		}
-		if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
-			InstanceProperties baseProperties = configs.get(instanceProperties.baseConfig);
-			if (baseProperties == null) {
-				throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
-			}
-			return buildConfigFromBaseConfig(baseProperties, instanceProperties);
-		}
-		return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties);
-	}
+    public RateLimiterConfig createRateLimiterConfig(
+        @Nullable InstanceProperties instanceProperties) {
+        if (instanceProperties == null) {
+            return RateLimiterConfig.ofDefaults();
+        }
+        if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+            InstanceProperties baseProperties = configs.get(instanceProperties.baseConfig);
+            if (baseProperties == null) {
+                throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
+            }
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
+        }
+        return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties);
+    }
 
-	private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
-		ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-		RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(), baseProperties);
-		return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
-	}
+    private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
+        InstanceProperties instanceProperties) {
+        ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
+        RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
+            baseProperties);
+        return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
+    }
 
-	private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties) {
-		if (instanceProperties == null) {
-			return builder.build();
-		}
+    private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
+        @Nullable InstanceProperties instanceProperties) {
+        if (instanceProperties == null) {
+            return builder.build();
+        }
 
-		if (instanceProperties.getLimitForPeriod() != null) {
-			builder.limitForPeriod(instanceProperties.getLimitForPeriod());
-		}
+        if (instanceProperties.getLimitForPeriod() != null) {
+            builder.limitForPeriod(instanceProperties.getLimitForPeriod());
+        }
 
-		if (instanceProperties.getLimitRefreshPeriod() != null) {
-			builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
-		}
+        if (instanceProperties.getLimitRefreshPeriod() != null) {
+            builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
+        }
 
-		if (instanceProperties.getTimeoutDuration() != null) {
-			builder.timeoutDuration(instanceProperties.getTimeoutDuration());
-		}
+        if (instanceProperties.getTimeoutDuration() != null) {
+            builder.timeoutDuration(instanceProperties.getTimeoutDuration());
+        }
 
-		if (instanceProperties.getWritableStackTraceEnabled() != null) {
-			builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
-		}
+        if (instanceProperties.getWritableStackTraceEnabled() != null) {
+            builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
+        }
 
-		return builder.build();
-	}
+        return builder.build();
+    }
 
-	private InstanceProperties getLimiterProperties(String limiter) {
-		return instances.get(limiter);
-	}
+    private InstanceProperties getLimiterProperties(String limiter) {
+        return instances.get(limiter);
+    }
 
-	public RateLimiterConfig createRateLimiterConfig(String limiter) {
-		return createRateLimiterConfig(getLimiterProperties(limiter));
-	}
+    public RateLimiterConfig createRateLimiterConfig(String limiter) {
+        return createRateLimiterConfig(getLimiterProperties(limiter));
+    }
 
-	@Nullable
-	public InstanceProperties getInstanceProperties(String instance) {
-		return instances.get(instance);
-	}
+    @Nullable
+    public InstanceProperties getInstanceProperties(String instance) {
+        return instances.get(instance);
+    }
 
-	public Map<String, InstanceProperties> getInstances() {
-		return instances;
-	}
+    public Map<String, InstanceProperties> getInstances() {
+        return instances;
+    }
 
-	/**
-	 * For backwards compatibility when setting limiters in configuration properties.
-	 */
-	public Map<String, InstanceProperties> getLimiters() {
-		return instances;
-	}
+    /**
+     * For backwards compatibility when setting limiters in configuration properties.
+     */
+    public Map<String, InstanceProperties> getLimiters() {
+        return instances;
+    }
 
-	public Map<String, InstanceProperties> getConfigs() {
-		return configs;
-	}
+    public Map<String, InstanceProperties> getConfigs() {
+        return configs;
+    }
 
-	/**
-	 * Class storing property values for configuring {@link RateLimiterConfig} instances.
-	 */
-	public static class InstanceProperties {
+    /**
+     * Class storing property values for configuring {@link RateLimiterConfig} instances.
+     */
+    public static class InstanceProperties {
 
-		private Integer limitForPeriod;
-		private Duration limitRefreshPeriod;
-		private Duration timeoutDuration;
-		@Nullable
-		private Boolean subscribeForEvents;
-		@Nullable
-		private Boolean registerHealthIndicator;
-		@Nullable
-		private Integer eventConsumerBufferSize;
-		@Nullable
-		private Boolean writableStackTraceEnabled;
-		@Nullable
-		private String baseConfig;
+        private Integer limitForPeriod;
+        private Duration limitRefreshPeriod;
+        private Duration timeoutDuration;
+        @Nullable
+        private Boolean subscribeForEvents;
+        @Nullable
+        private Boolean registerHealthIndicator;
+        @Nullable
+        private Integer eventConsumerBufferSize;
+        @Nullable
+        private Boolean writableStackTraceEnabled;
+        @Nullable
+        private String baseConfig;
 
-		/**
-		 * Configures the permissions limit for refresh period.
-		 * Count of permissions available during one rate limiter period
-		 * specified by {@link RateLimiterConfig#getLimitRefreshPeriod()} value.
-		 * Default value is 50.
-		 *
-		 * @return the permissions limit for refresh period
-		 */
-		@Nullable
-		public Integer getLimitForPeriod() {
-			return limitForPeriod;
-		}
+        /**
+         * Configures the permissions limit for refresh period. Count of permissions available
+         * during one rate limiter period specified by {@link RateLimiterConfig#getLimitRefreshPeriod()}
+         * value. Default value is 50.
+         *
+         * @return the permissions limit for refresh period
+         */
+        @Nullable
+        public Integer getLimitForPeriod() {
+            return limitForPeriod;
+        }
 
-		/**
-		 * Configures the permissions limit for refresh period.
-		 * Count of permissions available during one rate limiter period
-		 * specified by {@link RateLimiterConfig#getLimitRefreshPeriod()} value.
-		 * Default value is 50.
-		 *
-		 * @param limitForPeriod the permissions limit for refresh period
-		 */
-		public InstanceProperties setLimitForPeriod(Integer limitForPeriod) {
-			this.limitForPeriod = limitForPeriod;
-			return this;
-		}
+        /**
+         * Configures the permissions limit for refresh period. Count of permissions available
+         * during one rate limiter period specified by {@link RateLimiterConfig#getLimitRefreshPeriod()}
+         * value. Default value is 50.
+         *
+         * @param limitForPeriod the permissions limit for refresh period
+         */
+        public InstanceProperties setLimitForPeriod(Integer limitForPeriod) {
+            this.limitForPeriod = limitForPeriod;
+            return this;
+        }
 
-		/**
-		 * Configures the period of limit refresh.
-		 * After each period rate limiter sets its permissions
-		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
-		 * Default value is 500 nanoseconds.
-		 *
-		 * @return the period of limit refresh
-		 */
-		@Nullable
-		public Duration getLimitRefreshPeriod() {
-			return limitRefreshPeriod;
-		}
+        /**
+         * Configures the period of limit refresh. After each period rate limiter sets its
+         * permissions count to {@link RateLimiterConfig#getLimitForPeriod()} value. Default value
+         * is 500 nanoseconds.
+         *
+         * @return the period of limit refresh
+         */
+        @Nullable
+        public Duration getLimitRefreshPeriod() {
+            return limitRefreshPeriod;
+        }
 
-		/**
-		 * Configures the period of limit refresh.
-		 * After each period rate limiter sets its permissions
-		 * count to {@link RateLimiterConfig#getLimitForPeriod()} value.
-		 * Default value is 500 nanoseconds.
-		 *
-		 * @param limitRefreshPeriod the period of limit refresh
-		 */
-		public InstanceProperties setLimitRefreshPeriod(Duration limitRefreshPeriod) {
-			this.limitRefreshPeriod = limitRefreshPeriod;
-			return this;
-		}
+        /**
+         * Configures the period of limit refresh. After each period rate limiter sets its
+         * permissions count to {@link RateLimiterConfig#getLimitForPeriod()} value. Default value
+         * is 500 nanoseconds.
+         *
+         * @param limitRefreshPeriod the period of limit refresh
+         */
+        public InstanceProperties setLimitRefreshPeriod(Duration limitRefreshPeriod) {
+            this.limitRefreshPeriod = limitRefreshPeriod;
+            return this;
+        }
 
-		/**
-		 * Configures the default wait for permission duration.
-		 * Default value is 5 seconds.
-		 *
-		 * @return wait for permission duration
-		 */
-		@Nullable
-		public Duration getTimeoutDuration() {
-			return timeoutDuration;
-		}
+        /**
+         * Configures the default wait for permission duration. Default value is 5 seconds.
+         *
+         * @return wait for permission duration
+         */
+        @Nullable
+        public Duration getTimeoutDuration() {
+            return timeoutDuration;
+        }
 
-		/**
-		 * Configures the default wait for permission duration.
-		 * Default value is 5 seconds.
-		 *
-		 * @param timeout wait for permission duration
-		 */
-		public InstanceProperties setTimeoutDuration(Duration timeout) {
-			this.timeoutDuration = timeout;
-			return this;
-		}
+        /**
+         * Configures the default wait for permission duration. Default value is 5 seconds.
+         *
+         * @param timeout wait for permission duration
+         */
+        public InstanceProperties setTimeoutDuration(Duration timeout) {
+            this.timeoutDuration = timeout;
+            return this;
+        }
 
-		/**
-		 * Returns if we should enable writable stack traces or not.
-		 *
-		 * @return writableStackTraceEnabled if we should enable writable stack traces or not.
-		 */
-		public Boolean getWritableStackTraceEnabled() {
-			return this.writableStackTraceEnabled;
-		}
+        /**
+         * Returns if we should enable writable stack traces or not.
+         *
+         * @return writableStackTraceEnabled if we should enable writable stack traces or not.
+         */
+        public Boolean getWritableStackTraceEnabled() {
+            return this.writableStackTraceEnabled;
+        }
 
-		/**
-		 * Sets if we should enable writable stack traces or not.
-		 *
-		 * @param writableStackTraceEnabled The flag to enable writable stack traces.
-		 */
-		public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
-			this.writableStackTraceEnabled = writableStackTraceEnabled;
-			return this;
-		}
+        /**
+         * Sets if we should enable writable stack traces or not.
+         *
+         * @param writableStackTraceEnabled The flag to enable writable stack traces.
+         */
+        public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
+        }
 
-		public Boolean getSubscribeForEvents() {
-			return subscribeForEvents;
-		}
+        public Boolean getSubscribeForEvents() {
+            return subscribeForEvents;
+        }
 
-		public InstanceProperties setSubscribeForEvents(Boolean subscribeForEvents) {
-			this.subscribeForEvents = subscribeForEvents;
-			return this;
-		}
+        public InstanceProperties setSubscribeForEvents(Boolean subscribeForEvents) {
+            this.subscribeForEvents = subscribeForEvents;
+            return this;
+        }
 
-		public Integer getEventConsumerBufferSize() {
-			return eventConsumerBufferSize;
-		}
+        public Integer getEventConsumerBufferSize() {
+            return eventConsumerBufferSize;
+        }
 
-		public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+        public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
             Objects.requireNonNull(eventConsumerBufferSize);
             if (eventConsumerBufferSize < 1) {
-                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
+                throw new IllegalArgumentException(
+                    "eventConsumerBufferSize must be greater than or equal to 1.");
             }
 
             this.eventConsumerBufferSize = eventConsumerBufferSize;
-			return this;
-		}
+            return this;
+        }
 
-		public Boolean getRegisterHealthIndicator() {
-			return registerHealthIndicator;
-		}
+        public Boolean getRegisterHealthIndicator() {
+            return registerHealthIndicator;
+        }
 
-		public InstanceProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
-			this.registerHealthIndicator = registerHealthIndicator;
-			return this;
-		}
+        public InstanceProperties setRegisterHealthIndicator(Boolean registerHealthIndicator) {
+            this.registerHealthIndicator = registerHealthIndicator;
+            return this;
+        }
 
-		/**
-		 * Gets the shared configuration name. If this is set, the configuration builder will use the the shared
-		 * configuration instance over this one.
-		 *
-		 * @return The shared configuration name.
-		 */
-		@Nullable
-		public String getBaseConfig() {
-			return baseConfig;
-		}
+        /**
+         * Gets the shared configuration name. If this is set, the configuration builder will use
+         * the the shared configuration instance over this one.
+         *
+         * @return The shared configuration name.
+         */
+        @Nullable
+        public String getBaseConfig() {
+            return baseConfig;
+        }
 
-		/**
-		 * Sets the shared configuration name. If this is set, the configuration builder will use the the shared
-		 * configuration instance over this one.
-		 *
-		 * @param baseConfig The shared configuration name.
-		 */
-		public InstanceProperties setBaseConfig(String baseConfig) {
-			this.baseConfig = baseConfig;
-			return this;
-		}
-	}
+        /**
+         * Sets the shared configuration name. If this is set, the configuration builder will use
+         * the the shared configuration instance over this one.
+         *
+         * @param baseConfig The shared configuration name.
+         */
+        public InstanceProperties setBaseConfig(String baseConfig) {
+            this.baseConfig = baseConfig;
+            return this;
+        }
+    }
 
 }

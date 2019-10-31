@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
-public class CacheImpl<K, V>  implements Cache<K,V> {
+public class CacheImpl<K, V> implements Cache<K, V> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CacheImpl.class);
 
@@ -61,16 +61,16 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     @Override
     public V computeIfAbsent(K cacheKey, CheckedFunction0<V> supplier) {
         return getValueFromCache(cacheKey)
-                .getOrElse(() -> computeAndPut(cacheKey, supplier));
+            .getOrElse(() -> computeAndPut(cacheKey, supplier));
     }
 
     private V computeAndPut(K cacheKey, CheckedFunction0<V> supplier) {
         return Try.of(supplier)
-                .andThen(value -> putValueIntoCache(cacheKey, value))
+            .andThen(value -> putValueIntoCache(cacheKey, value))
             .get();
     }
 
-    private Option<V> getValueFromCache(K cacheKey){
+    private Option<V> getValueFromCache(K cacheKey) {
         try {
             Option<V> result = Option.of(cache.get(cacheKey));
             if (result.isDefined()) {
@@ -80,7 +80,7 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
                 onCacheMiss(cacheKey);
                 return result;
             }
-        }catch (Exception exception){
+        } catch (Exception exception) {
             LOG.warn("Failed to get a value from Cache {}", getName(), exception);
             onError(exception);
             return Option.none();
@@ -89,10 +89,10 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
 
     private void putValueIntoCache(K cacheKey, V value) {
         try {
-            if(value != null) {
+            if (value != null) {
                 cache.put(cacheKey, value);
             }
-        } catch (Exception exception){
+        } catch (Exception exception) {
             LOG.warn("Failed to put a value into Cache {}", getName(), exception);
             onError(exception);
         }
@@ -113,7 +113,7 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
     }
 
     private void publishCacheEvent(Supplier<CacheEvent> event) {
-        if(eventProcessor.hasConsumers()) {
+        if (eventProcessor.hasConsumers()) {
             eventProcessor.processEvent(event.get());
         }
     }
@@ -123,7 +123,8 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
         return eventProcessor;
     }
 
-    private class CacheEventProcessor extends EventProcessor<CacheEvent> implements EventConsumer<CacheEvent>, EventPublisher {
+    private class CacheEventProcessor extends EventProcessor<CacheEvent> implements
+        EventConsumer<CacheEvent>, EventPublisher {
 
         @Override
         public EventPublisher onCacheHit(EventConsumer<CacheOnHitEvent> eventConsumer) {
@@ -153,16 +154,17 @@ public class CacheImpl<K, V>  implements Cache<K,V> {
 
         private final LongAdder cacheMisses;
         private final LongAdder cacheHits;
+
         private CacheMetrics() {
             cacheMisses = new LongAdder();
             cacheHits = new LongAdder();
         }
 
-        void onCacheMiss(){
+        void onCacheMiss() {
             cacheMisses.increment();
         }
 
-        void onCacheHit(){
+        void onCacheHit() {
             cacheHits.increment();
         }
 

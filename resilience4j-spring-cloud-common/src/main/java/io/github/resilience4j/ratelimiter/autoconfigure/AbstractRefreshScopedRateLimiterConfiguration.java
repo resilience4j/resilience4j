@@ -22,18 +22,20 @@ public abstract class AbstractRefreshScopedRateLimiterConfiguration {
     }
 
     /**
-     * @param rateLimiterProperties ratelimiter spring configuration properties
+     * @param rateLimiterProperties             ratelimiter spring configuration properties
      * @param rateLimiterEventsConsumerRegistry the ratelimiter event consumer registry
      * @return the RefreshScoped RateLimiterRegistry
      */
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean
-    public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                   RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+    public RateLimiterRegistry rateLimiterRegistry(
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         return rateLimiterConfiguration.rateLimiterRegistry(
-                rateLimiterProperties, rateLimiterEventsConsumerRegistry, rateLimiterRegistryEventConsumer);
+            rateLimiterProperties, rateLimiterEventsConsumerRegistry,
+            rateLimiterRegistryEventConsumer);
     }
 
 }

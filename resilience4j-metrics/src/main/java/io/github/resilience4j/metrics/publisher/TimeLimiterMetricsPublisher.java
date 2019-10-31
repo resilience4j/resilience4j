@@ -26,7 +26,6 @@ import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;
 import static io.github.resilience4j.timelimiter.utils.MetricNames.*;
-import static io.github.resilience4j.timelimiter.utils.MetricNames.TIMEOUT;
 import static java.util.Objects.requireNonNull;
 
 public class TimeLimiterMetricsPublisher extends AbstractMetricsPublisher<TimeLimiter> {

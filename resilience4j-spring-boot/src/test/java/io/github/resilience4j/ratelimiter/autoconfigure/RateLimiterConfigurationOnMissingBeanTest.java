@@ -15,13 +15,16 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
-import java.lang.reflect.Method;
-import java.util.List;
-
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,23 +36,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        HealthIndicatorAutoConfiguration.class,
-        RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-        RateLimiterAutoConfiguration.class,
-        RateLimiterConfigurationOnMissingBean.class
+    HealthIndicatorAutoConfiguration.class,
+    RateLimiterConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    RateLimiterAutoConfiguration.class,
+    RateLimiterConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(RateLimiterProperties.class)
 public class RateLimiterConfigurationOnMissingBeanTest {
@@ -67,20 +66,23 @@ public class RateLimiterConfigurationOnMissingBeanTest {
     private EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry;
 
     @Test
-    public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean() throws NoSuchMethodException {
+    public void testAllBeansFromCircuitBreakerConfigurationHasOnMissingBean()
+        throws NoSuchMethodException {
         final Class<RateLimiterConfiguration> originalClass = RateLimiterConfiguration.class;
         final Class<RateLimiterConfigurationOnMissingBean> onMissingBeanClass = RateLimiterConfigurationOnMissingBean.class;
 
         for (Method methodCircuitBreakerConfiguration : originalClass.getMethods()) {
             if (methodCircuitBreakerConfiguration.isAnnotationPresent(Bean.class)) {
                 final Method methodOnMissing = onMissingBeanClass
-                        .getMethod(methodCircuitBreakerConfiguration.getName(), methodCircuitBreakerConfiguration.getParameterTypes());
+                    .getMethod(methodCircuitBreakerConfiguration.getName(),
+                        methodCircuitBreakerConfiguration.getParameterTypes());
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
                 if (!"rateLimiterEventsConsumerRegistry".equals(methodOnMissing.getName()) &&
-                        !"rateLimiterRegistryEventConsumer".equals(methodOnMissing.getName())) {
-                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+                    !"rateLimiterRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class))
+                        .isTrue();
                 }
             }
         }
@@ -90,7 +92,8 @@ public class RateLimiterConfigurationOnMissingBeanTest {
     public void testAllCircuitBreakerConfigurationBeansOverridden() {
         assertEquals(rateLimiterRegistry, configWithOverrides.rateLimiterRegistry);
         assertEquals(rateLimiterAspect, configWithOverrides.rateLimiterAspect);
-        assertNotEquals(rateLimiterEventsConsumerRegistry, configWithOverrides.rateLimiterEventsConsumerRegistry);
+        assertNotEquals(rateLimiterEventsConsumerRegistry,
+            configWithOverrides.rateLimiterEventsConsumerRegistry);
     }
 
     @Configuration
@@ -109,8 +112,12 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, FallbackDecorators fallbackDecorators) {
-            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry, new RateLimiterConfigurationProperties(), rateLimiterAspectExtList, fallbackDecorators);
+        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
+            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+            FallbackDecorators fallbackDecorators) {
+            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
+                new RateLimiterConfigurationProperties(), rateLimiterAspectExtList,
+                fallbackDecorators);
             return rateLimiterAspect;
         }
 

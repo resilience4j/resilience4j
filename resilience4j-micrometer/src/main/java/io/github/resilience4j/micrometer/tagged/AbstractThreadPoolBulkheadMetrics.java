@@ -77,13 +77,26 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
     }
 
     public static class MetricNames {
+
         private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
 
-        public static final String DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME = DEFAULT_PREFIX + ".queue.depth";
-        public static final String DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME = DEFAULT_PREFIX + ".queue.capacity";
-        public static final String DEFAULT_THREAD_POOL_SIZE_METRIC_NAME = DEFAULT_PREFIX + ".thread.pool.size";
-        public static final String DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME = DEFAULT_PREFIX + ".max.thread.pool.size";
-        public static final String DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME = DEFAULT_PREFIX + ".core.thread.pool.size";
+        public static final String DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME =
+            DEFAULT_PREFIX + ".queue.depth";
+        public static final String DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME =
+            DEFAULT_PREFIX + ".queue.capacity";
+        public static final String DEFAULT_THREAD_POOL_SIZE_METRIC_NAME =
+            DEFAULT_PREFIX + ".thread.pool.size";
+        public static final String DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME =
+            DEFAULT_PREFIX + ".max.thread.pool.size";
+        public static final String DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME =
+            DEFAULT_PREFIX + ".core.thread.pool.size";
+        private String queueDepthMetricName = DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME;
+        private String threadPoolSizeMetricName = DEFAULT_THREAD_POOL_SIZE_METRIC_NAME;
+        private String maxThreadPoolSizeMetricName = DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME;
+        private String coreThreadPoolSizeMetricName = DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME;
+        private String queueCapacityMetricName = DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME;
+        private MetricNames() {
+        }
 
         /**
          * Returns a builder for creating custom metric names.
@@ -199,7 +212,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
              * @return The builder.
              */
             public Builder maxThreadPoolSizeMetricName(String maxThreadPoolSizeMetricName) {
-                metricNames.maxThreadPoolSizeMetricName = requireNonNull(maxThreadPoolSizeMetricName);
+                metricNames.maxThreadPoolSizeMetricName = requireNonNull(
+                    maxThreadPoolSizeMetricName);
                 return this;
             }
 
@@ -210,7 +224,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
              * @return The builder.
              */
             public Builder coreThreadPoolSizeMetricName(String coreThreadPoolSizeMetricName) {
-                metricNames.coreThreadPoolSizeMetricName = requireNonNull(coreThreadPoolSizeMetricName);
+                metricNames.coreThreadPoolSizeMetricName = requireNonNull(
+                    coreThreadPoolSizeMetricName);
                 return this;
             }
 

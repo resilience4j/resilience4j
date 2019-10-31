@@ -32,35 +32,36 @@ import java.util.List;
  */
 @Configuration
 public class FallbackConfigurationOnMissingBean {
-	private final FallbackConfiguration fallbackConfiguration;
 
-	public FallbackConfigurationOnMissingBean() {
-		this.fallbackConfiguration = new FallbackConfiguration();
-	}
+    private final FallbackConfiguration fallbackConfiguration;
 
-	@Bean
-	@ConditionalOnMissingBean
-	public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorators) {
-		return fallbackConfiguration.fallbackDecorators(fallbackDecorators);
-	}
+    public FallbackConfigurationOnMissingBean() {
+        this.fallbackConfiguration = new FallbackConfiguration();
+    }
 
-	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public FallbackDecorator rxJava2FallbackDecorator() {
-		return fallbackConfiguration.rxJava2FallbackDecorator();
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorators) {
+        return fallbackConfiguration.fallbackDecorators(fallbackDecorators);
+    }
 
-	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public FallbackDecorator reactorFallbackDecorator() {
-		return fallbackConfiguration.reactorFallbackDecorator();
-	}
+    @Bean
+    @Conditional(value = {RxJava2OnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public FallbackDecorator rxJava2FallbackDecorator() {
+        return fallbackConfiguration.rxJava2FallbackDecorator();
+    }
 
-	@Bean
-	@ConditionalOnMissingBean
-	public FallbackDecorator completionStageFallbackDecorator() {
-		return fallbackConfiguration.completionStageFallbackDecorator();
-	}
+    @Bean
+    @Conditional(value = {ReactorOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public FallbackDecorator reactorFallbackDecorator() {
+        return fallbackConfiguration.reactorFallbackDecorator();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public FallbackDecorator completionStageFallbackDecorator() {
+        return fallbackConfiguration.completionStageFallbackDecorator();
+    }
 }

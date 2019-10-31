@@ -15,10 +15,10 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.vavr.CheckedFunction0;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import io.vavr.CheckedFunction0;
 
 /**
  * fallbackMethod decorator for {@link CompletionStage}
@@ -32,7 +32,8 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
+        CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             CompletionStage completionStage = (CompletionStage) request;
 
@@ -42,13 +43,13 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
                 if (throwable != null) {
                     try {
                         ((CompletionStage) fallbackMethod.fallback((Throwable) throwable))
-                                .whenComplete((fallbackResult, fallbackThrowable) -> {
-                                    if (fallbackThrowable != null) {
-                                        promise.completeExceptionally((Throwable) fallbackThrowable);
-                                    } else {
-                                        promise.complete(fallbackResult);
-                                    }
-                                });
+                            .whenComplete((fallbackResult, fallbackThrowable) -> {
+                                if (fallbackThrowable != null) {
+                                    promise.completeExceptionally((Throwable) fallbackThrowable);
+                                } else {
+                                    promise.complete(fallbackResult);
+                                }
+                            });
                     } catch (Throwable fallbackThrowable) {
                         promise.completeExceptionally(fallbackThrowable);
                     }

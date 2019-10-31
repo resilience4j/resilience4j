@@ -8,15 +8,17 @@ import java.util.concurrent.ScheduledExecutorService;
 public class SchedulerFactory {
 
     private static Lazy<SchedulerFactory> lazyInstance = Lazy.of(SchedulerFactory::new);
-    private Lazy<ScheduledExecutorService> lazyScheduler = Lazy.of(() -> Executors.newSingleThreadScheduledExecutor(threadTask -> {
-        Thread thread = new Thread(threadTask, "CircuitBreakerAutoTransitionThread");
-        thread.setDaemon(true);
-        return thread;
-    }));
+    private Lazy<ScheduledExecutorService> lazyScheduler = Lazy
+        .of(() -> Executors.newSingleThreadScheduledExecutor(threadTask -> {
+            Thread thread = new Thread(threadTask, "CircuitBreakerAutoTransitionThread");
+            thread.setDaemon(true);
+            return thread;
+        }));
 
-    private SchedulerFactory () {}
+    private SchedulerFactory() {
+    }
 
-    public static SchedulerFactory getInstance () {
+    public static SchedulerFactory getInstance() {
         return lazyInstance.get();
     }
 
