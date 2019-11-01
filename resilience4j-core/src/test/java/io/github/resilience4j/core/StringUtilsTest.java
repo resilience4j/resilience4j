@@ -2,6 +2,8 @@ package io.github.resilience4j.core;
 
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class StringUtilsTest {
 
     @Test
