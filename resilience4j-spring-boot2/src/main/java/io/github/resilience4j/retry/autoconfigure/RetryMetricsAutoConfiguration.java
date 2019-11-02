@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass({MeterRegistry.class, Retry.class, TaggedRetryMetricsPublisher.class})
-@AutoConfigureAfter({MeterRegistry.class, MetricsAutoConfiguration.class})
+@AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.retry.metrics.enabled", matchIfMissing = true)
 public class RetryMetricsAutoConfiguration {
 
