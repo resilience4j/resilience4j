@@ -22,6 +22,7 @@ import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetricsPubli
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -48,6 +49,7 @@ public class CircuitBreakerMetricsAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(value = MeterRegistry.class)
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher(
