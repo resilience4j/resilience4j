@@ -276,7 +276,7 @@ resilience4j.circuitbreaker:
             waitInterval: 5000
             failureRateThreshold: 50
             eventConsumerBufferSize: 10
-            registerHealthIndicator: false
+            registerHealthIndicator: true
             allowHealthIndicatorToFail: false
             recordFailurePredicate: com.foo.FooRecordFailurePredicate
             recordExceptions:

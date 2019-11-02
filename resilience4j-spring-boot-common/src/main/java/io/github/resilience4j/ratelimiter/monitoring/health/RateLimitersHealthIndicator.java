@@ -55,7 +55,7 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {
         return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
                 .map(InstanceProperties::getRegisterHealthIndicator)
-                .orElse(true);
+                .orElse(false);
     }
 
     private boolean allowHealthIndicatorToFail(RateLimiter rateLimiter) {

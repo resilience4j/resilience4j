@@ -69,7 +69,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
                 .map(InstanceProperties::getRegisterHealthIndicator)
-                .orElse(true);
+                .orElse(false);
     }
 
     private boolean allowHealthIndicatorToFail(CircuitBreaker circuitBreaker) {
