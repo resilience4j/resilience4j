@@ -123,7 +123,7 @@ When you want to publish Retry/AsyncRetry endpoints on the Prometheus endpoint, 
 and you have same metrics exposed there , check circuit breaker below for more information about the example.
 
 ==== RateLimiter
-The starter the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
+The starter publishes the status and metrics of all RateLimiter via a custom `RateLimiterHealthIndicator`.
 By default, none of the rate limiter status will map to an unhealthy state. This behaviour can be changed using the `allowHealthIndicatorToFail` property.
 When set to true, the rate limiter health indicator will report DOWN if there is some permission waiting threads and they won't be able to unblock until timeout.
 
