@@ -67,12 +67,12 @@ public class RxJava2FallbackDecorator implements FallbackDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(FallbackMethod recoveryMethod, Function<? super Throwable, ? extends T> errorFunction) {
+    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(FallbackMethod fallbackMethod, Function<? super Throwable, ? extends T> errorFunction) {
         return throwable -> {
             try {
-                return (T) recoveryMethod.fallback(throwable);
-            } catch (Throwable recoverThrowable) {
-                return (T) errorFunction.apply(recoverThrowable);
+                return (T) fallbackMethod.fallback(throwable);
+            } catch (Throwable fallbackThrowable) {
+                return (T) errorFunction.apply(fallbackThrowable);
             }
         };
     }

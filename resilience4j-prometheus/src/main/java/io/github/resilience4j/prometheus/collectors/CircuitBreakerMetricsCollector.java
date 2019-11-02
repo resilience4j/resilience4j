@@ -33,10 +33,22 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      * using given {@code supplier} as source of circuit breakers.
      *
      * @param names    the custom metric names
+     * @param options  the custom metric options
+     * @param circuitBreakerRegistry the source of circuit breakers
+     */
+    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names, MetricOptions options, CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerMetricsCollector(names, options, circuitBreakerRegistry);
+    }
+
+    /**
+     * Creates a new collector with custom metric names and
+     * using given {@code supplier} as source of circuit breakers.
+     *
+     * @param names    the custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      */
     public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetricsCollector(names, circuitBreakerRegistry);
+        return new CircuitBreakerMetricsCollector(names, MetricOptions.ofDefaults(), circuitBreakerRegistry);
     }
 
     /**
@@ -45,13 +57,13 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      * @param circuitBreakerRegistry the source of circuit breakers
      */
     public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetricsCollector(MetricNames.ofDefaults(), circuitBreakerRegistry);
+        return new CircuitBreakerMetricsCollector(MetricNames.ofDefaults(), MetricOptions.ofDefaults(), circuitBreakerRegistry);
     }
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    private CircuitBreakerMetricsCollector(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
-        super(names);
+    private CircuitBreakerMetricsCollector(MetricNames names, MetricOptions options, CircuitBreakerRegistry circuitBreakerRegistry) {
+        super(names, options);
         this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
 
         for (CircuitBreaker circuitBreaker : this.circuitBreakerRegistry.getAllCircuitBreakers()) {
