@@ -49,7 +49,7 @@ public class CircuitBreakerMetricsAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(value = MeterRegistry.class)
+    @ConditionalOnBean(MeterRegistry.class)
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher(
