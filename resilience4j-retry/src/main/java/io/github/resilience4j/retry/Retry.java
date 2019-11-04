@@ -120,7 +120,10 @@ public interface Retry {
 	}
 
 	/**
-	 * Decorates a Future Supplier with Retry.
+	 * Returns a Supplier of type Future which is decorated by Retry.
+	 *
+	 * Any delay which is specified in the retry context is accomplished by calling `Thread.sleep()`.  Thus it is not
+	 * recommended that `executor` be a single-threaded or otherwise fixed-thread-pool executor.
 	 *
 	 * @param retry    the retry context
 	 * @param executor execution service to use to pull and wait for supplied Futures
@@ -130,22 +133,17 @@ public interface Retry {
 	 */
 	static <T> Supplier<Future<T>> decorateFuture(Retry retry, ExecutorService executor, Supplier<Future<T>> supplier) {
 		return () -> executor.submit(() -> {
-			Retry.AsyncContext<T> context = retry.asyncContext();
+			Retry.Context<T> context = retry.context();
 			do try {
 				final T val = supplier.get().get();
-				final long delay = context.onResult(val);
-				if (delay <= 0) {
+				final boolean invalidResultAndShouldRetry = context.onResult(val);
+				if (!invalidResultAndShouldRetry) {
 					return val;
 				}
-				Thread.sleep(delay);
 
 			} catch (ExecutionException e) {
-				final long delay = context.onError(e);
-				if (delay <= 0) {
-					// ExecutionExceptions always wrap Exceptions
-					throw (Exception) e.getCause();
- 				}
-				Thread.sleep(delay);
+				// ExecutionExceptions always wrap Exceptions
+				context.onError((Exception) e.getCause());
 
 			} while (true);
 		});
