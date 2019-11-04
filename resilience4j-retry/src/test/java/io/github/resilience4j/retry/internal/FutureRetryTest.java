@@ -37,14 +37,13 @@ public class FutureRetryTest {
     @Test
     public void shouldNotRetry() throws InterruptedException, ExecutionException, TimeoutException {
         given(helloWorldService.returnFuture()).willReturn(completed);
-
         Retry retryContext = Retry.ofDefaults("id");
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         String result = resultFromDecoratedSupplier(retryContext);
 
         then(helloWorldService).should().returnFuture();
         assertThat(result).isEqualTo("Hello world");
-
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -54,19 +53,18 @@ public class FutureRetryTest {
     @Test
     public void shouldNotRetryWithThatResult() throws InterruptedException, ExecutionException, TimeoutException {
         given(helloWorldService.returnFuture()).willReturn(completed);
-
         Retry retryContext = Retry.of(
                 "id",
                 RetryConfig.<String>custom()
                         .retryOnResult(s -> s.contains("NoRetry"))
                         .maxAttempts(1)
                         .build());
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         String result = resultFromDecoratedSupplier(retryContext);
 
         then(helloWorldService).should().returnFuture();
         assertThat(result).isEqualTo("Hello world");
-
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -94,19 +92,18 @@ public class FutureRetryTest {
     private void shouldTryRepeatedlyInCaseOfRetryOnResult(int numAttempts)
             throws InterruptedException, ExecutionException, TimeoutException {
         given(helloWorldService.returnFuture()).willReturn(completed);
-
         Retry retryContext = Retry.of(
                 "id",
                 RetryConfig.<String>custom()
                         .maxAttempts(numAttempts)
                         .retryOnResult(s -> s.contains("Hello world"))
                         .build());
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         String result = resultFromDecoratedSupplier(retryContext);
 
         then(helloWorldService).should(times(numAttempts)).returnFuture();
         assertThat(result).isEqualTo("Hello world");
-
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -118,8 +115,9 @@ public class FutureRetryTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         given(helloWorldService.returnFuture())
                 .willThrow(new IllegalArgumentException("BAM!"));
-
         Retry retryContext = Retry.ofDefaults("id");
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         try {
             resultFromDecoratedSupplier(retryContext);
             fail("should throw ExecutionException");
@@ -127,7 +125,6 @@ public class FutureRetryTest {
             assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class);
         }
 
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -140,14 +137,13 @@ public class FutureRetryTest {
         given(helloWorldService.returnFuture())
                 .willReturn(failed)
                 .willReturn(completed);
-
         Retry retryContext = Retry.ofDefaults("id");
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         String result = resultFromDecoratedSupplier(retryContext);
 
         then(helloWorldService).should(times(2)).returnFuture();
         assertThat(result).isEqualTo("Hello world");
-
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -161,14 +157,13 @@ public class FutureRetryTest {
                 .willReturn(failed)
                 .willReturn(failed)
                 .willReturn(completed);
-
         Retry retryContext = Retry.ofDefaults("id");
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         String result = resultFromDecoratedSupplier(retryContext);
 
         then(helloWorldService).should(times(3)).returnFuture();
         assertThat(result).isEqualTo("Hello world");
-
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -192,18 +187,18 @@ public class FutureRetryTest {
 
     private void shouldThrowAfterAttemptsPerRetryConfiguration(int numAttempts) {
         given(helloWorldService.returnFuture()).willReturn(failed);
-
         Retry retryContext = Retry.of("id", RetryConfig.custom().maxAttempts(numAttempts).build());
+        Retry.Metrics metrics = retryContext.getMetrics();
+
         Try<String> resultTry = Try.of(() -> resultFromDecoratedSupplier(retryContext));
 
         then(helloWorldService).should(times(numAttempts)).returnFuture();
         assertThat(resultTry.isFailure()).isTrue();
+
         Throwable immediateCause = resultTry.getCause();
         assertThat(immediateCause).isInstanceOf(ExecutionException.class);
-        Throwable trueCause = immediateCause.getCause();
-        assertThat(trueCause).isInstanceOf(HelloWorldException.class);
+        assertThat(immediateCause.getCause()).isInstanceOf(HelloWorldException.class);
 
-        Retry.Metrics metrics = retryContext.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
