@@ -1,0 +1,105 @@
+:toc: macro
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+= Contributing
+
+We appreciate your input! We want to make contributing to *Resilience4j* as easy and transparent as possible.
+As a contributor, here are the guidelines we would like you to follow:
+
+toc::[]
+
+== Questions
+
+First, visit our https://resilience4j.readme.io/docs[User Guide]
+and search https://stackoverflow.com/questions/tagged/resilience4j?tab=votes&pagesize=50[Stack Overflow].
+Maybe somebody asked similar question in the past.
+
+IMPORTANT: Before you submit new issue, please search the https://github.com/resilience4j/resilience4j/issues[GitHub Issues].
+Maybe the discussion might inform you of solutions readily available.
+
+== Bugs
+If you discover unexpected behaviour or find a bug in the source code,
+you can help us by submitting an issue via https://github.com/resilience4j/resilience4j/issues[GitHub Issues].
+Use link:ISSUE_TEMPLATE[ISSUE_TEMPLATE] to provide required details.
+
+* Use a clear and descriptive title for the issue to identify the problem.
+* Explain which behavior you expected to see instead and why.
+
+We want to fix all the issues as soon as possible, but before fixing a bug we need to reproduce and confirm it.
+Having a minimal reproducible scenario gives us a wealth of important information without going back and forth to you with additional questions.
+We ask you to provide a minimal reproduction as a JUnit test.
+It allows us to quickly confirm a bug (or point out a coding problem)
+as well as confirm that we are fixing the right problem.
+
+== New features
+You can propose a new feature by submitting an issue.
+
+TIP: No ideas? See issues tagged as https://github.com/resilience4j/resilience4j/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22[*help wanted*].
+
+CAUTION: Even if you would like to start with a Pull Request first,
+please submit an issue with a proposal for your work first,
+to be sure that we can use it.
+
+For a major feature, outline your proposal in an issue so that it can be discussed.
+This will also allow us to better coordinate our efforts, prevent duplication of work,
+and help you to craft the change so that it is successfully accepted into the project.
+
+NOTE: We use https://guides.github.com/introduction/flow/index.html[Github Flow].
+
+Pull Requests are the best way to propose changes to the codebase:
+
+. Fork the repo and create your branch from `master`.
+. If you added code, add tests.
+. Don't forget about backward compatibility and `Javadoc` for public methods.
+. Apply out Twitter based coding style link:.editorconfig[.editorconfig]
+(https://blog.jetbrains.com/idea/2019/06/managing-code-style-on-a-directory-level-with-editorconfig/[Idea])
+and https://gist.github.com/wojteklu/73c6914cc446146b8b533c0988cf8d29[Clean Code] rules.
+. Use our commit message format: `Issue #699: Fixed/Added bla bla`
+. Send that Pull Request and participate in a code review.
+. After a merge update the documentation especially if you've changed API (public methods).
+
+== Tests
+
+We use https://assertj.github.io/doc/[AssertJ],
+https://javadoc.io/static/org.mockito/mockito-core/3.1.0/org/mockito/BDDMockito.html[BDDMockito]
+and static imports for them.
+Please write test body in the _Arrange-Act-Assert_ manner.
+Keep _Act (When)_ section as small as possible.
+
+TIP: Instead of `//Given` `//When` `//Then` comments separate sections by a new line.
+For complex _Given_ setup you can extract private methods.
+
+
+[source,java,title='Example test structure and conventions']
+----
+@Test
+public void shouldConsumeOnErrorEvent() {
+    retry.getEventPublisher().onError(
+        event -> logger.info(event.getEventType().toString()));
+    Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
+    given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
+
+    Try.ofSupplier(supplier)
+
+    // assertThat(result).isEqualTo...
+    then(logger).should().info("ERROR");
+    then(helloWorldService).should(times(3)).returnHelloWorld();
+}
+----
+
+== Licence
+
+By contributing, you agree that your contributions will be licensed under its
+link:LICENSE.txt[Apache License, Version 2.0.]
+
+== References
+
+This document was adapted from the open-source contribution guidelines:
+https://github.com/facebook/draft-js/blob/a9316a723f9e918afde44dea68b5f9f39b7d9b00/CONTRIBUTING.md[Facebook's Draft],
+https://github.com/angular/angular/blob/master/CONTRIBUTING.md[Angular].

@@ -10,5 +10,5 @@ classes
 */bin
 *.orig
 .attach_pid*
+java_pid*.hprof
 .DS_Store
-
