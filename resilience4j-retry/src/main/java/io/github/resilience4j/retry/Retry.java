@@ -138,6 +138,7 @@ public interface Retry {
 				final T val = supplier.get().get();
 				final boolean invalidResultAndShouldRetry = context.onResult(val);
 				if (!invalidResultAndShouldRetry) {
+					context.onComplete();
 					return val;
 				}
 
