@@ -716,8 +716,8 @@ public interface Retry {
 				T val = supplier.get().get();
 				final long delay = retryContext.onResult(val);
 				if (delay < 1) {
-					promise.complete(val);
 					retryContext.onComplete();
+					promise.complete(val);
 				} else {
 					scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
 				}
