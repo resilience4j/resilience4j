@@ -135,7 +135,7 @@ public interface Retry {
 	static <T> Supplier<Future<T>> decorateFuture(Retry retry, ScheduledExecutorService scheduler, Supplier<Future<T>> supplier) {
 		return () -> {
 			final CompletableFuture<T> promise = new CompletableFuture<>();
-			scheduler.execute(new FutureAsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise));
+			new FutureAsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise).run();
 			return promise;
 		};
 	}
