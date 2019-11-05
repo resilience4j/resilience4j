@@ -177,16 +177,6 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
             return new MetricNames();
         }
 
-        private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
-        private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
-        private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
-        private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
-        private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
-        private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
-
-        private MetricNames() {
-        }
-
         /**
          * Returns the metric name for circuit breaker calls, defaults to {@value DEFAULT_CIRCUIT_BREAKER_CALLS}.
          *

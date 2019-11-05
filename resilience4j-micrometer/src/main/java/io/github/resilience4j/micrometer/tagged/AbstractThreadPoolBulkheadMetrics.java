@@ -117,15 +117,6 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             return new MetricNames();
         }
 
-        private String queueDepthMetricName = DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME;
-        private String threadPoolSizeMetricName = DEFAULT_THREAD_POOL_SIZE_METRIC_NAME;
-        private String maxThreadPoolSizeMetricName = DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME;
-        private String coreThreadPoolSizeMetricName = DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME;
-        private String queueCapacityMetricName = DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME;
-
-        private MetricNames() {
-        }
-
         /**
          * Returns the metric name for queue depth,
          * defaults to {@value DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME}.

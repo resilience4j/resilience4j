@@ -95,12 +95,6 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
             return new MetricNames();
         }
 
-        private String availableConcurrentCallsMetricName = DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
-        private String maxAllowedConcurrentCallsMetricName = DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
-
-        private MetricNames() {
-        }
-
         /**
          * Returns the metric name for bulkhead concurrent calls,
          * defaults to {@value DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME}.

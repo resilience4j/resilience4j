@@ -88,9 +88,6 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
             return new MetricNames();
         }
 
-        private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-        private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
-
         /**
          * Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
          *
