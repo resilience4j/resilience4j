@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, ,Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,6 +123,19 @@ public class TaggedBulkheadMetricsTest {
         assertThat(maxAllowed).isNotNull();
         assertThat(maxAllowed.value()).isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
         assertThat(maxAllowed.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
+    }
+
+    @Test
+    public void customTagsShouldBeAdded() {
+        Bulkhead bulkheadC = bulkheadRegistry.bulkhead("backendC", io.vavr.collection.HashMap.of("key1", "value1"));
+        // record some basic stats
+        bulkheadC.tryAcquirePermission();
+        bulkheadC.tryAcquirePermission();
+
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(4);
+        final RequiredSearch match = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).tags("key1", "value1");
+        assertThat(match).isNotNull();
     }
 
     @Test

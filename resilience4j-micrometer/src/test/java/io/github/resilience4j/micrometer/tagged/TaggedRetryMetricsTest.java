@@ -71,6 +71,18 @@ public class TaggedRetryMetricsTest {
     }
 
     @Test
+    public void shouldAddCustomTags() {
+        retryRegistry.retry("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendF");
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendF")).hasSize(4);
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(8);
+        assertThat(meterRegistry.get(DEFAULT_RETRY_CALLS).tag("key1", "value1")).isNotNull();
+
+    }
+
+    @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(4);

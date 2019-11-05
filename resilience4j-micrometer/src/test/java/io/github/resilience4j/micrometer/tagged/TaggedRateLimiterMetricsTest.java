@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,17 @@ public class TaggedRateLimiterMetricsTest {
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, newRateLimiter.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value()).isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
+    }
+
+    @Test
+    public void shouldAddCustomTags() {
+        RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA", "backendF");
+        assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendA")).hasSize(2);
+        assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendF")).hasSize(2);
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(4);
+        assertThat(meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME).tag("key1", "value1")).isNotNull();
     }
 
     @Test
