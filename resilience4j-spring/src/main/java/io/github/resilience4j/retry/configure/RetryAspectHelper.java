@@ -67,16 +67,18 @@ public class RetryAspectHelper {
     private void decorateWithoutFallback(ProceedingJoinPointHelper joinPointHelper, io.github.resilience4j.retry.Retry retry) throws Throwable {
         if (CompletionStage.class.isAssignableFrom(joinPointHelper.getReturnType())) {
             decorateCompletableFuture(joinPointHelper, retry);
-        } else if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
+            return;
+        }
+        if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
             for (RetryAspectExt retryAspectExt : retryAspectExtList) {
                 if (retryAspectExt.canHandleReturnType(joinPointHelper.getReturnType())) {
                     retryAspectExt.decorate(joinPointHelper, retry);
+                    return;
                 }
             }
-        } else {
-            joinPointHelper.decorateProceedCall(
-                underliningCall -> io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, underliningCall));
         }
+        joinPointHelper.decorateProceedCall(
+            underliningCall -> io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, underliningCall));
     }
 
     /**

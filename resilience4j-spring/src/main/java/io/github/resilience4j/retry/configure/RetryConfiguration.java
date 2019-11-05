@@ -52,6 +52,11 @@ public class RetryConfiguration {
 	public ScheduledExecutorService retryExecutorService() {
 		return Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 	}
+        
+        @Bean
+        public RetryAspectHelper retryAspectHelper(ScheduledExecutorService retryExecutorService, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
+		return new RetryAspectHelper(retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
+        }
 
 	/**
 	 * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring properties
@@ -106,11 +111,6 @@ public class RetryConfiguration {
 				.orElse(100);
 		retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
 	}
-        
-        @Bean
-        public RetryAspectHelper retryAspectHelper(RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
-		return new RetryAspectHelper(retryExecutorService(), retryRegistry, retryAspectExtList, fallbackDecorators);
-        }
 
 	@Bean
 	@Conditional(value = {AspectJOnClasspathCondition.class})

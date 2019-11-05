@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,15 +48,14 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
      *
      * @param joinPointHelper Spring AOP helper
      * @param retry the configured retry
-     * @return the result object
      */
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(ProceedingJoinPointHelper joinPointHelper, io.github.resilience4j.retry.Retry retry) {
-        return () -> {
-            Object returnValue = joinPointHelper.getDecoratedProceedCall().apply();
+    public void decorate(ProceedingJoinPointHelper joinPointHelper, io.github.resilience4j.retry.Retry retry) {
+        joinPointHelper.decorateProceedCall(underliningCall -> () -> {
+            Object returnValue = underliningCall.apply();
             return handleReturnValue(returnValue, retry);
-        };
+        });
     }
 
     private Object handleReturnValue(Object returnValue, io.github.resilience4j.retry.Retry retry) {

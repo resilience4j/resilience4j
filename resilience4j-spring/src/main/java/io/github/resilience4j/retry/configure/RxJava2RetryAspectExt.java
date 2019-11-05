@@ -19,7 +19,6 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 import java.util.Set;
 
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,28 +45,19 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
     private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
-    /**
-     * @param returnType the AOP method return type class
-     * @return boolean if the method has Rx java 2 rerun type
-     */
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
-    /**
-     * @param joinPointHelper Spring AOP helper
-     * @param retry the configured Retry
-     * @return the result object
-     */
     @Override
-    public CheckedFunction0<Object> decorate(ProceedingJoinPointHelper joinPointHelper, Retry retry) {
+    public void decorate(ProceedingJoinPointHelper joinPointHelper, Retry retry) {
         RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
-        return () -> {
-            Object returnValue = joinPointHelper.getJoinPoint().proceed();
+        joinPointHelper.decorateProceedCall(unerliningCall -> () -> {
+            Object returnValue = unerliningCall.apply();
             return handleReturnValue(returnValue, retryTransformer);
-        };
+        });
     }
 
     @SuppressWarnings("unchecked")

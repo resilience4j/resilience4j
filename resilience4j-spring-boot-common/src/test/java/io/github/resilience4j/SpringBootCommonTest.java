@@ -32,6 +32,7 @@ import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRateLimiterConfi
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
+import io.github.resilience4j.retry.configure.RetryAspectHelper;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
 import org.junit.Test;
 
@@ -40,6 +41,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static java.util.Collections.emptyList;
+import java.util.concurrent.Executors;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
@@ -74,7 +76,8 @@ public class SpringBootCommonTest {
 		assertThat(retryConfigurationOnMissingBean.reactorRetryAspectExt()).isNotNull();
 		assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
 		assertThat(retryConfigurationOnMissingBean.retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
-		assertThat(retryConfigurationOnMissingBean.retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
+                RetryAspectHelper helper = new RetryAspectHelper(Executors.newSingleThreadScheduledExecutor(), RetryRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
+		assertThat(retryConfigurationOnMissingBean.retryAspect(helper, new RetryConfigurationProperties())).isNotNull();
 		assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty()));
 	}
 

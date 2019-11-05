@@ -17,7 +17,6 @@ package io.github.resilience4j.retry.autoconfigure;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,10 +30,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryAspect;
-import io.github.resilience4j.retry.configure.RetryAspectExt;
+import io.github.resilience4j.retry.configure.RetryAspectHelper;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.event.RetryEvent;
 
@@ -89,10 +87,8 @@ public class RetryConfigurationOnMissingBeanTest {
 		}
 
 		@Bean
-		public RetryAspect retryAspect(RetryRegistry retryRegistry,
-									   @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
-									   FallbackDecorators fallbackDecorators) {
-			this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry, retryAspectExts, fallbackDecorators);
+		public RetryAspect retryAspect(RetryAspectHelper retryAspectHelper) {
+			this.retryAspect = new RetryAspect(retryAspectHelper, new RetryProperties());
 			return retryAspect;
 		}
 

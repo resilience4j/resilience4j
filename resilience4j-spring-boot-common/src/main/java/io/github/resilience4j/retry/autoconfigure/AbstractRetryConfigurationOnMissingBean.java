@@ -26,12 +26,14 @@ import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * {@link Configuration
@@ -46,6 +48,18 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 	public AbstractRetryConfigurationOnMissingBean() {
 		this.retryConfiguration = new RetryConfiguration();
 	}
+        
+        @Bean
+	@ConditionalOnMissingBean
+	public ScheduledExecutorService retryExecutorService() {
+		return retryConfiguration.retryExecutorService();
+	}
+        
+        @Bean
+	@ConditionalOnMissingBean
+        public RetryAspectHelper retryAspectHelper(ScheduledExecutorService retryExecutorService, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
+		return retryConfiguration.retryAspectHelper(retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
+        }
 
 	/**
 	 * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring properties
