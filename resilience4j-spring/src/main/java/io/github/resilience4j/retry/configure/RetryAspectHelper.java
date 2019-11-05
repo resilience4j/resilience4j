@@ -31,13 +31,15 @@ import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
+import io.vavr.CheckedFunction0;
 
 public class RetryAspectHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspectHelper.class);
     private final ScheduledExecutorService retryExecutorService;
     private final RetryRegistry retryRegistry;
-    private final @Nullable List<RetryAspectExt> retryAspectExtList;
+    private final @Nullable
+    List<RetryAspectExt> retryAspectExtList;
     private final FallbackDecorators fallbackDecorators;
 
     /**
@@ -56,7 +58,7 @@ public class RetryAspectHelper {
     public void decorate(ProceedingJoinPointHelper joinPointHelper, Retry retryAnnotation) throws Throwable {
         String backend = retryAnnotation.name();
         io.github.resilience4j.retry.Retry retry = getOrCreateRetry(joinPointHelper.getMethodName(), backend);
-        decorateWithoutFallback(joinPointHelper, retry);
+        joinPointHelper.decorateProceedCall(underliningCall -> decorateWithoutFallback(retry, joinPointHelper.getReturnType(), underliningCall));
         if (StringUtils.isEmpty(retryAnnotation.fallbackMethod())) {
             return;
         }
@@ -64,21 +66,18 @@ public class RetryAspectHelper {
         joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 
-    private void decorateWithoutFallback(ProceedingJoinPointHelper joinPointHelper, io.github.resilience4j.retry.Retry retry) throws Throwable {
-        if (CompletionStage.class.isAssignableFrom(joinPointHelper.getReturnType())) {
-            decorateCompletableFuture(joinPointHelper, retry);
-            return;
+    private CheckedFunction0<Object> decorateWithoutFallback(io.github.resilience4j.retry.Retry retry, Class<?> returnType, CheckedFunction0<Object> supplier) {
+        if (CompletionStage.class.isAssignableFrom(returnType)) {
+            return decorateCompletableFuture(retry, supplier);
         }
         if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
             for (RetryAspectExt retryAspectExt : retryAspectExtList) {
-                if (retryAspectExt.canHandleReturnType(joinPointHelper.getReturnType())) {
-                    retryAspectExt.decorate(joinPointHelper, retry);
-                    return;
+                if (retryAspectExt.canHandleReturnType(returnType)) {
+                    return retryAspectExt.decorate(retry, supplier);
                 }
             }
         }
-        joinPointHelper.decorateProceedCall(
-            underliningCall -> io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, underliningCall));
+        return io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, supplier);
     }
 
     /**
@@ -97,20 +96,18 @@ public class RetryAspectHelper {
     }
 
     /**
-     * @param proceedingJoinPoint the AOP logic joint point
      * @param retry the configured async retry
+     * @param supplier target function that should be decorated
      * @return the result object if any
      */
     @SuppressWarnings("unchecked")
-    private void decorateCompletableFuture(ProceedingJoinPointHelper joinPointHelper, io.github.resilience4j.retry.Retry retry) {
-        joinPointHelper.decorateProceedCall(
-                underliningCall -> () -> retry.executeCompletionStage(retryExecutorService, () -> {
-                        try {
-                            return (CompletionStage<Object>) underliningCall.apply();
-                        } catch (Throwable throwable) {
-                            throw new CompletionException(throwable);
-                        }
-                    })
-        );
+    private CheckedFunction0<Object> decorateCompletableFuture(io.github.resilience4j.retry.Retry retry, CheckedFunction0<Object> supplier) {
+        return () -> retry.executeCompletionStage(retryExecutorService, () -> {
+            try {
+                return (CompletionStage<Object>) supplier.apply();
+            } catch (Throwable throwable) {
+                throw new CompletionException(throwable);
+            }
+        });
     }
 }

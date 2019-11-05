@@ -28,6 +28,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
+import io.vavr.CheckedFunction0;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,9 +37,6 @@ import reactor.core.publisher.Mono;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ReactorRetryAspectExtTest {
-
-    @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
     ReactorRetryAspectExt reactorRetryAspectExt;
@@ -52,18 +50,14 @@ public class ReactorRetryAspectExtTest {
     @Test
     public void testMonoType() throws Throwable {
         Retry retry = Retry.ofDefaults("test");
-        when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint, RetryDummyService.class.getMethod("mono", String.class));
-        reactorRetryAspectExt.decorate(joinPointHelper, retry);
-        assertThat(joinPointHelper.getJoinPoint().proceed()).isNotNull();
+        CheckedFunction0<Object> decorated = reactorRetryAspectExt.decorate(retry, () -> Mono.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Mono.class);
     }
 
     @Test
     public void testFluxType() throws Throwable {
         Retry retry = Retry.ofDefaults("test");
-        when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint, RetryDummyService.class.getMethod("flux"));
-        reactorRetryAspectExt.decorate(joinPointHelper, retry);
-        assertThat(joinPointHelper.getJoinPoint().proceed()).isNotNull();
+        CheckedFunction0<Object> decorated = reactorRetryAspectExt.decorate(retry, () -> Flux.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Flux.class);
     }
 }

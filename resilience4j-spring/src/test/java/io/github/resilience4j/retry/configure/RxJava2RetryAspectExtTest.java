@@ -15,30 +15,22 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.RetryDummyService;
-
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import io.vavr.CheckedFunction0;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2RetryAspectExtTest {
-
-    @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
     RxJava2RetryAspectExt rxJava2RetryAspectExt;
@@ -52,18 +44,14 @@ public class RxJava2RetryAspectExtTest {
     @Test
     public void testSingleType() throws Throwable {
         Retry retry = Retry.ofDefaults("test");
-        when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint, RetryDummyService.class.getMethod("single"));
-        rxJava2RetryAspectExt.decorate(joinPointHelper, retry);
-        assertThat(joinPointHelper.getJoinPoint().proceed()).isNotNull();
+        CheckedFunction0<Object> decorated = rxJava2RetryAspectExt.decorate(retry, () -> Single.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Single.class);
     }
 
     @Test
     public void testFlowableType() throws Throwable {
         Retry retry = Retry.ofDefaults("test");
-        when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint, RetryDummyService.class.getMethod("flowable"));
-        rxJava2RetryAspectExt.decorate(joinPointHelper, retry);
-        assertThat(joinPointHelper.getJoinPoint().proceed()).isNotNull();
+        CheckedFunction0<Object> decorated = rxJava2RetryAspectExt.decorate(retry, () -> Flowable.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Flowable.class);
     }
 }

@@ -45,17 +45,14 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
     /**
      * handle the Spring web flux (Flux /Mono) return types AOP based into
      * reactor retry See {@link io.github.resilience4j.retry.Retry} for details.
-     *
-     * @param joinPointHelper Spring AOP helper
-     * @param retry the configured retry
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void decorate(ProceedingJoinPointHelper joinPointHelper, io.github.resilience4j.retry.Retry retry) {
-        joinPointHelper.decorateProceedCall(underliningCall -> () -> {
-            Object returnValue = underliningCall.apply();
+    public CheckedFunction0<Object> decorate(io.github.resilience4j.retry.Retry retry, CheckedFunction0<Object> supplier) {
+        return () -> {
+            Object returnValue = supplier.apply();
             return handleReturnValue(returnValue, retry);
-        });
+        };
     }
 
     private Object handleReturnValue(Object returnValue, io.github.resilience4j.retry.Retry retry) {

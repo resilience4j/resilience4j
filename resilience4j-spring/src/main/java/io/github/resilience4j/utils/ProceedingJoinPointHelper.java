@@ -72,10 +72,6 @@ public class ProceedingJoinPointHelper {
         decoratedProceedCall = decorator.apply(decoratedProceedCall);
     }
 
-    public void setDecoratedProceedCall(CheckedFunction0<Object> decoratedProceedCall) {
-        this.decoratedProceedCall = decoratedProceedCall;
-    }
-
     @Nullable
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         if (joinPoint.getTarget() instanceof Proxy) {

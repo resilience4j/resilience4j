@@ -52,12 +52,12 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
     }
 
     @Override
-    public void decorate(ProceedingJoinPointHelper joinPointHelper, Retry retry) {
-        RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
-        joinPointHelper.decorateProceedCall(unerliningCall -> () -> {
-            Object returnValue = unerliningCall.apply();
+    public CheckedFunction0<Object> decorate(io.github.resilience4j.retry.Retry retry, CheckedFunction0<Object> supplier) {
+        return () -> {
+            RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
+            Object returnValue = supplier.apply();
             return handleReturnValue(returnValue, retryTransformer);
-        });
+        };
     }
 
     @SuppressWarnings("unchecked")

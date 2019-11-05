@@ -16,7 +16,7 @@
 package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.utils.ProceedingJoinPointHelper;
+import io.vavr.CheckedFunction0;
 
 /**
  * Retry aspect extension support interface type if you want to support new
@@ -31,8 +31,8 @@ public interface RetryAspectExt {
     boolean canHandleReturnType(Class returnType);
 
     /**
-     * @param joinPointHelper Spring AOP helper which you should decorate using {@link ProceedingJoinPointHelper#decorateProceedCall(java.util.function.Function)}
-     * @param retry the configured Retry
+     * @param supplier target function that should be decorated
+     * @return decorated function
      */
-    void decorate(ProceedingJoinPointHelper joinPointHelper, Retry retry);
+    CheckedFunction0<Object> decorate(Retry retry, CheckedFunction0<Object> supplier);
 }
