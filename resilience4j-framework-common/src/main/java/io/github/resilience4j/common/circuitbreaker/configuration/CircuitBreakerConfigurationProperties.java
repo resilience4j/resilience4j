@@ -280,6 +280,24 @@ public class CircuitBreakerConfigurationProperties {
          */
         private Double randomizedWaitFactor;
 
+        /**
+         * The Optional configured instance tags if any that can be used with the exported metrics
+         */
+        private Map<String, String> tags = new HashMap<>();
+
+        /**
+         * @return the Optional configured instance tags if any that can be used with the exported metrics
+         */
+        public Map<String, String> getTags() {
+            return tags;
+        }
+
+        /**
+         * @param tags the optional configured tags values for the target instance
+         */
+        public void setTags(Map<String, String> tags) {
+            this.tags = tags;
+        }
 
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.

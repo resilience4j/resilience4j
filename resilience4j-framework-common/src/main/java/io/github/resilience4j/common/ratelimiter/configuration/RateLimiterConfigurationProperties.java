@@ -34,7 +34,7 @@ public class RateLimiterConfigurationProperties {
 
 	public Optional<InstanceProperties> findRateLimiterProperties(String name) {
 		InstanceProperties instanceProperties = instances.get(name);
-		if(instanceProperties == null){
+		if (instanceProperties == null) {
 			instanceProperties = configs.get("default");
 		}
 		return Optional.ofNullable(instanceProperties);
@@ -130,6 +130,24 @@ public class RateLimiterConfigurationProperties {
 		private Boolean writableStackTraceEnabled;
 		@Nullable
 		private String baseConfig;
+		/**
+		 * The Optional configured instance tags if any that can be used with the exported metrics
+		 */
+		private Map<String, String> tags = new HashMap<>();
+
+		/**
+		 * @return the Optional configured instance tags if any that can be used with the exported metrics
+		 */
+		public Map<String, String> getTags() {
+			return tags;
+		}
+
+		/**
+		 * @param tags the optional configured tags values for the target instance
+		 */
+		public void setTags(Map<String, String> tags) {
+			this.tags = tags;
+		}
 
 		/**
 		 * Configures the permissions limit for refresh period.
