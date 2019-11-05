@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Yevhenii Voievodin
+ * Copyright 2019 Yevhenii Voievodin,Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +80,18 @@ public class TaggedCircuitBreakerMetricsTest {
         Optional<Gauge> successful = findGaugeByKindAndNameTags(gauges, "successful", newCircuitBreaker.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value()).isEqualTo(newCircuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+    }
+
+    @Test
+    public void shouldAddCustomTags() {
+        CircuitBreaker circuitBreakerF = circuitBreakerRegistry.circuitBreaker("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        circuitBreakerF.onSuccess(0, TimeUnit.NANOSECONDS);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendF");
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendF")).hasSize(15);
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(30);
+        final RequiredSearch match = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).tags("key1", "value1");
+        assertThat(match).isNotNull();
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Robert Winkler
+ * Copyright 2019 Robert Winkler, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,18 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaximumThreadPoolSize());
+    }
+
+    @Test
+    public void shouldAddCustomTags() {
+        bulkheadRegistry.bulkhead("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendF");
+        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendA")).hasSize(5);
+        assertThat(taggedBulkheadMetrics.meterIdMap.get("backendF")).hasSize(5);
+        List<Meter> meters = meterRegistry.getMeters();
+        assertThat(meters).hasSize(10);
+        assertThat(meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME).tag("key1", "value1")).isNotNull();
+
     }
 
     @Test
