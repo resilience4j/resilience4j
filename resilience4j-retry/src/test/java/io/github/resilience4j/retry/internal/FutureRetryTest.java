@@ -21,7 +21,7 @@ import static org.mockito.Mockito.times;
 public class FutureRetryTest {
 
     private HelloWorldService helloWorldService;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private CompletableFuture<String> completed = completedFuture("Hello world");
     private CompletableFuture<String> failed = new CompletableFuture<>();
@@ -207,7 +207,7 @@ public class FutureRetryTest {
 
     private String resultFromDecoratedSupplier(Retry retryContext)
             throws InterruptedException, ExecutionException, TimeoutException {
-        return Retry.decorateFuture(retryContext, executor, helloWorldService::returnFuture)
+        return Retry.decorateFuture(retryContext, scheduler, helloWorldService::returnFuture)
                 .get()
                 .get(2, TimeUnit.SECONDS);
     }
