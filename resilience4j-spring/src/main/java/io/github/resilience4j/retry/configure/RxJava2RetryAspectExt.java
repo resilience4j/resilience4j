@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.transformer.RetryTransformer;
+import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
@@ -34,60 +35,61 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
+import io.vavr.CheckedFunction0;
 
 /**
- * the Rx Retry logic support for the spring AOP
- * conditional on the presence of Rx classes on the spring class loader
+ * the Rx Retry logic support for the spring AOP conditional on the presence of
+ * Rx classes on the spring class loader
  */
 public class RxJava2RetryAspectExt implements RetryAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
-	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
+    private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
-	/**
-	 * @param returnType the AOP method return type class
-	 * @return boolean if the method has Rx java 2 rerun type
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public boolean canHandleReturnType(Class returnType) {
-		return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
-	}
+    /**
+     * @param returnType the AOP method return type class
+     * @return boolean if the method has Rx java 2 rerun type
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean canHandleReturnType(Class returnType) {
+        return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
+    }
 
-	/**
-	 * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-	 * @param retry               the configured Retry
-	 * @param methodName          the method name
-	 * @return the result object
-	 * @throws Throwable exception in case of faulty flow
-	 */
-	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName) throws Throwable {
-		RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
-		Object returnValue = proceedingJoinPoint.proceed();
-		return executeRxJava2Aspect(retryTransformer, returnValue);
-	}
+    /**
+     * @param joinPointHelper Spring AOP helper
+     * @param retry the configured Retry
+     * @return the result object
+     */
+    @Override
+    public CheckedFunction0<Object> decorate(ProceedingJoinPointHelper joinPointHelper, Retry retry) {
+        RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
+        return () -> {
+            Object returnValue = joinPointHelper.getJoinPoint().proceed();
+            return handleReturnValue(returnValue, retryTransformer);
+        };
+    }
 
-	@SuppressWarnings("unchecked")
-	private Object executeRxJava2Aspect(RetryTransformer retryTransformer, Object returnValue) {
-		if (returnValue instanceof ObservableSource) {
-			Observable<?> observable = (Observable<?>) returnValue;
-			return observable.compose(retryTransformer);
-		} else if (returnValue instanceof SingleSource) {
-			Single<?> single = (Single) returnValue;
-			return single.compose(retryTransformer);
-		} else if (returnValue instanceof CompletableSource) {
-			Completable completable = (Completable) returnValue;
-			return completable.compose(retryTransformer);
-		} else if (returnValue instanceof MaybeSource) {
-			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.compose(retryTransformer);
-		} else if (returnValue instanceof Flowable) {
-			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.compose(retryTransformer);
-		} else {
-			logger.error("Unsupported type for retry RxJava2 {}", returnValue.getClass().getTypeName());
-			throw new IllegalArgumentException("Not Supported type for the Retry in RxJava2 :" + returnValue.getClass().getName());
-		}
-	}
+    @SuppressWarnings("unchecked")
+    private Object handleReturnValue(Object returnValue, RetryTransformer retryTransformer) {
+        if (returnValue instanceof ObservableSource) {
+            Observable<?> observable = (Observable<?>) returnValue;
+            return observable.compose(retryTransformer);
+        } else if (returnValue instanceof SingleSource) {
+            Single<?> single = (Single) returnValue;
+            return single.compose(retryTransformer);
+        } else if (returnValue instanceof CompletableSource) {
+            Completable completable = (Completable) returnValue;
+            return completable.compose(retryTransformer);
+        } else if (returnValue instanceof MaybeSource) {
+            Maybe<?> maybe = (Maybe) returnValue;
+            return maybe.compose(retryTransformer);
+        } else if (returnValue instanceof Flowable) {
+            Flowable<?> flowable = (Flowable) returnValue;
+            return flowable.compose(retryTransformer);
+        } else {
+            logger.error("Unsupported type for retry RxJava2 {}", returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException("Not Supported type for the Retry in RxJava2 :" + returnValue.getClass().getName());
+        }
+    }
 }

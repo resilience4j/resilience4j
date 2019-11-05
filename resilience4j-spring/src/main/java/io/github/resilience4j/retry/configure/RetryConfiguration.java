@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +47,11 @@ import java.util.stream.Collectors;
  */
 @Configuration
 public class RetryConfiguration {
+    
+	@Bean
+	public ScheduledExecutorService retryExecutorService() {
+		return Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+	}
 
 	/**
 	 * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring properties
@@ -99,18 +106,16 @@ public class RetryConfiguration {
 				.orElse(100);
 		retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
 	}
+        
+        @Bean
+        public RetryAspectHelper retryAspectHelper(RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
+		return new RetryAspectHelper(retryExecutorService(), retryRegistry, retryAspectExtList, fallbackDecorators);
+        }
 
-	/**
-	 * @param retryConfigurationProperties retry configuration spring properties
-	 * @param retryRegistry                retry in memory registry
-	 * @return the spring retry AOP aspect
-	 */
 	@Bean
 	@Conditional(value = {AspectJOnClasspathCondition.class})
-	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-								   FallbackDecorators fallbackDecorators) {
-		return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, fallbackDecorators);
+	public RetryAspect retryAspect(RetryAspectHelper retryAspectHelper, RetryConfigurationProperties retryConfigurationProperties) {
+		return new RetryAspect(retryAspectHelper, retryConfigurationProperties);
 	}
 
 	@Bean

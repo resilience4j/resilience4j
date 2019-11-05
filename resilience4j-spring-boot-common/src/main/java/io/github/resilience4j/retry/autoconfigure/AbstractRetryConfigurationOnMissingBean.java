@@ -67,17 +67,15 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
 	}
 
 	/**
+	 * @param retryAspectHelper            retry aspect helper
 	 * @param retryConfigurationProperties retry configuration spring properties
-	 * @param retryRegistry                retry in memory registry
 	 * @return the spring retry AOP aspect
 	 */
 	@Bean
 	@Conditional(value = {AspectJOnClasspathCondition.class})
 	@ConditionalOnMissingBean
-	public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
-								   RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-								   FallbackDecorators fallbackDecorators) {
-		return retryConfiguration.retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList, fallbackDecorators);
+	public RetryAspect retryAspect(RetryAspectHelper retryAspectHelper, RetryConfigurationProperties retryConfigurationProperties) {
+		return retryConfiguration.retryAspect(retryAspectHelper, retryConfigurationProperties);
 	}
 
 	@Bean

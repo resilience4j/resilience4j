@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import io.github.resilience4j.RetryDummyService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,29 +37,33 @@ import reactor.core.publisher.Mono;
 @RunWith(MockitoJUnitRunner.class)
 public class ReactorRetryAspectExtTest {
 
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	ReactorRetryAspectExt reactorRetryAspectExt;
+    @InjectMocks
+    ReactorRetryAspectExt reactorRetryAspectExt;
 
+    @Test
+    public void testCheckTypes() {
+        assertThat(reactorRetryAspectExt.canHandleReturnType(Mono.class)).isTrue();
+        assertThat(reactorRetryAspectExt.canHandleReturnType(Flux.class)).isTrue();
+    }
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(reactorRetryAspectExt.canHandleReturnType(Mono.class)).isTrue();
-		assertThat(reactorRetryAspectExt.canHandleReturnType(Flux.class)).isTrue();
-	}
+    @Test
+    public void testMonoType() throws Throwable {
+        Retry retry = Retry.ofDefaults("test");
+        when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
+        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint, RetryDummyService.class.getMethod("mono", String.class));
+        reactorRetryAspectExt.decorate(joinPointHelper, retry);
+        assertThat(joinPointHelper.getJoinPoint().proceed()).isNotNull();
+    }
 
-	@Test
-	public void testReactorTypes() throws Throwable {
-		Retry retry = Retry.ofDefaults("test");
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
-		assertThat(reactorRetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
-		assertThat(reactorRetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod")).isNotNull();
-	}
-
-
+    @Test
+    public void testFluxType() throws Throwable {
+        Retry retry = Retry.ofDefaults("test");
+        when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
+        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint, RetryDummyService.class.getMethod("flux"));
+        reactorRetryAspectExt.decorate(joinPointHelper, retry);
+        assertThat(joinPointHelper.getJoinPoint().proceed()).isNotNull();
+    }
 }
