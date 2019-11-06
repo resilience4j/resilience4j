@@ -164,7 +164,7 @@ public interface RateLimiter {
      */
     static <T, F extends Future<T>> Supplier<F> decorateFuture(
         RateLimiter rateLimiter,
-        Supplier<F> supplier
+        Supplier<? extends F> supplier
     ) {
         return decorateFuture(rateLimiter, 1, supplier);
     }
@@ -181,7 +181,7 @@ public interface RateLimiter {
     static <T, F extends Future<T>> Supplier<F> decorateFuture(
         RateLimiter rateLimiter,
         int permits,
-        Supplier<F> supplier
+        Supplier<? extends F> supplier
     ) {
         return () -> {
             waitForPermission(rateLimiter, permits);
