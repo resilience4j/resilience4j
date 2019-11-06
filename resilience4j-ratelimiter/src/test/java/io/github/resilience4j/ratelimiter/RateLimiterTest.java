@@ -27,10 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
@@ -224,6 +221,34 @@ public class RateLimiterTest {
         assertThat(success.isCompletedExceptionally()).isFalse();
         assertThat(shouldBeEmpty.get()).isNull();
         then(supplier).should().get();
+    }
+
+    @Test(expected = RequestNotPermitted.class)
+    public void decorateFutureFailure()
+            throws InterruptedException, ExecutionException, TimeoutException {
+
+        Supplier<String> supplier = mock(Supplier.class);
+        given(supplier.get()).willReturn("Resource");
+        Supplier<Future<String>> decoratedFuture =
+            RateLimiter.decorateFuture(limit, () -> supplyAsync(supplier));
+        given(limit.acquirePermission(1)).willReturn(false);
+
+        decoratedFuture.get().get(2, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void decorateFutureSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Supplier<String> supplier = mock(Supplier.class);
+        given(supplier.get()).willReturn("Resource");
+        Supplier<Future<String>> decoratedFuture =
+            RateLimiter.decorateFuture(limit, () -> supplyAsync(supplier));
+        given(limit.acquirePermission(1)).willReturn(true);
+
+        String result = decoratedFuture.get().get(2, TimeUnit.SECONDS);
+
+        then(supplier).should().get();
+        assertThat(result).isEqualTo("Resource");
     }
 
     @Test
