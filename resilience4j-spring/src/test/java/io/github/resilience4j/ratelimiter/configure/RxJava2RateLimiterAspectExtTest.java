@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
@@ -31,44 +29,59 @@ import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.vavr.CheckedFunction0;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2RateLimiterAspectExtTest {
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
 
+    @InjectMocks
+    RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
-		assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
-	}
+    @Test
+    public void testCheckTypes() {
+        assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
+    }
 
-	@Test
-	public void testReactorTypes() throws Throwable {
-		RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+    @Test
+    public void testSingleType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2RateLimiterAspectExt.decorate(rateLimiter, () -> Single.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Single.class);
+    }
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+    @Test
+    public void testFlowableType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2RateLimiterAspectExt.decorate(rateLimiter, () -> Flowable.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Flowable.class);
+    }
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+    @Test
+    public void testCompletableType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2RateLimiterAspectExt.decorate(rateLimiter, () -> Completable.complete());
+        assertThat(decorated.apply()).isInstanceOf(Completable.class);
+    }
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Completable.complete());
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+    @Test
+    public void testMaybeType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2RateLimiterAspectExt.decorate(rateLimiter, () -> Maybe.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Maybe.class);
+    }
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Maybe.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Observable.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-
-	}
+    @Test
+    public void testObservableType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2RateLimiterAspectExt.decorate(rateLimiter, () -> Observable.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Observable.class);
+    }
 }

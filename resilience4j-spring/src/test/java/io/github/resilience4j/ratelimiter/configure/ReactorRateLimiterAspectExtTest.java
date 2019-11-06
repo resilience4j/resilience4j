@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
@@ -26,6 +24,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.vavr.CheckedFunction0;
+import static org.assertj.core.api.Assertions.assertThat;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,29 +35,29 @@ import reactor.core.publisher.Mono;
 @RunWith(MockitoJUnitRunner.class)
 public class ReactorRateLimiterAspectExtTest {
 
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	ReactorRateLimiterAspectExt reactorRateLimiterAspectExt;
+    @InjectMocks
+    ReactorRateLimiterAspectExt reactorRateLimiterAspectExt;
 
+    @Test
+    public void testCheckTypes() {
+        assertThat(reactorRateLimiterAspectExt.canHandleReturnType(Mono.class)).isTrue();
+        assertThat(reactorRateLimiterAspectExt.canHandleReturnType(Flux.class)).isTrue();
+    }
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(reactorRateLimiterAspectExt.canHandleReturnType(Mono.class)).isTrue();
-		assertThat(reactorRateLimiterAspectExt.canHandleReturnType(Flux.class)).isTrue();
-	}
+    @Test
+    public void testMonoType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = reactorRateLimiterAspectExt.decorate(rateLimiter, () -> Mono.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Mono.class);
+    }
 
-	@Test
-	public void testReactorTypes() throws Throwable {
-		RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
-		assertThat(reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
-		assertThat(reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-	}
-
-
+    @Test
+    public void testFluxType() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        CheckedFunction0<Object> decorated = reactorRateLimiterAspectExt.decorate(rateLimiter, () -> Flux.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Flux.class);
+    }
 }

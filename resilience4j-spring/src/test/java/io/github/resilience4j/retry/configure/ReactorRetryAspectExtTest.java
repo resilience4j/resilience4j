@@ -15,19 +15,13 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.RetryDummyService;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 import io.vavr.CheckedFunction0;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

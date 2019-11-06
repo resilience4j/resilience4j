@@ -34,60 +34,52 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
+import io.vavr.CheckedFunction0;
 
 /**
- * the Rx RateLimiter logic support for the spring AOP
- * conditional on the presence of Rx classes on the spring class loader
+ * the Rx RateLimiter logic support for the spring AOP conditional on the
+ * presence of Rx classes on the spring class loader
  */
 public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
-	private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
+    private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
-	/**
-	 * @param returnType the AOP method return type class
-	 * @return boolean if the method has Rx java 2 rerun type
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public boolean canHandleReturnType(Class returnType) {
-		return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean canHandleReturnType(Class returnType) {
+        return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
+    }
 
-	/**
-	 * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-	 * @param rateLimiter         the configured rateLimiter
-	 * @param methodName          the method name
-	 * @return the result object
-	 * @throws Throwable exception in case of faulty flow
-	 */
-	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
-		RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
-		Object returnValue = proceedingJoinPoint.proceed();
-		return executeRxJava2Aspect(rateLimiterOperator, returnValue);
-	}
+    @Override
+    public CheckedFunction0<Object> decorate(RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
+        return () -> {
+            Object returnValue = supplier.apply();
+            return handleReturnValue(rateLimiter, returnValue);
+        };
+    }
 
-	@SuppressWarnings("unchecked")
-	private Object executeRxJava2Aspect(RateLimiterOperator rateLimiterOperator, Object returnValue) {
-		if (returnValue instanceof ObservableSource) {
-			Observable<?> observable = (Observable) returnValue;
-			return observable.compose(rateLimiterOperator);
-		} else if (returnValue instanceof SingleSource) {
-			Single<?> single = (Single) returnValue;
-			return single.compose(rateLimiterOperator);
-		} else if (returnValue instanceof CompletableSource) {
-			Completable completable = (Completable) returnValue;
-			return completable.compose(rateLimiterOperator);
-		} else if (returnValue instanceof MaybeSource) {
-			Maybe<?> maybe = (Maybe) returnValue;
-			return maybe.compose(rateLimiterOperator);
-		} else if (returnValue instanceof Flowable) {
-			Flowable<?> flowable = (Flowable) returnValue;
-			return flowable.compose(rateLimiterOperator);
-		} else {
-			logger.error("Unsupported type for Rate limiter RxJava2 {}", returnValue.getClass().getTypeName());
-			throw new IllegalArgumentException("Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass().getName());
-		}
-	}
+    @SuppressWarnings("unchecked")
+    private Object handleReturnValue(RateLimiter rateLimiter, Object returnValue) {
+        RateLimiterOperator<Object> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
+        if (returnValue instanceof ObservableSource) {
+            Observable<?> observable = (Observable) returnValue;
+            return observable.compose(rateLimiterOperator);
+        } else if (returnValue instanceof SingleSource) {
+            Single<?> single = (Single) returnValue;
+            return single.compose(rateLimiterOperator);
+        } else if (returnValue instanceof CompletableSource) {
+            Completable completable = (Completable) returnValue;
+            return completable.compose(rateLimiterOperator);
+        } else if (returnValue instanceof MaybeSource) {
+            Maybe<?> maybe = (Maybe) returnValue;
+            return maybe.compose(rateLimiterOperator);
+        } else if (returnValue instanceof Flowable) {
+            Flowable<?> flowable = (Flowable) returnValue;
+            return flowable.compose(rateLimiterOperator);
+        } else {
+            logger.error("Unsupported type for Rate limiter RxJava2 {}", returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException("Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass().getName());
+        }
+    }
 }

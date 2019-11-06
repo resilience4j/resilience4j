@@ -29,6 +29,7 @@ import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectHelper;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
@@ -87,7 +88,8 @@ public class SpringBootCommonTest {
 		assertThat(rateLimiterConfigurationOnMissingBean.reactorRateLimiterAspectExt()).isNotNull();
 		assertThat(rateLimiterConfigurationOnMissingBean.rxJava2RateLimiterAspectExt()).isNotNull();
 		assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterRegistry(new RateLimiterConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
-		assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterAspect(new RateLimiterConfigurationProperties(), RateLimiterRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
+		RateLimiterAspectHelper rateLimiterAspectHelper = new RateLimiterAspectHelper(RateLimiterRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
+                assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterAspect(rateLimiterAspectHelper, new RateLimiterConfigurationProperties())).isNotNull();
 		assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterRegistryEventConsumer(Optional.empty()));
 	}
 
