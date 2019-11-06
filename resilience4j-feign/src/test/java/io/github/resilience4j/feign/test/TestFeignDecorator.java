@@ -1,11 +1,11 @@
 package io.github.resilience4j.feign.test;
 
-import java.lang.reflect.Method;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.feign.FeignDecorator;
 import io.vavr.CheckedFunction1;
+
+import java.lang.reflect.Method;
 
 public class TestFeignDecorator implements FeignDecorator {
 
@@ -29,9 +29,10 @@ public class TestFeignDecorator implements FeignDecorator {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
-            Method method, MethodHandler methodHandler,
-            Target<?> target) {
+    public CheckedFunction1<Object[], Object> decorate(
+        CheckedFunction1<Object[], Object> invocationCall,
+        Method method, MethodHandler methodHandler,
+        Target<?> target) {
         called = true;
         return alternativeFunction != null ? alternativeFunction : invocationCall;
     }

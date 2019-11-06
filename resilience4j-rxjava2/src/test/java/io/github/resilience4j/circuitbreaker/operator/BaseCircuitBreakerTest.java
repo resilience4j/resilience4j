@@ -16,7 +16,7 @@ abstract class BaseCircuitBreakerTest {
     HelloWorldService helloWorldService;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
         helloWorldService = mock(HelloWorldService.class);
     }

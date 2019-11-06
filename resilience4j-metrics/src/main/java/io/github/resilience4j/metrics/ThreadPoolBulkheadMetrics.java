@@ -28,23 +28,22 @@ import io.vavr.collection.Array;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.AVAILABLE_QUEUE_CAPACITY;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.CURRENT_THREAD_POOL_SIZE;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX;
-import static io.github.resilience4j.bulkhead.utils.MetricNames.DEFAULT_PREFIX_THREAD_POOL;
+import static io.github.resilience4j.bulkhead.utils.MetricNames.*;
 import static java.util.Objects.requireNonNull;
 
 /**
  * An adapter which exports {@link Bulkhead.Metrics} as Dropwizard Metrics Gauges.
  */
 public class ThreadPoolBulkheadMetrics implements MetricSet {
+
     private final MetricRegistry metricRegistry;
 
     private ThreadPoolBulkheadMetrics(Iterable<ThreadPoolBulkhead> bulkheads) {
         this(DEFAULT_PREFIX_THREAD_POOL, bulkheads, new MetricRegistry());
     }
 
-    private ThreadPoolBulkheadMetrics(String prefix, Iterable<ThreadPoolBulkhead> bulkheads, MetricRegistry metricRegistry) {
+    private ThreadPoolBulkheadMetrics(String prefix, Iterable<ThreadPoolBulkhead> bulkheads,
+        MetricRegistry metricRegistry) {
         requireNonNull(prefix);
         requireNonNull(bulkheads);
         requireNonNull(metricRegistry);
@@ -53,58 +52,65 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
             String name = bulkhead.getName();
             //number of available concurrent calls as an integer
             metricRegistry.register(name(prefix, name, CURRENT_THREAD_POOL_SIZE),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getThreadPoolSize());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getThreadPoolSize());
             metricRegistry.register(name(prefix, name, AVAILABLE_QUEUE_CAPACITY),
-                    (Gauge<Integer>) () -> bulkhead.getMetrics().getRemainingQueueCapacity());
+                (Gauge<Integer>) () -> bulkhead.getMetrics().getRemainingQueueCapacity());
         });
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified metrics names prefix and
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified
+     * metrics names prefix and a {@link BulkheadRegistry} as a source.
      *
      * @param prefix           the prefix of metrics names
      * @param bulkheadRegistry the registry of bulkheads
      * @param metricRegistry   the metric registry
      */
-    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix, ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
-        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), metricRegistry);
+    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix,
+        ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(),
+            metricRegistry);
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified metrics names prefix and
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with specified
+     * metrics names prefix and a {@link BulkheadRegistry} as a source.
      *
      * @param prefix           the prefix of metrics names
      * @param bulkheadRegistry the registry of bulkheads
      */
-    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix, ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(), new MetricRegistry());
+    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(String prefix,
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        return new ThreadPoolBulkheadMetrics(prefix, bulkheadRegistry.getAllBulkheads(),
+            new MetricRegistry());
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with a {@link
+     * BulkheadRegistry} as a source.
      *
      * @param bulkheadRegistry the registry of bulkheads
      */
-    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
-        return new ThreadPoolBulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(), metricRegistry);
+    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(
+        ThreadPoolBulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
+        return new ThreadPoolBulkheadMetrics(DEFAULT_PREFIX, bulkheadRegistry.getAllBulkheads(),
+            metricRegistry);
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with
-     * a {@link BulkheadRegistry} as a source.
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with a {@link
+     * BulkheadRegistry} as a source.
      *
      * @param bulkheadRegistry the registry of bulkheads
      */
-    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(ThreadPoolBulkheadRegistry bulkheadRegistry) {
+    public static ThreadPoolBulkheadMetrics ofBulkheadRegistry(
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new ThreadPoolBulkheadMetrics(bulkheadRegistry.getAllBulkheads());
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with
-     * an {@link Iterable} of bulkheads as a source.
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with an {@link
+     * Iterable} of bulkheads as a source.
      *
      * @param bulkheads the bulkheads
      */
@@ -113,18 +119,20 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
     }
 
     /**
-     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with
-     * an {@link Iterable} of bulkheads as a source.
+     * Creates a new instance BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with an {@link
+     * Iterable} of bulkheads as a source.
      *
      * @param bulkheads the bulkheads
      */
-    public static ThreadPoolBulkheadMetrics ofIterable(String prefix, Iterable<ThreadPoolBulkhead> bulkheads) {
+    public static ThreadPoolBulkheadMetrics ofIterable(String prefix,
+        Iterable<ThreadPoolBulkhead> bulkheads) {
         return new ThreadPoolBulkheadMetrics(prefix, bulkheads, new MetricRegistry());
     }
 
 
     /**
-     * Creates a new instance of BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with a bulkhead as a source.
+     * Creates a new instance of BulkheadMetrics {@link ThreadPoolBulkheadMetrics} with a bulkhead
+     * as a source.
      *
      * @param bulkhead the circuit breaker
      */

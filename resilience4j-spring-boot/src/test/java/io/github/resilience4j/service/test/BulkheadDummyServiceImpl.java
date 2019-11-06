@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 @Bulkhead(name = BulkheadDummyService.BACKEND)
 @Component
 public class BulkheadDummyServiceImpl implements BulkheadDummyService {
+
     @Override
     public void doSomething() {
         try {

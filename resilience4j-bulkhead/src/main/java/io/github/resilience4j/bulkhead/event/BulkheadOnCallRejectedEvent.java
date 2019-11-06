@@ -35,8 +35,8 @@ public class BulkheadOnCallRejectedEvent extends AbstractBulkheadEvent {
     @Override
     public String toString() {
         return String.format("%s: Bulkhead '%s' rejected a call.",
-                   getCreationTime(),
-                   getBulkheadName()
-               );
+            getCreationTime(),
+            getBulkheadName()
+        );
     }
 }

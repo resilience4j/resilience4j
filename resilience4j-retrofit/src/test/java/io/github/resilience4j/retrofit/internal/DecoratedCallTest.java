@@ -44,5 +44,6 @@ public class DecoratedCallTest {
     }
 
     private interface StringCall extends Call<String> {
+
     }
 }

@@ -33,10 +33,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Backend TimeLimiter manager.
- * Constructs backend TimeLimiters according to configuration values.
+ * Backend TimeLimiter manager. Constructs backend TimeLimiters according to configuration values.
  */
-public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, TimeLimiterConfig> implements TimeLimiterRegistry {
+public class InMemoryTimeLimiterRegistry extends
+    AbstractRegistry<TimeLimiter, TimeLimiterConfig> implements TimeLimiterRegistry {
 
     /**
      * The constructor with default default.
@@ -50,13 +50,17 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
         this.configurations.putAll(configs);
     }
 
-    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
-        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), registryEventConsumer);
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()),
+            registryEventConsumer);
         this.configurations.putAll(configs);
     }
 
-    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
-        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), registryEventConsumers);
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
+        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()),
+            registryEventConsumers);
         this.configurations.putAll(configs);
     }
 
@@ -69,11 +73,13 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
         super(defaultConfig);
     }
 
-    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
-    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
+        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
     }
 
@@ -98,17 +104,21 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
      */
     @Override
     public TimeLimiter timeLimiter(final String name, final TimeLimiterConfig config) {
-        return computeIfAbsent(name, () -> new TimeLimiterImpl(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+        return computeIfAbsent(name, () -> new TimeLimiterImpl(name,
+            Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TimeLimiter timeLimiter(final String name, final Supplier<TimeLimiterConfig> timeLimiterConfigSupplier) {
+    public TimeLimiter timeLimiter(final String name,
+        final Supplier<TimeLimiterConfig> timeLimiterConfigSupplier) {
         return computeIfAbsent(name, () -> {
-            TimeLimiterConfig config = Objects.requireNonNull(timeLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get();
-            return new TimeLimiterImpl(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL));
+            TimeLimiterConfig config = Objects
+                .requireNonNull(timeLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get();
+            return new TimeLimiterImpl(name,
+                Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL));
         });
     }
 
@@ -118,7 +128,8 @@ public class InMemoryTimeLimiterRegistry extends AbstractRegistry<TimeLimiter, T
     @Override
     public TimeLimiter timeLimiter(String name, String configName) {
         return computeIfAbsent(name, () -> {
-            TimeLimiterConfig config = getConfiguration(configName).orElseThrow(() -> new ConfigurationNotFoundException(configName));
+            TimeLimiterConfig config = getConfiguration(configName)
+                .orElseThrow(() -> new ConfigurationNotFoundException(configName));
             return TimeLimiter.of(name, config);
         });
     }

@@ -14,7 +14,7 @@ public class RxJava2Adapter {
      * Converts the EventPublisher into a Flowable.
      *
      * @param eventPublisher the event publisher
-     * @param <T> the type of the event
+     * @param <T>            the type of the event
      * @return the Flowable
      */
     public static <T> Flowable<T> toFlowable(EventPublisher<T> eventPublisher) {
@@ -28,7 +28,7 @@ public class RxJava2Adapter {
      * Converts the EventPublisher into an Observable.
      *
      * @param eventPublisher the event publisher
-     * @param <T> the type of the event
+     * @param <T>            the type of the event
      * @return the Observable
      */
     public static <T> Observable<T> toObservable(EventPublisher<T> eventPublisher) {

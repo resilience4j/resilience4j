@@ -11,10 +11,12 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
 
     private final Duration waitInterval;
 
-    public RetryOnRetryEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable, long waitInterval) {
+    public RetryOnRetryEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable,
+        long waitInterval) {
         super(name, numberOfAttempts, lastThrowable);
         this.waitInterval = Duration.ofMillis(waitInterval);
     }
+
     @Override
     public Type getEventType() {
         return Type.RETRY;
@@ -22,11 +24,12 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
 
     @Override
     public String toString() {
-        return String.format("%s: Retry '%s', waiting %s until attempt #%d. Last attempt failed with exception %s",
-                             getCreationTime(),
-                             getName(),
-                             waitInterval,
-                             getNumberOfRetryAttempts(),
-                             getLastThrowable() != null ? getLastThrowable().toString() : "null");
+        return String.format(
+            "%s: Retry '%s', waiting %s until attempt #%d. Last attempt failed with exception %s",
+            getCreationTime(),
+            getName(),
+            waitInterval,
+            getNumberOfRetryAttempts(),
+            getLastThrowable() != null ? getLastThrowable().toString() : "null");
     }
 }

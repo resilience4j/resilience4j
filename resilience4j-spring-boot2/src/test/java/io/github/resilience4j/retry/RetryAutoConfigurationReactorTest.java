@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RetryAutoConfigurationReactorTest {
 
     @Autowired
@@ -55,27 +55,30 @@ public class RetryAutoConfigurationReactorTest {
     private TestRestTemplate restTemplate;
 
     /**
-     * The test verifies that a Retry instance is created and configured properly when the RetryReactiveDummyService is invoked and
-     * that the Retry logic is properly handled
+     * The test verifies that a Retry instance is created and configured properly when the
+     * RetryReactiveDummyService is invoked and that the Retry logic is properly handled
      */
     @Test
     public void testRetryAutoConfigurationReactor() throws IOException {
         assertThat(retryRegistry).isNotNull();
         assertThat(retryProperties).isNotNull();
 
-        RetryEventsEndpointResponse retryEventListBefore = retryEventListBody("/actuator/retryevents");
+        RetryEventsEndpointResponse retryEventListBefore = retryEventListBody(
+            "/actuator/retryevents");
         RetryEventsEndpointResponse retryEventListForCBefore =
-                retryEventListBody("/actuator/retryevents/" + BACKEND_C);
+            retryEventListBody("/actuator/retryevents/" + BACKEND_C);
         ;
 
         try {
-            retryDummyService.doSomethingFlux(true).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+            retryDummyService.doSomethingFlux(true).subscribe(String::toUpperCase,
+                throwable -> System.out.println("Exception received:" + throwable.getMessage()));
         } catch (RetryExceptionWrapper ex) {
             assertThat(ex.getCause()).hasCauseInstanceOf(IllegalArgumentException.class);
             // Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        retryDummyService.doSomethingFlux(false).subscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+        retryDummyService.doSomethingFlux(false).subscribe(String::toUpperCase,
+            throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
         Retry retry = retryRegistry.retry(BACKEND_C);
         assertThat(retry).isNotNull();
@@ -87,13 +90,18 @@ public class RetryAutoConfigurationReactorTest {
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEventListBody("/actuator/retryevents");
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = retryEventListBody("/actuator/retryevents/" + BACKEND_C);
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListForCBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListForCBefore.getRetryEvents().size() + 3);
 
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException())).isTrue();
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+        assertThat(
+            retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException()))
+            .isTrue();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+            .isFalse();
 
         assertThat(retryAspect.getOrder()).isEqualTo(399);
     }

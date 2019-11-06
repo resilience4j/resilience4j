@@ -29,11 +29,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass({MeterRegistry.class, CircuitBreaker.class, TaggedCircuitBreakerMetricsPublisher.class})
+@ConditionalOnClass({MeterRegistry.class, CircuitBreaker.class,
+    TaggedCircuitBreakerMetricsPublisher.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
 public class CircuitBreakerMetricsAutoConfiguration {
@@ -41,14 +42,16 @@ public class CircuitBreakerMetricsAutoConfiguration {
     @Bean
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
-    public TaggedCircuitBreakerMetrics registerCircuitBreakerMetrics(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public TaggedCircuitBreakerMetrics registerCircuitBreakerMetrics(
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry);
     }
 
     @Bean
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher(MeterRegistry meterRegistry) {
+    public TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher(
+        MeterRegistry meterRegistry) {
         return new TaggedCircuitBreakerMetricsPublisher(meterRegistry);
     }
 

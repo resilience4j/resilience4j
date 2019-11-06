@@ -28,23 +28,14 @@ public class CircuitBreakerUtilIsCallPermittedTest {
     @Parameter(1)
     public boolean expectedPermission;
 
-    @Test
-    public void shouldIndicateCallPermittedForGivenStatus() {
-        CircuitBreaker circuitBreaker = givenCircuitBreakerAtState(state);
-
-        boolean isPermitted = isCallPermitted(circuitBreaker);
-
-        assertThat(isPermitted).isEqualTo(expectedPermission);
-    }
-
     @Parameters(name = "isCallPermitted should be {1} for circuit breaker state {0}")
     public static Collection<Object[]> cases() {
-        return asList(new Object[][] {
-                { State.DISABLED, CALL_PERMITTED },
-                { State.CLOSED, CALL_PERMITTED },
-                { State.OPEN, CALL_NOT_PERMITTED },
-                { State.FORCED_OPEN, CALL_NOT_PERMITTED },
-                { State.HALF_OPEN, CALL_PERMITTED },
+        return asList(new Object[][]{
+            {State.DISABLED, CALL_PERMITTED},
+            {State.CLOSED, CALL_PERMITTED},
+            {State.OPEN, CALL_NOT_PERMITTED},
+            {State.FORCED_OPEN, CALL_NOT_PERMITTED},
+            {State.HALF_OPEN, CALL_PERMITTED},
         });
     }
 
@@ -52,5 +43,14 @@ public class CircuitBreakerUtilIsCallPermittedTest {
         CircuitBreaker circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.getState()).thenReturn(state);
         return circuitBreaker;
+    }
+
+    @Test
+    public void shouldIndicateCallPermittedForGivenStatus() {
+        CircuitBreaker circuitBreaker = givenCircuitBreakerAtState(state);
+
+        boolean isPermitted = isCallPermitted(circuitBreaker);
+
+        assertThat(isPermitted).isEqualTo(expectedPermission);
     }
 }

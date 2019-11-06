@@ -40,21 +40,23 @@ public class AsyncUtils {
         }
     }
 
-    private static class RuntimeExecutionException extends RuntimeException {
-        RuntimeExecutionException(Throwable cause) {
-            super(cause);
-        }
-    }
-
     public static <T> T awaitResult(CompletionStage<T> completionStage) {
         return awaitResult(completionStage, DEFAULT_TIMEOUT_SECONDS);
     }
 
-    public static <T> T awaitResult(Supplier<CompletionStage<T>> completionStageSupplier, long timeoutSeconds) {
+    public static <T> T awaitResult(Supplier<CompletionStage<T>> completionStageSupplier,
+        long timeoutSeconds) {
         return awaitResult(completionStageSupplier.get(), timeoutSeconds);
     }
 
     public static <T> T awaitResult(Supplier<CompletionStage<T>> completionStageSupplier) {
         return awaitResult(completionStageSupplier, DEFAULT_TIMEOUT_SECONDS);
+    }
+
+    private static class RuntimeExecutionException extends RuntimeException {
+
+        RuntimeExecutionException(Throwable cause) {
+            super(cause);
+        }
     }
 }

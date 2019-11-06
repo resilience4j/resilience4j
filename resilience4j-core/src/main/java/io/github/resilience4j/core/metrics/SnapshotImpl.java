@@ -59,7 +59,7 @@ public class SnapshotImpl implements Snapshot {
 
     @Override
     public float getSlowCallRate() {
-        if(totalNumberOfCalls == 0){
+        if (totalNumberOfCalls == 0) {
             return 0;
         }
         return totalNumberOfSlowCalls * 100.0f / totalNumberOfCalls;
@@ -82,7 +82,7 @@ public class SnapshotImpl implements Snapshot {
 
     @Override
     public float getFailureRate() {
-        if(totalNumberOfCalls == 0){
+        if (totalNumberOfCalls == 0) {
             return 0;
         }
         return totalNumberOfFailedCalls * 100.0f / totalNumberOfCalls;
@@ -90,7 +90,7 @@ public class SnapshotImpl implements Snapshot {
 
     @Override
     public Duration getAverageDuration() {
-        if(totalNumberOfCalls == 0){
+        if (totalNumberOfCalls == 0) {
             return Duration.ZERO;
         }
         return Duration.ofMillis(totalDurationInMillis / totalNumberOfCalls);

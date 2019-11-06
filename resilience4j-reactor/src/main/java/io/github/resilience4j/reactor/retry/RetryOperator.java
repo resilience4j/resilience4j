@@ -26,113 +26,120 @@ import java.util.function.UnaryOperator;
 
 /**
  * A Reactor Retry operator which wraps a reactive type in a Retry.
+ *
  * @param <T> the value type of the upstream and downstream
  */
 public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 
-	private final Retry retry;
+    private final Retry retry;
 
-	private RetryOperator(Retry retry) {
-		this.retry = retry;
-	}
+    private RetryOperator(Retry retry) {
+        this.retry = retry;
+    }
 
-	/**
-	 * Creates a retry.
-	 *
-	 * @param <T>   the value type of the upstream and downstream
-	 * @param retry the retry
-	 * @return a RetryOperator
-	 */
-	public static <T> RetryOperator<T> of(Retry retry) {
-		return new RetryOperator<>(retry);
-	}
+    /**
+     * Creates a retry.
+     *
+     * @param <T>   the value type of the upstream and downstream
+     * @param retry the retry
+     * @return a RetryOperator
+     */
+    public static <T> RetryOperator<T> of(Retry retry) {
+        return new RetryOperator<>(retry);
+    }
 
-	@Override
-	public Publisher<T> apply(Publisher<T> publisher) {
-		if (publisher instanceof Mono) {
-			Context<T> context = new Context<>(retry.context());
-			Mono<T> upstream = (Mono<T>) publisher;
-			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
-					.doOnSuccess(t -> context.onComplete());
-		} else if (publisher instanceof Flux) {
-			Context<T> context = new Context<>(retry.context());
-			Flux<T> upstream = (Flux<T>) publisher;
-			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
-					.doOnComplete(context::onComplete);
+    /**
+     * to handle checked exception handling in reactor Function java 8 doOnNext
+     */
+    private static <T> Consumer<T> throwingConsumerWrapper(
+        ThrowingConsumer<T, Exception> throwingConsumer) {
+
+        return i -> {
+            try {
+                throwingConsumer.accept(i);
+            } catch (Exception ex) {
+                throw new RetryExceptionWrapper(ex);
+            }
+        };
+    }
+
+    @Override
+    public Publisher<T> apply(Publisher<T> publisher) {
+        if (publisher instanceof Mono) {
+            Context<T> context = new Context<>(retry.context());
+            Mono<T> upstream = (Mono<T>) publisher;
+            return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
+                .retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
+                .doOnSuccess(t -> context.onComplete());
+        } else if (publisher instanceof Flux) {
+            Context<T> context = new Context<>(retry.context());
+            Flux<T> upstream = (Flux<T>) publisher;
+            return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
+                .retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
+                .doOnComplete(context::onComplete);
         } else {
             throw new IllegalPublisherException(publisher);
         }
-	}
+    }
 
+    /**
+     * @param <T> input
+     * @param <E> possible thrown exception
+     */
+    @FunctionalInterface
+    public interface ThrowingConsumer<T, E extends Exception> {
 
-	private static class Context<T> {
-		private final Retry.Context<T> context;
+        void accept(T t) throws E;
+    }
 
-		Context(Retry.Context<T> context) {
-			this.context = context;
-		}
+    private static class Context<T> {
 
-		void onComplete() {
-			this.context.onComplete();
-		}
+        private final Retry.Context<T> context;
 
-		void throwExceptionToForceRetryOnResult(T value) {
-			if (context.onResult(value))
-				throw new RetryDueToResultException();
-		}
+        Context(Retry.Context<T> context) {
+            this.context = context;
+        }
 
-		void onError(Throwable throwable) throws Exception {
-			if (throwable instanceof RetryDueToResultException) return;
-			// Filter Error to not retry on it
-			if (throwable instanceof Error) {
-				throw (Error) throwable;
-			}
-			try {
-				if (throwable instanceof RetryExceptionWrapper) {
-					context.onError(castToException(throwable.getCause()));
-				} else {
-					context.onError(castToException(throwable));
-				}
+        void onComplete() {
+            this.context.onComplete();
+        }
 
-			} catch (Throwable t) {
-				throw castToException(t);
-			}
-		}
+        void throwExceptionToForceRetryOnResult(T value) {
+            if (context.onResult(value)) {
+                throw new RetryDueToResultException();
+            }
+        }
 
-		private Exception castToException(Throwable throwable) {
-			return throwable instanceof Exception ? (Exception) throwable : new Exception(throwable);
-		}
+        void onError(Throwable throwable) throws Exception {
+            if (throwable instanceof RetryDueToResultException) {
+                return;
+            }
+            // Filter Error to not retry on it
+            if (throwable instanceof Error) {
+                throw (Error) throwable;
+            }
+            try {
+                if (throwable instanceof RetryExceptionWrapper) {
+                    context.onError(castToException(throwable.getCause()));
+                } else {
+                    context.onError(castToException(throwable));
+                }
 
-		private static class RetryDueToResultException extends RuntimeException {
-			RetryDueToResultException() {
-				super("retry due to retryOnResult predicate");
-			}
-		}
-	}
+            } catch (Throwable t) {
+                throw castToException(t);
+            }
+        }
 
-	/**
-	 * @param <T> input
-	 * @param <E> possible thrown exception
-	 */
-	@FunctionalInterface
-	public interface ThrowingConsumer<T, E extends Exception> {
-		void accept(T t) throws E;
-	}
+        private Exception castToException(Throwable throwable) {
+            return throwable instanceof Exception ? (Exception) throwable
+                : new Exception(throwable);
+        }
 
-	/**
-	 * to handle checked exception handling in reactor Function java 8 doOnNext
-	 */
-	private static <T> Consumer<T> throwingConsumerWrapper(
-			ThrowingConsumer<T, Exception> throwingConsumer) {
+        private static class RetryDueToResultException extends RuntimeException {
 
-		return i -> {
-			try {
-				throwingConsumer.accept(i);
-			} catch (Exception ex) {
-				throw new RetryExceptionWrapper(ex);
-			}
-		};
-	}
+            RetryDueToResultException() {
+                super("retry due to retryOnResult predicate");
+            }
+        }
+    }
 }

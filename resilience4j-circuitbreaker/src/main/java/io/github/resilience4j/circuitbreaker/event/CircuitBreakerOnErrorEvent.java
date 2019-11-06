@@ -28,7 +28,8 @@ public class CircuitBreakerOnErrorEvent extends AbstractCircuitBreakerEvent {
     private final Throwable throwable;
     private final Duration elapsedDuration;
 
-    public CircuitBreakerOnErrorEvent(String circuitBreakerName, Duration elapsedDuration, Throwable throwable) {
+    public CircuitBreakerOnErrorEvent(String circuitBreakerName, Duration elapsedDuration,
+        Throwable throwable) {
         super(circuitBreakerName);
         this.throwable = throwable;
         this.elapsedDuration = elapsedDuration;

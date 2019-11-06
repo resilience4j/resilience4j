@@ -34,8 +34,8 @@ public class AbstractRefreshScopedBulkheadConfigurationTest {
     @Test
     public void shouldHaveRefreshScopeAnnotation() {
         Arrays.stream(AbstractRefreshScopedBulkheadConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
@@ -43,13 +43,15 @@ public class AbstractRefreshScopedBulkheadConfigurationTest {
         BulkheadConfig bulkheadConfig = new BulkheadConfig();
 
         assertThat(bulkheadConfig.bulkheadRegistry(
-                new BulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new BulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
+            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
 
         assertThat(bulkheadConfig.threadPoolBulkheadRegistry(
-                new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
+            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
     }
 
-    static class BulkheadConfig extends AbstractRefreshScopedBulkheadConfiguration { }
+    static class BulkheadConfig extends AbstractRefreshScopedBulkheadConfiguration {
+
+    }
 }

@@ -1,9 +1,8 @@
 package io.github.resilience4j.metrics.assertion;
 
+import com.codahale.metrics.MetricRegistry;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
-
-import com.codahale.metrics.MetricRegistry;
 
 public class MetricRegistryAssert extends AbstractAssert<MetricRegistryAssert, MetricRegistry> {
 

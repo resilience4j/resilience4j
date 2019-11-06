@@ -4,9 +4,10 @@ import io.reactivex.Flowable;
 import reactor.core.publisher.Flux;
 
 public interface BulkheadReactiveDummyService {
-	String BACKEND = "backendB";
 
-	Flux<String> doSomethingFlux();
+    String BACKEND = "backendB";
 
-	Flowable<String> doSomethingFlowable();
+    Flux<String> doSomethingFlux();
+
+    Flowable<String> doSomethingFlowable();
 }

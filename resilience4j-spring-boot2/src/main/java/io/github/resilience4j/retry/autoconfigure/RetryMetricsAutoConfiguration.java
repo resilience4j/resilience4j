@@ -29,8 +29,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
 @ConditionalOnClass({MeterRegistry.class, Retry.class, TaggedRetryMetricsPublisher.class})
@@ -38,18 +38,18 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "resilience4j.retry.metrics.enabled", matchIfMissing = true)
 public class RetryMetricsAutoConfiguration {
 
-	@Bean
-	@ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "true")
-	@ConditionalOnMissingBean
-	public TaggedRetryMetrics registerRetryMetrics(RetryRegistry retryRegistry) {
-		return TaggedRetryMetrics.ofRetryRegistry(retryRegistry);
-	}
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public TaggedRetryMetrics registerRetryMetrics(RetryRegistry retryRegistry) {
+        return TaggedRetryMetrics.ofRetryRegistry(retryRegistry);
+    }
 
-	@Bean
-	@ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
-	@ConditionalOnMissingBean
-	public TaggedRetryMetricsPublisher taggedRetryMetricsPublisher(MeterRegistry meterRegistry) {
-		return new TaggedRetryMetricsPublisher(meterRegistry);
-	}
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.retry.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public TaggedRetryMetricsPublisher taggedRetryMetricsPublisher(MeterRegistry meterRegistry) {
+        return new TaggedRetryMetricsPublisher(meterRegistry);
+    }
 
 }

@@ -121,17 +121,17 @@ class RateLimiterHandlerSpec extends Specification {
         actual = client.get('a')
 
         then:
-        actual.body.text  == 'success'
+        actual.body.text == 'success'
         actual.statusCode == 200
     }
 
     // 10 events / 10 s
     def buildConfig() {
         RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(10))
-                .limitForPeriod(10)
-                .timeoutDuration(Duration.ofMillis(20))
-                .build()
+            .limitRefreshPeriod(Duration.ofSeconds(10))
+            .limitForPeriod(10)
+            .timeoutDuration(Duration.ofMillis(20))
+            .build()
     }
 
 }

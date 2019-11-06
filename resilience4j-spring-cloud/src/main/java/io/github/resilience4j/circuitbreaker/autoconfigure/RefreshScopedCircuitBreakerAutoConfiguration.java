@@ -13,9 +13,11 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass({CircuitBreaker.class, RefreshScope.class})
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(CircuitBreakerAutoConfiguration.class)
-public class RefreshScopedCircuitBreakerAutoConfiguration extends AbstractRefreshScopedCircuitBreakerConfiguration {
+public class RefreshScopedCircuitBreakerAutoConfiguration extends
+    AbstractRefreshScopedCircuitBreakerConfiguration {
 
-    public RefreshScopedCircuitBreakerAutoConfiguration(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+    public RefreshScopedCircuitBreakerAutoConfiguration(
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         super(circuitBreakerProperties);
     }
 

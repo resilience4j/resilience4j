@@ -27,19 +27,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass({GaugeMetricFamily.class, CircuitBreaker.class, CircuitBreakerMetricsPublisher.class})
+@ConditionalOnClass({GaugeMetricFamily.class, CircuitBreaker.class,
+    CircuitBreakerMetricsPublisher.class})
 @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.enabled", matchIfMissing = true)
 public class CircuitBreakerPrometheusAutoConfiguration {
 
     @Bean
     @ConditionalOnProperty(value = "resilience4j.circuitbreaker.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
-    public CircuitBreakerMetricsCollector circuitBreakerPrometheusCollector(CircuitBreakerRegistry circuitBreakerRegistry) {
-        CircuitBreakerMetricsCollector collector = CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry);
+    public CircuitBreakerMetricsCollector circuitBreakerPrometheusCollector(
+        CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreakerMetricsCollector collector = CircuitBreakerMetricsCollector
+            .ofCircuitBreakerRegistry(circuitBreakerRegistry);
         collector.register();
         return collector;
     }

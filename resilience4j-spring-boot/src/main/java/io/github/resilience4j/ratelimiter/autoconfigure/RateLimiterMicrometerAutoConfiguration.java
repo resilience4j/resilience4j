@@ -29,11 +29,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass({MetricsAutoConfiguration.class, RateLimiter.class, TaggedRateLimiterMetricsPublisher.class})
+@ConditionalOnClass({MetricsAutoConfiguration.class, RateLimiter.class,
+    TaggedRateLimiterMetricsPublisher.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterMicrometerAutoConfiguration {
@@ -41,14 +42,16 @@ public class RateLimiterMicrometerAutoConfiguration {
     @Bean
     @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
-    public TaggedRateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry) {
+    public TaggedRateLimiterMetrics registerRateLimiterMetrics(
+        RateLimiterRegistry rateLimiterRegistry) {
         return TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry);
     }
 
     @Bean
     @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher(MeterRegistry meterRegistry) {
+    public TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher(
+        MeterRegistry meterRegistry) {
         return new TaggedRateLimiterMetricsPublisher(meterRegistry);
     }
 

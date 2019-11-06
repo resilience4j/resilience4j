@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class)
 public class RateLimiterRecoveryTest {
+
     @Autowired
     @Qualifier("rateLimiterDummyService")
     TestDummyService testDummyService;
@@ -42,7 +43,8 @@ public class RateLimiterRecoveryTest {
 
     @Test
     public void testAsyncRecovery() throws Exception {
-        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS))
+            .isEqualTo("recovered");
     }
 
     @Test

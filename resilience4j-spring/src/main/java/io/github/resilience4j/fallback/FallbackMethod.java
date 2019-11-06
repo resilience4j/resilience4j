@@ -15,22 +15,24 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.github.resilience4j.core.lang.Nullable;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-
-import io.github.resilience4j.core.lang.Nullable;
-
 /**
- * Reflection utility for invoking a fallback method. Fallback method should have same return type and parameter types of original method but the last additional parameter.
- * The last additional parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#fallback(Throwable)} is invoked, {@link Throwable} will be passed to that last parameter.
- * If there are multiple fallback method, one of the methods that has most closest superclass parameter of thrown object will be invoked.
+ * Reflection utility for invoking a fallback method. Fallback method should have same return type
+ * and parameter types of original method but the last additional parameter. The last additional
+ * parameter should be a subclass of {@link Throwable}. When {@link FallbackMethod#fallback(Throwable)}
+ * is invoked, {@link Throwable} will be passed to that last parameter. If there are multiple
+ * fallback method, one of the methods that has most closest superclass parameter of thrown object
+ * will be invoked.
  * <pre>
  * For example, there are two fallback methods
  * {@code
@@ -41,6 +43,7 @@ import io.github.resilience4j.core.lang.Nullable;
  * </pre>
  */
 public class FallbackMethod {
+
     private static final Map<MethodMeta, Map<Class<?>, Method>> FALLBACK_METHODS_CACHE = new ConcurrentReferenceHashMap<>();
     private final Map<Class<?>, Method> fallbackMethods;
     private final Object[] args;
@@ -52,10 +55,12 @@ public class FallbackMethod {
      *
      * @param fallbackMethods          configured and found fallback methods for this invocation
      * @param originalMethodReturnType the return type of the original source method
-     * @param args                     arguments those were passed to the original method. They will be passed to the fallbackMethod method.
+     * @param args                     arguments those were passed to the original method. They will
+     *                                 be passed to the fallbackMethod method.
      * @param target                   target object the fallbackMethod method will be invoked
      */
-    private FallbackMethod(Map<Class<?>, Method> fallbackMethods, Class<?> originalMethodReturnType, Object[] args, Object target) {
+    private FallbackMethod(Map<Class<?>, Method> fallbackMethods, Class<?> originalMethodReturnType,
+        Object[] args, Object target) {
 
         this.fallbackMethods = fallbackMethods;
         this.args = args;
@@ -65,27 +70,79 @@ public class FallbackMethod {
 
     /**
      * @param fallbackMethodName the configured fallback method name
-     * @param originalMethod the original method which has fallback method configured
-     * @param args the original method arguments
-     * @param target the target class that own the original method and fallback method
+     * @param originalMethod     the original method which has fallback method configured
+     * @param args               the original method arguments
+     * @param target             the target class that own the original method and fallback method
      * @return FallbackMethod instance
      */
-    public static FallbackMethod create(String fallbackMethodName, Method originalMethod, Object[] args, Object target) throws NoSuchMethodException {
+    public static FallbackMethod create(String fallbackMethodName, Method originalMethod,
+        Object[] args, Object target) throws NoSuchMethodException {
         MethodMeta methodMeta = new MethodMeta(
-                fallbackMethodName,
-                originalMethod.getParameterTypes(),
-                originalMethod.getReturnType(),
-                target.getClass());
+            fallbackMethodName,
+            originalMethod.getParameterTypes(),
+            originalMethod.getReturnType(),
+            target.getClass());
 
-        Map<Class<?>, Method> methods = FALLBACK_METHODS_CACHE.computeIfAbsent(methodMeta, FallbackMethod::extractMethods);
+        Map<Class<?>, Method> methods = FALLBACK_METHODS_CACHE
+            .computeIfAbsent(methodMeta, FallbackMethod::extractMethods);
 
         if (!methods.isEmpty()) {
             return new FallbackMethod(methods, originalMethod.getReturnType(), args, target);
         } else {
             throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)",
-                    methodMeta.returnType, methodMeta.targetClass, methodMeta.fallbackMethodName,
-                    StringUtils.arrayToDelimitedString(methodMeta.params, ","), Throwable.class));
+                methodMeta.returnType, methodMeta.targetClass, methodMeta.fallbackMethodName,
+                StringUtils.arrayToDelimitedString(methodMeta.params, ","), Throwable.class));
         }
+    }
+
+    /**
+     * @param methodMeta the method meta data
+     * @return Map<Class < ?>, Method>  map of all configure fallback methods for the original
+     * method that match the fallback method name
+     */
+    private static Map<Class<?>, Method> extractMethods(MethodMeta methodMeta) {
+        Map<Class<?>, Method> methods = new HashMap<>();
+        ReflectionUtils.doWithMethods(methodMeta.targetClass,
+            method -> merge(method, methods),
+            method -> filter(method, methodMeta)
+        );
+        return methods;
+    }
+
+    private static void merge(Method method, Map<Class<?>, Method> methods) {
+        Class<?>[] fallbackParams = method.getParameterTypes();
+        Class<?> exception = fallbackParams[fallbackParams.length - 1];
+        Method similar = methods.get(exception);
+        if (similar == null || Arrays
+            .equals(similar.getParameterTypes(), method.getParameterTypes())) {
+            methods.put(exception, method);
+        } else {
+            throw new IllegalStateException(
+                "You have more that one fallback method that cover the same exception type "
+                    + exception.getName());
+        }
+    }
+
+    private static boolean filter(Method method, MethodMeta methodMeta) {
+        if (!method.getName().equals(methodMeta.fallbackMethodName)) {
+            return false;
+        }
+        if (!methodMeta.returnType.isAssignableFrom(method.getReturnType())) {
+            return false;
+        }
+        if (method.getParameterCount() == 1) {
+            return Throwable.class.isAssignableFrom(method.getParameterTypes()[0]);
+        }
+        if (method.getParameterCount() != methodMeta.params.length + 1) {
+            return false;
+        }
+        Class[] targetParams = method.getParameterTypes();
+        for (int i = 0; i < methodMeta.params.length; i++) {
+            if (methodMeta.params[i] != targetParams[i]) {
+                return false;
+            }
+        }
+        return Throwable.class.isAssignableFrom(targetParams[methodMeta.params.length]);
     }
 
     /**
@@ -135,7 +192,7 @@ public class FallbackMethod {
      * @param fallback  fallback method
      * @param throwable the thrown exception
      * @return the result object if any
-     * @throws IllegalAccessException exception
+     * @throws IllegalAccessException    exception
      * @throws InvocationTargetException exception
      */
     private Object invoke(Method fallback, Throwable throwable) throws Throwable {
@@ -145,7 +202,8 @@ public class FallbackMethod {
                 ReflectionUtils.makeAccessible(fallback);
             }
             if (args.length != 0) {
-                if (args.length == 1 && Throwable.class.isAssignableFrom(fallback.getParameterTypes()[0])) {
+                if (args.length == 1 && Throwable.class
+                    .isAssignableFrom(fallback.getParameterTypes()[0])) {
                     return fallback.invoke(target, throwable);
                 }
                 Object[] newArgs = Arrays.copyOf(args, args.length + 1);
@@ -156,65 +214,18 @@ public class FallbackMethod {
             } else {
                 return fallback.invoke(target, throwable);
             }
-        }
-        catch(InvocationTargetException e) {
+        } catch (InvocationTargetException e) {
             // We want the original fallback-method exception to propagate instead:
             throw e.getCause();
-        }
-        finally {
+        } finally {
             if (!accessible) {
                 fallback.setAccessible(false);
             }
         }
     }
 
-    /**
-     * @param methodMeta the method meta data
-     * @return Map<Class < ?>, Method>  map of all configure fallback methods for the original method that match the fallback method name
-     */
-    private static Map<Class<?>, Method> extractMethods(MethodMeta methodMeta) {
-        Map<Class<?>, Method> methods = new HashMap<>();
-        ReflectionUtils.doWithMethods(methodMeta.targetClass,
-                method -> merge(method, methods),
-                method -> filter(method, methodMeta)
-        );
-        return methods;
-    }
-
-    private static void merge(Method method, Map<Class<?>, Method> methods) {
-        Class<?>[] fallbackParams = method.getParameterTypes();
-        Class<?> exception = fallbackParams[fallbackParams.length - 1];
-        Method similar = methods.get(exception);
-        if (similar == null || Arrays.equals(similar.getParameterTypes(), method.getParameterTypes())) {
-            methods.put(exception, method);
-        } else {
-            throw new IllegalStateException("You have more that one fallback method that cover the same exception type " + exception.getName());
-        }
-    }
-
-    private static boolean filter(Method method, MethodMeta methodMeta) {
-        if (!method.getName().equals(methodMeta.fallbackMethodName)) {
-            return false;
-        }
-        if (!methodMeta.returnType.isAssignableFrom(method.getReturnType())) {
-            return false;
-        }
-        if (method.getParameterCount() == 1) {
-            return Throwable.class.isAssignableFrom(method.getParameterTypes()[0]);
-        }
-        if (method.getParameterCount() != methodMeta.params.length + 1) {
-            return false;
-        }
-        Class[] targetParams = method.getParameterTypes();
-        for (int i = 0; i < methodMeta.params.length; i++) {
-            if (methodMeta.params[i] != targetParams[i]) {
-                return false;
-            }
-        }
-        return Throwable.class.isAssignableFrom(targetParams[methodMeta.params.length]);
-    }
-
     private static class MethodMeta {
+
         final String fallbackMethodName;
         final Class<?>[] params;
         final Class<?> returnType;
@@ -224,9 +235,11 @@ public class FallbackMethod {
          * @param fallbackMethodName the configured fallback method name
          * @param returnType         the original method return type
          * @param params             the original method arguments
-         * @param targetClass        the target class that own the original method and fallback method
+         * @param targetClass        the target class that own the original method and fallback
+         *                           method
          */
-        MethodMeta(String fallbackMethodName, Class<?>[] params, Class<?> returnType, Class<?> targetClass) {
+        MethodMeta(String fallbackMethodName, Class<?>[] params, Class<?> returnType,
+            Class<?> targetClass) {
             this.fallbackMethodName = fallbackMethodName;
             this.params = params;
             this.returnType = returnType;
@@ -235,13 +248,17 @@ public class FallbackMethod {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             MethodMeta that = (MethodMeta) o;
             return targetClass.equals(that.targetClass) &&
-                    fallbackMethodName.equals(that.fallbackMethodName) &&
-                    returnType.equals(that.returnType) &&
-                    Arrays.equals(params, that.params);
+                fallbackMethodName.equals(that.fallbackMethodName) &&
+                returnType.equals(that.returnType) &&
+                Arrays.equals(params, that.params);
         }
 
         @Override

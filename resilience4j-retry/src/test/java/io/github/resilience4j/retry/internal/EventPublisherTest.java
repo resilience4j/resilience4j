@@ -44,7 +44,7 @@ public class EventPublisherTest {
     private long sleptTime = 0L;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
@@ -54,48 +54,54 @@ public class EventPublisherTest {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
-                .map(RetryEvent::getEventType)
-                .test();
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .map(RetryEvent::getEventType)
+            .test();
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
 
         then(helloWorldService).should(times(3)).sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
         testSubscriber.assertValueCount(3)
-                .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.RETRY, RetryEvent.Type.ERROR);
+            .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.RETRY, RetryEvent.Type.ERROR);
     }
 
     @Test
     public void shouldReturnAfterTwoAttempts() {
-        willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService).sayHelloWorld();
+        willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService)
+            .sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
-                .map(RetryEvent::getEventType)
-                .test();
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .map(RetryEvent::getEventType)
+            .test();
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
 
         then(helloWorldService).should(times(2)).sayHelloWorld();
         assertThat(result.isSuccess()).isTrue();
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
-        testSubscriber.assertValueCount(2).assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.SUCCESS);
+        testSubscriber.assertValueCount(2)
+            .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.SUCCESS);
     }
 
     @Test
     public void shouldIgnoreError() {
-        willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService).sayHelloWorld();
+        willThrow(new HelloWorldException()).willDoNothing().given(helloWorldService)
+            .sayHelloWorld();
         RetryConfig config = RetryConfig.custom()
-                .retryOnException(t -> t instanceof IOException)
-                .maxAttempts(3).build();
+            .retryOnException(t -> t instanceof IOException)
+            .maxAttempts(3).build();
         Retry retry = Retry.of("id", config);
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
-                .map(RetryEvent::getEventType)
-                .test();
-        CheckedRunnable retryableRunnable = Retry.decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .map(RetryEvent::getEventType)
+            .test();
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
 

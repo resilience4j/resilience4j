@@ -15,18 +15,17 @@
  */
 package io.github.resilience4j.bulkhead.monitoring.endpoint;
 
-import java.util.List;
-
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.ResponseEntity;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import java.util.List;
 
 
 /**
@@ -38,7 +37,8 @@ public class BulkheadEndpoint extends AbstractEndpoint {
     private final BulkheadRegistry bulkheadRegistry;
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
-    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         super("bulkhead");
         this.bulkheadRegistry = bulkheadRegistry;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
@@ -47,11 +47,11 @@ public class BulkheadEndpoint extends AbstractEndpoint {
     @Override
     public ResponseEntity<BulkheadEndpointResponse> invoke() {
         List<String> bulkheads = bulkheadRegistry.getAllBulkheads()
-                .map(Bulkhead::getName)
-                .appendAll(threadPoolBulkheadRegistry.getAllBulkheads()
-                        .map(ThreadPoolBulkhead::getName))
-                .sorted()
-                .toJavaList();
+            .map(Bulkhead::getName)
+            .appendAll(threadPoolBulkheadRegistry.getAllBulkheads()
+                .map(ThreadPoolBulkhead::getName))
+            .sorted()
+            .toJavaList();
         return ResponseEntity.ok(new BulkheadEndpointResponse(bulkheads));
     }
 }

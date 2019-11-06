@@ -23,8 +23,8 @@ import java.time.ZonedDateTime;
 public abstract class AbstractTimeLimiterEvent implements TimeLimiterEvent {
 
     private final String timeLimiterName;
-    private Type eventType;
     private final ZonedDateTime creationTime;
+    private Type eventType;
 
     AbstractTimeLimiterEvent(String timeLimiterName, Type eventType) {
         this.timeLimiterName = timeLimiterName;
@@ -50,9 +50,9 @@ public abstract class AbstractTimeLimiterEvent implements TimeLimiterEvent {
     @Override
     public String toString() {
         return "TimeLimiterEvent{" +
-                "type=" + getEventType() +
-                ", timeLimiterName='" + getTimeLimiterName() + '\'' +
-                ", creationTime=" + getCreationTime() +
-                '}';
+            "type=" + getEventType() +
+            ", timeLimiterName='" + getTimeLimiterName() + '\'' +
+            ", creationTime=" + getCreationTime() +
+            '}';
     }
 }

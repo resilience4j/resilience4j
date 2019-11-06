@@ -26,15 +26,17 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
-public class CircuitBreakerConfigurationOnMissingBean extends AbstractCircuitBreakerConfigurationOnMissingBean {
+public class CircuitBreakerConfigurationOnMissingBean extends
+    AbstractCircuitBreakerConfigurationOnMissingBean {
 
-	public CircuitBreakerConfigurationOnMissingBean(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
-		super(circuitBreakerProperties);
-	}
+    public CircuitBreakerConfigurationOnMissingBean(
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        super(circuitBreakerProperties);
+    }
 
-	@Bean
-	public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
-		return circuitBreakerConfiguration.eventConsumerRegistry();
-	}
+    @Bean
+    public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
+        return circuitBreakerConfiguration.eventConsumerRegistry();
+    }
 
 }

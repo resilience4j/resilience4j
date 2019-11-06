@@ -42,8 +42,8 @@ public class CacheOnMissEvent<K> extends AbstractCacheEvent {
     @Override
     public String toString() {
         return String.format("%s: Cache '%s' recorded a cache miss on cache key '%s'.",
-                getCreationTime(),
-                getCacheName(),
-                getCacheKey().toString());
+            getCreationTime(),
+            getCacheName(),
+            getCacheKey().toString());
     }
 }

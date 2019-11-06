@@ -34,11 +34,11 @@ public class ThreadPoolBulkheadConfigTest {
         int queueCapacity = 50;
 
         ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(maxThreadPoolSize)
-                .coreThreadPoolSize(coreThreadPoolSize)
-                .queueCapacity(queueCapacity)
-                .keepAliveDuration(Duration.ofMillis(maxWait))
-                .build();
+            .maxThreadPoolSize(maxThreadPoolSize)
+            .coreThreadPoolSize(coreThreadPoolSize)
+            .queueCapacity(queueCapacity)
+            .keepAliveDuration(Duration.ofMillis(maxWait))
+            .build();
 
         assertThat(config).isNotNull();
         assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
@@ -47,63 +47,64 @@ public class ThreadPoolBulkheadConfigTest {
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
     }
 
-	@Test
-	public void testCreateFromBaseConfig() {
-		int maxThreadPoolSize = 20;
-		int coreThreadPoolSize = 2;
-		long maxWait = 555;
-		int queueCapacity = 50;
+    @Test
+    public void testCreateFromBaseConfig() {
+        int maxThreadPoolSize = 20;
+        int coreThreadPoolSize = 2;
+        long maxWait = 555;
+        int queueCapacity = 50;
 
-		ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.from(ThreadPoolBulkheadConfig.custom().build())
-				.maxThreadPoolSize(maxThreadPoolSize)
-				.coreThreadPoolSize(coreThreadPoolSize)
-				.queueCapacity(queueCapacity)
-                .keepAliveDuration(Duration.ofMillis(maxWait))
-				.build();
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig
+            .from(ThreadPoolBulkheadConfig.custom().build())
+            .maxThreadPoolSize(maxThreadPoolSize)
+            .coreThreadPoolSize(coreThreadPoolSize)
+            .queueCapacity(queueCapacity)
+            .keepAliveDuration(Duration.ofMillis(maxWait))
+            .build();
 
-		assertThat(config).isNotNull();
-		assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
-		assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
-		assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
-		assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
-	}
+        assertThat(config).isNotNull();
+        assertThat(config.getMaxThreadPoolSize()).isEqualTo(maxThreadPoolSize);
+        assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
+        assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
+        assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalMaxThreadPoolSize() {
         ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(-1)
-                .build();
+            .maxThreadPoolSize(-1)
+            .build();
 
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalCoreThreadPoolSize() {
         ThreadPoolBulkheadConfig.custom()
-                .coreThreadPoolSize(-1)
-                .build();
+            .coreThreadPoolSize(-1)
+            .build();
 
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalMaxWait() {
         ThreadPoolBulkheadConfig.custom()
-                .keepAliveDuration(Duration.ofMillis(-1))
-                .build();
+            .keepAliveDuration(Duration.ofMillis(-1))
+            .build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalQueueCapacity() {
         ThreadPoolBulkheadConfig.custom()
-                .queueCapacity(-1)
-                .build();
+            .queueCapacity(-1)
+            .build();
     }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testBuildWithIllegalMaxCoreThreads() {
-		ThreadPoolBulkheadConfig.custom()
-				.maxThreadPoolSize(1)
-				.coreThreadPoolSize(2)
-				.build();
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuildWithIllegalMaxCoreThreads() {
+        ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(1)
+            .coreThreadPoolSize(2)
+            .build();
+    }
 
 }

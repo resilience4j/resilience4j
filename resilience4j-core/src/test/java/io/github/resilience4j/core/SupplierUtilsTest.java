@@ -23,7 +23,8 @@ public class SupplierUtilsTest {
         Supplier<String> supplier = () -> {
             throw new RuntimeException("BAM!");
         };
-        Supplier<String> supplierWithRecovery = SupplierUtils.andThen(supplier, (result, ex) -> "Bla");
+        Supplier<String> supplierWithRecovery = SupplierUtils
+            .andThen(supplier, (result, ex) -> "Bla");
 
         String result = supplierWithRecovery.get();
 
@@ -35,7 +36,8 @@ public class SupplierUtilsTest {
         Supplier<String> supplier = () -> {
             throw new RuntimeException("BAM!");
         };
-        Supplier<String> supplierWithRecovery = SupplierUtils.andThen(supplier, (result) -> result, ex -> "Bla");
+        Supplier<String> supplierWithRecovery = SupplierUtils
+            .andThen(supplier, (result) -> result, ex -> "Bla");
 
         String result = supplierWithRecovery.get();
 

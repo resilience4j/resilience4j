@@ -1,1 +1,1 @@
-ext.moduleName='io.github.resilience4j.circularbuffer'
+ext.moduleName = 'io.github.resilience4j.circularbuffer'

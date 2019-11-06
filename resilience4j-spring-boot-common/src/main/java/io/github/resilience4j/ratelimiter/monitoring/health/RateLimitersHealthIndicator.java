@@ -27,7 +27,7 @@ import org.springframework.boot.actuate.health.Status;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties.*;
+import static io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties.InstanceProperties;
 
 public class RateLimitersHealthIndicator implements HealthIndicator {
 
@@ -36,26 +36,34 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
     private final HealthAggregator healthAggregator;
 
     public RateLimitersHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
-                                       RateLimiterConfigurationProperties rateLimiterProperties,
-                                       HealthAggregator healthAggregator) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        HealthAggregator healthAggregator) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.rateLimiterProperties = rateLimiterProperties;
         this.healthAggregator = healthAggregator;
     }
 
+    private static Health rateLimiterHealth(Status status, int availablePermissions,
+        int numberOfWaitingThreads) {
+        return Health.status(status)
+            .withDetail("availablePermissions", availablePermissions)
+            .withDetail("numberOfWaitingThreads", numberOfWaitingThreads)
+            .build();
+    }
+
     @Override
     public Health health() {
         Map<String, Health> healths = rateLimiterRegistry.getAllRateLimiters().toJavaStream()
-                .filter(this::isRegisterHealthIndicator)
-                .collect(Collectors.toMap(RateLimiter::getName, this::mapRateLimiterHealth));
+            .filter(this::isRegisterHealthIndicator)
+            .collect(Collectors.toMap(RateLimiter::getName, this::mapRateLimiterHealth));
 
         return healthAggregator.aggregate(healths);
     }
 
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {
         return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
-                .map(InstanceProperties::getRegisterHealthIndicator)
-                .orElse(false);
+            .map(InstanceProperties::getRegisterHealthIndicator)
+            .orElse(false);
     }
 
     private Health mapRateLimiterHealth(RateLimiter rateLimiter) {
@@ -69,18 +77,12 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
         }
         if (rateLimiter instanceof AtomicRateLimiter) {
             AtomicRateLimiter atomicRateLimiter = (AtomicRateLimiter) rateLimiter;
-            AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter.getDetailedMetrics();
+            AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter
+                .getDetailedMetrics();
             if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
                 return rateLimiterHealth(Status.DOWN, availablePermissions, numberOfWaitingThreads);
             }
         }
         return rateLimiterHealth(Status.UNKNOWN, availablePermissions, numberOfWaitingThreads);
-    }
-
-    private static Health rateLimiterHealth(Status status, int availablePermissions, int numberOfWaitingThreads) {
-        return Health.status(status)
-            .withDetail("availablePermissions", availablePermissions)
-            .withDetail("numberOfWaitingThreads", numberOfWaitingThreads)
-            .build();
     }
 }

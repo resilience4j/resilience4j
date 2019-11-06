@@ -19,7 +19,8 @@ package io.github.resilience4j.reactor.retry;
  * retry runtime exception wrapper for the thrown checked exception
  */
 public class RetryExceptionWrapper extends RuntimeException {
-	public RetryExceptionWrapper(Exception e) {
-		super(e);
-	}
+
+    public RetryExceptionWrapper(Exception e) {
+        super(e);
+    }
 }
