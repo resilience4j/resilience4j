@@ -36,7 +36,7 @@ suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
     return try {
         block().also { onComplete() }
     } catch (e: Throwable) {
-        if (isCancellation(coroutineContext,e)) {
+        if (isCancellation(coroutineContext, e)) {
             releasePermission()
         } else {
             onComplete()
@@ -44,6 +44,7 @@ suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
         throw e
     }
 }
+
 /**
  * Decorates the given suspend function [block] and returns it.
  *
@@ -61,11 +62,11 @@ fun <T> Bulkhead.decorateSuspendFunction(block: suspend () -> T): suspend () -> 
  * the confines of a dispatcher specialized for blocking calls.
  *
  */
-internal suspend fun Bulkhead.acquirePermissionSuspend(){
+internal suspend fun Bulkhead.acquirePermissionSuspend() {
     // Fast path. Avoid dispatch context switch.
-    if(bulkheadConfig.maxWaitDuration.isZero){
+    if (bulkheadConfig.maxWaitDuration.isZero) {
         acquirePermission()
-    }else{
-        withContext(Dispatchers.IO){ acquirePermission() }
+    } else {
+        withContext(Dispatchers.IO) { acquirePermission() }
     }
 }

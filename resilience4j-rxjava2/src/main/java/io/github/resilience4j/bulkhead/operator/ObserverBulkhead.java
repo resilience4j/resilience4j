@@ -22,8 +22,6 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
-
 class ObserverBulkhead<T> extends Observable<T> {
 
     private final Observable<T> upstream;
@@ -36,13 +34,14 @@ class ObserverBulkhead<T> extends Observable<T> {
 
     @Override
     protected void subscribeActual(Observer<? super T> downstream) {
-        if(bulkhead.tryAcquirePermission()){
+        if (bulkhead.tryAcquirePermission()) {
             upstream.subscribe(new BulkheadObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
         }
     }
+
     class BulkheadObserver extends AbstractObserver<T> {
 
         BulkheadObserver(Observer<? super T> downstreamObserver) {

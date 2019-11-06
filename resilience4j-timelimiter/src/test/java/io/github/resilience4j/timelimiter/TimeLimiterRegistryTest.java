@@ -1,10 +1,6 @@
 package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-
-import java.time.Duration;
-import java.util.*;
-
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.EntryAddedEvent;
@@ -13,18 +9,30 @@ import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.util.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class TimeLimiterRegistryTest {
 
+    private static Optional<EventProcessor<?>> getEventProcessor(
+        Registry.EventPublisher<TimeLimiter> eventPublisher) {
+        if (eventPublisher instanceof EventProcessor<?>) {
+            return Optional.of((EventProcessor<?>) eventPublisher);
+        }
+
+        return Optional.empty();
+    }
+
     @Test
     public void testCreateWithCustomConfig() {
         TimeLimiterConfig config = TimeLimiterConfig.custom()
-                .cancelRunningFuture(false)
-                .timeoutDuration(Duration.ofMillis(500))
-                .build();
+            .cancelRunningFuture(false)
+            .timeoutDuration(Duration.ofMillis(500))
+            .build();
 
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(config);
 
@@ -57,10 +65,11 @@ public class TimeLimiterRegistryTest {
 
     @Test
     public void testCreateWithSingleRegistryEventConsumer() {
-        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(), new NoOpTimeLimiterEventConsumer());
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+            .of(TimeLimiterConfig.ofDefaults(), new NoOpTimeLimiterEventConsumer());
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -69,10 +78,11 @@ public class TimeLimiterRegistryTest {
         registryEventConsumers.add(new NoOpTimeLimiterEventConsumer());
         registryEventConsumers.add(new NoOpTimeLimiterEventConsumer());
 
-        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(TimeLimiterConfig.ofDefaults(), registryEventConsumers);
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+            .of(TimeLimiterConfig.ofDefaults(), registryEventConsumers);
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -80,10 +90,11 @@ public class TimeLimiterRegistryTest {
         Map<String, TimeLimiterConfig> configs = new HashMap<>();
         configs.put("custom", TimeLimiterConfig.ofDefaults());
 
-        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(configs, new NoOpTimeLimiterEventConsumer());
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+            .of(configs, new NoOpTimeLimiterEventConsumer());
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -95,10 +106,11 @@ public class TimeLimiterRegistryTest {
         registryEventConsumers.add(new NoOpTimeLimiterEventConsumer());
         registryEventConsumers.add(new NoOpTimeLimiterEventConsumer());
 
-        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(configs, registryEventConsumers);
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+            .of(configs, registryEventConsumers);
 
         getEventProcessor(timeLimiterRegistry.getEventPublisher())
-                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
     }
 
     @Test
@@ -115,25 +127,22 @@ public class TimeLimiterRegistryTest {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
 
         assertThatThrownBy(() -> timeLimiterRegistry.timeLimiter("test", "doesNotExist"))
-                .isInstanceOf(ConfigurationNotFoundException.class);
+            .isInstanceOf(ConfigurationNotFoundException.class);
     }
 
-    private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<TimeLimiter> eventPublisher) {
-        if (eventPublisher instanceof EventProcessor<?>) {
-            return Optional.of((EventProcessor<?>) eventPublisher);
+    private static class NoOpTimeLimiterEventConsumer implements
+        RegistryEventConsumer<TimeLimiter> {
+
+        @Override
+        public void onEntryAddedEvent(EntryAddedEvent<TimeLimiter> entryAddedEvent) {
         }
 
-        return Optional.empty();
-    }
-
-    private static class NoOpTimeLimiterEventConsumer implements RegistryEventConsumer<TimeLimiter> {
         @Override
-        public void onEntryAddedEvent(EntryAddedEvent<TimeLimiter> entryAddedEvent) { }
+        public void onEntryRemovedEvent(EntryRemovedEvent<TimeLimiter> entryRemoveEvent) {
+        }
 
         @Override
-        public void onEntryRemovedEvent(EntryRemovedEvent<TimeLimiter> entryRemoveEvent) { }
-
-        @Override
-        public void onEntryReplacedEvent(EntryReplacedEvent<TimeLimiter> entryReplacedEvent) { }
+        public void onEntryReplacedEvent(EntryReplacedEvent<TimeLimiter> entryReplacedEvent) {
+        }
     }
 }

@@ -37,7 +37,8 @@ public class RefreshScopedAutoConfigurationTest {
 
     @Test
     public void refreshScopedCircuitBreakerRegistry() {
-        load(RefreshScopedCircuitBreakerAutoConfiguration.class, CircuitBreakerAutoConfiguration.class);
+        load(RefreshScopedCircuitBreakerAutoConfiguration.class,
+            CircuitBreakerAutoConfiguration.class);
         testRefreshScoped("circuitBreakerRegistry");
     }
 

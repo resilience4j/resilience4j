@@ -38,11 +38,11 @@ public class CircuitBreakerEventDTO {
     }
 
     CircuitBreakerEventDTO(String circuitBreakerName,
-                           CircuitBreakerEvent.Type type,
-                           String creationTime,
-                           @Nullable String errorMessage,
-                           @Nullable Long durationInMs,
-                           @Nullable CircuitBreaker.StateTransition stateTransition) {
+        CircuitBreakerEvent.Type type,
+        String creationTime,
+        @Nullable String errorMessage,
+        @Nullable Long durationInMs,
+        @Nullable CircuitBreaker.StateTransition stateTransition) {
         this.circuitBreakerName = circuitBreakerName;
         this.type = type;
         this.creationTime = creationTime;

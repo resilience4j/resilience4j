@@ -35,9 +35,9 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
         onSuccess(durationInNanos, TimeUnit.NANOSECONDS)
         return result
     } catch (exception: Throwable) {
-        if(isCancellation(coroutineContext, exception)){
+        if (isCancellation(coroutineContext, exception)) {
             releasePermission()
-        }else{
+        } else {
             val durationInNanos = System.nanoTime() - start
             onError(durationInNanos, TimeUnit.NANOSECONDS, exception)
         }

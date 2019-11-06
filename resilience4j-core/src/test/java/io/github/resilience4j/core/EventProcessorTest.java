@@ -32,12 +32,12 @@ public class EventProcessorTest {
     private Logger logger;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         logger = mock(Logger.class);
     }
 
     @Test
-    public void testRegisterOnEventConsumer(){
+    public void testRegisterOnEventConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Number> eventConsumer = event -> logger.info(event.toString());
 

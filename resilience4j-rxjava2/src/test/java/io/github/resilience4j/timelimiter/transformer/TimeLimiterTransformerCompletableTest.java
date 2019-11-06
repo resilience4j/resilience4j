@@ -24,13 +24,12 @@ import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.junit.Rule;
-import org.junit.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -48,57 +47,57 @@ public class TimeLimiterTransformerCompletableTest {
     @Test
     public void otherError() {
         given(helloWorldService.returnHelloWorld())
-                .willThrow(new RuntimeException());
+            .willThrow(new RuntimeException());
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Completable.fromRunnable(helloWorldService::returnHelloWorld)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertError(RuntimeException.class);
         then(timeLimiter).should()
-                .onError(any(RuntimeException.class));
+            .onError(any(RuntimeException.class));
     }
 
     @Test
     public void timeout() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Maybe.timer(1, TimeUnit.MINUTES)
-                .flatMapCompletable(t -> Completable.complete())
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .flatMapCompletable(t -> Completable.complete())
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertError(TimeoutException.class);
         then(timeLimiter).should()
-                .onError(any(TimeoutException.class));
+            .onError(any(TimeoutException.class));
     }
 
     @Test
     public void doNotTimeout() {
         given(helloWorldService.returnHelloWorld())
-                .willReturn("hello");
+            .willReturn("hello");
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ofMinutes(1)));
+            .willReturn(toConfig(Duration.ofMinutes(1)));
         TestObserver<?> observer = Completable.fromRunnable(helloWorldService::returnHelloWorld)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertComplete();
         then(timeLimiter).should()
-                .onSuccess();
+            .onSuccess();
     }
 
     private TimeLimiterConfig toConfig(Duration timeout) {
         return TimeLimiterConfig.custom()
-                .timeoutDuration(timeout)
-                .build();
+            .timeoutDuration(timeout)
+            .build();
     }
 
 }

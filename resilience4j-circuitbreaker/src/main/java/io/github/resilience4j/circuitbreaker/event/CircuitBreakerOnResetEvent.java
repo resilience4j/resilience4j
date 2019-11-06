@@ -21,7 +21,7 @@ package io.github.resilience4j.circuitbreaker.event;
 /**
  * A CircuitBreakerEvent which informs about a reset.
  */
-public class CircuitBreakerOnResetEvent extends AbstractCircuitBreakerEvent{
+public class CircuitBreakerOnResetEvent extends AbstractCircuitBreakerEvent {
 
     public CircuitBreakerOnResetEvent(String circuitBreakerName) {
         super(circuitBreakerName);
@@ -33,10 +33,10 @@ public class CircuitBreakerOnResetEvent extends AbstractCircuitBreakerEvent{
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return String.format("%s: CircuitBreaker '%s' reset",
-                getCreationTime(),
-                getCircuitBreakerName());
+            getCreationTime(),
+            getCircuitBreakerName());
 
     }
 }

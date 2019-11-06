@@ -9,6 +9,7 @@ import java.io.IOException;
 @CircuitBreaker(name = DummyService.BACKEND)
 @Component("circuitBreakerDummyService")
 public class CircuitBreakerDummyServiceImpl implements DummyService {
+
     @Override
     public void doSomething(boolean throwBackendTrouble) throws IOException {
         if (throwBackendTrouble) {

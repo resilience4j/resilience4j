@@ -35,52 +35,55 @@ import java.util.Comparator;
 @Endpoint(id = "retryevents")
 public class RetryEventsEndpoint {
 
-	private final EventConsumerRegistry<RetryEvent> eventConsumerRegistry;
+    private final EventConsumerRegistry<RetryEvent> eventConsumerRegistry;
 
-	public RetryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
-		this.eventConsumerRegistry = eventConsumerRegistry;
-	}
+    public RetryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+        this.eventConsumerRegistry = eventConsumerRegistry;
+    }
 
-	/**
-	 * @return all retry generated events
-	 */
-	@ReadOperation
-	public RetryEventsEndpointResponse getAllRetryEvenets() {
-		return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
-				.flatMap(CircularEventConsumer::getBufferedEvents)
-				.sorted(Comparator.comparing(RetryEvent::getCreationTime))
-				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
-	}
+    /**
+     * @return all retry generated events
+     */
+    @ReadOperation
+    public RetryEventsEndpointResponse getAllRetryEvenets() {
+        return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(RetryEvent::getCreationTime))
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+    }
 
-	/**
-	 * @param name backend name
-	 * @return the retry events generated for this backend
-	 */
-	@ReadOperation
-	public RetryEventsEndpointResponse getEventsFilteredByRetryrName(@Selector String name) {
-		return new RetryEventsEndpointResponse(getRetryEvents(name)
-				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
-	}
+    /**
+     * @param name backend name
+     * @return the retry events generated for this backend
+     */
+    @ReadOperation
+    public RetryEventsEndpointResponse getEventsFilteredByRetryrName(@Selector String name) {
+        return new RetryEventsEndpointResponse(getRetryEvents(name)
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+    }
 
-	/**
-	 * @param name      backend name
-	 * @param eventType retry event type
-	 * @return the matching generated retry events
-	 */
-	@ReadOperation
-	public RetryEventsEndpointResponse getEventsFilteredByRetryNameAndEventType(@Selector String name, @Selector String eventType) {
-		return new RetryEventsEndpointResponse(getRetryEvents(name)
-				.filter(event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()))
-				.map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
-	}
+    /**
+     * @param name      backend name
+     * @param eventType retry event type
+     * @return the matching generated retry events
+     */
+    @ReadOperation
+    public RetryEventsEndpointResponse getEventsFilteredByRetryNameAndEventType(
+        @Selector String name, @Selector String eventType) {
+        return new RetryEventsEndpointResponse(getRetryEvents(name)
+            .filter(
+                event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()))
+            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+    }
 
-	private List<RetryEvent> getRetryEvents(String name) {
-		final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry.getEventConsumer(name);
-		if (syncEvents != null) {
-			return syncEvents.getBufferedEvents()
-					.filter(event -> event.getName().equals(name));
-		} else {
-			return List.empty();
-		}
-	}
+    private List<RetryEvent> getRetryEvents(String name) {
+        final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry
+            .getEventConsumer(name);
+        if (syncEvents != null) {
+            return syncEvents.getBufferedEvents()
+                .filter(event -> event.getName().equals(name));
+        } else {
+            return List.empty();
+        }
+    }
 }

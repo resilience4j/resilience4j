@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
 @ConditionalOnClass({MetricRegistry.class, RateLimiter.class, RateLimiterMetricsPublisher.class})
@@ -41,18 +41,19 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.enabled", matchIfMissing = true)
 public class RateLimiterMetricsAutoConfiguration {
 
-	@Bean
-	@ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "true")
-	@ConditionalOnMissingBean
-	public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry, MetricRegistry metricRegistry) {
-		return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry, metricRegistry);
-	}
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public RateLimiterMetrics registerRateLimiterMetrics(RateLimiterRegistry rateLimiterRegistry,
+        MetricRegistry metricRegistry) {
+        return RateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry, metricRegistry);
+    }
 
-	@Bean
-	@ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
-	@ConditionalOnMissingBean
-	public RateLimiterMetricsPublisher rateLimiterMetricsPublisher(MetricRegistry metricRegistry) {
-		return new RateLimiterMetricsPublisher(metricRegistry);
-	}
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.ratelimiter.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public RateLimiterMetricsPublisher rateLimiterMetricsPublisher(MetricRegistry metricRegistry) {
+        return new RateLimiterMetricsPublisher(metricRegistry);
+    }
 
 }

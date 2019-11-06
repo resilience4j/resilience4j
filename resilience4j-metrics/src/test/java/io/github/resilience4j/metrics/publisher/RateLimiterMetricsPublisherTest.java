@@ -27,7 +27,8 @@ public class RateLimiterMetricsPublisherTest extends AbstractRateLimiterMetricsT
     @Override
     protected RateLimiter givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
         RateLimiterRegistry rateLimiterRegistry =
-                RateLimiterRegistry.of(RateLimiterConfig.ofDefaults(), new RateLimiterMetricsPublisher(prefix, metricRegistry));
+            RateLimiterRegistry.of(RateLimiterConfig.ofDefaults(),
+                new RateLimiterMetricsPublisher(prefix, metricRegistry));
 
         return rateLimiterRegistry.rateLimiter("testLimit");
     }
@@ -35,7 +36,8 @@ public class RateLimiterMetricsPublisherTest extends AbstractRateLimiterMetricsT
     @Override
     protected RateLimiter givenMetricRegistry(MetricRegistry metricRegistry) {
         RateLimiterRegistry rateLimiterRegistry =
-                RateLimiterRegistry.of(RateLimiterConfig.ofDefaults(), new RateLimiterMetricsPublisher(metricRegistry));
+            RateLimiterRegistry.of(RateLimiterConfig.ofDefaults(),
+                new RateLimiterMetricsPublisher(metricRegistry));
 
         return rateLimiterRegistry.rateLimiter("testLimit");
     }

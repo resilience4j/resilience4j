@@ -6,20 +6,21 @@ import java.util.List;
  * retry get all retries response DTO
  */
 public class RetryEndpointResponse {
-	private List<String> retries;
 
-	public RetryEndpointResponse() {
-	}
+    private List<String> retries;
 
-	public RetryEndpointResponse(List<String> retries) {
-		this.retries = retries;
-	}
+    public RetryEndpointResponse() {
+    }
 
-	public List<String> getRetries() {
-		return retries;
-	}
+    public RetryEndpointResponse(List<String> retries) {
+        this.retries = retries;
+    }
 
-	public void setRetries(List<String> retries) {
-		this.retries = retries;
-	}
+    public List<String> getRetries() {
+        return retries;
+    }
+
+    public void setRetries(List<String> retries) {
+        this.retries = retries;
+    }
 }

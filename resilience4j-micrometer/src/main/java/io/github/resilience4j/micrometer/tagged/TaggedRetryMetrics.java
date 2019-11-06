@@ -28,6 +28,13 @@ import static java.util.Objects.requireNonNull;
  */
 public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBinder {
 
+    private final RetryRegistry retryRegistry;
+
+    private TaggedRetryMetrics(MetricNames names, RetryRegistry retryRegistry) {
+        super(names);
+        this.retryRegistry = requireNonNull(retryRegistry);
+    }
+
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
@@ -41,19 +48,13 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
-     * @param names custom metric names
+     * @param names         custom metric names
      * @param retryRegistry the source of retries
      * @return The {@link TaggedRetryMetrics} instance.
      */
-    public static TaggedRetryMetrics ofRetryRegistry(MetricNames names, RetryRegistry retryRegistry) {
+    public static TaggedRetryMetrics ofRetryRegistry(MetricNames names,
+        RetryRegistry retryRegistry) {
         return new TaggedRetryMetrics(names, retryRegistry);
-    }
-
-    private final RetryRegistry retryRegistry;
-
-    private TaggedRetryMetrics(MetricNames names, RetryRegistry retryRegistry) {
-        super(names);
-        this.retryRegistry = requireNonNull(retryRegistry);
     }
 
     @Override
@@ -61,8 +62,10 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
         for (Retry retry : retryRegistry.getAllRetries()) {
             addMetrics(registry, retry);
         }
-        retryRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        retryRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        retryRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        retryRegistry.getEventPublisher()
+            .onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         retryRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

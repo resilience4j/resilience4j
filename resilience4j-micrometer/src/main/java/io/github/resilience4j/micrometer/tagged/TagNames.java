@@ -15,10 +15,13 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-/** Common constants for metric binder implementations based on tags. */
+/**
+ * Common constants for metric binder implementations based on tags.
+ */
 public final class TagNames {
-    private TagNames() {}
 
     public static final String NAME = "name";
     public static final String KIND = "kind";
+    private TagNames() {
+    }
 }

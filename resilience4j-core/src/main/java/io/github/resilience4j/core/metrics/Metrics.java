@@ -25,9 +25,9 @@ public interface Metrics {
     /**
      * Records a call.
      *
-     * @param duration the duration of the call
+     * @param duration     the duration of the call
      * @param durationUnit the time unit of the duration
-     * @param outcome the outcome of the call
+     * @param outcome      the outcome of the call
      */
     Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome);
 
@@ -38,8 +38,7 @@ public interface Metrics {
      */
     Snapshot getSnapshot();
 
-    enum Outcome
-    {
+    enum Outcome {
         SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR
     }
 

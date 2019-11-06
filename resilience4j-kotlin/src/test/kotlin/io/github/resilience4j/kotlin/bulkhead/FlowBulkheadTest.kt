@@ -57,7 +57,7 @@ class FlowBulkheadTest {
 
             //When
             flow {
-                repeat(3){
+                repeat(3) {
                     emit(it)
                 }
             }
@@ -66,7 +66,7 @@ class FlowBulkheadTest {
 
 
             //Then
-            repeat(3){
+            repeat(3) {
                 assertThat(resultList[it]).isEqualTo(it)
             }
             assertThat(permittedEvents).isEqualTo(1)
@@ -150,7 +150,7 @@ class FlowBulkheadTest {
             //When
             try {
                 flow {
-                    repeat(3){
+                    repeat(3) {
                         emit(it)
                     }
                     error("failed")
@@ -164,7 +164,7 @@ class FlowBulkheadTest {
             }
 
             //Then
-            repeat(3){
+            repeat(3) {
                 assertThat(resultList[it]).isEqualTo(it)
             }
             assertThat(permittedEvents).isEqualTo(1)

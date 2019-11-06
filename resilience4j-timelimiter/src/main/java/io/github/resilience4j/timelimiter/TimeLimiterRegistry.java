@@ -33,48 +33,6 @@ import java.util.function.Supplier;
 public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterConfig> {
 
     /**
-     * Returns all managed {@link TimeLimiter} instances.
-     *
-     * @return all managed {@link TimeLimiter} instances.
-     */
-    Seq<TimeLimiter> getAllTimeLimiters();
-
-    /**
-     * Returns a managed {@link TimeLimiter} or creates a new one with the default TimeLimiter configuration.
-     *
-     * @param name the name of the TimeLimiter
-     * @return The {@link TimeLimiter}
-     */
-    TimeLimiter timeLimiter(String name);
-
-    /**
-     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter configuration.
-     *
-     * @param name              the name of the TimeLimiter
-     * @param timeLimiterConfig a custom TimeLimiter configuration
-     * @return The {@link TimeLimiter}
-     */
-    TimeLimiter timeLimiter(String name, TimeLimiterConfig timeLimiterConfig);
-
-    /**
-     * Returns a managed {@link TimeLimiterConfig} or creates a new one with a custom TimeLimiterConfig configuration.
-     *
-     * @param name                      the name of the TimeLimiterConfig
-     * @param timeLimiterConfigSupplier a supplier of a custom TimeLimiterConfig configuration
-     * @return The {@link TimeLimiterConfig}
-     */
-    TimeLimiter timeLimiter(String name, Supplier<TimeLimiterConfig> timeLimiterConfigSupplier);
-
-    /**
-     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter configuration.
-     *
-     * @param name       the name of the TimeLimiter
-     * @param configName a custom TimeLimiter configuration name
-     * @return The {@link TimeLimiter}
-     */
-    TimeLimiter timeLimiter(String name, String configName);
-
-    /**
      * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration.
      *
      * @param defaultTimeLimiterConfig a custom default TimeLimiter configuration
@@ -85,29 +43,36 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     }
 
     /**
-     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration and a TimeLimiter registry event consumer.
+     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration and a
+     * TimeLimiter registry event consumer.
      *
      * @param defaultTimeLimiterConfig a custom default TimeLimiter configuration.
-     * @param registryEventConsumer a TimeLimiter registry event consumer.
-     * @return a TimeLimiterRegistry with a custom TimeLimiter configuration and a TimeLimiter registry event consumer.
+     * @param registryEventConsumer    a TimeLimiter registry event consumer.
+     * @return a TimeLimiterRegistry with a custom TimeLimiter configuration and a TimeLimiter
+     * registry event consumer.
      */
-    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
         return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, registryEventConsumer);
     }
 
     /**
-     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration and a list of TimeLimiter registry event consumers.
+     * Creates a TimeLimiterRegistry with a custom default TimeLimiter configuration and a list of
+     * TimeLimiter registry event consumers.
      *
      * @param defaultTimeLimiterConfig a custom default TimeLimiter configuration.
-     * @param registryEventConsumers a list of TimeLimiter registry event consumers.
-     * @return a TimeLimiterRegistry with a custom TimeLimiter configuration and list of TimeLimiter registry event consumers.
+     * @param registryEventConsumers   a list of TimeLimiter registry event consumers.
+     * @return a TimeLimiterRegistry with a custom TimeLimiter configuration and list of TimeLimiter
+     * registry event consumers.
      */
-    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+    static TimeLimiterRegistry of(TimeLimiterConfig defaultTimeLimiterConfig,
+        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
         return new InMemoryTimeLimiterRegistry(defaultTimeLimiterConfig, registryEventConsumers);
     }
 
     /**
-     * Returns a managed {@link TimeLimiterConfig} or creates a new one with a default TimeLimiter configuration.
+     * Returns a managed {@link TimeLimiterConfig} or creates a new one with a default TimeLimiter
+     * configuration.
      *
      * @return The {@link TimeLimiterConfig}
      */
@@ -126,25 +91,77 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     }
 
     /**
-     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a TimeLimiter registry event consumer.
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a
+     * TimeLimiter registry event consumer.
      *
-     * @param configs a Map of shared TimeLimiter configurations.
+     * @param configs               a Map of shared TimeLimiter configurations.
      * @param registryEventConsumer a TimeLimiter registry event consumer.
-     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a TimeLimiter registry event consumer.
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a
+     * TimeLimiter registry event consumer.
      */
-    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
         return new InMemoryTimeLimiterRegistry(configs, registryEventConsumer);
     }
 
     /**
-     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a list of TimeLimiter registry event consumers.
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a list of
+     * TimeLimiter registry event consumers.
      *
-     * @param configs a Map of shared TimeLimiter configurations.
+     * @param configs                a Map of shared TimeLimiter configurations.
      * @param registryEventConsumers a list of TimeLimiter registry event consumers.
-     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a list of TimeLimiter registry event consumers.
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a list of
+     * TimeLimiter registry event consumers.
      */
-    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
+        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
         return new InMemoryTimeLimiterRegistry(configs, registryEventConsumers);
     }
+
+    /**
+     * Returns all managed {@link TimeLimiter} instances.
+     *
+     * @return all managed {@link TimeLimiter} instances.
+     */
+    Seq<TimeLimiter> getAllTimeLimiters();
+
+    /**
+     * Returns a managed {@link TimeLimiter} or creates a new one with the default TimeLimiter
+     * configuration.
+     *
+     * @param name the name of the TimeLimiter
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name);
+
+    /**
+     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
+     * configuration.
+     *
+     * @param name              the name of the TimeLimiter
+     * @param timeLimiterConfig a custom TimeLimiter configuration
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name, TimeLimiterConfig timeLimiterConfig);
+
+    /**
+     * Returns a managed {@link TimeLimiterConfig} or creates a new one with a custom
+     * TimeLimiterConfig configuration.
+     *
+     * @param name                      the name of the TimeLimiterConfig
+     * @param timeLimiterConfigSupplier a supplier of a custom TimeLimiterConfig configuration
+     * @return The {@link TimeLimiterConfig}
+     */
+    TimeLimiter timeLimiter(String name, Supplier<TimeLimiterConfig> timeLimiterConfigSupplier);
+
+    /**
+     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
+     * configuration.
+     *
+     * @param name       the name of the TimeLimiter
+     * @param configName a custom TimeLimiter configuration name
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name, String configName);
 
 }

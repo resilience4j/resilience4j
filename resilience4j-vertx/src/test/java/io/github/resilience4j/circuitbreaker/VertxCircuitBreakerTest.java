@@ -54,8 +54,10 @@ public class VertxCircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnHelloWorld()).willReturn(Future.succeededFuture("Hello world"));
-        Supplier<Future<String>> supplier = VertxCircuitBreaker.decorateFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(Future.succeededFuture("Hello world"));
+        Supplier<Future<String>> supplier = VertxCircuitBreaker
+            .decorateFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         Future<String> future = supplier.get();
 
@@ -72,9 +74,11 @@ public class VertxCircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnHelloWorld()).willReturn(Future.succeededFuture("Hello world"));
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(Future.succeededFuture("Hello world"));
 
-        Future<String> future = VertxCircuitBreaker.executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Future<String> future = VertxCircuitBreaker
+            .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         assertThat(future.succeeded()).isTrue();
         assertThat(future.result()).isEqualTo("Hello world");
@@ -89,9 +93,11 @@ public class VertxCircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnHelloWorld()).willReturn(Future.failedFuture(new RuntimeException("BAM!")));
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(Future.failedFuture(new RuntimeException("BAM!")));
 
-        Future<String> future =  VertxCircuitBreaker.executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Future<String> future = VertxCircuitBreaker
+            .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         assertThat(future.failed()).isTrue();
         assertThat(future.cause()).isInstanceOf(RuntimeException.class);
@@ -104,11 +110,11 @@ public class VertxCircuitBreakerTest {
     @Test
     public void shouldReturnFailureWithCircuitBreakerOpenException() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .slidingWindowSize(2)
-                .permittedNumberOfCallsInHalfOpenState(2)
-                .failureRateThreshold(50)
-                .waitDurationInOpenState(Duration.ofMillis(1000))
-                .build();
+            .slidingWindowSize(2)
+            .permittedNumberOfCallsInHalfOpenState(2)
+            .failureRateThreshold(50)
+            .waitDurationInOpenState(Duration.ofMillis(1000))
+            .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
@@ -117,7 +123,8 @@ public class VertxCircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
-        Future<String> future =  VertxCircuitBreaker.executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
+        Future<String> future = VertxCircuitBreaker
+            .executeFuture(circuitBreaker, helloWorldService::returnHelloWorld);
 
         assertThat(future.failed()).isTrue();
         assertThat(future.cause()).isInstanceOf(CallNotPermittedException.class);

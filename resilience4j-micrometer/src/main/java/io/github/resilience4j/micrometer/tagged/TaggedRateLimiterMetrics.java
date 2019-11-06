@@ -28,27 +28,6 @@ import static java.util.Objects.requireNonNull;
  */
 public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics implements MeterBinder {
 
-    /**
-     * Creates a new binder that uses given {@code registry} as source of rate limiters.
-     *
-     * @param rateLimiterRegistry the source of rate limiters
-     * @return The {@link TaggedRateLimiterMetrics} instance.
-     */
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
-        return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), rateLimiterRegistry);
-    }
-
-    /**
-     * Creates a new binder that uses given {@code registry} as source of rate limiters.
-     *
-     * @param names custom metric names
-     * @param rateLimiterRegistry the source of rate limiters
-     * @return The {@link TaggedRateLimiterMetrics} instance.
-     */
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
-        return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
-    }
-
     private final RateLimiterRegistry rateLimiterRegistry;
 
     private TaggedRateLimiterMetrics(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
@@ -56,13 +35,38 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
         this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
     }
 
+    /**
+     * Creates a new binder that uses given {@code registry} as source of rate limiters.
+     *
+     * @param rateLimiterRegistry the source of rate limiters
+     * @return The {@link TaggedRateLimiterMetrics} instance.
+     */
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(
+        RateLimiterRegistry rateLimiterRegistry) {
+        return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), rateLimiterRegistry);
+    }
+
+    /**
+     * Creates a new binder that uses given {@code registry} as source of rate limiters.
+     *
+     * @param names               custom metric names
+     * @param rateLimiterRegistry the source of rate limiters
+     * @return The {@link TaggedRateLimiterMetrics} instance.
+     */
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names,
+        RateLimiterRegistry rateLimiterRegistry) {
+        return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
+    }
+
     @Override
     public void bindTo(MeterRegistry registry) {
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
             addMetrics(registry, rateLimiter);
         }
-        rateLimiterRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        rateLimiterRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        rateLimiterRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        rateLimiterRegistry.getEventPublisher()
+            .onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         rateLimiterRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

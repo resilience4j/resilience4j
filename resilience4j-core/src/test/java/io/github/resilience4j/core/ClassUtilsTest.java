@@ -10,19 +10,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class ClassUtilsTest {
 
     @Test
-    public void shouldInstantiatePredicateClass(){
+    public void shouldInstantiatePredicateClass() {
         assertThat(ClassUtils.instantiatePredicateClass(PublicPredicate.class)).isNotNull();
     }
 
     @Test
-    public void shouldFailToInstantiatePredicateClass(){
-        assertThatThrownBy(() -> ClassUtils.instantiatePredicateClass(NoDefaultConstructorPredicate.class))
-                .isInstanceOf(InstantiationException.class)
-                .hasCauseInstanceOf(NoSuchMethodException.class);
+    public void shouldFailToInstantiatePredicateClass() {
+        assertThatThrownBy(
+            () -> ClassUtils.instantiatePredicateClass(NoDefaultConstructorPredicate.class))
+            .isInstanceOf(InstantiationException.class)
+            .hasCauseInstanceOf(NoSuchMethodException.class);
     }
 
 
-    public static class PublicPredicate implements Predicate<String>{
+    public static class PublicPredicate implements Predicate<String> {
 
         @Override
         public boolean test(String o) {
@@ -30,11 +31,11 @@ public class ClassUtilsTest {
         }
     }
 
-    private static class NoDefaultConstructorPredicate implements Predicate<String>{
+    private static class NoDefaultConstructorPredicate implements Predicate<String> {
 
         private String bla;
 
-        public NoDefaultConstructorPredicate(String bla){
+        public NoDefaultConstructorPredicate(String bla) {
 
             this.bla = bla;
         }

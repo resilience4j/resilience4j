@@ -15,15 +15,14 @@
  */
 package io.github.resilience4j.common;
 
-import java.time.Duration;
-import java.time.format.DateTimeParseException;
-
+import io.micrometer.core.lang.Nullable;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
-import io.micrometer.core.lang.Nullable;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 
 /**
  * Integer to duration spring converter , will convert to milliseconds
@@ -33,17 +32,18 @@ import io.micrometer.core.lang.Nullable;
 @Order(0)
 public class IntegerToDurationConverter implements Converter<Integer, Duration> {
 
-	@Override
-	public Duration convert(@Nullable Integer source) {
-		if (source != null) {
-			try {
-				return Duration.ofMillis(source);
-			} catch (DateTimeParseException e) {
-				throw new IllegalArgumentException("Cannot convert '" + source + "' to Duration", e);
-			}
-		} else {
-			return null;
-		}
+    @Override
+    public Duration convert(@Nullable Integer source) {
+        if (source != null) {
+            try {
+                return Duration.ofMillis(source);
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Cannot convert '" + source + "' to Duration",
+                    e);
+            }
+        } else {
+            return null;
+        }
 
-	}
+    }
 }

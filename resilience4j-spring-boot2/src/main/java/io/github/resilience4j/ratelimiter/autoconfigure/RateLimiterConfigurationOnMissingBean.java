@@ -22,11 +22,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RateLimiterConfigurationOnMissingBean extends AbstractRateLimiterConfigurationOnMissingBean {
+public class RateLimiterConfigurationOnMissingBean extends
+    AbstractRateLimiterConfigurationOnMissingBean {
 
-	@Bean
-	@ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)
-	public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
-		return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
-	}
+    @Bean
+    @ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)
+    public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
+        return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
+    }
 }

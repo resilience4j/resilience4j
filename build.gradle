@@ -26,7 +26,7 @@ allprojects {
         mavenCentral()
     }
 }
-artifactoryPublish.skip=true // apply to all projects except the root
+artifactoryPublish.skip = true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
@@ -44,21 +44,21 @@ configure(project.coreProjects) {
     apply plugin: 'jacoco'
 
     dependencies {
-        compile ( libraries.vavr)
-        compile ( libraries.slf4j)
-        
+        compile(libraries.vavr)
+        compile(libraries.slf4j)
+
         // JSR-305 only used for non-required meta-annotations
         compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
-        testCompile ( libraries.junit)
-        testCompile ( libraries.assertj)
-        testCompile ( libraries.logback)
-        testCompile ( libraries.mockito)
-        testCompile ( libraries.powermock)
-        testCompile ( libraries.powermock_api_mockito)
-        testCompile ( libraries.powermock_module_junit4)
-        testCompile ( libraries.awaitility)
-        testCompile ( libraries.jaxws)
+        testCompile(libraries.junit)
+        testCompile(libraries.assertj)
+        testCompile(libraries.logback)
+        testCompile(libraries.mockito)
+        testCompile(libraries.powermock)
+        testCompile(libraries.powermock_api_mockito)
+        testCompile(libraries.powermock_module_junit4)
+        testCompile(libraries.awaitility)
+        testCompile(libraries.jaxws)
     }
 
     tasks.withType(JavaCompile) {
@@ -79,18 +79,18 @@ sonarqube {
     properties {
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
-        property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
-        property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
-        property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
-        property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
-        property "sonar.language","java"
+        property "sonar.links.homepage", "https://github.com/resilience4j/resilience4j"
+        property "sonar.links.ci", "https://travis-ci.org/resilience4j/resilience4j"
+        property "sonar.links.scm", "https://github.com/resilience4j/resilience4j"
+        property "sonar.links.issue", "https://github.com/resilience4j/resilience4j/issues"
+        property "sonar.language", "java"
     }
 }
 def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
 
 task jacocoMergeTest(type: JacocoMerge) {
     destinationFile = file(allTestCoverageFile)
-    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+    executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
 }
 
 task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
@@ -105,12 +105,12 @@ subprojects {
     }
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
-        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
+        if (!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
                 && !project.name.equals('resilience4j-test') && !project.name.equals('resilience4j-spring-boot-common')) {
             jar {
                 inputs.property('moduleName', moduleName)
                 manifest.attributes(
-                    'Automatic-Module-Name': moduleName
+                        'Automatic-Module-Name': moduleName
                 )
             }
         }

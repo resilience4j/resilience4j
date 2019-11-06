@@ -37,7 +37,7 @@ class RetryTransformerSpec extends Specification {
         when:
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { times.getAndIncrement(); "s" }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -57,7 +57,7 @@ class RetryTransformerSpec extends Specification {
         when:
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { times.getAndIncrement(); throw e }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -79,11 +79,11 @@ class RetryTransformerSpec extends Specification {
         when:
         def r1 = ExecHarness.yieldSingle {
             Blocking.<String> get { times.getAndIncrement(); throw e1 }
-                    .transform(transformer)
+                .transform(transformer)
         }
         def r2 = ExecHarness.yieldSingle {
             Blocking.<String> get { times.getAndIncrement(); throw e2 }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -106,7 +106,7 @@ class RetryTransformerSpec extends Specification {
         when:
         def r = ExecHarness.yieldSingle {
             Blocking.<String> get { times.getAndIncrement(); throw e }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -118,9 +118,9 @@ class RetryTransformerSpec extends Specification {
 
     def buildRetry() {
         RetryConfig config = RetryConfig.custom()
-                .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(100))
-                .build()
+            .maxAttempts(3)
+            .waitDuration(Duration.ofMillis(100))
+            .build()
         Retry.of("test", config)
     }
 }

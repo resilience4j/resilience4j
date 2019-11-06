@@ -52,8 +52,10 @@ public class RateLimiterMetricsPublisher extends AbstractMetricsPublisher<RateLi
         String waitingThreads = name(prefix, name, WAITING_THREADS);
         String availablePermissions = name(prefix, name, AVAILABLE_PERMISSIONS);
 
-        metricRegistry.register(waitingThreads, (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
-        metricRegistry.register(availablePermissions, (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
+        metricRegistry.register(waitingThreads,
+            (Gauge<Integer>) rateLimiter.getMetrics()::getNumberOfWaitingThreads);
+        metricRegistry.register(availablePermissions,
+            (Gauge<Integer>) rateLimiter.getMetrics()::getAvailablePermissions);
 
         List<String> metricNames = Arrays.asList(waitingThreads, availablePermissions);
         metricsNameMap.put(name, new HashSet<>(metricNames));

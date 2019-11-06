@@ -23,13 +23,12 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 import io.reactivex.schedulers.TestScheduler;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.junit.Rule;
-import org.junit.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -46,83 +45,83 @@ public class TimeLimiterTransformerMaybeTest {
     @Test
     public void otherError() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Maybe.error(new RuntimeException())
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertError(RuntimeException.class);
         then(timeLimiter).should()
-                .onError(any(RuntimeException.class));
+            .onError(any(RuntimeException.class));
     }
 
     @Test
     public void timeout() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Observable.interval(1, TimeUnit.MINUTES)
-                .firstElement()
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .firstElement()
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertError(TimeoutException.class);
         then(timeLimiter).should()
-                .onError(any(TimeoutException.class));
+            .onError(any(TimeoutException.class));
     }
 
     @Test
     public void timeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ZERO));
+            .willReturn(toConfig(Duration.ZERO));
         TestObserver<?> observer = Maybe.empty()
-                .delay(1, TimeUnit.MINUTES)
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .delay(1, TimeUnit.MINUTES)
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertError(TimeoutException.class);
         then(timeLimiter).should()
-                .onError(any(TimeoutException.class));
+            .onError(any(TimeoutException.class));
     }
 
     @Test
     public void doNotTimeout() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ofMinutes(1)));
+            .willReturn(toConfig(Duration.ofMinutes(1)));
         TestObserver<?> observer = Observable.interval(1, TimeUnit.SECONDS)
-                .firstElement()
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .firstElement()
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         testScheduler.advanceTimeBy(1, TimeUnit.MINUTES);
 
         observer.assertValueCount(1);
         then(timeLimiter).should()
-                .onSuccess();
+            .onSuccess();
     }
 
     @Test
     public void doNotTimeoutEmpty() {
         given(timeLimiter.getTimeLimiterConfig())
-                .willReturn(toConfig(Duration.ofMinutes(1)));
+            .willReturn(toConfig(Duration.ofMinutes(1)));
         TestObserver<?> observer = Maybe.empty()
-                .compose(TimeLimiterTransformer.of(timeLimiter))
-                .test();
+            .compose(TimeLimiterTransformer.of(timeLimiter))
+            .test();
 
         observer.assertComplete();
         then(timeLimiter).should()
-                .onSuccess();
+            .onSuccess();
     }
 
     private TimeLimiterConfig toConfig(Duration timeout) {
         return TimeLimiterConfig.custom()
-                .timeoutDuration(timeout)
-                .build();
+            .timeoutDuration(timeout)
+            .build();
     }
 
 }

@@ -16,7 +16,9 @@
  */
 package io.github.resilience4j.feign;
 
-import static feign.Util.checkNotNull;
+import feign.InvocationHandlerFactory.MethodHandler;
+import feign.Target;
+import io.vavr.CheckedFunction1;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -24,9 +26,7 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
-import feign.InvocationHandlerFactory.MethodHandler;
-import feign.Target;
-import io.vavr.CheckedFunction1;
+import static feign.Util.checkNotNull;
 
 /**
  * An instance of {@link InvocationHandler} that uses {@link FeignDecorator}s to enhance the
@@ -38,8 +38,8 @@ class DecoratorInvocationHandler implements InvocationHandler {
     private final Map<Method, CheckedFunction1<Object[], Object>> decoratedDispatch;
 
     public DecoratorInvocationHandler(Target<?> target,
-            Map<Method, MethodHandler> dispatch,
-            FeignDecorator invocationDecorator) {
+        Map<Method, MethodHandler> dispatch,
+        FeignDecorator invocationDecorator) {
         this.target = checkNotNull(target, "target");
         checkNotNull(dispatch, "dispatch");
         this.decoratedDispatch = decorateMethodHandlers(dispatch, invocationDecorator, target);
@@ -48,30 +48,33 @@ class DecoratorInvocationHandler implements InvocationHandler {
     /**
      * Applies the specified {@link FeignDecorator} to all specified {@link MethodHandler}s and
      * returns the result as a map of {@link CheckedFunction1}s. Invoking a {@link CheckedFunction1}
-     * will therefore invoke the decorator which, in turn, may invoke the corresponding
-     * {@link MethodHandler}.
+     * will therefore invoke the decorator which, in turn, may invoke the corresponding {@link
+     * MethodHandler}.
      *
-     * @param dispatch a map of the methods from the feign interface to the {@link MethodHandler}s.
-     * @param invocationDecorator the {@link FeignDecorator} with which to decorate the
-     *        {@link MethodHandler}s.
-     * @param target the target feign interface.
-     * @return a new map where the {@link MethodHandler}s are decorated with the
-     *         {@link FeignDecorator}.
+     * @param dispatch            a map of the methods from the feign interface to the {@link
+     *                            MethodHandler}s.
+     * @param invocationDecorator the {@link FeignDecorator} with which to decorate the {@link
+     *                            MethodHandler}s.
+     * @param target              the target feign interface.
+     * @return a new map where the {@link MethodHandler}s are decorated with the {@link
+     * FeignDecorator}.
      */
-    private Map<Method, CheckedFunction1<Object[], Object>> decorateMethodHandlers(Map<Method, MethodHandler> dispatch,
-            FeignDecorator invocationDecorator, Target<?> target) {
+    private Map<Method, CheckedFunction1<Object[], Object>> decorateMethodHandlers(
+        Map<Method, MethodHandler> dispatch,
+        FeignDecorator invocationDecorator, Target<?> target) {
         final Map<Method, CheckedFunction1<Object[], Object>> map = new HashMap<>();
         for (final Map.Entry<Method, MethodHandler> entry : dispatch.entrySet()) {
             final Method method = entry.getKey();
             final MethodHandler methodHandler = entry.getValue();
-            map.put(method, invocationDecorator.decorate(methodHandler::invoke, method, methodHandler, target));
+            map.put(method,
+                invocationDecorator.decorate(methodHandler::invoke, method, methodHandler, target));
         }
         return map;
     }
 
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args)
-            throws Throwable {
+        throws Throwable {
         switch (method.getName()) {
             case "equals":
                 return equals(args.length > 0 ? args[0] : null);

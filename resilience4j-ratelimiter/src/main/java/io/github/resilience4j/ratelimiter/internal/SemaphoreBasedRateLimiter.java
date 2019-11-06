@@ -38,8 +38,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
- * A RateLimiter implementation that consists of {@link Semaphore} and scheduler
- * that will refresh permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
+ * A RateLimiter implementation that consists of {@link Semaphore} and scheduler that will refresh
+ * permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
@@ -71,7 +71,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param rateLimiterConfig The RateLimiter configuration.
      * @param tags              tags to assign to the RateLimiter
      */
-    public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig, Map<String, String> tags) {
+    public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig,
+        Map<String, String> tags) {
         this(name, rateLimiterConfig, null, tags);
     }
 
@@ -83,7 +84,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param scheduler         executor that will refresh permissions
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-                                     @Nullable ScheduledExecutorService scheduler) {
+        @Nullable ScheduledExecutorService scheduler) {
         this(name, rateLimiterConfig, scheduler, HashMap.empty());
     }
 
@@ -96,9 +97,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param tags              tags to assign to the RateLimiter
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-                                     @Nullable ScheduledExecutorService scheduler, Map<String, String> tags) {
+        @Nullable ScheduledExecutorService scheduler, Map<String, String> tags) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
-        this.rateLimiterConfig = new AtomicReference<>(requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
+        this.rateLimiterConfig = new AtomicReference<>(
+            requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 
         this.scheduler = Option.of(scheduler).getOrElse(this::configureScheduler);
         this.tags = tags;
@@ -129,7 +131,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     void refreshLimit() {
-        int permissionsToRelease = this.rateLimiterConfig.get().getLimitForPeriod() - semaphore.availablePermits();
+        int permissionsToRelease =
+            this.rateLimiterConfig.get().getLimitForPeriod() - semaphore.availablePermits();
         semaphore.release(permissionsToRelease);
     }
 
@@ -139,8 +142,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public void changeTimeoutDuration(Duration timeoutDuration) {
         RateLimiterConfig newConfig = RateLimiterConfig.from(rateLimiterConfig.get())
-                .timeoutDuration(timeoutDuration)
-                .build();
+            .timeoutDuration(timeoutDuration)
+            .build();
         rateLimiterConfig.set(newConfig);
     }
 
@@ -150,8 +153,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public void changeLimitForPeriod(int limitForPeriod) {
         RateLimiterConfig newConfig = RateLimiterConfig.from(rateLimiterConfig.get())
-                .limitForPeriod(limitForPeriod)
-                .build();
+            .limitForPeriod(limitForPeriod)
+            .build();
         rateLimiterConfig.set(newConfig);
     }
 
@@ -161,7 +164,9 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public boolean acquirePermission(int permits) {
         try {
-            boolean success = semaphore.tryAcquire(permits, rateLimiterConfig.get().getTimeoutDuration().toNanos(), TimeUnit.NANOSECONDS);
+            boolean success = semaphore
+                .tryAcquire(permits, rateLimiterConfig.get().getTimeoutDuration().toNanos(),
+                    TimeUnit.NANOSECONDS);
             publishRateLimiterEvent(success, permits);
             return success;
         } catch (InterruptedException e) {
@@ -172,24 +177,26 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     /**
-     * Reserving permissions is not supported in the spemaphore based
-     * implementation. Semaphores are totally blocking by it's nature. So this
-     * non-blocking API isn't supported. Use {@link #acquirePermission()}
+     * Reserving permissions is not supported in the spemaphore based implementation. Semaphores are
+     * totally blocking by it's nature. So this non-blocking API isn't supported. Use {@link
+     * #acquirePermission()}
      *
      * @throws UnsupportedOperationException always for this implementation
      */
     @Override
     public long reservePermission() {
-        throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
+        throw new UnsupportedOperationException(
+            "Reserving permissions is not supported in the spemaphore based implementation");
     }
 
     /**
-     * @see #reservePermission()
      * @throws UnsupportedOperationException always for this implementation
+     * @see #reservePermission()
      */
     @Override
     public long reservePermission(int permits) {
-        throw new UnsupportedOperationException("Reserving permissions is not supported in the spemaphore based implementation");
+        throw new UnsupportedOperationException(
+            "Reserving permissions is not supported in the spemaphore based implementation");
     }
 
     /**
@@ -224,14 +231,25 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public String toString() {
         return "SemaphoreBasedRateLimiter{"
-                + "name='" + name + '\''
-                + ", rateLimiterConfig=" + rateLimiterConfig
-                + '}';
+            + "name='" + name + '\''
+            + ", rateLimiterConfig=" + rateLimiterConfig
+            + '}';
     }
 
     @Override
     public Map<String, String> getTags() {
         return tags;
+    }
+
+    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+        if (!eventProcessor.hasConsumers()) {
+            return;
+        }
+        if (permissionAcquired) {
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
+            return;
+        }
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 
     /**
@@ -257,16 +275,5 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         public int getNumberOfWaitingThreads() {
             return semaphore.getQueueLength();
         }
-    }
-
-    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
-        if (!eventProcessor.hasConsumers()) {
-            return;
-        }
-        if (permissionAcquired) {
-            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
-            return;
-        }
-        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 }

@@ -15,20 +15,21 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import io.github.resilience4j.common.IntegerToDurationConverter;
 import io.github.resilience4j.common.StringToDurationConverter;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration
 @Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
-public class RateLimiterConfigurationOnMissingBean extends AbstractRateLimiterConfigurationOnMissingBean {
-	@Bean
-	public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
-		return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
-	}
+public class RateLimiterConfigurationOnMissingBean extends
+    AbstractRateLimiterConfigurationOnMissingBean {
+
+    @Bean
+    public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
+        return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
+    }
 }

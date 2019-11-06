@@ -55,15 +55,17 @@ public class RetryMetricsPublisher extends AbstractMetricsPublisher<Retry> {
         String failedWithRetry = name(prefix, name, FAILED_CALLS_WITH_RETRY);
 
         metricRegistry.register(successfulWithoutRetry,
-                (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+            (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
         metricRegistry.register(successfulWithRetry,
-                (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
+            (Gauge<Long>) () -> retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
         metricRegistry.register(failedWithoutRetry,
-                (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
+            (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
         metricRegistry.register(failedWithRetry,
-                (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
+            (Gauge<Long>) () -> retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
 
-        List<String> metricNames = Arrays.asList(successfulWithoutRetry, successfulWithRetry, failedWithoutRetry, failedWithRetry);
+        List<String> metricNames = Arrays
+            .asList(successfulWithoutRetry, successfulWithRetry, failedWithoutRetry,
+                failedWithRetry);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 

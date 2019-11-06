@@ -12,7 +12,8 @@ public class PredicateCreatorTest {
 
     @Test
     public void buildRecordExceptionsPredicate() {
-        Optional<Predicate<Throwable>> optionalPredicate = PredicateCreator.createExceptionsPredicate(RuntimeException.class, IOException.class);
+        Optional<Predicate<Throwable>> optionalPredicate = PredicateCreator
+            .createExceptionsPredicate(RuntimeException.class, IOException.class);
 
         then(optionalPredicate).isNotEmpty();
         Predicate<Throwable> predicate = optionalPredicate.get();
@@ -26,7 +27,8 @@ public class PredicateCreatorTest {
 
     @Test
     public void buildIgnoreExceptionsPredicate() {
-        Optional<Predicate<Throwable>> optionalPredicate = PredicateCreator.createNegatedExceptionsPredicate(RuntimeException.class, BusinessException.class);
+        Optional<Predicate<Throwable>> optionalPredicate = PredicateCreator
+            .createNegatedExceptionsPredicate(RuntimeException.class, BusinessException.class);
 
         then(optionalPredicate).isNotEmpty();
         Predicate<Throwable> predicate = optionalPredicate.get();
@@ -39,5 +41,6 @@ public class PredicateCreatorTest {
     }
 
     private class BusinessException extends Exception {
+
     }
 }

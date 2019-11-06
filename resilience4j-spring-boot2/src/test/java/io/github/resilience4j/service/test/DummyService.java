@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public interface DummyService {
+
     String BACKEND = "backendA";
 
     void doSomething(boolean throwException) throws IOException;

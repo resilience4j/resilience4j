@@ -28,18 +28,22 @@ class AbstractAggregation {
     int numberOfFailedCalls = 0;
     int numberOfCalls = 0;
 
-    void record(long duration, TimeUnit durationUnit, Metrics.Outcome outcome){
+    void record(long duration, TimeUnit durationUnit, Metrics.Outcome outcome) {
         this.numberOfCalls++;
         this.totalDurationInMillis += durationUnit.toMillis(duration);
-        switch (outcome)
-        {
-            case SLOW_SUCCESS: numberOfSlowCalls++;
+        switch (outcome) {
+            case SLOW_SUCCESS:
+                numberOfSlowCalls++;
                 break;
 
-            case SLOW_ERROR: numberOfSlowCalls++; numberOfFailedCalls++; numberOfSlowFailedCalls++;
+            case SLOW_ERROR:
+                numberOfSlowCalls++;
+                numberOfFailedCalls++;
+                numberOfSlowFailedCalls++;
                 break;
 
-            case ERROR: numberOfFailedCalls++;
+            case ERROR:
+                numberOfFailedCalls++;
                 break;
         }
     }
