@@ -18,6 +18,7 @@ import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectExt;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectHelper;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -76,10 +77,8 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-                                                         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-                                                         FallbackDecorators recoveryDecorators) {
-            circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(), circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
+        public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
+            circuitBreakerAspect = new CircuitBreakerAspect(circuitBreakerAspectHelper, new CircuitBreakerProperties());
             return circuitBreakerAspect;
         }
 

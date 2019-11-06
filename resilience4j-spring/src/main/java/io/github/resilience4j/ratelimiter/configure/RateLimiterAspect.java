@@ -15,30 +15,14 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.utils.AnnotationExtractor;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 
 /**

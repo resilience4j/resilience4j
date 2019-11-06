@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
@@ -28,33 +26,38 @@ import org.mockito.junit.MockitoJUnitRunner;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import io.vavr.CheckedFunction0;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2CircuitBreakerAspectExtTest {
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspectExt;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
 
+    @InjectMocks
+    RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspectExt;
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(rxJava2CircuitBreakerAspectExt.canHandleReturnType(Flowable.class)).isTrue();
-		assertThat(rxJava2CircuitBreakerAspectExt.canHandleReturnType(Single.class)).isTrue();
-	}
+    @Test
+    public void testCheckTypes() {
+        assertThat(rxJava2CircuitBreakerAspectExt.canHandleReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2CircuitBreakerAspectExt.canHandleReturnType(Single.class)).isTrue();
+    }
 
-	@Test
-	public void testReactorTypes() throws Throwable {
-		CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
+    @Test
+    public void testSingleType() throws Throwable {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2CircuitBreakerAspectExt.decorate(circuitBreaker, () -> Single.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Single.class);
+    }
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
-		assertThat(rxJava2CircuitBreakerAspectExt.handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
-		assertThat(rxJava2CircuitBreakerAspectExt.handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
-	}
+    @Test
+    public void testFlowableType() throws Throwable {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
+        CheckedFunction0<Object> decorated = rxJava2CircuitBreakerAspectExt.decorate(circuitBreaker, () -> Flowable.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Flowable.class);
+    }
 }

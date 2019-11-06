@@ -15,14 +15,24 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.vavr.CheckedFunction0;
 
 /**
- * circuit breaker aspect extension support interface type if you want to support new types
+ * circuit breaker aspect extension support interface type if you want to
+ * support new types
  */
 public interface CircuitBreakerAspectExt {
 
-	boolean canHandleReturnType(Class returnType);
+    /**
+     * @param returnType the AOP method return type class
+     * @return boolean true if this extension can handle this type
+     */
+    boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable;
+    /**
+     * @param supplier target function that should be decorated
+     * @return decorated function
+     */
+    public CheckedFunction0<Object> decorate(CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier);
 }
