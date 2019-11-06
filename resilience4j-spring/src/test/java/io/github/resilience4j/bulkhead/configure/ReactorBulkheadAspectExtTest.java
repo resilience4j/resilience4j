@@ -15,17 +15,14 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.vavr.CheckedFunction0;
+import static org.assertj.core.api.Assertions.assertThat;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,29 +32,27 @@ import reactor.core.publisher.Mono;
 @RunWith(MockitoJUnitRunner.class)
 public class ReactorBulkheadAspectExtTest {
 
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
+    @InjectMocks
+    ReactorBulkheadAspectExt reactorBulkheadAspectExt;
 
-	@InjectMocks
-	ReactorBulkheadAspectExt reactorBulkheadAspectExt;
+    @Test
+    public void testCheckTypes() {
+        assertThat(reactorBulkheadAspectExt.canHandleReturnType(Mono.class)).isTrue();
+        assertThat(reactorBulkheadAspectExt.canHandleReturnType(Flux.class)).isTrue();
+    }
 
+    @Test
+    public void testMonoType() throws Throwable {
+        Bulkhead bulkhead = Bulkhead.ofDefaults("test");
+        CheckedFunction0<Object> decorated = reactorBulkheadAspectExt.decorate(bulkhead, () -> Mono.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Mono.class);
+    }
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(reactorBulkheadAspectExt.canHandleReturnType(Mono.class)).isTrue();
-		assertThat(reactorBulkheadAspectExt.canHandleReturnType(Flux.class)).isTrue();
-	}
-
-	@Test
-	public void testReactorTypes() throws Throwable {
-		Bulkhead bulkhead = Bulkhead.ofDefaults("test");
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
-		assertThat(reactorBulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
-		assertThat(reactorBulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod")).isNotNull();
-	}
-
+    @Test
+    public void testFluxType() throws Throwable {
+        Bulkhead bulkhead = Bulkhead.ofDefaults("test");
+        CheckedFunction0<Object> decorated = reactorBulkheadAspectExt.decorate(bulkhead, () -> Flux.just("Test"));
+        assertThat(decorated.apply()).isInstanceOf(Flux.class);
+    }
 
 }

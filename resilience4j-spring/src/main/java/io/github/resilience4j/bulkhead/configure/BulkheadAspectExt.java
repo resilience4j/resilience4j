@@ -15,14 +15,23 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 
 /**
- * BulkHead aspect extension support interface type if you want to support new types
+ * BulkHead aspect extension support interface type if you want to support new
+ * types
  */
 public interface BulkheadAspectExt {
 
-	boolean canHandleReturnType(Class returnType);
+    /**
+     * @param returnType the AOP method return type class
+     * @return boolean true if this extension can handle this type
+     */
+    boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable;
+    /**
+     * @param supplier target function that should be decorated
+     * @return decorated function
+     */
+    CheckedFunction0<Object> decorate(io.github.resilience4j.bulkhead.Bulkhead bulkhead, CheckedFunction0<Object> supplier);
 }

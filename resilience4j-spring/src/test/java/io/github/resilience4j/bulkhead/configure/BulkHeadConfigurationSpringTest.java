@@ -38,80 +38,77 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
+    BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
 })
 public class BulkHeadConfigurationSpringTest {
 
-	@Autowired
-	private ConfigWithOverrides configWithOverrides;
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
 
-	@Test
-	public void testAllCircuitBreakerConfigurationBeansOverridden() {
-		assertNotNull(configWithOverrides.bulkheadRegistry);
-		assertNotNull(configWithOverrides.bulkheadAspect);
-		assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
-		assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
-		assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
-		assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
-	}
+    @Test
+    public void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertNotNull(configWithOverrides.bulkheadRegistry);
+        assertNotNull(configWithOverrides.bulkheadAspect);
+        assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
+        assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
+        assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
+        assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
+    }
 
-	@Configuration
-	@ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback"})
-	public static class ConfigWithOverrides {
+    @Configuration
+    @ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback"})
+    public static class ConfigWithOverrides {
 
-		private BulkheadRegistry bulkheadRegistry;
+        private BulkheadRegistry bulkheadRegistry;
 
-		private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
+        private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
-		private BulkheadAspect bulkheadAspect;
+        private BulkheadAspect bulkheadAspect;
 
-		private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
+        private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
 
-		private BulkheadConfigurationProperties bulkheadConfigurationProperties;
+        private BulkheadConfigurationProperties bulkheadConfigurationProperties;
 
-		@Bean
-		public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
-			threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
-			return threadPoolBulkheadRegistry;
-		}
+        @Bean
+        public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
+            threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+            return threadPoolBulkheadRegistry;
+        }
 
-		@Bean
-		public BulkheadRegistry bulkheadRegistry() {
-			bulkheadRegistry = BulkheadRegistry.ofDefaults();
-			return bulkheadRegistry;
-		}
+        @Bean
+        public BulkheadRegistry bulkheadRegistry() {
+            bulkheadRegistry = BulkheadRegistry.ofDefaults();
+            return bulkheadRegistry;
+        }
 
-		@Bean
-		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-		                                     FallbackDecorators fallbackDecorators) {
-			bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(), threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
-			return bulkheadAspect;
-		}
+        @Bean
+        public BulkheadAspect bulkheadAspect(BulkheadAspectHelper bulkheadAspectHelper) {
+            bulkheadAspect = new BulkheadAspect(bulkheadAspectHelper, bulkheadConfigurationProperties());
+            return bulkheadAspect;
+        }
 
-		@Bean
-		public EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry() {
-			bulkheadEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
-			return bulkheadEventEventConsumerRegistry;
-		}
+        @Bean
+        public EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry() {
+            bulkheadEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+            return bulkheadEventEventConsumerRegistry;
+        }
 
-		@Bean
-		public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
-			bulkheadConfigurationProperties = new BulkheadConfigurationPropertiesTest();
-			return bulkheadConfigurationProperties;
-		}
+        @Bean
+        public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
+            bulkheadConfigurationProperties = new BulkheadConfigurationPropertiesTest();
+            return bulkheadConfigurationProperties;
+        }
 
-		private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
+        private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
 
-			BulkheadConfigurationPropertiesTest() {
-				InstanceProperties instanceProperties = new InstanceProperties();
-				instanceProperties.setBaseConfig("sharedConfig");
-				instanceProperties.setMaxConcurrentCalls(3);
-				getConfigs().put("sharedBackend", instanceProperties);
-			}
+            BulkheadConfigurationPropertiesTest() {
+                InstanceProperties instanceProperties = new InstanceProperties();
+                instanceProperties.setBaseConfig("sharedConfig");
+                instanceProperties.setMaxConcurrentCalls(3);
+                getConfigs().put("sharedBackend", instanceProperties);
+            }
 
-		}
-	}
-
+        }
+    }
 
 }

@@ -17,7 +17,6 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,77 +29,73 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspectExt;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspectHelper;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		BulkheadConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-		BulkheadAutoConfiguration.class,
-		BulkheadConfigurationOnMissingBean.class
+    BulkheadConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    BulkheadAutoConfiguration.class,
+    BulkheadConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(BulkheadProperties.class)
 public class BulkheadConfigurationOnMissingBeanTest {
 
-	@Autowired
-	private ConfigWithOverrides configWithOverrides;
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
 
-	@Autowired
-	private BulkheadRegistry bulkheadRegistry;
+    @Autowired
+    private BulkheadRegistry bulkheadRegistry;
 
-	@Autowired
-	private BulkheadAspect bulkheadAspect;
+    @Autowired
+    private BulkheadAspect bulkheadAspect;
 
-	@Autowired
-	private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
+    @Autowired
+    private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
 
-	@Test
-	public void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
-		final Class<BulkheadConfiguration> originalClass = BulkheadConfiguration.class;
-		final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass = BulkheadConfigurationOnMissingBean.class;
-		TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
-	}
+    @Test
+    public void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
+        final Class<BulkheadConfiguration> originalClass = BulkheadConfiguration.class;
+        final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass = BulkheadConfigurationOnMissingBean.class;
+        TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
+    }
 
-	@Test
-	public void testAllBulkHeadConfigurationBeansOverridden() {
-		assertEquals(bulkheadRegistry, configWithOverrides.bulkheadRegistry);
-		assertEquals(bulkheadAspect, configWithOverrides.bulkheadAspect);
-		assertEquals(bulkheadEventEventConsumerRegistry, configWithOverrides.bulkheadEventEventConsumerRegistry);
-	}
+    @Test
+    public void testAllBulkHeadConfigurationBeansOverridden() {
+        assertEquals(bulkheadRegistry, configWithOverrides.bulkheadRegistry);
+        assertEquals(bulkheadAspect, configWithOverrides.bulkheadAspect);
+        assertEquals(bulkheadEventEventConsumerRegistry, configWithOverrides.bulkheadEventEventConsumerRegistry);
+    }
 
-	@Configuration
-	public static class ConfigWithOverrides {
+    @Configuration
+    public static class ConfigWithOverrides {
 
-		private BulkheadRegistry bulkheadRegistry;
+        private BulkheadRegistry bulkheadRegistry;
 
-		private BulkheadAspect bulkheadAspect;
+        private BulkheadAspect bulkheadAspect;
 
-		private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
+        private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
 
-		@Bean
-		public BulkheadRegistry bulkheadRegistry() {
-			bulkheadRegistry = BulkheadRegistry.ofDefaults();
-			return bulkheadRegistry;
-		}
+        @Bean
+        public BulkheadRegistry bulkheadRegistry() {
+            bulkheadRegistry = BulkheadRegistry.ofDefaults();
+            return bulkheadRegistry;
+        }
 
-		@Bean
-		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-		                                     FallbackDecorators fallbackDecorators) {
-			bulkheadAspect = new BulkheadAspect(new BulkheadProperties(), threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
-			return bulkheadAspect;
-		}
+        @Bean
+        public BulkheadAspect bulkheadAspect(BulkheadAspectHelper bulkheadAspectHelper) {
+            bulkheadAspect = new BulkheadAspect(bulkheadAspectHelper, new BulkheadProperties());
+            return bulkheadAspect;
+        }
 
-		@Bean
-		public EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry() {
-			bulkheadEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
-			return bulkheadEventEventConsumerRegistry;
-		}
-	}
+        @Bean
+        public EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry() {
+            bulkheadEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+            return bulkheadEventEventConsumerRegistry;
+        }
+    }
 }
