@@ -25,6 +25,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
+import io.github.resilience4j.core.functions.OnceConsumer;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -33,9 +34,8 @@ import io.vavr.collection.HashMap;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.Objects;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -115,6 +115,32 @@ public interface Bulkhead {
             }
 
             return promise;
+        };
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a bulkhead. Bulkhead will reserve permission until {@link Future#get()}
+     * or {@link Future#get(long, TimeUnit)} is evaluated even if the underlying call took less time to return. Any delays in evaluating
+     * future will result in holding of permission in the underlying Semaphore.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of the returned Future result
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Future<T>> decorateFuture(Bulkhead bulkhead, Supplier<Future<T>> supplier) {
+        return () -> {
+            if (!bulkhead.tryAcquirePermission()) {
+                final CompletableFuture<T> promise = new CompletableFuture<>();
+                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
+                return promise;
+            }
+            try {
+                return new BulkheadFuture<T>(bulkhead, supplier.get());
+            } catch (Throwable e) {
+                bulkhead.onComplete();
+                throw e;
+            }
         };
     }
 
@@ -563,5 +589,55 @@ public interface Bulkhead {
         EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> eventConsumer);
 
         EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> eventConsumer);
+    }
+
+    /**
+     * This class decorates future with Bulkhead functionality around invocation.
+     *
+     * @param <T> of return type
+     */
+    final class BulkheadFuture<T> implements Future<T> {
+        final private Future<T> future;
+        final private OnceConsumer<Bulkhead> onceToBulkhead;
+
+        BulkheadFuture(Bulkhead bulkhead, Future<T> future) {
+            Objects.requireNonNull(future, "Non null Future is required to decorate");
+            this.onceToBulkhead = OnceConsumer.of(bulkhead);
+            this.future = future;
+
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return future.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return future.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return future.isDone();
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            try {
+                return future.get();
+            }  finally {
+                onceToBulkhead.applyOnce(bh -> bh.onComplete());
+            }
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            try {
+                return future.get(timeout, unit);
+            } finally {
+                onceToBulkhead.applyOnce(bh -> bh.onComplete());
+            }
+        }
     }
 }
