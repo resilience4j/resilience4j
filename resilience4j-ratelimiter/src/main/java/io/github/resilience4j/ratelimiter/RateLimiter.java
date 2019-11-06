@@ -154,6 +154,14 @@ public interface RateLimiter {
         };
     }
 
+    /**
+     * Returns a Supplier which is decorated by a RateLimiter.
+     * @param rateLimiter the rate limiter
+     * @param supplier    the original supplier
+     * @param <T>         the type of the returned Future's result
+     * @param <F>         the return type of the original Supplier (extends Future&lt;T&gt;)
+     * @return a supplier which is decorated by a rate limiter.
+     */
     static <T, F extends Future<T>> Supplier<F> decorateFuture(
         RateLimiter rateLimiter,
         Supplier<F> supplier
@@ -161,6 +169,15 @@ public interface RateLimiter {
         return decorateFuture(rateLimiter, 1, supplier);
     }
 
+    /**
+     * Returns a Supplier which is decorated by a RateLimiter.
+     * @param rateLimiter the rate limiter
+     * @param permits     the number of permits that this call requires
+     * @param supplier    the original supplier
+     * @param <T>         the type of the returned Future's result
+     * @param <F>         the return type of the original Supplier (extends Future&lt;T&gt;)
+     * @return a supplier which is decorated by a rate limiter.
+     */
     static <T, F extends Future<T>> Supplier<F> decorateFuture(
         RateLimiter rateLimiter,
         int permits,
