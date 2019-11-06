@@ -28,23 +28,24 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
-    private boolean consumerRegistered;
     List<EventConsumer<T>> onEventConsumers = new CopyOnWriteArrayList<>();
     ConcurrentMap<String, List<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
+    private boolean consumerRegistered;
 
-    public boolean hasConsumers(){
+    public boolean hasConsumers() {
         return consumerRegistered;
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized void registerConsumer(String className, EventConsumer<? extends T> eventConsumer){
+    public synchronized void registerConsumer(String className,
+        EventConsumer<? extends T> eventConsumer) {
         this.consumerRegistered = true;
         this.eventConsumerMap.compute(className, (k, consumers) -> {
-            if(consumers == null){
+            if (consumers == null) {
                 consumers = new ArrayList<>();
                 consumers.add((EventConsumer<T>) eventConsumer);
                 return consumers;
-            }else{
+            } else {
                 consumers.add((EventConsumer<T>) eventConsumer);
                 return consumers;
             }
@@ -53,13 +54,14 @@ public class EventProcessor<T> implements EventPublisher<T> {
 
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
-        if(!onEventConsumers.isEmpty()){
+        if (!onEventConsumers.isEmpty()) {
             onEventConsumers.forEach(onEventConsumer -> onEventConsumer.consumeEvent(event));
             consumed = true;
         }
-        if(!eventConsumerMap.isEmpty()){
-            List<EventConsumer<T>> eventConsumers = this.eventConsumerMap.get(event.getClass().getSimpleName());
-            if(eventConsumers != null && !eventConsumers.isEmpty()){
+        if (!eventConsumerMap.isEmpty()) {
+            List<EventConsumer<T>> eventConsumers = this.eventConsumerMap
+                .get(event.getClass().getSimpleName());
+            if (eventConsumers != null && !eventConsumers.isEmpty()) {
                 eventConsumers.forEach(consumer -> consumer.consumeEvent(event));
                 consumed = true;
             }

@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class CircuitBreakerAutoConfigurationRxJava2Test {
 
     @Autowired
@@ -61,57 +61,71 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 
 
     /**
-     * The test verifies that a CircuitBreaker instance is created and configured properly when the DummyService is invoked and
-     * that the CircuitBreaker records successful and failed calls.
+     * The test verifies that a CircuitBreaker instance is created and configured properly when the
+     * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
      */
     @Test
     public void testCircuitBreakerAutoConfigurationReactiveRxJava2() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
-        CircuitBreakerEventsEndpointResponse circuitBreakerEventListBefore = circuitBreakerEvents("/actuator" +
+        CircuitBreakerEventsEndpointResponse circuitBreakerEventListBefore = circuitBreakerEvents(
+            "/actuator" +
                 "/circuitbreakerevents");
-        CircuitBreakerEventsEndpointResponse circuitBreakerEventListForBBefore = circuitBreakerEvents("/actuator" +
+        CircuitBreakerEventsEndpointResponse circuitBreakerEventListForBBefore = circuitBreakerEvents(
+            "/actuator" +
                 "/circuitbreakerevents/backendB");
 
         try {
-            reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+            reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
+                throwable -> System.out.println("Exception received:" + throwable.getMessage()));
         } catch (Exception ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+        reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase,
+            throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(ReactiveDummyService.BACKEND);
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry
+            .circuitBreaker(ReactiveDummyService.BACKEND);
         assertThat(circuitBreaker).isNotNull();
 
         // expect circuitbreakers actuator endpoint contains both circuitbreakers
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate.getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
+        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
+            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
         assertThat(new HashSet<>(circuitBreakerList.getBody().getCircuitBreakers())).contains(
-                "backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient"
+            "backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient"
         );
 
         // expect circuitbreaker-event actuator endpoint recorded both events
-        CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents");
-        assertThat(circuitBreakerEventList.getCircuitBreakerEvents()).hasSize(circuitBreakerEventListBefore.getCircuitBreakerEvents().size() + 2);
+        CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents(
+            "/actuator/circuitbreakerevents");
+        assertThat(circuitBreakerEventList.getCircuitBreakerEvents())
+            .hasSize(circuitBreakerEventListBefore.getCircuitBreakerEvents().size() + 2);
 
         circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents/backendB");
-        assertThat(circuitBreakerEventList.getCircuitBreakerEvents()).hasSize(circuitBreakerEventListForBBefore.getCircuitBreakerEvents().size() + 2);
+        assertThat(circuitBreakerEventList.getCircuitBreakerEvents())
+            .hasSize(circuitBreakerEventListForBBefore.getCircuitBreakerEvents().size() + 2);
 
         // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate.getForEntity("/actuator/health", CompositeHealthResponse.class);
+        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
+            .getForEntity("/actuator/health", CompositeHealthResponse.class);
         assertThat(healthResponse.getBody().getDetails()).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers").getDetails().get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers").getDetails().get("backendB")).isNull();
+        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers").getDetails()
+            .get("backendA")).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers").getDetails()
+            .get("backendB")).isNull();
 
         // Observable test
         try {
-            reactiveDummyService.doSomethingObservable(true).blockingSubscribe(String::toUpperCase, Throwable::getCause);
+            reactiveDummyService.doSomethingObservable(true)
+                .blockingSubscribe(String::toUpperCase, Throwable::getCause);
         } catch (IOException ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingObservable(false).blockingSubscribe(String::toUpperCase, Throwable::getCause);
+        reactiveDummyService.doSomethingObservable(false)
+            .blockingSubscribe(String::toUpperCase, Throwable::getCause);
 
         // Maybe test
         try {
@@ -147,6 +161,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
     }
 
     private static final class CompositeHealthResponse {
+
         private Map<String, HealthResponse> details;
 
         public Map<String, HealthResponse> getDetails() {
@@ -159,6 +174,7 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
     }
 
     private static final class HealthResponse {
+
         private Map<String, Object> details;
 
         public Map<String, Object> getDetails() {

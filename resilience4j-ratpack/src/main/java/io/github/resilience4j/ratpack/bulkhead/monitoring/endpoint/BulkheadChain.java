@@ -47,75 +47,82 @@ public class BulkheadChain implements Action<Chain> {
 
     @Override
     public void execute(Chain chain) throws Exception {
-        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getBulkhead().getPath();
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints()
+            .getBulkhead().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
-                    Promise.<BulkheadEventsEndpointResponse>async(d -> {
-                        BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(eventConsumerRegistry
-                                .getAllEventConsumer()
-                                .flatMap(CircularEventConsumer::getBufferedEvents)
-                                .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
-                                .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
-                        d.success(response);
-                    }).then(r -> ctx.render(Jackson.json(r)))
+                Promise.<BulkheadEventsEndpointResponse>async(d -> {
+                    BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
+                        eventConsumerRegistry
+                            .getAllEventConsumer()
+                            .flatMap(CircularEventConsumer::getBufferedEvents)
+                            .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
+                            .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
+                    d.success(response);
+                }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
                 Seq<Flux<BulkheadEvent>> eventStreams = eventConsumerRegistry
-                        .getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
-                        .map(Flux::just);
+                    .getAllEventConsumer()
+                    .flatMap(CircularEventConsumer::getBufferedEvents)
+                    .map(Flux::just);
                 ctx.render(serverSentEvents(chain1, eventStreams));
             });
             chain1.get("events/:name", ctx -> {
-                        String bulkheadName = ctx.getPathTokens().get("name");
-                        Promise.<BulkheadEventsEndpointResponse>async(d -> {
-                            BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(eventConsumerRegistry
-                                    .getEventConsumer(bulkheadName)
-                                    .getBufferedEvents()
-                                    .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
-                            d.success(response);
-                        }).then(r -> ctx.render(Jackson.json(r)));
-                    }
+                    String bulkheadName = ctx.getPathTokens().get("name");
+                    Promise.<BulkheadEventsEndpointResponse>async(d -> {
+                        BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
+                            eventConsumerRegistry
+                                .getEventConsumer(bulkheadName)
+                                .getBufferedEvents()
+                                .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
+                        d.success(response);
+                    }).then(r -> ctx.render(Jackson.json(r)));
+                }
             );
             chain1.get("stream/events/:name", ctx -> {
                 String bulkheadName = ctx.getPathTokens().get("name");
                 Seq<Flux<BulkheadEvent>> eventStreams = eventConsumerRegistry
-                        .getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
-                        .filter(e -> e.getBulkheadName().equals(bulkheadName))
-                        .map(Flux::just);
+                    .getAllEventConsumer()
+                    .flatMap(CircularEventConsumer::getBufferedEvents)
+                    .filter(e -> e.getBulkheadName().equals(bulkheadName))
+                    .map(Flux::just);
                 ctx.render(serverSentEvents(chain1, eventStreams));
             });
             chain1.get("events/:name/:type", ctx -> {
-                        String bulkheadName = ctx.getPathTokens().get("name");
-                        String eventType = ctx.getPathTokens().get("type");
-                        Promise.<BulkheadEventsEndpointResponse>async(d -> {
-                            BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(eventConsumerRegistry
-                                    .getEventConsumer(bulkheadName)
-                                    .getBufferedEvents()
-                                    .filter(event -> event.getEventType() == BulkheadEvent.Type.valueOf(eventType.toUpperCase()))
-                                    .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
-                            d.success(response);
-                        }).then(r -> ctx.render(Jackson.json(r)));
-                    }
+                    String bulkheadName = ctx.getPathTokens().get("name");
+                    String eventType = ctx.getPathTokens().get("type");
+                    Promise.<BulkheadEventsEndpointResponse>async(d -> {
+                        BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
+                            eventConsumerRegistry
+                                .getEventConsumer(bulkheadName)
+                                .getBufferedEvents()
+                                .filter(event -> event.getEventType() == BulkheadEvent.Type
+                                    .valueOf(eventType.toUpperCase()))
+                                .map(BulkheadEventDTOFactory::createBulkheadEventDTO).toJavaList());
+                        d.success(response);
+                    }).then(r -> ctx.render(Jackson.json(r)));
+                }
             );
             chain1.get("stream/events/:name/:type", ctx -> {
                 String bulkheadName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
                 Seq<Flux<BulkheadEvent>> eventStreams = eventConsumerRegistry
-                        .getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
-                        .filter(e -> e.getBulkheadName().equals(bulkheadName))
-                        .filter(e -> e.getEventType().name().equals(eventType))
-                        .map(Flux::just);
+                    .getAllEventConsumer()
+                    .flatMap(CircularEventConsumer::getBufferedEvents)
+                    .filter(e -> e.getBulkheadName().equals(bulkheadName))
+                    .filter(e -> e.getEventType().name().equals(eventType))
+                    .map(Flux::just);
                 ctx.render(serverSentEvents(chain1, eventStreams));
             });
         });
     }
 
     private ServerSentEvents serverSentEvents(Chain chain, Seq<Flux<BulkheadEvent>> eventStreams) {
-        Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain.getRegistry()).writeValueAsString(BulkheadEventDTOFactory.createBulkheadEventDTO(b));
+        Function<BulkheadEvent, String> data = b -> Jackson.getObjectWriter(chain.getRegistry())
+            .writeValueAsString(BulkheadEventDTOFactory.createBulkheadEventDTO(b));
         return ServerSentEvents.serverSentEvents(Flux.merge(eventStreams),
-                e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name()).data(data));
+            e -> e.id(BulkheadEvent::getBulkheadName).event(c -> c.getEventType().name())
+                .data(data));
     }
 }

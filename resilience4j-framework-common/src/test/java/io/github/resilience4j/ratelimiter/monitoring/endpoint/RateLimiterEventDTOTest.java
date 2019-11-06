@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RateLimiterEventDTOTest {
 
     @Test
-    public void shouldMapRateLimiterOnFailureEvent(){
+    public void shouldMapRateLimiterOnFailureEvent() {
         RateLimiterOnFailureEvent event = new RateLimiterOnFailureEvent("name");
 
         RateLimiterEventDTO eventDTO = RateLimiterEventDTO.createRateLimiterEventDTO(event);
@@ -23,7 +23,7 @@ public class RateLimiterEventDTOTest {
     }
 
     @Test
-    public void shouldMapRateLimiterOnSuccessEvent(){
+    public void shouldMapRateLimiterOnSuccessEvent() {
         RateLimiterOnSuccessEvent event = new RateLimiterOnSuccessEvent("name");
 
         RateLimiterEventDTO eventDTO = RateLimiterEventDTO.createRateLimiterEventDTO(event);

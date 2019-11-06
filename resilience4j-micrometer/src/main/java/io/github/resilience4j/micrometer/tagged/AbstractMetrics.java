@@ -32,7 +32,7 @@ abstract class AbstractMetrics {
 
     void removeMetrics(MeterRegistry registry, String name) {
         Set<Meter.Id> ids = meterIdMap.get(name);
-        if(ids != null){
+        if (ids != null) {
             ids.forEach(registry::remove);
         }
         meterIdMap.remove(name);

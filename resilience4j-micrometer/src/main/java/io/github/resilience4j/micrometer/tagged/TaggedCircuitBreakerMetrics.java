@@ -26,7 +26,16 @@ import static java.util.Objects.requireNonNull;
 /**
  * A micrometer binder that is used to register CircuitBreaker exposed {@link Metrics metrics}.
  */
-public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics implements MeterBinder {
+public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics implements
+    MeterBinder {
+
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+
+    private TaggedCircuitBreakerMetrics(MetricNames names,
+        CircuitBreakerRegistry circuitBreakerRegistry) {
+        super(names);
+        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
+    }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
@@ -34,26 +43,21 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
      * @param circuitBreakerRegistry the source of circuit breakers
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
-    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new TaggedCircuitBreakerMetrics(MetricNames.ofDefaults(), circuitBreakerRegistry);
     }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
      *
-     * @param metricNames custom metric names
+     * @param metricNames            custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
-    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames, CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames,
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         return new TaggedCircuitBreakerMetrics(metricNames, circuitBreakerRegistry);
-    }
-
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-
-    private TaggedCircuitBreakerMetrics(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
-        super(names);
-        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
     }
 
     @Override
@@ -61,8 +65,10 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
         for (CircuitBreaker circuitBreaker : circuitBreakerRegistry.getAllCircuitBreakers()) {
             addMetrics(registry, circuitBreaker);
         }
-        circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        circuitBreakerRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        circuitBreakerRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        circuitBreakerRegistry.getEventPublisher()
+            .onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         circuitBreakerRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

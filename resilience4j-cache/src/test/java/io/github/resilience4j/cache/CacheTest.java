@@ -28,9 +28,7 @@ import java.util.function.Function;
 
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 
 public class CacheTest {
@@ -39,7 +37,7 @@ public class CacheTest {
 
     @SuppressWarnings("unchecked")
     @Before
-    public void setUp(){
+    public void setUp() {
         cache = mock(javax.cache.Cache.class);
     }
 
@@ -48,10 +46,11 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
-                toFlowable(cacheContext.getEventPublisher())
+            toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        CheckedFunction1<String, String> cachedFunction = Cache
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -60,18 +59,20 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
         then(cache).should().put("testKey", "Hello world");
         testSubscriber
-                .assertValueCount(1)
-                .assertValues(CacheEvent.Type.CACHE_MISS);
+            .assertValueCount(1)
+            .assertValues(CacheEvent.Type.CACHE_MISS);
     }
 
     @Test
     public void shouldReturnValueFromDecoratedSupplier() {
         given(cache.get("testKey")).willReturn(null);
         Cache<String, String> cacheContext = Cache.of(cache);
-        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(cacheContext.getEventPublisher())
-                .map(CacheEvent::getEventType)
-                .test();
-        Function<String, String> cachedFunction = Cache.decorateSupplier(cacheContext, () -> "Hello world");
+        TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
+            cacheContext.getEventPublisher())
+            .map(CacheEvent::getEventType)
+            .test();
+        Function<String, String> cachedFunction = Cache
+            .decorateSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -80,8 +81,8 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
         then(cache).should().put("testKey", "Hello world");
         testSubscriber
-                .assertValueCount(1)
-                .assertValues(CacheEvent.Type.CACHE_MISS);
+            .assertValueCount(1)
+            .assertValues(CacheEvent.Type.CACHE_MISS);
     }
 
     @Test
@@ -89,11 +90,11 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn(null);
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
-                toFlowable(cacheContext.getEventPublisher())
+            toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCallable(cacheContext, () -> "Hello world");
+            .decorateCallable(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -102,21 +103,22 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
         then(cache).should().put("testKey", "Hello world");
         testSubscriber
-                .assertValueCount(1)
-                .assertValues(CacheEvent.Type.CACHE_MISS);
+            .assertValueCount(1)
+            .assertValues(CacheEvent.Type.CACHE_MISS);
     }
 
     @Test
     public void shouldReturnValueOfSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
-        willThrow(new RuntimeException("Cache is not available")).given(cache).put("testKey", "Hello world");
+        willThrow(new RuntimeException("Cache is not available")).given(cache)
+            .put("testKey", "Hello world");
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
-                toFlowable(cacheContext.getEventPublisher())
+            toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -124,8 +126,8 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
         testSubscriber
-                .assertValueCount(2)
-                .assertValues(CacheEvent.Type.CACHE_MISS, CacheEvent.Type.ERROR);
+            .assertValueCount(2)
+            .assertValues(CacheEvent.Type.CACHE_MISS, CacheEvent.Type.ERROR);
     }
 
     @Test
@@ -133,11 +135,11 @@ public class CacheTest {
         given(cache.get("testKey")).willReturn("Hello from cache");
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
-                toFlowable(cacheContext.getEventPublisher())
+            toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -145,8 +147,8 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(1);
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(0);
         testSubscriber
-                .assertValueCount(1)
-                .assertValues(CacheEvent.Type.CACHE_HIT);
+            .assertValueCount(1)
+            .assertValues(CacheEvent.Type.CACHE_HIT);
     }
 
     @Test
@@ -154,11 +156,11 @@ public class CacheTest {
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
-                toFlowable(cacheContext.getEventPublisher())
+            toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -166,7 +168,7 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(0);
         testSubscriber
-                .assertValueCount(1)
-                .assertValues(CacheEvent.Type.ERROR);
+            .assertValueCount(1)
+            .assertValues(CacheEvent.Type.ERROR);
     }
 }

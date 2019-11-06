@@ -10,9 +10,7 @@ import java.io.IOException;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit test for {@link CompletableBulkhead} using {@link BulkheadOperator}.
@@ -22,7 +20,7 @@ public class CompletableBulkheadTest {
     private Bulkhead bulkhead;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 

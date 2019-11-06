@@ -37,9 +37,9 @@ class SingleCircuitBreaker<T> extends Single<T> {
 
     @Override
     protected void subscribeActual(SingleObserver<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerSingleObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }

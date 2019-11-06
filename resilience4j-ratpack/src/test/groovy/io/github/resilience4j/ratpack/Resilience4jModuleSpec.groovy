@@ -52,14 +52,14 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.circuitBreaker('test1')
-                      .circuitBreaker('test2') {
-                        it.setFailureRateThreshold(50)
+                        .circuitBreaker('test2') {
+                            it.setFailureRateThreshold(50)
                                 .setWaitDurationInOpenState(Duration.ofMillis(5000))
                                 .setRingBufferSizeInClosedState(200)
                                 .setRingBufferSizeInHalfOpenState(20)
                                 .setFailureRateThreshold(60)
                                 .setAutomaticTransitionFromOpenToHalfOpenEnabled(true)
-                    }
+                        }
                 }
             }
             handlers {
@@ -210,11 +210,11 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.rateLimiter('test')
-                      .rateLimiter('test2') {
-                        it.setLimitForPeriod(100)
+                        .rateLimiter('test2') {
+                            it.setLimitForPeriod(100)
                                 .setLimitRefreshPeriod(Duration.ofNanos(900))
                                 .setTimeoutDuration(Duration.ofMillis(10))
-                    }
+                        }
                 }
             }
             handlers {
@@ -347,10 +347,10 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test')
-                      .retry('test2') {
-                        it.setMaxRetryAttempts(3)
+                        .retry('test2') {
+                            it.setMaxRetryAttempts(3)
                                 .setWaitDuration(Duration.ofMillis(1000))
-                    }
+                        }
                 }
             }
             handlers {
@@ -473,10 +473,10 @@ class Resilience4jModuleSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.bulkhead('test')
-                      .bulkhead('test2') {
-                        it.setMaxConcurrentCalls(100)
+                        .bulkhead('test2') {
+                            it.setMaxConcurrentCalls(100)
                                 .setMaxWaitDuration(Duration.ofMillis(1000))
-                    }
+                        }
                 }
             }
             handlers {

@@ -33,29 +33,29 @@ public class SpringCloudCommonTest {
     @Test
     public void shouldHaveRefreshScopeAnnotation() {
         Arrays.stream(AbstractRefreshScopedBulkheadConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedCircuitBreakerConfig() {
         Arrays.stream(AbstractRefreshScopedCircuitBreakerConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedRetryConfig() {
         Arrays.stream(AbstractRefreshScopedRetryConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedRateLimiterConfig() {
         Arrays.stream(AbstractRefreshScopedRateLimiterConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
 }

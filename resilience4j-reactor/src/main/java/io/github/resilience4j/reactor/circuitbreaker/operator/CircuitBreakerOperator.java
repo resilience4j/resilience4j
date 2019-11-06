@@ -18,16 +18,16 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.IllegalPublisherException;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.UnaryOperator;
 
-import org.reactivestreams.Publisher;
-
 /**
- * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise emits a {@link CallNotPermittedException} if the CircuitBreaker is OPEN.
+ * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a
+ * permission to subscribe to an upstream Publisher. Otherwise emits a {@link
+ * CallNotPermittedException} if the CircuitBreaker is OPEN.
  *
  * @param <T> the value type
  */

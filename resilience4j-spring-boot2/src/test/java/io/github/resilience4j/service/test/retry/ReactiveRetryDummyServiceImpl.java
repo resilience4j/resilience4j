@@ -15,11 +15,10 @@
  */
 package io.github.resilience4j.service.test.retry;
 
-import org.assertj.core.util.Arrays;
-import org.springframework.stereotype.Component;
-
 import io.github.resilience4j.retry.annotation.Retry;
 import io.reactivex.Flowable;
+import org.assertj.core.util.Arrays;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 /**
@@ -28,21 +27,22 @@ import reactor.core.publisher.Flux;
 @Retry(name = ReactiveRetryDummyService.BACKEND_C)
 @Component
 public class ReactiveRetryDummyServiceImpl implements ReactiveRetryDummyService {
-	@Override
-	public Flux<String> doSomethingFlux(boolean throwException) {
 
-		if (throwException) {
-			return Flux.error(new IllegalArgumentException("FailedFlux"));
-		}
+    @Override
+    public Flux<String> doSomethingFlux(boolean throwException) {
 
-		return Flux.fromArray(Arrays.array("test", "test2"));
-	}
+        if (throwException) {
+            return Flux.error(new IllegalArgumentException("FailedFlux"));
+        }
 
-	@Override
-	public Flowable<String> doSomethingFlowable(boolean throwException) {
-		if (throwException) {
-			return Flowable.error(new IllegalArgumentException("Failed"));
-		}
-		return Flowable.just("testMaybe");
-	}
+        return Flux.fromArray(Arrays.array("test", "test2"));
+    }
+
+    @Override
+    public Flowable<String> doSomethingFlowable(boolean throwException) {
+        if (throwException) {
+            return Flowable.error(new IllegalArgumentException("Failed"));
+        }
+        return Flowable.just("testMaybe");
+    }
 }

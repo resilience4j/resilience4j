@@ -27,12 +27,15 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  */
 public class RxJava2OnClasspathCondition implements Condition {
 
-	private static final Logger logger = LoggerFactory.getLogger(RxJava2OnClasspathCondition.class);
-	private static final String CLASS_TO_CHECK = "io.reactivex.Flowable";
-	private static final String R4J_RXJAVA = "io.github.resilience4j.AbstractSubscriber";
-	@Override
-	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath."))
-				&& AspectUtil.checkClassIfFound(context, R4J_RXJAVA, (e) -> logger.info("RxJava2 related Aspect extensions are not activated because Resilience4j RxJava2 module is not on the classpath."));
-	}
+    private static final Logger logger = LoggerFactory.getLogger(RxJava2OnClasspathCondition.class);
+    private static final String CLASS_TO_CHECK = "io.reactivex.Flowable";
+    private static final String R4J_RXJAVA = "io.github.resilience4j.AbstractSubscriber";
+
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info(
+            "RxJava2 related Aspect extensions are not activated, because RxJava2 is not on the classpath."))
+            && AspectUtil.checkClassIfFound(context, R4J_RXJAVA, (e) -> logger.info(
+            "RxJava2 related Aspect extensions are not activated because Resilience4j RxJava2 module is not on the classpath."));
+    }
 }

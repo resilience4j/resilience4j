@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RetryAutoConfigurationAsyncTest {
 
     @Autowired
@@ -64,18 +64,20 @@ public class RetryAutoConfigurationAsyncTest {
     private TestRestTemplate restTemplate;
 
     /**
-     * The test verifies that a Async Retry instance is created and configured properly when the RetryDummyService is invoked and
-     * that the Async Retry logic is properly handled
+     * The test verifies that a Async Retry instance is created and configured properly when the
+     * RetryDummyService is invoked and that the Async Retry logic is properly handled
      */
     @Test
     public void testRetryAutoConfigurationAsync() throws Throwable {
         assertThat(retryRegistry).isNotNull();
 
         RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
-        RetryEventsEndpointResponse retryEventListForBBefore = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
+        RetryEventsEndpointResponse retryEventListForBBefore = retryEvents(
+            "/actuator/retryevents/" + RETRY_BACKEND_B);
 
         try {
-            final CompletionStage<String> stringCompletionStage = retryDummyService.doSomethingAsync(true);
+            final CompletionStage<String> stringCompletionStage = retryDummyService
+                .doSomethingAsync(true);
             String result = awaitResult(stringCompletionStage, 5);
             assertThat(result).isNull();
 
@@ -95,19 +97,24 @@ public class RetryAutoConfigurationAsyncTest {
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
         // expect retry actuator endpoint contains both retries
-        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate.getForEntity("/actuator/retries", RetryEndpointResponse.class);
-        assertThat(new HashSet<>(retriesList.getBody().getRetries())).contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
+            .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+        assertThat(new HashSet<>(retriesList.getBody().getRetries()))
+            .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
                 BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+            .isFalse();
         assertThat(retryAspect.getOrder()).isEqualTo(399);
     }
 
@@ -116,7 +123,8 @@ public class RetryAutoConfigurationAsyncTest {
     }
 
 
-    private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds) throws Throwable {
+    private <T> T awaitResult(CompletionStage<T> completionStage, long timeoutSeconds)
+        throws Throwable {
         try {
             return completionStage.toCompletableFuture().get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | TimeoutException e) {

@@ -22,7 +22,6 @@ import reactor.core.CoreSubscriber;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static java.util.Objects.requireNonNull;
 
@@ -42,8 +41,8 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     private final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
 
     protected CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
-                                       CoreSubscriber<? super T> downstreamSubscriber,
-                                       boolean singleProducer) {
+        CoreSubscriber<? super T> downstreamSubscriber,
+        boolean singleProducer) {
         super(downstreamSubscriber);
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.singleProducer = singleProducer;
@@ -53,7 +52,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
-            if (singleProducer && successSignaled.compareAndSet( false, true)) {
+            if (singleProducer && successSignaled.compareAndSet(false, true)) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
             }
             eventWasEmitted.set(true);
@@ -64,7 +63,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     protected void hookOnComplete() {
-        if (successSignaled.compareAndSet( false, true)) {
+        if (successSignaled.compareAndSet(false, true)) {
             circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
         }
 
@@ -74,11 +73,11 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     public void hookOnCancel() {
         if (!successSignaled.get()) {
-            if(eventWasEmitted.get()){
+            if (eventWasEmitted.get()) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            }else{
+            } else {
                 circuitBreaker.releasePermission();
-            }            
+            }
         }
     }
 

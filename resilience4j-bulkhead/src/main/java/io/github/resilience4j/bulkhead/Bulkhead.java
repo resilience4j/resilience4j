@@ -41,34 +41,353 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- *  A Bulkhead instance is thread-safe can be used to decorate multiple requests.
- *
- * A {@link Bulkhead} represent an entity limiting the amount of parallel operations. It does not assume nor does it mandate usage
- * of any particular concurrency and/or io model. These details are left for the client to manage. This bulkhead, depending on the
- * underlying concurrency/io model can be used to shed load, and, where it makes sense, limit resource use (i.e. limit amount of
+ * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
+ * <p>
+ * A {@link Bulkhead} represent an entity limiting the amount of parallel operations. It does not
+ * assume nor does it mandate usage of any particular concurrency and/or io model. These details are
+ * left for the client to manage. This bulkhead, depending on the underlying concurrency/io model
+ * can be used to shed load, and, where it makes sense, limit resource use (i.e. limit amount of
  * threads/actors involved in a particular flow, etc).
- *
- * In order to execute an operation protected by this bulkhead, a permission must be obtained by calling {@link Bulkhead#tryAcquirePermission()} ()}
- * If the bulkhead is full, no additional operations will be permitted to execute until space is available.
- *
- * Once the operation is complete, regardless of the result, client needs to call {@link Bulkhead#onComplete()} in order to maintain
- * integrity of internal bulkhead state.
- *
+ * <p>
+ * In order to execute an operation protected by this bulkhead, a permission must be obtained by
+ * calling {@link Bulkhead#tryAcquirePermission()} ()} If the bulkhead is full, no additional
+ * operations will be permitted to execute until space is available.
+ * <p>
+ * Once the operation is complete, regardless of the result, client needs to call {@link
+ * Bulkhead#onComplete()} in order to maintain integrity of internal bulkhead state.
  */
 public interface Bulkhead {
 
     /**
-     * Dynamic bulkhead configuration change.
-     * NOTE! New `maxWaitTime` duration won't affect threads that are currently waiting for permission.
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the Bulkhead
+     * @param supplier the original supplier
+     * @param <T>      the type of results supplied by this supplier
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(Bulkhead bulkhead,
+        CheckedFunction0<T> supplier) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                return supplier.apply();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T>      the type of the returned CompletionStage's result
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<CompletionStage<T>> decorateCompletionStage(Bulkhead bulkhead,
+        Supplier<CompletionStage<T>> supplier) {
+        return () -> {
+
+            final CompletableFuture<T> promise = new CompletableFuture<>();
+
+            if (!bulkhead.tryAcquirePermission()) {
+                promise.completeExceptionally(
+                    BulkheadFullException.createBulkheadFullException(bulkhead));
+            } else {
+                try {
+                    supplier.get()
+                        .whenComplete(
+                            (result, throwable) -> {
+                                bulkhead.onComplete();
+                                if (throwable != null) {
+                                    promise.completeExceptionally(throwable);
+                                } else {
+                                    promise.complete(result);
+                                }
+                            }
+                        );
+                } catch (Throwable throwable) {
+                    bulkhead.onComplete();
+                    promise.completeExceptionally(throwable);
+                }
+            }
+
+            return promise;
+        };
+    }
+
+    /**
+     * Returns a runnable which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param runnable the original runnable
+     * @return a runnable which is decorated by a Bulkhead.
+     */
+    static CheckedRunnable decorateCheckedRunnable(Bulkhead bulkhead, CheckedRunnable runnable) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                runnable.run();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a callable which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param callable the original Callable
+     * @param <T>      the result type of callable
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Callable<T> decorateCallable(Bulkhead bulkhead, Callable<T> callable) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                return callable.call();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T>      the type of results supplied by this supplier
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<T> decorateSupplier(Bulkhead bulkhead, Supplier<T> supplier) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                return supplier.get();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T>      the type of results supplied by this supplier
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Try<T>> decorateTrySupplier(Bulkhead bulkhead, Supplier<Try<T>> supplier) {
+        return () -> {
+            if (bulkhead.tryAcquirePermission()) {
+                try {
+                    return supplier.get();
+                } finally {
+                    bulkhead.onComplete();
+                }
+            } else {
+                return Try.failure(BulkheadFullException.createBulkheadFullException(bulkhead));
+            }
+        };
+    }
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T>      the type of results supplied by this supplier
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead,
+        Supplier<Either<? extends Exception, T>> supplier) {
+        return () -> {
+            if (bulkhead.tryAcquirePermission()) {
+                try {
+                    Either<? extends Exception, T> result = supplier.get();
+                    return Either.narrow(result);
+                } finally {
+                    bulkhead.onComplete();
+                }
+            } else {
+                return Either.left(BulkheadFullException.createBulkheadFullException(bulkhead));
+            }
+        };
+    }
+
+    /**
+     * Returns a consumer which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a consumer which is decorated by a Bulkhead.
+     */
+    static <T> Consumer<T> decorateConsumer(Bulkhead bulkhead, Consumer<T> consumer) {
+        return (t) -> {
+            bulkhead.acquirePermission();
+            try {
+                consumer.accept(t);
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a consumer which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a consumer which is decorated by a Bulkhead.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead,
+        CheckedConsumer<T> consumer) {
+        return (t) -> {
+            bulkhead.acquirePermission();
+            try {
+                consumer.accept(t);
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a runnable which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param runnable the original runnable
+     * @return a runnable which is decorated by a bulkhead.
+     */
+    static Runnable decorateRunnable(Bulkhead bulkhead, Runnable runnable) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                runnable.run();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a function which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param function the original function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the type of the result of the function
+     * @return a function which is decorated by a bulkhead.
+     */
+    static <T, R> Function<T, R> decorateFunction(Bulkhead bulkhead, Function<T, R> function) {
+        return (T t) -> {
+            bulkhead.acquirePermission();
+            try {
+                return function.apply(t);
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a function which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param function the original function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the type of the result of the function
+     * @return a function which is decorated by a bulkhead.
+     */
+    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Bulkhead bulkhead,
+        CheckedFunction1<T, R> function) {
+        return (T t) -> {
+            bulkhead.acquirePermission();
+            try {
+                return function.apply(t);
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Create a Bulkhead with a default configuration.
+     *
+     * @param name the name of the bulkhead
+     * @return a Bulkhead instance
+     */
+    static Bulkhead ofDefaults(String name) {
+        return new SemaphoreBulkhead(name);
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name   the name of the bulkhead
+     * @param config a custom BulkheadConfig configuration
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, BulkheadConfig config) {
+        return of(name, config, HashMap.empty());
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name   the name of the bulkhead
+     * @param config a custom BulkheadConfig configuration
+     * @param tags   tags added to the Bulkhead
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, BulkheadConfig config,
+        io.vavr.collection.Map<String, String> tags) {
+        return new SemaphoreBulkhead(name, config, tags);
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name                   the name of the bulkhead
+     * @param bulkheadConfigSupplier custom configuration supplier
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
+        return of(name, bulkheadConfigSupplier, HashMap.empty());
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name                   the name of the bulkhead
+     * @param bulkheadConfigSupplier custom configuration supplier
+     * @param tags                   tags added to the Bulkhead
+     * @return a Bulkhead instance
+     */
+    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier,
+        io.vavr.collection.Map<String, String> tags) {
+        return new SemaphoreBulkhead(name, bulkheadConfigSupplier, tags);
+    }
+
+    /**
+     * Dynamic bulkhead configuration change. NOTE! New `maxWaitTime` duration won't affect threads
+     * that are currently waiting for permission.
+     *
      * @param newConfig new BulkheadConfig
      */
     void changeConfig(BulkheadConfig newConfig);
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation.
-     * If the current thread is {@linkplain Thread#interrupt interrupted}
-     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
-     * but its interrupt status will be set.
+     * If the current thread is {@linkplain Thread#interrupt interrupted} while waiting for a permit
+     * then it won't throw {@linkplain InterruptedException}, but its interrupt status will be set.
      *
      * @return {@code true} if a permission was acquired and {@code false} otherwise
      */
@@ -76,20 +395,20 @@ public interface Bulkhead {
 
     /**
      * Acquires a permission to execute a call, only if one is available at the time of invocation
-     * If the current thread is {@linkplain Thread#interrupt interrupted}
-     * while waiting for a permit then it won't throw {@linkplain InterruptedException},
-     * but its interrupt status will be set.
+     * If the current thread is {@linkplain Thread#interrupt interrupted} while waiting for a permit
+     * then it won't throw {@linkplain InterruptedException}, but its interrupt status will be set.
      *
-     * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+     * @throws BulkheadFullException               when the Bulkhead is full and no further calls
+     *                                             are permitted.
      * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait
      */
     void acquirePermission();
 
     /**
      * Releases a permission and increases the number of available permits by one.
-     *
-     * Should only be used when a permission was acquired but not used. Otherwise use
-     * {@link Bulkhead#onComplete()} to signal a completed call and release a permission.
+     * <p>
+     * Should only be used when a permission was acquired but not used. Otherwise use {@link
+     * Bulkhead#onComplete()} to signal a completed call and release a permission.
      */
     void releasePermission();
 
@@ -127,8 +446,8 @@ public interface Bulkhead {
     io.vavr.collection.Map<String, String> getTags();
 
     /**
-     * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and
-     * can be used to register event consumers.
+     * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and can be
+     * used to register event consumers.
      *
      * @return an EventPublisher
      */
@@ -138,10 +457,10 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> T executeSupplier(Supplier<T> supplier){
+    default <T> T executeSupplier(Supplier<T> supplier) {
         return decorateSupplier(this, supplier).get();
     }
 
@@ -149,10 +468,10 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier){
+    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
         return decorateTrySupplier(this, supplier).get();
     }
 
@@ -160,10 +479,11 @@ public interface Bulkhead {
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the result of the decorated Supplier.
      */
-    default <T> Either<Exception, T> executeEitherSupplier(Supplier<Either<? extends Exception, T>> supplier){
+    default <T> Either<Exception, T> executeEitherSupplier(
+        Supplier<Either<? extends Exception, T>> supplier) {
         return decorateEitherSupplier(this, supplier).get();
     }
 
@@ -171,12 +491,11 @@ public interface Bulkhead {
      * Decorates and executes the decorated Callable.
      *
      * @param callable the original Callable
-     *
+     * @param <T>      the result type of callable
      * @return the result of the decorated Callable.
-     * @param <T> the result type of callable
      * @throws Exception if unable to compute a result
      */
-    default <T> T executeCallable(Callable<T> callable) throws Exception{
+    default <T> T executeCallable(Callable<T> callable) throws Exception {
         return decorateCallable(this, callable).call();
     }
 
@@ -185,7 +504,7 @@ public interface Bulkhead {
      *
      * @param runnable the original Runnable
      */
-    default void executeRunnable(Runnable runnable){
+    default void executeRunnable(Runnable runnable) {
         decorateRunnable(this, runnable).run();
     }
 
@@ -200,347 +519,16 @@ public interface Bulkhead {
     default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
         return decorateCheckedSupplier(this, checkedSupplier).apply();
     }
+
     /**
      * Decorates and executes the decorated CompletionStage.
      *
      * @param supplier the original CompletionStage
-     * @param <T> the type of results supplied by this supplier
+     * @param <T>      the type of results supplied by this supplier
      * @return the decorated CompletionStage.
      */
-    default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier){
+    default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStage(this, supplier).get();
-    }
-
-    /**
-     * Returns a supplier which is decorated by a bulkhead.
-     *
-     * @param bulkhead the Bulkhead
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
-     * @return a supplier which is decorated by a Bulkhead.
-     */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(Bulkhead bulkhead, CheckedFunction0<T> supplier){
-        return () -> {
-            bulkhead.acquirePermission();
-            try {
-                return supplier.apply();
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a supplier which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param supplier the original supplier
-     * @param <T> the type of the returned CompletionStage's result
-     * @return a supplier which is decorated by a Bulkhead.
-     */
-    static <T> Supplier<CompletionStage<T>> decorateCompletionStage(Bulkhead bulkhead, Supplier<CompletionStage<T>> supplier) {
-        return () -> {
-
-            final CompletableFuture<T> promise = new CompletableFuture<>();
-
-            if (!bulkhead.tryAcquirePermission()) {
-                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
-            }
-            else {
-                try {
-                    supplier.get()
-                            .whenComplete(
-                                (result, throwable) -> {
-                                    bulkhead.onComplete();
-                                    if (throwable != null) {
-                                        promise.completeExceptionally(throwable);
-                                    }
-                                    else {
-                                        promise.complete(result);
-                                    }
-                                }
-                            );
-                }
-                catch (Throwable throwable) {
-                    bulkhead.onComplete();
-                    promise.completeExceptionally(throwable);
-                }
-            }
-
-            return promise;
-        };
-    }
-
-    /**
-     * Returns a runnable which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param runnable the original runnable
-     *
-     * @return a runnable which is decorated by a Bulkhead.
-     */
-    static CheckedRunnable decorateCheckedRunnable(Bulkhead bulkhead, CheckedRunnable runnable){
-        return () -> {
-            bulkhead.acquirePermission();
-            try{
-                runnable.run();
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a callable which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param callable the original Callable
-     * @param <T> the result type of callable
-     *
-     * @return a supplier which is decorated by a Bulkhead.
-     */
-    static <T> Callable<T> decorateCallable(Bulkhead bulkhead, Callable<T> callable){
-        return () -> {
-            bulkhead.acquirePermission();
-            try {
-                return callable.call();
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a supplier which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
-     *
-     * @return a supplier which is decorated by a Bulkhead.
-     */
-    static <T> Supplier<T> decorateSupplier(Bulkhead bulkhead, Supplier<T> supplier){
-        return () -> {
-            bulkhead.acquirePermission();
-            try {
-                return supplier.get();
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a supplier which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
-     *
-     * @return a supplier which is decorated by a Bulkhead.
-     */
-    static <T> Supplier<Try<T>> decorateTrySupplier(Bulkhead bulkhead, Supplier<Try<T>> supplier){
-        return () -> {
-            if(bulkhead.tryAcquirePermission()){
-                try {
-                    return supplier.get();
-                }
-                finally {
-                    bulkhead.onComplete();
-                }
-            } else {
-                return Try.failure(BulkheadFullException.createBulkheadFullException(bulkhead));
-            }
-        };
-    }
-
-    /**
-     * Returns a supplier which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param supplier the original supplier
-     * @param <T> the type of results supplied by this supplier
-     *
-     * @return a supplier which is decorated by a Bulkhead.
-     */
-    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(Bulkhead bulkhead, Supplier<Either<? extends Exception, T>> supplier){
-        return () -> {
-            if(bulkhead.tryAcquirePermission()){
-                try {
-                    Either<? extends Exception, T> result = supplier.get();
-                    return Either.narrow(result);
-                }
-                finally {
-                    bulkhead.onComplete();
-                }
-            } else {
-                return Either.left(BulkheadFullException.createBulkheadFullException(bulkhead));
-            }
-        };
-    }
-
-    /**
-     * Returns a consumer which is decorated by a bulkhead.
-
-     * @param bulkhead the bulkhead
-     * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
-     *
-     * @return a consumer which is decorated by a Bulkhead.
-     */
-    static <T> Consumer<T> decorateConsumer(Bulkhead bulkhead, Consumer<T> consumer){
-        return (t) -> {
-            bulkhead.acquirePermission();
-            try {
-                consumer.accept(t);
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a consumer which is decorated by a bulkhead.
-
-     * @param bulkhead the bulkhead
-     * @param consumer the original consumer
-     * @param <T> the type of the input to the consumer
-     *
-     * @return a consumer which is decorated by a Bulkhead.
-     */
-    static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead, CheckedConsumer<T> consumer){
-        return (t) -> {
-            bulkhead.acquirePermission();
-            try {
-                consumer.accept(t);
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a runnable which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param runnable the original runnable
-     *
-     * @return a runnable which is decorated by a bulkhead.
-     */
-    static Runnable decorateRunnable(Bulkhead bulkhead, Runnable runnable){
-        return () -> {
-            bulkhead.acquirePermission();
-            try{
-                runnable.run();
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a function which is decorated by a bulkhead.
-
-     * @param bulkhead the bulkhead
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
-     * @return a function which is decorated by a bulkhead.
-     */
-    static <T, R> Function<T, R> decorateFunction(Bulkhead bulkhead, Function<T, R> function){
-        return (T t) -> {
-            bulkhead.acquirePermission();
-            try{
-                return function.apply(t);
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Returns a function which is decorated by a bulkhead.
-     *
-     * @param bulkhead the bulkhead
-     * @param function the original function
-     * @param <T> the type of the input to the function
-     * @param <R> the type of the result of the function
-     * @return a function which is decorated by a bulkhead.
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Bulkhead bulkhead, CheckedFunction1<T, R> function){
-        return (T t) -> {
-            bulkhead.acquirePermission();
-            try{
-                return function.apply(t);
-            }
-            finally {
-                bulkhead.onComplete();
-            }
-        };
-    }
-
-    /**
-     * Create a Bulkhead with a default configuration.
-     *
-     * @param name the name of the bulkhead
-     * @return a Bulkhead instance
-     */
-    static Bulkhead ofDefaults(String name) {
-        return new SemaphoreBulkhead(name);
-    }
-
-    /**
-     * Creates a bulkhead with a custom configuration
-     *
-     * @param name the name of the bulkhead
-     * @param config a custom BulkheadConfig configuration
-     * @return a Bulkhead instance
-     */
-    static Bulkhead of(String name, BulkheadConfig config) {
-        return of(name, config, HashMap.empty());
-    }
-
-    /**
-     * Creates a bulkhead with a custom configuration
-     *
-     * @param name the name of the bulkhead
-     * @param config a custom BulkheadConfig configuration
-     * @param tags tags added to the Bulkhead
-     * @return a Bulkhead instance
-     */
-    static Bulkhead of(String name, BulkheadConfig config, io.vavr.collection.Map<String, String> tags) {
-        return new SemaphoreBulkhead(name, config, tags);
-    }
-
-    /**
-     * Creates a bulkhead with a custom configuration
-     *
-     * @param name the name of the bulkhead
-     * @param bulkheadConfigSupplier custom configuration supplier
-     * @return a Bulkhead instance
-     */
-    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-        return of(name, bulkheadConfigSupplier, HashMap.empty());
-    }
-
-    /**
-     * Creates a bulkhead with a custom configuration
-     *
-     * @param name the name of the bulkhead
-     * @param bulkheadConfigSupplier custom configuration supplier
-     * @param tags tags added to the Bulkhead
-     * @return a Bulkhead instance
-     */
-    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier, io.vavr.collection.Map<String, String> tags) {
-        return new SemaphoreBulkhead(name, bulkheadConfigSupplier, tags);
     }
 
 
@@ -548,16 +536,17 @@ public interface Bulkhead {
 
 
         /**
-         * Returns the number of parallel executions this bulkhead can support at this point in time.
+         * Returns the number of parallel executions this bulkhead can support at this point in
+         * time.
          *
          * @return remaining bulkhead depth
          */
         int getAvailableConcurrentCalls();
 
         /**
-         * Returns the configured max amount of concurrent calls
-         * allowed for this bulkhead, basically it's a top inclusive bound for
-         * the value returned from {@link #getAvailableConcurrentCalls()}.
+         * Returns the configured max amount of concurrent calls allowed for this bulkhead,
+         * basically it's a top inclusive bound for the value returned from {@link
+         * #getAvailableConcurrentCalls()}.
          *
          * @return max allowed concurrent calls
          */

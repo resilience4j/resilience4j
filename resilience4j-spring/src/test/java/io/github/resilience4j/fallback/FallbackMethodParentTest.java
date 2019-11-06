@@ -15,10 +15,10 @@
  */
 package io.github.resilience4j.fallback;
 
+import org.junit.Test;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
-
-import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,6 +28,66 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SuppressWarnings("unused")
 public class FallbackMethodParentTest {
+
+    public String testMethod(String parameter) {
+        return "test";
+    }
+
+    public String fallbackParent(String parameter, IllegalStateException exception) {
+        return "recovered";
+    }
+
+    public String ambiguousFallback(String parameter, IOException exception) {
+        return "not-only-exception";
+    }
+
+    @Test
+    public void fallbackIgnoringParentMethod() throws Throwable {
+        Proxy target = new Proxy();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        FallbackMethod fallbackMethod = FallbackMethod
+            .create("fallbackParent", testMethod, new Object[]{"test"}, target);
+
+        assertThat(fallbackMethod.fallback(new IllegalStateException("err")))
+            .isEqualTo("proxy-recovered");
+    }
+
+    @Test
+    public void fallbackIgnoringInterfaceMethod() throws Throwable {
+        Proxy target = new Proxy();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        FallbackMethod fallbackMethod = FallbackMethod
+            .create("fallbackInterface", testMethod, new Object[]{"test"}, target);
+
+        assertThat(fallbackMethod.fallback(new IllegalArgumentException("err")))
+            .isEqualTo("proxy-recovered");
+    }
+
+    @Test
+    public void fallbackNotIgnoringInterfaceMethod() throws Throwable {
+        Proxy target = new Proxy();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        FallbackMethod fallbackMethod = FallbackMethod
+            .create("fallbackOnlyInterface", testMethod, new Object[]{"test"}, target);
+
+        assertThat(fallbackMethod.fallback(new IllegalArgumentException("err")))
+            .isEqualTo("only-interface-recovered");
+    }
+
+    @Test
+    public void dontFallbackAmbiguousMethod() throws Throwable {
+        Proxy target = new Proxy();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        assertThatThrownBy(() -> FallbackMethod
+            .create("ambiguousFallback", testMethod, new Object[]{"test"}, target))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("You have more that one fallback method that cover the same exception type "
+                + IOException.class.getName());
+    }
 
     interface ProxyInterface {
 
@@ -56,57 +116,5 @@ public class FallbackMethodParentTest {
         public String ambiguousFallback(IOException exception) {
             return "only-exception";
         }
-    }
-
-    public String testMethod(String parameter) {
-        return "test";
-    }
-
-    public String fallbackParent(String parameter, IllegalStateException exception) {
-        return "recovered";
-    }
-
-    public String ambiguousFallback(String parameter, IOException exception) {
-        return "not-only-exception";
-    }
-
-    @Test
-    public void fallbackIgnoringParentMethod() throws Throwable {
-        Proxy target = new Proxy();
-        Method testMethod = target.getClass().getMethod("testMethod", String.class);
-
-        FallbackMethod fallbackMethod = FallbackMethod.create("fallbackParent", testMethod, new Object[]{"test"}, target);
-
-        assertThat(fallbackMethod.fallback(new IllegalStateException("err"))).isEqualTo("proxy-recovered");
-    }
-
-    @Test
-    public void fallbackIgnoringInterfaceMethod() throws Throwable {
-        Proxy target = new Proxy();
-        Method testMethod = target.getClass().getMethod("testMethod", String.class);
-
-        FallbackMethod fallbackMethod = FallbackMethod.create("fallbackInterface", testMethod, new Object[]{"test"}, target);
-
-        assertThat(fallbackMethod.fallback(new IllegalArgumentException("err"))).isEqualTo("proxy-recovered");
-    }
-
-    @Test
-    public void fallbackNotIgnoringInterfaceMethod() throws Throwable {
-        Proxy target = new Proxy();
-        Method testMethod = target.getClass().getMethod("testMethod", String.class);
-
-        FallbackMethod fallbackMethod = FallbackMethod.create("fallbackOnlyInterface", testMethod, new Object[]{"test"}, target);
-
-        assertThat(fallbackMethod.fallback(new IllegalArgumentException("err"))).isEqualTo("only-interface-recovered");
-    }
-
-    @Test
-    public void dontFallbackAmbiguousMethod() throws Throwable {
-        Proxy target = new Proxy();
-        Method testMethod = target.getClass().getMethod("testMethod", String.class);
-
-        assertThatThrownBy(() -> FallbackMethod.create("ambiguousFallback", testMethod, new Object[]{"test"}, target))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("You have more that one fallback method that cover the same exception type " + IOException.class.getName());
     }
 }

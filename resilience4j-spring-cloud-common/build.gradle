@@ -10,4 +10,4 @@ dependencies {
 }
 
 compileJava.dependsOn(processResources)
-ext.moduleName='io.github.resilience4j.spring-cloud-common'
+ext.moduleName = 'io.github.resilience4j.spring-cloud-common'

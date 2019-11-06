@@ -23,16 +23,18 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
 
     /**
      * @param retryConfigurationProperties retry spring configuration properties
-     * @param retryEventConsumerRegistry the retry event consumer registry
+     * @param retryEventConsumerRegistry   the retry event consumer registry
      * @return the RefreshScoped RetryRegistry
      */
     @Bean
     @RefreshScope
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-                                       EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-                                       RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
-        return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryRegistryEventConsumer);
+        EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        return retryConfiguration
+            .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
+                retryRegistryEventConsumer);
     }
 
 }

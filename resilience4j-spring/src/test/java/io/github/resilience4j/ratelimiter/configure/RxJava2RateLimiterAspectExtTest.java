@@ -15,9 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,50 +24,57 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2RateLimiterAspectExtTest {
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
 
-
-	@Test
-	public void testCheckTypes() {
-		assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
-		assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
-	}
-
-	@Test
-	public void testReactorTypes() throws Throwable {
-		RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Completable.complete());
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Maybe.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
-
-		when(proceedingJoinPoint.proceed()).thenReturn(Observable.just("Test"));
-		assertThat(rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod")).isNotNull();
+    @InjectMocks
+    RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;
 
 
-	}
+    @Test
+    public void testCheckTypes() {
+        assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
+    }
+
+    @Test
+    public void testReactorTypes() throws Throwable {
+        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+
+        when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
+        assertThat(
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
+
+        when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
+        assertThat(
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
+
+        when(proceedingJoinPoint.proceed()).thenReturn(Completable.complete());
+        assertThat(
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
+
+        when(proceedingJoinPoint.proceed()).thenReturn(Maybe.just("Test"));
+        assertThat(
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
+
+        when(proceedingJoinPoint.proceed()).thenReturn(Observable.just("Test"));
+        assertThat(
+            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            .isNotNull();
+
+
+    }
 }

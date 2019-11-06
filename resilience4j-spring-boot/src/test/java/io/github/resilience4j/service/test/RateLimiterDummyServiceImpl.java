@@ -9,6 +9,7 @@ import java.io.IOException;
 @RateLimiter(name = DummyService.BACKEND)
 @Component(value = "rateLimiterDummyService")
 public class RateLimiterDummyServiceImpl implements DummyService {
+
     @Override
     public void doSomething(boolean throwBackendTrouble) throws IOException {
         if (throwBackendTrouble) {

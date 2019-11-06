@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.toList
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.util.concurrent.Phaser
 
 class FlowCircuitBreakerTest {
@@ -45,7 +44,7 @@ class FlowCircuitBreakerTest {
 
             //When
             flow {
-                repeat(3){
+                repeat(3) {
                     emit(it)
                 }
             }
@@ -53,7 +52,7 @@ class FlowCircuitBreakerTest {
                 .toList(resultList)
 
             //Then
-            repeat(3){
+            repeat(3) {
                 assertThat(resultList[it]).isEqualTo(it)
             }
             assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
@@ -76,7 +75,7 @@ class FlowCircuitBreakerTest {
             try {
                 flow {
                     Assertions.failBecauseExceptionWasNotThrown<Nothing>(CallNotPermittedException::class.java)
-                    repeat(3){
+                    repeat(3) {
                         emit(it)
                     }
                 }
@@ -110,7 +109,7 @@ class FlowCircuitBreakerTest {
             try {
                 flow {
                     wasStarted = true
-                    repeat(3){
+                    repeat(3) {
                         emit(it)
                     }
                 }
@@ -143,8 +142,8 @@ class FlowCircuitBreakerTest {
             //When
             try {
                 flow {
-                    repeat(6){
-                        if(it == 4) error("failed")
+                    repeat(6) {
+                        if (it == 4) error("failed")
                         emit(it)
                     }
                 }

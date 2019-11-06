@@ -26,12 +26,12 @@ import static java.util.Collections.unmodifiableList;
  */
 public final class LabelNames {
 
-    private LabelNames() {
-    }
-
     @SuppressWarnings("squid:S2386") // list is unmodifiable
     public static final List<String> NAME = unmodifiableList(singletonList("name"));
     // list is unmodifiable("squid:S2386") // list is unmodifiable
-    public static final List<String> NAME_AND_KIND = unmodifiableList(Arrays.asList("name", "kind"));
+    public static final List<String> NAME_AND_KIND = unmodifiableList(
+        Arrays.asList("name", "kind"));
+    private LabelNames() {
+    }
 
 }

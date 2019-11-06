@@ -27,10 +27,11 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.*;
+import static io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties.InstanceProperties;
 
 /**
- * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the health endpoints
+ * A Spring Boot health indicators which adds the state of a CircuitBreaker and it's metrics to the
+ * health endpoints
  */
 public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
@@ -50,26 +51,11 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private final HealthAggregator healthAggregator;
 
     public CircuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
-                                          CircuitBreakerConfigurationProperties circuitBreakerProperties,
-                                          HealthAggregator healthAggregator) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties,
+        HealthAggregator healthAggregator) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.healthAggregator = healthAggregator;
-    }
-
-    @Override
-    public Health health() {
-        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
-                .filter(this::isRegisterHealthIndicator)
-                .collect(Collectors.toMap(CircuitBreaker::getName, CircuitBreakersHealthIndicator::mapBackendMonitorState));
-
-        return healthAggregator.aggregate(healths);
-    }
-
-    private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
-        return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-                .map(InstanceProperties::getRegisterHealthIndicator)
-                .orElse(false);
     }
 
     private static Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
@@ -79,13 +65,14 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
             case OPEN:
                 return addDetails(Health.down(), circuitBreaker).build();
             case HALF_OPEN:
-                return addDetails(Health.unknown(),circuitBreaker).build();
+                return addDetails(Health.unknown(), circuitBreaker).build();
             default:
                 return addDetails(Health.unknown(), circuitBreaker).build();
         }
     }
 
-    private static Health.Builder addDetails(Health.Builder builder, CircuitBreaker circuitBreaker) {
+    private static Health.Builder addDetails(Health.Builder builder,
+        CircuitBreaker circuitBreaker) {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")
@@ -99,5 +86,21 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
             .withDetail(NOT_PERMITTED, metrics.getNumberOfNotPermittedCalls())
             .withDetail(STATE, circuitBreaker.getState());
         return builder;
+    }
+
+    @Override
+    public Health health() {
+        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
+            .filter(this::isRegisterHealthIndicator)
+            .collect(Collectors.toMap(CircuitBreaker::getName,
+                CircuitBreakersHealthIndicator::mapBackendMonitorState));
+
+        return healthAggregator.aggregate(healths);
+    }
+
+    private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
+        return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
+            .map(InstanceProperties::getRegisterHealthIndicator)
+            .orElse(false);
     }
 }

@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class FlowTimeLimiterTest {
@@ -42,14 +41,14 @@ class FlowTimeLimiterTest {
             //When
             flow {
                 repeat(3) {
-                    emit(helloWorldService.returnHelloWorld()+it)
+                    emit(helloWorldService.returnHelloWorld() + it)
                 }
             }
                 .timeLimiter(timelimiter)
                 .toList(resultList)
 
             //Then
-            repeat(3){
+            repeat(3) {
                 Assertions.assertThat(resultList[it]).isEqualTo("Hello world$it")
             }
             Assertions.assertThat(resultList.size).isEqualTo(3)

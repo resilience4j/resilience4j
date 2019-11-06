@@ -23,7 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedRetryMetricsPublisher
-        extends AbstractRetryMetrics implements MetricsPublisher<Retry> {
+    extends AbstractRetryMetrics implements MetricsPublisher<Retry> {
 
     private final MeterRegistry meterRegistry;
 

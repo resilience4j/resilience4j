@@ -49,94 +49,129 @@ public class CircuitBreakerChain implements Action<Chain> {
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
     @Inject
-    public CircuitBreakerChain(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
+    public CircuitBreakerChain(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        CircuitBreakerRegistry circuitBreakerRegistry) {
         this.eventConsumerRegistry = eventConsumerRegistry;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
     @Override
     public void execute(Chain chain) throws Exception {
-        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints().getCircuitbreaker().getPath();
+        String prefix = chain.getRegistry().get(Resilience4jConfig.class).getEndpoints()
+            .getCircuitbreaker().getPath();
         chain.prefix(prefix, chain1 -> {
             chain1.get("states/:name", ctx -> {
                 String circuitBreakerName = ctx.getPathTokens().get("name");
                 Promise.<CircuitBreakerStatesEndpointResponse>async(d -> {
-                    CircuitBreakerStatesEndpointResponse response = new CircuitBreakerStatesEndpointResponse(circuitBreakerRegistry
+                    CircuitBreakerStatesEndpointResponse response = new CircuitBreakerStatesEndpointResponse(
+                        circuitBreakerRegistry
                             .getAllCircuitBreakers()
                             .filter(c -> c.getName().equals(circuitBreakerName))
-                            .map(c -> new CircuitBreakerStateDTO(c.getName(), c.getState(), new CircuitBreakerMetricsDTO(c.getMetrics())))
+                            .map(c -> new CircuitBreakerStateDTO(c.getName(), c.getState(),
+                                new CircuitBreakerMetricsDTO(c.getMetrics())))
                             .toJavaList()
                     );
                     d.success(response);
                 }).then(r -> ctx.render(Jackson.json(r)));
             });
             chain1.get("states", ctx ->
-                    Promise.<CircuitBreakerStatesEndpointResponse>async(d -> {
-                        CircuitBreakerStatesEndpointResponse response = new CircuitBreakerStatesEndpointResponse(circuitBreakerRegistry
-                                .getAllCircuitBreakers()
-                                .map(c -> new CircuitBreakerStateDTO(c.getName(), c.getState(), new CircuitBreakerMetricsDTO(c.getMetrics())))
-                                .toJavaList()
-                        );
-                        d.success(response);
-                    }).then(r -> ctx.render(Jackson.json(r)))
+                Promise.<CircuitBreakerStatesEndpointResponse>async(d -> {
+                    CircuitBreakerStatesEndpointResponse response = new CircuitBreakerStatesEndpointResponse(
+                        circuitBreakerRegistry
+                            .getAllCircuitBreakers()
+                            .map(c -> new CircuitBreakerStateDTO(c.getName(), c.getState(),
+                                new CircuitBreakerMetricsDTO(c.getMetrics())))
+                            .toJavaList()
+                    );
+                    d.success(response);
+                }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("events", ctx ->
-                    Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
-                        CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry
-                                .getAllEventConsumer()
-                                .flatMap(CircularEventConsumer::getBufferedEvents)
-                                .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
-                                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
-                        d.success(response);
-                    }).then(r -> ctx.render(Jackson.json(r)))
+                Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
+                    CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(
+                        eventConsumerRegistry
+                            .getAllEventConsumer()
+                            .flatMap(CircularEventConsumer::getBufferedEvents)
+                            .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
+                            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
+                            .toJavaList());
+                    d.success(response);
+                }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers().map(circuitBreaker -> ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()));
-                Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(Flux.merge(eventStreams), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry
+                    .getAllCircuitBreakers().map(circuitBreaker -> ReactorAdapter
+                        .toFlux(circuitBreaker.getEventPublisher()));
+                Function<CircuitBreakerEvent, String> data = c -> Jackson
+                    .getObjectWriter(chain1.getRegistry()).writeValueAsString(
+                        CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
+                ServerSentEvents events = ServerSentEvents
+                    .serverSentEvents(Flux.merge(eventStreams),
+                        e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
+                            .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name", ctx -> {
-                        String circuitBreakerName = ctx.getPathTokens().get("name");
-                        Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
-                            CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry
-                                    .getEventConsumer(circuitBreakerName)
-                                    .getBufferedEvents()
-                                    .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
-                            d.success(response);
-                        }).then(r -> ctx.render(Jackson.json(r)));
-                    }
+                    String circuitBreakerName = ctx.getPathTokens().get("name");
+                    Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
+                        CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(
+                            eventConsumerRegistry
+                                .getEventConsumer(circuitBreakerName)
+                                .getBufferedEvents()
+                                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
+                                .toJavaList());
+                        d.success(response);
+                    }).then(r -> ctx.render(Jackson.json(r)));
+                }
             );
             chain1.get("stream/events/:name", ctx -> {
                 String circuitBreakerName = ctx.getPathTokens().get("name");
-                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().find(cb -> cb.getName().equals(circuitBreakerName))
-                        .getOrElseThrow(() -> new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
-                Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()), e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
+                    .find(cb -> cb.getName().equals(circuitBreakerName))
+                    .getOrElseThrow(() -> new IllegalArgumentException(String
+                        .format("circuit breaker with name %s not found", circuitBreakerName)));
+                Function<CircuitBreakerEvent, String> data = c -> Jackson
+                    .getObjectWriter(chain1.getRegistry()).writeValueAsString(
+                        CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
+                ServerSentEvents events = ServerSentEvents
+                    .serverSentEvents(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()),
+                        e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
+                            .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
             chain1.get("events/:name/:type", ctx -> {
-                        String circuitBreakerName = ctx.getPathTokens().get("name");
-                        String eventType = ctx.getPathTokens().get("type");
-                        Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
-                            CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry
-                                    .getEventConsumer(circuitBreakerName)
-                                    .getBufferedEvents()
-                                    .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
-                                    .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
-                            d.success(response);
-                        }).then(r -> ctx.render(Jackson.json(r)));
-                    }
+                    String circuitBreakerName = ctx.getPathTokens().get("name");
+                    String eventType = ctx.getPathTokens().get("type");
+                    Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
+                        CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(
+                            eventConsumerRegistry
+                                .getEventConsumer(circuitBreakerName)
+                                .getBufferedEvents()
+                                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
+                                    .valueOf(eventType.toUpperCase()))
+                                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
+                                .toJavaList());
+                        d.success(response);
+                    }).then(r -> ctx.render(Jackson.json(r)));
+                }
             );
             chain1.get("stream/events/:name/:type", ctx -> {
                 String circuitBreakerName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
-                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().find(cb -> cb.getName().equals(circuitBreakerName))
-                        .getOrElseThrow(() -> new IllegalArgumentException(String.format("circuit breaker with name %s not found", circuitBreakerName)));
-                Flux<CircuitBreakerEvent> eventStream = ReactorAdapter.toFlux(circuitBreaker.getEventPublisher())
-                        .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()));
-                Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry()).writeValueAsString(CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
-                ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream, e -> e.id(CircuitBreakerEvent::getCircuitBreakerName).event(c -> c.getEventType().name()).data(data));
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
+                    .find(cb -> cb.getName().equals(circuitBreakerName))
+                    .getOrElseThrow(() -> new IllegalArgumentException(String
+                        .format("circuit breaker with name %s not found", circuitBreakerName)));
+                Flux<CircuitBreakerEvent> eventStream = ReactorAdapter
+                    .toFlux(circuitBreaker.getEventPublisher())
+                    .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
+                        .valueOf(eventType.toUpperCase()));
+                Function<CircuitBreakerEvent, String> data = c -> Jackson
+                    .getObjectWriter(chain1.getRegistry()).writeValueAsString(
+                        CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream,
+                    e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
+                        .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
         });

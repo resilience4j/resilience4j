@@ -30,7 +30,7 @@ public class StopWatch {
     private final Instant startTime;
     private Clock clock;
 
-    StopWatch(Clock clock){
+    StopWatch(Clock clock) {
         this.clock = clock;
         this.startTime = clock.instant();
     }

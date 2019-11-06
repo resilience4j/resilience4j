@@ -35,9 +35,9 @@ public abstract class AbstractTimeLimiterMetrics extends Collector {
     protected AbstractTimeLimiterMetrics(MetricNames names) {
         this.names = requireNonNull(names);
         callsCounter = Counter.build(names.getCallsMetricName(),
-                "Total number of calls by kind")
-                .labelNames("name", "kind")
-                .create().register(collectorRegistry);
+            "Total number of calls by kind")
+            .labelNames("name", "kind")
+            .create().register(collectorRegistry);
     }
 
     /**
@@ -46,10 +46,11 @@ public abstract class AbstractTimeLimiterMetrics extends Collector {
     public static class MetricNames {
 
         public static final String DEFAULT_CALLS_METRIC_NAME = "resilience4j_timelimiter_calls";
+        private String callsMetricName = DEFAULT_CALLS_METRIC_NAME;
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          */
         public static Builder custom() {
             return new Builder();
@@ -61,8 +62,6 @@ public abstract class AbstractTimeLimiterMetrics extends Collector {
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
-
-        private String callsMetricName = DEFAULT_CALLS_METRIC_NAME;
 
         /**
          * Returns the metric name for calls, defaults to {@value DEFAULT_CALLS_METRIC_NAME}.
@@ -79,7 +78,8 @@ public abstract class AbstractTimeLimiterMetrics extends Collector {
             private final MetricNames metricNames = new MetricNames();
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_CALLS_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CALLS_METRIC_NAME} with
+             * a given one.
              */
             public Builder callsMetricName(String callsMetricName) {
                 metricNames.callsMetricName = requireNonNull(callsMetricName);

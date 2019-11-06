@@ -2,4 +2,4 @@ dependencies {
     compileOnly project(':resilience4j-circuitbreaker')
     compileOnly project(':resilience4j-ratelimiter')
 }
-ext.moduleName='io.github.resilience4j.annotations'
+ext.moduleName = 'io.github.resilience4j.annotations'

@@ -6,6 +6,6 @@ public class IllegalPublisherException extends IllegalStateException {
 
     public IllegalPublisherException(Publisher publisher) {
         super("Publisher of type <" + publisher.getClass().getSimpleName()
-                + "> is not supported by this operator");
+            + "> is not supported by this operator");
     }
 }

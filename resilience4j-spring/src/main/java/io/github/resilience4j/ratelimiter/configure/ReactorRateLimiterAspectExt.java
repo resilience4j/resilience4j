@@ -24,45 +24,50 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * the Reactor RateLimiter logic support for the spring AOP
- * Conditional on Reactor class existence on spring class loader
+ * the Reactor RateLimiter logic support for the spring AOP Conditional on Reactor class existence
+ * on spring class loader
  */
 public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 
-	private static final Logger logger = LoggerFactory.getLogger(ReactorRateLimiterAspectExt.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReactorRateLimiterAspectExt.class);
 
-	/**
-	 * @param returnType the AOP method return type class
-	 * @return boolean if the method has Reactor return type
-	 */
-	@Override
-	public boolean canHandleReturnType(Class returnType) {
-		return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));
-	}
+    /**
+     * @param returnType the AOP method return type class
+     * @return boolean if the method has Reactor return type
+     */
+    @Override
+    public boolean canHandleReturnType(Class returnType) {
+        return (Flux.class.isAssignableFrom(returnType)) || (Mono.class
+            .isAssignableFrom(returnType));
+    }
 
-	/**
-	 * handle the Spring web flux (Flux /Mono) return types AOP based into reactor rate limiter
-	 * See {@link RateLimiter} for details.
-	 *
-	 * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-	 * @param rateLimiter         the configured rateLimiter
-	 * @param methodName          the method name
-	 * @return the result object
-	 * @throws Throwable exception in case of faulty flow
-	 */
-	@Override
-	public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter, String methodName) throws Throwable {
-		Object returnValue = proceedingJoinPoint.proceed();
-		if (Flux.class.isAssignableFrom(returnValue.getClass())) {
-			Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-			return fluxReturnValue.compose(RateLimiterOperator.of(rateLimiter));
-		} else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
-			Mono<?> monoReturnValue = (Mono<?>) returnValue;
-			return monoReturnValue.compose(RateLimiterOperator.of(rateLimiter));
-		} else {
-			logger.error("Unsupported type for Reactor rateLimiter {}", returnValue.getClass().getTypeName());
-			throw new IllegalArgumentException("Not Supported type for the rateLimiter in Reactor :" + returnValue.getClass().getName());
+    /**
+     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor rate limiter See
+     * {@link RateLimiter} for details.
+     *
+     * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
+     * @param rateLimiter         the configured rateLimiter
+     * @param methodName          the method name
+     * @return the result object
+     * @throws Throwable exception in case of faulty flow
+     */
+    @Override
+    public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
+        String methodName) throws Throwable {
+        Object returnValue = proceedingJoinPoint.proceed();
+        if (Flux.class.isAssignableFrom(returnValue.getClass())) {
+            Flux<?> fluxReturnValue = (Flux<?>) returnValue;
+            return fluxReturnValue.compose(RateLimiterOperator.of(rateLimiter));
+        } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
+            Mono<?> monoReturnValue = (Mono<?>) returnValue;
+            return monoReturnValue.compose(RateLimiterOperator.of(rateLimiter));
+        } else {
+            logger.error("Unsupported type for Reactor rateLimiter {}",
+                returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                "Not Supported type for the rateLimiter in Reactor :" + returnValue.getClass()
+                    .getName());
 
-		}
-	}
+        }
+    }
 }

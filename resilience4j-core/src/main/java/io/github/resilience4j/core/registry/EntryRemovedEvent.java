@@ -18,11 +18,11 @@
  */
 package io.github.resilience4j.core.registry;
 
-public class EntryRemovedEvent<E> extends AbstractRegistryEvent{
+public class EntryRemovedEvent<E> extends AbstractRegistryEvent {
 
     private E removedEntry;
 
-    EntryRemovedEvent(E removedEntry){
+    EntryRemovedEvent(E removedEntry) {
         this.removedEntry = removedEntry;
     }
 

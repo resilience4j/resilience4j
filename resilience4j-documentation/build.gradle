@@ -1,7 +1,7 @@
 apply plugin: 'org.asciidoctor.convert'
 
-artifactoryPublish.skip=true
-sonarqube.skipProject=true
+artifactoryPublish.skip = true
+sonarqube.skipProject = true
 
 asciidoctor.dependsOn test
 

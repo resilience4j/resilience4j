@@ -40,11 +40,17 @@ public interface RegistryEvent {
      * Event types which are created by a CircuitBreaker.
      */
     enum Type {
-        /** An Event which informs that an entry has been added */
+        /**
+         * An Event which informs that an entry has been added
+         */
         ADDED,
-        /** An Event which informs that an entry has been removed */
+        /**
+         * An Event which informs that an entry has been removed
+         */
         REMOVED,
-        /** An Event which informs that an entry has been replaced */
+        /**
+         * An Event which informs that an entry has been replaced
+         */
         REPLACED
     }
 }

@@ -18,40 +18,35 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import static java.lang.reflect.Array.newInstance;
-import static java.util.Objects.requireNonNull;
-
-import java.util.AbstractQueue;
-import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
 
+import static java.lang.reflect.Array.newInstance;
+import static java.util.Objects.requireNonNull;
+
 /**
- *
- * The purpose of this queue is to store the N most recently inserted elements.
- * If the {@link ConcurrentEvictingQueue} is already full {@code ConcurrentEvictingQueue.size() == capacity},
- * the oldest element (the head) will be evicted, and then the new element added at the tail.
- *
- * In order to achieve thread-safety it utilizes capability-based locking features of {@link StampedLock}.
- * All spins optimistic/pessimistic reads and writes are encapsulated in following methods:
+ * The purpose of this queue is to store the N most recently inserted elements. If the {@link
+ * ConcurrentEvictingQueue} is already full {@code ConcurrentEvictingQueue.size() == capacity}, the
+ * oldest element (the head) will be evicted, and then the new element added at the tail.
+ * <p>
+ * In order to achieve thread-safety it utilizes capability-based locking features of {@link
+ * StampedLock}. All spins optimistic/pessimistic reads and writes are encapsulated in following
+ * methods:
  *
  * <ul>
  * <li> {@link ConcurrentEvictingQueue#readConcurrently(Supplier)}</li>
  * <li> {@link ConcurrentEvictingQueue#readConcurrentlyWithoutSpin(Supplier)}</li>
  * <li> {@link ConcurrentEvictingQueue#writeConcurrently(Supplier)}</li>
  * </ul>
- *
+ * <p>
  * All other logic just relies on this utility methods.
- *
+ * <p>
  * Also please take into account that {@link ConcurrentEvictingQueue#size}
  * and {@link ConcurrentEvictingQueue#modificationsCount} are {@code volatile} fields,
  * so we can read them and compare against them without any additional synchronizations.
- *
+ * <p>
  * This class IS thread-safe, and does NOT accept null elements.
- *
  */
 public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
 
@@ -62,8 +57,8 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     private static final int RETRIES = 5;
 
     private final int maxSize;
-    private volatile int size;
     private final StampedLock stampedLock;
+    private volatile int size;
     private Object[] ringBuffer;
     private int headIndex;
     private int tailIndex;
@@ -83,8 +78,8 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     }
 
     /**
-     * Returns an iterator over the elements in this queue in proper sequence.
-     * The elements will be returned in order from first (head) to last (tail).
+     * Returns an iterator over the elements in this queue in proper sequence. The elements will be
+     * returned in order from first (head) to last (tail).
      * <p>
      * This iterator implementation NOT allow removes and co-modifications.
      *
@@ -106,11 +101,10 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     }
 
     /**
-     * Inserts the specified element at the tail of this queue if it is
-     * possible to do so immediately or if capacity limit is exited
-     * the oldest element (the head) will be evicted, and then the new element added at the tail.
-     * This method is generally preferable to method {@link #add},
-     * which can fail to insert an element only by throwing an exception.
+     * Inserts the specified element at the tail of this queue if it is possible to do so
+     * immediately or if capacity limit is exited the oldest element (the head) will be evicted, and
+     * then the new element added at the tail. This method is generally preferable to method {@link
+     * #add}, which can fail to insert an element only by throwing an exception.
      *
      * @throws NullPointerException if the specified element is null
      */
@@ -176,8 +170,8 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     }
 
     /**
-     * Atomically removes all of the elements from this queue.
-     * The queue will be empty after this call returns.
+     * Atomically removes all of the elements from this queue. The queue will be empty after this
+     * call returns.
      */
     @Override
     public void clear() {
@@ -196,11 +190,10 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     }
 
     /**
-     * Returns an array containing all of the elements in this queue, in
-     * proper sequence.
+     * Returns an array containing all of the elements in this queue, in proper sequence.
      * <p>The returned array will be "safe" in that no references to it are
-     * maintained by this queue.  (In other words, this method must allocate
-     * a new array).  The caller is free to modify the returned array.
+     * maintained by this queue.  (In other words, this method must allocate a new array).  The
+     * caller is free to modify the returned array.
      * <p>This method acts as bridge between array-based and collection-based
      * APIs.
      *
@@ -216,27 +209,24 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     }
 
     /**
-     * Returns an array containing all of the elements in this queue, in
-     * proper sequence; the runtime type of the returned array is that of
-     * the specified array.  If the queue fits in the specified array, it
-     * is returned therein.  Otherwise, a new array is allocated with the
+     * Returns an array containing all of the elements in this queue, in proper sequence; the
+     * runtime type of the returned array is that of the specified array.  If the queue fits in the
+     * specified array, it is returned therein.  Otherwise, a new array is allocated with the
      * runtime type of the specified array and the size of this queue.
      *
      * <p>Like the {@link #toArray()} method, this method acts as bridge between
-     * array-based and collection-based APIs.  Further, this method allows
-     * precise control over the runtime type of the output array, and may,
-     * under certain circumstances, be used to save allocation costs.
-
-     * Note that {@code toArray(new Object[0])} is identical in function to
-     * {@code toArray()}.
+     * array-based and collection-based APIs.  Further, this method allows precise control over the
+     * runtime type of the output array, and may, under certain circumstances, be used to save
+     * allocation costs.
+     * <p>
+     * Note that {@code toArray(new Object[0])} is identical in function to {@code toArray()}.
      *
-     * @param destination the array into which the elements of the queue are to
-     *          be stored, if it is big enough; otherwise, a new array of the
-     *          same runtime type is allocated for this purpose
+     * @param destination the array into which the elements of the queue are to be stored, if it is
+     *                    big enough; otherwise, a new array of the same runtime type is allocated
+     *                    for this purpose
      * @return an array containing all of the elements in this queue
-     * @throws ArrayStoreException if the runtime type of the specified array
-     *         is not a supertype of the runtime type of every element in
-     *         this queue
+     * @throws ArrayStoreException  if the runtime type of the specified array is not a supertype of
+     *                              the runtime type of every element in this queue
      * @throws NullPointerException if the specified array is null
      */
     @Override
@@ -268,51 +258,12 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
         return (ringIndex + 1) % maxSize;
     }
 
-
-    private class Iter implements Iterator<E> {
-
-        private int visitedCount = 0;
-        private int cursor;
-        private int expectedModificationsCount;
-
-        Iter(final int headIndex, final int modificationsCount) {
-            this.cursor = headIndex;
-            this.expectedModificationsCount = modificationsCount;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return visitedCount < size;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public E next() {
-            Supplier<E> nextElement = () -> {
-                checkForModification();
-                if (visitedCount >= size) {
-                    throw new NoSuchElementException();
-                }
-                E item = (E) ringBuffer[cursor];
-                cursor = nextIndex(cursor);
-                visitedCount++;
-                return item;
-            };
-            return readConcurrently(nextElement);
-        }
-        private void checkForModification() {
-            if (modificationsCount != expectedModificationsCount) {
-                throw new ConcurrentModificationException();
-            }
-        }
-    }
-
     private <T> T readConcurrently(final Supplier<T> readSupplier) {
         T result;
         long stamp;
         for (int i = 0; i < RETRIES; i++) {
             stamp = stampedLock.tryOptimisticRead();
-            if(stamp == 0) {
+            if (stamp == 0) {
                 continue;
             }
             result = readSupplier.get();
@@ -349,5 +300,44 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
             stampedLock.unlockWrite(stamp);
         }
         return result;
+    }
+
+    private class Iter implements Iterator<E> {
+
+        private int visitedCount = 0;
+        private int cursor;
+        private int expectedModificationsCount;
+
+        Iter(final int headIndex, final int modificationsCount) {
+            this.cursor = headIndex;
+            this.expectedModificationsCount = modificationsCount;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return visitedCount < size;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public E next() {
+            Supplier<E> nextElement = () -> {
+                checkForModification();
+                if (visitedCount >= size) {
+                    throw new NoSuchElementException();
+                }
+                E item = (E) ringBuffer[cursor];
+                cursor = nextIndex(cursor);
+                visitedCount++;
+                return item;
+            };
+            return readConcurrently(nextElement);
+        }
+
+        private void checkForModification() {
+            if (modificationsCount != expectedModificationsCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
     }
 }

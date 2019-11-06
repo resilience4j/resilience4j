@@ -11,7 +11,7 @@ dependencies {
     compileOnly(project(':resilience4j-ratelimiter'))
     compileOnly(project(':resilience4j-retry'))
     compileOnly(project(':resilience4j-timelimiter'))
-    
+
     testImplementation(project(':resilience4j-bulkhead'))
     testImplementation(project(':resilience4j-circuitbreaker'))
     testImplementation(project(':resilience4j-ratelimiter'))
@@ -20,21 +20,21 @@ dependencies {
 }
 
 def experimentalFlags = [
-    "-Xuse-experimental=kotlin.Experimental"
+        "-Xuse-experimental=kotlin.Experimental"
 ]
 
 compileKotlin {
-    kotlinOptions{
+    kotlinOptions {
         jvmTarget = "1.8"
         freeCompilerArgs += experimentalFlags
     }
 }
 
 compileTestKotlin {
-    kotlinOptions{
+    kotlinOptions {
         jvmTarget = "1.8"
         freeCompilerArgs += experimentalFlags
     }
 }
 
-ext.moduleName='io.github.resilience4j.kotlin'
+ext.moduleName = 'io.github.resilience4j.kotlin'
