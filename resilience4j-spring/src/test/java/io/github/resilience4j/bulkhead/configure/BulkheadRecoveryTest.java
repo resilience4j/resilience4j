@@ -15,11 +15,9 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import com.jayway.awaitility.Awaitility;
 import io.github.resilience4j.TestApplication;
 import io.github.resilience4j.TestDummyService;
 import io.vavr.CheckedFunction0;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

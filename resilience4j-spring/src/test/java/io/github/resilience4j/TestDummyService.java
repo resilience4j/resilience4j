@@ -164,7 +164,7 @@ public interface TestDummyService {
 
     default Future<String> futureFallbackFailure(Throwable throwable) {
         CompletableFuture<String> f = new CompletableFuture<>();
-        f.completeExceptionally(new IllegalAccessException("something went wrong!"));
+        f.completeExceptionally(new IllegalAccessException("BAM!"));
         return f;
     }
 }
