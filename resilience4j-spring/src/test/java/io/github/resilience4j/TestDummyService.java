@@ -19,8 +19,10 @@ import io.reactivex.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.FileNotFoundException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 
 public interface TestDummyService {
 
@@ -122,5 +124,47 @@ public interface TestDummyService {
 
     default Flowable<String> flowableRecovery(Throwable throwable) {
         return Flowable.just("recovered");
+    }
+
+    default Future<String> asyncFutureSemaphoreSuccess(){
+        return CompletableFuture.completedFuture("Hello World");
+    }
+
+    default Future<String> asyncFutureSemaphoreFailure(){
+        CompletableFuture<String> f = new CompletableFuture<>();
+        f.completeExceptionally(new FileNotFoundException("something went wrong!"));
+        return f;
+    }
+
+    default Future<String> asyncFutureSemaphoreFallbackFailure(){
+        CompletableFuture<String> f = new CompletableFuture<>();
+        f.completeExceptionally(new FileNotFoundException("something went wrong!"));
+        return f;
+    }
+
+    default Future<String> asyncFutureThreadpoolSuccess(){
+        return CompletableFuture.completedFuture("Hello World");
+    }
+
+    default Future<String> asyncFutureThreadpoolFailure(){
+        CompletableFuture<String> f = new CompletableFuture<>();
+        f.completeExceptionally(new FileNotFoundException("BAM!"));
+        return f;
+    }
+
+    default Future<String> asyncFutureThreadpoolFallbackFailure(){
+        CompletableFuture<String> f = new CompletableFuture<>();
+        f.completeExceptionally(new FileNotFoundException("BAM!"));
+        return f;
+    }
+
+    default Future<String> futureFallbackRecovered(Throwable throwable) {
+        return CompletableFuture.supplyAsync(() -> "recovered");
+    }
+
+    default Future<String> futureFallbackFailure(Throwable throwable) {
+        CompletableFuture<String> f = new CompletableFuture<>();
+        f.completeExceptionally(new IllegalAccessException("something went wrong!"));
+        return f;
     }
 }

@@ -557,6 +557,17 @@ public interface Bulkhead {
         return decorateCompletionStage(this, supplier).get();
     }
 
+    /**
+     * Decorates and executes the decorated Future.
+     *
+     * @param supplier the original Future
+     * @param <T>      the type of results supplied by this supplier
+     * @return the decorated CompletionStage.
+     */
+    default <T> Future<T> executeFuture(Supplier<Future<T>> supplier) {
+        return decorateFuture(this, supplier).get();
+    }
+
 
     interface Metrics {
 

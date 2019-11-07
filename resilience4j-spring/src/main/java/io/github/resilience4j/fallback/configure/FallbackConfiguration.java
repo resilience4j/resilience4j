@@ -48,6 +48,11 @@ public class FallbackConfiguration {
     }
 
     @Bean
+    public FallbackDecorator futureFallbackDecorator() {
+        return new FutureFallbackDecorator();
+    }
+
+    @Bean
     public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorator) {
         return new FallbackDecorators(fallbackDecorator);
     }

@@ -15,8 +15,11 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import com.jayway.awaitility.Awaitility;
 import io.github.resilience4j.TestApplication;
 import io.github.resilience4j.TestDummyService;
+import io.vavr.CheckedFunction0;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +27,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class)
@@ -55,6 +61,74 @@ public class BulkheadRecoveryTest {
 
         assertThat(testDummyService.asyncThreadPoolSuccess().toCompletableFuture()
             .get(5, TimeUnit.SECONDS)).isEqualTo("finished");
+    }
+
+    @Test
+    public void testAsyncFutureSemaphoreSuccess() throws Exception {
+        assertThat(
+            testDummyService.asyncFutureSemaphoreSuccess().get(5, TimeUnit.SECONDS))
+            .isEqualTo("Hello World");
+    }
+
+    @Test
+    public void testAsyncFutureSemaphoreRecovery() throws Exception {
+
+        waitAtMost(5, TimeUnit.SECONDS).until(() -> assertThat(
+            CheckedFunction0.of(testDummyService.asyncFutureSemaphoreFailure()::get).unchecked().apply())
+            .isEqualTo("recovered"));
+    }
+
+    @Test
+    public void testAsyncFutureSemaphoreRecoveryWithTimeout() throws Exception {
+        assertThat(
+            testDummyService.asyncFutureSemaphoreFailure().get(5, TimeUnit.SECONDS))
+            .isEqualTo("recovered");
+    }
+
+    @Test
+    public void testAsyncFutureSemaphoreRecoveryFailure() {
+        Throwable thrown = catchThrowable(
+            () -> testDummyService.asyncFutureSemaphoreFallbackFailure().get());
+
+        assertThat(thrown)
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseInstanceOf(IllegalAccessException.class);
+
+        assertThat(thrown.getCause().getMessage()).isEqualTo("BAM!");
+    }
+
+    @Test
+    public void testAsyncFutureThreadpoolSuccess() throws Exception {
+        assertThat(
+            testDummyService.asyncFutureThreadpoolSuccess().get(5, TimeUnit.SECONDS))
+            .isEqualTo("Hello World");
+    }
+
+    @Test
+    public void testAsyncFutureThreadpoolRecovery() throws Exception {
+
+        waitAtMost(5, TimeUnit.SECONDS).until(() -> assertThat(
+            CheckedFunction0.of(testDummyService.asyncFutureThreadpoolFailure()::get).unchecked().apply())
+            .isEqualTo("recovered"));
+    }
+
+    @Test
+    public void testAsyncFutureThreadpoolRecoveryTimeout() throws Exception {
+        assertThat(
+            testDummyService.asyncFutureThreadpoolFailure().get(5, TimeUnit.SECONDS))
+            .isEqualTo("recovered");
+    }
+
+    @Test
+    public void testAsyncFutureThreadpoolRecoveryFailure() {
+        Throwable thrown = catchThrowable(
+            () -> testDummyService.asyncFutureThreadpoolFallbackFailure().get());
+
+        assertThat(thrown)
+            .isInstanceOf(ExecutionException.class)
+            .hasCauseInstanceOf(IllegalAccessException.class);
+
+        assertThat(thrown.getCause().getMessage()).isEqualTo("BAM!");
     }
 
     @Test
