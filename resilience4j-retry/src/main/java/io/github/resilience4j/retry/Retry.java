@@ -123,19 +123,85 @@ public interface Retry {
     /**
      * Returns a Supplier of type Future which is decorated by Retry.
      *
-     * Any delay which is specified in the retry context is accomplished by calling `Thread.sleep()`.  Thus it is not
-     * recommended that `executor` be a single-threaded or otherwise fixed-thread-pool executor.
+     * When `Supplier#get()` is called on the result, a task will be executed on `scheduler` which
+     * calls `supplier.get().get()` and reschedules itself if `retry` deems it necessary.  This will
+     * block the task thread, which depending on `supplier` may theoretically be the current thread.
      *
      * @param retry     the retry context
-     * @param scheduler execution service to use to pull supplied Futures and schedule retries
-     * @param supplier  future supplier
-     * @param <T>       type of future result
-     * @return decorated supplier
+     * @param scheduler the execution service to use to pull supplied Futures and schedule retries
+     * @param supplier  the future supplier
+     * @param <T>       the type of future result
+     * @return the decorated supplier
      */
-    static <T> Supplier<Future<T>> decorateFuture(Retry retry, ScheduledExecutorService scheduler, Supplier<Future<T>> supplier) {
+    static <T> Supplier<Future<T>> decorateFuture(
+        Retry retry,
+        ScheduledExecutorService scheduler,
+        Supplier<? extends Future<? extends T>> supplier
+    ) {
+        return () -> {
+            final CompletableFuture<T> promise = new CompletableFuture<>();
+            scheduler.execute(
+                new FutureAsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise));
+            return promise;
+        };
+    }
+
+    /**
+     * Returns a Supplier of type Future which is decorated by Retry.
+     *
+     * When `Supplier#get()` is called on the result, it will call `supplier.get().get()` on the
+     * current thread.  This means that
+     * <strong>the thread calling `Supplier#get()` will block, possibly indefinitely</strong>
+     * unless a timeout is built into `supplier.get()` and its result.
+     * Afterward, if `retry` deems it necessary, `Supplier#get()` will schedule a task on
+     * `scheduler` to retry; these subsequent tasks should not block the calling thread.
+     *
+     * @param retry     the retry context
+     * @param scheduler the execution service to use to schedule retries
+     * @param supplier  the future supplier
+     * @param <T>       the type of future result
+     * @return the decorated supplier
+     */
+    static <T> Supplier<Future<T>> decorateFutureBlocking(
+        Retry retry,
+        ScheduledExecutorService scheduler,
+        Supplier<? extends Future<? extends T>> supplier
+    ) {
         return () -> {
             final CompletableFuture<T> promise = new CompletableFuture<>();
             new FutureAsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise).run();
+            return promise;
+        };
+    }
+
+    /**
+     * Returns a Supplier of type Future which is decorated by Retry.
+     *
+     * When `Supplier#get()` is called on the result, it will call
+     * `supplier.get().get(timeout, unit)` on the current thread.  This means that the thread
+     * calling `Supplier#get()` will block, but not indefinitely.
+     * Afterward, if `retry` deems it necessary, `Supplier#get()` will schedule a task on
+     * `scheduler` to retry; these subsequent tasks should not block the calling thread.
+     *
+     * @param retry     the retry context
+     * @param scheduler the execution service to use to schedule retries
+     * @param supplier  the future supplier
+     * @param timeout   the maximum time to wait
+     * @param unit      the time unit of the timeout argument
+     * @param <T>       the type of future result
+     * @return the decorated supplier
+     */
+    static <T> Supplier<Future<T>> decorateFutureBlockingWithTimeout(
+        Retry retry,
+        ScheduledExecutorService scheduler,
+        Supplier<? extends Future<? extends T>> supplier,
+        long timeout,
+        TimeUnit unit
+    ) {
+        return () -> {
+            final CompletableFuture<T> promise = new CompletableFuture<>();
+            new FutureAsyncRetryBlock<>(scheduler, retry.asyncContext(), supplier, promise)
+                .runWithTimeout(timeout, unit);
             return promise;
         };
     }
@@ -708,13 +774,13 @@ public interface Retry {
     class FutureAsyncRetryBlock<T> implements Runnable {
         private final ScheduledExecutorService scheduler;
         private final Retry.AsyncContext<T> retryContext;
-        private final Supplier<Future<T>> supplier;
+        private final Supplier<? extends Future<? extends T>> supplier;
         private final CompletableFuture<T> promise;
 
         public FutureAsyncRetryBlock(
             ScheduledExecutorService scheduler,
             AsyncContext<T> retryContext,
-            Supplier<Future<T>> supplier,
+            Supplier<? extends Future<? extends T>> supplier,
             CompletableFuture<T> promise
         ) {
             this.scheduler = scheduler;
@@ -746,6 +812,46 @@ public interface Retry {
 
                 if (delay < 1) {
                     promise.completeExceptionally(ex);
+                } else {
+                    scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+                }
+
+            } catch (RuntimeException e) {
+                promise.completeExceptionally(e);
+            }
+        }
+
+        public void runWithTimeout(long timeout, TimeUnit unit) {
+            try {
+                T val = supplier.get().get(timeout, unit);
+                final long delay = retryContext.onResult(val);
+                if (delay < 1) {
+                    retryContext.onComplete();
+                    promise.complete(val);
+                } else {
+                    scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+                }
+
+            } catch (InterruptedException e) {
+                promise.completeExceptionally(e);
+                Thread.currentThread().interrupt();
+
+            } catch (ExecutionException e) {
+                // ExecutionExceptions always wrap Exceptions
+                Exception ex = (Exception) e.getCause();
+                final long delay = retryContext.onError(ex);
+
+                if (delay < 1) {
+                    promise.completeExceptionally(ex);
+                } else {
+                    scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
+                }
+
+            } catch (TimeoutException e) {
+                final long delay = retryContext.onError(e);
+
+                if (delay < 1) {
+                    promise.completeExceptionally(e);
                 } else {
                     scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
                 }
