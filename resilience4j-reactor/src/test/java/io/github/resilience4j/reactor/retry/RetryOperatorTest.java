@@ -64,12 +64,12 @@ public class RetryOperatorTest {
             .willReturn("Hello world");
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectNext("Hello world")
             .expectComplete()
             .verify(Duration.ofSeconds(1));
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectNext("Hello world")
             .expectComplete()
             .verify(Duration.ofSeconds(1));
@@ -92,7 +92,7 @@ public class RetryOperatorTest {
             .willThrow(new StackOverflowError("BAM!"));
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(StackOverflowError.class)
             .verify(Duration.ofSeconds(1));
@@ -107,7 +107,7 @@ public class RetryOperatorTest {
             .willThrow(new Error("BAM!"));
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(Error.class)
             .verify(Duration.ofSeconds(1));
@@ -128,13 +128,13 @@ public class RetryOperatorTest {
             .willThrow(new HelloWorldException());
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
             .verify(Duration.ofSeconds(1));
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
             .verify(Duration.ofSeconds(1));
@@ -156,7 +156,7 @@ public class RetryOperatorTest {
             .willThrow(new HelloWorldException());
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(RetryOperator.of(retry)))
+            .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectError(HelloWorldException.class)
             .verify(Duration.ofSeconds(1));
@@ -179,7 +179,7 @@ public class RetryOperatorTest {
             .willReturn("success");
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(RetryOperator.of(retry)))
+            .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNext("success")
             .expectComplete()
@@ -202,7 +202,7 @@ public class RetryOperatorTest {
             .willReturn("retry");
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(RetryOperator.of(retry)))
+            .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNextCount(1)
             .expectComplete()
@@ -218,7 +218,7 @@ public class RetryOperatorTest {
         RetryOperator<Object> retryOperator = RetryOperator.of(retry);
 
         StepVerifier.create(Flux.error(new HelloWorldException())
-            .compose(retryOperator))
+            .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
             .verify(Duration.ofSeconds(1));
@@ -239,7 +239,7 @@ public class RetryOperatorTest {
         Retry retry = Retry.of("testName", config);
 
         StepVerifier.create(Flux.just("retry", "success")
-            .compose(RetryOperator.of(retry)))
+            .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNext("retry")
             .expectNext("success")
@@ -260,7 +260,7 @@ public class RetryOperatorTest {
         Retry retry = Retry.of("testName", config);
 
         StepVerifier.create(Flux.just("retry")
-            .compose(RetryOperator.of(retry)))
+            .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNextCount(1)
             .expectComplete()

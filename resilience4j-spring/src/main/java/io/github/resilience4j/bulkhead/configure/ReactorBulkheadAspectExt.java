@@ -57,10 +57,10 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.compose(BulkheadOperator.of(bulkhead));
+            return fluxReturnValue.transformDeferred(BulkheadOperator.of(bulkhead));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
-            return monoReturnValue.compose(BulkheadOperator.of(bulkhead));
+            return monoReturnValue.transformDeferred(BulkheadOperator.of(bulkhead));
         } else {
             logger.error("Unsupported type for Reactor BulkHead {}",
                 returnValue.getClass().getTypeName());
