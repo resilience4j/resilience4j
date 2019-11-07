@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -150,6 +151,41 @@ public interface RateLimiter {
                 promise.completeExceptionally(exception);
             }
             return promise;
+        };
+    }
+
+    /**
+     * Returns a Supplier which is decorated by a RateLimiter.
+     * @param rateLimiter the rate limiter
+     * @param supplier    the original supplier
+     * @param <T>         the type of the returned Future's result
+     * @param <F>         the return type of the original Supplier (extends Future&lt;T&gt;)
+     * @return a supplier which is decorated by a rate limiter.
+     */
+    static <T, F extends Future<T>> Supplier<F> decorateFuture(
+        RateLimiter rateLimiter,
+        Supplier<? extends F> supplier
+    ) {
+        return decorateFuture(rateLimiter, 1, supplier);
+    }
+
+    /**
+     * Returns a Supplier which is decorated by a RateLimiter.
+     * @param rateLimiter the rate limiter
+     * @param permits     the number of permits that this call requires
+     * @param supplier    the original supplier
+     * @param <T>         the type of the returned Future's result
+     * @param <F>         the return type of the original Supplier (extends Future&lt;T&gt;)
+     * @return a supplier which is decorated by a rate limiter.
+     */
+    static <T, F extends Future<T>> Supplier<F> decorateFuture(
+        RateLimiter rateLimiter,
+        int permits,
+        Supplier<? extends F> supplier
+    ) {
+        return () -> {
+            waitForPermission(rateLimiter, permits);
+            return supplier.get();
         };
     }
 
