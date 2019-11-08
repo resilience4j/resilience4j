@@ -35,7 +35,8 @@ public class BulkheadEndpoint {
     private final BulkheadRegistry bulkheadRegistry;
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
-    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+    public BulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
     }
@@ -43,10 +44,10 @@ public class BulkheadEndpoint {
     @ReadOperation
     public BulkheadEndpointResponse getAllBulkheads() {
         List<String> bulkheads = bulkheadRegistry.getAllBulkheads()
-                .map(Bulkhead::getName)
-                .appendAll(threadPoolBulkheadRegistry
-                        .getAllBulkheads()
-                        .map(ThreadPoolBulkhead::getName)).sorted().toJavaList();
+            .map(Bulkhead::getName)
+            .appendAll(threadPoolBulkheadRegistry
+                .getAllBulkheads()
+                .map(ThreadPoolBulkhead::getName)).sorted().toJavaList();
         return new BulkheadEndpointResponse(bulkheads);
     }
 }

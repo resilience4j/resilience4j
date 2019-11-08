@@ -27,14 +27,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnClass({GaugeMetricFamily.class, ThreadPoolBulkhead.class, ThreadPoolBulkheadMetricsCollector.class})
+@ConditionalOnClass({GaugeMetricFamily.class, ThreadPoolBulkhead.class,
+    ThreadPoolBulkheadMetricsCollector.class})
 @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.enabled", matchIfMissing = true)
 public class ThreadPoolBulkheadPrometheusAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolBulkheadMetricsCollector threadPoolBulkheadPrometheusCollector(ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
-        ThreadPoolBulkheadMetricsCollector collector = ThreadPoolBulkheadMetricsCollector.ofBulkheadRegistry(threadPoolBulkheadRegistry);
+    public ThreadPoolBulkheadMetricsCollector threadPoolBulkheadPrometheusCollector(
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+        ThreadPoolBulkheadMetricsCollector collector = ThreadPoolBulkheadMetricsCollector
+            .ofBulkheadRegistry(threadPoolBulkheadRegistry);
         collector.register();
         return collector;
     }

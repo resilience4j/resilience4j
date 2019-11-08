@@ -44,8 +44,10 @@ public class Resilience4jRateLimiterTest {
     @Before
     public void setUp() {
         rateLimiter = mock(RateLimiter.class);
-        final FeignDecorators decorators = FeignDecorators.builder().withRateLimiter(rateLimiter).build();
-        testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
+        final FeignDecorators decorators = FeignDecorators.builder().withRateLimiter(rateLimiter)
+            .build();
+        testService = Resilience4jFeign.builder(decorators)
+            .target(TestService.class, "http://localhost:8080/");
     }
 
     @Test
@@ -84,9 +86,9 @@ public class Resilience4jRateLimiterTest {
 
     private void setupStub(int responseCode) {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(responseCode)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
     }
 }

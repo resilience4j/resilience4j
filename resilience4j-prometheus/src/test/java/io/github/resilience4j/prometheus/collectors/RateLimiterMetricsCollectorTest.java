@@ -48,7 +48,8 @@ public class RateLimiterMetricsCollectorTest {
             new String[]{rateLimiter.getName()}
         );
 
-        assertThat(availablePermissions).isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
+        assertThat(availablePermissions)
+            .isEqualTo(rateLimiter.getMetrics().getAvailablePermissions());
     }
 
     @Test
@@ -71,7 +72,7 @@ public class RateLimiterMetricsCollectorTest {
                 .availablePermissionsMetricName("custom_available_permissions")
                 .waitingThreadsMetricName("custom_waiting_threads")
                 .build(),
-                rateLimiterRegistry).register(registry);
+            rateLimiterRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
             "custom_available_permissions",

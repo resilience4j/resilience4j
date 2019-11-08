@@ -49,7 +49,8 @@ public class TimeLimiterMetricsCollectorTest {
     public void successfulCallsReportsCorrespondingValue() {
         timeLimiter.onSuccess();
 
-        Double successfulCalls = getSampleValue(registry, DEFAULT_CALLS_METRIC_NAME, KIND_SUCCESSFUL);
+        Double successfulCalls = getSampleValue(registry, DEFAULT_CALLS_METRIC_NAME,
+            KIND_SUCCESSFUL);
 
         assertThat(successfulCalls).isEqualTo(1);
     }
@@ -74,11 +75,13 @@ public class TimeLimiterMetricsCollectorTest {
 
     @Test
     public void customMetricNamesOverrideDefaultOnes() {
-        TimeLimiterMetricsCollector.MetricNames names = TimeLimiterMetricsCollector.MetricNames.custom()
-                .callsMetricName("custom_calls")
-                .build();
+        TimeLimiterMetricsCollector.MetricNames names = TimeLimiterMetricsCollector.MetricNames
+            .custom()
+            .callsMetricName("custom_calls")
+            .build();
         CollectorRegistry customRegistry = new CollectorRegistry();
-        TimeLimiterMetricsCollector.ofTimeLimiterRegistry(names, timeLimiterRegistry).register(customRegistry);
+        TimeLimiterMetricsCollector.ofTimeLimiterRegistry(names, timeLimiterRegistry)
+            .register(customRegistry);
         timeLimiter.onSuccess();
         timeLimiter.onError(new RuntimeException());
         timeLimiter.onError(new TimeoutException());
@@ -92,11 +95,12 @@ public class TimeLimiterMetricsCollectorTest {
         assertThat(timeoutCalls).isNotNull();
     }
 
-    private Double getSampleValue(CollectorRegistry collectorRegistry, String metricName, String metricKind) {
+    private Double getSampleValue(CollectorRegistry collectorRegistry, String metricName,
+        String metricKind) {
         return collectorRegistry.getSampleValue(
-                metricName,
-                new String[]{"name", "kind"},
-                new String[]{timeLimiter.getName(), metricKind}
+            metricName,
+            new String[]{"name", "kind"},
+            new String[]{timeLimiter.getName(), metricKind}
         );
     }
 }

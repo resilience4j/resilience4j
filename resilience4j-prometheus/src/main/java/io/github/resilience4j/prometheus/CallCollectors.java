@@ -4,6 +4,7 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 
 final class CallCollectors {
+
     public final Histogram histogram;
     public final Counter totalCounter;
     public final Counter errorCounter;

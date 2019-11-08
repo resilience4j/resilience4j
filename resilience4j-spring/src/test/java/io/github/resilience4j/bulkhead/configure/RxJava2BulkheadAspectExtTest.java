@@ -15,9 +15,9 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,9 +25,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * aspect unit test
@@ -35,29 +34,31 @@ import io.reactivex.Single;
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2BulkheadAspectExtTest {
 
-	@Mock
-	ProceedingJoinPoint proceedingJoinPoint;
+    @Mock
+    ProceedingJoinPoint proceedingJoinPoint;
 
-	@InjectMocks
-	RxJava2BulkheadAspectExt rxJava2BulkheadAspectExt;
+    @InjectMocks
+    RxJava2BulkheadAspectExt rxJava2BulkheadAspectExt;
 
 
-	@Test
-	public void testCheckTypes() {
-		assertThat(rxJava2BulkheadAspectExt.canHandleReturnType(Flowable.class)).isTrue();
-		assertThat(rxJava2BulkheadAspectExt.canHandleReturnType(Single.class)).isTrue();
-	}
+    @Test
+    public void testCheckTypes() {
+        assertThat(rxJava2BulkheadAspectExt.canHandleReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2BulkheadAspectExt.canHandleReturnType(Single.class)).isTrue();
+    }
 
-	@Test
-	public void testReactorTypes() throws Throwable {
-		Bulkhead bulkhead = Bulkhead.ofDefaults("test");
+    @Test
+    public void testReactorTypes() throws Throwable {
+        Bulkhead bulkhead = Bulkhead.ofDefaults("test");
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
-		assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod")).isNotNull();
+        when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
+        assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
+            .isNotNull();
 
-		when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
-		assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod")).isNotNull();
-	}
+        when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
+        assertThat(rxJava2BulkheadAspectExt.handle(proceedingJoinPoint, bulkhead, "testMethod"))
+            .isNotNull();
+    }
 
 
 }

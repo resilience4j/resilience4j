@@ -20,23 +20,28 @@ import org.springframework.core.Ordered;
 /**
  * Main spring properties for retry configuration
  */
-public class RetryConfigurationProperties extends io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties {
-	private int retryAspectOrder = Ordered.LOWEST_PRECEDENCE - 3;
-	/**
-	 * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then circuit breaker then rate limiter then bulkhead
-	 * but the user can override it still if he has different use case but bulkhead will be first aspect all the time due to the implicit order we have it for bulkhead
-	 */
-	public int getRetryAspectOrder() {
-		return retryAspectOrder;
-	}
+public class RetryConfigurationProperties extends
+    io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties {
 
-	/**
-	 * set retry aspect order
-	 *
-	 * @param retryAspectOrder retry aspect target order
-	 */
-	public void setRetryAspectOrder(int retryAspectOrder) {
-		this.retryAspectOrder = retryAspectOrder;
-	}
+    private int retryAspectOrder = Ordered.LOWEST_PRECEDENCE - 3;
+
+    /**
+     * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then
+     * circuit breaker then rate limiter then bulkhead but the user can override it still if he has
+     * different use case but bulkhead will be first aspect all the time due to the implicit order
+     * we have it for bulkhead
+     */
+    public int getRetryAspectOrder() {
+        return retryAspectOrder;
+    }
+
+    /**
+     * set retry aspect order
+     *
+     * @param retryAspectOrder retry aspect target order
+     */
+    public void setRetryAspectOrder(int retryAspectOrder) {
+        this.retryAspectOrder = retryAspectOrder;
+    }
 
 }

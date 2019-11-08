@@ -44,7 +44,7 @@ public class RunnableRetryTest {
     private long sleptTime = 0L;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
     }
@@ -71,7 +71,7 @@ public class RunnableRetryTest {
         then(helloWorldService).should(times(3)).sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
     @Test
@@ -89,14 +89,14 @@ public class RunnableRetryTest {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         Retry retry = Retry.ofDefaults("id");
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
 
         then(helloWorldService).should(times(3)).sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION*2);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class RunnableRetryTest {
         RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
         Retry retry = Retry.of("id", config);
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
 
@@ -119,13 +119,13 @@ public class RunnableRetryTest {
     public void shouldReturnAfterOneAttemptAndIgnoreException() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig.custom()
-                .retryOnException(throwable -> Match(throwable).of(
-                        Case($(Predicates.instanceOf(HelloWorldException.class)), false),
-                        Case($(), true)))
-                .build();
+            .retryOnException(throwable -> Match(throwable).of(
+                Case($(Predicates.instanceOf(HelloWorldException.class)), false),
+                Case($(), true)))
+            .build();
         Retry retry = Retry.of("id", config);
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
 
@@ -140,18 +140,18 @@ public class RunnableRetryTest {
     public void shouldTakeIntoAccountBackoffFunction() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
         RetryConfig config = RetryConfig
-                .custom()
-                .intervalFunction(IntervalFunction.of(Duration.ofMillis(500), x -> x * x))
-                .build();
+            .custom()
+            .intervalFunction(IntervalFunction.of(Duration.ofMillis(500), x -> x * x))
+            .build();
         Retry retry = Retry.of("id", config);
         CheckedRunnable retryableRunnable = Retry
-                .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try.run(retryableRunnable);
 
         then(helloWorldService).should(times(3)).sayHelloWorld();
         assertThat(sleptTime).isEqualTo(
-                RetryConfig.DEFAULT_WAIT_DURATION +
-                        RetryConfig.DEFAULT_WAIT_DURATION*RetryConfig.DEFAULT_WAIT_DURATION);
+            RetryConfig.DEFAULT_WAIT_DURATION +
+                RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
     }
 }

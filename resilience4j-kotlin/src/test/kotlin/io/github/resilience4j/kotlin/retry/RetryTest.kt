@@ -24,7 +24,6 @@ import io.github.resilience4j.retry.RetryConfig
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class RetryTest {
@@ -85,9 +84,9 @@ class RetryTest {
             val helloWorldService = HelloWorldService()
             val retry = Retry.of("testName") {
                 RetryConfig.custom<Any?>()
-                        .waitDuration(Duration.ofMillis(10))
-                        .retryOnResult { helloWorldService.invocationCounter < 2 }
-                        .build()
+                    .waitDuration(Duration.ofMillis(10))
+                    .retryOnResult { helloWorldService.invocationCounter < 2 }
+                    .build()
             }
             val metrics = retry.metrics
 

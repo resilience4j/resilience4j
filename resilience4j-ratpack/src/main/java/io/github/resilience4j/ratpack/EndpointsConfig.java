@@ -33,7 +33,8 @@ public class EndpointsConfig {
         return circuitbreaker;
     }
 
-    public EndpointsConfig circuitBreakers(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+    public EndpointsConfig circuitBreakers(
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             circuitbreaker = configure.apply(new EndpointConfig("circuitbreaker"));
             return this;
@@ -46,7 +47,8 @@ public class EndpointsConfig {
         return ratelimiter;
     }
 
-    public EndpointsConfig rateLimiters(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+    public EndpointsConfig rateLimiters(
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             ratelimiter = configure.apply(new EndpointConfig("ratelimiter"));
             return this;
@@ -59,7 +61,8 @@ public class EndpointsConfig {
         return retry;
     }
 
-    public EndpointsConfig retries(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+    public EndpointsConfig retries(
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             retry = configure.apply(new EndpointConfig("retry"));
             return this;
@@ -72,7 +75,8 @@ public class EndpointsConfig {
         return bulkhead;
     }
 
-    public EndpointsConfig bulkheads(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+    public EndpointsConfig bulkheads(
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             bulkhead = configure.apply(new EndpointConfig("bulkhead"));
             return this;
@@ -85,7 +89,8 @@ public class EndpointsConfig {
         return threadpoolbulkhead;
     }
 
-    public EndpointsConfig threadPoolBulkheads(Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+    public EndpointsConfig threadPoolBulkheads(
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
             threadpoolbulkhead = configure.apply(new EndpointConfig("threadpoolpulkhead"));
             return this;
@@ -95,6 +100,7 @@ public class EndpointsConfig {
     }
 
     public static class EndpointConfig {
+
         private boolean enabled = true;
         @Nullable
         private String path;

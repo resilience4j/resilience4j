@@ -5,13 +5,14 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.util.List;
 
 public class CircuitBreakerEndpointResponse {
+
     @Nullable
     private List<String> circuitBreakers;
 
-    public CircuitBreakerEndpointResponse(){
+    public CircuitBreakerEndpointResponse() {
     }
 
-    public CircuitBreakerEndpointResponse(List<String> circuitBreakers){
+    public CircuitBreakerEndpointResponse(List<String> circuitBreakers) {
         this.circuitBreakers = circuitBreakers;
     }
 

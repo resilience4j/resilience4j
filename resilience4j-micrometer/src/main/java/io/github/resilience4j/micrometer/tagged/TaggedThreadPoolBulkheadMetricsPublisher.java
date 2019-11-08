@@ -23,7 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedThreadPoolBulkheadMetricsPublisher
-        extends AbstractThreadPoolBulkheadMetrics implements MetricsPublisher<ThreadPoolBulkhead> {
+    extends AbstractThreadPoolBulkheadMetrics implements MetricsPublisher<ThreadPoolBulkhead> {
 
     private final MeterRegistry meterRegistry;
 
@@ -32,7 +32,8 @@ public class TaggedThreadPoolBulkheadMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
+    public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names,
+        MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);
     }

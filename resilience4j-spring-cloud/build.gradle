@@ -14,8 +14,8 @@ dependencies {
     testCompile(libraries.spring_boot_actuator)
     testCompile(libraries.spring_cloud_context)
     testCompile project(':resilience4j-spring-boot')
-    
+
 }
 
 compileJava.dependsOn(processResources)
-ext.moduleName='io.github.resilience4j.springcloud'
+ext.moduleName = 'io.github.resilience4j.springcloud'

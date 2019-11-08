@@ -25,7 +25,7 @@ public abstract class AbstractDisposable implements Disposable {
     private final AtomicReference<Disposable> subscription = new AtomicReference<>();
 
     public void onSubscribe(Disposable disposable) {
-        if(DisposableHelper.setOnce(this.subscription, disposable)){
+        if (DisposableHelper.setOnce(this.subscription, disposable)) {
             hookOnSubscribe();
         }
     }
@@ -34,18 +34,18 @@ public abstract class AbstractDisposable implements Disposable {
 
     @Override
     public void dispose() {
-        if(DisposableHelper.dispose(subscription)){
+        if (DisposableHelper.dispose(subscription)) {
             hookOnCancel();
         }
     }
 
-    void whenNotDisposed(Runnable runnable){
+    void whenNotDisposed(Runnable runnable) {
         if (!isDisposed()) {
             runnable.run();
         }
     }
 
-    void whenNotCompleted(Runnable runnable){
+    void whenNotCompleted(Runnable runnable) {
         if (DisposableHelper.dispose(subscription)) {
             runnable.run();
         }

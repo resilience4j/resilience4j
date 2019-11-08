@@ -19,7 +19,6 @@
 package io.github.resilience4j.kotlin.ratelimiter
 
 import io.github.resilience4j.kotlin.HelloWorldService
-import io.github.resilience4j.kotlin.bulkhead.bulkhead
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class FlowRateLimiterTest {

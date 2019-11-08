@@ -38,8 +38,9 @@ import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createReque
 
 /**
  * A {@link MethodInterceptor} to handle all methods annotated with {@link RateLimiter}. It will
- * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
- *
+ * handle methods that return a {@link Promise}, {@link reactor.core.publisher.Flux}, {@link
+ * reactor.core.publisher.Mono}, {@link java.util.concurrent.CompletionStage}, or value.
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}RateLimiter(name = "myService")
@@ -47,20 +48,21 @@ import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createReque
  *         return "Sir Captain " + name;
  *     }
  * </code></pre>
- * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass through a
- * a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given config.
- *
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
+ * through a a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given
+ * config.
+ * <p>
  * The fallbackMethod signature must match either:
- *
- * 1) The method parameter signature on the annotated method or
- * 2) The method parameter signature with a matching exception type as the last parameter on the annotated method
- *
- * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage},
- * {@link reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value.
- * Other reactive types are not supported.
- *
- * If the return value is one of the reactive types listed above, it must match the return value type of the
- * annotated method.
+ * <p>
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
+ * <p>
+ * The return value can be a {@link Promise}, {@link java.util.concurrent.CompletionStage}, {@link
+ * reactor.core.publisher.Flux}, {@link reactor.core.publisher.Mono}, or an object value. Other
+ * reactive types are not supported.
+ * <p>
+ * If the return value is one of the reactive types listed above, it must match the return value
+ * type of the annotated method.
  */
 public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
 
@@ -74,20 +76,23 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
     public Object invoke(MethodInvocation invocation) throws Throwable {
         RateLimiter annotation = invocation.getMethod().getAnnotation(RateLimiter.class);
         if (annotation == null) {
-            annotation = invocation.getMethod().getDeclaringClass().getAnnotation(RateLimiter.class);
+            annotation = invocation.getMethod().getDeclaringClass()
+                .getAnnotation(RateLimiter.class);
         }
         final RecoveryFunction<?> fallbackMethod = Optional
-                .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
-                .orElse(new DefaultRecoveryFunction<>());
+            .ofNullable(createRecoveryFunction(invocation, annotation.fallbackMethod()))
+            .orElse(new DefaultRecoveryFunction<>());
         if (registry == null) {
             registry = RateLimiterRegistry.ofDefaults();
         }
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry.rateLimiter(annotation.name());
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry
+            .rateLimiter(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
-                RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter).recover(fallbackMethod);
+                RateLimiterTransformer transformer = RateLimiterTransformer.of(rateLimiter)
+                    .recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
@@ -120,9 +125,12 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
     }
 
     @Nullable
-    private Object handleProceedWithException(MethodInvocation invocation, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, RecoveryFunction<?> recoveryFunction) throws Throwable {
+    private Object handleProceedWithException(MethodInvocation invocation,
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
+        RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
+            return io.github.resilience4j.ratelimiter.RateLimiter
+                .decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }

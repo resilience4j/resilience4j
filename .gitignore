@@ -1,4 +1,6 @@
-.idea
+!.idea
+.idea/*
+!.idea/codeStyles
 *.iml
 .gradle
 build
@@ -10,5 +12,5 @@ classes
 */bin
 *.orig
 .attach_pid*
+java_pid*.hprof
 .DS_Store
-

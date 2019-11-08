@@ -6,24 +6,28 @@ import java.util.function.Predicate;
 
 public class PredicateCreator {
 
-    private PredicateCreator() {}
+    private PredicateCreator() {
+    }
 
     @SafeVarargs
-    public static Optional<Predicate<Throwable>> createExceptionsPredicate(Class<? extends Throwable> ...recordExceptions) {
+    public static Optional<Predicate<Throwable>> createExceptionsPredicate(
+        Class<? extends Throwable>... recordExceptions) {
         return exceptionPredicate(recordExceptions);
     }
 
     @SafeVarargs
-    public static Optional<Predicate<Throwable>> createNegatedExceptionsPredicate(Class<? extends Throwable> ...ignoreExceptions) {
+    public static Optional<Predicate<Throwable>> createNegatedExceptionsPredicate(
+        Class<? extends Throwable>... ignoreExceptions) {
         return exceptionPredicate(ignoreExceptions)
-                .map(Predicate::negate);
+            .map(Predicate::negate);
     }
 
-    private static Optional<Predicate<Throwable>> exceptionPredicate(Class<? extends Throwable>[] recordExceptions) {
+    private static Optional<Predicate<Throwable>> exceptionPredicate(
+        Class<? extends Throwable>[] recordExceptions) {
         return Arrays.stream(recordExceptions)
-                .distinct()
-                .map(PredicateCreator::makePredicate)
-                .reduce(Predicate::or);
+            .distinct()
+            .map(PredicateCreator::makePredicate)
+            .reduce(Predicate::or);
     }
 
     private static Predicate<Throwable> makePredicate(Class<? extends Throwable> exClass) {

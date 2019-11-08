@@ -50,21 +50,38 @@ public interface CircuitBreakerEvent {
      * Event types which are created by a CircuitBreaker.
      */
     enum Type {
-        /** A CircuitBreakerEvent which informs that an error has been recorded */
+        /**
+         * A CircuitBreakerEvent which informs that an error has been recorded
+         */
         ERROR(false),
-        /** A CircuitBreakerEvent which informs that an error has been ignored */
+        /**
+         * A CircuitBreakerEvent which informs that an error has been ignored
+         */
         IGNORED_ERROR(false),
-        /** A CircuitBreakerEvent which informs that a success has been recorded */
+        /**
+         * A CircuitBreakerEvent which informs that a success has been recorded
+         */
         SUCCESS(false),
-        /** A CircuitBreakerEvent which informs that a call was not permitted because the CircuitBreaker state is OPEN */
+        /**
+         * A CircuitBreakerEvent which informs that a call was not permitted because the
+         * CircuitBreaker state is OPEN
+         */
         NOT_PERMITTED(false),
-        /** A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed */
+        /**
+         * A CircuitBreakerEvent which informs the state of the CircuitBreaker has been changed
+         */
         STATE_TRANSITION(true),
-        /** A CircuitBreakerEvent which informs the CircuitBreaker has been reset */
+        /**
+         * A CircuitBreakerEvent which informs the CircuitBreaker has been reset
+         */
         RESET(true),
-        /** A CircuitBreakerEvent which informs the CircuitBreaker has been forced open */
+        /**
+         * A CircuitBreakerEvent which informs the CircuitBreaker has been forced open
+         */
         FORCED_OPEN(false),
-        /** A CircuitBreakerEvent which informs the CircuitBreaker has been disabled */
+        /**
+         * A CircuitBreakerEvent which informs the CircuitBreaker has been disabled
+         */
         DISABLED(false);
 
         public final boolean forcePublish;

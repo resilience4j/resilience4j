@@ -38,14 +38,14 @@ class SingleRateLimiter<T> extends Single<T> {
     @Override
     protected void subscribeActual(SingleObserver<? super T> downstream) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
                     .subscribe(() -> upstream.subscribe(new RateLimiterSingleObserver(downstream)));
-            }else{
+            } else {
                 upstream.subscribe(new RateLimiterSingleObserver(downstream));
             }
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(RequestNotPermitted.createRequestNotPermitted(rateLimiter));
         }

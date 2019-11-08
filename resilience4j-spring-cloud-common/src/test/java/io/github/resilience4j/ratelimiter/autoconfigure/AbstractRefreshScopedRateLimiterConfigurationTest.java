@@ -34,8 +34,8 @@ public class AbstractRefreshScopedRateLimiterConfigurationTest {
     @Test
     public void testRefreshScopedRetryConfig() {
         Arrays.stream(AbstractRefreshScopedRetryConfiguration.class.getMethods())
-                .filter(method -> method.isAnnotationPresent(Bean.class))
-                .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
@@ -43,9 +43,11 @@ public class AbstractRefreshScopedRateLimiterConfigurationTest {
         RateLimiterConfig rateLimiterConfig = new RateLimiterConfig();
 
         assertThat(rateLimiterConfig.rateLimiterRegistry(
-                new RateLimiterConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new RateLimiterConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
+            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
     }
 
-    static class RateLimiterConfig extends AbstractRefreshScopedRateLimiterConfiguration { }
+    static class RateLimiterConfig extends AbstractRefreshScopedRateLimiterConfiguration {
+
+    }
 }

@@ -18,12 +18,13 @@ package io.github.resilience4j.common.bulkhead.monitoring.endpoint;
 import java.util.List;
 
 public class BulkheadEventsEndpointResponse {
+
     private List<BulkheadEventDTO> bulkheadEvents;
 
-    public BulkheadEventsEndpointResponse(){
+    public BulkheadEventsEndpointResponse() {
     }
 
-    public BulkheadEventsEndpointResponse(List<BulkheadEventDTO> bulkheadEvents){
+    public BulkheadEventsEndpointResponse(List<BulkheadEventDTO> bulkheadEvents) {
         this.bulkheadEvents = bulkheadEvents;
     }
 

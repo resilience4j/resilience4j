@@ -3,6 +3,6 @@ dependencies {
     testCompile project(':resilience4j-test')
     testCompile project(':resilience4j-rxjava2')
     jmh project(':resilience4j-rxjava2')
-    testCompile ( libraries.rxjava2)
+    testCompile(libraries.rxjava2)
 }
-ext.moduleName='io.github.resilience4j.bulkhead'
+ext.moduleName = 'io.github.resilience4j.bulkhead'

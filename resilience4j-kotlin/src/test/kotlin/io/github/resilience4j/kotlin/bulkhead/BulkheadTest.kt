@@ -71,9 +71,9 @@ class BulkheadTest {
         runBlocking {
             val bulkhead = Bulkhead.of("testName") {
                 BulkheadConfig.custom()
-                        .maxConcurrentCalls(1)
-                        .maxWaitDuration(Duration.ZERO)
-                        .build()
+                    .maxConcurrentCalls(1)
+                    .maxWaitDuration(Duration.ZERO)
+                    .build()
             }.registerEventListener()
 
             val sync = Channel<Unit>(Channel.RENDEZVOUS)

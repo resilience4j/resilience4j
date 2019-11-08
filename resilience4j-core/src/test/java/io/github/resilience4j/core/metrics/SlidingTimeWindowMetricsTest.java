@@ -29,14 +29,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SlidingTimeWindowMetricsTest {
 
     @Test
-    public void checkInitialBucketCreation(){
+    public void checkInitialBucketCreation() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         SlidingTimeWindowMetrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
         PartialAggregation[] buckets = metrics.partialAggregations;
 
         long epochSecond = clock.instant().getEpochSecond();
-        for(int i = 0; i < buckets.length; i++){
+        for (int i = 0; i < buckets.length; i++) {
             PartialAggregation bucket = buckets[i];
             assertThat(bucket.getEpochSecond()).isEqualTo(epochSecond + i);
         }
@@ -50,7 +50,7 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void testRecordSuccess(){
+    public void testRecordSuccess() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
@@ -67,7 +67,7 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void testRecordError(){
+    public void testRecordError() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
@@ -84,11 +84,12 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void testRecordSlowSuccess(){
+    public void testRecordSlowSuccess() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
-        Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
+        Snapshot snapshot = metrics
+            .record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
@@ -101,7 +102,7 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void testSlowCallsPercentage(){
+    public void testSlowCallsPercentage() {
 
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
@@ -124,7 +125,7 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void testMoveHeadIndexByOne(){
+    public void testMoveHeadIndexByOne() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         SlidingTimeWindowMetrics metrics = new SlidingTimeWindowMetrics(3, clock);
 
@@ -149,7 +150,7 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void shouldClearSlidingTimeWindowMetrics(){
+    public void shouldClearSlidingTimeWindowMetrics() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
@@ -212,7 +213,7 @@ public class SlidingTimeWindowMetricsTest {
     }
 
     @Test
-    public void testSlidingTimeWindowMetrics(){
+    public void testSlidingTimeWindowMetrics() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         Metrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
@@ -222,7 +223,6 @@ public class SlidingTimeWindowMetricsTest {
         assertThat(result.getNumberOfSuccessfulCalls()).isEqualTo(0);
         assertThat(result.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(result.getTotalDuration().toMillis()).isEqualTo(100);
-
 
         clock.advanceByMillis(100);
 
@@ -247,7 +247,6 @@ public class SlidingTimeWindowMetricsTest {
         assertThat(result.getNumberOfSuccessfulCalls()).isEqualTo(3);
         assertThat(result.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(result.getTotalDuration().toMillis()).isEqualTo(400);
-
 
         clock.advanceBySeconds(1);
 

@@ -23,9 +23,10 @@ import reactor.core.publisher.Flux;
  * reactive web service test using reactor types and RxJava2 for Retry
  */
 public interface ReactiveRetryDummyService {
-	String BACKEND_C = "retryBackendC";
 
-	Flux<String> doSomethingFlux(boolean throwException);
+    String BACKEND_C = "retryBackendC";
 
-	Flowable<String> doSomethingFlowable(boolean throwException);
+    Flux<String> doSomethingFlux(boolean throwException);
+
+    Flowable<String> doSomethingFlowable(boolean throwException);
 }

@@ -23,22 +23,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link Configuration
- * Configuration} for resilience4j-retry.
+ * {@link Configuration Configuration} for resilience4j-retry.
  */
 @Configuration
 public class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationOnMissingBean {
-	/**
-	 * The EventConsumerRegistry is used to manage EventConsumer instances.
-	 * The EventConsumerRegistry is used by the Retry events monitor to show the latest RetryEvent events
-	 * for each Retry instance.
-	 *
-	 * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
-	 */
-	@Bean
-	@ConditionalOnMissingBean(value = RetryEvent.class, parameterizedContainer = EventConsumerRegistry.class)
-	public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
-		return retryConfiguration.retryEventConsumerRegistry();
-	}
+
+    /**
+     * The EventConsumerRegistry is used to manage EventConsumer instances. The
+     * EventConsumerRegistry is used by the Retry events monitor to show the latest RetryEvent
+     * events for each Retry instance.
+     *
+     * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
+     */
+    @Bean
+    @ConditionalOnMissingBean(value = RetryEvent.class, parameterizedContainer = EventConsumerRegistry.class)
+    public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
+        return retryConfiguration.retryEventConsumerRegistry();
+    }
 
 }

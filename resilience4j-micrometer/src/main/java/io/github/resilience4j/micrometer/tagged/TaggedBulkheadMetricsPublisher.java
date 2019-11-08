@@ -23,7 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedBulkheadMetricsPublisher
-        extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {
+    extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {
 
     private final MeterRegistry meterRegistry;
 

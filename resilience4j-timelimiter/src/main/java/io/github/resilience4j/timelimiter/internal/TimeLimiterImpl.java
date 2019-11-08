@@ -31,7 +31,8 @@ public class TimeLimiterImpl implements TimeLimiter {
         return () -> {
             Future<T> future = futureSupplier.get();
             try {
-                T result = future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+                T result = future.get(getTimeLimiterConfig().getTimeoutDuration().toMillis(),
+                    TimeUnit.MILLISECONDS);
                 onSuccess();
                 return result;
             } catch (TimeoutException e) {
@@ -57,12 +58,14 @@ public class TimeLimiterImpl implements TimeLimiter {
 
     @Override
     public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
-            ScheduledExecutorService scheduler, Supplier<F> supplier) {
+        ScheduledExecutorService scheduler, Supplier<F> supplier) {
 
         return () -> {
             CompletableFuture<T> future = supplier.get().toCompletableFuture();
             ScheduledFuture<?> timeoutFuture =
-                    Timeout.of(future, scheduler, getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
+                Timeout
+                    .of(future, scheduler, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
+                        TimeUnit.MILLISECONDS);
 
             return future.whenComplete((result, throwable) -> {
                 // complete
@@ -153,16 +156,18 @@ public class TimeLimiterImpl implements TimeLimiter {
      */
     static final class Timeout {
 
-        private Timeout() { }
+        private Timeout() {
+        }
 
         static ScheduledFuture<?> of(
-                CompletableFuture<?> future, ScheduledExecutorService scheduler, long delay, TimeUnit unit) {
+            CompletableFuture<?> future, ScheduledExecutorService scheduler, long delay,
+            TimeUnit unit) {
             return scheduler.schedule(() -> {
                 if (future != null && !future.isDone()) {
                     future.completeExceptionally(new TimeoutException());
                 }
             }, delay, unit);
-         }
+        }
     }
 
 }

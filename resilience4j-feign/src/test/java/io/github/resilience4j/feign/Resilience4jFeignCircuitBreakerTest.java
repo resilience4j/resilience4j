@@ -36,14 +36,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class Resilience4jFeignCircuitBreakerTest {
 
+    private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+        .slidingWindowSize(3)
+        .waitDurationInOpenState(Duration.ofMillis(1000))
+        .build();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
-
-    private static final CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .slidingWindowSize(3)
-            .waitDurationInOpenState(Duration.ofMillis(1000))
-            .build();
-
     private CircuitBreaker circuitBreaker;
     private TestService testService;
 
@@ -51,8 +49,9 @@ public class Resilience4jFeignCircuitBreakerTest {
     public void setUp() {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withCircuitBreaker(circuitBreaker).build();
-        testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
+            .withCircuitBreaker(circuitBreaker).build();
+        testService = Resilience4jFeign.builder(decorators)
+            .target(TestService.class, "http://localhost:8080/");
     }
 
     @Test
@@ -65,8 +64,8 @@ public class Resilience4jFeignCircuitBreakerTest {
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
         assertThat(metrics.getNumberOfSuccessfulCalls())
-                .describedAs("Successful Calls")
-                .isEqualTo(1);
+            .describedAs("Successful Calls")
+            .isEqualTo(1);
     }
 
     @Test
@@ -83,19 +82,19 @@ public class Resilience4jFeignCircuitBreakerTest {
         }
 
         assertThat(exceptionThrown)
-                .describedAs("FeignException thrown")
-                .isTrue();
+            .describedAs("FeignException thrown")
+            .isTrue();
         assertThat(metrics.getNumberOfFailedCalls())
-                .describedAs("Successful Calls")
-                .isEqualTo(1);
+            .describedAs("Successful Calls")
+            .isEqualTo(1);
     }
 
     @Test
     public void testCircuitBreakerOpen() throws Exception {
         boolean exceptionThrown = false;
         final int threshold = circuitBreaker
-                .getCircuitBreakerConfig()
-                .getSlidingWindowSize() + 1;
+            .getCircuitBreakerConfig()
+            .getSlidingWindowSize() + 1;
 
         setupStub(400);
 
@@ -110,11 +109,11 @@ public class Resilience4jFeignCircuitBreakerTest {
         }
 
         assertThat(exceptionThrown)
-                .describedAs("CallNotPermittedException thrown")
-                .isTrue();
+            .describedAs("CallNotPermittedException thrown")
+            .isTrue();
         assertThat(circuitBreaker.tryAcquirePermission())
-                .describedAs("CircuitBreaker Closed")
-                .isFalse();
+            .describedAs("CircuitBreaker Closed")
+            .isFalse();
     }
 
 
@@ -122,8 +121,8 @@ public class Resilience4jFeignCircuitBreakerTest {
     public void testCircuitBreakerClosed() throws Exception {
         boolean exceptionThrown = false;
         final int threshold = circuitBreaker
-                .getCircuitBreakerConfig()
-                .getSlidingWindowSize() - 1;
+            .getCircuitBreakerConfig()
+            .getSlidingWindowSize() - 1;
 
         setupStub(400);
 
@@ -138,18 +137,18 @@ public class Resilience4jFeignCircuitBreakerTest {
         }
 
         assertThat(exceptionThrown)
-                .describedAs("CallNotPermittedException thrown")
-                .isFalse();
+            .describedAs("CallNotPermittedException thrown")
+            .isFalse();
         assertThat(circuitBreaker.tryAcquirePermission())
-                .describedAs("CircuitBreaker Closed")
-                .isTrue();
+            .describedAs("CircuitBreaker Closed")
+            .isTrue();
     }
 
     private void setupStub(int responseCode) {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(responseCode)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
     }
 }

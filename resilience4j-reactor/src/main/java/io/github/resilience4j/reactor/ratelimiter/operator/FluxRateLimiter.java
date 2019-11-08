@@ -38,14 +38,14 @@ class FluxRateLimiter<T> extends FluxOperator<T, T> {
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Mono.delay(Duration.ofNanos(waitDuration))
-                        .subscribe(delay -> source.subscribe(new RateLimiterSubscriber<>(actual)));
-            }else{
+                    .subscribe(delay -> source.subscribe(new RateLimiterSubscriber<>(actual)));
+            } else {
                 source.subscribe(new RateLimiterSubscriber<>(actual));
             }
-        }else{
+        } else {
             Operators.error(actual, createRequestNotPermitted(rateLimiter));
         }
     }

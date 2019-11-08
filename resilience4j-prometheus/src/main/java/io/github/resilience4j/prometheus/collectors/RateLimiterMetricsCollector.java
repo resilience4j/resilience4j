@@ -28,17 +28,29 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
-/** Collects RateLimiter exposed {@link Metrics}. */
+/**
+ * Collects RateLimiter exposed {@link Metrics}.
+ */
 public class RateLimiterMetricsCollector extends Collector {
 
+    private final MetricNames names;
+    private final RateLimiterRegistry rateLimiterRegistry;
+
+    private RateLimiterMetricsCollector(MetricNames names,
+        RateLimiterRegistry rateLimiterRegistry) {
+        this.names = requireNonNull(names);
+        this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
+    }
+
     /**
-     * Creates a new collector with custom metric names and
-     * using given {@code supplier} as source of rate limiters.
+     * Creates a new collector with custom metric names and using given {@code supplier} as source
+     * of rate limiters.
      *
-     * @param names    the custom metric names
+     * @param names               the custom metric names
      * @param rateLimiterRegistry the source of rate limiters
      */
-    public static RateLimiterMetricsCollector ofRateLimiterRegistry(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+    public static RateLimiterMetricsCollector ofRateLimiterRegistry(MetricNames names,
+        RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetricsCollector(names, rateLimiterRegistry);
     }
 
@@ -47,16 +59,9 @@ public class RateLimiterMetricsCollector extends Collector {
      *
      * @param rateLimiterRegistry the source of rate limiters
      */
-    public static RateLimiterMetricsCollector ofRateLimiterRegistry(RateLimiterRegistry rateLimiterRegistry) {
+    public static RateLimiterMetricsCollector ofRateLimiterRegistry(
+        RateLimiterRegistry rateLimiterRegistry) {
         return new RateLimiterMetricsCollector(MetricNames.ofDefaults(), rateLimiterRegistry);
-    }
-
-    private final MetricNames names;
-    private final RateLimiterRegistry rateLimiterRegistry;
-
-    private RateLimiterMetricsCollector(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
-        this.names = requireNonNull(names);
-        this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
     }
 
     @Override
@@ -74,63 +79,85 @@ public class RateLimiterMetricsCollector extends Collector {
 
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
             List<String> nameLabel = singletonList(rateLimiter.getName());
-            availablePermissionsFamily.addMetric(nameLabel, rateLimiter.getMetrics().getAvailablePermissions());
-            waitingThreadsFamily.addMetric(nameLabel, rateLimiter.getMetrics().getNumberOfWaitingThreads());
+            availablePermissionsFamily
+                .addMetric(nameLabel, rateLimiter.getMetrics().getAvailablePermissions());
+            waitingThreadsFamily
+                .addMetric(nameLabel, rateLimiter.getMetrics().getNumberOfWaitingThreads());
         }
 
         return asList(availablePermissionsFamily, waitingThreadsFamily);
     }
 
-    /** Defines possible configuration for metric names. */
+    /**
+     * Defines possible configuration for metric names.
+     */
     public static class MetricNames {
 
         public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME = "resilience4j_ratelimiter_available_permissions";
         public static final String DEFAULT_WAITING_THREADS_METRIC_NAME = "resilience4j_ratelimiter_waiting_threads";
+        private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+        private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          */
         public static Builder custom() {
             return new Builder();
         }
 
-        /** Returns default metric names. */
+        /**
+         * Returns default metric names.
+         */
         public static MetricNames ofDefaults() {
             return new MetricNames();
         }
 
-        private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-        private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
-
-        /** Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}. */
+        /**
+         * Returns the metric name for available permissions, defaults to {@value
+         * DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
+         */
         public String getAvailablePermissionsMetricName() {
             return availablePermissionsMetricName;
         }
 
-        /** Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}. */
+        /**
+         * Returns the metric name for waiting threads, defaults to {@value
+         * DEFAULT_WAITING_THREADS_METRIC_NAME}.
+         */
         public String getWaitingThreadsMetricName() {
             return waitingThreadsMetricName;
         }
 
-        /** Helps building custom instance of {@link MetricNames}. */
+        /**
+         * Helps building custom instance of {@link MetricNames}.
+         */
         public static class Builder {
 
             private final MetricNames metricNames = new MetricNames();
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}
+             * with a given one.
+             */
             public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
-                metricNames.availablePermissionsMetricName = requireNonNull(availablePermissionsMetricName);
+                metricNames.availablePermissionsMetricName = requireNonNull(
+                    availablePermissionsMetricName);
                 return this;
             }
 
-            /** Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one. */
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME}
+             * with a given one.
+             */
             public Builder waitingThreadsMetricName(String waitingThreadsMetricName) {
                 metricNames.waitingThreadsMetricName = requireNonNull(waitingThreadsMetricName);
                 return this;
             }
 
-            /** Builds {@link MetricNames} instance. */
+            /**
+             * Builds {@link MetricNames} instance.
+             */
             public MetricNames build() {
                 return metricNames;
             }
