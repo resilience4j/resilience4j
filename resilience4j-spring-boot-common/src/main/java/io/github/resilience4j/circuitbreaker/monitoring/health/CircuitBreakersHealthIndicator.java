@@ -51,28 +51,15 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private final HealthAggregator healthAggregator;
 
     public CircuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
-        CircuitBreakerConfigurationProperties circuitBreakerProperties,
-        HealthAggregator healthAggregator) {
+                                          CircuitBreakerConfigurationProperties circuitBreakerProperties,
+                                          HealthAggregator healthAggregator) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.healthAggregator = healthAggregator;
     }
 
-    private static Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
-        switch (circuitBreaker.getState()) {
-            case CLOSED:
-                return addDetails(Health.up(), circuitBreaker).build();
-            case OPEN:
-                return addDetails(Health.down(), circuitBreaker).build();
-            case HALF_OPEN:
-                return addDetails(Health.unknown(), circuitBreaker).build();
-            default:
-                return addDetails(Health.unknown(), circuitBreaker).build();
-        }
-    }
-
     private static Health.Builder addDetails(Health.Builder builder,
-        CircuitBreaker circuitBreaker) {
+                                             CircuitBreaker circuitBreaker) {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
         builder.withDetail(FAILURE_RATE, metrics.getFailureRate() + "%")
@@ -88,19 +75,40 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
         return builder;
     }
 
-    @Override
-    public Health health() {
-        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
-            .filter(this::isRegisterHealthIndicator)
-            .collect(Collectors.toMap(CircuitBreaker::getName,
-                CircuitBreakersHealthIndicator::mapBackendMonitorState));
+    private boolean allowHealthIndicatorToFail(CircuitBreaker circuitBreaker) {
+        return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
+            .map(InstanceProperties::getAllowHealthIndicatorToFail)
+            .orElse(false);
+    }
 
-        return healthAggregator.aggregate(healths);
+    private Health mapBackendMonitorState(CircuitBreaker circuitBreaker) {
+        switch (circuitBreaker.getState()) {
+            case CLOSED:
+                return addDetails(Health.up(), circuitBreaker).build();
+            case OPEN:
+                boolean allowHealthIndicatorToFail = allowHealthIndicatorToFail(circuitBreaker);
+
+                return addDetails(allowHealthIndicatorToFail ? Health.down() : Health.status("CIRCUIT_OPEN"), circuitBreaker).build();
+            case HALF_OPEN:
+                return addDetails(Health.status("CIRCUIT_HALF_OPEN"), circuitBreaker).build();
+            default:
+                return addDetails(Health.unknown(), circuitBreaker).build();
+        }
     }
 
     private boolean isRegisterHealthIndicator(CircuitBreaker circuitBreaker) {
         return circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
             .map(InstanceProperties::getRegisterHealthIndicator)
             .orElse(false);
+    }
+
+    @Override
+    public Health health() {
+        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
+            .filter(this::isRegisterHealthIndicator)
+            .collect(Collectors.toMap(CircuitBreaker::getName,
+                this::mapBackendMonitorState));
+
+        return healthAggregator.aggregate(healths);
     }
 }

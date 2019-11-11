@@ -260,6 +260,9 @@ public class CircuitBreakerConfigurationProperties {
         private Boolean writableStackTraceEnabled;
 
         @Nullable
+        private Boolean allowHealthIndicatorToFail;
+
+        @Nullable
         private Integer eventConsumerBufferSize;
 
         @Nullable
@@ -467,6 +470,27 @@ public class CircuitBreakerConfigurationProperties {
             }
 
             this.eventConsumerBufferSize = eventConsumerBufferSize;
+            return this;
+        }
+
+        /**
+         * @return the flag that controls if health indicators are allowed to go into a failed (DOWN) status.
+         * @see #setAllowHealthIndicatorToFail(Boolean)
+         */
+        @Nullable
+        public Boolean getAllowHealthIndicatorToFail() {
+            return allowHealthIndicatorToFail;
+        }
+
+        /**
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status.
+         * By default, health indicators for circuit breakers will never go into an unhealthy state.
+         *
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to fail
+         * @return the InstanceProperties
+         */
+        public InstanceProperties setAllowHealthIndicatorToFail(Boolean allowHealthIndicatorToFail) {
+            this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
             return this;
         }
 

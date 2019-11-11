@@ -28,6 +28,7 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 60
       eventConsumerBufferSize: 10
       registerHealthIndicator: true
+      allowHealthIndicatorToFail: false
   backends:
     backendA:
       slidingWindowSize: 6
@@ -36,6 +37,7 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 70
       eventConsumerBufferSize: 10
       registerHealthIndicator: true
+      allowHealthIndicatorToFail: false
       recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       recordExceptions:
       - io.github.resilience4j.circuitbreaker.RecordedException
@@ -72,6 +74,7 @@ resilience4j.ratelimiter:
       timeoutDuration: 0
       subscribeForEvents: true
       registerHealthIndicator: true
+      allowHealthIndicatorToFail: false
     backendB:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
