@@ -66,6 +66,12 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
             .orElse(false);
     }
 
+    private boolean allowHealthIndicatorToFail(RateLimiter rateLimiter) {
+        return rateLimiterProperties.findRateLimiterProperties(rateLimiter.getName())
+                .map(InstanceProperties::getAllowHealthIndicatorToFail)
+                .orElse(false);
+    }
+
     private Health mapRateLimiterHealth(RateLimiter rateLimiter) {
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
         int availablePermissions = metrics.getAvailablePermissions();
@@ -75,12 +81,15 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
         if (availablePermissions > 0 || numberOfWaitingThreads == 0) {
             return rateLimiterHealth(Status.UP, availablePermissions, numberOfWaitingThreads);
         }
+
         if (rateLimiter instanceof AtomicRateLimiter) {
             AtomicRateLimiter atomicRateLimiter = (AtomicRateLimiter) rateLimiter;
             AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = atomicRateLimiter
                 .getDetailedMetrics();
             if (detailedMetrics.getNanosToWait() > timeoutInNanos) {
-                return rateLimiterHealth(Status.DOWN, availablePermissions, numberOfWaitingThreads);
+                boolean allowHealthIndicatorToFail = allowHealthIndicatorToFail(rateLimiter);
+
+                return rateLimiterHealth(allowHealthIndicatorToFail ? Status.DOWN : new Status("RATE_LIMITED"), availablePermissions, numberOfWaitingThreads);
             }
         }
         return rateLimiterHealth(Status.UNKNOWN, availablePermissions, numberOfWaitingThreads);

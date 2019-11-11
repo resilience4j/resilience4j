@@ -34,19 +34,20 @@ public class ConfigUtils {
      * @param baseProperties     base config properties
      * @param instanceProperties instance properties
      */
-    public static void mergePropertiesIfAny(
-        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
-        CircuitBreakerConfigurationProperties.InstanceProperties baseProperties) {
+    public static void mergePropertiesIfAny(CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties, CircuitBreakerConfigurationProperties.InstanceProperties baseProperties) {
         if (instanceProperties.getRegisterHealthIndicator() == null) {
             if (baseProperties.getRegisterHealthIndicator() != null) {
-                instanceProperties
-                    .setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+                instanceProperties.setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+            }
+        }
+        if (instanceProperties.getAllowHealthIndicatorToFail() == null) {
+            if (baseProperties.getAllowHealthIndicatorToFail() != null) {
+                instanceProperties.setAllowHealthIndicatorToFail(baseProperties.getAllowHealthIndicatorToFail());
             }
         }
         if (instanceProperties.getEventConsumerBufferSize() == null) {
             if (baseProperties.getEventConsumerBufferSize() != null) {
-                instanceProperties
-                    .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+                instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
             }
         }
     }
@@ -74,13 +75,15 @@ public class ConfigUtils {
      * @param baseProperties     base config properties
      * @param instanceProperties instance properties
      */
-    public static void mergePropertiesIfAny(
-        RateLimiterConfigurationProperties.InstanceProperties baseProperties,
-        RateLimiterConfigurationProperties.InstanceProperties instanceProperties) {
+    public static void mergePropertiesIfAny(RateLimiterConfigurationProperties.InstanceProperties baseProperties, RateLimiterConfigurationProperties.InstanceProperties instanceProperties) {
         if (instanceProperties.getRegisterHealthIndicator() == null) {
             if (baseProperties.getRegisterHealthIndicator() != null) {
-                instanceProperties
-                    .setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+                instanceProperties.setRegisterHealthIndicator(baseProperties.getRegisterHealthIndicator());
+            }
+        }
+        if (instanceProperties.getAllowHealthIndicatorToFail() == null) {
+            if (baseProperties.getAllowHealthIndicatorToFail() != null) {
+                instanceProperties.setAllowHealthIndicatorToFail(baseProperties.getAllowHealthIndicatorToFail());
             }
         }
         if (instanceProperties.getSubscribeForEvents() == null) {
@@ -90,8 +93,7 @@ public class ConfigUtils {
         }
         if (instanceProperties.getEventConsumerBufferSize() == null) {
             if (baseProperties.getEventConsumerBufferSize() != null) {
-                instanceProperties
-                    .setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+                instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
             }
         }
     }

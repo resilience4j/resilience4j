@@ -37,6 +37,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
         instanceProperties1.setEventConsumerBufferSize(100);
         instanceProperties1.setRegisterHealthIndicator(true);
+        instanceProperties1.setAllowHealthIndicatorToFail(true);
         instanceProperties1.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
         instanceProperties1.setSlidingWindowSize(200);
         instanceProperties1.setMinimumNumberOfCalls(10);
@@ -84,6 +85,8 @@ public class CircuitBreakerConfigurationPropertiesTest {
             .getBackendProperties("backend1");
         assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1"))
             .isNotEmpty();
+        assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1").get().getRegisterHealthIndicator()).isTrue();
+        assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1").get().getAllowHealthIndicatorToFail()).isTrue();
         CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig(instanceProperties2);
         assertThat(circuitBreaker2).isNotNull();
