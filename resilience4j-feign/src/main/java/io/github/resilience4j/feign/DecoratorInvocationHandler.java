@@ -66,8 +66,11 @@ class DecoratorInvocationHandler implements InvocationHandler {
         for (final Map.Entry<Method, MethodHandler> entry : dispatch.entrySet()) {
             final Method method = entry.getKey();
             final MethodHandler methodHandler = entry.getValue();
-            map.put(method,
-                invocationDecorator.decorate(methodHandler::invoke, method, methodHandler, target));
+            if (methodHandler != null) {
+                CheckedFunction1<Object[], Object> decorated = invocationDecorator
+                    .decorate(methodHandler::invoke, method, methodHandler, target);
+                map.put(method, decorated);
+            }
         }
         return map;
     }
