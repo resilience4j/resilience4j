@@ -1,5 +1,6 @@
 package io.github.resilience4j;
 
+import io.github.resilience4j.decorators.annotation.Decorator;
 import java.util.concurrent.CompletionStage;
 
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class RetryDummyService implements TestDummyService {
 	@Override
-	@Retry(name = BACKEND, fallbackMethod = "recovery")
+	@Decorator(retry = @Retry(name = BACKEND, fallbackMethod = "recovery"))
 	public String sync() {
 		return syncError();
 	}

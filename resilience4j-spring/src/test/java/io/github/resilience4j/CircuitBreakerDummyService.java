@@ -5,6 +5,7 @@ import java.util.concurrent.CompletionStage;
 import org.springframework.stereotype.Component;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.decorators.annotation.Decorator;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -16,7 +17,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class CircuitBreakerDummyService implements TestDummyService {
 	@Override
-	@CircuitBreaker(name = BACKEND, fallbackMethod = "recovery")
+	@Decorator(circuitBreaker = @CircuitBreaker(name = BACKEND, fallbackMethod = "recovery"))
 	public String sync() {
 		return syncError();
 	}

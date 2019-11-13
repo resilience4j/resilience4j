@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class AnnotationExtractor {
     private static final Logger logger = LoggerFactory.getLogger(AnnotationExtractor.class);
@@ -39,6 +38,7 @@ public class AnnotationExtractor {
      * @param <T>             The annotation type.
      * @return annotation
      */
+    @SuppressWarnings("unchecked")
     public static <T extends Annotation> List<T> extractAll(Class<?> targetClass, Class<T> annotationClass) {
         List<T> annotations = Collections.EMPTY_LIST;
         if (targetClass.isAnnotationPresent(annotationClass)) {
@@ -107,6 +107,7 @@ public class AnnotationExtractor {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private static <T extends Annotation> List<T> extractAllAnnotationsFromClosestMatch(Object targetProxy, Class<T> annotationClass) {
         int numberOfImplementations = targetProxy.getClass().getInterfaces().length;
         for (int depth = 0; depth < numberOfImplementations; depth++) {
