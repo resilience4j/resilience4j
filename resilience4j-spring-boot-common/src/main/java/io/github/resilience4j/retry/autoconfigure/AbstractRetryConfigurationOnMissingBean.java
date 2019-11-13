@@ -31,79 +31,89 @@ import org.springframework.context.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * {@link Configuration
- * Configuration} for resilience4j-retry.
+ * {@link Configuration Configuration} for resilience4j-retry.
  */
 @Configuration
 @Import(FallbackConfigurationOnMissingBean.class)
 public abstract class AbstractRetryConfigurationOnMissingBean {
 
-	protected final RetryConfiguration retryConfiguration;
+    protected final RetryConfiguration retryConfiguration;
 
-	public AbstractRetryConfigurationOnMissingBean() {
-		this.retryConfiguration = new RetryConfiguration();
-	}
-        
-        @Bean
-	@ConditionalOnMissingBean
-	public ScheduledExecutorService retryExecutorService() {
-		return retryConfiguration.retryExecutorService();
-	}
-        
-        @Bean
-	@ConditionalOnMissingBean
-        public RetryAspectHelper retryAspectHelper(ScheduledExecutorService retryExecutorService, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
-		return retryConfiguration.retryAspectHelper(retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
-        }
+    public AbstractRetryConfigurationOnMissingBean() {
+        this.retryConfiguration = new RetryConfiguration();
+    }
 
-	/**
-	 * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring properties
-	 * @param retryEventConsumerRegistry   the event retry registry
-	 * @return the retry definition registry
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
-									   EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-									   RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
-		return retryConfiguration.retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry, retryRegistryEventConsumer);
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public ScheduledExecutorService retryExecutorService() {
+        return retryConfiguration.retryExecutorService();
+    }
 
-	@Bean
-	@Primary
-	public RegistryEventConsumer<Retry> retryRegistryEventConsumer(Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
-		return retryConfiguration.retryRegistryEventConsumer(optionalRegistryEventConsumers);
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public RetryAspectHelper retryAspectHelper(
+            ScheduledExecutorService retryExecutorService,
+            RetryRegistry retryRegistry,
+            @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+            FallbackDecorators fallbackDecorators) {
+        return retryConfiguration.retryAspectHelper(
+                retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
+    }
 
-	/**
-	 * @param retryAspectHelper            retry aspect helper
-	 * @param retryConfigurationProperties retry configuration spring properties
-	 * @return the spring retry AOP aspect
-	 */
-	@Bean
-	@Conditional(value = {AspectJOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public RetryAspect retryAspect(RetryAspectHelper retryAspectHelper, RetryConfigurationProperties retryConfigurationProperties) {
-		return retryConfiguration.retryAspect(retryAspectHelper, retryConfigurationProperties);
-	}
+    /**
+     * @param retryConfigurationProperties retryConfigurationProperties retry
+     * configuration spring properties
+     * @param retryEventConsumerRegistry the event retry registry
+     * @return the retry definition registry
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RetryRegistry retryRegistry(
+            RetryConfigurationProperties retryConfigurationProperties,
+            EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+            RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        return retryConfiguration
+                .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
+                        retryRegistryEventConsumer);
+    }
 
-	@Bean
-	@Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
-		return retryConfiguration.rxJava2RetryAspectExt();
-	}
+    @Bean
+    @Primary
+    public RegistryEventConsumer<Retry> retryRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+        return retryConfiguration.retryRegistryEventConsumer(optionalRegistryEventConsumers);
+    }
 
-	@Bean
-	@Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
-	@ConditionalOnMissingBean
-	public ReactorRetryAspectExt reactorRetryAspectExt() {
-		return retryConfiguration.reactorRetryAspectExt();
-	}
+    /**
+     * @param retryAspectHelper retry aspect helper
+     * @param retryConfigurationProperties retry configuration spring properties
+     * @return the spring retry AOP aspect
+     */
+    @Bean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RetryAspect retryAspect(
+            RetryAspectHelper retryAspectHelper,
+            RetryConfigurationProperties retryConfigurationProperties) {
+        return retryConfiguration.retryAspect(retryAspectHelper, retryConfigurationProperties);
+    }
+
+    @Bean
+    @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
+        return retryConfiguration.rxJava2RetryAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public ReactorRetryAspectExt reactorRetryAspectExt() {
+        return retryConfiguration.reactorRetryAspectExt();
+    }
 
 }

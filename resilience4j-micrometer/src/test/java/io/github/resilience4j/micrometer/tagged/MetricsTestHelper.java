@@ -23,36 +23,40 @@ import java.util.Collection;
 import java.util.Optional;
 
 final class MetricsTestHelper {
-    static Optional<Gauge> findGaugeByKindAndNameTags(Collection<Gauge> gauges, String kind, String name) {
+
+    static Optional<Gauge> findGaugeByKindAndNameTags(Collection<Gauge> gauges, String kind,
+        String name) {
         return gauges.stream()
-                .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
-                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
-                .findAny();
+            .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
+            .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+            .findAny();
     }
 
-    static Optional<Timer> findTimerByKindAndNameTags(Collection<Timer> timers, String kind, String name) {
+    static Optional<Timer> findTimerByKindAndNameTags(Collection<Timer> timers, String kind,
+        String name) {
         return timers.stream()
-                .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
-                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
-                .findAny();
+            .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
+            .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+            .findAny();
     }
 
-    static Optional<Counter> findCounterByKindAndNameTags(Collection<Counter> counters, String kind, String name) {
+    static Optional<Counter> findCounterByKindAndNameTags(Collection<Counter> counters, String kind,
+        String name) {
         return counters.stream()
-                .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
-                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
-                .findAny();
+            .filter(g -> kind.equals(g.getId().getTag(TagNames.KIND)))
+            .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+            .findAny();
     }
 
     static Optional<Counter> findCounterByNamesTag(Collection<Counter> gauges, String name) {
         return gauges.stream()
-                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
-                .findAny();
+            .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+            .findAny();
     }
 
     static Optional<Gauge> findGaugeByNamesTag(Collection<Gauge> gauges, String name) {
         return gauges.stream()
-                .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
-                .findAny();
+            .filter(g -> name.equals(g.getId().getTag(TagNames.NAME)))
+            .findAny();
     }
 }

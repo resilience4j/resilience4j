@@ -15,11 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
-import java.lang.reflect.Method;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +33,11 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import java.lang.reflect.Method;
+
+import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {

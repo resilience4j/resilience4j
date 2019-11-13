@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -26,6 +25,8 @@ import io.vavr.CheckedFunction0;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * aspect unit test
  */
@@ -34,7 +35,7 @@ public class ReactorRetryAspectExtTest {
 
     @InjectMocks
     ReactorRetryAspectExt reactorRetryAspectExt;
-
+    
     @Test
     public void testCheckTypes() {
         assertThat(reactorRetryAspectExt.canHandleReturnType(Mono.class)).isTrue();

@@ -15,7 +15,9 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,15 +30,14 @@ import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.vavr.CheckedFunction0;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2CircuitBreakerAspectExtTest {
-
-    @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
     RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspectExt;

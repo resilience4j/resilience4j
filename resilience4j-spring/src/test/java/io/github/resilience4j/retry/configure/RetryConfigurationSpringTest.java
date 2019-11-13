@@ -79,7 +79,9 @@ public class RetryConfigurationSpringTest {
 	}
         
         @Bean
-        public RetryAspectHelper retryAspectHelper(RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
+        public RetryAspectHelper retryAspectHelper(RetryRegistry retryRegistry,
+                @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+                FallbackDecorators fallbackDecorators) {
 		return new RetryAspectHelper(retryExecutorService(), retryRegistry, retryAspectExtList, fallbackDecorators);
         }
 
@@ -112,5 +114,4 @@ public class RetryConfigurationSpringTest {
 
         }
     }
-
 }

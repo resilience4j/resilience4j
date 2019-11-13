@@ -11,7 +11,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 /**
  * Unit test for {@link SingleCircuitBreaker}.
@@ -28,7 +29,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertResult(1);
 
         then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -44,7 +46,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         then(circuitBreaker).should(times(2)).onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -52,7 +55,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
 
-         Single.fromCallable(() -> helloWorldService.returnHelloWorld())
+        Single.fromCallable(() -> helloWorldService.returnHelloWorld())
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertSubscribed()
@@ -61,7 +64,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
 
         then(helloWorldService).should(never()).returnHelloWorld();
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -75,7 +79,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should().onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should()
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -91,7 +96,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertNotComplete();
 
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -99,13 +105,14 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .cancel();
 
         then(circuitBreaker).should().releasePermission();
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

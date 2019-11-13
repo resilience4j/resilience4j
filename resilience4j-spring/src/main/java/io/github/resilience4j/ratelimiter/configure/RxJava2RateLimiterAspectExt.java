@@ -15,16 +15,12 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
-
-import java.util.Set;
-
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
@@ -35,6 +31,7 @@ import io.reactivex.ObservableSource;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.vavr.CheckedFunction0;
+import java.util.Set;
 
 /**
  * the Rx RateLimiter logic support for the spring AOP conditional on the
@@ -43,16 +40,21 @@ import io.vavr.CheckedFunction0;
 public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
-    private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private final Set<Class> rxSupportedTypes = newHashSet(
+            ObservableSource.class, SingleSource.class, CompletableSource.class, 
+            MaybeSource.class, Flowable.class);
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
+        return rxSupportedTypes.stream()
+                .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            RateLimiter rateLimiter,
+            CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(rateLimiter, returnValue);
@@ -78,8 +80,12 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
             Flowable<?> flowable = (Flowable) returnValue;
             return flowable.compose(rateLimiterOperator);
         } else {
-            logger.error("Unsupported type for Rate limiter RxJava2 {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the Rate limiter in RxJava2 :" + returnValue.getClass().getName());
+            logger.error(
+                    "Unsupported type for Rate limiter RxJava2 {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the Rate limiter in RxJava2 :"
+                            + returnValue.getClass().getName());
         }
     }
 }

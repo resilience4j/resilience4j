@@ -83,6 +83,7 @@ public class SpringBootCommonTest {
         assertThat(retryConfigurationOnMissingBean.retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
         RetryAspectHelper helper = new RetryAspectHelper(Executors.newSingleThreadScheduledExecutor(), RetryRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
         assertThat(retryConfigurationOnMissingBean.retryAspect(helper, new RetryConfigurationProperties())).isNotNull();
+
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty()));
     }
 
@@ -98,20 +99,25 @@ public class SpringBootCommonTest {
     }
 
     // testing config samples
-    class BulkheadConfigurationOnMissingBean extends AbstractBulkheadConfigurationOnMissingBean {
+    class BulkheadConfigurationOnMissingBean
+            extends AbstractBulkheadConfigurationOnMissingBean {
     }
 
-    class CircuitBreakerConfig extends AbstractCircuitBreakerConfigurationOnMissingBean {
+    class CircuitBreakerConfig
+            extends AbstractCircuitBreakerConfigurationOnMissingBean {
 
-        public CircuitBreakerConfig(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        public CircuitBreakerConfig(
+                CircuitBreakerConfigurationProperties circuitBreakerProperties) {
             super(circuitBreakerProperties);
         }
 
     }
 
-    class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationOnMissingBean {
+    class RetryConfigurationOnMissingBean
+            extends AbstractRetryConfigurationOnMissingBean {
     }
 
-    class RateLimiterConfigurationOnMissingBean extends AbstractRateLimiterConfigurationOnMissingBean {
+    class RateLimiterConfigurationOnMissingBean
+            extends AbstractRateLimiterConfigurationOnMissingBean {
     }
 }

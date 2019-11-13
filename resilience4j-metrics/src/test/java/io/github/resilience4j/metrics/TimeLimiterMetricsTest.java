@@ -35,7 +35,8 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
     protected TimeLimiter given(String prefix, MetricRegistry metricRegistry) {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testLimit");
-        metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiterRegistry(prefix, timeLimiterRegistry));
+        metricRegistry
+            .registerAll(TimeLimiterMetrics.ofTimeLimiterRegistry(prefix, timeLimiterRegistry));
 
         return timeLimiter;
     }
@@ -59,11 +60,11 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
-                .hasValue(2L);
+            .hasValue(2L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
-                .hasValue(0L);
+            .hasValue(0L);
     }
 
     @Test
@@ -76,18 +77,18 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
-                .hasValue(2L);
+            .hasValue(2L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
-                .hasValue(0L);
+            .hasValue(0L);
     }
 
     @Test
     public void shouldRecordTimeouts() {
         TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom()
-                .timeoutDuration(Duration.ZERO)
-                .build());
+            .timeoutDuration(Duration.ZERO)
+            .build());
         metricRegistry.registerAll(TimeLimiterMetrics.ofTimeLimiter(timeLimiter));
 
         timeLimiter.onError(new TimeoutException());
@@ -95,11 +96,11 @@ public class TimeLimiterMetricsTest extends AbstractTimeLimiterMetricsTest {
 
         assertThat(metricRegistry).hasMetricsSize(3);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + SUCCESSFUL)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + FAILED)
-                .hasValue(0L);
+            .hasValue(0L);
         assertThat(metricRegistry).counter(DEFAULT_PREFIX + TIMEOUT)
-                .hasValue(2L);
+            .hasValue(2L);
     }
 
 }

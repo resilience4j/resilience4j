@@ -34,5 +34,7 @@ public interface RateLimiterAspectExt {
      * @param supplier target function that should be decorated
      * @return decorated function
      */
-    CheckedFunction0<Object> decorate(RateLimiter rateLimiter, CheckedFunction0<Object> supplier);
+    CheckedFunction0<Object> decorate(
+            RateLimiter rateLimiter,
+            CheckedFunction0<Object> supplier);
 }

@@ -15,17 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import static org.junit.Assert.assertEquals;
-
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
@@ -35,6 +24,17 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -60,7 +60,8 @@ public class BulkheadConfigurationOnMissingBeanTest {
     @Test
     public void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
         final Class<BulkheadConfiguration> originalClass = BulkheadConfiguration.class;
-        final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass = BulkheadConfigurationOnMissingBean.class;
+        final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass
+                = BulkheadConfigurationOnMissingBean.class;
         TestUtils.assertAnnotations(originalClass, onMissingBeanClass);
     }
 
@@ -68,7 +69,9 @@ public class BulkheadConfigurationOnMissingBeanTest {
     public void testAllBulkHeadConfigurationBeansOverridden() {
         assertEquals(bulkheadRegistry, configWithOverrides.bulkheadRegistry);
         assertEquals(bulkheadAspect, configWithOverrides.bulkheadAspect);
-        assertEquals(bulkheadEventEventConsumerRegistry, configWithOverrides.bulkheadEventEventConsumerRegistry);
+        assertEquals(
+                bulkheadEventEventConsumerRegistry,
+                configWithOverrides.bulkheadEventEventConsumerRegistry);
     }
 
     @Configuration

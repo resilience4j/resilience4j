@@ -37,12 +37,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 /**
- * {@link org.springframework.context.annotation.Configuration
- * Configuration} for resilience4j ratelimiter.
+ * {@link org.springframework.context.annotation.Configuration Configuration} for resilience4j
+ * ratelimiter.
  */
 @Configuration
 public class RateLimiterConfiguration {
@@ -51,10 +50,13 @@ public class RateLimiterConfiguration {
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
             EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
             RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
-        RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties, rateLimiterRegistryEventConsumer);
-        registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
+        RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(
+                rateLimiterProperties, rateLimiterRegistryEventConsumer);
+        registerEventConsumer(
+                rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
         rateLimiterProperties.getInstances().forEach(
-                (name, properties) -> rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
+                (name, properties) -> rateLimiterRegistry.rateLimiter(
+                        name, rateLimiterProperties.createRateLimiterConfig(properties))
         );
         return rateLimiterRegistry;
     }
@@ -73,7 +75,8 @@ public class RateLimiterConfiguration {
      * properties.
      * @return a RateLimiterRegistry
      */
-    private RateLimiterRegistry createRateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
+    private RateLimiterRegistry createRateLimiterRegistry(
+            RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
             RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         Map<String, RateLimiterConfig> configs = rateLimiterConfigurationProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
@@ -90,11 +93,19 @@ public class RateLimiterConfiguration {
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,
-            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-        rateLimiterRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), rateLimiterConfigurationProperties));
+            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
+            RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+        rateLimiterRegistry.getEventPublisher().onEntryAdded(
+                event -> registerEventConsumer(
+                        eventConsumerRegistry,
+                        event.getAddedEntry(),
+                        rateLimiterConfigurationProperties));
     }
 
-    private void registerEventConsumer(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter, RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+    private void registerEventConsumer(
+            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
+            RateLimiter rateLimiter,
+            RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
         final io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties.getInstances().get(rateLimiter.getName());
         if (limiterProperties != null && limiterProperties.getSubscribeForEvents() != null && limiterProperties.getSubscribeForEvents()) {
             rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(rateLimiter.getName(), limiterProperties.getEventConsumerBufferSize() != null && limiterProperties.getEventConsumerBufferSize() != 0 ? limiterProperties.getEventConsumerBufferSize() : 100));
@@ -103,13 +114,18 @@ public class RateLimiterConfiguration {
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public RateLimiterAspectHelper rateLimiterAspectHelper(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, FallbackDecorators fallbackDecorators) {
+    public RateLimiterAspectHelper rateLimiterAspectHelper(
+            RateLimiterRegistry rateLimiterRegistry,
+            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+            FallbackDecorators fallbackDecorators) {
         return new RateLimiterAspectHelper(rateLimiterRegistry, rateLimiterAspectExtList, fallbackDecorators);
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public RateLimiterAspect rateLimiterAspect(RateLimiterAspectHelper rateLimiterAspectHelper, RateLimiterConfigurationProperties rateLimiterProperties) {
+    public RateLimiterAspect rateLimiterAspect(
+            RateLimiterAspectHelper rateLimiterAspectHelper,
+            RateLimiterConfigurationProperties rateLimiterProperties) {
         return new RateLimiterAspect(rateLimiterAspectHelper, rateLimiterProperties);
     }
 

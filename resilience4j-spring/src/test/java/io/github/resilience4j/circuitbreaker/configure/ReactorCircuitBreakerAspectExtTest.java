@@ -15,28 +15,23 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.vavr.CheckedFunction0;
-import static org.assertj.core.api.Assertions.assertThat;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ReactorCircuitBreakerAspectExtTest {
-
-    @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
     ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspectExt;
@@ -60,5 +55,4 @@ public class ReactorCircuitBreakerAspectExtTest {
         CheckedFunction0<Object> decorated = reactorCircuitBreakerAspectExt.decorate(circuitBreaker, () -> Flux.just("Test"));
         assertThat(decorated.apply()).isInstanceOf(Flux.class);
     }
-
 }

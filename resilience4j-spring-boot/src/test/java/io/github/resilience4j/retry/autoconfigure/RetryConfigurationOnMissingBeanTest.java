@@ -15,12 +15,6 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
-import java.lang.reflect.Method;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,80 +32,85 @@ import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.retry.configure.RetryAspectHelper;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.event.RetryEvent;
+import java.lang.reflect.Method;
+
+import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		RetryConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
-		RetryAutoConfiguration.class,
-		RetryConfigurationOnMissingBean.class
+    RetryConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
+    RetryAutoConfiguration.class,
+    RetryConfigurationOnMissingBean.class
 })
 @EnableConfigurationProperties(RetryProperties.class)
 public class RetryConfigurationOnMissingBeanTest {
 
-	@Autowired
-	private ConfigWithOverrides configWithOverrides;
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
 
-	@Autowired
-	private RetryRegistry retryRegistry;
+    @Autowired
+    private RetryRegistry retryRegistry;
 
-	@Autowired
-	private RetryAspect retryAspect;
+    @Autowired
+    private RetryAspect retryAspect;
 
-	@Autowired
-	private EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry;
+    @Autowired
+    private EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry;
 
-	@Test
-	public void testAllBeansFromRetryHasOnMissingBean() throws NoSuchMethodException {
-		final Class<RetryConfiguration> originalClass = RetryConfiguration.class;
-		final Class<RetryConfigurationOnMissingBean> onMissingBeanClass = RetryConfigurationOnMissingBean.class;
+    @Test
+    public void testAllBeansFromRetryHasOnMissingBean() throws NoSuchMethodException {
+        final Class<RetryConfiguration> originalClass = RetryConfiguration.class;
+        final Class<RetryConfigurationOnMissingBean> onMissingBeanClass = RetryConfigurationOnMissingBean.class;
 
-		for (Method methodRetryConfiguration : originalClass.getMethods()) {
-			if (methodRetryConfiguration.isAnnotationPresent(Bean.class)) {
-				final Method methodOnMissing = onMissingBeanClass
-						.getMethod(methodRetryConfiguration.getName(), methodRetryConfiguration.getParameterTypes());
+        for (Method methodRetryConfiguration : originalClass.getMethods()) {
+            if (methodRetryConfiguration.isAnnotationPresent(Bean.class)) {
+                final Method methodOnMissing = onMissingBeanClass
+                        .getMethod(methodRetryConfiguration.getName(), methodRetryConfiguration.getParameterTypes());
 
-				assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
+                assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
-				if (!"retryEventConsumerRegistry".equals(methodOnMissing.getName()) &&
-						!"retryRegistryEventConsumer".equals(methodOnMissing.getName())) {
-					assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
-				}
-			}
-		}
-	}
+                if (!"retryEventConsumerRegistry".equals(methodOnMissing.getName())
+                        && !"retryRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+                }
+            }
+        }
+    }
 
-	@Test
-	public void testAllRetryConfigurationBeansOverridden() {
-		assertEquals(retryAspect, configWithOverrides.retryAspect);
-		assertNotEquals(retryEventConsumerRegistry, configWithOverrides.retryEventConsumerRegistry);
-		assertEquals(retryRegistry, configWithOverrides.retryRegistry);
-	}
+    @Test
+    public void testAllRetryConfigurationBeansOverridden() {
+        assertEquals(retryAspect, configWithOverrides.retryAspect);
+        assertNotEquals(retryEventConsumerRegistry, configWithOverrides.retryEventConsumerRegistry);
+        assertEquals(retryRegistry, configWithOverrides.retryRegistry);
+    }
 
-	@Configuration
-	public static class ConfigWithOverrides {
+    @Configuration
+    public static class ConfigWithOverrides {
 
-		private RetryRegistry retryRegistry;
+        private RetryRegistry retryRegistry;
 
-		private RetryAspect retryAspect;
+        private RetryAspect retryAspect;
 
-		private EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry;
+        private EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry;
 
-		@Bean
-		public RetryRegistry retryRegistry() {
-			this.retryRegistry = RetryRegistry.ofDefaults();
-			return retryRegistry;
-		}
+        @Bean
+        public RetryRegistry retryRegistry() {
+            this.retryRegistry = RetryRegistry.ofDefaults();
+            return retryRegistry;
+        }
 
-		@Bean
-		public RetryAspect retryAspect(RetryAspectHelper retryAspectHelper) {
-			this.retryAspect = new RetryAspect(retryAspectHelper, new RetryProperties());
-			return retryAspect;
-		}
+        @Bean
+        public RetryAspect retryAspect(RetryAspectHelper retryAspectHelper) {
+            this.retryAspect = new RetryAspect(retryAspectHelper, new RetryProperties());
+            return retryAspect;
+        }
 
-		@Bean
-		public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
-			this.retryEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
-			return retryEventConsumerRegistry;
-		}
-	}
+        @Bean
+        public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
+            this.retryEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+            return retryEventConsumerRegistry;
+        }
+    }
 }

@@ -15,12 +15,11 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.vavr.CheckedFunction0;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
-import io.vavr.CheckedFunction0;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -44,7 +43,8 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
      * for details.
      */
     @Override
-    public CheckedFunction0<Object> decorate(CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(circuitBreaker, returnValue);
@@ -54,13 +54,18 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
     private Object handleReturnValue(CircuitBreaker circuitBreaker, Object returnValue) {
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.compose(io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
+            return fluxReturnValue.compose(
+                    io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
             return monoReturnValue.compose(CircuitBreakerOperator.of(circuitBreaker));
         } else {
-            logger.error("Unsupported type for Reactor circuit breaker {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the circuit breaker in Reactor:" + returnValue.getClass().getName());
+            logger.error(
+                    "Unsupported type for Reactor circuit breaker {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the circuit breaker in Reactor:"
+                            + returnValue.getClass().getName());
 
         }
     }

@@ -45,7 +45,8 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
      * reactor bulk head See {@link Bulkhead} for details.
      */
     @Override
-    public CheckedFunction0<Object> decorate(Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(bulkhead, returnValue);
@@ -60,9 +61,12 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
             return monoReturnValue.compose(BulkheadOperator.of(bulkhead));
         } else {
-            logger.error("Unsupported type for Reactor BulkHead {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the BulkHead in Reactor :" + returnValue.getClass().getName());
-
+            logger.error(
+                    "Unsupported type for Reactor BulkHead {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the BulkHead in Reactor :"
+                            + returnValue.getClass().getName());
         }
     }
 }

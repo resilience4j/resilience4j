@@ -21,7 +21,8 @@ import io.reactivex.*;
 import org.reactivestreams.Publisher;
 
 public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
-        SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+    SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+
     private final Retry retry;
 
     private RetryTransformer(Retry retry) {
@@ -43,43 +44,44 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
     public Publisher<T> apply(Flowable<T> upstream) {
         Context<T> context = new Context<>(retry.context());
         return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnComplete(context::onComplete);
+            .retryWhen(errors -> errors.doOnNext(context::onError))
+            .doOnComplete(context::onComplete);
     }
 
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
         Context<T> context = new Context<>(retry.context());
         return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnComplete(context::onComplete);
+            .retryWhen(errors -> errors.doOnNext(context::onError))
+            .doOnComplete(context::onComplete);
     }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
         Context<T> context = new Context<>(retry.context());
         return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnSuccess(t -> context.onComplete());
+            .retryWhen(errors -> errors.doOnNext(context::onError))
+            .doOnSuccess(t -> context.onComplete());
     }
 
     @Override
     public CompletableSource apply(Completable upstream) {
         Context<T> context = new Context<>(retry.context());
         return upstream.retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnComplete(context::onComplete);
+            .doOnComplete(context::onComplete);
     }
 
     @Override
     public MaybeSource<T> apply(Maybe<T> upstream) {
         Context<T> context = new Context<>(retry.context());
         return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnSuccess(t -> context.onComplete())
-                .doOnComplete(context::onComplete);
+            .retryWhen(errors -> errors.doOnNext(context::onError))
+            .doOnSuccess(t -> context.onComplete())
+            .doOnComplete(context::onComplete);
     }
 
     private static class Context<T> {
+
         private final Retry.Context<T> context;
 
         Context(Retry.Context<T> context) {
@@ -91,13 +93,16 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         }
 
         void throwExceptionToForceRetryOnResult(T value) {
-            if (context.onResult(value))
+            if (context.onResult(value)) {
                 throw new RetryDueToResultException();
+            }
         }
 
         void onError(Throwable throwable) throws Exception {
-            if (throwable instanceof RetryDueToResultException) return;
-	        // Filter Error to not retry on it
+            if (throwable instanceof RetryDueToResultException) {
+                return;
+            }
+            // Filter Error to not retry on it
             if (throwable instanceof Error) {
                 throw (Error) throwable;
             }
@@ -109,10 +114,12 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         }
 
         private Exception castToException(Throwable throwable) {
-            return throwable instanceof Exception ? (Exception) throwable : new Exception(throwable);
+            return throwable instanceof Exception ? (Exception) throwable
+                : new Exception(throwable);
         }
 
         private static class RetryDueToResultException extends RuntimeException {
+
             RetryDueToResultException() {
                 super("retry due to retryOnResult predicate");
             }

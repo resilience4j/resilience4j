@@ -33,7 +33,9 @@ import io.vavr.CheckedFunction0;
 public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2BulkheadAspectExt.class);
-    private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private final Set<Class> rxSupportedTypes = newHashSet(
+            ObservableSource.class, SingleSource.class, CompletableSource.class,
+            MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -42,11 +44,13 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
+        return rxSupportedTypes.stream()
+                .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(bulkhead, returnValue);
@@ -56,6 +60,7 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
     @SuppressWarnings("unchecked")
     private Object handleReturnValue(Bulkhead bulkhead, Object returnValue) {
         BulkheadOperator<Object> bulkheadOperator = BulkheadOperator.of(bulkhead);
+
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable<?>) returnValue;
             return observable.compose(bulkheadOperator);
@@ -72,8 +77,12 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
             Flowable<?> flowable = (Flowable) returnValue;
             return flowable.compose(bulkheadOperator);
         } else {
-            logger.error("Unsupported type for BulkHead RxJava2 {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the BulkHead in RxJava2 :" + returnValue.getClass().getName());
+            logger.error(
+                    "Unsupported type for BulkHead RxJava2 {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the BulkHead in RxJava2 :"
+                            + returnValue.getClass().getName());
         }
     }
 }

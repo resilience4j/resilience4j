@@ -22,7 +22,7 @@ public class CompletableRateLimiterTest {
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
@@ -41,9 +41,9 @@ public class CompletableRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Completable.complete()
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .awaitTerminalEvent(1, TimeUnit.SECONDS);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .awaitTerminalEvent(1, TimeUnit.SECONDS);
     }
 
     @Test

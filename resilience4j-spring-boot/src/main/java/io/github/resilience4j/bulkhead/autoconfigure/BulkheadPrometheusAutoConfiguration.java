@@ -26,8 +26,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
 @ConditionalOnClass({GaugeMetricFamily.class, Bulkhead.class, BulkheadMetricsCollector.class})
@@ -37,7 +37,8 @@ public class BulkheadPrometheusAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public BulkheadMetricsCollector bulkheadPrometheusCollector(BulkheadRegistry bulkheadRegistry) {
-        BulkheadMetricsCollector collector = BulkheadMetricsCollector.ofBulkheadRegistry(bulkheadRegistry);
+        BulkheadMetricsCollector collector = BulkheadMetricsCollector
+            .ofBulkheadRegistry(bulkheadRegistry);
         collector.register();
         return collector;
     }

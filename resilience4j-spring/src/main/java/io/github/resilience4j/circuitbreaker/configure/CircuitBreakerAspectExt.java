@@ -23,7 +23,7 @@ import io.vavr.CheckedFunction0;
  * support new types
  */
 public interface CircuitBreakerAspectExt {
-
+    
     /**
      * @param returnType the AOP method return type class
      * @return boolean true if this extension can handle this type
@@ -34,5 +34,6 @@ public interface CircuitBreakerAspectExt {
      * @param supplier target function that should be decorated
      * @return decorated function
      */
-    public CheckedFunction0<Object> decorate(CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier);
+    public CheckedFunction0<Object> decorate(
+            CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier);
 }

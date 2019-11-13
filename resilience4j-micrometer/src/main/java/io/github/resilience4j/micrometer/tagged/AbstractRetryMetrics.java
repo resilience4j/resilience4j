@@ -73,6 +73,7 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
     }
 
     public static class MetricNames {
+
         public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";
 
         /**
@@ -112,6 +113,7 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
          * Helps building custom instance of {@link MetricNames}.
          */
         public static class Builder {
+
             private final MetricNames metricNames = new MetricNames();
 
             /**

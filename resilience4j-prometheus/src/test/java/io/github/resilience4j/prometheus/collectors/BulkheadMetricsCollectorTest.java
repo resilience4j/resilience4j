@@ -73,7 +73,7 @@ public class BulkheadMetricsCollectorTest {
                 .availableConcurrentCallsMetricName("custom_available_calls")
                 .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
                 .build(),
-                bulkheadRegistry ).register(registry);
+            bulkheadRegistry).register(registry);
 
         assertThat(registry.getSampleValue(
             "custom_available_calls",

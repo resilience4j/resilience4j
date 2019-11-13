@@ -36,12 +36,12 @@ import java.text.MessageFormat;
     {
         @Outcome(
             id = "remainingDepth=1" +
-                 " events=\\[\\[CALL_REJECTED\\], \\[\\], \\[\\]\\]",
+                " events=\\[\\[CALL_REJECTED\\], \\[\\], \\[\\]\\]",
             expect = Expect.ACCEPTABLE
         ),
         @Outcome(
             id = "remainingDepth=1" +
-                 " events=\\[\\[\\], \\[\\], \\[\\]\\]",
+                " events=\\[\\[\\], \\[\\], \\[\\]\\]",
             expect = Expect.ACCEPTABLE
         )
     }
@@ -56,9 +56,9 @@ public class ConcurrentBulkheadTest {
         bulkhead = Bulkhead.of("test", BulkheadConfig.custom().maxConcurrentCalls(1).build());
 
         callRejectectedEventSubscriber = RxJava2Adapter.toFlowable(bulkhead.getEventPublisher())
-                                                 .filter(event -> event.getEventType() == Type.CALL_REJECTED)
-                                                 .map(BulkheadEvent::getEventType)
-                                                 .test();
+            .filter(event -> event.getEventType() == Type.CALL_REJECTED)
+            .map(BulkheadEvent::getEventType)
+            .test();
     }
 
     @Actor

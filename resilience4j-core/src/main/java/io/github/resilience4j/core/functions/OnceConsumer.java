@@ -10,8 +10,12 @@ import java.util.function.Consumer;
  */
 public final class OnceConsumer<T> {
 
-    private final AtomicBoolean hasRun = new AtomicBoolean(false);
     final T t;
+    private final AtomicBoolean hasRun = new AtomicBoolean(false);
+
+    private OnceConsumer(T t) {
+        this.t = t;
+    }
 
     /**
      * Create a do once consumer.
@@ -22,10 +26,6 @@ public final class OnceConsumer<T> {
      */
     public static <T> OnceConsumer<T> of(T t) {
         return new OnceConsumer<>(t);
-    }
-
-    private OnceConsumer(T t) {
-        this.t = t;
     }
 
     /**

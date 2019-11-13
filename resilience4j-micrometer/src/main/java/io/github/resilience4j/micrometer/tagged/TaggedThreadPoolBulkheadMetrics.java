@@ -24,9 +24,19 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A micrometer binder that is used to register ThreadPoolBulkheadM exposed {@link Metrics metrics}.
+ * A micrometer binder that is used to register ThreadPoolBulkheadM exposed {@link Metrics
+ * metrics}.
  */
-public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadMetrics implements MeterBinder {
+public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadMetrics implements
+    MeterBinder {
+
+    private final ThreadPoolBulkheadRegistry bulkheadRegistry;
+
+    private TaggedThreadPoolBulkheadMetrics(MetricNames names,
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        super(names);
+        this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
+    }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of bulkheads.
@@ -34,27 +44,22 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedThreadPoolBulkheadMetrics} instance.
      */
-    public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(ThreadPoolBulkheadRegistry bulkheadRegistry) {
+    public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new TaggedThreadPoolBulkheadMetrics(MetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     /**
-     * Creates a new binder defining custom metric names and
-     * using given {@code registry} as source of bulkheads.
+     * Creates a new binder defining custom metric names and using given {@code registry} as source
+     * of bulkheads.
      *
-     * @param names custom names of the metrics
+     * @param names            custom names of the metrics
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedThreadPoolBulkheadMetrics} instance.
      */
-    public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(MetricNames names, ThreadPoolBulkheadRegistry bulkheadRegistry) {
+    public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(MetricNames names,
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new TaggedThreadPoolBulkheadMetrics(names, bulkheadRegistry);
-    }
-
-    private final ThreadPoolBulkheadRegistry bulkheadRegistry;
-
-    private TaggedThreadPoolBulkheadMetrics(MetricNames names, ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        super(names);
-        this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
 
     @Override
@@ -62,8 +67,10 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
         for (ThreadPoolBulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
             addMetrics(registry, bulkhead);
         }
-        bulkheadRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        bulkheadRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        bulkheadRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        bulkheadRegistry.getEventPublisher()
+            .onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         bulkheadRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

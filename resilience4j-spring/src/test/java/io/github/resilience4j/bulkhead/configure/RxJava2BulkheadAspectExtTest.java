@@ -48,5 +48,4 @@ public class RxJava2BulkheadAspectExtTest {
         CheckedFunction0<Object> decorated = rxJava2BulkheadAspectExt.decorate(bulkhead, () -> Flowable.just("Test"));
         assertThat(decorated.apply()).isInstanceOf(Flowable.class);
     }
-
 }

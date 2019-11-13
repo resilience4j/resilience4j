@@ -22,8 +22,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
-
 class FluxBulkhead<T> extends FluxOperator<T, T> {
 
     private final Bulkhead bulkhead;
@@ -35,9 +33,9 @@ class FluxBulkhead<T> extends FluxOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if(bulkhead.tryAcquirePermission()){
+        if (bulkhead.tryAcquirePermission()) {
             source.subscribe(new BulkheadSubscriber<>(bulkhead, actual, false));
-        }else{
+        } else {
             Operators.error(actual, BulkheadFullException.createBulkheadFullException(bulkhead));
         }
     }

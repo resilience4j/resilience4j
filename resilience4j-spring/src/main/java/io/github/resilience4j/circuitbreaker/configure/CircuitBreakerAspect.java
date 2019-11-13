@@ -56,18 +56,27 @@ public class CircuitBreakerAspect implements Ordered {
     private final CircuitBreakerAspectHelper circuitBreakerAspectHelper;
     private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
-    public CircuitBreakerAspect(CircuitBreakerAspectHelper circuitBreakerAspectHelper, CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+    public CircuitBreakerAspect(
+            CircuitBreakerAspectHelper circuitBreakerAspectHelper,
+            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         this.circuitBreakerAspectHelper = circuitBreakerAspectHelper;
         this.circuitBreakerProperties = circuitBreakerProperties;
     }
 
-    @Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
+    @Pointcut(
+            value = "@within(circuitBreaker) || @annotation(circuitBreaker)",
+            argNames = "circuitBreaker")
     public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)", argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
-    public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+    @Around(
+            value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)",
+            argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
+    public Object circuitBreakerAroundAdvice(
+            ProceedingJoinPoint proceedingJoinPoint,
+            @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
+        ProceedingJoinPointHelper joinPointHelper
+                = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (circuitBreakerAnnotation == null) {
             circuitBreakerAnnotation = joinPointHelper.getClassAnnotation(CircuitBreaker.class);
         }

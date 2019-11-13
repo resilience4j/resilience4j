@@ -11,12 +11,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
 
 /**
  * Unit test for {@link ObserverCircuitBreaker}.
  */
 public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
+
     @Test
     public void shouldSubscribeToObservableJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
@@ -27,7 +28,8 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertResult("Event 1", "Event 2");
 
         then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -41,7 +43,8 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should().onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should()
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -57,7 +60,8 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertNotComplete();
 
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -65,13 +69,14 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Observable.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .cancel();
 
         then(circuitBreaker).should().releasePermission();
-        then(circuitBreaker).should(never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 }

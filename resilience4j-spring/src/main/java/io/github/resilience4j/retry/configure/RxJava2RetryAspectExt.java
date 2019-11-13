@@ -50,7 +50,9 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(io.github.resilience4j.retry.Retry retry, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            io.github.resilience4j.retry.Retry retry,
+            CheckedFunction0<Object> supplier) {
         return () -> {
             RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
             Object returnValue = supplier.apply();
@@ -59,7 +61,8 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
     }
 
     @SuppressWarnings("unchecked")
-    private Object handleReturnValue(Object returnValue, RetryTransformer retryTransformer) {
+    private Object handleReturnValue(
+            Object returnValue, RetryTransformer retryTransformer) {
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable<?>) returnValue;
             return observable.compose(retryTransformer);
@@ -76,8 +79,12 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
             Flowable<?> flowable = (Flowable) returnValue;
             return flowable.compose(retryTransformer);
         } else {
-            logger.error("Unsupported type for retry RxJava2 {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the Retry in RxJava2 :" + returnValue.getClass().getName());
+            logger.error(
+                    "Unsupported type for retry RxJava2 {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the Retry in RxJava2 :"
+                            + returnValue.getClass().getName());
         }
     }
 }

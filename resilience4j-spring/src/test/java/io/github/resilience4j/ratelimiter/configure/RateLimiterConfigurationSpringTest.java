@@ -88,7 +88,8 @@ public class RateLimiterConfigurationSpringTest {
             return rateLimiterConfigurationProperties;
         }
 
-        private class RateLimiterConfigurationPropertiesTest extends RateLimiterConfigurationProperties {
+        private class RateLimiterConfigurationPropertiesTest
+                extends RateLimiterConfigurationProperties {
 
             RateLimiterConfigurationPropertiesTest() {
                 InstanceProperties instanceProperties = new InstanceProperties();
@@ -99,5 +100,4 @@ public class RateLimiterConfigurationSpringTest {
 
         }
     }
-
 }

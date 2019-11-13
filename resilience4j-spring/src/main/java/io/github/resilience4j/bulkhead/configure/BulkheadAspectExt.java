@@ -33,5 +33,8 @@ public interface BulkheadAspectExt {
      * @param supplier target function that should be decorated
      * @return decorated function
      */
-    CheckedFunction0<Object> decorate(io.github.resilience4j.bulkhead.Bulkhead bulkhead, CheckedFunction0<Object> supplier);
+    CheckedFunction0<Object> decorate(
+            io.github.resilience4j.bulkhead.Bulkhead bulkhead,
+            CheckedFunction0<Object> supplier);
+
 }

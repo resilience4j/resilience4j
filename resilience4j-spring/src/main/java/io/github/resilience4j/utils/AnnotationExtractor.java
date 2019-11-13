@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class AnnotationExtractor {
+
     private static final Logger logger = LoggerFactory.getLogger(AnnotationExtractor.class);
 
     private AnnotationExtractor() {
@@ -44,10 +45,14 @@ public class AnnotationExtractor {
         if (targetClass.isAnnotationPresent(annotationClass)) {
             annotations = Arrays.asList(targetClass.getAnnotationsByType(annotationClass));
             if (logger.isDebugEnabled() && annotations.isEmpty()) {
-                logger.debug("TargetClass has no annotation '{}'", annotationClass.getSimpleName());
+                logger.debug(
+                        "TargetClass has no annotation '{}'",
+                        annotationClass.getSimpleName());
                 annotations = Arrays.asList(targetClass.getDeclaredAnnotationsByType(annotationClass));
                 if (logger.isDebugEnabled() && annotations.isEmpty()) {
-                    logger.debug("TargetClass has no declared annotation '{}'", annotationClass.getSimpleName());
+                    logger.debug(
+                            "TargetClass has no declared annotation '{}'",
+                            annotationClass.getSimpleName());
                 }
             }
         }
@@ -57,13 +62,14 @@ public class AnnotationExtractor {
     /**
      * Extracts the annotation from the target implementation of the Proxy(ies)
      *
-     * @param targetProxy The proxy class
+     * @param targetProxy     The proxy class
      * @param annotationClass The annotation to extract
      * @param <T>
      * @return
      */
     @Nullable
-    public static <T extends Annotation> T extractAnnotationFromProxy(Object targetProxy, Class<T> annotationClass) {
+    public static <T extends Annotation> T extractAnnotationFromProxy(
+            Object targetProxy, Class<T> annotationClass) {
         return extractAllAnnotationsFromProxy(targetProxy, annotationClass)
                 .stream().findFirst().orElse(null);
     }
@@ -77,7 +83,8 @@ public class AnnotationExtractor {
      * @return
      */
     @Nullable
-    public static <T extends Annotation> List<T> extractAllAnnotationsFromProxy(Object targetProxy, Class<T> annotationClass) {
+    public static <T extends Annotation> List<T> extractAllAnnotationsFromProxy(
+            Object targetProxy, Class<T> annotationClass) {
         if (targetProxy.getClass().getInterfaces().length == 1) {
             return extractAll(targetProxy.getClass().getInterfaces()[0], annotationClass);
         } else if (targetProxy.getClass().getInterfaces().length > 1) {
@@ -96,7 +103,8 @@ public class AnnotationExtractor {
      * @return
      */
     @Nullable
-    public static <T extends Annotation> List<T> extractAllMethodAnnotationsFromProxy(Object targetProxy, Method method, Class<T> annotationClass) {
+    public static <T extends Annotation> List<T> extractAllMethodAnnotationsFromProxy(
+            Object targetProxy, Method method, Class<T> annotationClass) {
         Class<?>[] interfaces = targetProxy.getClass().getInterfaces();
         for (int depth = 0; depth < interfaces.length; depth++) {
             List<T> annotations = extractAllMethodAnnotationsIfMethodExistsInClass(interfaces[depth], method, annotationClass);
@@ -108,7 +116,8 @@ public class AnnotationExtractor {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Annotation> List<T> extractAllAnnotationsFromClosestMatch(Object targetProxy, Class<T> annotationClass) {
+    private static <T extends Annotation> List<T> extractAllAnnotationsFromClosestMatch(
+            Object targetProxy, Class<T> annotationClass) {
         int numberOfImplementations = targetProxy.getClass().getInterfaces().length;
         for (int depth = 0; depth < numberOfImplementations; depth++) {
             List<T> annotations = extractAll(targetProxy.getClass().getInterfaces()[depth], annotationClass);

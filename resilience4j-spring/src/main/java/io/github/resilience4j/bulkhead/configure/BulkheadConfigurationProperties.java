@@ -17,13 +17,15 @@ package io.github.resilience4j.bulkhead.configure;
 
 import org.springframework.core.Ordered;
 
-public class BulkheadConfigurationProperties extends io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties {
+public class BulkheadConfigurationProperties extends
+    io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties {
 
-	/**
-	 * As of release 0.16.0 as we set an implicit spring aspect order for bulkhead to cover the async case of threadPool bulkhead
-	 */
-	public int getBulkheadAspectOrder() {
-		return Ordered.LOWEST_PRECEDENCE;
-	}
+    /**
+     * As of release 0.16.0 as we set an implicit spring aspect order for bulkhead to cover the
+     * async case of threadPool bulkhead
+     */
+    public int getBulkheadAspectOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
 
 }

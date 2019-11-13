@@ -37,41 +37,51 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     private final float failureRateThreshold;
     private final float slowCallRateThreshold;
     private final long slowCallDurationThresholdInNanos;
-    private int minimumNumberOfCalls;
     private final LongAdder numberOfNotPermittedCalls;
+    private int minimumNumberOfCalls;
 
-    private CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig.SlidingWindowType slidingWindowType, CircuitBreakerConfig circuitBreakerConfig) {
-        if(slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED){
+    private CircuitBreakerMetrics(int slidingWindowSize,
+        CircuitBreakerConfig.SlidingWindowType slidingWindowType,
+        CircuitBreakerConfig circuitBreakerConfig) {
+        if (slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED) {
             this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
-            this.minimumNumberOfCalls = Math.min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
-        }else{
+            this.minimumNumberOfCalls = Math
+                .min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
+        } else {
             this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
         this.slowCallRateThreshold = circuitBreakerConfig.getSlowCallRateThreshold();
-        this.slowCallDurationThresholdInNanos = circuitBreakerConfig.getSlowCallDurationThreshold().toNanos();
+        this.slowCallDurationThresholdInNanos = circuitBreakerConfig.getSlowCallDurationThreshold()
+            .toNanos();
         this.numberOfNotPermittedCalls = new LongAdder();
     }
 
-    private CircuitBreakerMetrics(int slidingWindowSize, CircuitBreakerConfig circuitBreakerConfig) {
+    private CircuitBreakerMetrics(int slidingWindowSize,
+        CircuitBreakerConfig circuitBreakerConfig) {
         this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig);
     }
 
     static CircuitBreakerMetrics forCosed(CircuitBreakerConfig circuitBreakerConfig) {
-        return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(), circuitBreakerConfig);
+        return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
+            circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forHalfOpen(int permittedNumberOfCallsInHalfOpenState,CircuitBreakerConfig circuitBreakerConfig) {
-        return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
+    static CircuitBreakerMetrics forHalfOpen(int permittedNumberOfCallsInHalfOpenState,
+        CircuitBreakerConfig circuitBreakerConfig) {
+        return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState,
+            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
     }
 
     static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
-        return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
+        return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
+            circuitBreakerConfig);
     }
 
     static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig) {
-        return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
+        return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
+            circuitBreakerConfig);
     }
 
     /**
@@ -88,9 +98,9 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     public Result onSuccess(long duration, TimeUnit durationUnit) {
         Snapshot snapshot;
-        if(durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos){
+        if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
             snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_SUCCESS);
-        }else{
+        } else {
             snapshot = metrics.record(duration, durationUnit, Outcome.SUCCESS);
         }
         return checkIfThresholdsExceeded(snapshot);
@@ -103,37 +113,37 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     public Result onError(long duration, TimeUnit durationUnit) {
         Snapshot snapshot;
-        if(durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos){
+        if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
             snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_ERROR);
-        }else{
+        } else {
             snapshot = metrics.record(duration, durationUnit, Outcome.ERROR);
         }
         return checkIfThresholdsExceeded(snapshot);
     }
 
     /**
-     * Checks if the failure rate is above the threshold or
-     * if the slow calls percentage is above the threshold.
+     * Checks if the failure rate is above the threshold or if the slow calls percentage is above
+     * the threshold.
      *
      * @param snapshot a metrics snapshot
      * @return false, if the thresholds haven't been exceeded.
      */
     private Result checkIfThresholdsExceeded(Snapshot snapshot) {
         float failureRateInPercentage = getFailureRate(snapshot);
-        if(failureRateInPercentage == -1 ){
+        if (failureRateInPercentage == -1) {
             return Result.BELOW_MINIMUM_CALLS_THRESHOLD;
         }
-        if(failureRateInPercentage >= failureRateThreshold){
+        if (failureRateInPercentage >= failureRateThreshold) {
             return Result.ABOVE_THRESHOLDS;
         }
         float slowCallsInPercentage = getSlowCallRate(snapshot);
-        if(slowCallsInPercentage >= slowCallRateThreshold){
+        if (slowCallsInPercentage >= slowCallRateThreshold) {
             return Result.ABOVE_THRESHOLDS;
         }
         return Result.BELOW_THRESHOLDS;
     }
 
-    private float getSlowCallRate(Snapshot snapshot){
+    private float getSlowCallRate(Snapshot snapshot) {
         int bufferedCalls = snapshot.getTotalNumberOfCalls();
         if (bufferedCalls == 0 || bufferedCalls < minimumNumberOfCalls) {
             return -1.0f;

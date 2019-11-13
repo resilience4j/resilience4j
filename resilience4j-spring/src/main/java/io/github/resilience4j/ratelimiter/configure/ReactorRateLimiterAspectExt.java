@@ -41,7 +41,8 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
      * reactor rate limiter See {@link RateLimiter} for details.
      */
     @Override
-    public CheckedFunction0<Object> decorate(RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(rateLimiter, returnValue);
@@ -56,9 +57,12 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
             return monoReturnValue.compose(RateLimiterOperator.of(rateLimiter));
         } else {
-            logger.error("Unsupported type for Reactor rateLimiter {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the rateLimiter in Reactor :" + returnValue.getClass().getName());
-
+            logger.error(
+                    "Unsupported type for Reactor rateLimiter {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the rateLimiter in Reactor :"
+                            + returnValue.getClass().getName());
         }
     }
 }

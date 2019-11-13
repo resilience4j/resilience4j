@@ -15,35 +15,30 @@
  */
 package io.github.resilience4j.circuitbreaker.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * This annotation can be applied to a class or a specific method.
- * Applying it on a class is equivalent to applying it on all its public methods.
- * The annotation enables backend monitoring for all methods where it is applied.
- * Backend monitoring is performed via a circuit breaker.
- * See {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} for details.
+ * This annotation can be applied to a class or a specific method. Applying it on a class is
+ * equivalent to applying it on all its public methods. The annotation enables backend monitoring
+ * for all methods where it is applied. Backend monitoring is performed via a circuit breaker. See
+ * {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} for details.
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented
 public @interface CircuitBreaker {
 
-	/**
-	 * Name of the circuit breaker.
-	 *
-	 * @return the name of the circuit breaker
-	 */
-	String name();
+    /**
+     * Name of the circuit breaker.
+     *
+     * @return the name of the circuit breaker
+     */
+    String name();
 
-	/**
-	 * fallbackMethod method name.
-	 *
-	 * @return fallbackMethod method name.
-	 */
-	String fallbackMethod() default "";
+    /**
+     * fallbackMethod method name.
+     *
+     * @return fallbackMethod method name.
+     */
+    String fallbackMethod() default "";
 }

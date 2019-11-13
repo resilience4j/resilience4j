@@ -16,7 +16,6 @@
 package io.github.resilience4j;
 
 import io.github.resilience4j.prometheus.collectors.BulkheadMetricsCollector;
-import io.github.resilience4j.prometheus.collectors.CircuitBreakerMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.RateLimiterMetricsCollector;
 import io.github.resilience4j.prometheus.collectors.ThreadPoolBulkheadMetricsCollector;
 import io.github.resilience4j.prometheus.publisher.CircuitBreakerMetricsPublisher;

@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,9 @@ import io.vavr.CheckedFunction0;
 import static org.assertj.core.api.Assertions.assertThat;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 /**
  * aspect unit test
@@ -54,5 +59,4 @@ public class ReactorBulkheadAspectExtTest {
         CheckedFunction0<Object> decorated = reactorBulkheadAspectExt.decorate(bulkhead, () -> Flux.just("Test"));
         assertThat(decorated.apply()).isInstanceOf(Flux.class);
     }
-
 }

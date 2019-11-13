@@ -15,6 +15,12 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -34,6 +40,7 @@ import io.github.resilience4j.utils.ProceedingJoinPointHelper;
  * The RateLimiterRegistry is used to retrieve an instance of a RateLimiter for
  * a specific backend.
  *
+
  * Given a method like this:
  * <pre><code>
  *     {@literal @}RateLimiter(name = "myService")
@@ -67,14 +74,21 @@ public class RateLimiterAspect implements Ordered {
      *
      * @param rateLimiter - matched annotation
      */
-    @Pointcut(value = "@within(rateLimiter) || @annotation(rateLimiter)", argNames = "rateLimiter")
+    @Pointcut(
+            value = "@within(rateLimiter) || @annotation(rateLimiter)",
+            argNames = "rateLimiter")
     public void matchAnnotatedClassOrMethod(RateLimiter rateLimiter) {
         // Method used as pointcut
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)", argNames = "proceedingJoinPoint, rateLimiterAnnotation")
-    public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+    @Around(
+            value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)",
+            argNames = "proceedingJoinPoint, rateLimiterAnnotation")
+    public Object rateLimiterAroundAdvice(
+            ProceedingJoinPoint proceedingJoinPoint,
+            @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
+        ProceedingJoinPointHelper joinPointHelper
+                = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (rateLimiterAnnotation == null) {
             rateLimiterAnnotation = joinPointHelper.getClassAnnotation(RateLimiter.class);
         }
@@ -84,6 +98,7 @@ public class RateLimiterAspect implements Ordered {
         rateLimiterAspectHelper.decorate(joinPointHelper, rateLimiterAnnotation);
         return joinPointHelper.getDecoratedProceedCall().apply();
     }
+
 
     @Override
     public int getOrder() {

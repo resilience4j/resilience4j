@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.retry.configure;
 
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -26,30 +25,28 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 
+
 /**
- * This Spring AOP aspect intercepts all methods which are annotated with a
- * {@link Retry} annotation. The aspect will handle methods that return a
- * RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type, or
- * value type.
- *
- * The RetryRegistry is used to retrieve an instance of a Retry for a specific
- * name.
- *
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry}
+ * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * reactive type, CompletionStage type, or value type.
+ * <p>
+ * The RetryRegistry is used to retrieve an instance of a Retry for a specific name.
+ * <p>
  * Given a method like this:
  * <pre><code>
  *     {@literal @}Retry(name = "myService")
  *     public String fancyName(String name) {
  *         return "Sir Captain " + name;
  *     }
- * </code></pre> each time the {@code #fancyName(String)} method is invoked, the
- * method's execution will pass through a a
- * {@link io.github.resilience4j.retry.Retry} according to the given config.
- *
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
+ * through a a {@link io.github.resilience4j.retry.Retry} according to the given config.
+ * <p>
  * The fallbackMethod parameter signature must match either:
- *
- * 1) The method parameter signature on the annotated method or 2) The method
- * parameter signature with a matching exception type as the last parameter on
- * the annotated method
+ * <p>
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
 public class RetryAspect implements Ordered {

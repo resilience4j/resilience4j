@@ -38,8 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@link Configuration
- * Configuration} for resilience4j-bulkhead.
+ * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
 @Import(FallbackConfigurationOnMissingBean.class)
@@ -55,32 +54,44 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean
-    public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+    public BulkheadRegistry bulkheadRegistry(
+            BulkheadConfigurationProperties bulkheadConfigurationProperties,
             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
             RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
-        return bulkheadConfiguration.bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry, bulkheadRegistryEventConsumer);
+        return bulkheadConfiguration.bulkheadRegistry(
+                bulkheadConfigurationProperties,
+                bulkheadEventConsumerRegistry,
+                bulkheadRegistryEventConsumer);
     }
 
     @Bean
     @Primary
-    public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers) {
+    public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers) {
         return bulkheadConfiguration.bulkheadRegistryEventConsumer(optionalRegistryEventConsumers);
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public BulkheadAspectHelper bulkheadAspectHelper(ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-            BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
+    public BulkheadAspectHelper bulkheadAspectHelper(
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+            BulkheadRegistry bulkheadRegistry,
+            @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
             FallbackDecorators fallbackDecorators) {
-        return bulkheadConfiguration.bulkheadAspectHelper(threadPoolBulkheadRegistry, bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
+        return bulkheadConfiguration.bulkheadAspectHelper(
+                threadPoolBulkheadRegistry, bulkheadRegistry,
+                bulkHeadAspectExtList, fallbackDecorators);
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public BulkheadAspect bulkheadAspect(BulkheadAspectHelper bulkheadAspectHelper, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        return bulkheadConfiguration.bulkheadAspect(bulkheadAspectHelper, bulkheadConfigurationProperties);
+    public BulkheadAspect bulkheadAspect(
+            BulkheadAspectHelper bulkheadAspectHelper,
+            BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+        return bulkheadConfiguration.bulkheadAspect(
+                bulkheadAspectHelper, bulkheadConfigurationProperties);
     }
 
     @Bean
@@ -99,18 +110,22 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean
-    public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+    public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
+            ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
             RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
-                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry, threadPoolBulkheadRegistryEventConsumer);
+                threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
+                threadPoolBulkheadRegistryEventConsumer);
     }
 
     @Bean
     @Primary
-    public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
-        return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistryEventConsumer(optionalRegistryEventConsumers);
+    public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
+        return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistryEventConsumer(
+                optionalRegistryEventConsumers);
     }
 
 }

@@ -34,37 +34,42 @@ public class CircuitBreakerEventsEndpoint {
 
     private final EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
 
-    public CircuitBreakerEventsEndpoint(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+    public CircuitBreakerEventsEndpoint(
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         this.eventConsumerRegistry = eventConsumerRegistry;
     }
 
     @ReadOperation
     public CircuitBreakerEventsEndpointResponse getAllCircuitBreakerEvents() {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
-                .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
-                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
+            .flatMap(CircularEventConsumer::getBufferedEvents)
+            .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
+            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
     @ReadOperation
-    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(@Selector String name) {
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(
+        @Selector String name) {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(name)
-                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
+            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
     @ReadOperation
-    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(@Selector String name, @Selector String eventType) {
+    public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerNameAndEventType(
+        @Selector String name, @Selector String eventType) {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(name)
-                .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
-                .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
+            .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
+                .valueOf(eventType.toUpperCase()))
+            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).toJavaList());
     }
 
     private List<CircuitBreakerEvent> getCircuitBreakerEvents(String circuitBreakerName) {
-        CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry.getEventConsumer(circuitBreakerName);
-        if(eventConsumer != null){
+        CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry
+            .getEventConsumer(circuitBreakerName);
+        if (eventConsumer != null) {
             return eventConsumer.getBufferedEvents()
-                    .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName));
-        }else{
+                .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName));
+        } else {
             return List.empty();
         }
     }

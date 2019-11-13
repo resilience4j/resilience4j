@@ -15,12 +15,9 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -30,6 +27,7 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vavr.CheckedFunction0;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -37,9 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RxJava2RateLimiterAspectExtTest {
-
-    @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
     RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;

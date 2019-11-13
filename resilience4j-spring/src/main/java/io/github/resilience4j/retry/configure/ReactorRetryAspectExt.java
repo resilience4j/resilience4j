@@ -15,12 +15,10 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import io.vavr.CheckedFunction0;
+import io.github.resilience4j.reactor.retry.RetryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.github.resilience4j.reactor.retry.RetryOperator;
-import io.github.resilience4j.utils.ProceedingJoinPointHelper;
-import io.vavr.CheckedFunction0;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -39,7 +37,8 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));
+        return (Flux.class.isAssignableFrom(returnType))
+                || (Mono.class.isAssignableFrom(returnType));
     }
 
     /**
@@ -48,14 +47,18 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(io.github.resilience4j.retry.Retry retry, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            io.github.resilience4j.retry.Retry retry,
+            CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(returnValue, retry);
         };
     }
 
-    private Object handleReturnValue(Object returnValue, io.github.resilience4j.retry.Retry retry) {
+    private Object handleReturnValue(
+            Object returnValue,
+            io.github.resilience4j.retry.Retry retry) {
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
             return fluxReturnValue.compose(RetryOperator.of(retry));
@@ -63,9 +66,12 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
             return monoReturnValue.compose(RetryOperator.of(retry));
         } else {
-            logger.error("Unsupported type for Reactor retry {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the retry in Reactor :" + returnValue.getClass().getName());
-
+            logger.error(
+                    "Unsupported type for Reactor retry {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the retry in Reactor :"
+                            + returnValue.getClass().getName());
         }
     }
 }

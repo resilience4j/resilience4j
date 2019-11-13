@@ -22,8 +22,6 @@ import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
-
 class MaybeBulkhead<T> extends Maybe<T> {
 
     private final Maybe<T> upstream;
@@ -36,9 +34,9 @@ class MaybeBulkhead<T> extends Maybe<T> {
 
     @Override
     protected void subscribeActual(MaybeObserver<? super T> downstream) {
-        if(bulkhead.tryAcquirePermission()){
+        if (bulkhead.tryAcquirePermission()) {
             upstream.subscribe(new BulkheadMaybeObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
         }

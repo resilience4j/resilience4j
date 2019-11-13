@@ -33,16 +33,20 @@ import io.vavr.CheckedFunction0;
 public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2CircuitBreakerAspectExt.class);
-    private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private final Set<Class> rxSupportedTypes = newHashSet(
+            ObservableSource.class, SingleSource.class, CompletableSource.class, 
+            MaybeSource.class, Flowable.class);
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
+        return rxSupportedTypes.stream()
+                .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(
+            CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(circuitBreaker, returnValue);
@@ -68,8 +72,12 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
             Flowable<?> flowable = (Flowable) returnValue;
             return flowable.compose(circuitBreakerOperator);
         } else {
-            logger.error("Unsupported type for RxJava2 circuit breaker return type {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException("Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass().getName());
+            logger.error(
+                    "Unsupported type for RxJava2 circuit breaker return type {}",
+                    returnValue.getClass().getTypeName());
+            throw new IllegalArgumentException(
+                    "Not Supported type for the circuit breaker in RxJava2:"
+                            + returnValue.getClass().getName());
         }
     }
 }

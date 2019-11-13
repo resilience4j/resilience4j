@@ -24,7 +24,8 @@ import io.vavr.control.Option;
 import java.util.Arrays;
 
 /**
- * Thread safe implementation of {@link CircularFifoBuffer} on top of {@link ConcurrentEvictingQueue}
+ * Thread safe implementation of {@link CircularFifoBuffer} on top of {@link
+ * ConcurrentEvictingQueue}
  **/
 public class ConcurrentCircularFifoBuffer<T> implements CircularFifoBuffer<T> {
 
@@ -32,8 +33,7 @@ public class ConcurrentCircularFifoBuffer<T> implements CircularFifoBuffer<T> {
     private final int capacity;
 
     /**
-     * Creates an {@code ConcurrentCircularFifoBuffer} with the given (fixed)
-     * capacity
+     * Creates an {@code ConcurrentCircularFifoBuffer} with the given (fixed) capacity
      *
      * @param capacity the capacity of this {@code ConcurrentCircularFifoBuffer}
      * @throws IllegalArgumentException if {@code capacity < 1}
@@ -72,7 +72,7 @@ public class ConcurrentCircularFifoBuffer<T> implements CircularFifoBuffer<T> {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public List<T> toList(){
+    public List<T> toList() {
         T[] elementsArray = (T[]) queue.toArray();
         return List.ofAll(Arrays.asList(elementsArray));
     }
