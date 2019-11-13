@@ -56,12 +56,12 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     public RetryAspectHelper retryAspectHelper(
-            ScheduledExecutorService retryExecutorService,
-            RetryRegistry retryRegistry,
-            @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        ScheduledExecutorService retryExecutorService,
+        RetryRegistry retryRegistry,
+        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return retryConfiguration.retryAspectHelper(
-                retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
+            retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
     }
 
     /**
@@ -73,19 +73,20 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(
-            RetryConfigurationProperties retryConfigurationProperties,
-            EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-            RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        RetryConfigurationProperties retryConfigurationProperties,
+        EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
         return retryConfiguration
-                .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
-                        retryRegistryEventConsumer);
+            .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
+                retryRegistryEventConsumer);
     }
 
     @Bean
     @Primary
     public RegistryEventConsumer<Retry> retryRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
-        return retryConfiguration.retryRegistryEventConsumer(optionalRegistryEventConsumers);
+        Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers) {
+        return retryConfiguration
+            .retryRegistryEventConsumer(optionalRegistryEventConsumers);
     }
 
     /**
@@ -97,8 +98,8 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
     public RetryAspect retryAspect(
-            RetryAspectHelper retryAspectHelper,
-            RetryConfigurationProperties retryConfigurationProperties) {
+        RetryAspectHelper retryAspectHelper,
+        RetryConfigurationProperties retryConfigurationProperties) {
         return retryConfiguration.retryAspect(retryAspectHelper, retryConfigurationProperties);
     }
 

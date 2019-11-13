@@ -31,6 +31,7 @@ public interface CircuitBreakerAspectExt {
     boolean canHandleReturnType(Class returnType);
 
     /**
+     * @param circuitBreaker circuit breaker to decorate the checked function
      * @param supplier target function that should be decorated
      * @return decorated function
      */

@@ -26,29 +26,23 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.decorators.annotation.Decorator;
-import io.github.resilience4j.decorators.annotation.Decorators;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectHelper;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 import java.util.Arrays;
 import java.util.Collections;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
- * This Spring AOP aspect intercepts all methods which are annotated with a
- * {@link Decorator} annotation. The aspect will handle methods that return a
- * RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type, or
- * value type.
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link Decorator}
+ * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * reactive type, CompletionStage type, or value type.
  *
- * The RetryRegistry is used to retrieve an instance of a Retry for a specific
- * name.
+ * The RetryRegistry is used to retrieve an instance of a Retry for a specific name.
  *
  * Given a method like this:
  * <pre><code>
@@ -58,12 +52,12 @@ import org.springframework.beans.factory.annotation.Value;
  *     public String getInformation() throws Exception {
  *         return restTemplate.getForEntity(informationUrl, String.class);
  *     }
- * </code></pre> each time the {@code #getInformation()} method is invoked, the
- * method's execution will pass through all the decorators specified in the above
- * annotation.
- * 
+ * </code></pre>
+ * each time the {@code #getInformation()} method is invoked, the method's execution
+ * will pass through all the decorators specified in the above annotation.
+ *
  * Calling a Spring bean method with the annotations given above is equivalent to:
- * 
+ *
  * <pre><code>
  *     Decorators.ofCheckedSupplier(() -{@literal >} service.getInformation())
  *         .withRetry(retryRegistry.retry("readtimeouts"))
@@ -75,7 +69,6 @@ import org.springframework.beans.factory.annotation.Value;
 @Aspect
 public class DecoratorsAspect implements Ordered {
 
-    private static final Logger logger = LoggerFactory.getLogger(DecoratorsAspect.class);
     private final RetryAspectHelper retryAspectHelper;
     private final RateLimiterAspectHelper rateLimiterAspectHelper;
     private final BulkheadAspectHelper bulkheadAspectHelper;
@@ -83,11 +76,11 @@ public class DecoratorsAspect implements Ordered {
     private final int order;
 
     public DecoratorsAspect(
-            RetryAspectHelper retryAspectHelper,
-            RateLimiterAspectHelper rateLimiterAspectHelper,
-            BulkheadAspectHelper bulkheadAspectHelper,
-            CircuitBreakerAspectHelper circuitBreakerAspectHelper,
-            int order) {
+        RetryAspectHelper retryAspectHelper,
+        RateLimiterAspectHelper rateLimiterAspectHelper,
+        BulkheadAspectHelper bulkheadAspectHelper,
+        CircuitBreakerAspectHelper circuitBreakerAspectHelper,
+        int order) {
         this.retryAspectHelper = retryAspectHelper;
         this.rateLimiterAspectHelper = rateLimiterAspectHelper;
         this.bulkheadAspectHelper = bulkheadAspectHelper;
@@ -95,14 +88,22 @@ public class DecoratorsAspect implements Ordered {
         this.order = order;
     }
 
-    @Pointcut(value = "@within(decorator) || @annotation(decorator)", argNames = "decorator")
+    @Pointcut(
+        value = "@within(decorator) || @annotation(decorator)",
+        argNames = "decorator")
     public void matchAnnotatedClassOrMethod(Decorator decorator) {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(foundDecoratorAnnotation)", argNames = "proceedingJoinPoint, foundDecoratorAnnotation")
-    public Object decorateAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Decorator foundDecoratorAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
-        List<Decorator> decoratorAnnotations = joinPointHelper.getMethodAnnotations(Decorator.class);
+    @Around(
+        value = "matchAnnotatedClassOrMethod(foundDecoratorAnnotation)",
+        argNames = "proceedingJoinPoint, foundDecoratorAnnotation")
+    public Object decorateAroundAdvice(
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable Decorator foundDecoratorAnnotation) throws Throwable {
+        ProceedingJoinPointHelper joinPointHelper
+            = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+        List<Decorator> decoratorAnnotations = joinPointHelper.getMethodAnnotations(
+            Decorator.class);
         if (decoratorAnnotations == null) {
             decoratorAnnotations = joinPointHelper.getClassAnnotations(Decorator.class);
         }
@@ -116,7 +117,8 @@ public class DecoratorsAspect implements Ordered {
             for (Retry retryAnnotation : retryAnnotations) {
                 retryAspectHelper.decorate(joinPointHelper, retryAnnotation);
             }
-            List<RateLimiter> rateLimiterAnnotations = Arrays.asList(decoratorAnnotation.rateLimiter());
+            List<RateLimiter> rateLimiterAnnotations
+                = Arrays.asList(decoratorAnnotation.rateLimiter());
             Collections.reverse(rateLimiterAnnotations);
             for (RateLimiter rateLimiterAnnotation : rateLimiterAnnotations) {
                 rateLimiterAspectHelper.decorate(joinPointHelper, rateLimiterAnnotation);
@@ -126,7 +128,8 @@ public class DecoratorsAspect implements Ordered {
             for (Bulkhead bulkheadAnnotation : bulkheadAnnotations) {
                 bulkheadAspectHelper.decorate(joinPointHelper, bulkheadAnnotation);
             }
-            List<CircuitBreaker> circuitBreakerAnnotations = Arrays.asList(decoratorAnnotation.circuitBreaker());
+            List<CircuitBreaker> circuitBreakerAnnotations
+                = Arrays.asList(decoratorAnnotation.circuitBreaker());
             Collections.reverse(circuitBreakerAnnotations);
             for (CircuitBreaker circuitBreakerAnnotation : circuitBreakerAnnotations) {
                 circuitBreakerAspectHelper.decorate(joinPointHelper, circuitBreakerAnnotation);

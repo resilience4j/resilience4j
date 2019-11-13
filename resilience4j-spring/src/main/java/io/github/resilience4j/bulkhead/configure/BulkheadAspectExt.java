@@ -18,8 +18,7 @@ package io.github.resilience4j.bulkhead.configure;
 import io.vavr.CheckedFunction0;
 
 /**
- * BulkHead aspect extension support interface type if you want to support new
- * types
+ * BulkHead aspect extension support interface type if you want to support new types
  */
 public interface BulkheadAspectExt {
 
@@ -30,11 +29,12 @@ public interface BulkheadAspectExt {
     boolean canHandleReturnType(Class returnType);
 
     /**
+     * @param bulkhead bulkhead to decorate the checked function
      * @param supplier target function that should be decorated
      * @return decorated function
      */
     CheckedFunction0<Object> decorate(
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead,
-            CheckedFunction0<Object> supplier);
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead,
+        CheckedFunction0<Object> supplier);
 
 }

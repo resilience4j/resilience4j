@@ -19,11 +19,10 @@ import io.github.resilience4j.retry.Retry;
 import io.vavr.CheckedFunction0;
 
 /**
- * Retry aspect extension support interface type if you want to support new
- * types
+ * Retry aspect extension support interface type if you want to support new types
  */
 public interface RetryAspectExt {
-    
+
     /**
      * @param returnType the AOP method return type class
      * @return boolean true if this extension can handle this type
@@ -31,10 +30,11 @@ public interface RetryAspectExt {
     boolean canHandleReturnType(Class returnType);
 
     /**
+     * @param retry retry to decorate the checked function
      * @param supplier target function that should be decorated
      * @return decorated function
      */
     CheckedFunction0<Object> decorate(
-            Retry retry, CheckedFunction0<Object> supplier);
+        Retry retry, CheckedFunction0<Object> supplier);
 
 }

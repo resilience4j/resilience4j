@@ -41,7 +41,7 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     protected final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
     public AbstractCircuitBreakerConfigurationOnMissingBean(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(circuitBreakerProperties);
     }
@@ -49,15 +49,15 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-            RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
         CircuitBreakerRegistry circuitBreakerRegistry
-                = circuitBreakerConfiguration.createCircuitBreakerRegistry(
-                        circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
+            = circuitBreakerConfiguration.createCircuitBreakerRegistry(
+                circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 
         // Register the event consumers
         circuitBreakerConfiguration.registerEventConsumer(
-                circuitBreakerRegistry, eventConsumerRegistry);
+            circuitBreakerRegistry, eventConsumerRegistry);
 
         // Initialize backends that were initially configured.
         circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
@@ -68,27 +68,27 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     @Bean
     @Primary
     public RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers) {
+        Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers) {
         return circuitBreakerConfiguration.circuitBreakerRegistryEventConsumer(
-                optionalRegistryEventConsumers);
+            optionalRegistryEventConsumers);
     }
 
     @Bean
     @ConditionalOnMissingBean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public CircuitBreakerAspectHelper circuitBreakerAspectHelper(
-            CircuitBreakerRegistry circuitBreakerRegistry,
-            @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return circuitBreakerConfiguration.circuitBreakerAspectHelper(
-                circuitBreakerRegistry, circuitBreakerAspectExtList,fallbackDecorators);
+            circuitBreakerRegistry, circuitBreakerAspectExtList, fallbackDecorators);
     }
 
     @Bean
     @ConditionalOnMissingBean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public CircuitBreakerAspect circuitBreakerAspect(
-            CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
+        CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
         return circuitBreakerConfiguration.circuitBreakerAspect(circuitBreakerAspectHelper);
     }
 

@@ -75,8 +75,8 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
-                if (!"eventConsumerRegistry".equals(methodOnMissing.getName()) &&
-                    !"circuitBreakerRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                if (!"eventConsumerRegistry".equals(methodOnMissing.getName())
+                    && !"circuitBreakerRegistryEventConsumer".equals(methodOnMissing.getName())) {
                     assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class))
                         .isTrue();
                 }
@@ -109,10 +109,10 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
 
         @Bean
         public CircuitBreakerAspect circuitBreakerAspect(
-                CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
+            CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
             circuitBreakerAspect = new CircuitBreakerAspect(
-                    circuitBreakerAspectHelper,
-                    new CircuitBreakerProperties());
+                circuitBreakerAspectHelper,
+                new CircuitBreakerProperties());
             return circuitBreakerAspect;
         }
 

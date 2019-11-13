@@ -49,16 +49,16 @@ public class CircuitBreakerConfiguration {
     private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
     public CircuitBreakerConfiguration(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         this.circuitBreakerProperties = circuitBreakerProperties;
     }
 
     @Bean
     public CircuitBreakerRegistry circuitBreakerRegistry(
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-            RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
-                circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
+            circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
 
         registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
         initCircuitBreakerRegistry(circuitBreakerRegistry);
@@ -68,21 +68,25 @@ public class CircuitBreakerConfiguration {
     @Bean
     @Primary
     public RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers) {
-        return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+        Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers) {
+        return new CompositeRegistryEventConsumer<>(
+            optionalRegistryEventConsumers.orElseGet(ArrayList::new));
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public CircuitBreakerAspectHelper circuitBreakerAspectHelper(CircuitBreakerRegistry circuitBreakerRegistry,
-            @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-            FallbackDecorators fallbackDecorators) {
-        return new CircuitBreakerAspectHelper(circuitBreakerRegistry, circuitBreakerAspectExtList, fallbackDecorators);
+    public CircuitBreakerAspectHelper circuitBreakerAspectHelper(
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        FallbackDecorators fallbackDecorators) {
+        return new CircuitBreakerAspectHelper(
+            circuitBreakerRegistry, circuitBreakerAspectExtList, fallbackDecorators);
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
+    public CircuitBreakerAspect circuitBreakerAspect(
+        CircuitBreakerAspectHelper circuitBreakerAspectHelper) {
         return new CircuitBreakerAspect(circuitBreakerAspectHelper, circuitBreakerProperties);
     }
 
@@ -100,9 +104,8 @@ public class CircuitBreakerConfiguration {
 
     /**
      * The EventConsumerRegistry is used to manage EventConsumer instances. The
-     * EventConsumerRegistry is used by the CircuitBreakerHealthIndicator to
-     * show the latest CircuitBreakerEvents events for each CircuitBreaker
-     * instance.
+     * EventConsumerRegistry is used by the CircuitBreakerHealthIndicator to show the latest
+     * CircuitBreakerEvents events for each CircuitBreaker instance.
      *
      * @return a default EventConsumerRegistry
      * {@link io.github.resilience4j.consumer.DefaultEventConsumerRegistry}
@@ -115,19 +118,19 @@ public class CircuitBreakerConfiguration {
     /**
      * Initializes a circuitBreaker registry.
      *
-     * @param circuitBreakerProperties The circuit breaker configuration
-     * properties.
+     * @param circuitBreakerProperties The circuit breaker configuration properties.
      *
      * @return a CircuitBreakerRegistry
      */
     public CircuitBreakerRegistry createCircuitBreakerRegistry(
-            CircuitBreakerConfigurationProperties circuitBreakerProperties,
-            RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+        CircuitBreakerConfigurationProperties circuitBreakerProperties,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
 
         Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
-                .entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey,
-                        entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
+            .entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey,
+                    entry -> circuitBreakerProperties.createCircuitBreakerConfig(
+                        entry.getValue())));
 
         return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer);
     }
@@ -139,34 +142,35 @@ public class CircuitBreakerConfiguration {
      */
     public void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
         circuitBreakerProperties.getInstances().forEach(
-                (name, properties) -> circuitBreakerRegistry.circuitBreaker(
-                        name, circuitBreakerProperties.createCircuitBreakerConfig(properties))
+            (name, properties) -> circuitBreakerRegistry.circuitBreaker(
+                name, circuitBreakerProperties.createCircuitBreakerConfig(properties))
         );
     }
 
     /**
-     * Registers the post creation consumer function that registers the consumer
-     * events to the circuit breakers.
+     * Registers the post creation consumer function that registers the consumer events to the
+     * circuit breakers.
      *
      * @param circuitBreakerRegistry The circuit breaker registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     public void registerEventConsumer(
-            CircuitBreakerRegistry circuitBreakerRegistry,
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         circuitBreakerRegistry.getEventPublisher()
-                .onEntryAdded(event -> registerEventConsumer(
-                        eventConsumerRegistry, event.getAddedEntry()));
+            .onEntryAdded(event -> registerEventConsumer(
+            eventConsumerRegistry, event.getAddedEntry()));
     }
 
     private void registerEventConsumer(
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-            CircuitBreaker circuitBreaker) {
-        int eventConsumerBufferSize = circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
-                .map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
-                .orElse(100);
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        CircuitBreaker circuitBreaker) {
+        int eventConsumerBufferSize
+            = circuitBreakerProperties.findCircuitBreakerProperties(circuitBreaker.getName())
+            .map(io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .orElse(100);
         circuitBreaker.getEventPublisher().onEvent(
-                eventConsumerRegistry.createEventConsumer(
-                        circuitBreaker.getName(), eventConsumerBufferSize));
+            eventConsumerRegistry.createEventConsumer(
+                circuitBreaker.getName(), eventConsumerBufferSize));
     }
 }

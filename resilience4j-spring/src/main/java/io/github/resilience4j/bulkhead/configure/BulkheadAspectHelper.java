@@ -42,40 +42,61 @@ public class BulkheadAspectHelper {
     List<BulkheadAspectExt> bulkheadAspectExts;
     private final FallbackDecorators fallbackDecorators;
 
-    public BulkheadAspectHelper(ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts, FallbackDecorators fallbackDecorators) {
+    public BulkheadAspectHelper(
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+        BulkheadRegistry bulkheadRegistry,
+        @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+        FallbackDecorators fallbackDecorators) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.bulkheadAspectExts = bulkheadAspectExts;
         this.fallbackDecorators = fallbackDecorators;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
     }
 
-    public void decorate(ProceedingJoinPointHelper joinPointHelper, Bulkhead bulkheadAnnotation) throws Throwable {
+    public void decorate(
+        ProceedingJoinPointHelper joinPointHelper,
+        Bulkhead bulkheadAnnotation) throws Throwable {
         String name = bulkheadAnnotation.name();
         switch (bulkheadAnnotation.type()) {
             case THREADPOOL:
                 joinPointHelper.decorateProceedCall(
-                        underliningCall -> decorateWithThreadpoolWithoutFallback(name, joinPointHelper.getDeclaringMethodName(), joinPointHelper.getReturnType(), underliningCall));
+                    underliningCall -> decorateWithThreadpoolWithoutFallback(
+                        name,
+                        joinPointHelper.getDeclaringMethodName(),
+                        joinPointHelper.getReturnType(),
+                        underliningCall));
                 break;
             case SEMAPHORE:
                 joinPointHelper.decorateProceedCall(
-                        underliningCall -> decorateWithSemaphoreWithoutFallback(name, joinPointHelper.getDeclaringMethodName(), joinPointHelper.getReturnType(), underliningCall));
+                    underliningCall -> decorateWithSemaphoreWithoutFallback(
+                        name,
+                        joinPointHelper.getDeclaringMethodName(),
+                        joinPointHelper.getReturnType(),
+                        underliningCall));
                 break;
         }
         if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(bulkheadAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
-        joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
+        FallbackMethod fallbackMethod = FallbackMethod.create(
+            bulkheadAnnotation.fallbackMethod(),
+            joinPointHelper.getDeclaringMethod(),
+            joinPointHelper.getJoinPoint().getArgs(),
+            joinPointHelper.getJoinPoint().getTarget());
+        joinPointHelper.decorateProceedCall(
+            underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 
     /**
      * execute the logic wrapped by ThreadPool bulkhead , please check
-     * {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead} for more
-     * information
+     * {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead} for more information
      */
-    private CheckedFunction0<Object> decorateWithThreadpoolWithoutFallback(String backend, String methodName, Class<?> returnType, CheckedFunction0<Object> supplier) {
+    private CheckedFunction0<Object> decorateWithThreadpoolWithoutFallback(
+        String backend, String methodName, Class<?> returnType, CheckedFunction0<Object> supplier) {
         if (logger.isDebugEnabled()) {
-            logger.debug("ThreadPool bulkhead invocation for method {} in backend {}", methodName, backend);
+            logger.debug(
+                "ThreadPool bulkhead invocation for method {} in backend {}",
+                methodName, backend);
         }
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
         if (CompletionStage.class.isAssignableFrom(returnType)) {
@@ -87,12 +108,15 @@ public class BulkheadAspectHelper {
                 }
             });
         } else {
-            throw new IllegalStateException("ThreadPool bulkhead is only applicable for completable futures ");
+            throw new IllegalStateException(
+                "ThreadPool bulkhead is only applicable for completable futures");
         }
     }
 
-    private CheckedFunction0<Object> decorateWithSemaphoreWithoutFallback(String backend, String methodName, Class<?> returnType, CheckedFunction0<Object> supplier) {
-        io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName, backend);
+    private CheckedFunction0<Object> decorateWithSemaphoreWithoutFallback(
+        String backend, String methodName, Class<?> returnType, CheckedFunction0<Object> supplier) {
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(
+            methodName, backend);
         if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
             for (BulkheadAspectExt bulkHeadAspectExt : bulkheadAspectExts) {
                 if (bulkHeadAspectExt.canHandleReturnType(returnType)) {
@@ -103,29 +127,27 @@ public class BulkheadAspectHelper {
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             return decorateCompletableFuture(bulkhead, supplier);
         }
-        return io.github.resilience4j.bulkhead.Bulkhead.decorateCheckedSupplier(bulkhead, supplier);
+        return io.github.resilience4j.bulkhead.Bulkhead.decorateCheckedSupplier(
+            bulkhead, supplier);
     }
 
-    private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName, String backend) {
+    private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(
+        String methodName, String backend) {
         io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}ms' for method: '{}'",
-                    backend, bulkhead.getBulkheadConfig().getMaxConcurrentCalls(),
-                    bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(), methodName);
+            logger.debug(
+                "Created or retrieved bulkhead '{}' with max concurrent call '{}' "
+                    + "and max wait time '{}ms' for method: '{}'",
+                backend, bulkhead.getBulkheadConfig().getMaxConcurrentCalls(),
+                bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(), methodName);
         }
 
         return bulkhead;
     }
 
-    /**
-     * handle the asynchronous completable future flow
-     *
-     * @param proceedingJoinPoint AOPJoinPoint
-     * @param bulkhead configured bulkhead
-     * @return CompletionStage
-     */
-    private CheckedFunction0<Object> decorateCompletableFuture(io.github.resilience4j.bulkhead.Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
+    private CheckedFunction0<Object> decorateCompletableFuture(
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
         return () -> bulkhead.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) supplier.apply();

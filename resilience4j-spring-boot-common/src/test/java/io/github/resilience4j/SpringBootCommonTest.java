@@ -54,42 +54,78 @@ public class SpringBootCommonTest {
 
     @Test
     public void testBulkHeadCommonConfig() {
-        BulkheadConfigurationOnMissingBean bulkheadConfigurationOnMissingBean = new BulkheadConfigurationOnMissingBean();
-        assertThat(bulkheadConfigurationOnMissingBean.bulkheadRegistry(new BulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
-        assertThat(bulkheadConfigurationOnMissingBean.threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+        BulkheadConfigurationOnMissingBean bulkheadConfigurationOnMissingBean
+            = new BulkheadConfigurationOnMissingBean();
+        assertThat(
+            bulkheadConfigurationOnMissingBean.bulkheadRegistry(
+                new BulkheadConfigurationProperties(),
+                new DefaultEventConsumerRegistry<>(),
+                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+        assertThat(
+            bulkheadConfigurationOnMissingBean.threadPoolBulkheadRegistry(
+                new ThreadPoolBulkheadConfigurationProperties(),
+                new DefaultEventConsumerRegistry<>(),
+                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
-        BulkheadAspectHelper bulkheadAspectHelper = new BulkheadAspectHelper(ThreadPoolBulkheadRegistry.ofDefaults(), BulkheadRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
-        assertThat(bulkheadConfigurationOnMissingBean.bulkheadAspect(bulkheadAspectHelper, new BulkheadConfigurationProperties()));
-        assertThat(bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty()));
+        BulkheadAspectHelper bulkheadAspectHelper = new BulkheadAspectHelper(
+            ThreadPoolBulkheadRegistry.ofDefaults(),
+            BulkheadRegistry.ofDefaults(),
+            Collections.emptyList(),
+            new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
+        assertThat(
+            bulkheadConfigurationOnMissingBean.bulkheadAspect(
+                bulkheadAspectHelper, new BulkheadConfigurationProperties()));
+        assertThat(
+            bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty()));
     }
 
     @Test
     public void testCircuitBreakerCommonConfig() {
-        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
+        CircuitBreakerConfig circuitBreakerConfig
+            = new CircuitBreakerConfig(new CircuitBreakerConfigurationProperties());
         assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
-        assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
-        CircuitBreakerAspectHelper circuitBreakerAspectHelper = new CircuitBreakerAspectHelper(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
+        assertThat(
+            circuitBreakerConfig.circuitBreakerRegistry(
+                new DefaultEventConsumerRegistry<>(),
+                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+        CircuitBreakerAspectHelper circuitBreakerAspectHelper
+            = new CircuitBreakerAspectHelper(
+                CircuitBreakerRegistry.ofDefaults(),
+                Collections.emptyList(),
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
         assertThat(circuitBreakerConfig.circuitBreakerAspect(circuitBreakerAspectHelper));
         assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty()));
     }
 
     @Test
     public void testRetryCommonConfig() {
-        RetryConfigurationOnMissingBean retryConfigurationOnMissingBean = new RetryConfigurationOnMissingBean();
+        RetryConfigurationOnMissingBean retryConfigurationOnMissingBean
+            = new RetryConfigurationOnMissingBean();
         assertThat(retryConfigurationOnMissingBean.reactorRetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
-        assertThat(retryConfigurationOnMissingBean.retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
-        RetryAspectHelper helper = new RetryAspectHelper(Executors.newSingleThreadScheduledExecutor(), RetryRegistry.ofDefaults(), Collections.emptyList(), new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
-        assertThat(retryConfigurationOnMissingBean.retryAspect(helper, new RetryConfigurationProperties())).isNotNull();
+        assertThat(
+            retryConfigurationOnMissingBean.retryRegistry(
+                new RetryConfigurationProperties(),
+                new DefaultEventConsumerRegistry<>(),
+                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+        RetryAspectHelper helper = new RetryAspectHelper(
+            Executors.newSingleThreadScheduledExecutor(),
+            RetryRegistry.ofDefaults(),
+            Collections.emptyList(),
+            new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())));
+        assertThat(
+            retryConfigurationOnMissingBean.retryAspect(
+                helper, new RetryConfigurationProperties())).isNotNull();
 
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty()));
     }
 
     @Test
     public void testRateLimiterCommonConfig() {
-        RateLimiterConfigurationOnMissingBean rateLimiterConfigurationOnMissingBean = new RateLimiterConfigurationOnMissingBean();
+        RateLimiterConfigurationOnMissingBean rateLimiterConfigurationOnMissingBean
+            = new RateLimiterConfigurationOnMissingBean();
         assertThat(rateLimiterConfigurationOnMissingBean.reactorRateLimiterAspectExt()).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean.rxJava2RateLimiterAspectExt()).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean.rateLimiterRegistry(new RateLimiterConfigurationProperties(), new DefaultEventConsumerRegistry<>(), new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
@@ -100,24 +136,24 @@ public class SpringBootCommonTest {
 
     // testing config samples
     class BulkheadConfigurationOnMissingBean
-            extends AbstractBulkheadConfigurationOnMissingBean {
+        extends AbstractBulkheadConfigurationOnMissingBean {
     }
 
     class CircuitBreakerConfig
-            extends AbstractCircuitBreakerConfigurationOnMissingBean {
+        extends AbstractCircuitBreakerConfigurationOnMissingBean {
 
         public CircuitBreakerConfig(
-                CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
             super(circuitBreakerProperties);
         }
 
     }
 
     class RetryConfigurationOnMissingBean
-            extends AbstractRetryConfigurationOnMissingBean {
+        extends AbstractRetryConfigurationOnMissingBean {
     }
 
     class RateLimiterConfigurationOnMissingBean
-            extends AbstractRateLimiterConfigurationOnMissingBean {
+        extends AbstractRateLimiterConfigurationOnMissingBean {
     }
 }

@@ -77,8 +77,8 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
-                if (!"rateLimiterEventsConsumerRegistry".equals(methodOnMissing.getName()) &&
-                    !"rateLimiterRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                if (!"rateLimiterEventsConsumerRegistry".equals(methodOnMissing.getName())
+                    && !"rateLimiterRegistryEventConsumer".equals(methodOnMissing.getName())) {
                     assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class))
                         .isTrue();
                 }
@@ -111,10 +111,10 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 
         @Bean
         public RateLimiterAspect rateLimiterAspect(
-                RateLimiterAspectHelper rateLimiterAspectHelper) {
+            RateLimiterAspectHelper rateLimiterAspectHelper) {
             rateLimiterAspect = new RateLimiterAspect(
-                    rateLimiterAspectHelper,
-                    new RateLimiterConfigurationProperties());
+                rateLimiterAspectHelper,
+                new RateLimiterConfigurationProperties());
             return rateLimiterAspect;
         }
 

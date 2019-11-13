@@ -24,8 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * the Reactor bulkhead logic support for the spring AOP Conditional on Reactor
- * class existence on spring class loader
+ * the Reactor bulkhead logic support for the spring AOP Conditional on Reactor class existence on
+ * spring class loader
  */
 public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
 
@@ -37,16 +37,17 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
      */
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));
+        return (Flux.class.isAssignableFrom(returnType))
+            || (Mono.class.isAssignableFrom(returnType));
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into
-     * reactor bulk head See {@link Bulkhead} for details.
+     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor bulk head See
+     * {@link Bulkhead} for details.
      */
     @Override
     public CheckedFunction0<Object> decorate(
-            Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
+        Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(bulkhead, returnValue);
@@ -62,11 +63,11 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
             return monoReturnValue.compose(BulkheadOperator.of(bulkhead));
         } else {
             logger.error(
-                    "Unsupported type for Reactor BulkHead {}",
-                    returnValue.getClass().getTypeName());
+                "Unsupported type for Reactor BulkHead {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the BulkHead in Reactor :"
-                            + returnValue.getClass().getName());
+                "Not Supported type for the BulkHead in Reactor :"
+                + returnValue.getClass().getName());
         }
     }
 }

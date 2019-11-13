@@ -1,4 +1,5 @@
 package io.github.resilience4j.retry.configure;
+
 /*
  * Copyright 2019 Mahmoud Romeh
  *

@@ -24,8 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * the Reactor breaker logic support for the spring AOP Conditional on Reactor
- * class existence on spring class loader
+ * the Reactor breaker logic support for the spring AOP Conditional on Reactor class existence on
+ * spring class loader
  */
 public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
 
@@ -37,14 +37,13 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into
-     * reactor circuit-breaker See
-     * {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator}
-     * for details.
+     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
+     * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for
+     * details.
      */
     @Override
     public CheckedFunction0<Object> decorate(
-            CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
+        CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(circuitBreaker, returnValue);
@@ -55,17 +54,18 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
             return fluxReturnValue.compose(
-                    io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(circuitBreaker));
+                io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator.of(
+                    circuitBreaker));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
             return monoReturnValue.compose(CircuitBreakerOperator.of(circuitBreaker));
         } else {
             logger.error(
-                    "Unsupported type for Reactor circuit breaker {}",
-                    returnValue.getClass().getTypeName());
+                "Unsupported type for Reactor circuit breaker {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the circuit breaker in Reactor:"
-                            + returnValue.getClass().getName());
+                "Not Supported type for the circuit breaker in Reactor:"
+                + returnValue.getClass().getName());
 
         }
     }

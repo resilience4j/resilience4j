@@ -19,8 +19,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.vavr.CheckedFunction0;
 
 /**
- * RateLimiter aspect extension support interface type if you want to support
- * new types
+ * RateLimiter aspect extension support interface type if you want to support new types
  */
 public interface RateLimiterAspectExt {
 
@@ -31,10 +30,11 @@ public interface RateLimiterAspectExt {
     boolean canHandleReturnType(Class returnType);
 
     /**
+     * @param rateLimiter rate limiter to decorate the checked function
      * @param supplier target function that should be decorated
      * @return decorated function
      */
     CheckedFunction0<Object> decorate(
-            RateLimiter rateLimiter,
-            CheckedFunction0<Object> supplier);
+        RateLimiter rateLimiter,
+        CheckedFunction0<Object> supplier);
 }

@@ -34,27 +34,27 @@ import io.vavr.CheckedFunction0;
 import java.util.Set;
 
 /**
- * the Rx RateLimiter logic support for the spring AOP conditional on the
- * presence of Rx classes on the spring class loader
+ * the Rx RateLimiter logic support for the spring AOP conditional on the presence of Rx classes on
+ * the spring class loader
  */
 public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(
-            ObservableSource.class, SingleSource.class, CompletableSource.class, 
-            MaybeSource.class, Flowable.class);
+        ObservableSource.class, SingleSource.class, CompletableSource.class,
+        MaybeSource.class, Flowable.class);
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream()
-                .anyMatch(classType -> classType.isAssignableFrom(returnType));
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     @Override
     public CheckedFunction0<Object> decorate(
-            RateLimiter rateLimiter,
-            CheckedFunction0<Object> supplier) {
+        RateLimiter rateLimiter,
+        CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(rateLimiter, returnValue);
@@ -81,11 +81,11 @@ public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
             return flowable.compose(rateLimiterOperator);
         } else {
             logger.error(
-                    "Unsupported type for Rate limiter RxJava2 {}",
-                    returnValue.getClass().getTypeName());
+                "Unsupported type for Rate limiter RxJava2 {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the Rate limiter in RxJava2 :"
-                            + returnValue.getClass().getName());
+                "Not Supported type for the Rate limiter in RxJava2 :"
+                + returnValue.getClass().getName());
         }
     }
 }

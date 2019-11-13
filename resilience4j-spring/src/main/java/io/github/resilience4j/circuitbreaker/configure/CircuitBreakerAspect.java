@@ -25,13 +25,12 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.Ordered;
 
 /**
- * This Spring AOP aspect intercepts all methods which are annotated with a
- * {@link CircuitBreaker} annotation. The aspect will handle methods that return
- * a RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type,
- * or value type.
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker}
+ * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * reactive type, CompletionStage type, or value type.
  *
- * The CircuitBreakerRegistry is used to retrieve an instance of a
- * CircuitBreaker for a specific name.
+ * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific
+ * name.
  *
  * Given a method like this:
  * <pre><code>
@@ -39,16 +38,15 @@ import org.springframework.core.Ordered;
  *     public String fancyName(String name) {
  *         return "Sir Captain " + name;
  *     }
- * </code></pre> each time the {@code #fancyName(String)} method is invoked, the
- * method's execution will pass through a a
- * {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to the
- * given config.
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution
+ * will pass through a a {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} according to
+ * the given config.
  *
  * The fallbackMethod parameter signature must match either:
  *
- * 1) The method parameter signature on the annotated method or 2) The method
- * parameter signature with a matching exception type as the last parameter on
- * the annotated method
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
 public class CircuitBreakerAspect implements Ordered {
@@ -57,26 +55,26 @@ public class CircuitBreakerAspect implements Ordered {
     private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
     public CircuitBreakerAspect(
-            CircuitBreakerAspectHelper circuitBreakerAspectHelper,
-            CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+        CircuitBreakerAspectHelper circuitBreakerAspectHelper,
+        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
         this.circuitBreakerAspectHelper = circuitBreakerAspectHelper;
         this.circuitBreakerProperties = circuitBreakerProperties;
     }
 
     @Pointcut(
-            value = "@within(circuitBreaker) || @annotation(circuitBreaker)",
-            argNames = "circuitBreaker")
+        value = "@within(circuitBreaker) || @annotation(circuitBreaker)",
+        argNames = "circuitBreaker")
     public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
     }
 
     @Around(
-            value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)",
-            argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
+        value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)",
+        argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
     public Object circuitBreakerAroundAdvice(
-            ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
         ProceedingJoinPointHelper joinPointHelper
-                = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+            = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (circuitBreakerAnnotation == null) {
             circuitBreakerAnnotation = joinPointHelper.getClassAnnotation(CircuitBreaker.class);
         }

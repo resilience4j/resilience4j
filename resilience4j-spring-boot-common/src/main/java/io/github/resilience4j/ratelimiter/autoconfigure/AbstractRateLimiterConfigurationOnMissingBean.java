@@ -46,20 +46,21 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(
-            RateLimiterConfigurationProperties rateLimiterProperties,
-            EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-            RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         return rateLimiterConfiguration.rateLimiterRegistry(
-                rateLimiterProperties, rateLimiterEventsConsumerRegistry,
-                rateLimiterRegistryEventConsumer);
+            rateLimiterProperties, rateLimiterEventsConsumerRegistry,
+            rateLimiterRegistryEventConsumer);
 
     }
 
     @Bean
     @Primary
     public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
-        return rateLimiterConfiguration.rateLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
+        Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers) {
+        return rateLimiterConfiguration
+            .rateLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
 
     }
 
@@ -67,21 +68,21 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
     public RateLimiterAspectHelper rateLimiterAspectHelper(
-            RateLimiterRegistry rateLimiterRegistry,
-            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+        RateLimiterRegistry rateLimiterRegistry,
+        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         return rateLimiterConfiguration.rateLimiterAspectHelper(
-                rateLimiterRegistry, rateLimiterAspectExtList, fallbackDecorators);
+            rateLimiterRegistry, rateLimiterAspectExtList, fallbackDecorators);
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
     public RateLimiterAspect rateLimiterAspect(
-            RateLimiterAspectHelper rateLimiterAspectHelper,
-            RateLimiterConfigurationProperties rateLimiterProperties) {
+        RateLimiterAspectHelper rateLimiterAspectHelper,
+        RateLimiterConfigurationProperties rateLimiterProperties) {
         return rateLimiterConfiguration.rateLimiterAspect(
-                rateLimiterAspectHelper, rateLimiterProperties);
+            rateLimiterAspectHelper, rateLimiterProperties);
     }
 
     @Bean

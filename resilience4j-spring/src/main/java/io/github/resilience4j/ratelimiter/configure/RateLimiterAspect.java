@@ -15,12 +15,6 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,31 +26,28 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
 
 /**
- * This Spring AOP aspect intercepts all methods which are annotated with a
- * {@link RateLimiter} annotation. The aspect will handle methods that return a
- * RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type, or
- * value type.
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link RateLimiter}
+ * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * reactive type, CompletionStage type, or value type.
  *
- * The RateLimiterRegistry is used to retrieve an instance of a RateLimiter for
- * a specific backend.
+ * The RateLimiterRegistry is used to retrieve an instance of a RateLimiter for a specific backend.
  *
-
+ *
  * Given a method like this:
  * <pre><code>
  *     {@literal @}RateLimiter(name = "myService")
  *     public String fancyName(String name) {
  *         return "Sir Captain " + name;
  *     }
- * </code></pre> each time the {@code #fancyName(String)} method is invoked, the
- * method's execution will pass through a a
- * {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given
- * config.
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution
+ * will pass through a a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the
+ * given config.
  *
  * The fallbackMethod parameter signature must match either:
  *
- * 1) The method parameter signature on the annotated method or 2) The method
- * parameter signature with a matching exception type as the last parameter on
- * the annotated method
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
 public class RateLimiterAspect implements Ordered {
@@ -64,7 +55,9 @@ public class RateLimiterAspect implements Ordered {
     private final RateLimiterAspectHelper rateLimiterAspectHelper;
     private final RateLimiterConfigurationProperties properties;
 
-    public RateLimiterAspect(RateLimiterAspectHelper rateLimiterAspectHelper, RateLimiterConfigurationProperties properties) {
+    public RateLimiterAspect(
+        RateLimiterAspectHelper rateLimiterAspectHelper,
+        RateLimiterConfigurationProperties properties) {
         this.rateLimiterAspectHelper = rateLimiterAspectHelper;
         this.properties = properties;
     }
@@ -75,20 +68,20 @@ public class RateLimiterAspect implements Ordered {
      * @param rateLimiter - matched annotation
      */
     @Pointcut(
-            value = "@within(rateLimiter) || @annotation(rateLimiter)",
-            argNames = "rateLimiter")
+        value = "@within(rateLimiter) || @annotation(rateLimiter)",
+        argNames = "rateLimiter")
     public void matchAnnotatedClassOrMethod(RateLimiter rateLimiter) {
         // Method used as pointcut
     }
 
     @Around(
-            value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)",
-            argNames = "proceedingJoinPoint, rateLimiterAnnotation")
+        value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)",
+        argNames = "proceedingJoinPoint, rateLimiterAnnotation")
     public Object rateLimiterAroundAdvice(
-            ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
         ProceedingJoinPointHelper joinPointHelper
-                = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+            = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (rateLimiterAnnotation == null) {
             rateLimiterAnnotation = joinPointHelper.getClassAnnotation(RateLimiter.class);
         }
@@ -98,7 +91,6 @@ public class RateLimiterAspect implements Ordered {
         rateLimiterAspectHelper.decorate(joinPointHelper, rateLimiterAnnotation);
         return joinPointHelper.getDecoratedProceedCall().apply();
     }
-
 
     @Override
     public int getOrder() {

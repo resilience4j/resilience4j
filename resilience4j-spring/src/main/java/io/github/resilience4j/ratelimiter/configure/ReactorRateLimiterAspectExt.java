@@ -24,8 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * the Reactor RateLimiter logic support for the spring AOP Conditional on
- * Reactor class existence on spring class loader
+ * the Reactor RateLimiter logic support for the spring AOP Conditional on Reactor class existence
+ * on spring class loader
  */
 public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 
@@ -33,16 +33,17 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
 
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return (Flux.class.isAssignableFrom(returnType)) || (Mono.class.isAssignableFrom(returnType));
+        return (Flux.class.isAssignableFrom(returnType))
+            || (Mono.class.isAssignableFrom(returnType));
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into
-     * reactor rate limiter See {@link RateLimiter} for details.
+     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor rate limiter See
+     * {@link RateLimiter} for details.
      */
     @Override
     public CheckedFunction0<Object> decorate(
-            RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
+        RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(rateLimiter, returnValue);
@@ -58,11 +59,11 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
             return monoReturnValue.compose(RateLimiterOperator.of(rateLimiter));
         } else {
             logger.error(
-                    "Unsupported type for Reactor rateLimiter {}",
-                    returnValue.getClass().getTypeName());
+                "Unsupported type for Reactor rateLimiter {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the rateLimiter in Reactor :"
-                            + returnValue.getClass().getName());
+                "Not Supported type for the rateLimiter in Reactor :"
+                + returnValue.getClass().getName());
         }
     }
 }

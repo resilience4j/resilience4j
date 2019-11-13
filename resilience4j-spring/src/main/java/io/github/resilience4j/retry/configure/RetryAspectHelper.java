@@ -42,11 +42,6 @@ public class RetryAspectHelper {
     List<RetryAspectExt> retryAspectExtList;
     private final FallbackDecorators fallbackDecorators;
 
-    /**
-     * @param retryRegistry retry definition registry
-     * @param retryAspectExtList a list of retry aspect extensions
-     * @param fallbackDecorators the fallback decorators
-     */
     public RetryAspectHelper(ScheduledExecutorService retryExecutorService, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
         this.retryExecutorService = retryExecutorService;
         this.retryRegistry = retryRegistry;
@@ -80,26 +75,16 @@ public class RetryAspectHelper {
         return io.github.resilience4j.retry.Retry.decorateCheckedSupplier(retry, supplier);
     }
 
-    /**
-     * @param methodName the retry method name
-     * @param backend the retry backend name
-     * @return the configured retry
-     */
     private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
         io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend);
 
         if (logger.isDebugEnabled()) {
             logger.debug("Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
-                    backend, retry.getRetryConfig().getResultPredicate(), methodName);
+                backend, retry.getRetryConfig().getResultPredicate(), methodName);
         }
         return retry;
     }
 
-    /**
-     * @param retry the configured async retry
-     * @param supplier target function that should be decorated
-     * @return the result object if any
-     */
     @SuppressWarnings("unchecked")
     private CheckedFunction0<Object> decorateCompletableFuture(io.github.resilience4j.retry.Retry retry, CheckedFunction0<Object> supplier) {
         return () -> retry.executeCompletionStage(retryExecutorService, () -> {

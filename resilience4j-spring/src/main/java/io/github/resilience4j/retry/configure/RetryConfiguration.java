@@ -46,21 +46,26 @@ import java.util.stream.Collectors;
  */
 @Configuration
 public class RetryConfiguration {
-    
-	@Bean
-	public ScheduledExecutorService retryExecutorService() {
-		return Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-	}
-        
-        @Bean
-        public RetryAspectHelper retryAspectHelper(ScheduledExecutorService retryExecutorService, RetryRegistry retryRegistry, @Autowired(required = false) List<RetryAspectExt> retryAspectExtList, FallbackDecorators fallbackDecorators) {
-		return new RetryAspectHelper(retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
-        }
+
+    @Bean
+    public ScheduledExecutorService retryExecutorService() {
+        return Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    }
+
+    @Bean
+    public RetryAspectHelper retryAspectHelper(
+        ScheduledExecutorService retryExecutorService,
+        RetryRegistry retryRegistry,
+        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        FallbackDecorators fallbackDecorators) {
+        return new RetryAspectHelper(
+            retryExecutorService, retryRegistry, retryAspectExtList, fallbackDecorators);
+    }
 
     /**
      * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring
-     *                                     properties
-     * @param retryEventConsumerRegistry   the event retry registry
+     * properties
+     * @param retryEventConsumerRegistry the event retry registry
      * @return the retry definition registry
      */
     @Bean
@@ -104,7 +109,7 @@ public class RetryConfiguration {
      * Registers the post creation consumer function that registers the consumer events to the
      * retries.
      *
-     * @param retryRegistry         The retry registry.
+     * @param retryRegistry The retry registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(RetryRegistry retryRegistry,
@@ -119,8 +124,7 @@ public class RetryConfiguration {
         Retry retry, RetryConfigurationProperties retryConfigurationProperties) {
         int eventConsumerBufferSize = Optional
             .ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
-            .map(
-                io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .map(io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
         retry.getEventPublisher().onEvent(
             eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
@@ -129,8 +133,8 @@ public class RetryConfiguration {
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public RetryAspect retryAspect(
-            RetryAspectHelper retryAspectHelper,
-            RetryConfigurationProperties retryConfigurationProperties) {
+        RetryAspectHelper retryAspectHelper,
+        RetryConfigurationProperties retryConfigurationProperties) {
         return new RetryAspect(retryAspectHelper, retryConfigurationProperties);
     }
 

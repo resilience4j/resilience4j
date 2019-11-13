@@ -42,24 +42,39 @@ public class CircuitBreakerAspectHelper {
     List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
     private final FallbackDecorators fallbackDecorators;
 
-    public CircuitBreakerAspectHelper(CircuitBreakerRegistry circuitBreakerRegistry, @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList, FallbackDecorators fallbackDecorators) {
+    public CircuitBreakerAspectHelper(
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
     }
-    
-    public void decorate(ProceedingJoinPointHelper joinPointHelper, CircuitBreaker circuitBreakerAnnotation) throws Throwable {
+
+    public void decorate(
+        ProceedingJoinPointHelper joinPointHelper,
+        CircuitBreaker circuitBreakerAnnotation) throws Throwable {
         String backend = circuitBreakerAnnotation.name();
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(joinPointHelper.getDeclaringMethodName(), backend);
-        joinPointHelper.decorateProceedCall(underliningCall -> decorateWithoutFallback(circuitBreaker, joinPointHelper.getReturnType(), underliningCall));
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker
+            = getOrCreateCircuitBreaker(joinPointHelper.getDeclaringMethodName(), backend);
+        joinPointHelper.decorateProceedCall(
+            underliningCall -> decorateWithoutFallback(
+                circuitBreaker, joinPointHelper.getReturnType(), underliningCall));
         if (StringUtils.isEmpty(circuitBreakerAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(circuitBreakerAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
-        joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
+        FallbackMethod fallbackMethod = FallbackMethod.create(
+            circuitBreakerAnnotation.fallbackMethod(),
+            joinPointHelper.getDeclaringMethod(),
+            joinPointHelper.getJoinPoint().getArgs(),
+            joinPointHelper.getJoinPoint().getTarget());
+        joinPointHelper.decorateProceedCall(
+            underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 
-    private CheckedFunction0<Object> decorateWithoutFallback(io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<?> returnType, CheckedFunction0<Object> supplier) {
+    private CheckedFunction0<Object> decorateWithoutFallback(
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker,
+        Class<?> returnType, CheckedFunction0<Object> supplier) {
         if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
             for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
                 if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {
@@ -70,25 +85,28 @@ public class CircuitBreakerAspectHelper {
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             return decorateCompletableFuture(circuitBreaker, supplier);
         }
-        return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
+        return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(
+            circuitBreaker, supplier);
     }
 
-    private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String methodName, String backend) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend);
+    private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(
+        String methodName, String backend) {
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker
+            = circuitBreakerRegistry.circuitBreaker(backend);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Created or retrieved circuit breaker '{}' with failure rate '{}' for method: '{}'",
-                    backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(), methodName);
+            logger.debug(
+                "Created or retrieved circuit breaker '{}' with failure rate '{}' for method: '{}'",
+                backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
+                methodName);
         }
 
         return circuitBreaker;
     }
 
-    /**
-     * handle the CompletionStage return types AOP based into configured
-     * circuit-breaker
-     */
-    private CheckedFunction0<Object> decorateCompletableFuture(io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, CheckedFunction0<Object> supplier) {
+    private CheckedFunction0<Object> decorateCompletableFuture(
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker,
+        CheckedFunction0<Object> supplier) {
         return () -> circuitBreaker.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) supplier.apply();

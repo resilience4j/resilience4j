@@ -41,24 +41,39 @@ public class RateLimiterAspectHelper {
     List<RateLimiterAspectExt> rateLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
 
-    public RateLimiterAspectHelper(RateLimiterRegistry rateLimiterRegistry, @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList, FallbackDecorators fallbackDecorators) {
+    public RateLimiterAspectHelper(
+        RateLimiterRegistry rateLimiterRegistry,
+        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+        FallbackDecorators fallbackDecorators) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.rateLimiterAspectExtList = rateLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
     }
-    
-    public void decorate(ProceedingJoinPointHelper joinPointHelper, RateLimiter rateLimiterAnnotation) throws Throwable {
+
+    public void decorate(
+        ProceedingJoinPointHelper joinPointHelper,
+        RateLimiter rateLimiterAnnotation) throws Throwable {
         String name = rateLimiterAnnotation.name();
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(joinPointHelper.getDeclaringMethodName(), name);
-        joinPointHelper.decorateProceedCall(underliningCall -> decorateWithoutFallback(rateLimiter, joinPointHelper.getReturnType(), underliningCall));
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
+            joinPointHelper.getDeclaringMethodName(), name);
+        joinPointHelper.decorateProceedCall(
+            underliningCall -> decorateWithoutFallback(
+                rateLimiter, joinPointHelper.getReturnType(), underliningCall));
         if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(rateLimiterAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
-        joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
+        FallbackMethod fallbackMethod = FallbackMethod.create(
+            rateLimiterAnnotation.fallbackMethod(),
+            joinPointHelper.getDeclaringMethod(),
+            joinPointHelper.getJoinPoint().getArgs(),
+            joinPointHelper.getJoinPoint().getTarget());
+        joinPointHelper.decorateProceedCall(
+            underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 
-    private CheckedFunction0<Object> decorateWithoutFallback(io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, Class<?> returnType, CheckedFunction0<Object> supplier) {
+    private CheckedFunction0<Object> decorateWithoutFallback(
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
+        Class<?> returnType, CheckedFunction0<Object> supplier) {
         if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
             for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {
                 if (rateLimiterAspectExt.canHandleReturnType(returnType)) {
@@ -69,32 +84,33 @@ public class RateLimiterAspectHelper {
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             return decorateCompletableFuture(rateLimiter, supplier);
         }
-        return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, supplier);
+        return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(
+            rateLimiter, supplier);
     }
 
-    private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName, String name) {
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(name);
-
+    private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(
+        String methodName, String name) {
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter
+            = rateLimiterRegistry.rateLimiter(name);
+        
         if (logger.isDebugEnabled()) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
             logger.debug(
-                    "Created or retrieved rate limiter '{}' with period: '{}'; "
-                            + "limit for period: '{}'; timeout: '{}'; method: '{}'",
-                    name, rateLimiterConfig.getLimitRefreshPeriod(), rateLimiterConfig.getLimitForPeriod(),
-                    rateLimiterConfig.getTimeoutDuration(), methodName
+                "Created or retrieved rate limiter '{}' with period: '{}'; "
+                + "limit for period: '{}'; timeout: '{}'; method: '{}'",
+                name, rateLimiterConfig.getLimitRefreshPeriod(),
+                rateLimiterConfig.getLimitForPeriod(),
+                rateLimiterConfig.getTimeoutDuration(), methodName
             );
         }
 
         return rateLimiter;
     }
 
-    /**
-     * @param rateLimiter configured rate limiter
-     * @param supplier target function that should be decorated
-     * @return the result object if any
-     */
     @SuppressWarnings("unchecked")
-    private CheckedFunction0<Object> decorateCompletableFuture(io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, CheckedFunction0<Object> supplier) {
+    private CheckedFunction0<Object> decorateCompletableFuture(
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
+        CheckedFunction0<Object> supplier) {
         return () -> rateLimiter.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) supplier.apply();

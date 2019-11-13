@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,18 +62,21 @@ public class BulkheadConfigurationOnMissingBeanTest {
     @Test
     public void testAllBeansFromBulkHeadHasOnMissingBean() throws NoSuchMethodException {
         final Class<BulkheadConfiguration> originalClass = BulkheadConfiguration.class;
-        final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass = BulkheadConfigurationOnMissingBean.class;
+        final Class<BulkheadConfigurationOnMissingBean> onMissingBeanClass
+            = BulkheadConfigurationOnMissingBean.class;
 
         for (Method methodBulkheadConfiguration : originalClass.getMethods()) {
             if (methodBulkheadConfiguration.isAnnotationPresent(Bean.class)) {
-                final Method methodOnMissing = onMissingBeanClass
-                        .getMethod(methodBulkheadConfiguration.getName(), methodBulkheadConfiguration.getParameterTypes());
+                final Method methodOnMissing = onMissingBeanClass.getMethod(
+                    methodBulkheadConfiguration.getName(),
+                    methodBulkheadConfiguration.getParameterTypes());
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
                 if (!"bulkheadEventConsumerRegistry".equals(methodOnMissing.getName())
-                        && !"bulkheadRegistryEventConsumer".equals(methodOnMissing.getName())) {
-                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+                    && !"bulkheadRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class))
+                        .isTrue();
                 }
             }
         }

@@ -35,24 +35,27 @@ import io.reactivex.SingleSource;
 import io.vavr.CheckedFunction0;
 
 /**
- * the Rx Retry logic support for the spring AOP conditional on the presence of
- * Rx classes on the spring class loader
+ * the Rx Retry logic support for the spring AOP conditional on the presence of Rx classes on the
+ * spring class loader
  */
 public class RxJava2RetryAspectExt implements RetryAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
-    private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private final Set<Class> rxSupportedTypes = newHashSet(
+        ObservableSource.class, SingleSource.class, CompletableSource.class,
+        MaybeSource.class, Flowable.class);
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
-        return rxSupportedTypes.stream().anyMatch(classType -> classType.isAssignableFrom(returnType));
+        return rxSupportedTypes.stream()
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     @Override
     public CheckedFunction0<Object> decorate(
-            io.github.resilience4j.retry.Retry retry,
-            CheckedFunction0<Object> supplier) {
+        io.github.resilience4j.retry.Retry retry,
+        CheckedFunction0<Object> supplier) {
         return () -> {
             RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
             Object returnValue = supplier.apply();
@@ -62,7 +65,7 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
 
     @SuppressWarnings("unchecked")
     private Object handleReturnValue(
-            Object returnValue, RetryTransformer retryTransformer) {
+        Object returnValue, RetryTransformer retryTransformer) {
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable<?>) returnValue;
             return observable.compose(retryTransformer);
@@ -80,11 +83,11 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
             return flowable.compose(retryTransformer);
         } else {
             logger.error(
-                    "Unsupported type for retry RxJava2 {}",
-                    returnValue.getClass().getTypeName());
+                "Unsupported type for retry RxJava2 {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the Retry in RxJava2 :"
-                            + returnValue.getClass().getName());
+                "Not Supported type for the Retry in RxJava2 :"
+                + returnValue.getClass().getName());
         }
     }
 }

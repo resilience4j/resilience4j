@@ -67,13 +67,14 @@ public class RetryConfigurationOnMissingBeanTest {
         for (Method methodRetryConfiguration : originalClass.getMethods()) {
             if (methodRetryConfiguration.isAnnotationPresent(Bean.class)) {
                 final Method methodOnMissing = onMissingBeanClass
-                        .getMethod(methodRetryConfiguration.getName(), methodRetryConfiguration.getParameterTypes());
+                    .getMethod(methodRetryConfiguration.getName(), methodRetryConfiguration.getParameterTypes());
 
                 assertThat(methodOnMissing.isAnnotationPresent(Bean.class)).isTrue();
 
                 if (!"retryEventConsumerRegistry".equals(methodOnMissing.getName())
-                        && !"retryRegistryEventConsumer".equals(methodOnMissing.getName())) {
-                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class)).isTrue();
+                    && !"retryRegistryEventConsumer".equals(methodOnMissing.getName())) {
+                    assertThat(methodOnMissing.isAnnotationPresent(ConditionalOnMissingBean.class))
+                        .isTrue();
                 }
             }
         }

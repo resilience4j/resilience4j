@@ -27,15 +27,15 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 import io.vavr.CheckedFunction0;
 
 /**
- * the Rx bulkhead logic support for the spring AOP conditional on the presence
- * of Rx classes on the spring class loader
+ * the Rx bulkhead logic support for the spring AOP conditional on the presence of Rx classes on the
+ * spring class loader
  */
 public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(RxJava2BulkheadAspectExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(
-            ObservableSource.class, SingleSource.class, CompletableSource.class,
-            MaybeSource.class, Flowable.class);
+        ObservableSource.class, SingleSource.class, CompletableSource.class,
+        MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -45,12 +45,12 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return rxSupportedTypes.stream()
-                .anyMatch(classType -> classType.isAssignableFrom(returnType));
+            .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     @Override
     public CheckedFunction0<Object> decorate(
-            Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
+        Bulkhead bulkhead, CheckedFunction0<Object> supplier) {
         return () -> {
             Object returnValue = supplier.apply();
             return handleReturnValue(bulkhead, returnValue);
@@ -78,11 +78,11 @@ public class RxJava2BulkheadAspectExt implements BulkheadAspectExt {
             return flowable.compose(bulkheadOperator);
         } else {
             logger.error(
-                    "Unsupported type for BulkHead RxJava2 {}",
-                    returnValue.getClass().getTypeName());
+                "Unsupported type for BulkHead RxJava2 {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
-                    "Not Supported type for the BulkHead in RxJava2 :"
-                            + returnValue.getClass().getName());
+                "Not Supported type for the BulkHead in RxJava2 :"
+                + returnValue.getClass().getName());
         }
     }
 }

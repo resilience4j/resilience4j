@@ -25,14 +25,12 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.Ordered;
 
 /**
- * This Spring AOP aspect intercepts all methods which are annotated with a
- * {@link Bulkhead} annotation. The aspect will handle methods that return a
- * RxJava2 reactive type, Spring Reactor reactive type, CompletionStage type, or
- * value type.
-
+ * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead}
+ * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * reactive type, CompletionStage type, or value type.
+ *
  * <p>
- * The BulkheadRegistry is used to retrieve an instance of a Bulkhead for a
- * specific name.
+ * The BulkheadRegistry is used to retrieve an instance of a Bulkhead for a specific name.
  * <p>
  * Given a method like this:
  * <pre><code>
@@ -40,17 +38,16 @@ import org.springframework.core.Ordered;
  *     public String fancyName(String name) {
  *         return "Sir Captain " + name;
  *     }
- * </code></pre> each time the {@code #fancyName(String)} method is invoked, the
- * method's execution will pass through a a
- * {@link io.github.resilience4j.bulkhead.Bulkhead} according to the given
+ * </code></pre>
+ * each time the {@code #fancyName(String)} method is invoked, the method's execution
+ * will pass through a a {@link io.github.resilience4j.bulkhead.Bulkhead} according to the given
  * config.
  * <p>
  * The fallbackMethod parameter signature must match either:
  * <p>
- * 1) The method parameter signature on the annotated method or 2) The method
- * parameter signature with a matching exception type as the last parameter on
- * the annotated method
-
+ * 1) The method parameter signature on the annotated method or 2) The method parameter signature
+ * with a matching exception type as the last parameter on the annotated method
+ *
  */
 @Aspect
 public class BulkheadAspect implements Ordered {
@@ -58,25 +55,27 @@ public class BulkheadAspect implements Ordered {
     private final BulkheadAspectHelper bulkheadAspectHelper;
     private final BulkheadConfigurationProperties bulkheadConfigurationProperties;
 
-    public BulkheadAspect(BulkheadAspectHelper bulkheadAspectHelper, BulkheadConfigurationProperties backendMonitorPropertiesRegistry) {
+    public BulkheadAspect(
+        BulkheadAspectHelper bulkheadAspectHelper,
+        BulkheadConfigurationProperties backendMonitorPropertiesRegistry) {
         this.bulkheadAspectHelper = bulkheadAspectHelper;
         this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
     }
 
     @Pointcut(
-            value = "@within(Bulkhead) || @annotation(Bulkhead)",
-            argNames = "Bulkhead")
+        value = "@within(Bulkhead) || @annotation(Bulkhead)",
+        argNames = "Bulkhead")
     public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
     }
 
     @Around(
-            value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)",
-            argNames = "proceedingJoinPoint, bulkheadAnnotation")
+        value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)",
+        argNames = "proceedingJoinPoint, bulkheadAnnotation")
     public Object bulkheadAroundAdvice(
-            ProceedingJoinPoint proceedingJoinPoint,
-            @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
         ProceedingJoinPointHelper joinPointHelper
-                = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+            = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (bulkheadAnnotation == null) {
             bulkheadAnnotation = joinPointHelper.getClassAnnotation(Bulkhead.class);
         }
@@ -86,7 +85,6 @@ public class BulkheadAspect implements Ordered {
         bulkheadAspectHelper.decorate(joinPointHelper, bulkheadAnnotation);
         return joinPointHelper.getDecoratedProceedCall().apply();
     }
-
 
     @Override
     public int getOrder() {

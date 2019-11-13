@@ -39,5 +39,4 @@ public class CircuitBreakerConfigurationProperties extends
         this.circuitBreakerAspectOrder = circuitBreakerAspectOrder;
     }
 
-
 }
