@@ -50,12 +50,12 @@ public class CircuitBreakerAspectHelper {
     
     public void decorate(ProceedingJoinPointHelper joinPointHelper, CircuitBreaker circuitBreakerAnnotation) throws Throwable {
         String backend = circuitBreakerAnnotation.name();
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(joinPointHelper.getMethodName(), backend);
+        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(joinPointHelper.getDeclaringMethodName(), backend);
         joinPointHelper.decorateProceedCall(underliningCall -> decorateWithoutFallback(circuitBreaker, joinPointHelper.getReturnType(), underliningCall));
         if (StringUtils.isEmpty(circuitBreakerAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(circuitBreakerAnnotation.fallbackMethod(), joinPointHelper.getMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
+        FallbackMethod fallbackMethod = FallbackMethod.create(circuitBreakerAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
         joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 

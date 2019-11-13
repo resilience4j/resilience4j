@@ -68,9 +68,9 @@ public class RetryAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(retryAnnotation)", argNames = "proceedingJoinPoint, retryAnnotation")
     public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Retry retryAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint);
+        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (retryAnnotation == null) {
-            retryAnnotation = joinPointHelper.getAnnotation(Retry.class);
+            retryAnnotation = joinPointHelper.getClassAnnotation(Retry.class);
         }
         if (retryAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();

@@ -6,6 +6,8 @@ import io.vavr.CheckedFunction0;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -18,32 +20,35 @@ public class ProceedingJoinPointHelper {
 
     private final ProceedingJoinPoint joinPoint;
     private final Method method;
-    private final String methodName;
+    private final Method declaringMethod;
+    private final String declaringMethodName;
     private final Class<?> returnType;
     private CheckedFunction0<Object> decoratedProceedCall;
-
-    public ProceedingJoinPointHelper(ProceedingJoinPoint joinPoint) {
-        this(joinPoint, () -> joinPoint.proceed());
-    }
     
     /**
      * @param proceedCall Spring AOP call to {@link ProceedingJoinPoint#proceed()} with possible decorators already applied
      */
-    public ProceedingJoinPointHelper(ProceedingJoinPoint joinPoint, CheckedFunction0<Object> proceedCall) {
-        this(joinPoint, ((MethodSignature) joinPoint.getSignature()).getMethod(), proceedCall);
-    }
-    
-    public ProceedingJoinPointHelper(ProceedingJoinPoint joinPoint, Method method) {
-        this(joinPoint, method, () -> joinPoint.proceed());
-    }
-    
-    public ProceedingJoinPointHelper(ProceedingJoinPoint joinPoint, Method method, CheckedFunction0<Object> proceedCall) {
+    private ProceedingJoinPointHelper(ProceedingJoinPoint joinPoint, Method method, Method declaringMethod, CheckedFunction0<Object> proceedCall) {
         this.joinPoint = joinPoint;
         this.decoratedProceedCall = proceedCall;
         this.method = method;
-        methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        returnType = method.getReturnType();
+        this.declaringMethod = declaringMethod;
+        declaringMethodName = declaringMethod.getDeclaringClass().getName() + "#" + method.getName();
+        returnType = declaringMethod.getReturnType();
     }
+    
+    public static ProceedingJoinPointHelper prepareFor(ProceedingJoinPoint joinPoint) {
+        try {
+            Method declaringMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
+            Method method = joinPoint.getTarget().getClass().getMethod(
+                    declaringMethod.getName(), declaringMethod.getParameterTypes());
+            CheckedFunction0<Object> proceedCall = () -> joinPoint.proceed();
+            return new ProceedingJoinPointHelper(
+                    joinPoint, method, declaringMethod, proceedCall);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("Target without a method from its interface / superclass?", e);
+        }
+    } 
 
     public ProceedingJoinPoint getJoinPoint() {
         return joinPoint;
@@ -53,8 +58,12 @@ public class ProceedingJoinPointHelper {
         return method;
     }
 
-    public String getMethodName() {
-        return methodName;
+    public Method getDeclaringMethod() {
+        return declaringMethod;
+    }
+
+    public String getDeclaringMethodName() {
+        return declaringMethodName;
     }
 
     public Class<?> getReturnType() {
@@ -72,13 +81,27 @@ public class ProceedingJoinPointHelper {
         decoratedProceedCall = decorator.apply(decoratedProceedCall);
     }
 
-    @Nullable
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+    public <T extends Annotation> List<T> getMethodAnnotations(Class<T> annotationClass) {
         if (joinPoint.getTarget() instanceof Proxy) {
-            logger.debug("The rate limiter annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor.extractAnnotationFromProxy(joinPoint.getTarget(), annotationClass);
+            return AnnotationExtractor.extractAllMethodAnnotationsFromProxy(joinPoint.getTarget(), declaringMethod, annotationClass);
         } else {
-            return AnnotationExtractor.extract(joinPoint.getTarget().getClass(), annotationClass);
+            return Arrays.asList(getMethod().getAnnotationsByType(annotationClass));
+        }
+    }
+
+    @Nullable
+    public <T extends Annotation> T getClassAnnotation(Class<T> annotationClass) {
+        return getClassAnnotations(annotationClass)
+                .stream().findFirst().orElse(null);
+    }
+
+    @Nullable
+    public <T extends Annotation> List<T> getClassAnnotations(Class<T> annotationClass) {
+        if (joinPoint.getTarget() instanceof Proxy) {
+            return AnnotationExtractor.extractAllAnnotationsFromProxy(
+                    joinPoint.getTarget(), annotationClass);
+        } else {
+            return AnnotationExtractor.extractAll(joinPoint.getTarget().getClass(), annotationClass);
         }
     }
 }

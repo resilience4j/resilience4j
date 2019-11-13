@@ -22,8 +22,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 /**
@@ -55,8 +53,6 @@ import org.springframework.core.Ordered;
 @Aspect
 public class CircuitBreakerAspect implements Ordered {
 
-    private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
-
     private final CircuitBreakerAspectHelper circuitBreakerAspectHelper;
     private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
@@ -71,9 +67,9 @@ public class CircuitBreakerAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)", argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint);
+        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (circuitBreakerAnnotation == null) {
-            circuitBreakerAnnotation = joinPointHelper.getAnnotation(CircuitBreaker.class);
+            circuitBreakerAnnotation = joinPointHelper.getClassAnnotation(CircuitBreaker.class);
         }
         if (circuitBreakerAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();

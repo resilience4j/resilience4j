@@ -15,38 +15,31 @@
  */
 package io.github.resilience4j.decorators.configure;
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.bulkhead.configure.BulkheadAspectHelper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspectHelper;
 import io.github.resilience4j.retry.configure.*;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.decorators.annotation.Decorator;
 import io.github.resilience4j.decorators.annotation.Decorators;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
-import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectHelper;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.ProceedingJoinPointHelper;
-import io.github.resilience4j.utils.AnnotationExtractor;
 import java.util.Arrays;
 import java.util.Collections;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a
@@ -59,43 +52,91 @@ import java.util.Collections;
  *
  * Given a method like this:
  * <pre><code>
- *     {@literal @}Retry(name = "myService")
- *     public String fancyName(String name) {
- *         return "Sir Captain " + name;
+ *     {@literal @}Decorator(retry = @Retry(name = "readTimeouts"))
+ *     {@literal @}Decorator(rateLimiter = @RateLimiter(name = "myServiceLimiter"))
+ *     {@literal @}Decorator(retry = @Retry(name = "connectionTimeouts"))
+ *     public String getInformation() throws Exception {
+ *         return restTemplate.getForEntity(informationUrl, String.class);
  *     }
- * </code></pre> each time the {@code #fancyName(String)} method is invoked, the
- * method's execution will pass through a a
- * {@link io.github.resilience4j.retry.Retry} according to the given config.
- *
- * The fallbackMethod parameter signature must match either:
- *
- * 1) The method parameter signature on the annotated method or 2) The method
- * parameter signature with a matching exception type as the last parameter on
- * the annotated method
+ * </code></pre> each time the {@code #getInformation()} method is invoked, the
+ * method's execution will pass through all the decorators specified in the above
+ * annotation.
+ * 
+ * Calling a Spring bean method with the annotations given above is equivalent to:
+ * 
+ * <pre><code>
+ *     Decorators.ofCheckedSupplier(() -{@literal >} service.getInformation())
+ *         .withRetry(retryRegistry.retry("readtimeouts"))
+ *         .withRateLimiter(rateLimiterRegistry.rateLimiter(""))
+ *         .withRetry(retryRegistry.retry(""))
+ *         .get();
+ * </code></pre>
  */
-//@Aspect
-public class DecoratorsAspect /*implements Ordered*/ {
-/*
+@Aspect
+public class DecoratorsAspect implements Ordered {
+
     private static final Logger logger = LoggerFactory.getLogger(DecoratorsAspect.class);
     private final RetryAspectHelper retryAspectHelper;
+    private final RateLimiterAspectHelper rateLimiterAspectHelper;
+    private final BulkheadAspectHelper bulkheadAspectHelper;
+    private final CircuitBreakerAspectHelper circuitBreakerAspectHelper;
+    private final int order;
 
-    @Pointcut(value = "@within(decorators) || @annotation(decorators)", argNames = "decorators")
-    public void matchAnnotatedClassOrMethod(Decorators decorators) {
+    public DecoratorsAspect(
+            RetryAspectHelper retryAspectHelper,
+            RateLimiterAspectHelper rateLimiterAspectHelper,
+            BulkheadAspectHelper bulkheadAspectHelper,
+            CircuitBreakerAspectHelper circuitBreakerAspectHelper,
+            int order) {
+        this.retryAspectHelper = retryAspectHelper;
+        this.rateLimiterAspectHelper = rateLimiterAspectHelper;
+        this.bulkheadAspectHelper = bulkheadAspectHelper;
+        this.circuitBreakerAspectHelper = circuitBreakerAspectHelper;
+        this.order = order;
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(decoratorsAnnotation)", argNames = "proceedingJoinPoint, decoratorsAnnotation")
-    public Object decorateAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Decorators decoratorsAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint);
-        if (decoratorsAnnotation == null) {
-            decoratorsAnnotation = joinPointHelper.getAnnotation(Decorators.class);
+    @Pointcut(value = "@within(decorator) || @annotation(decorator)", argNames = "decorator")
+    public void matchAnnotatedClassOrMethod(Decorator decorator) {
+    }
+
+    @Around(value = "matchAnnotatedClassOrMethod(foundDecoratorAnnotation)", argNames = "proceedingJoinPoint, foundDecoratorAnnotation")
+    public Object decorateAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable Decorator foundDecoratorAnnotation) throws Throwable {
+        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
+        List<Decorator> decoratorAnnotations = joinPointHelper.getMethodAnnotations(Decorator.class);
+        if (decoratorAnnotations == null) {
+            decoratorAnnotations = joinPointHelper.getClassAnnotations(Decorator.class);
         }
-        if (decoratorsAnnotation == null || decoratorsAnnotation.value().length == 0) { //because annotations wasn't found
+        if (decoratorAnnotations == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
-        for (Decorator decoratorAnnotation : Collections.reverse(Arrays.asList(decoratorsAnnotation.value()))) {
-            for (Retry retryAnnotation : Collections.reverse(Arrays.asList(decoratorAnnotation.retry()))) {
-                retryAspectHelper.decorate(joinPointHelper, retryAnnotation)
+        Collections.reverse(decoratorAnnotations);
+        for (Decorator decoratorAnnotation : decoratorAnnotations) {
+            List<Retry> retryAnnotations = Arrays.asList(decoratorAnnotation.retry());
+            Collections.reverse(retryAnnotations);
+            for (Retry retryAnnotation : retryAnnotations) {
+                retryAspectHelper.decorate(joinPointHelper, retryAnnotation);
+            }
+            List<RateLimiter> rateLimiterAnnotations = Arrays.asList(decoratorAnnotation.rateLimiter());
+            Collections.reverse(rateLimiterAnnotations);
+            for (RateLimiter rateLimiterAnnotation : rateLimiterAnnotations) {
+                rateLimiterAspectHelper.decorate(joinPointHelper, rateLimiterAnnotation);
+            }
+            List<Bulkhead> bulkheadAnnotations = Arrays.asList(decoratorAnnotation.bulkhead());
+            Collections.reverse(bulkheadAnnotations);
+            for (Bulkhead bulkheadAnnotation : bulkheadAnnotations) {
+                bulkheadAspectHelper.decorate(joinPointHelper, bulkheadAnnotation);
+            }
+            List<CircuitBreaker> circuitBreakerAnnotations = Arrays.asList(decoratorAnnotation.circuitBreaker());
+            Collections.reverse(circuitBreakerAnnotations);
+            for (CircuitBreaker circuitBreakerAnnotation : circuitBreakerAnnotations) {
+                circuitBreakerAspectHelper.decorate(joinPointHelper, circuitBreakerAnnotation);
             }
         }
-    }*/
+        return joinPointHelper.getDecoratedProceedCall().apply();
+    }
+
+    @Override
+    public int getOrder() {
+        return order;
+    }
 }

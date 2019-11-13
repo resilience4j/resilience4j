@@ -74,9 +74,9 @@ public class RateLimiterAspect implements Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)", argNames = "proceedingJoinPoint, rateLimiterAnnotation")
     public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint, @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
-        ProceedingJoinPointHelper joinPointHelper = new ProceedingJoinPointHelper(proceedingJoinPoint);
+        ProceedingJoinPointHelper joinPointHelper = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         if (rateLimiterAnnotation == null) {
-            rateLimiterAnnotation = joinPointHelper.getAnnotation(RateLimiter.class);
+            rateLimiterAnnotation = joinPointHelper.getClassAnnotation(RateLimiter.class);
         }
         if (rateLimiterAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();

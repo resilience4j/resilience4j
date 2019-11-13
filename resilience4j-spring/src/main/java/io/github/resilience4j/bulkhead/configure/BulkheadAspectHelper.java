@@ -54,17 +54,17 @@ public class BulkheadAspectHelper {
         switch (bulkheadAnnotation.type()) {
             case THREADPOOL:
                 joinPointHelper.decorateProceedCall(
-                        underliningCall -> decorateWithThreadpoolWithoutFallback(name, joinPointHelper.getMethodName(), joinPointHelper.getReturnType(), underliningCall));
+                        underliningCall -> decorateWithThreadpoolWithoutFallback(name, joinPointHelper.getDeclaringMethodName(), joinPointHelper.getReturnType(), underliningCall));
                 break;
             case SEMAPHORE:
                 joinPointHelper.decorateProceedCall(
-                        underliningCall -> decorateWithSemaphoreWithoutFallback(name, joinPointHelper.getMethodName(), joinPointHelper.getReturnType(), underliningCall));
+                        underliningCall -> decorateWithSemaphoreWithoutFallback(name, joinPointHelper.getDeclaringMethodName(), joinPointHelper.getReturnType(), underliningCall));
                 break;
         }
         if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(bulkheadAnnotation.fallbackMethod(), joinPointHelper.getMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
+        FallbackMethod fallbackMethod = FallbackMethod.create(bulkheadAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
         joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 

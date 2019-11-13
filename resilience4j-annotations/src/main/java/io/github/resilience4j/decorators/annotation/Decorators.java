@@ -26,5 +26,5 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Decorators {
 
-    public Decorator[] value();
+    Decorator[] value();
 }

@@ -57,12 +57,12 @@ public class RetryAspectHelper {
 
     public void decorate(ProceedingJoinPointHelper joinPointHelper, Retry retryAnnotation) throws Throwable {
         String backend = retryAnnotation.name();
-        io.github.resilience4j.retry.Retry retry = getOrCreateRetry(joinPointHelper.getMethodName(), backend);
+        io.github.resilience4j.retry.Retry retry = getOrCreateRetry(joinPointHelper.getDeclaringMethodName(), backend);
         joinPointHelper.decorateProceedCall(underliningCall -> decorateWithoutFallback(retry, joinPointHelper.getReturnType(), underliningCall));
         if (StringUtils.isEmpty(retryAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(retryAnnotation.fallbackMethod(), joinPointHelper.getMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
+        FallbackMethod fallbackMethod = FallbackMethod.create(retryAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
         joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 

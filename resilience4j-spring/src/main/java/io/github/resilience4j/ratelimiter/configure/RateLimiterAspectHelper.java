@@ -49,12 +49,12 @@ public class RateLimiterAspectHelper {
     
     public void decorate(ProceedingJoinPointHelper joinPointHelper, RateLimiter rateLimiterAnnotation) throws Throwable {
         String name = rateLimiterAnnotation.name();
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(joinPointHelper.getMethodName(), name);
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(joinPointHelper.getDeclaringMethodName(), name);
         joinPointHelper.decorateProceedCall(underliningCall -> decorateWithoutFallback(rateLimiter, joinPointHelper.getReturnType(), underliningCall));
         if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
             return;
         }
-        FallbackMethod fallbackMethod = FallbackMethod.create(rateLimiterAnnotation.fallbackMethod(), joinPointHelper.getMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
+        FallbackMethod fallbackMethod = FallbackMethod.create(rateLimiterAnnotation.fallbackMethod(), joinPointHelper.getDeclaringMethod(), joinPointHelper.getJoinPoint().getArgs(), joinPointHelper.getJoinPoint().getTarget());
         joinPointHelper.decorateProceedCall(underliningCall -> fallbackDecorators.decorate(fallbackMethod, underliningCall));
     }
 
