@@ -17,6 +17,7 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -25,7 +26,6 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -37,13 +37,18 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
+    protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter, RateLimiterRegistry rateLimiterRegistry) {
+        registerMetrics(meterRegistry, rateLimiter, mapToTagsList(rateLimiterRegistry.getRegistryTags().toJavaMap()));
+    }
+
     protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter) {
+        List<Tag> customTags = mapToTagsList(rateLimiter.getTags()
+                .toJavaMap());
+        registerMetrics(meterRegistry, rateLimiter, customTags);
+    }
+
+    private void registerMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter, List<Tag> customTags) {
         Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = rateLimiter.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
         idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
                 .description("The number of available permissions")
                 .tag(TagNames.NAME, rateLimiter.getName())
@@ -54,7 +59,6 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
                 .tag(TagNames.NAME, rateLimiter.getName())
                 .tags(customTags)
                 .register(meterRegistry).getId());
-
         meterIdMap.put(rateLimiter.getName(), idSet);
     }
 

@@ -41,7 +41,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
      *
-     * @param metricNames custom metric names
+     * @param metricNames            custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
@@ -59,7 +59,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
     @Override
     public void bindTo(MeterRegistry registry) {
         for (CircuitBreaker circuitBreaker : circuitBreakerRegistry.getAllCircuitBreakers()) {
-            addMetrics(registry, circuitBreaker);
+            addMetrics(registry, circuitBreaker, circuitBreakerRegistry);
         }
         circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         circuitBreakerRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));

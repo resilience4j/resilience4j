@@ -58,8 +58,15 @@ public class BulkheadConfiguration {
                                              RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, bulkheadRegistryEventConsumer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
+        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
+        bulkheadConfigurationProperties.getInstances().values().forEach(instanceProperties -> {
+            instanceProperties.getTags().forEach(mergedTags::put);
+        });
+        bulkheadConfigurationProperties.getConfigs().values().forEach(defaultConfig -> {
+            defaultConfig.getTags().forEach(mergedTags::put);
+        });
         bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
-                bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties), io.vavr.collection.HashMap.ofAll(properties.getTags())));
+                bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties), mergedTags));
         return bulkheadRegistry;
     }
 

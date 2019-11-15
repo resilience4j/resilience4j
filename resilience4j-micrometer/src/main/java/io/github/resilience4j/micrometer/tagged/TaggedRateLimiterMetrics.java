@@ -41,7 +41,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
     /**
      * Creates a new binder that uses given {@code registry} as source of rate limiters.
      *
-     * @param names custom metric names
+     * @param names               custom metric names
      * @param rateLimiterRegistry the source of rate limiters
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
@@ -59,7 +59,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
     @Override
     public void bindTo(MeterRegistry registry) {
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
-            addMetrics(registry, rateLimiter);
+            addMetrics(registry, rateLimiter, rateLimiterRegistry);
         }
         rateLimiterRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         rateLimiterRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));

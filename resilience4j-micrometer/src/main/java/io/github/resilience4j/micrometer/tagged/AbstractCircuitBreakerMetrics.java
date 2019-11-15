@@ -17,12 +17,12 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.*;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -40,14 +40,19 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    protected void addMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker) {
-        Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = circuitBreaker.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
 
+    protected void addMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker, CircuitBreakerRegistry circuitBreakerRegistry) {
+        registerMetrics(meterRegistry, circuitBreaker, mapToTagsList(circuitBreakerRegistry.getRegistryTags().toJavaMap()));
+    }
+
+    protected void addMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker) {
+        List<Tag> customTags = mapToTagsList(circuitBreaker.getTags()
+                .toJavaMap());
+        registerMetrics(meterRegistry, circuitBreaker, customTags);
+    }
+
+    private void registerMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker, List<Tag> customTags) {
+        Set<Meter.Id> idSet = new HashSet<>();
         final CircuitBreaker.State[] states = CircuitBreaker.State.values();
         for (CircuitBreaker.State state : states) {
             idSet.add(Gauge.builder(names.getStateMetricName(), circuitBreaker, cb -> cb.getState() == state ? 1 : 0)

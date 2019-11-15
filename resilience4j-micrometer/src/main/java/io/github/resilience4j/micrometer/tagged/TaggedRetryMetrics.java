@@ -41,7 +41,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
     /**
      * Creates a new binder that uses given {@code registry} as source of retries.
      *
-     * @param names custom metric names
+     * @param names         custom metric names
      * @param retryRegistry the source of retries
      * @return The {@link TaggedRetryMetrics} instance.
      */
@@ -59,7 +59,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
     @Override
     public void bindTo(MeterRegistry registry) {
         for (Retry retry : retryRegistry.getAllRetries()) {
-            addMetrics(registry, retry);
+            addMetrics(registry, retry, retryRegistry);
         }
         retryRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         retryRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));

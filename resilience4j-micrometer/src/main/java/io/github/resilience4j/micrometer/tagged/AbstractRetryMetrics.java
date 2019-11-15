@@ -17,6 +17,7 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -25,7 +26,6 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -37,13 +37,19 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
+
+    protected void addMetrics(MeterRegistry meterRegistry, Retry retry, RetryRegistry retryRegistry) {
+        registerMetrics(meterRegistry, retry, mapToTagsList(retryRegistry.getRegistryTags().toJavaMap()));
+    }
+
     protected void addMetrics(MeterRegistry meterRegistry, Retry retry) {
+        List<Tag> customTags = mapToTagsList(retry.getTags()
+                .toJavaMap());
+        registerMetrics(meterRegistry, retry, customTags);
+    }
+
+    private void registerMetrics(MeterRegistry meterRegistry, Retry retry, List<Tag> customTags) {
         Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = retry.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
         idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
                 .description("The number of successful calls without a retry attempt")
                 .tag(TagNames.NAME, retry.getName())
@@ -68,9 +74,9 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
                 .tag(TagNames.KIND, "failed_with_retry")
                 .tags(customTags)
                 .register(meterRegistry).getId());
-
         meterIdMap.put(retry.getName(), idSet);
     }
+
 
     public static class MetricNames {
         public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";

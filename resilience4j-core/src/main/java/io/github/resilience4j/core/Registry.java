@@ -22,6 +22,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEvent;
+import io.vavr.collection.Map;
 
 import java.util.Optional;
 
@@ -41,22 +42,22 @@ public interface Registry<E, C> {
 	/**
 	 * Find a named entry in the Registry
 	 *
-	 * @param name    the  name
+	 * @param name the  name
 	 */
 	Optional<E> find(String name);
 
 	/**
 	 * Remove an entry from the Registry
 	 *
-	 * @param name    the  name
+	 * @param name the  name
 	 */
 	Optional<E> remove(String name);
 
 	/**
 	 * Replace an existing entry in the Registry by a new one.
 	 *
-	 * @param name    the existing name
-	 * @param newEntry    a new entry
+	 * @param name     the existing name
+	 * @param newEntry a new entry
 	 */
 	Optional<E> replace(String name, E newEntry);
 
@@ -74,6 +75,12 @@ public interface Registry<E, C> {
 	 * @return the default configuration
 	 */
 	C getDefaultConfig();
+
+
+	/**
+	 * @return global configured registry tags
+	 */
+	Map<String, String> getRegistryTags();
 
 	/**
 	 * Returns an EventPublisher which can be used to register event consumers.

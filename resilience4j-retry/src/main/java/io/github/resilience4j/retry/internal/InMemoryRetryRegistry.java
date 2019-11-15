@@ -70,7 +70,7 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
 	}
 
 	public InMemoryRetryRegistry(Map<String, RetryConfig> configs, List<RegistryEventConsumer<Retry>> registryEventConsumers, io.vavr.collection.Map<String, String> tags) {
-		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumers);
+		this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()), registryEventConsumers, tags);
 		this.configurations.putAll(configs);
 	}
 

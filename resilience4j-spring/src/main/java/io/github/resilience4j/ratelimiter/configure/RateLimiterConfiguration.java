@@ -53,9 +53,16 @@ public class RateLimiterConfiguration {
                                                    RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
         RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties, rateLimiterRegistryEventConsumer);
         registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
+        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
+        rateLimiterProperties.getInstances().values().forEach(instanceProperties -> {
+            instanceProperties.getTags().forEach(mergedTags::put);
+        });
+        rateLimiterProperties.getConfigs().values().forEach(defaultConfig -> {
+            defaultConfig.getTags().forEach(mergedTags::put);
+        });
         rateLimiterProperties.getInstances().forEach(
                 (name, properties) ->
-                        rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties), io.vavr.collection.HashMap.ofAll(properties.getTags()))
+                        rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties), mergedTags)
         );
         return rateLimiterRegistry;
     }

@@ -40,59 +40,67 @@ import java.util.stream.Collectors;
 @Configuration
 public class ThreadPoolBulkheadConfiguration {
 
-	/**
-	 * @param bulkheadConfigurationProperties bulk head spring configuration properties
-	 * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
-	 * @return the ThreadPoolBulkheadRegistry with all needed setup in place
-	 */
-	@Bean
-	public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-																 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-																 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
-		ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer);
-		registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
-		bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
-		return bulkheadRegistry;
-	}
+    /**
+     * @param bulkheadConfigurationProperties bulk head spring configuration properties
+     * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
+     * @return the ThreadPoolBulkheadRegistry with all needed setup in place
+     */
+    @Bean
+    public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
+                                                                 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+                                                                 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer);
+        registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
+        bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
+        return bulkheadRegistry;
+    }
 
-	@Bean
-	@Primary
-	public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
-			Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
-		return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
-	}
+    @Bean
+    @Primary
+    public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
+        return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+    }
 
-	/**
-	 * Initializes a bulkhead registry.
-	 *
-	 * @param bulkheadConfigurationProperties The bulkhead configuration properties.
-	 * @return a ThreadPoolBulkheadRegistry
-	 */
-	private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-															  RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
-		Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
-				.entrySet()
-				.stream()
-				.collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
+    /**
+     * Initializes a bulkhead registry.
+     *
+     * @param threadPoolBulkheadConfigurationProperties The bulkhead configuration properties.
+     * @return a ThreadPoolBulkheadRegistry
+     */
+    private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+                                                              RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
+        threadPoolBulkheadConfigurationProperties.getInstances().values().forEach(instanceProperties -> {
+            instanceProperties.getTags().forEach(mergedTags::put);
+        });
+        threadPoolBulkheadConfigurationProperties.getConfigs().values().forEach(defaultConfig -> {
+            defaultConfig.getTags().forEach(mergedTags::put);
+        });
 
-		return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer);
-	}
+        Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties.getConfigs()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> threadPoolBulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
 
-	/**
-	 * Registers the post creation consumer function that registers the consumer events to the bulkheads.
-	 *
-	 * @param bulkheadRegistry      The BulkHead registry.
-	 * @param eventConsumerRegistry The event consumer registry.
-	 */
-	private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,
-	                                   EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
-		bulkheadRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), bulkheadConfigurationProperties));
-	}
+        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer);
+    }
 
-	private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkhead bulkHead, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
-		int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-				.map(ThreadPoolBulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
-				.orElse(100);
-		bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()), eventConsumerBufferSize));
-	}
+    /**
+     * Registers the post creation consumer function that registers the consumer events to the bulkheads.
+     *
+     * @param bulkheadRegistry      The BulkHead registry.
+     * @param eventConsumerRegistry The event consumer registry.
+     */
+    private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,
+                                       EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
+        bulkheadRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), bulkheadConfigurationProperties));
+    }
+
+    private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkhead bulkHead, ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
+        int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
+                .map(ThreadPoolBulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+                .orElse(100);
+        bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()), eventConsumerBufferSize));
+    }
 }

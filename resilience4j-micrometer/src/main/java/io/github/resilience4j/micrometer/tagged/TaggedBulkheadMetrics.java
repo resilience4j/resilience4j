@@ -42,7 +42,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
      * Creates a new binder defining custom metric names and
      * using given {@code registry} as source of bulkheads.
      *
-     * @param names custom names of the metrics
+     * @param names            custom names of the metrics
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
@@ -60,7 +60,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
     @Override
     public void bindTo(MeterRegistry registry) {
         for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
-            addMetrics(registry, bulkhead);
+            addMetrics(registry, bulkhead, bulkheadRegistry);
         }
         bulkheadRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
         bulkheadRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));

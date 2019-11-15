@@ -13,6 +13,9 @@ resilience4j.retry:
   backends:
     retryBackendA:
       baseConfig: default
+      tags:
+        tag1: tag1Value
+        tag2: tag2Value
     retryBackendB:
       baseConfig: default
     retryBackendC:
@@ -39,6 +42,9 @@ resilience4j.circuitbreaker:
       registerHealthIndicator: true
   backends:
     backendA:
+      tags:
+        tag1: tag1Value
+        tag2: tag2Value
       registerHealthIndicator: true
       slidingWindowSize: 6
       permittedNumberOfCallsInHalfOpenState: 2
@@ -95,6 +101,9 @@ resilience4j.ratelimiter:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
       timeoutDuration: 3s
+      tags:
+        tag1: tag1Value
+        tag2: tag2Value
     rateLimiterDummyFeignClient:
       baseConfig: default
 
@@ -108,6 +117,9 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+      tags:
+        tag1: tag1Value
+        tag2: tag2Value
     dummyFeignClient:
       maxWaitDuration: 100
       maxConcurrentCalls: 3
@@ -121,6 +133,9 @@ resilience4j.thread-pool-bulkhead":
       keepAliveDuration: 1s
   backends:
     backendB:
+      tags:
+        tag1: tag1Value
+        tag2: tag2Value
       baseConfig: default
     backendC:
       maxThreadPoolSize: 1

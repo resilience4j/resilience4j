@@ -57,9 +57,16 @@ public class RetryConfiguration {
                                        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
         RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties, retryRegistryEventConsumer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry, retryConfigurationProperties);
+        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
+        retryConfigurationProperties.getInstances().values().forEach(instanceProperties -> {
+            instanceProperties.getTags().forEach(mergedTags::put);
+        });
+        retryConfigurationProperties.getConfigs().values().forEach(defaultConfig -> {
+            defaultConfig.getTags().forEach(mergedTags::put);
+        });
         retryConfigurationProperties.getInstances()
                 .forEach((name, properties) ->
-                        retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name), io.vavr.collection.HashMap.ofAll(properties.getTags())));
+                        retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name), mergedTags));
         return retryRegistry;
     }
 
