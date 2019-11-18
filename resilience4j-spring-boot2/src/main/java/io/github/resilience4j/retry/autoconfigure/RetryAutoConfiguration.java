@@ -41,18 +41,21 @@ import org.springframework.context.annotation.Import;
 @Import({RetryConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class RetryAutoConfiguration {
 
-    @Bean
-    @ConditionalOnEnabledEndpoint
-    @ConditionalOnClass(value = {Endpoint.class})
-    public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
-        return new RetryEndpoint(retryRegistry);
-    }
+    @Configuration
+    @ConditionalOnClass(Endpoint.class)
+    static class RetryAutoEndpointConfiguration {
 
-    @Bean
-    @ConditionalOnEnabledEndpoint
-    @ConditionalOnClass(value = {Endpoint.class})
-    public RetryEventsEndpoint retryEventsEndpoint(
-        EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
-        return new RetryEventsEndpoint(eventConsumerRegistry);
+        @Bean
+        @ConditionalOnEnabledEndpoint
+        public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
+            return new RetryEndpoint(retryRegistry);
+        }
+
+        @Bean
+        @ConditionalOnEnabledEndpoint
+        public RetryEventsEndpoint retryEventsEndpoint(
+            EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+            return new RetryEventsEndpoint(eventConsumerRegistry);
+        }
     }
 }
