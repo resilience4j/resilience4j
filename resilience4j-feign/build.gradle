@@ -2,6 +2,7 @@ dependencies {
     compileOnly(libraries.feign)
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
+    compile project(':resilience4j-bulkhead')
     testCompile(libraries.feign_wiremock)
     testCompile(libraries.feign)
 }
