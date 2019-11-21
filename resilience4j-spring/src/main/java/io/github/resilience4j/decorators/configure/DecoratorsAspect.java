@@ -30,6 +30,7 @@ import org.springframework.core.Ordered;
 
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.decorators.annotation.Decorator;
+import io.github.resilience4j.decorators.annotation.Decorators;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectHelper;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -94,12 +95,31 @@ public class DecoratorsAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(Decorator decorator) {
     }
 
+    @Pointcut(
+        value = "@within(decorators) || @annotation(decorators)",
+        argNames = "decorators")
+    public void matchMultipalyAnnotatedClassOrMethod(Decorators decorators) {
+    }
+
     @Around(
         value = "matchAnnotatedClassOrMethod(foundDecoratorAnnotation)",
         argNames = "proceedingJoinPoint, foundDecoratorAnnotation")
-    public Object decorateAroundAdvice(
+    public Object decorateAroundSingleAnnotationAdvice(
         ProceedingJoinPoint proceedingJoinPoint,
         @Nullable Decorator foundDecoratorAnnotation) throws Throwable {
+        return decorateAroundAdvice(proceedingJoinPoint);
+    }   
+
+    @Around(
+        value = "matchMultipalyAnnotatedClassOrMethod(foundDecoratorsAnnotation)",
+        argNames = "proceedingJoinPoint, foundDecoratorsAnnotation")
+    public Object decorateAroundMultipalyAnnotatedAdvice(
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable Decorators foundDecoratorsAnnotation) throws Throwable {
+        return decorateAroundAdvice(proceedingJoinPoint);
+    }
+    
+    private Object decorateAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         ProceedingJoinPointHelper joinPointHelper
             = ProceedingJoinPointHelper.prepareFor(proceedingJoinPoint);
         List<Decorator> decoratorAnnotations = joinPointHelper.getMethodAnnotations(
