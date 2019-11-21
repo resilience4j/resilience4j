@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Robert Winkler
+ * Copyright 2019 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,8 @@ import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerE
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
-import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -41,23 +39,24 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnClass(CircuitBreaker.class)
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
 @Import({CircuitBreakerConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
-@AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class CircuitBreakerAutoConfiguration {
 
-    @Bean
-    @ConditionalOnEnabledEndpoint
-    @ConditionalOnClass(value = {Endpoint.class})
-    public CircuitBreakerEndpoint circuitBreakerEndpoint(
-        CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerEndpoint(circuitBreakerRegistry);
-    }
+    @Configuration
+    @ConditionalOnClass(Endpoint.class)
+    static class CircuitBreakerEndpointAutoConfiguration {
 
-    @Bean
-    @ConditionalOnEnabledEndpoint
-    @ConditionalOnClass(value = {Endpoint.class})
-    public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(
-        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-        return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
-    }
+        @Bean
+        @ConditionalOnEnabledEndpoint
+        public CircuitBreakerEndpoint circuitBreakerEndpoint(
+            CircuitBreakerRegistry circuitBreakerRegistry) {
+            return new CircuitBreakerEndpoint(circuitBreakerRegistry);
+        }
 
+        @Bean
+        @ConditionalOnEnabledEndpoint
+        public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(
+            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+            return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
+        }
+    }
 }
