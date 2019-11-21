@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}
  */
-public class Resilience4jRateLimiterTest {
+public class Resilience4jFeignRateLimiterTest {
 
     private static final String MOCK_URL = "http://localhost:8080/";
     @Rule
