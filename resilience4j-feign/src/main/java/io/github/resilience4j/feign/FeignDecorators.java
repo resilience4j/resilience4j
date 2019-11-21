@@ -18,6 +18,7 @@ package io.github.resilience4j.feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.vavr.CheckedFunction1;
@@ -188,6 +189,18 @@ public class FeignDecorators implements FeignDecorator {
         public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory,
             Predicate<Exception> filter) {
             decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory), filter));
+            return this;
+        }
+
+
+        /**
+         * Adds a {@link Bulkhead} to the decorator chain.
+         *
+         * @param bulkhead a fully configured {@link Bulkhead}.
+         * @return the builder
+         */
+        public Builder withBulkhead(Bulkhead bulkhead) {
+            decorators.add((fn, m, mh, t) -> Bulkhead.decorateCheckedFunction(bulkhead, fn));
             return this;
         }
 
