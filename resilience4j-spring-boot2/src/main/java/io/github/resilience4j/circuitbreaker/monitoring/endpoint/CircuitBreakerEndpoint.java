@@ -16,14 +16,13 @@
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
-import java.util.List;
-
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import java.util.List;
 
 
 @Endpoint(id = "circuitbreakers")
@@ -38,7 +37,7 @@ public class CircuitBreakerEndpoint {
     @ReadOperation
     public CircuitBreakerEndpointResponse getAllCircuitBreakers() {
         List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers()
-                .map(CircuitBreaker::getName).sorted().toJavaList();
+            .map(CircuitBreaker::getName).sorted().toJavaList();
         return new CircuitBreakerEndpointResponse(circuitBreakers);
     }
 }

@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
 @ConditionalOnClass({MetricRegistry.class, Bulkhead.class, BulkheadMetricsPublisher.class})
@@ -41,18 +41,20 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMetricsAutoConfiguration {
 
-	@Bean
-	@ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "true")
-	@ConditionalOnMissingBean
-	public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry, MetricRegistry metricRegistry) {
-		return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
-	}
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "true")
+    @ConditionalOnMissingBean
+    public BulkheadMetrics registerBulkheadMetrics(BulkheadRegistry bulkheadRegistry,
+        MetricRegistry metricRegistry) {
+        return BulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry, metricRegistry);
+    }
 
-	@Bean
-	@ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
-	@ConditionalOnMissingBean
-	public BulkheadMetricsPublisher bulkheadDropwizardMetricsPublisher(MetricRegistry metricRegistry) {
-		return new BulkheadMetricsPublisher(metricRegistry);
-	}
+    @Bean
+    @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public BulkheadMetricsPublisher bulkheadDropwizardMetricsPublisher(
+        MetricRegistry metricRegistry) {
+        return new BulkheadMetricsPublisher(metricRegistry);
+    }
 
 }

@@ -36,7 +36,7 @@ public class CacheEventPublisherTest {
 
     @SuppressWarnings("unchecked")
     @Before
-    public void setUp(){
+    public void setUp() {
         cache = mock(javax.cache.Cache.class);
         logger = mock(Logger.class);
     }
@@ -55,9 +55,9 @@ public class CacheEventPublisherTest {
         given(cache.get("testKey")).willReturn("Hello world");
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheHit(
-                event -> logger.info(event.getEventType().toString()));
+            event -> logger.info(event.getEventType().toString()));
         CheckedFunction1<String, String> cachedFunction = Cache
-                .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -70,8 +70,9 @@ public class CacheEventPublisherTest {
         given(cache.get("testKey")).willReturn(null);
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheMiss(
-                event -> logger.info(event.getEventType().toString()));
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            event -> logger.info(event.getEventType().toString()));
+        CheckedFunction1<String, String> cachedFunction = Cache
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
 
@@ -84,8 +85,9 @@ public class CacheEventPublisherTest {
         given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onError(
-                event -> logger.info(event.getEventType().toString()));
-        CheckedFunction1<String, String> cachedFunction = Cache.decorateCheckedSupplier(cacheContext, () -> "Hello world");
+            event -> logger.info(event.getEventType().toString()));
+        CheckedFunction1<String, String> cachedFunction = Cache
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
 
         assertThat(value).isEqualTo("Hello world");

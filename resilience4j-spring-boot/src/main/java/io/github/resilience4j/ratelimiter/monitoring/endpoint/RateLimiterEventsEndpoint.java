@@ -33,9 +33,11 @@ import java.util.List;
 @Controller
 @RequestMapping(value = "ratelimiter/")
 public class RateLimiterEventsEndpoint {
+
     private final EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry;
 
-    public RateLimiterEventsEndpoint(EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
+    public RateLimiterEventsEndpoint(
+        EventConsumerRegistry<RateLimiterEvent> eventsConsumerRegistry) {
         this.eventsConsumerRegistry = eventsConsumerRegistry;
     }
 
@@ -52,8 +54,10 @@ public class RateLimiterEventsEndpoint {
 
     @GetMapping(value = "events/{rateLimiterName}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(@PathVariable("rateLimiterName") String rateLimiterName) {
-        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(rateLimiterName).getBufferedEvents()
+    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(
+        @PathVariable("rateLimiterName") String rateLimiterName) {
+        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry
+            .getEventConsumer(rateLimiterName).getBufferedEvents()
             .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
         return new RateLimiterEventsEndpointResponse(eventsList);
@@ -61,10 +65,12 @@ public class RateLimiterEventsEndpoint {
 
     @GetMapping(value = "events/{rateLimiterName}/{eventType}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(@PathVariable("rateLimiterName") String rateLimiterName,
-                                                                                            @PathVariable("eventType") String eventType) {
+    public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterNameAndEventType(
+        @PathVariable("rateLimiterName") String rateLimiterName,
+        @PathVariable("eventType") String eventType) {
         RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
-        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry.getEventConsumer(rateLimiterName).getBufferedEvents()
+        List<RateLimiterEventDTO> eventsList = eventsConsumerRegistry
+            .getEventConsumer(rateLimiterName).getBufferedEvents()
             .filter(event -> event.getRateLimiterName().equals(rateLimiterName))
             .filter(event -> event.getEventType() == targetType)
             .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();

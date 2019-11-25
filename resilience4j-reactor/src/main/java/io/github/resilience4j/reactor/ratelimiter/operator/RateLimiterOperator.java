@@ -18,21 +18,22 @@ package io.github.resilience4j.reactor.ratelimiter.operator;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.reactor.IllegalPublisherException;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.UnaryOperator;
 
-import org.reactivestreams.Publisher;
-
 
 /**
- * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise emits a {@link RequestNotPermitted} if the rate limit is exceeded.
+ * A RateLimiter operator which checks if a downstream subscriber/observer can acquire a permission
+ * to subscribe to an upstream Publisher. Otherwise emits a {@link RequestNotPermitted} if the rate
+ * limit is exceeded.
  *
  * @param <T> the value type
  */
 public class RateLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
+
     private final RateLimiter rateLimiter;
 
     private RateLimiterOperator(RateLimiter rateLimiter) {

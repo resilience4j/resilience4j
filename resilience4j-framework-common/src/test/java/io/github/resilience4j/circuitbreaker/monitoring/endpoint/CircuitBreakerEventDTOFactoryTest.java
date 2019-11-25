@@ -15,10 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CircuitBreakerEventDTOFactoryTest {
 
     @Test
-    public void shouldMapCircuitBreakerOnSuccessEvent(){
-        CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent("name", Duration.ofSeconds(5));
+    public void shouldMapCircuitBreakerOnSuccessEvent() {
+        CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent("name",
+            Duration.ofSeconds(5));
 
-        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(event);
+        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory
+            .createCircuitBreakerEventDTO(event);
 
         assertThat(circuitBreakerEventDTO.getCircuitBreakerName()).isEqualTo("name");
         assertThat(circuitBreakerEventDTO.getDurationInMs()).isEqualTo(5000);
@@ -28,23 +30,28 @@ public class CircuitBreakerEventDTOFactoryTest {
     }
 
     @Test
-    public void shouldMapCircuitBreakerOnErrorEvent(){
-        CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent("name", Duration.ofSeconds(5), new IOException("Error Message"));
+    public void shouldMapCircuitBreakerOnErrorEvent() {
+        CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent("name",
+            Duration.ofSeconds(5), new IOException("Error Message"));
 
-        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(event);
+        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory
+            .createCircuitBreakerEventDTO(event);
 
         assertThat(circuitBreakerEventDTO.getCircuitBreakerName()).isEqualTo("name");
         assertThat(circuitBreakerEventDTO.getDurationInMs()).isEqualTo(5000);
         assertThat(circuitBreakerEventDTO.getType()).isEqualTo(ERROR);
-        assertThat(circuitBreakerEventDTO.getErrorMessage()).isEqualTo("java.io.IOException: Error Message");
+        assertThat(circuitBreakerEventDTO.getErrorMessage())
+            .isEqualTo("java.io.IOException: Error Message");
         assertThat(circuitBreakerEventDTO.getCreationTime()).isNotNull();
     }
 
     @Test
-    public void shouldMapCircuitBreakerOnCallNotPermittedEvent(){
-        CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent("name");
+    public void shouldMapCircuitBreakerOnCallNotPermittedEvent() {
+        CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent(
+            "name");
 
-        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(event);
+        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory
+            .createCircuitBreakerEventDTO(event);
 
         assertThat(circuitBreakerEventDTO.getCircuitBreakerName()).isEqualTo("name");
         assertThat(circuitBreakerEventDTO.getDurationInMs()).isNull();
@@ -54,38 +61,45 @@ public class CircuitBreakerEventDTOFactoryTest {
     }
 
     @Test
-    public void shouldMapCircuitBreakerOnStateTransitionEvent(){
-        CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent("name", StateTransition.CLOSED_TO_OPEN);
+    public void shouldMapCircuitBreakerOnStateTransitionEvent() {
+        CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(
+            "name", StateTransition.CLOSED_TO_OPEN);
 
-        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(event);
+        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory
+            .createCircuitBreakerEventDTO(event);
 
         assertThat(circuitBreakerEventDTO.getCircuitBreakerName()).isEqualTo("name");
         assertThat(circuitBreakerEventDTO.getDurationInMs()).isNull();
         assertThat(circuitBreakerEventDTO.getType()).isEqualTo(STATE_TRANSITION);
         assertThat(circuitBreakerEventDTO.getErrorMessage()).isNull();
-        assertThat(circuitBreakerEventDTO.getStateTransition()).isEqualTo(StateTransition.CLOSED_TO_OPEN);
+        assertThat(circuitBreakerEventDTO.getStateTransition())
+            .isEqualTo(StateTransition.CLOSED_TO_OPEN);
         assertThat(circuitBreakerEventDTO.getCreationTime()).isNotNull();
     }
 
 
     @Test
-    public void shouldMapCircuitBreakerOnIgnoredErrorEvent(){
-        CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent("name", Duration.ofSeconds(5), new IOException("Error Message"));
+    public void shouldMapCircuitBreakerOnIgnoredErrorEvent() {
+        CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent("name",
+            Duration.ofSeconds(5), new IOException("Error Message"));
 
-        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(event);
+        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory
+            .createCircuitBreakerEventDTO(event);
 
         assertThat(circuitBreakerEventDTO.getCircuitBreakerName()).isEqualTo("name");
         assertThat(circuitBreakerEventDTO.getDurationInMs()).isEqualTo(5000);
         assertThat(circuitBreakerEventDTO.getType()).isEqualTo(IGNORED_ERROR);
-        assertThat(circuitBreakerEventDTO.getErrorMessage()).isEqualTo("java.io.IOException: Error Message");
+        assertThat(circuitBreakerEventDTO.getErrorMessage())
+            .isEqualTo("java.io.IOException: Error Message");
         assertThat(circuitBreakerEventDTO.getCreationTime()).isNotNull();
     }
 
     @Test
-    public void shouldMapCircuitBreakerOnResetEvent(){
+    public void shouldMapCircuitBreakerOnResetEvent() {
         CircuitBreakerOnResetEvent event = new CircuitBreakerOnResetEvent("name");
 
-        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(event);
+        CircuitBreakerEventDTO circuitBreakerEventDTO = CircuitBreakerEventDTOFactory
+            .createCircuitBreakerEventDTO(event);
 
         assertThat(circuitBreakerEventDTO.getCircuitBreakerName()).isEqualTo("name");
         assertThat(circuitBreakerEventDTO.getDurationInMs()).isNull();

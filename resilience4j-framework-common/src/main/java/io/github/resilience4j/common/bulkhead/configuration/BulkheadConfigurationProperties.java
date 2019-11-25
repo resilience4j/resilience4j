@@ -42,13 +42,15 @@ public class BulkheadConfigurationProperties {
         return buildBulkheadConfig(BulkheadConfig.custom(), instanceProperties);
     }
 
-    private BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+    private BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
+        InstanceProperties instanceProperties) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         BulkheadConfig baseConfig = buildBulkheadConfig(BulkheadConfig.custom(), baseProperties);
         return buildBulkheadConfig(BulkheadConfig.from(baseConfig), instanceProperties);
     }
 
-    private BulkheadConfig buildBulkheadConfig(BulkheadConfig.Builder builder, InstanceProperties instanceProperties) {
+    private BulkheadConfig buildBulkheadConfig(BulkheadConfig.Builder builder,
+        InstanceProperties instanceProperties) {
         if (instanceProperties.getMaxConcurrentCalls() != null) {
             builder.maxConcurrentCalls(instanceProperties.getMaxConcurrentCalls());
         }
@@ -79,8 +81,8 @@ public class BulkheadConfigurationProperties {
     }
 
     /**
-     * Bulkhead config adapter for integration with Ratpack. {@link #maxWaitDuration} should
-     * almost always be set to 0, so the compute threads would not be blocked upon execution.
+     * Bulkhead config adapter for integration with Ratpack. {@link #maxWaitDuration} should almost
+     * always be set to 0, so the compute threads would not be blocked upon execution.
      */
     public static class InstanceProperties {
 
@@ -91,6 +93,11 @@ public class BulkheadConfigurationProperties {
         @Nullable
         private Integer eventConsumerBufferSize;
 
+        public Integer getMaxConcurrentCalls() {
+            return maxConcurrentCalls;
+        }
+
+        public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
         /**
          * The Optional configured instance tags if any that can be used with the exported metrics
          */
@@ -113,44 +120,27 @@ public class BulkheadConfigurationProperties {
         public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
             Objects.requireNonNull(maxConcurrentCalls);
             if (maxConcurrentCalls < 1) {
-                throw new IllegalArgumentException("maxConcurrentCalls must be greater than or equal to 1.");
+                throw new IllegalArgumentException(
+                    "maxConcurrentCalls must be greater than or equal to 1.");
             }
 
             this.maxConcurrentCalls = maxConcurrentCalls;
             return this;
         }
 
+        public Duration getMaxWaitDuration() {
+            return maxWaitDuration;
+        }
+
         public InstanceProperties setMaxWaitDuration(Duration maxWaitDuration) {
             Objects.requireNonNull(maxWaitDuration);
             if (maxWaitDuration.toMillis() < 0) {
-                throw new IllegalArgumentException("maxWaitDuration must be greater than or equal to 0.");
+                throw new IllegalArgumentException(
+                    "maxWaitDuration must be greater than or equal to 0.");
             }
 
             this.maxWaitDuration = maxWaitDuration;
             return this;
-        }
-
-        public InstanceProperties setBaseConfig(String baseConfig) {
-            this.baseConfig = baseConfig;
-            return this;
-        }
-
-        public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
-            Objects.requireNonNull(eventConsumerBufferSize);
-            if (eventConsumerBufferSize < 1) {
-                throw new IllegalArgumentException("eventConsumerBufferSize must be greater than or equal to 1.");
-            }
-
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
-            return this;
-        }
-
-        public Integer getMaxConcurrentCalls() {
-            return maxConcurrentCalls;
-        }
-
-        public Duration getMaxWaitDuration() {
-            return maxWaitDuration;
         }
 
         @Nullable
@@ -158,9 +148,25 @@ public class BulkheadConfigurationProperties {
             return baseConfig;
         }
 
+        public InstanceProperties setBaseConfig(String baseConfig) {
+            this.baseConfig = baseConfig;
+            return this;
+        }
+
         @Nullable
         public Integer getEventConsumerBufferSize() {
             return eventConsumerBufferSize;
+        }
+
+        public InstanceProperties setEventConsumerBufferSize(Integer eventConsumerBufferSize) {
+            Objects.requireNonNull(eventConsumerBufferSize);
+            if (eventConsumerBufferSize < 1) {
+                throw new IllegalArgumentException(
+                    "eventConsumerBufferSize must be greater than or equal to 1.");
+            }
+
+            this.eventConsumerBufferSize = eventConsumerBufferSize;
+            return this;
         }
 
     }

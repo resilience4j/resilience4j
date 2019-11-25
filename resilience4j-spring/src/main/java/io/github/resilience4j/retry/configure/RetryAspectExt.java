@@ -15,16 +15,16 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-
 import io.github.resilience4j.retry.Retry;
+import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
  * Retry aspect extension support interface type if you want to support new types
  */
 public interface RetryAspectExt {
 
-	boolean canHandleReturnType(Class returnType);
+    boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName) throws Throwable;
+    Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName)
+        throws Throwable;
 }

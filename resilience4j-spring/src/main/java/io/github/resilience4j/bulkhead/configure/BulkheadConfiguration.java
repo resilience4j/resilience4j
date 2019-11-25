@@ -40,8 +40,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * {@link Configuration
- * Configuration} for resilience4j-bulkhead.
+ * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
 @Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class})
@@ -53,11 +52,14 @@ public class BulkheadConfiguration {
      * @return the BulkheadRegistry with all needed setup in place
      */
     @Bean
-    public BulkheadRegistry bulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-                                             EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-                                             RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
-        BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, bulkheadRegistryEventConsumer);
-        registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
+    public BulkheadRegistry bulkheadRegistry(
+        BulkheadConfigurationProperties bulkheadConfigurationProperties,
+        EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
+            bulkheadRegistryEventConsumer);
+        registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
+            bulkheadConfigurationProperties);
         io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
         bulkheadConfigurationProperties.getInstances().values().forEach(instanceProperties -> {
             instanceProperties.getTags().forEach(mergedTags::put);
@@ -66,14 +68,16 @@ public class BulkheadConfiguration {
             defaultConfig.getTags().forEach(mergedTags::put);
         });
         bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
-                bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties), mergedTags));
+            bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties), mergedTags));
         return bulkheadRegistry;
     }
 
     @Bean
     @Primary
-    public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers) {
-        return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+    public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(
+        Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers) {
+        return new CompositeRegistryEventConsumer<>(
+            optionalRegistryEventConsumers.orElseGet(ArrayList::new));
     }
 
     /**
@@ -82,39 +86,52 @@ public class BulkheadConfiguration {
      * @param bulkheadConfigurationProperties The bulkhead configuration properties.
      * @return a BulkheadRegistry
      */
-    private BulkheadRegistry createBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
-                                                    RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+    private BulkheadRegistry createBulkheadRegistry(
+        BulkheadConfigurationProperties bulkheadConfigurationProperties,
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
         Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
-                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
+            .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
 
         return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer);
     }
 
     /**
-     * Registers the post creation consumer function that registers the consumer events to the bulkheads.
+     * Registers the post creation consumer function that registers the consumer events to the
+     * bulkheads.
      *
      * @param bulkheadRegistry      The BulkHead registry.
      * @param eventConsumerRegistry The event consumer registry.
      */
     private void registerEventConsumer(BulkheadRegistry bulkheadRegistry,
-                                       EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        bulkheadRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), bulkheadConfigurationProperties));
+        EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
+        BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+        bulkheadRegistry.getEventPublisher().onEntryAdded(
+            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
+                bulkheadConfigurationProperties));
     }
 
-    private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, Bulkhead bulkHead, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        int eventConsumerBufferSize = Optional.ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-                .map(io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
-                .orElse(100);
-        bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
+    private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
+        Bulkhead bulkHead, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
+        int eventConsumerBufferSize = Optional
+            .ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
+            .map(
+                io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .orElse(100);
+        bulkHead.getEventPublisher().onEvent(
+            eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));
     }
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public BulkheadAspect bulkheadAspect(BulkheadConfigurationProperties bulkheadConfigurationProperties, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-                                         BulkheadRegistry bulkheadRegistry, @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-                                         FallbackDecorators fallbackDecorators) {
-        return new BulkheadAspect(bulkheadConfigurationProperties, threadPoolBulkheadRegistry, bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
+    public BulkheadAspect bulkheadAspect(
+        BulkheadConfigurationProperties bulkheadConfigurationProperties,
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+        BulkheadRegistry bulkheadRegistry,
+        @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
+        FallbackDecorators fallbackDecorators) {
+        return new BulkheadAspect(bulkheadConfigurationProperties, threadPoolBulkheadRegistry,
+            bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
     }
 
     @Bean
@@ -130,9 +147,9 @@ public class BulkheadConfiguration {
     }
 
     /**
-     * The EventConsumerRegistry is used to manage EventConsumer instances.
-     * The EventConsumerRegistry is used by the BulkheadHealthIndicator to show the latest Bulkhead events
-     * for each Bulkhead instance.
+     * The EventConsumerRegistry is used to manage EventConsumer instances. The
+     * EventConsumerRegistry is used by the BulkheadHealthIndicator to show the latest Bulkhead
+     * events for each Bulkhead instance.
      *
      * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
      */

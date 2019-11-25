@@ -15,23 +15,19 @@
  */
 package io.github.resilience4j.ratelimiter.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
- * This annotation can be applied to a class or a specific method.
- * Applying it on a class is equivalent to applying it on all its public methods.
- * The annotation enables throttling for all methods where it is applied.
- * Throttling monitoring is performed via a rate limiter.
- * See {@link io.github.resilience4j.ratelimiter.RateLimiter} for details.
+ * This annotation can be applied to a class or a specific method. Applying it on a class is
+ * equivalent to applying it on all its public methods. The annotation enables throttling for all
+ * methods where it is applied. Throttling monitoring is performed via a rate limiter. See {@link
+ * io.github.resilience4j.ratelimiter.RateLimiter} for details.
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented
 public @interface RateLimiter {
+
     /**
      * Name of the rate limiter
      *

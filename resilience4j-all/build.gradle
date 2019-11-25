@@ -11,4 +11,4 @@ dependencies {
     compile project(':resilience4j-timelimiter')
     testCompile project(':resilience4j-test')
 }
-ext.moduleName='io.github.resilience4j.all'
+ext.moduleName = 'io.github.resilience4j.all'

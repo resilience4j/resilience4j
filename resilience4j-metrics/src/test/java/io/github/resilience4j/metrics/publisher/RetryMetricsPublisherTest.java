@@ -26,14 +26,16 @@ public class RetryMetricsPublisherTest extends AbstractRetryMetricsTest {
 
     @Override
     protected Retry givenMetricRegistry(String prefix, MetricRegistry metricRegistry) {
-        RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), new RetryMetricsPublisher(prefix, metricRegistry));
+        RetryRegistry retryRegistry = RetryRegistry
+            .of(RetryConfig.ofDefaults(), new RetryMetricsPublisher(prefix, metricRegistry));
 
         return retryRegistry.retry("testName");
     }
 
     @Override
     protected Retry givenMetricRegistry(MetricRegistry metricRegistry) {
-        RetryRegistry retryRegistry = RetryRegistry.of(RetryConfig.ofDefaults(), new RetryMetricsPublisher(metricRegistry));
+        RetryRegistry retryRegistry = RetryRegistry
+            .of(RetryConfig.ofDefaults(), new RetryMetricsPublisher(metricRegistry));
 
         return retryRegistry.retry("testName");
     }

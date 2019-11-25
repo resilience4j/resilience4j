@@ -49,7 +49,8 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         bulkhead.executeSupplier(() -> "Bla");
         bulkhead.executeSupplier(() -> "Bla");
 
-        taggedBulkheadMetrics = TaggedThreadPoolBulkheadMetrics.ofThreadPoolBulkheadRegistry(bulkheadRegistry);
+        taggedBulkheadMetrics = TaggedThreadPoolBulkheadMetrics
+            .ofThreadPoolBulkheadRegistry(bulkheadRegistry);
         taggedBulkheadMetrics.bindTo(meterRegistry);
     }
 
@@ -64,11 +65,13 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(10);
 
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME)
+            .gauges();
 
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaximumThreadPoolSize());
+        assertThat(successful.get().value())
+            .isEqualTo(newBulkhead.getMetrics().getMaximumThreadPoolSize());
     }
 
     @Test
@@ -99,14 +102,18 @@ public class TaggedThreadPoolBulkheadMetricsTest {
 
     @Test
     public void shouldReplaceMetrics() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME)
+            .gauges();
 
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, bulkhead.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo(bulkhead.getMetrics().getMaximumThreadPoolSize());
+        assertThat(successful.get().value())
+            .isEqualTo(bulkhead.getMetrics().getMaximumThreadPoolSize());
 
-        ThreadPoolBulkhead newBulkhead = ThreadPoolBulkhead.of(bulkhead.getName(), ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE + 1).build());
+        ThreadPoolBulkhead newBulkhead = ThreadPoolBulkhead
+            .of(bulkhead.getName(), ThreadPoolBulkheadConfig.custom()
+                .maxThreadPoolSize(ThreadPoolBulkheadConfig.DEFAULT_MAX_THREAD_POOL_SIZE + 1)
+                .build());
 
         bulkheadRegistry.replace(bulkhead.getName(), newBulkhead);
 
@@ -114,9 +121,9 @@ public class TaggedThreadPoolBulkheadMetricsTest {
 
         successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaximumThreadPoolSize());
+        assertThat(successful.get().value())
+            .isEqualTo(newBulkhead.getMetrics().getMaximumThreadPoolSize());
     }
-
 
 
     @Test
@@ -177,17 +184,17 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         ).bindTo(meterRegistry);
 
         Set<String> metricNames = meterRegistry.getMeters()
-                .stream()
-                .map(Meter::getId)
-                .map(Meter.Id::getName)
-                .collect(Collectors.toSet());
+            .stream()
+            .map(Meter::getId)
+            .map(Meter.Id::getName)
+            .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
-                "custom.max.thread.pool.size",
-                "custom.core.thread.pool.size",
-                "resilience4j.bulkhead.queue.depth",
-                "resilience4j.bulkhead.queue.capacity",
-                "resilience4j.bulkhead.thread.pool.size"
+            "custom.max.thread.pool.size",
+            "custom.core.thread.pool.size",
+            "resilience4j.bulkhead.queue.depth",
+            "resilience4j.bulkhead.queue.capacity",
+            "resilience4j.bulkhead.thread.pool.size"
         ));
     }
 }

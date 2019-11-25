@@ -238,9 +238,9 @@ class RetrySpec extends Specification {
 
     def buildConfig() {
         RetryConfig.custom()
-                .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(50))
-                .build()
+            .maxAttempts(3)
+            .waitDuration(Duration.ofMillis(50))
+            .build()
     }
 
     static class Something {

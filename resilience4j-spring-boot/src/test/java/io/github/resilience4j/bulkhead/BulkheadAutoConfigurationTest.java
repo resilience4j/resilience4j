@@ -62,8 +62,8 @@ public class BulkheadAutoConfigurationTest {
     private TestRestTemplate restTemplate;
 
     /**
-     * The test verifies that a Bulkhead instance is created and configured properly when the BulkheadDummyService is invoked and
-     * that the Bulkhead records permitted and rejected calls.
+     * The test verifies that a Bulkhead instance is created and configured properly when the
+     * BulkheadDummyService is invoked and that the Bulkhead records permitted and rejected calls.
      */
     @Test
     public void testBulkheadAutoConfiguration() {
@@ -81,37 +81,43 @@ public class BulkheadAutoConfigurationTest {
         es.submit(dummyService::doSomething);
 
         await()
-                .atMost(1, TimeUnit.SECONDS)
-                .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+            .atMost(1, TimeUnit.SECONDS)
+            .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(0);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
-        Callable<Boolean> booleanCallable = () -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 1;
+        Callable<Boolean> booleanCallable = () ->
+            bulkhead.getMetrics().getAvailableConcurrentCalls() == 1;
         await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(booleanCallable);
+            .atMost(2, TimeUnit.SECONDS)
+            .until(booleanCallable);
         // Test Actuator endpoints
 
-        ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate.getForEntity("/bulkhead", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(2).containsExactly("backendA", "backendB");
+        ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
+            .getForEntity("/bulkhead", BulkheadEndpointResponse.class);
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(2)
+            .containsExactly("backendA", "backendB");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
         }
 
         await()
-                .atMost(2, TimeUnit.SECONDS)
-                .until(booleanCallable);
+            .atMost(2, TimeUnit.SECONDS)
+            .until(booleanCallable);
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate.getForEntity("/bulkhead/events", BulkheadEventsEndpointResponse.class);
+        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = restTemplate
+            .getForEntity("/bulkhead/events", BulkheadEventsEndpointResponse.class);
         List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
         assertThat(bulkheadEvents).isNotEmpty();
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType()).isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEvents).filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
-                .isNotEmpty();
+        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType())
+            .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
+        assertThat(bulkheadEvents)
+            .filteredOn(it -> it.getType() == BulkheadEvent.Type.CALL_REJECTED)
+            .isNotEmpty();
 
-	    assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
+        assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
 
         es.shutdown();
     }

@@ -40,9 +40,9 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerSubscriber(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptySubscription.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
@@ -69,9 +69,9 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
         @Override
         public void hookOnCancel() {
-            if(eventWasEmitted.get()){
+            if (eventWasEmitted.get()) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            }else{
+            } else {
                 circuitBreaker.releasePermission();
             }
         }

@@ -34,8 +34,8 @@ public class EnqueueDecorator {
         return responseReference.get();
     }
 
-    public static void performCatchingEnqueue(Call<?> call){
-        try{
+    public static void performCatchingEnqueue(Call<?> call) {
+        try {
             enqueue(call);
         } catch (Throwable ignored) {
         }

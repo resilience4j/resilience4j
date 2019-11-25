@@ -29,11 +29,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
-@ConditionalOnClass({MetricsAutoConfiguration.class, Bulkhead.class, TaggedBulkheadMetricsPublisher.class})
+@ConditionalOnClass({MetricsAutoConfiguration.class, Bulkhead.class,
+    TaggedBulkheadMetricsPublisher.class})
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMicrometerAutoConfiguration {
@@ -48,7 +49,8 @@ public class BulkheadMicrometerAutoConfiguration {
     @Bean
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(MeterRegistry meterRegistry) {
+    public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(
+        MeterRegistry meterRegistry) {
         return new TaggedBulkheadMetricsPublisher(meterRegistry);
     }
 

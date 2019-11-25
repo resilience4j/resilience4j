@@ -26,8 +26,8 @@ import retrofit2.Response;
 import java.io.IOException;
 
 /**
- * Simple decorator class that implements Call&lt;T&gt; and delegates all calls the the Call instance
- * provided in the constructor.  Methods can be overridden as required.
+ * Simple decorator class that implements Call&lt;T&gt; and delegates all calls the the Call
+ * instance provided in the constructor.  Methods can be overridden as required.
  *
  * @param <T> Call parameter type
  */

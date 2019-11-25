@@ -50,11 +50,18 @@ public interface BulkheadEvent {
      * Event types which are created by a bulkhead.
      */
     enum Type {
-        /** A BulkheadEvent which informs that a call has been permitted to proceed */
+        /**
+         * A BulkheadEvent which informs that a call has been permitted to proceed
+         */
         CALL_PERMITTED,
-        /** A BulkheadEvent which informs that a call was rejected due to bulkhead being full */
+        /**
+         * A BulkheadEvent which informs that a call was rejected due to bulkhead being full
+         */
         CALL_REJECTED,
-        /** A BulkheadEvent which informs that a call was finished(success and failure is indistinguishable) */
+        /**
+         * A BulkheadEvent which informs that a call was finished(success and failure is
+         * indistinguishable)
+         */
         CALL_FINISHED
     }
 }

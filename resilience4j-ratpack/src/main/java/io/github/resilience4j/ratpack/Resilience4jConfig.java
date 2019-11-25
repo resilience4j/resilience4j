@@ -26,6 +26,7 @@ import ratpack.func.Function;
 import static ratpack.util.Exceptions.uncheck;
 
 public class Resilience4jConfig {
+
     private BulkheadConfigurationProperties bulkhead = new BulkheadConfigurationProperties();
     // ratpack does not have the ability to name things with "-", so we must use threadpoolbulkhead instead of thread-pool-bulkhead
     private ThreadPoolBulkheadConfigurationProperties threadpoolbulkhead = new ThreadPoolBulkheadConfigurationProperties();
@@ -40,9 +41,11 @@ public class Resilience4jConfig {
         return circuitBreaker(name, config -> config);
     }
 
-    public Resilience4jConfig circuitBreaker(String name, Function<? super CircuitBreakerConfigurationProperties.InstanceProperties, ? extends CircuitBreakerConfigurationProperties.InstanceProperties> configure) {
+    public Resilience4jConfig circuitBreaker(String name,
+        Function<? super CircuitBreakerConfigurationProperties.InstanceProperties, ? extends CircuitBreakerConfigurationProperties.InstanceProperties> configure) {
         try {
-            CircuitBreakerConfigurationProperties.InstanceProperties finalConfig = configure.apply(new CircuitBreakerConfigurationProperties.InstanceProperties());
+            CircuitBreakerConfigurationProperties.InstanceProperties finalConfig = configure
+                .apply(new CircuitBreakerConfigurationProperties.InstanceProperties());
             circuitbreaker.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -54,9 +57,11 @@ public class Resilience4jConfig {
         return rateLimiter(name, config -> config);
     }
 
-    public Resilience4jConfig rateLimiter(String name, Function<? super RateLimiterConfigurationProperties.InstanceProperties, ? extends RateLimiterConfigurationProperties.InstanceProperties> configure) {
+    public Resilience4jConfig rateLimiter(String name,
+        Function<? super RateLimiterConfigurationProperties.InstanceProperties, ? extends RateLimiterConfigurationProperties.InstanceProperties> configure) {
         try {
-            RateLimiterConfigurationProperties.InstanceProperties finalConfig = configure.apply(new RateLimiterConfigurationProperties.InstanceProperties());
+            RateLimiterConfigurationProperties.InstanceProperties finalConfig = configure
+                .apply(new RateLimiterConfigurationProperties.InstanceProperties());
             ratelimiter.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -68,9 +73,11 @@ public class Resilience4jConfig {
         return retry(name, config -> config);
     }
 
-    public Resilience4jConfig retry(String name, Function<? super RetryConfigurationProperties.InstanceProperties, ? extends RetryConfigurationProperties.InstanceProperties> configure) {
+    public Resilience4jConfig retry(String name,
+        Function<? super RetryConfigurationProperties.InstanceProperties, ? extends RetryConfigurationProperties.InstanceProperties> configure) {
         try {
-            RetryConfigurationProperties.InstanceProperties finalConfig = configure.apply(new RetryConfigurationProperties.InstanceProperties());
+            RetryConfigurationProperties.InstanceProperties finalConfig = configure
+                .apply(new RetryConfigurationProperties.InstanceProperties());
             retry.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -82,9 +89,11 @@ public class Resilience4jConfig {
         return bulkhead(name, config -> config);
     }
 
-    public Resilience4jConfig bulkhead(String name, Function<? super BulkheadConfigurationProperties.InstanceProperties, ? extends BulkheadConfigurationProperties.InstanceProperties> configure) {
+    public Resilience4jConfig bulkhead(String name,
+        Function<? super BulkheadConfigurationProperties.InstanceProperties, ? extends BulkheadConfigurationProperties.InstanceProperties> configure) {
         try {
-            BulkheadConfigurationProperties.InstanceProperties finalConfig = configure.apply(new BulkheadConfigurationProperties.InstanceProperties());
+            BulkheadConfigurationProperties.InstanceProperties finalConfig = configure
+                .apply(new BulkheadConfigurationProperties.InstanceProperties());
             bulkhead.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -96,9 +105,11 @@ public class Resilience4jConfig {
         return threadPoolBulkhead(name, config -> config);
     }
 
-    public Resilience4jConfig threadPoolBulkhead(String name, Function<? super ThreadPoolBulkheadConfigurationProperties.InstanceProperties, ? extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties> configure) {
+    public Resilience4jConfig threadPoolBulkhead(String name,
+        Function<? super ThreadPoolBulkheadConfigurationProperties.InstanceProperties, ? extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties> configure) {
         try {
-            ThreadPoolBulkheadConfigurationProperties.InstanceProperties finalConfig = configure.apply(new ThreadPoolBulkheadConfigurationProperties.InstanceProperties());
+            ThreadPoolBulkheadConfigurationProperties.InstanceProperties finalConfig = configure
+                .apply(new ThreadPoolBulkheadConfigurationProperties.InstanceProperties());
             threadpoolbulkhead.getInstances().put(name, finalConfig);
             return this;
         } catch (Exception e) {
@@ -116,7 +127,8 @@ public class Resilience4jConfig {
         return this;
     }
 
-    public Resilience4jConfig endpoints(Function<? super EndpointsConfig, ? extends EndpointsConfig> configure) {
+    public Resilience4jConfig endpoints(
+        Function<? super EndpointsConfig, ? extends EndpointsConfig> configure) {
         try {
             endpoints = configure.apply(new EndpointsConfig());
             return this;

@@ -22,6 +22,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.time.Duration;
 
 class CircuitBreakerEventDTOBuilder {
+
     private final String circuitBreakerName;
     private final CircuitBreakerEvent.Type type;
     private final String creationTime;
@@ -32,7 +33,8 @@ class CircuitBreakerEventDTOBuilder {
     @Nullable
     private CircuitBreaker.StateTransition stateTransition = null;
 
-    CircuitBreakerEventDTOBuilder(String circuitBreakerName, CircuitBreakerEvent.Type type, String creationTime){
+    CircuitBreakerEventDTOBuilder(String circuitBreakerName, CircuitBreakerEvent.Type type,
+        String creationTime) {
         this.circuitBreakerName = circuitBreakerName;
         this.type = type;
         this.creationTime = creationTime;
@@ -48,12 +50,14 @@ class CircuitBreakerEventDTOBuilder {
         return this;
     }
 
-    CircuitBreakerEventDTOBuilder setStateTransition(CircuitBreaker.StateTransition stateTransition) {
+    CircuitBreakerEventDTOBuilder setStateTransition(
+        CircuitBreaker.StateTransition stateTransition) {
         this.stateTransition = stateTransition;
         return this;
     }
 
     CircuitBreakerEventDTO build() {
-        return new CircuitBreakerEventDTO(circuitBreakerName, type, creationTime, throwable, duration, stateTransition);
+        return new CircuitBreakerEventDTO(circuitBreakerName, type, creationTime, throwable,
+            duration, stateTransition);
     }
 }

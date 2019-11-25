@@ -20,7 +20,7 @@ package io.github.resilience4j.core.metrics;
 
 class TotalAggregation extends AbstractAggregation {
 
-    void removeBucket(AbstractAggregation bucket){
+    void removeBucket(AbstractAggregation bucket) {
         this.totalDurationInMillis -= bucket.totalDurationInMillis;
         this.numberOfSlowCalls -= bucket.numberOfSlowCalls;
         this.numberOfSlowFailedCalls -= bucket.numberOfSlowFailedCalls;

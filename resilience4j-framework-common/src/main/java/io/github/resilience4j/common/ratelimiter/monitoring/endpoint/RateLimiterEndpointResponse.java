@@ -26,7 +26,8 @@ public class RateLimiterEndpointResponse {
     private List<String> rateLimiters;
 
     // created for spring to be able to construct POJO
-    public RateLimiterEndpointResponse() {}
+    public RateLimiterEndpointResponse() {
+    }
 
     public RateLimiterEndpointResponse(@Nullable List<String> rateLimiters) {
         this.rateLimiters = rateLimiters;

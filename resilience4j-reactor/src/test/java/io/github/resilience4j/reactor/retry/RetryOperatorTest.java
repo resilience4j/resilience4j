@@ -37,225 +37,227 @@ import static org.mockito.Mockito.times;
 
 public class RetryOperatorTest {
 
-	private HelloWorldService helloWorldService;
+    private HelloWorldService helloWorldService;
 
-	@Before
-	public void setUp() {
-		helloWorldService = mock(HelloWorldService.class);
-	}
+    @Before
+    public void setUp() {
+        helloWorldService = mock(HelloWorldService.class);
+    }
 
-	@Test
-	public void returnOnCompleteUsingMono() {
-		RetryConfig config = retryConfig();
-		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryOperator = RetryOperator.of(retry);
-		given(helloWorldService.returnHelloWorld())
-				.willReturn("Hello world")
-				.willThrow(new HelloWorldException())
-				.willThrow(new HelloWorldException())
-				.willReturn("Hello world");
+    @Test
+    public void returnOnCompleteUsingMono() {
+        RetryConfig config = retryConfig();
+        Retry retry = Retry.of("testName", config);
+        RetryOperator<String> retryOperator = RetryOperator.of(retry);
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("Hello world")
+            .willThrow(new HelloWorldException())
+            .willThrow(new HelloWorldException())
+            .willReturn("Hello world");
 
-		Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator).block(Duration.ofMillis(100));
-		Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator).block(Duration.ofMillis(100));
+        Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator)
+            .block(Duration.ofMillis(100));
+        Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator)
+            .block(Duration.ofMillis(100));
 
-		then(helloWorldService).should(times(4)).returnHelloWorld();
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
-		assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-	}
-
-
-	@Test(expected = StackOverflowError.class)
-	public void shouldNotRetryUsingMonoStackOverFlow() {
-		RetryConfig config = retryConfig();
-		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryOperator = RetryOperator.of(retry);
-		given(helloWorldService.returnHelloWorld())
-				.willThrow(new StackOverflowError("BAM!"));
-
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryOperator))
-				.expectSubscription()
-				.expectError(StackOverflowError.class)
-				.verify(Duration.ofMillis(50));
-
-		then(helloWorldService).should().returnHelloWorld();
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-	}
-
-	@Test
-	public void shouldNotRetryWhenItThrowErrorMono() {
-		RetryConfig config = retryConfig();
-		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryOperator = RetryOperator.of(retry);
-		given(helloWorldService.returnHelloWorld())
-				.willThrow(new Error("BAM!"));
-
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryOperator))
-				.expectSubscription()
-				.expectError(Error.class)
-				.verify(Duration.ofMillis(50));
-
-		then(helloWorldService).should().returnHelloWorld();
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-	}
+        then(helloWorldService).should(times(4)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
 
 
-	@Test
-	public void returnOnErrorUsingMono() {
-		RetryConfig config = retryConfig();
-		Retry retry = Retry.of("testName", config);
-		RetryOperator<String> retryOperator = RetryOperator.of(retry);
-		given(helloWorldService.returnHelloWorld())
-				.willThrow(new HelloWorldException());
+    @Test(expected = StackOverflowError.class)
+    public void shouldNotRetryUsingMonoStackOverFlow() {
+        RetryConfig config = retryConfig();
+        Retry retry = Retry.of("testName", config);
+        RetryOperator<String> retryOperator = RetryOperator.of(retry);
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new StackOverflowError("BAM!"));
 
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryOperator))
-				.expectSubscription()
-				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofMillis(50));
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(StackOverflowError.class)
+            .verify(Duration.ofMillis(50));
 
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(retryOperator))
-				.expectSubscription()
-				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofMillis(50));
+        then(helloWorldService).should().returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+    }
 
-		then(helloWorldService).should(times(6)).returnHelloWorld();
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-	}
+    @Test
+    public void shouldNotRetryWhenItThrowErrorMono() {
+        RetryConfig config = retryConfig();
+        Retry retry = Retry.of("testName", config);
+        RetryOperator<String> retryOperator = RetryOperator.of(retry);
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new Error("BAM!"));
 
-	@Test
-	public void doNotRetryFromPredicateUsingMono() {
-		RetryConfig config = RetryConfig.custom()
-				.retryOnException(t -> t instanceof IOException)
-				.waitDuration(Duration.ofMillis(50))
-				.maxAttempts(3).build();
-		Retry retry = Retry.of("testName", config);
-		given(helloWorldService.returnHelloWorld())
-				.willThrow(new HelloWorldException());
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(Error.class)
+            .verify(Duration.ofMillis(50));
 
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(RetryOperator.of(retry)))
-				.expectSubscription()
-				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofMillis(50));
+        then(helloWorldService).should().returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
 
-		then(helloWorldService).should().returnHelloWorld();
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-	}
 
-	@Test
-	public void retryOnResultUsingMono() {
-		RetryConfig config = RetryConfig.<String>custom()
-				.retryOnResult("retry"::equals)
-				.waitDuration(Duration.ofMillis(50))
-				.maxAttempts(3).build();
-		Retry retry = Retry.of("testName", config);
-		given(helloWorldService.returnHelloWorld())
-				.willReturn("retry")
-				.willReturn("success");
+    @Test
+    public void returnOnErrorUsingMono() {
+        RetryConfig config = retryConfig();
+        Retry retry = Retry.of("testName", config);
+        RetryOperator<String> retryOperator = RetryOperator.of(retry);
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new HelloWorldException());
 
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(RetryOperator.of(retry)))
-				.expectSubscription()
-				.expectNext("success")
-				.expectComplete().verify(Duration.ofMillis(50));
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
 
-		then(helloWorldService).should(times(2)).returnHelloWorld();
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-	}
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(retryOperator))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
 
-	@Test
-	public void retryOnResultFailAfterMaxAttemptsUsingMono() {
-		RetryConfig config = RetryConfig.<String>custom()
-				.retryOnResult("retry"::equals)
-				.waitDuration(Duration.ofMillis(50))
-				.maxAttempts(3).build();
-		Retry retry = Retry.of("testName", config);
-		given(helloWorldService.returnHelloWorld())
-				.willReturn("retry");
+        then(helloWorldService).should(times(6)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
 
-		StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-				.compose(RetryOperator.of(retry)))
-				.expectSubscription()
-				.expectNextCount(1)
-				.expectComplete().verify(Duration.ofMillis(50));
+    @Test
+    public void doNotRetryFromPredicateUsingMono() {
+        RetryConfig config = RetryConfig.custom()
+            .retryOnException(t -> t instanceof IOException)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new HelloWorldException());
 
-		then(helloWorldService).should(times(3)).returnHelloWorld();
-	}
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
 
-	@Test
-	public void shouldFailWithExceptionFlux() {
-		RetryConfig config = retryConfig();
-		Retry retry = Retry.of("testName", config);
-		RetryOperator<Object> retryOperator = RetryOperator.of(retry);
+        then(helloWorldService).should().returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+    }
 
-		StepVerifier.create(Flux.error(new HelloWorldException()).compose(retryOperator))
-				.expectSubscription()
-				.expectError(RetryExceptionWrapper.class)
-				.verify(Duration.ofMillis(50));
+    @Test
+    public void retryOnResultUsingMono() {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("retry")
+            .willReturn("success");
 
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-	}
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNext("success")
+            .expectComplete().verify(Duration.ofMillis(50));
 
-	@Test
-	public void retryOnResultUsingFlux() {
-		RetryConfig config = RetryConfig.<String>custom()
-				.retryOnResult("retry"::equals)
-				.waitDuration(Duration.ofMillis(50))
-				.maxAttempts(3).build();
-		Retry retry = Retry.of("testName", config);
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
+    }
 
-		StepVerifier.create(Flux.just("retry", "success")
-				.compose(RetryOperator.of(retry)))
-				.expectSubscription()
-				.expectNext("retry")
-				.expectNext("success")
-				.expectComplete().verify(Duration.ofMillis(50));
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingMono() {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("retry");
 
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
-	}
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNextCount(1)
+            .expectComplete().verify(Duration.ofMillis(50));
 
-	@Test
-	public void retryOnResultFailAfterMaxAttemptsUsingFlux() {
-		RetryConfig config = RetryConfig.<String>custom()
-				.retryOnResult("retry"::equals)
-				.waitDuration(Duration.ofMillis(50))
-				.maxAttempts(3).build();
-		Retry retry = Retry.of("testName", config);
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
 
-		StepVerifier.create(Flux.just("retry")
-				.compose(RetryOperator.of(retry)))
-				.expectSubscription()
-				.expectNextCount(1)
-				.expectComplete().verify(Duration.ofMillis(50));
+    @Test
+    public void shouldFailWithExceptionFlux() {
+        RetryConfig config = retryConfig();
+        Retry retry = Retry.of("testName", config);
+        RetryOperator<Object> retryOperator = RetryOperator.of(retry);
 
-		Retry.Metrics metrics = retry.getMetrics();
-		assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-		assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
-	}
+        StepVerifier.create(Flux.error(new HelloWorldException()).compose(retryOperator))
+            .expectSubscription()
+            .expectError(RetryExceptionWrapper.class)
+            .verify(Duration.ofMillis(50));
 
-	private RetryConfig retryConfig() {
-		return RetryConfig.custom().waitDuration(Duration.ofMillis(50)).build();
-	}
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+    }
+
+    @Test
+    public void retryOnResultUsingFlux() {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+
+        StepVerifier.create(Flux.just("retry", "success")
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNext("retry")
+            .expectNext("success")
+            .expectComplete().verify(Duration.ofMillis(50));
+
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsUsingFlux() {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3).build();
+        Retry retry = Retry.of("testName", config);
+
+        StepVerifier.create(Flux.just("retry")
+            .compose(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNextCount(1)
+            .expectComplete().verify(Duration.ofMillis(50));
+
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
+    private RetryConfig retryConfig() {
+        return RetryConfig.custom().waitDuration(Duration.ofMillis(50)).build();
+    }
 }

@@ -27,8 +27,8 @@ public class BulkheadEventDTO {
     }
 
     BulkheadEventDTO(String bulkheadName,
-                     BulkheadEvent.Type type,
-                     String creationTime) {
+        BulkheadEvent.Type type,
+        String creationTime) {
         this.bulkheadName = bulkheadName;
         this.type = type;
         this.creationTime = creationTime;

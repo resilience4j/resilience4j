@@ -6,19 +6,19 @@ import io.github.resilience4j.metrics.Timer;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
-public class TimerImpl implements Timer{
+public class TimerImpl implements Timer {
 
     public static final String SUCCESSFUL = "successful";
     public static final String TOTAL = "total";
     public static final String FAILED = "failed";
     private final String timerName;
     private final MetricRegistry metricRegistry;
+    private final TimerMetrics metrics;
     private com.codahale.metrics.Timer successfulCallsTimer;
     private com.codahale.metrics.Counter totalCallsCounter;
     private com.codahale.metrics.Counter failedCallsCounter;
-    private final TimerMetrics metrics;
 
-    public TimerImpl(String timerName, MetricRegistry metricRegistry){
+    public TimerImpl(String timerName, MetricRegistry metricRegistry) {
         this.timerName = timerName;
         this.metricRegistry = metricRegistry;
         this.successfulCallsTimer = metricRegistry.timer(name(timerName, SUCCESSFUL));
@@ -50,6 +50,7 @@ public class TimerImpl implements Timer{
     }
 
     public final class ContextImpl implements Timer.Context {
+
         com.codahale.metrics.Timer.Context timerContext;
 
         private ContextImpl() {
@@ -69,6 +70,7 @@ public class TimerImpl implements Timer{
 
 
     private final class TimerMetrics implements Metrics {
+
         private TimerMetrics() {
         }
 

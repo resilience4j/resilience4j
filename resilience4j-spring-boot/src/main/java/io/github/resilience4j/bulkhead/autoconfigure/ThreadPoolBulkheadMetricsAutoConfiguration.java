@@ -32,7 +32,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnClass({MetricRegistry.class, ThreadPoolBulkhead.class, ThreadPoolBulkheadMetricsPublisher.class})
+@ConditionalOnClass({MetricRegistry.class, ThreadPoolBulkhead.class,
+    ThreadPoolBulkheadMetricsPublisher.class})
 @AutoConfigureAfter(MetricsDropwizardAutoConfiguration.class)
 @AutoConfigureBefore(MetricRepositoryAutoConfiguration.class)
 @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.enabled", matchIfMissing = true)
@@ -41,14 +42,17 @@ public class ThreadPoolBulkheadMetricsAutoConfiguration {
     @Bean
     @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
-    public ThreadPoolBulkheadMetrics registerThreadPoolBulkheadMetrics(ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, MetricRegistry metricRegistry) {
-        return ThreadPoolBulkheadMetrics.ofBulkheadRegistry(threadPoolBulkheadRegistry, metricRegistry);
+    public ThreadPoolBulkheadMetrics registerThreadPoolBulkheadMetrics(
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, MetricRegistry metricRegistry) {
+        return ThreadPoolBulkheadMetrics
+            .ofBulkheadRegistry(threadPoolBulkheadRegistry, metricRegistry);
     }
 
     @Bean
     @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public ThreadPoolBulkheadMetricsPublisher threadPoolBulkheadDropwizardMetricsPublisher(MetricRegistry metricRegistry) {
+    public ThreadPoolBulkheadMetricsPublisher threadPoolBulkheadDropwizardMetricsPublisher(
+        MetricRegistry metricRegistry) {
         return new ThreadPoolBulkheadMetricsPublisher(metricRegistry);
     }
 }

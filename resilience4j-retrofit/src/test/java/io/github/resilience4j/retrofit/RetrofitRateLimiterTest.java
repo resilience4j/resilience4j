@@ -36,12 +36,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -50,15 +45,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 public class RetrofitRateLimiterTest {
 
+    private static final RateLimiterConfig config = RateLimiterConfig.custom()
+        .timeoutDuration(Duration.ofMillis(50))
+        .limitRefreshPeriod(Duration.ofMillis(5000))
+        .limitForPeriod(1)
+        .build();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
-
-    private static final RateLimiterConfig config = RateLimiterConfig.custom()
-            .timeoutDuration(Duration.ofMillis(50))
-            .limitRefreshPeriod(Duration.ofMillis(5000))
-            .limitForPeriod(1)
-            .build();
-
     private RetrofitService service;
     private RateLimiter rateLimiter;
     private OkHttpClient client;
@@ -67,28 +60,28 @@ public class RetrofitRateLimiterTest {
     public void setUp() {
         final long TIMEOUT = 150; // ms
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
-                .build();
+            .connectTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            .readTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            .writeTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
+            .build();
 
         this.rateLimiter = RateLimiter.of("backendName", config);
         this.service = new Retrofit.Builder()
-                .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .client(client)
-                .baseUrl(wireMockRule.baseUrl())
-                .build()
-                .create(RetrofitService.class);
+            .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .client(client)
+            .baseUrl(wireMockRule.baseUrl())
+            .build()
+            .create(RetrofitService.class);
     }
 
     @Test
     public void decorateSuccessfulCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         service.greeting().execute();
 
@@ -98,10 +91,10 @@ public class RetrofitRateLimiterTest {
     @Test
     public void decorateSuccessfulEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         EnqueueDecorator.enqueue(service.greeting());
 
@@ -111,9 +104,9 @@ public class RetrofitRateLimiterTest {
     @Test(expected = IOException.class)
     public void shouldNotCatchCallExceptionsInRateLimiter() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withFixedDelay(400)));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withFixedDelay(400)));
 
         service.greeting().execute();
     }
@@ -121,9 +114,9 @@ public class RetrofitRateLimiterTest {
     @Test(expected = IOException.class)
     public void shouldNotCatchEnqueuedCallExceptionsInRateLimiter() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withFixedDelay(400)));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withFixedDelay(400)));
 
         EnqueueDecorator.enqueue(service.greeting());
     }
@@ -131,54 +124,54 @@ public class RetrofitRateLimiterTest {
     @Test
     public void decorateRateLimitedCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         final Response<String> execute = service.greeting().execute();
         assertThat(execute.isSuccessful())
-                .describedAs("Response successful")
-                .isTrue();
+            .describedAs("Response successful")
+            .isTrue();
 
         final Response<String> rateLimitedResponse = service.greeting().execute();
         assertThat(rateLimitedResponse.isSuccessful())
-                .describedAs("Response successful")
-                .isFalse();
+            .describedAs("Response successful")
+            .isFalse();
         assertThat(rateLimitedResponse.code())
-                .describedAs("HTTP Error Code")
-                .isEqualTo(429);
+            .describedAs("HTTP Error Code")
+            .isEqualTo(429);
     }
 
     @Test
     public void decorateRateLimitedEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
 
         final Response<String> execute = EnqueueDecorator.enqueue(service.greeting());
         assertThat(execute.isSuccessful())
-                .describedAs("Response successful")
-                .isTrue();
+            .describedAs("Response successful")
+            .isTrue();
 
         final Response<String> rateLimitedResponse = EnqueueDecorator.enqueue(service.greeting());
         assertThat(rateLimitedResponse.isSuccessful())
-                .describedAs("Response successful")
-                .isFalse();
+            .describedAs("Response successful")
+            .isFalse();
         assertThat(rateLimitedResponse.code())
-                .describedAs("HTTP Error Code")
-                .isEqualTo(429);
+            .describedAs("HTTP Error Code")
+            .isEqualTo(429);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowOnBadService() {
         BadRetrofitService badService = new Retrofit.Builder()
-                .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
-                .baseUrl(wireMockRule.baseUrl())
-                .build()
-                .create(BadRetrofitService.class);
+            .addCallAdapterFactory(RateLimiterCallAdapter.of(rateLimiter))
+            .baseUrl(wireMockRule.baseUrl())
+            .build()
+            .create(BadRetrofitService.class);
 
         badService.greeting();
     }
@@ -188,26 +181,26 @@ public class RetrofitRateLimiterTest {
         String body = "this is from rxjava";
 
         stubFor(get(urlPathEqualTo("/delegated"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody(body)));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody(body)));
 
         RetrofitService service = new Retrofit.Builder()
-                .addCallAdapterFactory(RateLimiterCallAdapter.of(RateLimiter.of(
-                        "backendName",
-                        RateLimiterConfig.custom()
-                                .timeoutDuration(Duration.ofMillis(50))
-                                .limitForPeriod(1)
-                                .limitRefreshPeriod(Duration.ofDays(1))
-                                .build()
-                )))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .client(client)
-                .baseUrl(wireMockRule.baseUrl())
-                .build()
-                .create(RetrofitService.class);
+            .addCallAdapterFactory(RateLimiterCallAdapter.of(RateLimiter.of(
+                "backendName",
+                RateLimiterConfig.custom()
+                    .timeoutDuration(Duration.ofMillis(50))
+                    .limitForPeriod(1)
+                    .limitRefreshPeriod(Duration.ofDays(1))
+                    .build()
+            )))
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .client(client)
+            .baseUrl(wireMockRule.baseUrl())
+            .build()
+            .create(RetrofitService.class);
 
         Single<String> success = service.delegated();
         Single<String> failure = service.delegated();
@@ -229,26 +222,26 @@ public class RetrofitRateLimiterTest {
         String body = "this is from rxjava";
 
         stubFor(get(urlPathEqualTo("/delegated"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody(body)));
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/plain")
+                .withBody(body)));
 
         RetrofitService service = new Retrofit.Builder()
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addCallAdapterFactory(RateLimiterCallAdapter.of(RateLimiter.of(
-                        "backendName",
-                        RateLimiterConfig.custom()
-                                .timeoutDuration(Duration.ofMillis(50))
-                                .limitForPeriod(1)
-                                .limitRefreshPeriod(Duration.ofDays(1))
-                                .build()
-                )))
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .client(client)
-                .baseUrl(wireMockRule.baseUrl())
-                .build()
-                .create(RetrofitService.class);
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addCallAdapterFactory(RateLimiterCallAdapter.of(RateLimiter.of(
+                "backendName",
+                RateLimiterConfig.custom()
+                    .timeoutDuration(Duration.ofMillis(50))
+                    .limitForPeriod(1)
+                    .limitRefreshPeriod(Duration.ofDays(1))
+                    .build()
+            )))
+            .addConverterFactory(ScalarsConverterFactory.create())
+            .client(client)
+            .baseUrl(wireMockRule.baseUrl())
+            .build()
+            .create(RetrofitService.class);
 
         Single<String> success = service.delegated();
         Single<String> failure = service.delegated();

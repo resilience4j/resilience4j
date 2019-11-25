@@ -1,8 +1,8 @@
 dependencies {
     compile project(':resilience4j-spring-cloud-common')
-    
+
     compile project(':resilience4j-spring-boot2')
-    
+
     compileOnly(libraries.spring_cloud_context2)
     compileOnly(libraries.spring_boot2_config_processor)
     compileOnly(libraries.spring_boot2_autoconfigure_processor)
@@ -17,4 +17,4 @@ dependencies {
 }
 
 compileJava.dependsOn(processResources)
-ext.moduleName='io.github.resilience4j.springcloud2'
+ext.moduleName = 'io.github.resilience4j.springcloud2'

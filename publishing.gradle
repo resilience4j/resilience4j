@@ -56,7 +56,7 @@ bintray {
         websiteUrl = "${url}"
         issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
         vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
-        desc =  project.description
+        desc = project.description
         licenses = ['Apache-2.0']
         version {
             name = project.version
@@ -67,9 +67,12 @@ bintray {
                 passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
             }
             mavenCentralSync {
-                sync = true //Optional (true by default). Determines whether to sync the version to Maven Central.
-                user = project.hasProperty('ossUser') ? project.property('ossUser') : '' //OSS user token
-                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : '' //OSS user password
+                sync = true
+                //Optional (true by default). Determines whether to sync the version to Maven Central.
+                user = project.hasProperty('ossUser') ? project.property('ossUser') : ''
+                //OSS user token
+                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : ''
+                //OSS user password
             }
         }
     }

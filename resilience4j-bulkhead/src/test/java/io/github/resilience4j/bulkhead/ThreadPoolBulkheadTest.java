@@ -48,10 +48,10 @@ public class ThreadPoolBulkheadTest {
         Awaitility.reset();
         helloWorldService = mock(HelloWorldService.class);
         config = ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(1)
-                .coreThreadPoolSize(1)
-                .queueCapacity(1)
-                .build();
+            .maxThreadPoolSize(1)
+            .coreThreadPoolSize(1)
+            .queueCapacity(1)
+            .build();
     }
 
     @Test
@@ -64,7 +64,8 @@ public class ThreadPoolBulkheadTest {
             try {
                 final AtomicInteger counter = new AtomicInteger(0);
                 bulkhead.executeRunnable(() -> {
-                    Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() > 1);
+                    Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS)
+                        .until(() -> counter.incrementAndGet() > 1);
                 });
             } catch (Exception e) {
                 exception.initCause(e);
@@ -86,8 +87,10 @@ public class ThreadPoolBulkheadTest {
         }).start();
 
         final AtomicInteger counter = new AtomicInteger(0);
-        Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
-        assertThat(exception.getCause().getMessage()).contains("Bulkhead 'testSupplier' is full and does not permit further calls");
+        Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .until(() -> counter.incrementAndGet() >= 2);
+        assertThat(exception.getCause().getMessage())
+            .contains("Bulkhead 'testSupplier' is full and does not permit further calls");
     }
 
 
@@ -137,11 +140,13 @@ public class ThreadPoolBulkheadTest {
 
 
     @Test
-    public void shouldExecuteSupplierAndReturnWithSuccess() throws ExecutionException, InterruptedException {
+    public void shouldExecuteSupplierAndReturnWithSuccess()
+        throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
-        CompletionStage<String> result = bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
+        CompletionStage<String> result = bulkhead
+            .executeSupplier(helloWorldService::returnHelloWorld);
 
         assertThat(result.toCompletableFuture().get()).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorld();
@@ -150,12 +155,13 @@ public class ThreadPoolBulkheadTest {
     @Test
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("Config must not be null");
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("Config must not be null");
     }
 
     @Test
-    public void testCreateThreadsUsingNameForPrefix() throws ExecutionException, InterruptedException {
+    public void testCreateThreadsUsingNameForPrefix()
+        throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);
         Supplier<String> getThreadName = () -> Thread.currentThread().getName();
 

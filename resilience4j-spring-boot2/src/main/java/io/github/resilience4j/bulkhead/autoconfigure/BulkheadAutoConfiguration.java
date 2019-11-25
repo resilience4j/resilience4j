@@ -15,16 +15,6 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
@@ -33,29 +23,40 @@ import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-bulkhead.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-bulkhead.
  */
 @Configuration
 @ConditionalOnClass(Bulkhead.class)
 @EnableConfigurationProperties({BulkheadProperties.class, ThreadPoolBulkheadProperties.class})
 @Import({BulkheadConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
-@AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 
-	@Bean
-	@ConditionalOnEnabledEndpoint
-	@ConditionalOnClass(value = {Endpoint.class})
-	public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
-		return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
-	}
+    @Configuration
+    @ConditionalOnClass(Endpoint.class)
+    static class BulkheadEndpointAutoConfiguration {
 
-	@Bean
-	@ConditionalOnEnabledEndpoint
-	@ConditionalOnClass(value = {Endpoint.class})
-	public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
-		return new BulkheadEventsEndpoint(eventConsumerRegistry);
-	}
+        @Bean
+        @ConditionalOnEnabledEndpoint
+        public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+            return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
+        }
+
+        @Bean
+        @ConditionalOnEnabledEndpoint
+        public BulkheadEventsEndpoint bulkheadEventsEndpoint(
+            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+            return new BulkheadEventsEndpoint(eventConsumerRegistry);
+        }
+    }
 }

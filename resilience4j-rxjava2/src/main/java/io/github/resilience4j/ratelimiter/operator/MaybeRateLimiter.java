@@ -38,14 +38,14 @@ class MaybeRateLimiter<T> extends Maybe<T> {
     @Override
     protected void subscribeActual(MaybeObserver<? super T> downstream) {
         long waitDuration = rateLimiter.reservePermission();
-        if(waitDuration >= 0){
-            if(waitDuration > 0){
+        if (waitDuration >= 0) {
+            if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                        .subscribe(() -> upstream.subscribe(new RateLimiterMaybeObserver(downstream)));
-            }else{
+                    .subscribe(() -> upstream.subscribe(new RateLimiterMaybeObserver(downstream)));
+            } else {
                 upstream.subscribe(new RateLimiterMaybeObserver(downstream));
             }
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(RequestNotPermitted.createRequestNotPermitted(rateLimiter));
         }

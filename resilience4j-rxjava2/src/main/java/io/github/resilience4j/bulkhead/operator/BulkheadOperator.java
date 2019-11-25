@@ -23,14 +23,20 @@ import org.reactivestreams.Publisher;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is full.
+ * A Bulkhead operator which checks if a subscriber/observer can acquire a permission to subscribe
+ * to an upstream Publisher. Otherwise emits a {@link BulkheadFullException}, if the Bulkhead is
+ * full.
  *
  * @param <T> the value type
  */
-public class BulkheadOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T>{
+public class BulkheadOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>,
+    MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T> {
 
     private final Bulkhead bulkhead;
+
+    private BulkheadOperator(Bulkhead bulkhead) {
+        this.bulkhead = requireNonNull(bulkhead);
+    }
 
     /**
      * Creates a BulkheadOperator.
@@ -40,10 +46,6 @@ public class BulkheadOperator<T> implements FlowableTransformer<T, T>, SingleTra
      */
     public static <T> BulkheadOperator<T> of(Bulkhead bulkhead) {
         return new BulkheadOperator<>(bulkhead);
-    }
-
-    private BulkheadOperator(Bulkhead bulkhead) {
-        this.bulkhead = requireNonNull(bulkhead);
     }
 
     @Override

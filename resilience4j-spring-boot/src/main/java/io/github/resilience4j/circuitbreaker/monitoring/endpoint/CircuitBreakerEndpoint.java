@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import org.springframework.boot.actuate.endpoint.AbstractEndpoint;
 import org.springframework.boot.actuate.endpoint.Endpoint;
@@ -22,9 +24,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 
 /**
@@ -43,7 +42,7 @@ public class CircuitBreakerEndpoint extends AbstractEndpoint {
     @Override
     public ResponseEntity<CircuitBreakerEndpointResponse> invoke() {
         List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers()
-                .map(CircuitBreaker::getName).sorted().toJavaList();
+            .map(CircuitBreaker::getName).sorted().toJavaList();
         return ResponseEntity.ok(new CircuitBreakerEndpointResponse(circuitBreakers));
     }
 }

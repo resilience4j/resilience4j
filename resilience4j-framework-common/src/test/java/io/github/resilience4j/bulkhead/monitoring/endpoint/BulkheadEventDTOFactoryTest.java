@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BulkheadEventDTOFactoryTest {
 
     @Test
-    public void shouldMapBulkheadOnCallFinishedEvent(){
+    public void shouldMapBulkheadOnCallFinishedEvent() {
         BulkheadOnCallFinishedEvent event = new BulkheadOnCallFinishedEvent("name");
 
         BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
@@ -24,7 +24,7 @@ public class BulkheadEventDTOFactoryTest {
     }
 
     @Test
-    public void shouldMapBulkheadOnCallPermittedEvent(){
+    public void shouldMapBulkheadOnCallPermittedEvent() {
         BulkheadOnCallPermittedEvent event = new BulkheadOnCallPermittedEvent("name");
 
         BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);
@@ -35,7 +35,7 @@ public class BulkheadEventDTOFactoryTest {
     }
 
     @Test
-    public void shouldMapBulkheadOnCallRejectedEvent(){
+    public void shouldMapBulkheadOnCallRejectedEvent() {
         BulkheadOnCallRejectedEvent event = new BulkheadOnCallRejectedEvent("name");
 
         BulkheadEventDTO eventDTO = BulkheadEventDTOFactory.createBulkheadEventDTO(event);

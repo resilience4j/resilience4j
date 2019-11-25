@@ -14,11 +14,11 @@ dependencies {
     compileOnly(libraries.hibernate_validator)
     annotationProcessor(libraries.spring_boot_config_processor)
     annotationProcessor(libraries.spring_boot_autoconfigure_processor)
-    
+
     testCompile(libraries.spring_boot_test)
     testCompile(libraries.spring_boot_aop)
     testCompile(libraries.spring_boot_actuator)
-    testCompile(libraries.spring_boot_web)    
+    testCompile(libraries.spring_boot_web)
     testCompile(libraries.reactor)
     testCompile(libraries.metrics)
     testCompile(libraries.hibernate_validator)
@@ -31,4 +31,4 @@ dependencies {
 }
 
 compileJava.dependsOn(processResources)
-ext.moduleName='io.github.resilience4j.springboot'
+ext.moduleName = 'io.github.resilience4j.springboot'

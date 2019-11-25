@@ -20,7 +20,8 @@ public class TimeLimiterTest {
         Duration timeoutDuration = Duration.ofSeconds(1);
         TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
         assertThat(timeLimiter).isNotNull();
-        assertThat(timeLimiter.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(timeoutDuration);
+        assertThat(timeLimiter.getTimeLimiterConfig().getTimeoutDuration())
+            .isEqualTo(timeoutDuration);
     }
 
     @Test
@@ -32,7 +33,8 @@ public class TimeLimiterTest {
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).willThrow(new TimeoutException());
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+            .willThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
@@ -59,24 +61,27 @@ public class TimeLimiterTest {
             return 0;
         });
 
-        CompletionStage<Integer> decorated = TimeLimiter.decorateCompletionStage(timeLimiter, scheduler, supplier).get();
+        CompletionStage<Integer> decorated = TimeLimiter
+            .decorateCompletionStage(timeLimiter, scheduler, supplier).get();
         Try<Integer> decoratedResult = Try.ofCallable(() -> decorated.toCompletableFuture().get());
         assertThat(decoratedResult.isFailure()).isTrue();
         assertThat(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
-                .hasCauseExactlyInstanceOf(TimeoutException.class);
+            .hasCauseExactlyInstanceOf(TimeoutException.class);
     }
 
     @Test
     public void shouldThrowTimeoutExceptionAndNotInvokeCancel() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
-        TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
+        TimeLimiter timeLimiter = TimeLimiter
+            .of(TimeLimiterConfig.custom().timeoutDuration(timeoutDuration)
                 .cancelRunningFuture(false).build());
 
         @SuppressWarnings("unchecked")
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
 
         Supplier<Future<Integer>> supplier = () -> mockFuture;
-        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS)).willThrow(new TimeoutException());
+        given(mockFuture.get(timeoutDuration.toMillis(), TimeUnit.MILLISECONDS))
+            .willThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
         Try<Integer> decoratedResult = Try.ofCallable(decorated);
@@ -121,10 +126,12 @@ public class TimeLimiterTest {
             return 42;
         });
 
-        int result = timeLimiter.executeCompletionStage(scheduler, supplier).toCompletableFuture().get();
+        int result = timeLimiter.executeCompletionStage(scheduler, supplier).toCompletableFuture()
+            .get();
         assertThat(result).isEqualTo(42);
 
-        int result2 = timeLimiter.decorateCompletionStage(scheduler, supplier).get().toCompletableFuture().get();
+        int result2 = timeLimiter.decorateCompletionStage(scheduler, supplier).get()
+            .toCompletableFuture().get();
         assertThat(result2).isEqualTo(42);
     }
 
@@ -133,7 +140,9 @@ public class TimeLimiterTest {
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-        Supplier<Future<Integer>> supplier = () -> executorService.submit(() -> {throw new RuntimeException();});
+        Supplier<Future<Integer>> supplier = () -> executorService.submit(() -> {
+            throw new RuntimeException();
+        });
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
 
         Try<Integer> decoratedResult = Try.ofCallable(decorated);

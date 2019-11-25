@@ -45,7 +45,8 @@ public class TaggedBulkheadMetricsPublisherTest {
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         taggedBulkheadMetricsPublisher = new TaggedBulkheadMetricsPublisher(meterRegistry);
-        bulkheadRegistry = BulkheadRegistry.of(BulkheadConfig.ofDefaults(), taggedBulkheadMetricsPublisher);
+        bulkheadRegistry = BulkheadRegistry
+            .of(BulkheadConfig.ofDefaults(), taggedBulkheadMetricsPublisher);
         bulkhead = bulkheadRegistry.bulkhead("backendA");
 
         // record some basic stats
@@ -65,11 +66,13 @@ public class TaggedBulkheadMetricsPublisherTest {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(4);
 
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry
+            .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
 
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+        assertThat(successful.get().value())
+            .isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
     }
 
     @Test
@@ -88,39 +91,47 @@ public class TaggedBulkheadMetricsPublisherTest {
 
     @Test
     public void shouldReplaceMetrics() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+        Collection<Gauge> gauges = meterRegistry
+            .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
 
         Optional<Gauge> successful = findGaugeByNamesTag(gauges, bulkhead.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+        assertThat(successful.get().value())
+            .isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
 
         Bulkhead newBulkhead = Bulkhead.of(bulkhead.getName(), BulkheadConfig.custom()
-                .maxConcurrentCalls(100).build());
+            .maxConcurrentCalls(100).build());
 
         bulkheadRegistry.replace(bulkhead.getName(), newBulkhead);
 
-        gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+        gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME)
+            .gauges();
 
         successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
-        assertThat(successful.get().value()).isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+        assertThat(successful.get().value())
+            .isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
 
     }
 
     @Test
     public void availableConcurrentCallsGaugeIsRegistered() {
-        Gauge available = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME).gauge();
+        Gauge available = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME)
+            .gauge();
 
         assertThat(available).isNotNull();
-        assertThat(available.value()).isEqualTo(bulkhead.getMetrics().getAvailableConcurrentCalls());
+        assertThat(available.value())
+            .isEqualTo(bulkhead.getMetrics().getAvailableConcurrentCalls());
     }
 
     @Test
     public void maxAllowedConcurrentCallsGaugeIsRegistered() {
-        Gauge maxAllowed = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauge();
+        Gauge maxAllowed = meterRegistry
+            .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauge();
 
         assertThat(maxAllowed).isNotNull();
-        assertThat(maxAllowed.value()).isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+        assertThat(maxAllowed.value())
+            .isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
         assertThat(maxAllowed.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
     }
 
@@ -128,23 +139,24 @@ public class TaggedBulkheadMetricsPublisherTest {
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher = new TaggedBulkheadMetricsPublisher(
-                TaggedBulkheadMetricsPublisher.MetricNames.custom()
-                        .availableConcurrentCallsMetricName("custom_available_calls")
-                        .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
-                        .build(), meterRegistry);
+            TaggedBulkheadMetricsPublisher.MetricNames.custom()
+                .availableConcurrentCallsMetricName("custom_available_calls")
+                .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
+                .build(), meterRegistry);
 
-        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(BulkheadConfig.ofDefaults(), taggedBulkheadMetricsPublisher);
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry
+            .of(BulkheadConfig.ofDefaults(), taggedBulkheadMetricsPublisher);
         bulkhead = bulkheadRegistry.bulkhead("backendA");
 
         Set<String> metricNames = meterRegistry.getMeters()
-                .stream()
-                .map(Meter::getId)
-                .map(Meter.Id::getName)
-                .collect(Collectors.toSet());
+            .stream()
+            .map(Meter::getId)
+            .map(Meter.Id::getName)
+            .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
-                "custom_available_calls",
-                "custom_max_allowed_calls"
+            "custom_available_calls",
+            "custom_max_allowed_calls"
         ));
     }
 
