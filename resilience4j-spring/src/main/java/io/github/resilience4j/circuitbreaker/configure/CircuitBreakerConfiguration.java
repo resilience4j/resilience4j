@@ -57,6 +57,7 @@ public class CircuitBreakerConfiguration {
 	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
 														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
+        registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
         io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
         circuitBreakerProperties.getInstances().values().forEach(instanceProperties -> {
             instanceProperties.getTags().forEach(mergedTags::put);

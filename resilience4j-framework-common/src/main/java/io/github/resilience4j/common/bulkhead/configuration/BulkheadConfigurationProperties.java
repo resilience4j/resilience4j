@@ -93,11 +93,6 @@ public class BulkheadConfigurationProperties {
         @Nullable
         private Integer eventConsumerBufferSize;
 
-        public Integer getMaxConcurrentCalls() {
-            return maxConcurrentCalls;
-        }
-
-        public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {
         /**
          * The Optional configured instance tags if any that can be used with the exported metrics
          */
@@ -115,6 +110,10 @@ public class BulkheadConfigurationProperties {
          */
         public void setTags(Map<String, String> tags) {
             this.tags = tags;
+        }
+
+        public Integer getMaxConcurrentCalls() {
+            return maxConcurrentCalls;
         }
 
         public InstanceProperties setMaxConcurrentCalls(Integer maxConcurrentCalls) {

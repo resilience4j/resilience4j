@@ -145,10 +145,6 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     public EventPublisher<E> getEventPublisher() {
         return eventProcessor;
     }
-    @Override
-    public EventPublisher<E> getEventPublisher() {
-        return eventProcessor;
-    }
 
     /**
      * Creates map with all tags (registry and instance). When tags (keys) of the two collide the

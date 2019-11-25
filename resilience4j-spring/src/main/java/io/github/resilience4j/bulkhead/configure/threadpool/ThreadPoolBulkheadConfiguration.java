@@ -57,27 +57,7 @@ public class ThreadPoolBulkheadConfiguration {
             .bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
         return bulkheadRegistry;
     }
-    /**
-     * @param bulkheadConfigurationProperties bulk head spring configuration properties
-     * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
-     * @return the ThreadPoolBulkheadRegistry with all needed setup in place
-     */
-    @Bean
-    public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-                                                                 EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-                                                                 RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
-        ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer);
-        registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry, bulkheadConfigurationProperties);
-        bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry.bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
-        return bulkheadRegistry;
-    }
 
-    @Bean
-    @Primary
-    public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
-        return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
-    }
     @Bean
     @Primary
     public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(

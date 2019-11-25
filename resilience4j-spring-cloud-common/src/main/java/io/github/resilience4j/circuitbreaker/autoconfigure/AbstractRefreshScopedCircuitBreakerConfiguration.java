@@ -49,7 +49,7 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
             defaultConfig.getTags().forEach(mergedTags::put);
         });
         // Initialize backends that were initially configured.
-        circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
+        circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry,mergedTags);
 
         return circuitBreakerRegistry;
     }
