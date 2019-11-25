@@ -38,7 +38,7 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead, BulkheadRegistry bulkheadRegistry) {
-        addMetrics(meterRegistry, bulkhead, mapToTagsList(bulkheadRegistry.getRegistryTags().toJavaMap()));
+        addMetrics(meterRegistry, bulkhead, mapToTagsList(bulkheadRegistry.getTags().toJavaMap()));
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead) {

@@ -38,7 +38,7 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter, RateLimiterRegistry rateLimiterRegistry) {
-        registerMetrics(meterRegistry, rateLimiter, mapToTagsList(rateLimiterRegistry.getRegistryTags().toJavaMap()));
+        registerMetrics(meterRegistry, rateLimiter, mapToTagsList(rateLimiterRegistry.getTags().toJavaMap()));
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter) {

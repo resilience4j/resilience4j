@@ -137,7 +137,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     }
 
     @Override
-    public Map<String, String> getRegistryTags() {
+    public Map<String, String> getTags() {
         return registryTags;
     }
 

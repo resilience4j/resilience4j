@@ -38,7 +38,7 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
-        addMetrics(meterRegistry, bulkhead, mapToTagsList(threadPoolBulkheadRegistry.getRegistryTags().toJavaMap()));
+        addMetrics(meterRegistry, bulkhead, mapToTagsList(threadPoolBulkheadRegistry.getTags().toJavaMap()));
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead) {

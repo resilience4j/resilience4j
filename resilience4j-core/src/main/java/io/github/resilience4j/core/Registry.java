@@ -79,7 +79,7 @@ public interface Registry<E, C> {
     /**
      * @return global configured registry tags
      */
-    Map<String, String> getRegistryTags();
+    Map<String, String> getTags();
 
     /**
      * Returns an EventPublisher which can be used to register event consumers.

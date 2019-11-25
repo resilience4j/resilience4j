@@ -7,6 +7,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.collection.HashMap;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -41,17 +42,22 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
 
         // Register the event consumers
         circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
-        circuitBreakerProperties.getInstances().values().forEach(instanceProperties -> {
-            instanceProperties.getTags().forEach(mergedTags::put);
-        });
-        circuitBreakerProperties.getConfigs().values().forEach(defaultConfig -> {
-            defaultConfig.getTags().forEach(mergedTags::put);
-        });
+        HashMap<String, String> allTags = getAllTags();
         // Initialize backends that were initially configured.
-        circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry,mergedTags);
+        circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry,allTags);
 
         return circuitBreakerRegistry;
+    }
+
+    public HashMap<String, String> getAllTags() {
+        HashMap<String, String> allTags = HashMap.empty();
+        circuitBreakerProperties.getInstances().values().forEach(instanceProperties -> {
+            instanceProperties.getTags().forEach(allTags::put);
+        });
+        circuitBreakerProperties.getConfigs().values().forEach(defaultConfig -> {
+            defaultConfig.getTags().forEach(allTags::put);
+        });
+        return allTags;
     }
 
 }
