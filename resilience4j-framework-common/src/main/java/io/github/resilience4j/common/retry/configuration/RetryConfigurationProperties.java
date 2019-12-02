@@ -1,6 +1,5 @@
-package io.github.resilience4j.common.retry.configuration;
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +13,7 @@ package io.github.resilience4j.common.retry.configuration;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.common.retry.configuration;
 
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
@@ -34,6 +34,10 @@ import java.util.function.Predicate;
  */
 public class RetryConfigurationProperties {
 
+    /**
+     * The Optional configured global tags if any that can be used with the exported metrics
+     */
+    private Map<String, String> tags = new HashMap<>();
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -52,6 +56,21 @@ public class RetryConfigurationProperties {
     @Nullable
     public InstanceProperties getBackendProperties(String backend) {
         return instances.get(backend);
+    }
+
+    /**
+     * @return the Optional configured registry global tags if any that can be used with the
+     * exported metrics
+     */
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
+    /**
+     * @param tags the optional configured tags values into registry
+     */
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
     }
 
     /**
@@ -253,25 +272,6 @@ public class RetryConfigurationProperties {
 
         @Nullable
         private String baseConfig;
-
-        /**
-         * The Optional configured instance tags if any that can be used with the exported metrics
-         */
-        private Map<String, String> tags = new HashMap<>();
-
-        /**
-         * @return the Optional configured instance tags if any that can be used with the exported metrics
-         */
-        public Map<String, String> getTags() {
-            return tags;
-        }
-
-        /**
-         * @param tags the optional configured tags values for the target instance
-         */
-        public void setTags(Map<String, String> tags) {
-            this.tags = tags;
-        }
 
         @Nullable
         public Duration getWaitDuration() {

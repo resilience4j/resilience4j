@@ -59,16 +59,9 @@ public class RetryConfiguration {
             retryRegistryEventConsumer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry,
             retryConfigurationProperties);
-        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
-        retryConfigurationProperties.getInstances().values().forEach(instanceProperties -> {
-            instanceProperties.getTags().forEach(mergedTags::put);
-        });
-        retryConfigurationProperties.getConfigs().values().forEach(defaultConfig -> {
-            defaultConfig.getTags().forEach(mergedTags::put);
-        });
         retryConfigurationProperties.getInstances()
             .forEach((name, properties) ->
-                retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name), mergedTags));
+                retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name)));
         return retryRegistry;
     }
 
@@ -93,7 +86,8 @@ public class RetryConfiguration {
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
 
-        return RetryRegistry.of(configs, retryRegistryEventConsumer);
+        return RetryRegistry.of(configs, retryRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(retryConfigurationProperties.getTags()));
     }
 
     /**

@@ -125,6 +125,22 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
     }
 
     /**
+     * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations and a Bulkhead
+     * registry event consumer.
+     *
+     * @param configs               a Map of shared Bulkhead configurations.
+     * @param registryEventConsumer a Bulkhead registry event consumer.
+     * @param tags                  default tags to add to the registry
+     * @return a BulkheadRegistry with a Map of shared Bulkhead configurations and a Bulkhead
+     * registry event consumer.
+     */
+    static BulkheadRegistry of(Map<String, BulkheadConfig> configs,
+        RegistryEventConsumer<Bulkhead> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        return new InMemoryBulkheadRegistry(configs, registryEventConsumer, tags);
+    }
+
+    /**
      * Creates a BulkheadRegistry with a Map of shared Bulkhead configurations and a list of
      * Bulkhead registry event consumers.
      *

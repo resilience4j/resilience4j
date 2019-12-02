@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,11 @@ import java.util.Optional;
 
 public class RateLimiterConfigurationProperties {
 
+    /**
+     * The Optional configured global registry tags if any that can be used with the exported
+     * metrics
+     */
+    private Map<String, String> tags = new HashMap<>();
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -56,7 +61,7 @@ public class RateLimiterConfigurationProperties {
     }
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-                                                        InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
             baseProperties);
@@ -64,7 +69,7 @@ public class RateLimiterConfigurationProperties {
     }
 
     private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
-                                                     @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties) {
         if (instanceProperties == null) {
             return builder.build();
         }
@@ -99,6 +104,21 @@ public class RateLimiterConfigurationProperties {
     @Nullable
     public InstanceProperties getInstanceProperties(String instance) {
         return instances.get(instance);
+    }
+
+    /**
+     * @return the Optional configured registry global tags if any that can be used with the
+     * exported metrics
+     */
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
+    /**
+     * @param tags the optional configured tags values into registry
+     */
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
     }
 
     public Map<String, InstanceProperties> getInstances() {
@@ -136,24 +156,7 @@ public class RateLimiterConfigurationProperties {
         private Boolean writableStackTraceEnabled;
         @Nullable
         private String baseConfig;
-        /**
-         * The Optional configured instance tags if any that can be used with the exported metrics
-         */
-        private Map<String, String> tags = new HashMap<>();
 
-        /**
-         * @return the Optional configured instance tags if any that can be used with the exported metrics
-         */
-        public Map<String, String> getTags() {
-            return tags;
-        }
-
-        /**
-         * @param tags the optional configured tags values for the target instance
-         */
-        public void setTags(Map<String, String> tags) {
-            this.tags = tags;
-        }
         /**
          * Configures the permissions limit for refresh period. Count of permissions available
          * during one rate limiter period specified by {@link RateLimiterConfig#getLimitRefreshPeriod()}
@@ -266,7 +269,8 @@ public class RateLimiterConfigurationProperties {
         }
 
         /**
-         * @return the flag that controls if health indicators are allowed to go into a failed (DOWN) status.
+         * @return the flag that controls if health indicators are allowed to go into a failed
+         * (DOWN) status.
          * @see #setAllowHealthIndicatorToFail(Boolean)
          */
         @Nullable
@@ -275,13 +279,15 @@ public class RateLimiterConfigurationProperties {
         }
 
         /**
-         * When set to true, it allows the health indicator to go to a failed (DOWN) status.
-         * By default, health indicators for rate limiters will never go into an unhealthy state.
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status. By
+         * default, health indicators for rate limiters will never go into an unhealthy state.
          *
-         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to fail
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to
+         *                                   fail
          * @return the InstanceProperties
          */
-        public InstanceProperties setAllowHealthIndicatorToFail(Boolean allowHealthIndicatorToFail) {
+        public InstanceProperties setAllowHealthIndicatorToFail(
+            Boolean allowHealthIndicatorToFail) {
             this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
             return this;
         }

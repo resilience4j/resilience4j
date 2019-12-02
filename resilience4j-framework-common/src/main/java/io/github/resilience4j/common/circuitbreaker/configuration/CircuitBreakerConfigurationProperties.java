@@ -38,6 +38,11 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
 
 public class CircuitBreakerConfigurationProperties {
 
+    /**
+     * The Optional configured global registry tags if any that can be used with the exported
+     * metrics
+     */
+    private Map<String, String> tags = new HashMap<>();
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -198,6 +203,21 @@ public class CircuitBreakerConfigurationProperties {
         return instances.get(backend);
     }
 
+    /**
+     * @return the Optional configured registry global tags if any that can be used with the
+     * exported metrics
+     */
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
+    /**
+     * @param tags the optional configured tags values into registry
+     */
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
+    }
+
     public Map<String, InstanceProperties> getInstances() {
         return instances;
     }
@@ -299,25 +319,6 @@ public class CircuitBreakerConfigurationProperties {
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
-
-        /**
-         * The Optional configured instance tags if any that can be used with the exported metrics
-         */
-        private Map<String, String> tags = new HashMap<>();
-
-        /**
-         * @return the Optional configured instance tags if any that can be used with the exported metrics
-         */
-        public Map<String, String> getTags() {
-            return tags;
-        }
-
-        /**
-         * @param tags the optional configured tags values for the target instance
-         */
-        public void setTags(Map<String, String> tags) {
-            this.tags = tags;
-        }
 
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.
@@ -492,7 +493,8 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         /**
-         * @return the flag that controls if health indicators are allowed to go into a failed (DOWN) status.
+         * @return the flag that controls if health indicators are allowed to go into a failed
+         * (DOWN) status.
          * @see #setAllowHealthIndicatorToFail(Boolean)
          */
         @Nullable
@@ -501,13 +503,15 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         /**
-         * When set to true, it allows the health indicator to go to a failed (DOWN) status.
-         * By default, health indicators for circuit breakers will never go into an unhealthy state.
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status. By
+         * default, health indicators for circuit breakers will never go into an unhealthy state.
          *
-         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to fail
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to
+         *                                   fail
          * @return the InstanceProperties
          */
-        public InstanceProperties setAllowHealthIndicatorToFail(Boolean allowHealthIndicatorToFail) {
+        public InstanceProperties setAllowHealthIndicatorToFail(
+            Boolean allowHealthIndicatorToFail) {
             this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
             return this;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Robert Winkler
+ * Copyright 2017 Robert Winkler,Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,21 +53,16 @@ public class CircuitBreakerConfiguration {
         this.circuitBreakerProperties = circuitBreakerProperties;
     }
 
-	@Bean
-	public CircuitBreakerRegistry circuitBreakerRegistry(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-														 RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
-        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
+    @Bean
+    public CircuitBreakerRegistry circuitBreakerRegistry(
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
+        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
+            circuitBreakerProperties, circuitBreakerRegistryEventConsumer);
         registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
-        circuitBreakerProperties.getInstances().values().forEach(instanceProperties -> {
-            instanceProperties.getTags().forEach(mergedTags::put);
-        });
-        circuitBreakerProperties.getConfigs().values().forEach(defaultConfig -> {
-            defaultConfig.getTags().forEach(mergedTags::put);
-        });
-        initCircuitBreakerRegistry(circuitBreakerRegistry, mergedTags);
+        initCircuitBreakerRegistry(circuitBreakerRegistry);
         return circuitBreakerRegistry;
-	}
+    }
 
     @Bean
     @Primary
@@ -125,7 +120,8 @@ public class CircuitBreakerConfiguration {
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
 
-        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer);
+        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(circuitBreakerProperties.getTags()));
     }
 
     /**
@@ -133,9 +129,10 @@ public class CircuitBreakerConfiguration {
      *
      * @param circuitBreakerRegistry The circuit breaker registry.
      */
-    public void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry, io.vavr.collection.HashMap<String, String> mergedTags) {
+    public void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
         circuitBreakerProperties.getInstances().forEach(
-                (name, properties) -> circuitBreakerRegistry.circuitBreaker(name, circuitBreakerProperties.createCircuitBreakerConfig(properties), mergedTags)
+            (name, properties) -> circuitBreakerRegistry.circuitBreaker(name,
+                circuitBreakerProperties.createCircuitBreakerConfig(properties))
         );
     }
 

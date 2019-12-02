@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 lespinsideg , Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,22 +72,19 @@ public class ThreadPoolBulkheadConfiguration {
      * @param threadPoolBulkheadConfigurationProperties The bulkhead configuration properties.
      * @return a ThreadPoolBulkheadRegistry
      */
-    private ThreadPoolBulkheadRegistry createBulkheadRegistry(ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
-                                                              RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
-        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
-        threadPoolBulkheadConfigurationProperties.getInstances().values().forEach(instanceProperties -> {
-            instanceProperties.getTags().forEach(mergedTags::put);
-        });
-        threadPoolBulkheadConfigurationProperties.getConfigs().values().forEach(defaultConfig -> {
-            defaultConfig.getTags().forEach(mergedTags::put);
-        });
+    private ThreadPoolBulkheadRegistry createBulkheadRegistry(
+        ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties
+            .getConfigs()
+            .entrySet()
+            .stream()
+            .collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> threadPoolBulkheadConfigurationProperties
+                    .createThreadPoolBulkheadConfig(entry.getValue())));
 
-        Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties.getConfigs()
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> threadPoolBulkheadConfigurationProperties.createThreadPoolBulkheadConfig(entry.getValue())));
-
-        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer);
+        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(threadPoolBulkheadConfigurationProperties.getTags()));
     }
 
     /**

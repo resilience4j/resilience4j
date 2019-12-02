@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas , Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,11 @@ import java.util.Objects;
 
 public class BulkheadConfigurationProperties {
 
+    /**
+     * The Optional configured global registry tags if any that can be used with the exported
+     * metrics
+     */
+    private Map<String, String> tags = new HashMap<>();
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -58,6 +63,21 @@ public class BulkheadConfigurationProperties {
             builder.maxWaitDuration(instanceProperties.getMaxWaitDuration());
         }
         return builder.build();
+    }
+
+    /**
+     * @return the Optional configured registry global tags if any that can be used with the
+     * exported metrics
+     */
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
+    /**
+     * @param tags the optional configured tags values into registry
+     */
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
     }
 
     @Nullable
@@ -92,25 +112,6 @@ public class BulkheadConfigurationProperties {
         private String baseConfig;
         @Nullable
         private Integer eventConsumerBufferSize;
-
-        /**
-         * The Optional configured instance tags if any that can be used with the exported metrics
-         */
-        private Map<String, String> tags = new HashMap<>();
-
-        /**
-         * @return the Optional configured instance tags if any that can be used with the exported metrics
-         */
-        public Map<String, String> getTags() {
-            return tags;
-        }
-
-        /**
-         * @param tags the optional configured tags values for the target instance
-         */
-        public void setTags(Map<String, String> tags) {
-            this.tags = tags;
-        }
 
         public Integer getMaxConcurrentCalls() {
             return maxConcurrentCalls;

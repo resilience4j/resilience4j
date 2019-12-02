@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Bohdan Storozhuk
+ * Copyright 2017 Bohdan Storozhuk, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,25 +47,22 @@ import java.util.stream.Collectors;
 @Configuration
 public class RateLimiterConfiguration {
 
-	@Bean
-	public RateLimiterRegistry rateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
-	                                               EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-												   RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
-		RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties, rateLimiterRegistryEventConsumer);
-		registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry, rateLimiterProperties);
-        io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
-        rateLimiterProperties.getInstances().values().forEach(instanceProperties -> {
-            instanceProperties.getTags().forEach(mergedTags::put);
-        });
-        rateLimiterProperties.getConfigs().values().forEach(defaultConfig -> {
-            defaultConfig.getTags().forEach(mergedTags::put);
-        });
+    @Bean
+    public RateLimiterRegistry rateLimiterRegistry(
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties,
+            rateLimiterRegistryEventConsumer);
+        registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry,
+            rateLimiterProperties);
         rateLimiterProperties.getInstances().forEach(
             (name, properties) ->
-                rateLimiterRegistry.rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties), mergedTags)
+                rateLimiterRegistry
+                    .rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
         );
         return rateLimiterRegistry;
-	}
+    }
 
     @Bean
     @Primary
@@ -89,7 +86,8 @@ public class RateLimiterConfiguration {
                 entry -> rateLimiterConfigurationProperties
                     .createRateLimiterConfig(entry.getValue())));
 
-        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer);
+        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(rateLimiterConfigurationProperties.getTags()));
     }
 
     /**

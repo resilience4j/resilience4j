@@ -55,19 +55,11 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
         CircuitBreakerRegistry circuitBreakerRegistry =
             circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties,
                 circuitBreakerRegistryEventConsumer);
-
-		// Register the event consumers
-		circuitBreakerConfiguration.registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-		io.vavr.collection.HashMap<String, String> mergedTags = io.vavr.collection.HashMap.empty();
-		circuitBreakerProperties.getInstances().values().forEach(instanceProperties -> {
-			instanceProperties.getTags().forEach(mergedTags::put);
-		});
-		circuitBreakerProperties.getConfigs().values().forEach(defaultConfig -> {
-			defaultConfig.getTags().forEach(mergedTags::put);
-		});
-
-		// Initialize backends that were initially configured.
-		circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry, mergedTags);
+        // Register the event consumers
+        circuitBreakerConfiguration
+            .registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
+        // Initialize backends that were initially configured.
+        circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
 
         return circuitBreakerRegistry;
     }
