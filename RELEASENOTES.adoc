@@ -265,12 +265,15 @@ NOTE: Breaking changes:
 * Issue #607: Added a new config parameter to enable the CircuitBreaker and RateLimiter health indicator. They are disabled by default now.
 
 == Version 1.2.0
-* Issue #659: Added support for Kotlin Flows
-* Issue #691: Exceptions thrown from fallback methods shouldn't be wrapped
-* Issue #682: Retrofit call cancellations are recorded as circuit breaker failures
-* Issue #674: CircuitBreaker tried an illegal state transition from HALF_OPEN to HALF_OPEN
 * Issue #642: Added weight support in RateLimiter
-* Issue #699: Added CircuitBreaker waitIntervalFunction to spring boot config
-* Issue #687: context.onSuccess called in case of maximum amount of retries reached
-* Issue #756: resilience4j Spring Boot module must work without a Spring actuator
+* Issue #659: Added support for Kotlin Flows
 * Issue #668: Added util class to determine whether Circuit Breaker permits calls
+* Issue #671: Allow configurable wait times for circuit breakers to be open as a function of # of close attempts
+* Issue #674: CircuitBreaker tried an illegal state transition from HALF_OPEN to HALF_OPEN
+* Issue #682: Retrofit call cancellations are recorded as circuit breaker failures
+* Issue #687: context.onSuccess called in case of maximum amount of retries reached
+* Issue #691: Exceptions thrown from fallback methods shouldn't be wrapped
+* Issue #699: Added CircuitBreaker waitIntervalFunction to spring boot config
+* Issue #701: Allow custom Prometheus Histogram buckets
+* Issue #756: Spring Boot module must work without a Spring actuator
+* PR #722: Health indicator overall status can be controlled with allowHealthIndicatorToFail property
