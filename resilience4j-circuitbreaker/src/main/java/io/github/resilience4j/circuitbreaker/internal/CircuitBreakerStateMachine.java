@@ -484,7 +484,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isClosed;
 
         ClosedState() {
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forCosed(getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig());
             this.isClosed = new AtomicBoolean(true);
         }
 
