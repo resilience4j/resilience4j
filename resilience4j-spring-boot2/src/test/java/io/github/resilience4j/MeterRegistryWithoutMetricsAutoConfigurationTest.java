@@ -46,27 +46,27 @@ public class MeterRegistryWithoutMetricsAutoConfigurationTest {
 
 	@Test
 	public void newCircuitBreakerPublisherIsBound() {
-		assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
+		assertThat(taggedCircuitBreakerMetricsPublisher).isNull();
 	}
 
 	@Test
 	public void newBulkheadPublisherIsBound() {
-		assertThat(taggedBulkheadMetricsPublisher).isNotNull();
+		assertThat(taggedBulkheadMetricsPublisher).isNull();
 	}
 
 	@Test
 	public void newThreadPoolBulkheadPublisherIsBound() {
-		assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
+		assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNull();
 	}
 
 	@Test
 	public void newRateLimiterPublisherIsBound() {
-		assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
+		assertThat(taggedRateLimiterMetricsPublisher).isNull();
 	}
 
 	@Test
 	public void newRetryPublisherIsBound() {
-		assertThat(taggedRetryMetricsPublisher).isNotNull();
+		assertThat(taggedRetryMetricsPublisher).isNull();
 	}
 
 }
