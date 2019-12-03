@@ -63,7 +63,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forCosed(CircuitBreakerConfig circuitBreakerConfig) {
+    static CircuitBreakerMetrics forClosed(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
             circuitBreakerConfig);
     }
