@@ -30,7 +30,7 @@ public class BulkheadDummyServiceImpl implements BulkheadDummyService {
     }
 
     @Override
-    @Bulkhead(name = BulkheadDummyService.BACKEND_C, type = Bulkhead.Type.THREADPOOL)
+    @Bulkhead(name = BulkheadDummyService.BACKEND_D, type = Bulkhead.Type.THREADPOOL)
     public CompletableFuture<Object> doSomethingAsyncWithThreadLocal() throws InterruptedException {
         return CompletableFuture.completedFuture(
             TestThreadLocalContextPropagator.TestThreadLocalContextHolder.get().orElse(null));
