@@ -19,6 +19,7 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -36,13 +37,8 @@ import java.util.function.Predicate;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
 
-public class CircuitBreakerConfigurationProperties {
+public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
-    /**
-     * The Optional configured global registry tags if any that can be used with the exported
-     * metrics
-     */
-    private Map<String, String> tags = new HashMap<>();
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -201,21 +197,6 @@ public class CircuitBreakerConfigurationProperties {
     @Nullable
     public InstanceProperties getBackendProperties(String backend) {
         return instances.get(backend);
-    }
-
-    /**
-     * @return the Optional configured registry global tags if any that can be used with the
-     * exported metrics
-     */
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    /**
-     * @param tags the optional configured tags values into registry
-     */
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
     }
 
     public Map<String, InstanceProperties> getInstances() {

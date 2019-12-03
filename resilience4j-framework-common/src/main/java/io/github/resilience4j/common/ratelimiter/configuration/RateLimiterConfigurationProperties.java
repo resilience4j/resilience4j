@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -27,13 +28,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class RateLimiterConfigurationProperties {
+public class RateLimiterConfigurationProperties extends CommonProperties{
 
-    /**
-     * The Optional configured global registry tags if any that can be used with the exported
-     * metrics
-     */
-    private Map<String, String> tags = new HashMap<>();
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -104,21 +100,6 @@ public class RateLimiterConfigurationProperties {
     @Nullable
     public InstanceProperties getInstanceProperties(String instance) {
         return instances.get(instance);
-    }
-
-    /**
-     * @return the Optional configured registry global tags if any that can be used with the
-     * exported metrics
-     */
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    /**
-     * @param tags the optional configured tags values into registry
-     */
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
     }
 
     public Map<String, InstanceProperties> getInstances() {

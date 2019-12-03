@@ -17,6 +17,7 @@ package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
@@ -26,13 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class ThreadPoolBulkheadConfigurationProperties {
+public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
-    /**
-     * The Optional configured global registry tags if any that can be used with the exported
-     * metrics
-     */
-    private Map<String, String> tags = new HashMap<>();
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -54,21 +50,6 @@ public class ThreadPoolBulkheadConfigurationProperties {
     @Nullable
     public InstanceProperties getBackendProperties(String backend) {
         return instances.get(backend);
-    }
-
-    /**
-     * @return the Optional configured registry global tags if any that can be used with the
-     * exported metrics
-     */
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    /**
-     * @param tags the optional configured tags values into registry
-     */
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
     }
 
     // Thread pool bulkhead section
