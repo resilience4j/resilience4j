@@ -35,7 +35,7 @@ public class CircuitBreakerMetricsTest {
             .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
-            .forCosed(circuitBreakerConfig);
+            .forClosed(circuitBreakerConfig);
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
