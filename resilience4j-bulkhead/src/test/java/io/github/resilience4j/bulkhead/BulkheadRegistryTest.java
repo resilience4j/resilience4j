@@ -24,6 +24,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.Tuple;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +53,13 @@ public class BulkheadRegistryTest {
             .maxConcurrentCalls(100)
             .maxWaitDuration(Duration.ofMillis(50))
             .build();
+    }
+
+    @Test
+    public void shouldInitRegistryTags() {
+        BulkheadRegistry registry = BulkheadRegistry.of(config,io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).isNotEmpty();
+        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
     }
 
     @Test

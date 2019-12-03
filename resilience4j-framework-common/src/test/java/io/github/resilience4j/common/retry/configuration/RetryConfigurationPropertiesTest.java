@@ -23,6 +23,8 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,8 +54,11 @@ public class RetryConfigurationPropertiesTest {
         RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
         retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         retryConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String,String> globalTagsForRetries=new HashMap<>();
+        globalTagsForRetries.put("testKey1","testKet2");
+        retryConfigurationProperties.setTags(globalTagsForRetries);
         //Then
+        assertThat(retryConfigurationProperties.getTags().size()).isEqualTo(1);
         assertThat(retryConfigurationProperties.getInstances().size()).isEqualTo(2);
         assertThat(retryConfigurationProperties.getBackends().size()).isEqualTo(2);
         final RetryConfig retry1 = retryConfigurationProperties.createRetryConfig("backend1");

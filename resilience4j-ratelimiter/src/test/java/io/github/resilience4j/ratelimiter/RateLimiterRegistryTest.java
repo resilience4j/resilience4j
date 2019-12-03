@@ -7,6 +7,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.Tuple;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -25,6 +26,15 @@ public class RateLimiterRegistryTest {
         }
 
         return Optional.empty();
+    }
+
+    @Test
+    public void shouldInitRegistryTags() {
+        Map<String, RateLimiterConfig> configs = new HashMap<>();
+        configs.put("custom", RateLimiterConfig.ofDefaults());
+        RateLimiterRegistry registry = RateLimiterRegistry.of(configs,io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).isNotEmpty();
+        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
     }
 
     @Test
