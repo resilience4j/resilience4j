@@ -21,6 +21,9 @@ package io.github.resilience4j.bulkhead;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -105,6 +108,52 @@ public class ThreadPoolBulkheadConfigTest {
             .maxThreadPoolSize(1)
             .coreThreadPoolSize(2)
             .build();
+    }
+
+    @Test
+    public void testContextPropagatorConfig() {
+
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig
+            .custom()
+            .contextPropagator(TestCtxPropagator.class)
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.getContextPropagator()).isNotNull();
+        assertThat(config.getContextPropagator().getClass()).isEqualTo(TestCtxPropagator.class);
+    }
+
+    @Test
+    public void testContextPropagatorConfigDefault() {
+
+        int maxThreadPoolSize = 20;
+        int coreThreadPoolSize = 2;
+        long maxWait = 555;
+        int queueCapacity = 50;
+
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(maxThreadPoolSize)
+            .coreThreadPoolSize(coreThreadPoolSize)
+            .queueCapacity(queueCapacity)
+            .keepAliveDuration(Duration.ofMillis(maxWait))
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.getContextPropagator()).isNotNull();
+        assertThat(config.getContextPropagator().getClass()).isEqualTo(
+            ContextPropagator.EmptyContextPropagator.class);
+    }
+
+    public static class TestCtxPropagator implements ContextPropagator<Object> {
+
+        @Override
+        public Supplier<Optional<Object>> retrieve() { return null; }
+
+        @Override
+        public Consumer<Optional<Object>> copy() { return null; }
+
+        @Override
+        public Consumer<Optional<Object>> cleanUp() { return null; }
     }
 
 }

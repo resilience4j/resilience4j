@@ -18,6 +18,9 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
 
 /**
@@ -33,12 +36,14 @@ public class ThreadPoolBulkheadConfig {
     public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime()
         .availableProcessors();
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+    private static final ContextPropagator DEFAULT_CONTEXT_PROPAGATOR = ContextPropagator.empty();
 
     private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
     private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
     private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
     private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    private ContextPropagator contextPropagator = DEFAULT_CONTEXT_PROPAGATOR;
 
     private ThreadPoolBulkheadConfig() {
     }
@@ -90,11 +95,11 @@ public class ThreadPoolBulkheadConfig {
         return writableStackTraceEnabled;
     }
 
+    public ContextPropagator getContextPropagator() { return contextPropagator; }
+
     public static class Builder {
 
         private ThreadPoolBulkheadConfig config;
-
-
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
             this.config = bulkheadConfig;
         }
@@ -130,6 +135,19 @@ public class ThreadPoolBulkheadConfig {
                     "coreThreadPoolSize must be a positive integer value >= 1");
             }
             config.coreThreadPoolSize = coreThreadPoolSize;
+            return this;
+        }
+
+        /**
+         * Configures the context propagator class.
+         *
+         * @return the BulkheadConfig.Builder
+         */
+        public final Builder contextPropagator(
+            @Nullable Class<? extends ContextPropagator> contextPropagatorClazz) {
+            this.config.contextPropagator = contextPropagatorClazz!=null
+                ? ClassUtils.instantiateClassDefConstructor(contextPropagatorClazz)
+                : DEFAULT_CONTEXT_PROPAGATOR;
             return this;
         }
 
@@ -188,6 +206,7 @@ public class ThreadPoolBulkheadConfig {
                 throw new IllegalArgumentException(
                     "maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
             }
+
             return config;
         }
     }

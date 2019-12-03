@@ -17,6 +17,8 @@ package io.github.resilience4j.bulkhead;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.TestThreadLocalContextPropagator;
+import io.github.resilience4j.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
 import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
@@ -41,10 +43,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -181,6 +180,49 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkheadAspect.getOrder()).isEqualTo(Ordered.LOWEST_PRECEDENCE);
 
         es.shutdown();
+    }
+
+    /**
+     * The test verifies that a Bulkhead instance is created and configured properly and
+     * is able to transfer context from ThreadLocal
+     */
+    @Test
+    public void testBulkheadAutoConfigurationThreadPoolContextPropagation()
+        throws InterruptedException, TimeoutException, ExecutionException {
+        assertThat(threadPoolBulkheadRegistry).isNotNull();
+        assertThat(threadPoolBulkheadProperties).isNotNull();
+
+        TestThreadLocalContextHolder.put("SurviveThreadBoundary");
+
+        ThreadPoolBulkhead bulkhead = threadPoolBulkheadRegistry
+            .bulkhead(BulkheadDummyService.BACKEND_C);
+
+        assertThat(bulkhead).isNotNull();
+        assertThat(bulkhead.getBulkheadConfig()).isNotNull();
+        assertThat(bulkhead.getBulkheadConfig().getContextPropagator()).isNotNull();
+        assertThat(bulkhead.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(
+            TestThreadLocalContextPropagator.class);
+
+
+        CompletableFuture<Object> future = dummyService
+            .doSomethingAsyncWithThreadLocal();
+
+        Object value = future.get(5, TimeUnit.SECONDS);
+
+        assertThat(value).isEqualTo("SurviveThreadBoundary");
+        // Test Actuator endpoints
+
+        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(
+            "/actuator/bulkheadevents/backendC");
+        List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody()
+            .getBulkheadEvents();
+
+        assertThat(bulkheadEventsByBackend).isNotNull();
+        assertThat(bulkheadEventsByBackend.size()).isEqualTo(2);
+        assertThat(bulkheadEventsByBackend.stream()
+            .filter(it -> it.getType() == BulkheadEvent.Type.CALL_PERMITTED).count() == 1);
+        assertThat(bulkheadEventsByBackend.stream()
+            .filter(it -> it.getType() == BulkheadEvent.Type.CALL_FINISHED).count() == 1);
     }
 
 

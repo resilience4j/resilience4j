@@ -15,9 +15,11 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import io.github.resilience4j.TestThreadLocalContextPropagator;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -32,8 +34,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -49,8 +50,11 @@ public class BulkHeadConfigurationSpringTest {
         assertNotNull(configWithOverrides.bulkheadRegistry);
         assertNotNull(configWithOverrides.bulkheadAspect);
         assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
+        assertNotNull(configWithOverrides.threadPoolBulkheadConfigurationProperties);
         assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
         assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
+        assertTrue(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().containsKey("sharedBackend"));
+        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagator(), TestThreadLocalContextPropagator.class);
         assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
     }
 
@@ -67,6 +71,8 @@ public class BulkHeadConfigurationSpringTest {
         private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
 
         private BulkheadConfigurationProperties bulkheadConfigurationProperties;
+
+        private ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties;
 
         @Bean
         public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
@@ -103,12 +109,28 @@ public class BulkHeadConfigurationSpringTest {
             return bulkheadConfigurationProperties;
         }
 
+        @Bean
+        public ThreadPoolBulkheadConfigurationProperties threadpoolBulkheadConfigurationProperties() {
+            threadPoolBulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationPropertiesTest();
+            return threadPoolBulkheadConfigurationProperties;
+        }
+
         private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
 
             BulkheadConfigurationPropertiesTest() {
                 InstanceProperties instanceProperties = new InstanceProperties();
                 instanceProperties.setBaseConfig("sharedConfig");
                 instanceProperties.setMaxConcurrentCalls(3);
+                getConfigs().put("sharedBackend", instanceProperties);
+            }
+
+        }
+
+        private class ThreadPoolBulkheadConfigurationPropertiesTest extends ThreadPoolBulkheadConfigurationProperties {
+
+            ThreadPoolBulkheadConfigurationPropertiesTest() {
+                InstanceProperties instanceProperties = new InstanceProperties();
+                instanceProperties.setContextPropagator(TestThreadLocalContextPropagator.class);
                 getConfigs().put("sharedBackend", instanceProperties);
             }
 

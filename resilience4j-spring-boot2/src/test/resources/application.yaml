@@ -129,6 +129,7 @@ resilience4j.thread-pool-bulkhead":
       maxThreadPoolSize: 1
       coreThreadPoolSize: 1
       queueCapacity: 1
+      contextPropagator: io.github.resilience4j.TestThreadLocalContextPropagator
 
 
 management.security.enabled: false

@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -98,6 +99,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
         if (properties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
         }
+        if(properties.getContextPropagator() != null){
+            builder.contextPropagator(properties.getContextPropagator());
+        }
 
         return builder.build();
     }
@@ -121,6 +125,9 @@ public class ThreadPoolBulkheadConfigurationProperties {
         private int coreThreadPoolSize;
         private int queueCapacity;
         private Duration keepAliveDuration;
+
+        @Nullable
+        private Class<? extends ContextPropagator> contextPropagator;
 
         public int getMaxThreadPoolSize() {
             return maxThreadPoolSize;
@@ -202,6 +209,23 @@ public class ThreadPoolBulkheadConfigurationProperties {
          */
         public InstanceProperties setBaseConfig(String baseConfig) {
             this.baseConfig = baseConfig;
+            return this;
+        }
+
+        /**
+         * Getter return class type of {@link ContextPropagator}
+         * @return class of {@link ContextPropagator}
+         */
+        public Class<? extends ContextPropagator> getContextPropagator() { return contextPropagator; }
+
+        /**
+         * Set the class type of {@link ContextPropagator}
+         *
+         * @param contextPropagator subclass of {@link ContextPropagator}
+         * @return return builder instance back for fluent set up
+         */
+        public InstanceProperties setContextPropagator(Class<? extends ContextPropagator> contextPropagator) {
+            this.contextPropagator = contextPropagator;
             return this;
         }
     }

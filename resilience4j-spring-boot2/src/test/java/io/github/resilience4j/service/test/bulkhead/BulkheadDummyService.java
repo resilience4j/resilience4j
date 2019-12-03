@@ -10,4 +10,6 @@ public interface BulkheadDummyService {
     void doSomething();
 
     CompletableFuture<String> doSomethingAsync() throws InterruptedException;
+
+    CompletableFuture<Object> doSomethingAsyncWithThreadLocal() throws InterruptedException;
 }
