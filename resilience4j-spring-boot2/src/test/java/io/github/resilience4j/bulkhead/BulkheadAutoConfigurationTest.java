@@ -156,7 +156,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD","dummyFeignClient");
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD", "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomethingAsync);
@@ -200,8 +200,8 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getBulkheadConfig()).isNotNull();
         assertThat(bulkhead.getBulkheadConfig().getContextPropagator()).isNotNull();
-        assertThat(bulkhead.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(
-            TestThreadLocalContextPropagator.class);
+        assertThat(bulkhead.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getContextPropagator().get(0).getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
 
 
         CompletableFuture<Object> future = dummyService
@@ -259,7 +259,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC","backendD", "dummyFeignClient");
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD", "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
@@ -389,7 +389,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC","backendD","dummyFeignClient");
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD", "dummyFeignClient");
 
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(
             "/actuator/bulkheadevents");

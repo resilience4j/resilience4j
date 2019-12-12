@@ -18,8 +18,9 @@
  */
 package io.github.resilience4j.bulkhead.internal;
 
-import io.github.resilience4j.bulkhead.TestThreadLocalContextPropagator;
-import io.github.resilience4j.bulkhead.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
+
+import io.github.resilience4j.bulkhead.TestContextPropagators;
+import io.github.resilience4j.bulkhead.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import org.junit.Before;
@@ -44,7 +45,7 @@ public class FixedThreadPoolBulkheadTest {
             .maxThreadPoolSize(2)
             .coreThreadPoolSize(1)
             .queueCapacity(10)
-            .contextPropagator(TestThreadLocalContextPropagator.class)
+            .contextPropagator(TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.class)
             .keepAliveDuration(Duration.ofMillis(10))
             .build();
         bulkhead = ThreadPoolBulkhead.of("test", config);
@@ -52,7 +53,7 @@ public class FixedThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testSupplierThreadLocalContextPropagator(){
+    public void testSupplierThreadLocalContextPropagator() {
 
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
 
@@ -64,7 +65,7 @@ public class FixedThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testRunnableThreadLocalContextPropagator(){
+    public void testRunnableThreadLocalContextPropagator() {
 
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         AtomicReference reference = new AtomicReference();

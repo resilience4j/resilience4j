@@ -48,6 +48,8 @@ public class ThreadPoolBulkheadConfigTest {
         assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
         assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
+        assertThat(config.getContextPropagator()).isEmpty();
+
     }
 
     @Test
@@ -70,6 +72,7 @@ public class ThreadPoolBulkheadConfigTest {
         assertThat(config.getCoreThreadPoolSize()).isEqualTo(coreThreadPoolSize);
         assertThat(config.getKeepAliveDuration().toMillis()).isEqualTo(maxWait);
         assertThat(config.getQueueCapacity()).isEqualTo(queueCapacity);
+        assertThat(config.getContextPropagator()).isEmpty();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -120,7 +123,8 @@ public class ThreadPoolBulkheadConfigTest {
 
         assertThat(config).isNotNull();
         assertThat(config.getContextPropagator()).isNotNull();
-        assertThat(config.getContextPropagator().getClass()).isEqualTo(TestCtxPropagator.class);
+        assertThat(config.getContextPropagator().size()).isEqualTo(1);
+        assertThat(config.getContextPropagator().get(0).getClass()).isEqualTo(TestCtxPropagator.class);
     }
 
     @Test
@@ -140,20 +144,25 @@ public class ThreadPoolBulkheadConfigTest {
 
         assertThat(config).isNotNull();
         assertThat(config.getContextPropagator()).isNotNull();
-        assertThat(config.getContextPropagator().getClass()).isEqualTo(
-            ContextPropagator.EmptyContextPropagator.class);
+        assertThat(config.getContextPropagator()).isEmpty();
     }
 
     public static class TestCtxPropagator implements ContextPropagator<Object> {
 
         @Override
-        public Supplier<Optional<Object>> retrieve() { return null; }
+        public Supplier<Optional<Object>> retrieve() {
+            return null;
+        }
 
         @Override
-        public Consumer<Optional<Object>> copy() { return null; }
+        public Consumer<Optional<Object>> copy() {
+            return null;
+        }
 
         @Override
-        public Consumer<Optional<Object>> cleanUp() { return null; }
+        public Consumer<Optional<Object>> clear() {
+            return null;
+        }
     }
 
 }

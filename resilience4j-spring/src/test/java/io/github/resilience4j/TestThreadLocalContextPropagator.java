@@ -18,14 +18,14 @@ public class TestThreadLocalContextPropagator<T> implements ContextPropagator<T>
     @Override
     public Consumer<Optional<T>> copy() {
         return (t) -> t.ifPresent(e -> {
-            cleanUp();
+            clear();
             put(e);
         });
     }
 
     @Override
-    public Consumer<Optional<T>> cleanUp() {
-        return (t) -> clear();
+    public Consumer<Optional<T>> clear() {
+        return (t) -> TestThreadLocalContextHolder.clear();
     }
 
     public static class TestThreadLocalContextHolder {

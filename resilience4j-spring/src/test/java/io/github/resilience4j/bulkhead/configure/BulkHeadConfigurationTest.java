@@ -49,14 +49,14 @@ public class BulkHeadConfigurationTest {
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
         assertThat(bulkhead1.getBulkheadConfig().getContextPropagator()).isNotNull();
-        assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
+        assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
+        assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().get(0).getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
 
         ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backend2");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isNotNull();
-        assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(
-            ContextPropagator.EmptyContextPropagator.class);
+        assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isEmpty();
 
 
         assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(2);
@@ -110,21 +110,23 @@ public class BulkHeadConfigurationTest {
             assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(3);
             assertThat(bulkhead1.getBulkheadConfig().getQueueCapacity()).isEqualTo(1);
             assertThat(bulkhead1.getBulkheadConfig().getContextPropagator()).isNotNull();
-            assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(ContextPropagator.EmptyContextPropagator.class);
+            assertThat(bulkhead1.getBulkheadConfig().getContextPropagator()).isEmpty();
+
             // Should get shared config and overwrite core number
             ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backendWithSharedConfig");
             assertThat(bulkhead2).isNotNull();
             assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(4);
             assertThat(bulkhead2.getBulkheadConfig().getQueueCapacity()).isEqualTo(2);
             assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isNotNull();
-            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
+            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
+            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().get(0).getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
 
             // Unknown backend should get default config of Registry
             ThreadPoolBulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
             assertThat(bulkhead3).isNotNull();
             assertThat(bulkhead3.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
             assertThat(bulkhead3.getBulkheadConfig().getContextPropagator()).isNotNull();
-            assertThat(bulkhead3.getBulkheadConfig().getContextPropagator().getClass()).isEqualTo(ContextPropagator.EmptyContextPropagator.class);
+            assertThat(bulkhead3.getBulkheadConfig().getContextPropagator()).isEmpty();
 
             assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(3);
         } catch (Exception e) {
