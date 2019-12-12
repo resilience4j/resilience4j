@@ -99,8 +99,8 @@ public class ThreadPoolBulkheadConfigurationProperties {
         if (properties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
         }
-        if(properties.getContextPropagator() != null){
-            builder.contextPropagator(properties.getContextPropagator());
+        if(properties.getContextPropagators() != null){
+            builder.contextPropagator(properties.getContextPropagators());
         }
 
         return builder.build();
@@ -127,7 +127,7 @@ public class ThreadPoolBulkheadConfigurationProperties {
         private Duration keepAliveDuration;
 
         @Nullable
-        private Class<? extends ContextPropagator> contextPropagator;
+        private Class<? extends ContextPropagator>[] contextPropagators;
 
         public int getMaxThreadPoolSize() {
             return maxThreadPoolSize;
@@ -213,19 +213,19 @@ public class ThreadPoolBulkheadConfigurationProperties {
         }
 
         /**
-         * Getter return class type of {@link ContextPropagator}
-         * @return class of {@link ContextPropagator}
+         * Getter return array of {@link ContextPropagator} class
+         * @return array of {@link ContextPropagator} classes
          */
-        public Class<? extends ContextPropagator> getContextPropagator() { return contextPropagator; }
+        public Class<? extends ContextPropagator>[] getContextPropagators() { return contextPropagators; }
 
         /**
          * Set the class type of {@link ContextPropagator}
          *
-         * @param contextPropagator subclass of {@link ContextPropagator}
+         * @param contextPropagators subclass of {@link ContextPropagator}
          * @return return builder instance back for fluent set up
          */
-        public InstanceProperties setContextPropagator(Class<? extends ContextPropagator> contextPropagator) {
-            this.contextPropagator = contextPropagator;
+        public InstanceProperties setContextPropagator(Class<? extends ContextPropagator>... contextPropagators) {
+            this.contextPropagators = contextPropagators;
             return this;
         }
     }
