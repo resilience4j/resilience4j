@@ -61,7 +61,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
     @Override
     public void bindTo(MeterRegistry registry) {
         for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
-            addMetrics(registry, bulkhead, bulkheadRegistry);
+            addMetrics(registry, bulkhead);
         }
         bulkheadRegistry.getEventPublisher()
             .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));

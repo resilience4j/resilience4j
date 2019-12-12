@@ -60,7 +60,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
     @Override
     public void bindTo(MeterRegistry registry) {
         for (Retry retry : retryRegistry.getAllRetries()) {
-            addMetrics(registry, retry, retryRegistry);
+            addMetrics(registry, retry);
         }
         retryRegistry.getEventPublisher()
             .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));

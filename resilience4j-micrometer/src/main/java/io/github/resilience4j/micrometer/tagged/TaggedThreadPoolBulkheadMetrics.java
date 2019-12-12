@@ -65,7 +65,7 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
     @Override
     public void bindTo(MeterRegistry registry) {
         for (ThreadPoolBulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {
-            addMetrics(registry, bulkhead, bulkheadRegistry);
+            addMetrics(registry, bulkhead);
         }
         bulkheadRegistry.getEventPublisher()
             .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));

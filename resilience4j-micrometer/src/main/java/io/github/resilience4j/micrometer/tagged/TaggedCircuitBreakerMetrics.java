@@ -63,7 +63,7 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
     @Override
     public void bindTo(MeterRegistry registry) {
         for (CircuitBreaker circuitBreaker : circuitBreakerRegistry.getAllCircuitBreakers()) {
-            addMetrics(registry, circuitBreaker, circuitBreakerRegistry);
+            addMetrics(registry, circuitBreaker);
         }
         circuitBreakerRegistry.getEventPublisher()
             .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));

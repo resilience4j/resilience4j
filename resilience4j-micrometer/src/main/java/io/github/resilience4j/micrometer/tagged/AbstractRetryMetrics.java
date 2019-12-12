@@ -17,7 +17,6 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -37,43 +36,42 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-
-    protected void addMetrics(MeterRegistry meterRegistry, Retry retry, RetryRegistry retryRegistry) {
-        registerMetrics(meterRegistry, retry, mapToTagsList(retryRegistry.getTags().toJavaMap()));
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, Retry retry) {
         List<Tag> customTags = mapToTagsList(retry.getTags()
-                .toJavaMap());
+            .toJavaMap());
         registerMetrics(meterRegistry, retry, customTags);
     }
 
     private void registerMetrics(MeterRegistry meterRegistry, Retry retry, List<Tag> customTags) {
         Set<Meter.Id> idSet = new HashSet<>();
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
-                .description("The number of successful calls without a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "successful_without_retry")
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
-                .description("The number of successful calls after a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "successful_with_retry")
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
-                .description("The number of failed calls without a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "failed_without_retry")
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry, rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
-                .description("The number of failed calls after a retry attempt")
-                .tag(TagNames.NAME, retry.getName())
-                .tag(TagNames.KIND, "failed_with_retry")
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+            rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
+            .description("The number of successful calls without a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "successful_without_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+            rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
+            .description("The number of successful calls after a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "successful_with_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+            rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
+            .description("The number of failed calls without a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "failed_without_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+            rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
+            .description("The number of failed calls after a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "failed_with_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
         meterIdMap.put(retry.getName(), idSet);
     }
 
@@ -83,8 +81,8 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          *
          * @return The builder.
          */
@@ -123,7 +121,8 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
             private final MetricNames metricNames = new MetricNames();
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_RETRY_CALLS} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_RETRY_CALLS} with a
+             * given one.
              *
              * @param callsMetricName The metric name for retry calls.
              * @return The builder.

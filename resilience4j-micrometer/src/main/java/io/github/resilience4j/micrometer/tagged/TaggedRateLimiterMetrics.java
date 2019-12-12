@@ -61,7 +61,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
     @Override
     public void bindTo(MeterRegistry registry) {
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {
-            addMetrics(registry, rateLimiter, rateLimiterRegistry);
+            addMetrics(registry, rateLimiter);
         }
         rateLimiterRegistry.getEventPublisher()
             .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
