@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,26 +37,29 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead) {
-        Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = bulkhead.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
-        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getAvailableConcurrentCalls())
-                .description("The number of available permissions")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead, bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
-                .description("The maximum number of available permissions")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
-
-        meterIdMap.put(bulkhead.getName(), idSet);
+        List<Tag> customTags = mapToTagsList(bulkhead.getTags().toJavaMap());
+        addMetrics(meterRegistry, bulkhead, customTags);
     }
 
+    private void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead, List<Tag> customTags) {
+        Set<Meter.Id> idSet = new HashSet<>();
+
+        idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead,
+            bh -> bh.getMetrics().getAvailableConcurrentCalls())
+            .description("The number of available permissions")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getMaxAllowedConcurrentCallsMetricName(), bulkhead,
+            bh -> bh.getMetrics().getMaxAllowedConcurrentCalls())
+            .description("The maximum number of available permissions")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+
+        meterIdMap.put(bulkhead.getName(), idSet);
+
+    }
 
     /**
      * Defines possible configuration for metric names.
@@ -77,8 +79,8 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          *
          * @return The builder.
          */
@@ -96,8 +98,8 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for bulkhead concurrent calls,
-         * defaults to {@value DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME}.
+         * Returns the metric name for bulkhead concurrent calls, defaults to {@value
+         * DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME}.
          *
          * @return The available concurrent calls metric name.
          */
@@ -106,8 +108,8 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for bulkhead max available concurrent calls,
-         * defaults to {@value DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME}.
+         * Returns the metric name for bulkhead max available concurrent calls, defaults to {@value
+         * DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME}.
          *
          * @return The max allowed concurrent calls metric name.
          */
@@ -123,9 +125,11 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
             private final MetricNames metricNames = new MetricNames();
 
             /**
-             * Overrides the default metric name {@value TaggedBulkheadMetrics.MetricNames#DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value TaggedBulkheadMetrics.MetricNames#DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME}
+             * with a given one.
              *
-             * @param availableConcurrentCallsMetricName The available concurrent calls metric name.
+             * @param availableConcurrentCallsMetricName The available concurrent calls metric
+             *                                           name.
              * @return The builder.
              */
             public Builder availableConcurrentCallsMetricName(
@@ -136,9 +140,11 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
             }
 
             /**
-             * Overrides the default metric name {@value TaggedBulkheadMetrics.MetricNames#DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value TaggedBulkheadMetrics.MetricNames#DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME}
+             * with a given one.
              *
-             * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls metric name.
+             * @param maxAllowedConcurrentCallsMetricName The max allowed concurrent calls metric
+             *                                            name.
              * @return The builder.
              */
             public Builder maxAllowedConcurrentCallsMetricName(

@@ -24,7 +24,11 @@ import io.github.resilience4j.core.Registry;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -130,6 +134,11 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     @Override
     public C getDefaultConfig() {
         return configurations.get(DEFAULT_CONFIG);
+    }
+
+    @Override
+    public Map<String, String> getTags() {
+        return registryTags;
     }
 
     @Override

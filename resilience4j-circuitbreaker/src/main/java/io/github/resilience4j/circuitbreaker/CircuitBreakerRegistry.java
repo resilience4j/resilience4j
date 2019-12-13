@@ -113,6 +113,23 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
 
     /**
      * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
+     * CircuitBreaker registry event consumer.
+     *
+     * @param configs               a Map of shared CircuitBreaker configurations.
+     * @param registryEventConsumer a CircuitBreaker registry event consumer.
+     * @param tags                  default tags to add to the registry
+     * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
+     * CircuitBreaker registry event consumer.
+     */
+    static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs,
+        RegistryEventConsumer<CircuitBreaker> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        return new InMemoryCircuitBreakerRegistry(configs, registryEventConsumer, tags);
+    }
+
+
+    /**
+     * Creates a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations and a
      * list of CircuitBreaker registry event consumers.
      *
      * @param configs                a Map of shared CircuitBreaker configurations.

@@ -69,6 +69,14 @@ public final class InMemoryCircuitBreakerRegistry extends
     }
 
     public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs,
+        RegistryEventConsumer<CircuitBreaker> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()),
+            registryEventConsumer, tags);
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs,
         List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers) {
         this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()),
             registryEventConsumers);
@@ -98,6 +106,12 @@ public final class InMemoryCircuitBreakerRegistry extends
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig,
         RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
+    }
+
+    public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig,
+        RegistryEventConsumer<CircuitBreaker> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        super(defaultConfig, registryEventConsumer, tags);
     }
 
     public InMemoryCircuitBreakerRegistry(CircuitBreakerConfig defaultConfig,

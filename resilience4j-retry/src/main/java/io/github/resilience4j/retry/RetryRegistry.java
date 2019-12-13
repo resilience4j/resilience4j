@@ -118,6 +118,22 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
     }
 
     /**
+     * Creates a RetryRegistry with a Map of shared Retry configurations and a Retry registry event
+     * consumer.
+     *
+     * @param configs               a Map of shared Retry configurations.
+     * @param registryEventConsumer a Retry registry event consumer.
+     * @param tags                  default tags to add to the registry
+     * @return a RetryRegistry with a Map of shared Retry configurations and a Retry registry event
+     * consumer.
+     */
+    static RetryRegistry of(Map<String, RetryConfig> configs,
+        RegistryEventConsumer<Retry> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        return new InMemoryRetryRegistry(configs, registryEventConsumer, tags);
+    }
+
+    /**
      * Creates a RetryRegistry with a Map of shared Retry configurations and a list of Retry
      * registry event consumers.
      *

@@ -20,6 +20,8 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,8 +50,11 @@ public class RateLimiterConfigurationPropertiesTest {
         RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         rateLimiterConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String,String> globalTagsForRateLimiters=new HashMap<>();
+        globalTagsForRateLimiters.put("testKey1","testKet2");
+        rateLimiterConfigurationProperties.setTags(globalTagsForRateLimiters);
         //Then
+        assertThat(rateLimiterConfigurationProperties.getTags().size()).isEqualTo(1);
         assertThat(rateLimiterConfigurationProperties.getInstances().size()).isEqualTo(2);
         assertThat(rateLimiterConfigurationProperties.getLimiters().size()).isEqualTo(2);
         RateLimiterConfig rateLimiter = rateLimiterConfigurationProperties

@@ -1,5 +1,8 @@
 resilience4j.retry:
   retryAspectOrder: 399
+  tags:
+    tag1: tag1Value
+    tag2: tag2Value
   configs:
     default:
       maxRetryAttempts: 3
@@ -28,6 +31,9 @@ resilience4j.retry:
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
+  tags:
+    tag1: tag1Value
+    tag2: tag2Value
   configs:
     default:
       slidingWindowSize: 100
@@ -82,6 +88,9 @@ resilience4j.circuitbreaker:
 
 
 resilience4j.ratelimiter:
+  tags:
+    tag1: tag1Value
+    tag2: tag2Value
   rateLimiterAspectOrder: 401
   configs:
     default:
@@ -102,6 +111,9 @@ resilience4j.ratelimiter:
       baseConfig: default
 
 resilience4j.bulkhead:
+  tags:
+    tag1: tag1Value
+    tag2: tag2Value
   configs:
     default:
       maxWaitDuration: 10
@@ -116,6 +128,9 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 3
 
 resilience4j.thread-pool-bulkhead":
+  tags:
+    tag1: tag1Value
+    tag2: tag2Value
   configs:
     default:
       maxThreadPoolSize: 4
@@ -124,6 +139,7 @@ resilience4j.thread-pool-bulkhead":
       keepAliveDuration: 1s
   backends:
     backendB:
+      tags:
       baseConfig: default
     backendC:
       maxThreadPoolSize: 1

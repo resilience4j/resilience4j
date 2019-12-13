@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Robert Winkler
+ * Copyright 2017 Robert Winkler,Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,8 @@ public class CircuitBreakerConfiguration {
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getValue())));
 
-        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer);
+        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(circuitBreakerProperties.getTags()));
     }
 
     /**
