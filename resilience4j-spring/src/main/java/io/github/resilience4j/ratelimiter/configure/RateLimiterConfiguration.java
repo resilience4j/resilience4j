@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Bohdan Storozhuk
+ * Copyright 2017 Bohdan Storozhuk, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,8 +57,9 @@ public class RateLimiterConfiguration {
         registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry,
             rateLimiterProperties);
         rateLimiterProperties.getInstances().forEach(
-            (name, properties) -> rateLimiterRegistry
-                .rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
+            (name, properties) ->
+                rateLimiterRegistry
+                    .rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
         );
         return rateLimiterRegistry;
     }
@@ -85,7 +86,8 @@ public class RateLimiterConfiguration {
                 entry -> rateLimiterConfigurationProperties
                     .createRateLimiterConfig(entry.getValue())));
 
-        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer);
+        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(rateLimiterConfigurationProperties.getTags()));
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 lespinsideg, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,8 +60,8 @@ public class BulkheadConfiguration {
             bulkheadRegistryEventConsumer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
-        bulkheadConfigurationProperties.getInstances().forEach(
-            (name, properties) -> bulkheadRegistry
+        bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
+            bulkheadRegistry
                 .bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
         return bulkheadRegistry;
     }
@@ -87,7 +87,8 @@ public class BulkheadConfiguration {
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
 
-        return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer);
+        return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(bulkheadConfigurationProperties.getTags()));
     }
 
     /**

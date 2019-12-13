@@ -1,6 +1,5 @@
-package io.github.resilience4j.common.retry.configuration;
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +13,9 @@ package io.github.resilience4j.common.retry.configuration;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.common.retry.configuration;
 
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -32,7 +33,7 @@ import java.util.function.Predicate;
 /**
  * Main spring properties for retry configuration
  */
-public class RetryConfigurationProperties {
+public class RetryConfigurationProperties extends CommonProperties {
 
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();

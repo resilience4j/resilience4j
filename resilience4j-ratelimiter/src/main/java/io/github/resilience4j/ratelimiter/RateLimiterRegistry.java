@@ -119,6 +119,22 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
     }
 
     /**
+     * Creates a RateLimiterRegistry with a Map of shared RateLimiter configurations and a
+     * RateLimiter registry event consumer.
+     *
+     * @param configs               a Map of shared RateLimiter configurations.
+     * @param registryEventConsumer a RateLimiter registry event consumer.
+     * @param tags                  default tags to add to the registry
+     * @return a RateLimiterRegistry with a Map of shared RateLimiter configurations and a
+     * RateLimiter registry event consumer.
+     */
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
+        RegistryEventConsumer<RateLimiter> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        return new InMemoryRateLimiterRegistry(configs, registryEventConsumer, tags);
+    }
+
+    /**
      * Creates a RateLimiterRegistry with a Map of shared RateLimiter configurations and a list of
      * RateLimiter registry event consumers.
      *

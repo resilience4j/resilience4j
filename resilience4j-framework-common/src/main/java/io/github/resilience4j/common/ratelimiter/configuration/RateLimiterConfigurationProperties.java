@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -27,7 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class RateLimiterConfigurationProperties {
+public class RateLimiterConfigurationProperties extends CommonProperties{
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -56,7 +57,7 @@ public class RateLimiterConfigurationProperties {
     }
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-                                                        InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
             baseProperties);
@@ -64,7 +65,7 @@ public class RateLimiterConfigurationProperties {
     }
 
     private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
-                                                     @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties) {
         if (instanceProperties == null) {
             return builder.build();
         }
@@ -249,7 +250,8 @@ public class RateLimiterConfigurationProperties {
         }
 
         /**
-         * @return the flag that controls if health indicators are allowed to go into a failed (DOWN) status.
+         * @return the flag that controls if health indicators are allowed to go into a failed
+         * (DOWN) status.
          * @see #setAllowHealthIndicatorToFail(Boolean)
          */
         @Nullable
@@ -258,13 +260,15 @@ public class RateLimiterConfigurationProperties {
         }
 
         /**
-         * When set to true, it allows the health indicator to go to a failed (DOWN) status.
-         * By default, health indicators for rate limiters will never go into an unhealthy state.
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status. By
+         * default, health indicators for rate limiters will never go into an unhealthy state.
          *
-         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to fail
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to
+         *                                   fail
          * @return the InstanceProperties
          */
-        public InstanceProperties setAllowHealthIndicatorToFail(Boolean allowHealthIndicatorToFail) {
+        public InstanceProperties setAllowHealthIndicatorToFail(
+            Boolean allowHealthIndicatorToFail) {
             this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
             return this;
         }

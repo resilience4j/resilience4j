@@ -18,9 +18,13 @@ package io.github.resilience4j.common.bulkhead.configuration;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,8 +46,12 @@ public class BulkheadConfigurationPropertiesTest {
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
         bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
+        Map<String,String> tags=new HashMap<>();
+        tags.put("testKey1","testKet2");
+        bulkheadConfigurationProperties.setTags(tags);
 
         //Then
+        assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
         assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
@@ -132,9 +140,12 @@ public class BulkheadConfigurationPropertiesTest {
         BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         bulkheadConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String,String> globalTags=new HashMap<>();
+        globalTags.put("testKey1","testKet2");
+        bulkheadConfigurationProperties.setTags(globalTags);
         //Then
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
             .createBulkheadConfig(instanceProperties1);
         assertThat(bulkhead1).isNotNull();

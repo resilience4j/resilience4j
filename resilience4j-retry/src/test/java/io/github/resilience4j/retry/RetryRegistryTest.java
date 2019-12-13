@@ -22,6 +22,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,6 +52,15 @@ public class RetryRegistryTest {
     public void testCreateWithNullConfig() {
         assertThatThrownBy(() -> RetryRegistry.of((RetryConfig) null))
             .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void shouldInitRegistryTags() {
+        RetryConfig retryConfig = RetryConfig.ofDefaults();
+        Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
+        RetryRegistry registry = RetryRegistry.of(retryConfigs,new NoOpRetryEventConsumer(),io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).isNotEmpty();
+        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
     }
 
     @Test
