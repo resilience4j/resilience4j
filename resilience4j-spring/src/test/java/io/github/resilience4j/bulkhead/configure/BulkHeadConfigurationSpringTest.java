@@ -23,6 +23,7 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
@@ -54,7 +56,9 @@ public class BulkHeadConfigurationSpringTest {
         assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
         assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
         assertTrue(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().containsKey("sharedBackend"));
-        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators(), TestThreadLocalContextPropagator.class);
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()).isNotNull();
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators().length).isEqualTo(1);
+        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()[0], TestThreadLocalContextPropagator.class);
         assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
     }
 
