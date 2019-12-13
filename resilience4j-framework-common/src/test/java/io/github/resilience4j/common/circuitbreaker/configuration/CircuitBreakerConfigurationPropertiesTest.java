@@ -21,6 +21,8 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -111,9 +113,12 @@ public class CircuitBreakerConfigurationPropertiesTest {
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
         circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String,String> globalTagsForCircuitBreakers=new HashMap<>();
+        globalTagsForCircuitBreakers.put("testKey1","testKet2");
+        circuitBreakerConfigurationProperties.setTags(globalTagsForCircuitBreakers);
         //Then
         assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getTags()).isNotEmpty();
         assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
         final CircuitBreakerConfig circuitBreakerConfig1 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig(instanceProperties1);

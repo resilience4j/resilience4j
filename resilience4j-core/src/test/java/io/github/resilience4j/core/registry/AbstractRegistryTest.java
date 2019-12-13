@@ -1,5 +1,7 @@
 package io.github.resilience4j.core.registry;
 
+import io.vavr.Tuple;
+import io.vavr.collection.Map;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -12,6 +14,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 public class AbstractRegistryTest {
+
+    @Test
+    public void shouldInitRegistryTags(){
+        TestRegistry testRegistry = new TestRegistry(io.vavr.collection.HashMap.of("Tag1","Tag1Value"));
+        assertThat(testRegistry.getTags()).isNotEmpty();
+        assertThat(testRegistry.getTags()).containsOnly(Tuple.of("Tag1","Tag1Value"));
+    }
+
 
     @Test
     public void shouldContainDefaultAndCustomConfiguration() {
@@ -148,6 +158,11 @@ public class AbstractRegistryTest {
 
         TestRegistry(RegistryEventConsumer<String> registryEventConsumer) {
             super("default", registryEventConsumer);
+            this.configurations.put(DEFAULT_CONFIG, "default");
+        }
+
+        TestRegistry(Map<String,String> tags) {
+            super("default", tags);
             this.configurations.put(DEFAULT_CONFIG, "default");
         }
     }

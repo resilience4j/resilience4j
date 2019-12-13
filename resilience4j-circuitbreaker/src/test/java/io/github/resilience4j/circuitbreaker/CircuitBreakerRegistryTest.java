@@ -24,6 +24,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.Tuple;
 import org.junit.Test;
 
 import java.util.*;
@@ -41,6 +42,16 @@ public class CircuitBreakerRegistryTest {
         }
 
         return Optional.empty();
+    }
+
+    @Test
+    public void shouldInitRegistryTags() {
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
+        Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
+            .singletonMap("default", circuitBreakerConfig);
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(circuitBreakerConfigs,new NoOpCircuitBreakerEventConsumer(),io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).isNotEmpty();
+        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
     }
 
     @Test

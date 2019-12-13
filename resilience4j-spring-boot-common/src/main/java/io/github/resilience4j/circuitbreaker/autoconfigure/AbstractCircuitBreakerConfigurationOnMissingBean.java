@@ -55,11 +55,9 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
         CircuitBreakerRegistry circuitBreakerRegistry =
             circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties,
                 circuitBreakerRegistryEventConsumer);
-
         // Register the event consumers
         circuitBreakerConfiguration
             .registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-
         // Initialize backends that were initially configured.
         circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
 

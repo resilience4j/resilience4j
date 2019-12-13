@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,23 +37,26 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter) {
-        Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = rateLimiter.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
-        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
-                .description("The number of available permissions")
-                .tag(TagNames.NAME, rateLimiter.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
-                .description("The number of waiting threads")
-                .tag(TagNames.NAME, rateLimiter.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        List<Tag> customTags = mapToTagsList(rateLimiter.getTags()
+            .toJavaMap());
+        registerMetrics(meterRegistry, rateLimiter, customTags);
+    }
 
+    private void registerMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter,
+        List<Tag> customTags) {
+        Set<Meter.Id> idSet = new HashSet<>();
+        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter,
+            rl -> rl.getMetrics().getAvailablePermissions())
+            .description("The number of available permissions")
+            .tag(TagNames.NAME, rateLimiter.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter,
+            rl -> rl.getMetrics().getNumberOfWaitingThreads())
+            .description("The number of waiting threads")
+            .tag(TagNames.NAME, rateLimiter.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
         meterIdMap.put(rateLimiter.getName(), idSet);
     }
 
@@ -70,8 +72,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          *
          * @return The builder.
          */
@@ -89,7 +91,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
+         * Returns the metric name for available permissions, defaults to {@value
+         * DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
          *
          * @return The available permissions metric name.
          */
@@ -98,7 +101,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}.
+         * Returns the metric name for waiting threads, defaults to {@value
+         * DEFAULT_WAITING_THREADS_METRIC_NAME}.
          *
          * @return The waiting threads metric name.
          */
@@ -114,7 +118,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
             private final MetricNames metricNames = new MetricNames();
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}
+             * with a given one.
              *
              * @param availablePermissionsMetricName The available permissions metric name.
              * @return The builder.
@@ -126,7 +131,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
             }
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME}
+             * with a given one.
              *
              * @param waitingThreadsMetricName The waiting threads metric name.
              * @return The builder.

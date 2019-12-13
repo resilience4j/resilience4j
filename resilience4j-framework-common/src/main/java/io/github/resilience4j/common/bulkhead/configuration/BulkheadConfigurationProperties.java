@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas , Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -26,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class BulkheadConfigurationProperties {
+public class BulkheadConfigurationProperties extends CommonProperties {
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();

@@ -19,6 +19,7 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -36,7 +37,7 @@ import java.util.function.Predicate;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
 
-public class CircuitBreakerConfigurationProperties {
+public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -300,7 +301,6 @@ public class CircuitBreakerConfigurationProperties {
          */
         private Double randomizedWaitFactor;
 
-
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.
          *
@@ -474,7 +474,8 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         /**
-         * @return the flag that controls if health indicators are allowed to go into a failed (DOWN) status.
+         * @return the flag that controls if health indicators are allowed to go into a failed
+         * (DOWN) status.
          * @see #setAllowHealthIndicatorToFail(Boolean)
          */
         @Nullable
@@ -483,13 +484,15 @@ public class CircuitBreakerConfigurationProperties {
         }
 
         /**
-         * When set to true, it allows the health indicator to go to a failed (DOWN) status.
-         * By default, health indicators for circuit breakers will never go into an unhealthy state.
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status. By
+         * default, health indicators for circuit breakers will never go into an unhealthy state.
          *
-         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to fail
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to
+         *                                   fail
          * @return the InstanceProperties
          */
-        public InstanceProperties setAllowHealthIndicatorToFail(Boolean allowHealthIndicatorToFail) {
+        public InstanceProperties setAllowHealthIndicatorToFail(
+            Boolean allowHealthIndicatorToFail) {
             this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
             return this;
         }

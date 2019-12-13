@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 lespinsideg , Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,19 +69,22 @@ public class ThreadPoolBulkheadConfiguration {
     /**
      * Initializes a bulkhead registry.
      *
-     * @param bulkheadConfigurationProperties The bulkhead configuration properties.
+     * @param threadPoolBulkheadConfigurationProperties The bulkhead configuration properties.
      * @return a ThreadPoolBulkheadRegistry
      */
     private ThreadPoolBulkheadRegistry createBulkheadRegistry(
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
+        ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
-        Map<String, ThreadPoolBulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
+        Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties
+            .getConfigs()
             .entrySet()
             .stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, entry -> bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig(entry.getValue())));
+            .collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> threadPoolBulkheadConfigurationProperties
+                    .createThreadPoolBulkheadConfig(entry.getValue())));
 
-        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer);
+        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(threadPoolBulkheadConfigurationProperties.getTags()));
     }
 
     /**

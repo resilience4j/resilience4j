@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,40 +37,46 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead) {
+        List<Tag> customTags = mapToTagsList(bulkhead.getTags().toJavaMap());
+        addMetrics(meterRegistry, bulkhead, customTags);
+    }
+
+    private void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead,
+        List<Tag> customTags) {
         Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = bulkhead.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
-        idSet.add(Gauge.builder(names.getQueueDepthMetricName(), bulkhead, bh -> bh.getMetrics().getQueueDepth())
-                .description("The queue depth")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getThreadPoolSizeMetricName(), bulkhead, bh -> bh.getMetrics().getThreadPoolSize())
-                .description("The thread pool size")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getQueueDepthMetricName(), bulkhead,
+            bh -> bh.getMetrics().getQueueDepth())
+            .description("The queue depth")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getThreadPoolSizeMetricName(), bulkhead,
+            bh -> bh.getMetrics().getThreadPoolSize())
+            .description("The thread pool size")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
 
-        idSet.add(Gauge.builder(names.getQueueCapacityMetricName(), bulkhead, bh -> bh.getMetrics().getQueueCapacity())
-                .description("The queue capacity")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getQueueCapacityMetricName(), bulkhead,
+            bh -> bh.getMetrics().getQueueCapacity())
+            .description("The queue capacity")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
 
-        idSet.add(Gauge.builder(names.getMaxThreadPoolSizeMetricName(), bulkhead, bh -> bh.getMetrics().getMaximumThreadPoolSize())
-                .description("The maximum thread pool size")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getMaxThreadPoolSizeMetricName(), bulkhead,
+            bh -> bh.getMetrics().getMaximumThreadPoolSize())
+            .description("The maximum thread pool size")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
 
-        idSet.add(Gauge.builder(names.getCoreThreadPoolSizeMetricName(), bulkhead, bh -> bh.getMetrics().getCoreThreadPoolSize())
-                .description("The core thread pool size")
-                .tag(TagNames.NAME, bulkhead.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCoreThreadPoolSizeMetricName(), bulkhead,
+            bh -> bh.getMetrics().getCoreThreadPoolSize())
+            .description("The core thread pool size")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
 
         meterIdMap.put(bulkhead.getName(), idSet);
     }
@@ -95,12 +100,13 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         private String maxThreadPoolSizeMetricName = DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME;
         private String coreThreadPoolSizeMetricName = DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME;
         private String queueCapacityMetricName = DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME;
+
         private MetricNames() {
         }
 
         /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
+         * Returns a builder for creating custom metric names. Note that names have default values,
+         * so only desired metrics can be renamed.
          *
          * @return The builder.
          */
@@ -118,8 +124,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for queue depth,
-         * defaults to {@value DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME}.
+         * Returns the metric name for queue depth, defaults to {@value
+         * DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME}.
          *
          * @return The queue depth metric name.
          */
@@ -128,8 +134,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for thread pool size,
-         * defaults to {@value DEFAULT_THREAD_POOL_SIZE_METRIC_NAME}.
+         * Returns the metric name for thread pool size, defaults to {@value
+         * DEFAULT_THREAD_POOL_SIZE_METRIC_NAME}.
          *
          * @return The thread pool size metric name.
          */
@@ -138,8 +144,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for max thread pool size,
-         * defaults to {@value DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME}.
+         * Returns the metric name for max thread pool size, defaults to {@value
+         * DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME}.
          *
          * @return The max thread pool size metric name.
          */
@@ -148,8 +154,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for core thread pool size,
-         * defaults to {@value DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME}.
+         * Returns the metric name for core thread pool size, defaults to {@value
+         * DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME}.
          *
          * @return The core thread pool size metric name.
          */
@@ -158,8 +164,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         }
 
         /**
-         * Returns the metric name for queue capacity,
-         * defaults to {@value DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME}.
+         * Returns the metric name for queue capacity, defaults to {@value
+         * DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME}.
          *
          * @return The queue capacity metric name.
          */
@@ -175,7 +181,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             private final MetricNames metricNames = new MetricNames();
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME}
+             * with a given one.
              *
              * @param queueDepthMetricName The queue depth metric name.
              * @return The builder.
@@ -186,7 +193,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             }
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_THREAD_POOL_SIZE_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_THREAD_POOL_SIZE_METRIC_NAME}
+             * with a given one.
              *
              * @param threadPoolSizeMetricName The thread pool size metric name.
              * @return The builder.
@@ -197,7 +205,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             }
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME}
+             * with a given one.
              *
              * @param maxThreadPoolSizeMetricName The max thread pool size metric name.
              * @return The builder.
@@ -209,7 +218,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             }
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME}
+             * with a given one.
              *
              * @param coreThreadPoolSizeMetricName The core thread pool size metric name.
              * @return The builder.
@@ -221,7 +231,8 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             }
 
             /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME} with a given one.
+             * Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME}
+             * with a given one.
              *
              * @param queueCapacityMetricName The queue capacity metric name.
              * @return The builder.
