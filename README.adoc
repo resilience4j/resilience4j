@@ -370,8 +370,8 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 [cols="4*"]
 |===
 
-|slides
-|https://www.slideshare.net/nfrankel/goto-berlin-battle-of-the-circuit-breakers-resilience4j-vs-istio[Battle of the Circuit Breakers: Resilience4J vs Istio]
+|0:37
+|https://www.youtube.com/watch?v=YXP6RKdQkz0[Battle of the Circuit Breakers: Resilience4J vs Istio]
 |Nicolas Frankel
 |GOTO Berlin
 
