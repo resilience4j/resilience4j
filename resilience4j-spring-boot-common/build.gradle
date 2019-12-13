@@ -3,8 +3,6 @@ dependencies {
 
     compileOnly(libraries.spring_boot2_aop)
     compileOnly(libraries.spring_boot2_actuator)
-    compileOnly(libraries.spring_boot2_config_processor)
-    compileOnly(libraries.spring_boot2_autoconfigure_processor)
 
     testCompile project(':resilience4j-reactor')
     testCompile project(':resilience4j-rxjava2')
