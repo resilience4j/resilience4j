@@ -54,7 +54,7 @@ public class BulkHeadConfigurationSpringTest {
         assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
         assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
         assertTrue(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().containsKey("sharedBackend"));
-        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagator(), TestThreadLocalContextPropagator.class);
+        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators(), TestThreadLocalContextPropagator.class);
         assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
     }
 
