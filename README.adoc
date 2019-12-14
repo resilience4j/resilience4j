@@ -63,6 +63,8 @@ https://mvnrepository.com/artifact/io.github.resilience4j[*pick what you need*].
 
 Setup and usage is described in our *https://resilience4j.readme.io/docs[User Guide]*.
 
+- https://github.com/resilience4j-docs-ja/resilience4j-docs-ja[有志による日本語訳(非公式) Japanese translation by volunteers(Unofficial)]
+
 == Overview
 
 Resilience4j provides several core modules and add-on modules:
