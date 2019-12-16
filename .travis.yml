@@ -1,7 +1,7 @@
 dist: trusty
 language: java
-sudo: false
-matrix:
+os: linux
+jobs:
   include:
     - jdk: oraclejdk8
       env: PUBLISH=true
@@ -9,8 +9,10 @@ matrix:
 before_install:
   - chmod +x gradlew
 after_success:
-  - test -n $SONAR_TOKEN && ./gradlew sonarqube
-  - test $TRAVIS_BRANCH = "master" && test -n $BINTRAY_USER && test -n $PUBLISH && ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+  - if [ -n "$SONAR_TOKEN" ]; then ./gradlew sonarqube; fi
+  - if [ "$TRAVIS_BRANCH" = "master" ] &&  [ -n "$BINTRAY_USER" ] && [ -n "$PUBLISH" ]; then
+      ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}";
+    fi
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
