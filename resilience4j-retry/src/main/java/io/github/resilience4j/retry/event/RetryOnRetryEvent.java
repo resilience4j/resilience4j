@@ -34,11 +34,11 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
     @Override
     public String toString() {
         return String.format(
-            "%s: Retry '%s', waiting %s until attempt #%d. Last attempt failed with exception %s",
+            "%s: Retry '%s', waiting %s until attempt '%d'. Last attempt failed with exception '%s'.",
             getCreationTime(),
             getName(),
             getWaitInterval(),
             getNumberOfRetryAttempts(),
-            getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            getLastThrowable());
     }
 }
