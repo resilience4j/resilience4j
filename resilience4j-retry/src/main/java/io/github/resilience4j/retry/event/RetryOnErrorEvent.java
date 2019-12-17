@@ -18,13 +18,15 @@
  */
 package io.github.resilience4j.retry.event;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 /**
  * A RetryEvent which informs that a call has been retried, but still failed, such that the the
  * maximum number of attempts has been reached. It will not be retried any more.
  */
 public class RetryOnErrorEvent extends AbstractRetryEvent {
 
-    public RetryOnErrorEvent(String name, int numberOfAttempts, Throwable lastThrowable) {
+    public RetryOnErrorEvent(String name, int numberOfAttempts, @Nullable Throwable lastThrowable) {
         super(name, numberOfAttempts, lastThrowable);
     }
 
@@ -40,6 +42,6 @@ public class RetryOnErrorEvent extends AbstractRetryEvent {
             getCreationTime(),
             getName(),
             getNumberOfRetryAttempts(),
-            getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            getLastThrowable());
     }
 }
