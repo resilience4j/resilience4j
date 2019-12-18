@@ -18,13 +18,15 @@
  */
 package io.github.resilience4j.retry.event;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 /**
  * A RetryEvent which informs that a call has been retried and a retry was successful. This event is
  * not published when a call was successful without a retry attempt.
  */
 public class RetryOnSuccessEvent extends AbstractRetryEvent {
 
-    public RetryOnSuccessEvent(String name, int currentNumOfAttempts, Throwable lastThrowable) {
+    public RetryOnSuccessEvent(String name, int currentNumOfAttempts, @Nullable Throwable lastThrowable) {
         super(name, currentNumOfAttempts, lastThrowable);
     }
 
@@ -40,6 +42,6 @@ public class RetryOnSuccessEvent extends AbstractRetryEvent {
             getCreationTime(),
             getName(),
             getNumberOfRetryAttempts(),
-            getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            getLastThrowable());
     }
 }

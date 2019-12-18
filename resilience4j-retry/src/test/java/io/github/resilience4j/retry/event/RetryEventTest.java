@@ -21,6 +21,7 @@ package io.github.resilience4j.retry.event;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import static io.github.resilience4j.retry.event.RetryEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,14 @@ public class RetryEventTest {
     }
 
     @Test
+    public void testRetryOnErrorEventWithNullLastThrowable() {
+        RetryOnErrorEvent retryOnErrorEvent = new RetryOnErrorEvent("test", 2, null);
+        assertThat(retryOnErrorEvent.getLastThrowable()).isNull();
+        assertThat(retryOnErrorEvent.toString()).contains(
+            "Retry 'test' recorded a failed retry attempt. Number of retry attempts: '2'. Giving up. Last exception was: 'null'.");
+    }
+
+    @Test
     public void testRetryOnSuccessEvent() {
         RetryOnSuccessEvent retryOnSuccessEvent = new RetryOnSuccessEvent("test", 2,
             new IOException("Bla"));
@@ -52,6 +61,14 @@ public class RetryEventTest {
     }
 
     @Test
+    public void testRetryOnSuccessEventWithNullLastThrowable() {
+        RetryOnSuccessEvent retryOnSuccessEvent = new RetryOnSuccessEvent("test", 2, null);
+        assertThat(retryOnSuccessEvent.getLastThrowable()).isNull();
+        assertThat(retryOnSuccessEvent.toString()).contains(
+            "Retry 'test' recorded a successful retry attempt. Number of retry attempts: '2', Last exception was: 'null'.");
+    }
+
+    @Test
     public void testRetryOnIgnoredErrorEvent() {
         RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test",
             new IOException("Bla"));
@@ -61,6 +78,35 @@ public class RetryEventTest {
         assertThat(retryOnIgnoredErrorEvent.getLastThrowable()).isInstanceOf(IOException.class);
         assertThat(retryOnIgnoredErrorEvent.toString()).contains(
             "Retry 'test' recorded an error which has been ignored: 'java.io.IOException: Bla'.");
+    }
+
+    @Test
+    public void testRetryOnIgnoredErrorEventWithNullLastThrowable() {
+        RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test", null);
+        assertThat(retryOnIgnoredErrorEvent.getLastThrowable()).isNull();
+        assertThat(retryOnIgnoredErrorEvent.toString()).contains(
+            "Retry 'test' recorded an error which has been ignored: 'null'.");
+    }
+
+    @Test
+    public void testRetryOnRetryEvent() {
+        RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2,
+            new IOException("Bla"), 1234L);
+        assertThat(retryOnRetryEvent.getName()).isEqualTo("test");
+        assertThat(retryOnRetryEvent.getNumberOfRetryAttempts()).isEqualTo(2);
+        assertThat(retryOnRetryEvent.getEventType()).isEqualTo(Type.RETRY);
+        assertThat(retryOnRetryEvent.getLastThrowable()).isInstanceOf(IOException.class);
+        assertThat(retryOnRetryEvent.getWaitInterval()).isEqualTo(Duration.ofMillis(1234L));
+        assertThat(retryOnRetryEvent.toString()).contains(
+            "Retry 'test', waiting PT1.234S until attempt '2'. Last attempt failed with exception 'java.io.IOException: Bla'.");
+    }
+
+    @Test
+    public void testRetryOnRetryEventWithNullLastThrowable() {
+        RetryOnRetryEvent retryOnRetryEvent = new RetryOnRetryEvent("test", 2, null, 500L);
+        assertThat(retryOnRetryEvent.getLastThrowable()).isNull();
+        assertThat(retryOnRetryEvent.toString()).contains(
+            "Retry 'test', waiting PT0.5S until attempt '2'. Last attempt failed with exception 'null'.");
     }
 
 }
