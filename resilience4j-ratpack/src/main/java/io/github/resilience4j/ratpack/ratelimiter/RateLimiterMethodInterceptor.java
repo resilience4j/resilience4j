@@ -17,6 +17,7 @@
 package io.github.resilience4j.ratpack.ratelimiter;
 
 import com.google.inject.Inject;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -85,8 +86,13 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         if (registry == null) {
             registry = RateLimiterRegistry.ofDefaults();
         }
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = registry
-            .rateLimiter(annotation.name());
+        String configurationName = annotation.configurationName();
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter;
+        if(StringUtils.isNotEmpty(configurationName)) {
+            rateLimiter = registry.rateLimiter(annotation.name(), configurationName);
+        } else {
+            rateLimiter = registry.rateLimiter(annotation.name());
+        }
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation);

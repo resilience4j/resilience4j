@@ -36,6 +36,13 @@ public @interface RateLimiter {
     String name();
 
     /**
+     * Name of the configuration
+     *
+     * @return the name of the configuration
+     */
+    String configurationName() default "";
+
+    /**
      * fallbackMethod method name.
      *
      * @return fallbackMethod method name.

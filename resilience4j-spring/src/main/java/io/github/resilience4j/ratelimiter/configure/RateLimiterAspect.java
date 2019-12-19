@@ -106,8 +106,9 @@ public class RateLimiterAspect implements Ordered {
             return proceedingJoinPoint.proceed();
         }
         String name = rateLimiterAnnotation.name();
+        String configurationName = rateLimiterAnnotation.configurationName();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
-            methodName, name);
+            methodName, name, configurationName);
         Class<?> returnType = method.getReturnType();
 
         if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
@@ -138,9 +139,13 @@ public class RateLimiterAspect implements Ordered {
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName,
-        String name) {
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry
-            .rateLimiter(name);
+        String name, String configurationName) {
+        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter;
+        if (StringUtils.isEmpty(configurationName)) {
+            rateLimiter = rateLimiterRegistry.rateLimiter(name);
+        } else {
+            rateLimiter = rateLimiterRegistry.rateLimiter(name, configurationName);
+        }
 
         if (logger.isDebugEnabled()) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
