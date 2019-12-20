@@ -199,7 +199,13 @@ public class InMemoryRateLimiterRegistry extends
     @Override
     public RateLimiter rateLimiter(String name, String configName,
         io.vavr.collection.Map<String, String> tags) {
-        return computeIfAbsent(name, () -> RateLimiter.of(name, getConfiguration(configName)
-            .orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
+        RateLimiterConfig rateLimiterConfig = getConfiguration(configName)
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName));
+        RateLimiter rateLimiter = computeIfAbsent(name, () -> RateLimiter.of(name, rateLimiterConfig, getAllTags(tags)));
+        if(rateLimiter.getRateLimiterConfig() != rateLimiterConfig) {
+           throw new IllegalStateException("Rate limiter '" + name + "' was already initialized with configurationName" +
+               " different that '" + configName +"'");
+        }
+        return rateLimiter;
     }
 }

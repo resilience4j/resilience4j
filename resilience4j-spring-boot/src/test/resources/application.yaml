@@ -17,6 +17,7 @@ resilience4j.retry:
       - java.io.IOException
       ignoreExceptions:
       - io.github.resilience4j.circuitbreaker.IgnoredException
+
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
   configs:
@@ -66,6 +67,11 @@ resilience4j.circuitbreaker:
       baseConfig: default
 
 resilience4j.ratelimiter:
+  configs:
+    testConfig:
+      limitForPeriod: 2
+      limitRefreshPeriod: 2000ms
+      timeoutDuration: 2s
   rateLimiterAspectOrder: 401
   limiters:
     backendA:

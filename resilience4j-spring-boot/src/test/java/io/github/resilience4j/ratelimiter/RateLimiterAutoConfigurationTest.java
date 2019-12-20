@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,13 +42,14 @@ import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 public class RateLimiterAutoConfigurationTest {
 
-    @Autowired
+    @SpyBean
     private RateLimiterRegistry rateLimiterRegistry;
 
     @Autowired
@@ -61,12 +63,36 @@ public class RateLimiterAutoConfigurationTest {
     private DummyService dummyService;
 
     @Autowired
+    @Qualifier("rateLimiterWithConfigDummyService")
+    private DummyService dummyServiceWithConfig;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     @BeforeClass
     public static void setUp() {
         // Need to clear this static registry out since multiple tests register collectors that could collide.
         CollectorRegistry.defaultRegistry.clear();
+    }
+
+    /**
+     * The test verifies that <code>configurationName</code> parameter of <code>RateLimiter</code> annotation
+     * is passed to <code>RateLimiterRegistry#rateLimiter(String, String)</code>
+     *
+     * @see io.github.resilience4j.ratelimiter.annotation.RateLimiter#configurationName()
+     * @see RateLimiterRegistry#rateLimiter(String, String)
+     */
+    @Test
+    public void testRateLimiterWithConfigAutoConfiguration() throws IOException {
+        assertThat(rateLimiterRegistry).isNotNull();
+        assertThat(rateLimiterProperties).isNotNull();
+        assertThat(rateLimiterProperties.getConfigs()).containsKey("testConfig");
+        assertThat(dummyServiceWithConfig).isNotNull();
+
+        dummyServiceWithConfig.doSomething(false);
+
+        verify(rateLimiterRegistry, times(1))
+            .rateLimiter(DummyService.BACKEND_C, "testConfig");
     }
 
     /**
