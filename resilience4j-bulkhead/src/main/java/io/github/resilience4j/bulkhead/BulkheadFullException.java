@@ -25,10 +25,6 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
  */
 public class BulkheadFullException extends RuntimeException {
 
-    private BulkheadFullException(String message, boolean writableStackTrace) {
-        super(message, null, false, writableStackTrace);
-    }
-
     /**
      * Static method to construct a {@link BulkheadFullException} with a Bulkhead.
      *
