@@ -19,7 +19,6 @@
 package io.github.resilience4j.kotlin.retry
 
 import io.github.resilience4j.kotlin.HelloWorldService
-import io.github.resilience4j.kotlin.bulkhead.bulkhead
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import kotlinx.coroutines.flow.flow
@@ -27,7 +26,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
-import java.lang.IllegalStateException
 import java.time.Duration
 
 class FlowRetryTest {
@@ -41,8 +39,8 @@ class FlowRetryTest {
 
             //When
             flow {
-                repeat(3){
-                    emit(helloWorldService.returnHelloWorld()+it)
+                repeat(3) {
+                    emit(helloWorldService.returnHelloWorld() + it)
                 }
             }
                 .retry(retry)
@@ -50,7 +48,7 @@ class FlowRetryTest {
 
 
             //Then
-            repeat(3){
+            repeat(3) {
                 Assertions.assertThat(resultList[it]).isEqualTo("Hello world$it")
             }
             Assertions.assertThat(resultList.size).isEqualTo(3)
@@ -75,10 +73,10 @@ class FlowRetryTest {
 
             //When
             flow {
-                repeat(3){
+                repeat(3) {
                     when (helloWorldService.invocationCounter) {
                         0 -> helloWorldService.throwException()
-                        else -> emit(helloWorldService.returnHelloWorld()+it)
+                        else -> emit(helloWorldService.returnHelloWorld() + it)
                     }
                 }
             }
@@ -87,7 +85,7 @@ class FlowRetryTest {
 
 
             //Then
-            repeat(3){
+            repeat(3) {
                 Assertions.assertThat(resultList[it]).isEqualTo("Hello world$it")
             }
             Assertions.assertThat(resultList.size).isEqualTo(3)

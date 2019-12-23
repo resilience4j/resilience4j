@@ -25,30 +25,49 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-/** Collects circuit breaker exposed {@link Metrics}. */
+/**
+ * Collects circuit breaker exposed {@link Metrics}.
+ */
 public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetrics {
 
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
+
+    private CircuitBreakerMetricsCollector(MetricNames names, MetricOptions options,
+        CircuitBreakerRegistry circuitBreakerRegistry) {
+        super(names, options);
+        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
+
+        for (CircuitBreaker circuitBreaker : this.circuitBreakerRegistry.getAllCircuitBreakers()) {
+            addMetrics(circuitBreaker);
+        }
+        circuitBreakerRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+    }
+
     /**
-     * Creates a new collector with custom metric names and
-     * using given {@code supplier} as source of circuit breakers.
+     * Creates a new collector with custom metric names and using given {@code supplier} as source
+     * of circuit breakers.
      *
-     * @param names    the custom metric names
-     * @param options  the custom metric options
+     * @param names                  the custom metric names
+     * @param options                the custom metric options
      * @param circuitBreakerRegistry the source of circuit breakers
      */
-    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names, MetricOptions options, CircuitBreakerRegistry circuitBreakerRegistry) {
+    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names,
+        MetricOptions options, CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerMetricsCollector(names, options, circuitBreakerRegistry);
     }
 
     /**
-     * Creates a new collector with custom metric names and
-     * using given {@code supplier} as source of circuit breakers.
+     * Creates a new collector with custom metric names and using given {@code supplier} as source
+     * of circuit breakers.
      *
-     * @param names    the custom metric names
+     * @param names                  the custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      */
-    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names, CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetricsCollector(names, MetricOptions.ofDefaults(), circuitBreakerRegistry);
+    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(MetricNames names,
+        CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerMetricsCollector(names, MetricOptions.ofDefaults(),
+            circuitBreakerRegistry);
     }
 
     /**
@@ -56,26 +75,18 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
      *
      * @param circuitBreakerRegistry the source of circuit breakers
      */
-    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new CircuitBreakerMetricsCollector(MetricNames.ofDefaults(), MetricOptions.ofDefaults(), circuitBreakerRegistry);
-    }
-
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-
-    private CircuitBreakerMetricsCollector(MetricNames names, MetricOptions options, CircuitBreakerRegistry circuitBreakerRegistry) {
-        super(names, options);
-        this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
-
-        for (CircuitBreaker circuitBreaker : this.circuitBreakerRegistry.getAllCircuitBreakers()) {
-            addMetrics(circuitBreaker);
-        }
-        circuitBreakerRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+    public static CircuitBreakerMetricsCollector ofCircuitBreakerRegistry(
+        CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new CircuitBreakerMetricsCollector(MetricNames.ofDefaults(),
+            MetricOptions.ofDefaults(), circuitBreakerRegistry);
     }
 
     @Override
     public List<MetricFamilySamples> collect() {
-        List<MetricFamilySamples> samples = Collections.list(collectorRegistry.metricFamilySamples());
-        samples.addAll(collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
+        List<MetricFamilySamples> samples = Collections
+            .list(collectorRegistry.metricFamilySamples());
+        samples
+            .addAll(collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
         return samples;
     }
 

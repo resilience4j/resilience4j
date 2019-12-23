@@ -1,5 +1,7 @@
 package io.github.resilience4j.core.registry;
 
+import io.vavr.Tuple;
+import io.vavr.collection.Map;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -13,143 +15,156 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AbstractRegistryTest {
 
-	@Test
-	public void shouldContainDefaultAndCustomConfiguration() {
-		TestRegistry testRegistry = new TestRegistry();
-		testRegistry.addConfiguration("custom", "test");
-		assertThat(testRegistry.getConfiguration("custom").get()).isEqualTo("test");
-		assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
-	}
+    @Test
+    public void shouldInitRegistryTags(){
+        TestRegistry testRegistry = new TestRegistry(io.vavr.collection.HashMap.of("Tag1","Tag1Value"));
+        assertThat(testRegistry.getTags()).isNotEmpty();
+        assertThat(testRegistry.getTags()).containsOnly(Tuple.of("Tag1","Tag1Value"));
+    }
 
-	@Test
-	public void shouldNotAllowToOverwriteDefaultConfiguration() {
-		TestRegistry testRegistry = new TestRegistry();
 
-		assertThatThrownBy(() ->testRegistry.addConfiguration("default", "test") )
-			.isInstanceOf(IllegalArgumentException.class);
-	}
+    @Test
+    public void shouldContainDefaultAndCustomConfiguration() {
+        TestRegistry testRegistry = new TestRegistry();
+        testRegistry.addConfiguration("custom", "test");
+        assertThat(testRegistry.getConfiguration("custom").get()).isEqualTo("test");
+        assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
+    }
 
-	@Test
-	public void shouldConsumeRegistryEvents() {
-		List<RegistryEvent> consumedEvents = new ArrayList<>();
-		List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
-		List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
-		List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
+    @Test
+    public void shouldNotAllowToOverwriteDefaultConfiguration() {
+        TestRegistry testRegistry = new TestRegistry();
 
-		TestRegistry testRegistry = new TestRegistry();
-		testRegistry.getEventPublisher().onEvent(consumedEvents::add);
-		testRegistry.getEventPublisher().onEntryAdded(addedEvents::add);
-		testRegistry.getEventPublisher().onEntryRemoved(removedEvents::add);
-		testRegistry.getEventPublisher().onEntryReplaced(replacedEvents::add);
+        assertThatThrownBy(() -> testRegistry.addConfiguration("default", "test"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 
-		String addedEntry1 = testRegistry.computeIfAbsent("name", () -> "entry1");
-		assertThat(addedEntry1).isEqualTo("entry1");
+    @Test
+    public void shouldConsumeRegistryEvents() {
+        List<RegistryEvent> consumedEvents = new ArrayList<>();
+        List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
+        List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
+        List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
 
-		String addedEntry2 = testRegistry.computeIfAbsent("name2", () -> "entry2");
-		assertThat(addedEntry2).isEqualTo("entry2");
+        TestRegistry testRegistry = new TestRegistry();
+        testRegistry.getEventPublisher().onEvent(consumedEvents::add);
+        testRegistry.getEventPublisher().onEntryAdded(addedEvents::add);
+        testRegistry.getEventPublisher().onEntryRemoved(removedEvents::add);
+        testRegistry.getEventPublisher().onEntryReplaced(replacedEvents::add);
 
-		Optional<String> removedEntry = testRegistry.remove("name");
-		assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+        String addedEntry1 = testRegistry.computeIfAbsent("name", () -> "entry1");
+        assertThat(addedEntry1).isEqualTo("entry1");
 
-		Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
-		assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+        String addedEntry2 = testRegistry.computeIfAbsent("name2", () -> "entry2");
+        assertThat(addedEntry2).isEqualTo("entry2");
 
-		assertThat(consumedEvents).hasSize(4);
-		assertThat(addedEvents).hasSize(2);
-		assertThat(removedEvents).hasSize(1);
-		assertThat(replacedEvents).hasSize(1);
+        Optional<String> removedEntry = testRegistry.remove("name");
+        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
 
-		assertThat(consumedEvents).extracting("eventType")
-				.containsExactly(Type.ADDED, Type.ADDED, Type.REMOVED, Type.REPLACED);
+        Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
+        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
 
-		assertThat(addedEvents).extracting("addedEntry")
-				.containsExactly("entry1", "entry2");
+        assertThat(consumedEvents).hasSize(4);
+        assertThat(addedEvents).hasSize(2);
+        assertThat(removedEvents).hasSize(1);
+        assertThat(replacedEvents).hasSize(1);
 
-		assertThat(removedEvents).extracting("removedEntry")
-				.containsExactly("entry1");
+        assertThat(consumedEvents).extracting("eventType")
+            .containsExactly(Type.ADDED, Type.ADDED, Type.REMOVED, Type.REPLACED);
 
-		assertThat(replacedEvents).extracting("oldEntry")
-				.containsExactly("entry2");
+        assertThat(addedEvents).extracting("addedEntry")
+            .containsExactly("entry1", "entry2");
 
-		assertThat(replacedEvents).extracting("newEntry")
-				.containsExactly("entry3");
+        assertThat(removedEvents).extracting("removedEntry")
+            .containsExactly("entry1");
 
-	}
+        assertThat(replacedEvents).extracting("oldEntry")
+            .containsExactly("entry2");
 
-	@Test
-	public void testCreateWithRegistryEventConsumer() {
-		List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
-		List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
-		List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
+        assertThat(replacedEvents).extracting("newEntry")
+            .containsExactly("entry3");
 
-		RegistryEventConsumer<String> registryEventConsumer = new RegistryEventConsumer<String>() {
-			@Override
-			public void onEntryAddedEvent(EntryAddedEvent<String> entryAddedEvent) {
-				addedEvents.add(entryAddedEvent);
-			}
+    }
 
-			@Override
-			public void onEntryRemovedEvent(EntryRemovedEvent<String> entryRemoveEvent) {
-				removedEvents.add(entryRemoveEvent);
-			}
+    @Test
+    public void testCreateWithRegistryEventConsumer() {
+        List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
+        List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
+        List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
 
-			@Override
-			public void onEntryReplacedEvent(EntryReplacedEvent<String> entryReplacedEvent) {
-				replacedEvents.add(entryReplacedEvent);
-			}
-		};
+        RegistryEventConsumer<String> registryEventConsumer = new RegistryEventConsumer<String>() {
+            @Override
+            public void onEntryAddedEvent(EntryAddedEvent<String> entryAddedEvent) {
+                addedEvents.add(entryAddedEvent);
+            }
 
-		TestRegistry testRegistry = new TestRegistry(registryEventConsumer);
+            @Override
+            public void onEntryRemovedEvent(EntryRemovedEvent<String> entryRemoveEvent) {
+                removedEvents.add(entryRemoveEvent);
+            }
 
-		String addedEntry1 = testRegistry.computeIfAbsent("name", () -> "entry1");
-		assertThat(addedEntry1).isEqualTo("entry1");
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<String> entryReplacedEvent) {
+                replacedEvents.add(entryReplacedEvent);
+            }
+        };
 
-		String addedEntry2 = testRegistry.computeIfAbsent("name2", () -> "entry2");
-		assertThat(addedEntry2).isEqualTo("entry2");
+        TestRegistry testRegistry = new TestRegistry(registryEventConsumer);
 
-		Optional<String> removedEntry = testRegistry.remove("name");
-		assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+        String addedEntry1 = testRegistry.computeIfAbsent("name", () -> "entry1");
+        assertThat(addedEntry1).isEqualTo("entry1");
 
-		Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
-		assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+        String addedEntry2 = testRegistry.computeIfAbsent("name2", () -> "entry2");
+        assertThat(addedEntry2).isEqualTo("entry2");
 
-		assertThat(addedEvents).hasSize(2);
-		assertThat(removedEvents).hasSize(1);
-		assertThat(replacedEvents).hasSize(1);
+        Optional<String> removedEntry = testRegistry.remove("name");
+        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
 
-		assertThat(addedEvents).extracting("addedEntry")
-				.containsExactly("entry1", "entry2");
+        Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
+        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
 
-		assertThat(removedEvents).extracting("removedEntry")
-				.containsExactly("entry1");
+        assertThat(addedEvents).hasSize(2);
+        assertThat(removedEvents).hasSize(1);
+        assertThat(replacedEvents).hasSize(1);
 
-		assertThat(replacedEvents).extracting("oldEntry")
-				.containsExactly("entry2");
+        assertThat(addedEvents).extracting("addedEntry")
+            .containsExactly("entry1", "entry2");
 
-		assertThat(replacedEvents).extracting("newEntry")
-				.containsExactly("entry3");
-	}
+        assertThat(removedEvents).extracting("removedEntry")
+            .containsExactly("entry1");
 
-	@Test
-	public void shouldOnlyFindRegisteredObjects() {
-		TestRegistry testRegistry = new TestRegistry();
+        assertThat(replacedEvents).extracting("oldEntry")
+            .containsExactly("entry2");
 
-		assertThat(testRegistry.find("test")).isEmpty();
-		testRegistry.entryMap.put("test", "value");
-		assertThat(testRegistry.find("test")).contains("value");
-	}
+        assertThat(replacedEvents).extracting("newEntry")
+            .containsExactly("entry3");
+    }
 
-	static class TestRegistry extends AbstractRegistry<String, String> {
+    @Test
+    public void shouldOnlyFindRegisteredObjects() {
+        TestRegistry testRegistry = new TestRegistry();
 
-		TestRegistry() {
-			super("default");
-			this.configurations.put(DEFAULT_CONFIG, "default");
-		}
+        assertThat(testRegistry.find("test")).isEmpty();
+        testRegistry.entryMap.put("test", "value");
+        assertThat(testRegistry.find("test")).contains("value");
+    }
 
-		TestRegistry(RegistryEventConsumer<String> registryEventConsumer) {
-			super("default", registryEventConsumer);
-			this.configurations.put(DEFAULT_CONFIG, "default");
-		}
-	}
+    static class TestRegistry extends AbstractRegistry<String, String> {
+
+        TestRegistry() {
+            super("default");
+            this.configurations.put(DEFAULT_CONFIG, "default");
+        }
+
+        TestRegistry(RegistryEventConsumer<String> registryEventConsumer) {
+            super("default", registryEventConsumer);
+            this.configurations.put(DEFAULT_CONFIG, "default");
+        }
+
+        TestRegistry(Map<String,String> tags) {
+            super("default", tags);
+            this.configurations.put(DEFAULT_CONFIG, "default");
+        }
+    }
 
 }

@@ -23,11 +23,13 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 public class AspectJOnClasspathCondition implements Condition {
 
-	private static final Logger logger = LoggerFactory.getLogger(AspectJOnClasspathCondition.class);
-	private static final String CLASS_TO_CHECK = "org.aspectj.lang.ProceedingJoinPoint";
-	@Override
-	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-		return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info("Aspects are not activated because AspectJ is not on the classpath."));
-	}
+    private static final Logger logger = LoggerFactory.getLogger(AspectJOnClasspathCondition.class);
+    private static final String CLASS_TO_CHECK = "org.aspectj.lang.ProceedingJoinPoint";
+
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger
+            .info("Aspects are not activated because AspectJ is not on the classpath."));
+    }
 
 }

@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = TestApplication.class)
+    classes = TestApplication.class)
 public class RetryAutoConfigurationRxJavaTest {
 
     @Autowired
@@ -55,28 +55,32 @@ public class RetryAutoConfigurationRxJavaTest {
     private TestRestTemplate restTemplate;
 
     /**
-     * The test verifies that a Retry instance is created and configured properly when the RetryReactiveDummyService is invoked and
-     * that the Retry logic is properly handled
+     * The test verifies that a Retry instance is created and configured properly when the
+     * RetryReactiveDummyService is invoked and that the Retry logic is properly handled
      */
     @Test
     public void testRetryAutoConfigurationRxJava2() throws IOException {
         assertThat(retryRegistry).isNotNull();
         assertThat(retryProperties).isNotNull();
-        RetryEventsEndpointResponse retryEventListBefore = getRetryEventsBody("/actuator/retryevents");
-        RetryEventsEndpointResponse retryEventsListOfCBefore = getRetryEventsBody("/actuator/retryevents/" + BACKEND_C);
+        RetryEventsEndpointResponse retryEventListBefore = getRetryEventsBody(
+            "/actuator/retryevents");
+        RetryEventsEndpointResponse retryEventsListOfCBefore = getRetryEventsBody(
+            "/actuator/retryevents/" + BACKEND_C);
 
         Retry retry = retryRegistry.retry(BACKEND_C);
         assertThat(retry).isNotNull();
         Retry.Metrics metricsBefore = retry.getMetrics();
 
         try {
-            retryDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+            retryDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
+                throwable -> System.out.println("Exception received:" + throwable.getMessage()));
         } catch (RetryExceptionWrapper ex) {
             assertThat(ex.getCause()).hasCauseInstanceOf(IllegalArgumentException.class);
             // Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        retryDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase, throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+        retryDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase,
+            throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
         // expect retry is configured as defined in application.yml
         assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
@@ -85,20 +89,29 @@ public class RetryAutoConfigurationRxJavaTest {
 
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = getRetryEventsBody("/actuator/retryevents");
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
 
         retryEventList = getRetryEventsBody("/actuator/retryevents/" + BACKEND_C);
-        assertThat(retryEventList.getRetryEvents()).hasSize(retryEventsListOfCBefore.getRetryEvents().size() + 3);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventsListOfCBefore.getRetryEvents().size() + 3);
 
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException())).isTrue();
-        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException())).isFalse();
+        assertThat(
+            retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException()))
+            .isTrue();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+            .isFalse();
 
         assertThat(retryAspect.getOrder()).isEqualTo(399);
 
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(metricsBefore.getNumberOfFailedCallsWithoutRetryAttempt());
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isGreaterThanOrEqualTo(metricsBefore.getNumberOfFailedCallsWithRetryAttempt());
-        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isGreaterThanOrEqualTo(metricsBefore.getNumberOfSuccessfulCallsWithoutRetryAttempt());
-        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(metricsBefore.getNumberOfSuccessfulCallsWithRetryAttempt());
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
+            .isEqualTo(metricsBefore.getNumberOfFailedCallsWithoutRetryAttempt());
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
+            .isGreaterThanOrEqualTo(metricsBefore.getNumberOfFailedCallsWithRetryAttempt());
+        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
+            .isGreaterThanOrEqualTo(metricsBefore.getNumberOfSuccessfulCallsWithoutRetryAttempt());
+        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
+            .isEqualTo(metricsBefore.getNumberOfSuccessfulCallsWithRetryAttempt());
     }
 
     private RetryEventsEndpointResponse getRetryEventsBody(String s) {

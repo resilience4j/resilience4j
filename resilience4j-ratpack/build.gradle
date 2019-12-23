@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 
 dependencies {
-    compileOnly ( libraries.ratpack )
+    compileOnly(libraries.ratpack)
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-framework-common')
     compile project(':resilience4j-bulkhead')
@@ -10,17 +10,17 @@ dependencies {
     compile project(':resilience4j-retry')
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-reactor')
-    compile ( libraries.reactor )
-    compileOnly ( libraries.ratpack_metrics )
+    compile(libraries.reactor)
+    compileOnly(libraries.ratpack_metrics)
     compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
-    compileOnly ( libraries.hibernate_validator )
-    testCompile ( libraries.groovy )
-    testCompile ( libraries.ratpack_test )
-    testCompile ( libraries.spock )
-    testCompile ( libraries.ratpack_metrics )
+    compileOnly(libraries.hibernate_validator)
+    testCompile(libraries.groovy)
+    testCompile(libraries.ratpack_test)
+    testCompile(libraries.spock)
+    testCompile(libraries.ratpack_metrics)
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
-    testCompile ( libraries.ratpack )
+    testCompile(libraries.ratpack)
 }
-ext.moduleName='io.github.resilience4j.ratpack'
+ext.moduleName = 'io.github.resilience4j.ratpack'

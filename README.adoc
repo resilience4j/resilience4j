@@ -16,12 +16,12 @@ image:https://dev.azure.com/resilience4j/resilience4j/_apis/build/status/resilie
 image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"]
 image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
-image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=bugs["Bugs", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
-image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=vulnerabilities["Vulnerabilities", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=sqale_rating["Maintainability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=reliability_rating["Reliability", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=security_rating["Security", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=vulnerabilities["Vulnerabilities", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
+image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=bugs["Bugs", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 
 toc::[]
 
@@ -42,6 +42,7 @@ The advantage is that you have the choice to select the decorators you need and 
 ----
 Supplier<String> supplier = () -> backendService.doSomething(param1, param2);
 
+// In order to run this code, you will need resilience4j-all (See below)
 Supplier<String> decoratedSupplier = Decorators.ofSupplier(supplier)
   .withRetry(Retry.ofDefaults("name"))
   .withCircuitBreaker(CircuitBreaker.ofDefaults("name"))
@@ -65,6 +66,10 @@ Setup and usage is described in our *https://resilience4j.readme.io/docs[User Gu
 == Overview
 
 Resilience4j provides several core modules and add-on modules:
+
+=== All-inclusive package
+
+* resilience4j-all
 
 === Core modules
 
@@ -364,6 +369,11 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 
 [cols="4*"]
 |===
+
+|0:37
+|https://www.youtube.com/watch?v=YXP6RKdQkz0[Battle of the Circuit Breakers: Resilience4J vs Istio]
+|Nicolas Frankel
+|GOTO Berlin
 
 |0:42
 |https://www.youtube.com/watch?v=KosSsZEqS-k&t=157[Resilience patterns in the post-Hystrix world]

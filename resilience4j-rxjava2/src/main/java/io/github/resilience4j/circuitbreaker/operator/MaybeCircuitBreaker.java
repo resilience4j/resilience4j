@@ -37,9 +37,9 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
 
     @Override
     protected void subscribeActual(MaybeObserver<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerMaybeObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }

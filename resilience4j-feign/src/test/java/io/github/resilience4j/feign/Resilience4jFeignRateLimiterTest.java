@@ -33,8 +33,9 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}
  */
-public class Resilience4jRateLimiterTest {
+public class Resilience4jFeignRateLimiterTest {
 
+    private static final String MOCK_URL = "http://localhost:8080/";
     @Rule
     public WireMockRule wireMockRule = new WireMockRule();
 
@@ -44,14 +45,16 @@ public class Resilience4jRateLimiterTest {
     @Before
     public void setUp() {
         rateLimiter = mock(RateLimiter.class);
-        final FeignDecorators decorators = FeignDecorators.builder().withRateLimiter(rateLimiter).build();
-        testService = Resilience4jFeign.builder(decorators).target(TestService.class, "http://localhost:8080/");
+        final FeignDecorators decorators = FeignDecorators.builder()
+            .withRateLimiter(rateLimiter)
+            .build();
+        testService = Resilience4jFeign.builder(decorators)
+            .target(TestService.class, MOCK_URL);
     }
 
     @Test
-    public void testSuccessfulCall() throws Exception {
-        setupStub(200);
-
+    public void testSuccessfulCall() {
+        givenResponse(200);
         when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
         testService.greeting();
@@ -61,11 +64,9 @@ public class Resilience4jRateLimiterTest {
 
     @Test(expected = RequestNotPermitted.class)
     public void testRateLimiterLimiting() {
-        setupStub(200);
-
+        givenResponse(200);
         when(rateLimiter.acquirePermission(1)).thenReturn(false);
-        RateLimiterConfig config = RateLimiterConfig.ofDefaults();
-        when(rateLimiter.getRateLimiterConfig()).thenReturn(config);
+        when(rateLimiter.getRateLimiterConfig()).thenReturn(RateLimiterConfig.ofDefaults());
 
         testService.greeting();
 
@@ -74,19 +75,30 @@ public class Resilience4jRateLimiterTest {
 
     @Test(expected = FeignException.class)
     public void testFailedHttpCall() {
-        setupStub(400);
-
+        givenResponse(400);
         when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
         testService.greeting();
     }
 
+    @Test(expected = RequestNotPermitted.class)
+    public void testRateLimiterCreateByStaticMethod() {
+        testService = TestService.create(MOCK_URL, rateLimiter);
+        givenResponse(200);
+        when(rateLimiter.acquirePermission(1)).thenReturn(false);
+        when(rateLimiter.getRateLimiterConfig()).thenReturn(RateLimiterConfig.ofDefaults());
 
-    private void setupStub(int responseCode) {
+        testService.greeting();
+
+        verify(0, getRequestedFor(urlPathEqualTo("/greeting")));
+    }
+
+
+    private void givenResponse(int responseCode) {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(responseCode)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("hello world")));
+            .willReturn(aResponse()
+                .withStatus(responseCode)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("hello world")));
     }
 }

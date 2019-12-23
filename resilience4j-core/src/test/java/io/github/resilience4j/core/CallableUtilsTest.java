@@ -25,7 +25,8 @@ public class CallableUtilsTest {
         Callable<String> callable = () -> {
             throw new IOException("BAM!");
         };
-        Callable<String> callableWithRecovery = CallableUtils.andThen(callable, (result, ex) -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils
+            .andThen(callable, (result, ex) -> "Bla");
 
         String result = callableWithRecovery.call();
 
@@ -37,7 +38,8 @@ public class CallableUtilsTest {
         Callable<String> callable = () -> {
             throw new IOException("BAM!");
         };
-        Callable<String> callableWithRecovery = CallableUtils.andThen(callable, (result) -> result, ex -> "Bla");
+        Callable<String> callableWithRecovery = CallableUtils
+            .andThen(callable, (result) -> result, ex -> "Bla");
 
         String result = callableWithRecovery.call();
 

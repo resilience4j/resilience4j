@@ -22,8 +22,6 @@ import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import static io.github.resilience4j.bulkhead.BulkheadFullException.createBulkheadFullException;
-
 class CompletableBulkhead extends Completable {
 
     private final Completable upstream;
@@ -36,9 +34,9 @@ class CompletableBulkhead extends Completable {
 
     @Override
     protected void subscribeActual(CompletableObserver downstream) {
-        if(bulkhead.tryAcquirePermission()){
+        if (bulkhead.tryAcquirePermission()) {
             upstream.subscribe(new BulkheadCompletableObserver(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptyDisposable.INSTANCE);
             downstream.onError(BulkheadFullException.createBulkheadFullException(bulkhead));
         }

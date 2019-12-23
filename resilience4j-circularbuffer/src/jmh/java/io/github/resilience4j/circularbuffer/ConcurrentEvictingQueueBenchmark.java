@@ -19,18 +19,7 @@
 package io.github.resilience4j.circularbuffer;
 
 
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Group;
-import org.openjdk.jmh.annotations.GroupThreads;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -46,12 +35,20 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @BenchmarkMode(Mode.AverageTime)
 public class ConcurrentEvictingQueueBenchmark {
+
     public static final int FORK_COUNT = 2;
     private static final int WARMUP_COUNT = 10;
     private static final int ITERATION_COUNT = 10;
     private static final int CAPACITY = 10;
     private ConcurrentEvictingQueue<Object> queue;
     private Object event;
+
+    public static void main(String[] args) throws RunnerException {
+        Options options = new OptionsBuilder()
+            .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
+            .build();
+        new Runner(options).run();
+    }
 
     @Setup
     public void setUp() {
@@ -100,13 +97,5 @@ public class ConcurrentEvictingQueueBenchmark {
     public void concurrentEvictingQueuePeek(Blackhole bh) {
         Object event = queue.peek();
         bh.consume(event);
-    }
-
-
-    public static void main(String[] args) throws RunnerException {
-        Options options = new OptionsBuilder()
-            .include(".*" + ConcurrentEvictingQueueBenchmark.class.getSimpleName() + ".*")
-            .build();
-        new Runner(options).run();
     }
 }

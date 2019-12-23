@@ -22,7 +22,7 @@ public class PartialAggregation extends AbstractAggregation {
 
     private long epochSecond;
 
-    PartialAggregation(long epochSecond){
+    PartialAggregation(long epochSecond) {
         this.epochSecond = epochSecond;
     }
 

@@ -23,7 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedTimeLimiterMetricsPublisher
-        extends AbstractTimeLimiterMetrics implements MetricsPublisher<TimeLimiter> {
+    extends AbstractTimeLimiterMetrics implements MetricsPublisher<TimeLimiter> {
 
     private final MeterRegistry meterRegistry;
 
@@ -36,6 +36,7 @@ public class TaggedTimeLimiterMetricsPublisher
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);
     }
+
     @Override
     public void publishMetrics(TimeLimiter entry) {
         addMetrics(meterRegistry, entry);

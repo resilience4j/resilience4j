@@ -33,9 +33,9 @@ fun <T> Flow<T>.bulkhead(bulkhead: Bulkhead): Flow<T> =
         bulkhead.acquirePermissionSuspend()
 
         val source = this@bulkhead.onCompletion { e ->
-            if(isCancellation(coroutineContext, e)){
+            if (isCancellation(coroutineContext, e)) {
                 bulkhead.releasePermission()
-            }else{
+            } else {
                 bulkhead.onComplete()
             }
         }

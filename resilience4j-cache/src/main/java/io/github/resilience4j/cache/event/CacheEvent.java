@@ -51,11 +51,17 @@ public interface CacheEvent {
      * Event types which are created by a CircuitBreaker.
      */
     enum Type {
-        /** A CacheEvent which informs that at Cache was not available */
+        /**
+         * A CacheEvent which informs that at Cache was not available
+         */
         ERROR,
-        /** A CacheEvent which informs a cache hit */
+        /**
+         * A CacheEvent which informs a cache hit
+         */
         CACHE_HIT,
-        /** A CacheEvent which informs a cache miss */
+        /**
+         * A CacheEvent which informs a cache miss
+         */
         CACHE_MISS
     }
 }

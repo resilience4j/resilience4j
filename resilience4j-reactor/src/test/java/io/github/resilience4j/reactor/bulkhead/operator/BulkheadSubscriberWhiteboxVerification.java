@@ -23,7 +23,7 @@ import org.reactivestreams.tck.TestEnvironment;
 import reactor.core.publisher.MonoProcessor;
 
 public class BulkheadSubscriberWhiteboxVerification extends
-        SubscriberWhiteboxVerification<Integer> {
+    SubscriberWhiteboxVerification<Integer> {
 
     public BulkheadSubscriberWhiteboxVerification() {
         super(new TestEnvironment());
@@ -31,7 +31,8 @@ public class BulkheadSubscriberWhiteboxVerification extends
 
     @Override
     public Subscriber<Integer> createSubscriber(WhiteboxSubscriberProbe<Integer> probe) {
-        return new io.github.resilience4j.reactor.bulkhead.operator.BulkheadSubscriber<Integer>(Bulkhead.ofDefaults("verification"), MonoProcessor.create(), true) {
+        return new io.github.resilience4j.reactor.bulkhead.operator.BulkheadSubscriber<Integer>(
+            Bulkhead.ofDefaults("verification"), MonoProcessor.create(), true) {
             @Override
             public void hookOnSubscribe(Subscription subscription) {
                 super.hookOnSubscribe(subscription);

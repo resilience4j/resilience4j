@@ -1,10 +1,10 @@
 dependencies {
-    compileOnly ( libraries.retrofit )
+    compileOnly(libraries.retrofit)
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
-    testCompile ( libraries.retrofit_test )
-    testCompile ( libraries.retrofit_wiremock )
-    testCompile ( libraries.retrofit )
-    testCompile ( libraries.retrofit_rxjava )
+    testCompile(libraries.retrofit_test)
+    testCompile(libraries.retrofit_wiremock)
+    testCompile(libraries.retrofit)
+    testCompile(libraries.retrofit_rxjava)
 }
-ext.moduleName='io.github.resilience4j.retrofit'
+ext.moduleName = 'io.github.resilience4j.retrofit'

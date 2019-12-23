@@ -1,5 +1,5 @@
-ext.moduleName='io.github.resilience4j.core'
+ext.moduleName = 'io.github.resilience4j.core'
 
 dependencies {
-    testCompile ( libraries.mock_clock )
+    testCompile(libraries.mock_clock)
 }

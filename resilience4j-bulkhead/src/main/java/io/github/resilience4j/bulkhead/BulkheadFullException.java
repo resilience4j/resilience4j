@@ -25,20 +25,27 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
  */
 public class BulkheadFullException extends RuntimeException {
 
+    private BulkheadFullException(String message, boolean writableStackTrace) {
+        super(message, null, false, writableStackTrace);
+    }
+
     /**
      * Static method to construct a {@link BulkheadFullException} with a Bulkhead.
      *
      * @param bulkhead the Bulkhead.
      */
     public static BulkheadFullException createBulkheadFullException(Bulkhead bulkhead) {
-        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
+            .isWritableStackTraceEnabled();
 
         String message;
         if (Thread.currentThread().isInterrupted()) {
-            message = String.format("Bulkhead '%s' is full and thread was interrupted during permission wait",
+            message = String
+                .format("Bulkhead '%s' is full and thread was interrupted during permission wait",
                     bulkhead.getName());
         } else {
-            message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+            message = String.format("Bulkhead '%s' is full and does not permit further calls",
+                bulkhead.getName());
         }
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
@@ -50,9 +57,11 @@ public class BulkheadFullException extends RuntimeException {
      * @param bulkhead the Bulkhead.
      */
     public static BulkheadFullException createBulkheadFullException(ThreadPoolBulkhead bulkhead) {
-        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
+        boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
+            .isWritableStackTraceEnabled();
 
-        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        String message = String
+            .format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
     }

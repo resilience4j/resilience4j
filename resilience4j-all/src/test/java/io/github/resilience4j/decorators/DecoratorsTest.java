@@ -63,12 +63,12 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Supplier<String> decoratedSupplier = Decorators
-                .ofSupplier(() -> helloWorldService.returnHelloWorld())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         String result = decoratedSupplier.get();
 
@@ -84,12 +84,12 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedFunction0<String> decoratedSupplier = Decorators
-                .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         String result = Try.of(decoratedSupplier).get();
 
@@ -104,12 +104,12 @@ public class DecoratorsTest {
     public void testDecorateRunnable() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Runnable decoratedRunnable = Decorators
-                .ofRunnable(() -> helloWorldService.sayHelloWorld())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofRunnable(() -> helloWorldService.sayHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         decoratedRunnable.run();
 
@@ -124,12 +124,12 @@ public class DecoratorsTest {
     public void testDecorateCheckedRunnable() throws IOException {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedRunnable decoratedRunnable = Decorators
-                .ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         Try.run(decoratedRunnable);
 
@@ -145,13 +145,13 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Supplier<CompletionStage<String>> completionStageSupplier =
-                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
         CompletionStage<String> completionStage = Decorators
-                .ofCompletionStage(completionStageSupplier)
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .get();
+            .ofCompletionStage(completionStageSupplier)
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .get();
 
         String value = completionStage.toCompletableFuture().get();
 
@@ -163,17 +163,18 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCompletionStageNewAPI() throws ExecutionException, InterruptedException {
+    public void testDecorateCompletionStageNewAPI()
+        throws ExecutionException, InterruptedException {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Supplier<CompletionStage<String>> completionStageSupplier =
-                () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
         CompletionStage<String> completionStage = Decorators
-                .ofCompletionStage(completionStageSupplier)
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .get();
+            .ofCompletionStage(completionStageSupplier)
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .get();
 
         String value = completionStage.toCompletableFuture().get();
 
@@ -188,7 +189,7 @@ public class DecoratorsTest {
     public void testExecuteConsumer() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Decorators.DecorateConsumer<String> decoratedConsumer =
-                Decorators.ofConsumer((String input) -> helloWorldService
+            Decorators.ofConsumer((String input) -> helloWorldService
                 .sayHelloWorldWithName(input))
                 .withCircuitBreaker(circuitBreaker)
                 .withBulkhead(Bulkhead.ofDefaults("testName"))
@@ -207,12 +208,12 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Function<String, String> decoratedFunction = Decorators
-                .ofFunction(helloWorldService::returnHelloWorldWithName)
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofFunction(helloWorldService::returnHelloWorldWithName)
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         String result = decoratedFunction.apply("Name");
 
@@ -224,15 +225,16 @@ public class DecoratorsTest {
 
     @Test
     public void testDecorateCheckedFunction() throws IOException {
-        given(helloWorldService.returnHelloWorldWithNameWithException("Name")).willReturn("Hello world Name");
+        given(helloWorldService.returnHelloWorldWithNameWithException("Name"))
+            .willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedFunction1<String, String> decoratedFunction = Decorators
-                .ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withRateLimiter(RateLimiter.ofDefaults("testName"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         String result = Try.of(() -> decoratedFunction.apply("Name")).get();
 
@@ -247,11 +249,11 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Supplier<String> decoratedSupplier = Decorators
-                .ofSupplier(() -> helloWorldService.returnHelloWorld())
-                .withCircuitBreaker(circuitBreaker)
-                .withRetry(Retry.ofDefaults("id"))
-                .withBulkhead(Bulkhead.ofDefaults("testName"))
-                .decorate();
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
 
         Try.of(decoratedSupplier::get);
 
@@ -265,15 +267,15 @@ public class DecoratorsTest {
     public void testDecoratorBuilderWithRateLimiter() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .timeoutDuration(Duration.ofMillis(100))
-                .limitRefreshPeriod(Duration.ofSeconds(1))
-                .limitForPeriod(1)
-                .build();
+            .timeoutDuration(Duration.ofMillis(100))
+            .limitRefreshPeriod(Duration.ofSeconds(1))
+            .limitForPeriod(1)
+            .build();
         RateLimiter rateLimiter = RateLimiter.of("backendName", config);
         CheckedFunction0<String> restrictedSupplier = Decorators
-                .ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
-                .withRateLimiter(rateLimiter)
-                .decorate();
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
+            .withRateLimiter(rateLimiter)
+            .decorate();
         alignTime(rateLimiter);
 
         Try<String> firstTry = Try.of(restrictedSupplier);
@@ -304,9 +306,9 @@ public class DecoratorsTest {
         given(cache.containsKey("testKey")).willReturn(true);
         given(cache.get("testKey")).willReturn("Hello from cache");
         CheckedFunction1<String, String> cachedFunction = Decorators
-                .ofCheckedSupplier(() -> "Hello world")
-                .withCache(Cache.of(cache))
-                .decorate();
+            .ofCheckedSupplier(() -> "Hello world")
+            .withCache(Cache.of(cache))
+            .decorate();
 
         Try<String> value = Try.of(() -> cachedFunction.apply("testKey"));
 
@@ -321,9 +323,9 @@ public class DecoratorsTest {
         given(cache.containsKey("testKey")).willReturn(true);
         given(cache.get("testKey")).willReturn("Hello from cache");
         Function<String, String> cachedFunction = Decorators
-                .ofSupplier(() -> "Hello world")
-                .withCache(Cache.of(cache))
-                .decorate();
+            .ofSupplier(() -> "Hello world")
+            .withCache(Cache.of(cache))
+            .decorate();
 
         String value = cachedFunction.apply("testKey");
 

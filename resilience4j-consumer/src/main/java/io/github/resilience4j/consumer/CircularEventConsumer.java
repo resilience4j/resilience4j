@@ -31,8 +31,7 @@ public class CircularEventConsumer<T> implements EventConsumer<T> {
     private CircularFifoBuffer<T> eventCircularFifoBuffer;
 
     /**
-     * Creates an {@code CircuitBreakerEventConsumer} with the given (fixed)
-     * capacity
+     * Creates an {@code CircuitBreakerEventConsumer} with the given (fixed) capacity
      *
      * @param capacity the capacity of this CircuitBreakerEventConsumer
      * @throws IllegalArgumentException if {@code capacity < 1}
@@ -42,7 +41,7 @@ public class CircularEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public void consumeEvent(T event){
+    public void consumeEvent(T event) {
         eventCircularFifoBuffer.add(event);
     }
 
@@ -51,7 +50,7 @@ public class CircularEventConsumer<T> implements EventConsumer<T> {
      *
      * @return a list containing all of the buffered events.
      */
-    public List<T> getBufferedEvents(){
+    public List<T> getBufferedEvents() {
         return eventCircularFifoBuffer.toList();
     }
 }

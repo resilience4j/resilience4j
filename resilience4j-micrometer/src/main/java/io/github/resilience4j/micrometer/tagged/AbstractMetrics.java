@@ -17,10 +17,14 @@ package io.github.resilience4j.micrometer.tagged;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 abstract class AbstractMetrics {
 
@@ -32,9 +36,15 @@ abstract class AbstractMetrics {
 
     void removeMetrics(MeterRegistry registry, String name) {
         Set<Meter.Id> ids = meterIdMap.get(name);
-        if(ids != null){
+        if (ids != null) {
             ids.forEach(registry::remove);
         }
         meterIdMap.remove(name);
+    }
+
+    List<Tag> mapToTagsList(Map<String, String> tagsMap) {
+        return tagsMap.entrySet()
+                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
+                .collect(Collectors.toList());
     }
 }

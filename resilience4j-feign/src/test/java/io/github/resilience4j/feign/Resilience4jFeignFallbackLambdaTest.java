@@ -16,21 +16,14 @@
  */
 package io.github.resilience4j.feign;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.feign.test.Issue560;
 import io.github.resilience4j.feign.test.TestService;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -48,11 +41,11 @@ public class Resilience4jFeignFallbackLambdaTest {
     @Before
     public void setUp() {
         final FeignDecorators decorators = FeignDecorators.builder()
-                .withFallback(Issue560.createLambdaFallback())
-                .build();
+            .withFallback(Issue560.createLambdaFallback())
+            .build();
 
         this.testService = Resilience4jFeign.builder(decorators)
-                .target(TestService.class, MOCK_URL);
+            .target(TestService.class, MOCK_URL);
     }
 
     @Test
@@ -67,9 +60,9 @@ public class Resilience4jFeignFallbackLambdaTest {
 
     private void setupStub() {
         stubFor(get(urlPathEqualTo("/greeting"))
-                .willReturn(aResponse()
-                        .withStatus(400)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Hello, world!")));
+            .willReturn(aResponse()
+                .withStatus(400)
+                .withHeader("Content-Type", "text/plain")
+                .withBody("Hello, world!")));
     }
 }

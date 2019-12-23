@@ -16,16 +16,17 @@
  */
 package io.github.resilience4j.feign;
 
+import io.vavr.CheckedFunction1;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import io.vavr.CheckedFunction1;
-
 /**
- * A {@link FallbackHandler} wrapping a fallback of type {@param T} whose instance will consume the exception thrown on error.
- * A new instance of the fallback will be created for every thrown exceptions.
+ * A {@link FallbackHandler} wrapping a fallback of type {@param T} whose instance will consume the
+ * exception thrown on error. A new instance of the fallback will be created for every thrown
+ * exceptions.
  *
  * @param <T> the type of the fallback
  */
@@ -38,9 +39,10 @@ class FallbackFactory<T> implements FallbackHandler<T> {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
-                                                       Method method,
-                                                       Predicate<Exception> filter) {
+    public CheckedFunction1<Object[], Object> decorate(
+        CheckedFunction1<Object[], Object> invocationCall,
+        Method method,
+        Predicate<Exception> filter) {
         return args -> {
             try {
                 return invocationCall.apply(args);

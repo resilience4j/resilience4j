@@ -32,8 +32,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-bulkhead.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-bulkhead.
  */
 @Configuration
 @ConditionalOnClass(Bulkhead.class)
@@ -42,19 +42,21 @@ import org.springframework.context.annotation.Import;
 @AutoConfigureBefore(EndpointAutoConfiguration.class)
 public class BulkheadAutoConfiguration {
 
-	@Configuration
-	@ConditionalOnClass(value = {Endpoint.class})
-	public static class BulkheadEndpointConfiguration {
+    @Configuration
+    @ConditionalOnClass(value = {Endpoint.class})
+    public static class BulkheadEndpointConfiguration {
 
-		@Bean
-		public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
-			return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
-		}
+        @Bean
+        public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+            return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
+        }
 
-		@Bean
-		public BulkheadEventsEndpoint bulkheadEventsEndpoint(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
-			return new BulkheadEventsEndpoint(eventConsumerRegistry);
-		}
+        @Bean
+        public BulkheadEventsEndpoint bulkheadEventsEndpoint(
+            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+            return new BulkheadEventsEndpoint(eventConsumerRegistry);
+        }
 
-	}
+    }
 }

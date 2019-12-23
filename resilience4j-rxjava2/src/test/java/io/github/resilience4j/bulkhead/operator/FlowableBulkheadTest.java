@@ -20,7 +20,7 @@ public class FlowableBulkheadTest {
     private Bulkhead bulkhead;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 

@@ -15,27 +15,22 @@
  */
 package io.github.resilience4j.fallback;
 
-import static io.github.resilience4j.utils.AspectUtil.newHashSet;
+import io.reactivex.*;
+import io.vavr.CheckedFunction0;
 
 import java.util.Set;
 import java.util.function.Function;
 
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.vavr.CheckedFunction0;
+import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
- * fallbackMethod decorator for {@link ObservableSource}, {@link SingleSource}, {@link CompletableSource}, {@link MaybeSource} and {@link Flowable}.
+ * fallbackMethod decorator for {@link ObservableSource}, {@link SingleSource}, {@link
+ * CompletableSource}, {@link MaybeSource} and {@link Flowable}.
  */
 public class RxJava2FallbackDecorator implements FallbackDecorator {
-    private static final Set<Class<?>> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+
+    private static final Set<Class<?>> RX_SUPPORTED_TYPES = newHashSet(ObservableSource.class,
+        SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     @Override
     public boolean supports(Class<?> target) {
@@ -43,23 +38,29 @@ public class RxJava2FallbackDecorator implements FallbackDecorator {
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
+        CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
             if (request instanceof ObservableSource) {
                 Observable<?> observable = (Observable<?>) request;
-                return observable.onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Observable::error));
+                return observable
+                    .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Observable::error));
             } else if (request instanceof SingleSource) {
                 Single<?> single = (Single) request;
-                return single.onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Single::error));
+                return single
+                    .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Single::error));
             } else if (request instanceof CompletableSource) {
                 Completable completable = (Completable) request;
-                return completable.onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Completable::error));
+                return completable.onErrorResumeNext(
+                    rxJava2OnErrorResumeNext(fallbackMethod, Completable::error));
             } else if (request instanceof MaybeSource) {
                 Maybe<?> maybe = (Maybe) request;
-                return maybe.onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Maybe::error));
+                return maybe
+                    .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Maybe::error));
             } else if (request instanceof Flowable) {
                 Flowable<?> flowable = (Flowable) request;
-                return flowable.onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Flowable::error));
+                return flowable
+                    .onErrorResumeNext(rxJava2OnErrorResumeNext(fallbackMethod, Flowable::error));
             } else {
                 return request;
             }
@@ -67,7 +68,8 @@ public class RxJava2FallbackDecorator implements FallbackDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(FallbackMethod fallbackMethod, Function<? super Throwable, ? extends T> errorFunction) {
+    private <T> io.reactivex.functions.Function<Throwable, T> rxJava2OnErrorResumeNext(
+        FallbackMethod fallbackMethod, Function<? super Throwable, ? extends T> errorFunction) {
         return throwable -> {
             try {
                 return (T) fallbackMethod.fallback(throwable);

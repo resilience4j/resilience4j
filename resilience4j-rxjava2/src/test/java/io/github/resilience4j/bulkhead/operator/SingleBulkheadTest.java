@@ -19,11 +19,11 @@ import static org.mockito.Mockito.*;
  * Unit test for {@link SingleBulkhead} using {@link BulkheadOperator}.
  */
 public class SingleBulkheadTest {
-    
+
     private Bulkhead bulkhead;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
@@ -86,10 +86,10 @@ public class SingleBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         Single.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(BulkheadOperator.of(bulkhead))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(BulkheadOperator.of(bulkhead))
+            .test()
+            .cancel();
 
         then(bulkhead).should().releasePermission();
         then(bulkhead).should(never()).onComplete();
