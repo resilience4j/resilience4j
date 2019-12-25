@@ -140,6 +140,4 @@ public class BulkHeadConfigurationSpringTest {
 
         }
     }
-
-
 }

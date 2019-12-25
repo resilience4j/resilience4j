@@ -11,6 +11,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.customizer.Customizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -56,11 +57,13 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
+        Customizer<ThreadPoolBulkheadRegistry> compositeThreadPoolBulkheadRegistryCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-            threadPoolBulkheadRegistryEventConsumer);
+            threadPoolBulkheadRegistryEventConsumer,
+            compositeThreadPoolBulkheadRegistryCustomizer);
     }
 
 }

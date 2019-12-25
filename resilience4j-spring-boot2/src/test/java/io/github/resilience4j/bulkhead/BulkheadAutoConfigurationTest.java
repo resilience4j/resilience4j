@@ -26,6 +26,9 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
+import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
+import io.github.resilience4j.customizer.Customizer;
+import io.github.resilience4j.service.test.BeanContextPropagator;
 import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.TestApplication;
 import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
@@ -48,6 +51,7 @@ import java.util.concurrent.*;
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -74,6 +78,37 @@ public class BulkheadAutoConfigurationTest {
     private TestRestTemplate restTemplate;
     @Autowired
     private DummyFeignClient dummyFeignClient;
+    @Autowired
+    private Customizer<ThreadPoolBulkheadRegistry> customizer;
+
+    @Test
+    public void testThreadPoolBulkheadCustomizer() {
+        assertThat(customizer).isNotNull().isInstanceOf(CompositeRegistryCustomizer.class);
+        List<Customizer> delegates = (List<Customizer>) getField(customizer, "delegates");
+        assertThat(delegates).isNotNull().hasSize(1);
+
+        //ContextPropagator set by properties
+        ThreadPoolBulkhead bulkheadD = threadPoolBulkheadRegistry
+            .bulkhead(BulkheadDummyService.BACKEND_D);
+
+        assertThat(bulkheadD).isNotNull();
+        assertThat(bulkheadD.getBulkheadConfig()).isNotNull();
+        assertThat(bulkheadD.getBulkheadConfig().getContextPropagator()).isNotNull();
+        assertThat(bulkheadD.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
+        assertThat(bulkheadD.getBulkheadConfig().getContextPropagator().get(0).getClass())
+            .isEqualTo(TestThreadLocalContextPropagator.class);
+
+        //ContextPropagator set by bean using Registry Customizer
+        ThreadPoolBulkhead bulkheadC = threadPoolBulkheadRegistry
+            .bulkhead(BulkheadDummyService.BACKEND_C);
+
+        assertThat(bulkheadC).isNotNull();
+        assertThat(bulkheadC.getBulkheadConfig()).isNotNull();
+        assertThat(bulkheadC.getBulkheadConfig().getContextPropagator()).isNotNull();
+        assertThat(bulkheadC.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
+        assertThat(bulkheadC.getBulkheadConfig().getContextPropagator().get(0).getClass())
+            .isEqualTo(BeanContextPropagator.class);
+    }
 
     /**
      * This test verifies that the combination of @FeignClient and @Bulkhead annotation works as
@@ -156,7 +191,8 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD", "dummyFeignClient");
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD",
+                "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomethingAsync);
@@ -183,8 +219,8 @@ public class BulkheadAutoConfigurationTest {
     }
 
     /**
-     * The test verifies that a Bulkhead instance is created and configured properly and
-     * is able to transfer context from ThreadLocal
+     * The test verifies that a Bulkhead instance is created and configured properly and is able to
+     * transfer context from ThreadLocal
      */
     @Test
     public void testBulkheadAutoConfigurationThreadPoolContextPropagation()
@@ -201,8 +237,8 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkhead.getBulkheadConfig()).isNotNull();
         assertThat(bulkhead.getBulkheadConfig().getContextPropagator()).isNotNull();
         assertThat(bulkhead.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
-        assertThat(bulkhead.getBulkheadConfig().getContextPropagator().get(0).getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
-
+        assertThat(bulkhead.getBulkheadConfig().getContextPropagator().get(0).getClass())
+            .isEqualTo(TestThreadLocalContextPropagator.class);
 
         CompletableFuture<Object> future = dummyService
             .doSomethingAsyncWithThreadLocal();
@@ -259,7 +295,8 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD", "dummyFeignClient");
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD",
+                "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
@@ -389,7 +426,8 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD", "dummyFeignClient");
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD",
+                "dummyFeignClient");
 
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(
             "/actuator/bulkheadevents");

@@ -21,7 +21,6 @@ package io.github.resilience4j.bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -92,9 +91,7 @@ public class ThreadPoolBulkheadConfig {
         return maxThreadPoolSize;
     }
 
-    public int getCoreThreadPoolSize() {
-        return coreThreadPoolSize;
-    }
+    public int getCoreThreadPoolSize() { return coreThreadPoolSize; }
 
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
@@ -102,6 +99,10 @@ public class ThreadPoolBulkheadConfig {
 
     public List<? extends ContextPropagator> getContextPropagator() {
         return contextPropagators;
+    }
+
+    public void setContextPropagators(List<? extends ContextPropagator> contextPropagators) {
+        this.contextPropagators = contextPropagators;
     }
 
     public static class Builder {

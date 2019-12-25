@@ -20,11 +20,13 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +50,8 @@ public class AbstractRefreshScopedBulkheadConfigurationTest {
 
         assertThat(bulkheadConfig.threadPoolBulkheadRegistry(
             new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()), new CompositeRegistryCustomizer<>(
+                emptyList()))).isNotNull();
     }
 
     static class BulkheadConfig extends AbstractRefreshScopedBulkheadConfiguration {

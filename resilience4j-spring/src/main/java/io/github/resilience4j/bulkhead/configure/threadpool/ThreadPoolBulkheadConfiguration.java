@@ -23,14 +23,13 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
+import io.github.resilience4j.customizer.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -48,15 +47,29 @@ public class ThreadPoolBulkheadConfiguration {
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
+        Customizer<ThreadPoolBulkheadRegistry> compositeThreadPoolBulkheadRegistryCustomizer) {
+
         ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(
             bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer);
+
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
+
         bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry
             .bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name)));
+
+        compositeThreadPoolBulkheadRegistryCustomizer.customize(bulkheadRegistry);
+
         return bulkheadRegistry;
     }
+
+    @Bean
+    @Primary
+    public Customizer<ThreadPoolBulkheadRegistry> compositeThreadPoolBulkheadRegistryCustomizer(Optional<List<Customizer<ThreadPoolBulkheadRegistry>>> customizers){
+        return new CompositeRegistryCustomizer<>(customizers.isPresent()? customizers.get() : Collections.emptyList());
+    }
+
 
     @Bean
     @Primary
@@ -75,6 +88,7 @@ public class ThreadPoolBulkheadConfiguration {
     private ThreadPoolBulkheadRegistry createBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+
         Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties
             .getConfigs()
             .entrySet()
