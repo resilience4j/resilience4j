@@ -21,6 +21,8 @@ package io.github.resilience4j.bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -107,6 +109,7 @@ public class ThreadPoolBulkheadConfig {
 
     public static class Builder {
         private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
+        private List<ContextPropagator> contextPropagators = new ArrayList<>();
         private ThreadPoolBulkheadConfig config;
 
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
@@ -157,6 +160,13 @@ public class ThreadPoolBulkheadConfig {
             this.contextPropagatorClasses = contextPropagatorClasses != null
                 ? contextPropagatorClasses
                 : new Class[0];
+            return this;
+        }
+
+        public final Builder contextPropagator(ContextPropagator... contextPropagators) {
+            this.contextPropagators = contextPropagators != null ?
+                Arrays.stream(contextPropagators).collect(toList()) :
+                new ArrayList<>();
             return this;
         }
 
@@ -219,6 +229,10 @@ public class ThreadPoolBulkheadConfig {
                 config.contextPropagators = stream(contextPropagatorClasses)
                     .map(c -> instantiateClassDefConstructor(c))
                     .collect(toList());
+            }
+            //setting bean of type context propagator overrides the class type.
+            if (contextPropagators.size() > 0){
+                config.contextPropagators = this.contextPropagators;
             }
 
             return config;
