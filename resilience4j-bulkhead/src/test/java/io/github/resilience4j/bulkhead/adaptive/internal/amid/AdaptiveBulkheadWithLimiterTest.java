@@ -5,12 +5,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,85 +27,164 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 /**
  * test the adoptive bulkhead limiter logic
  */
+@Ignore
 public class AdaptiveBulkheadWithLimiterTest {
-	private AdaptiveBulkhead bulkhead;
-	private AdaptiveBulkheadConfig<AimdConfig> config;
-	// enable if u need to see the graphs of the executions
-	private boolean drawGraphs = false;
 
-	@Before
-	public void setup() {
-		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
-				.minConcurrentRequestsLimit(5)
-				.slidingWindowSize(5)
-				.slidingWindowTime(2)
-				.failureRateThreshold(50)
-				.slowCallRateThreshold(50)
-				.slowCallDurationThreshold(200)
-				.build()).build();
+    private static final Logger LOGGER = LoggerFactory.getLogger(
+        AdaptiveBulkheadWithLimiterTest.class);
+    private static MockServerContainer mockServerContainer;
+    private static MockServerClient client;
 
-		bulkhead = AdaptiveBulkhead.of("test", config);
+    static {
+        mockServerContainer = new MockServerContainer();
+        mockServerContainer.start();
+        client = new MockServerClient(mockServerContainer.getContainerIpAddress(),
+            mockServerContainer.getServerPort());
+    }
 
-	}
+    // enable if u need to see the graphs of the executions
+    private boolean drawGraphs = false;
+    private List<LogEntry> maxConcurrentCalls = new CopyOnWriteArrayList<>();
+    private AdaptiveBulkhead bulkhead;
+    private AdaptiveBulkheadConfig<AimdConfig> config;
+    private final String baseUrl = mockServerContainer.getEndpoint() + "/testService/2";
 
-	@Test
-	public void testLimiter() throws InterruptedException {
-		List<Double> time = new ArrayList<>();
-		List<Double> maxConcurrentCalls = new ArrayList<>();
-		AtomicInteger count = new AtomicInteger();
-		if (drawGraphs) {
-			bulkhead.getEventPublisher().onEvent(event -> {
-				if (event instanceof BulkheadOnLimitDecreasedEvent || event instanceof BulkheadOnLimitIncreasedEvent) {
-					maxConcurrentCalls.add(Double.valueOf(event.eventData().get("newMaxConcurrentCalls")));
-					time.add((double) count.incrementAndGet());
-				}
+    @Before
+    public void init() {
+        maxConcurrentCalls.clear();
+        config = AdaptiveBulkheadConfig.<AimdConfig>builder()
+            .config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
+                .minConcurrentRequestsLimit(10)
+                .slidingWindowSize(20)
+                .failureRateThreshold(50)
+                .slowCallRateThreshold(50)
+                .slowCallDurationThreshold(150)
+                .build()).build();
 
-			});
-		}
-		ExecutorService executorService = Executors.newFixedThreadPool(6);
-		// if u like to get the graphs , increase the number of iterations to have better distribution
-		for (int i = 0; i < 3000; i++) {
-			Runnable runnable = () -> {
-				bulkhead.acquirePermission();
-				final Duration duration = Duration.ofMillis(randomLatency(5, 400));
-				try {
-					Thread.sleep(duration.toMillis());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				bulkhead.onSuccess(duration.toMillis(), TimeUnit.MILLISECONDS);
-			};
-			executorService.execute(runnable);
-		}
+        bulkhead = AdaptiveBulkhead.of("test", config);
+        bulkhead.getEventPublisher().onEvent(event -> {
+            LOGGER.info("Received event {}: {}  ", event.getEventType(),
+                event.eventData().entrySet().toString());
+            if (event instanceof BulkheadOnLimitDecreasedEvent
+                || event instanceof BulkheadOnLimitIncreasedEvent) {
+                maxConcurrentCalls
+                    .add(new LogEntry(event.getCreationTime().getNano(),
+                        Double.parseDouble(event.eventData().get("newMaxConcurrentCalls"))));
 
-		assertThat(config).isNotNull();
-		assertThat(bulkhead).isNotNull();
+            }
+        });
+        final Duration duration = Duration.ofMillis(randomLatency(1, 200));
+        client.when(HttpRequest.request()
+            .withPath("/testService/2"))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withBody("{\"msgCode\":\"2\",\"msg\":\"2000000\"}")
+                .withDelay(TimeUnit.MILLISECONDS, duration.toMillis())
+                .withHeader("Content-Type", "application/json"));
+    }
 
-		Thread.sleep(20000);
-		executorService.shutdown();
+    @Test
+    public void testProtectedServiceBehindTheGateway() {
+        assertThat(config).isNotNull();
+        assertThat(bulkhead).isNotNull();
+        ExecutorService executorService = Executors
+            .newFixedThreadPool(20);
+        List<Callable<HttpResponse>> parallelCalls = new ArrayList<>(20);
+        for (int i = 0; i < 20; i++) {
+            parallelCalls.add(this::callProtectedApi);
+        }
+        try {
+            executorService.invokeAll(parallelCalls);
+        } catch (InterruptedException e) {
+            LOGGER.error(
+                "InterruptedException  has been thrown while waiting for all parallel tasks to be done",
+                e);
+        }
+        LOGGER
+            .info("finished the TEST with reported matrices size : {}", maxConcurrentCalls.size());
+        executorService.shutdown();
+    }
 
-		if (drawGraphs) {
-			// Create Chart
-			XYChart chart2 = new XYChartBuilder().width(800).height(600).title(getClass().getSimpleName()).xAxisTitle("time").yAxisTitle("Concurrency limit").build();
-			chart2.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
-			chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-			chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
-			chart2.getStyler().setYAxisDecimalPattern("ConcurrentCalls #");
-			chart2.getStyler().setPlotMargin(0);
-			chart2.getStyler().setPlotContentSize(.95);
+    public HttpResponse callProtectedApi() {
+        // increase the number of loop count for bigger load and better call distribution , set to 100 only for limiting testing execution time
+        for (int i = 0; i < 100; i++) {
+            try {
+                bulkhead.executeCheckedSupplier(() -> {
+                    LOGGER.info("Calling endpoint : " + baseUrl);
+                    org.apache.http.HttpResponse response = hitTheServerWithPostRequest(
+                        baseUrl);
+                    try {
+                        LOGGER
+                            .info("Received: status->{}, payload->{}",
+                                response.getStatusLine().getStatusCode(),
+                                EntityUtils.toString(response.getEntity(), "UTF-8"));
+                    } catch (IOException e) {
+                        LOGGER.error("Parsing response entity failed ", e);
+                    }
+                    return response;
+                });
+            } catch (Throwable throwable) {
+                LOGGER.error("error from  adaptive bulkhead", throwable);
+            }
+        }
+        return null;
+    }
 
 
-			chart2.addSeries("MaxConcurrentCalls", time, maxConcurrentCalls);
-			try {
-				BitmapEncoder.saveJPGWithQuality(chart2, "./AdaptiveBulkheadConcurrency.jpg", 0.95f);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+    private org.apache.http.HttpResponse hitTheServerWithPostRequest(String getUrl) {
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet httpGet = new HttpGet(getUrl);
+        httpGet.setHeader("Content-type", "application/json");
+        org.apache.http.HttpResponse response = null;
+        try {
+            response = client.execute(httpGet);
 
-	}
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return response;
+    }
 
-	public long randomLatency(int min, int max) {
-		return min + ThreadLocalRandom.current().nextLong(max - min);
-	}
+
+    @AfterClass
+    public static void close() {
+        mockServerContainer.close();
+    }
+
+    @After
+    public void beforeFinish() {
+        if (drawGraphs) {
+            drawChart();
+        }
+    }
+
+    private void drawChart() {
+        // Create Chart
+        if (!maxConcurrentCalls.isEmpty()) {
+            Collections.sort(maxConcurrentCalls);
+            XYChart chart2 = new XYChartBuilder().width(800).height(600)
+                .title("Adaptive bulkhead concurrency")
+                .xAxisTitle("Seconds").yAxisTitle("Max Concurrent Limit").build();
+            chart2.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+            chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+            chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
+            chart2.getStyler().setYAxisDecimalPattern("Max Concurrent Limit #");
+            chart2.getStyler().setPlotMargin(0);
+            chart2.getStyler().setPlotContentSize(0.50);
+            chart2.addSeries("MaxConcurrentCalls", maxConcurrentCalls.stream().map(
+                LogEntry::getTime).collect(
+                Collectors.toList()), maxConcurrentCalls.stream().map(
+                LogEntry::getConcurrentCalls).collect(
+                Collectors.toList()));
+            try {
+                BitmapEncoder.saveJPGWithQuality(chart2, "./AdaptiveBulkheadConcurrency.jpg", 1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private long randomLatency(int min, int max) {
+        return min + ThreadLocalRandom.current().nextLong(max - min);
+    }
 }
