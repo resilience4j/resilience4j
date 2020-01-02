@@ -155,11 +155,11 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     TimeLimiter timeLimiter(String name, Supplier<TimeLimiterConfig> timeLimiterConfigSupplier);
 
     /**
-     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
-     * configuration.
+     * Returns a managed {@link TimeLimiter} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the TimeLimiter
-     * @param configName a custom TimeLimiter configuration name
+     * @param configName the name of the shared configuration
      * @return The {@link TimeLimiter}
      */
     TimeLimiter timeLimiter(String name, String configName);

@@ -231,21 +231,21 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         io.vavr.collection.Map<String, String> tags);
 
     /**
-     * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter
-     * configuration.
+     * Returns a managed {@link RateLimiter} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the RateLimiter
-     * @param configName a custom RateLimiter configuration name
+     * @param configName the name of the shared configuration
      * @return The {@link RateLimiter}
      */
     RateLimiter rateLimiter(String name, String configName);
 
     /**
-     * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter
-     * configuration.
+     * Returns a managed {@link RateLimiter} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the RateLimiter
-     * @param configName a custom RateLimiter configuration name
+     * @param configName the name of the shared configuration
      * @return The {@link RateLimiter}
      */
     RateLimiter rateLimiter(String name, String configName,
