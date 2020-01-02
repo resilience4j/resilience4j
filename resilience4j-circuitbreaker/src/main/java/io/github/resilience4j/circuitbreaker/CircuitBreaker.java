@@ -550,11 +550,11 @@ public interface CircuitBreaker {
     void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
     /**
-     * Records a successful call.
+     * Records a successful call. This method must be invoked when a call was
+     * successful.
      *
      * @param duration     The elapsed time duration of the call
-     * @param durationUnit The duration unit This method must be invoked when a call was
-     *                     successful.
+     * @param durationUnit The duration unit
      */
     void onSuccess(long duration, TimeUnit durationUnit);
 
