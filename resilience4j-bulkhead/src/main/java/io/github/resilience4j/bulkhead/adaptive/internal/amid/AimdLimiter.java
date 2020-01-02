@@ -18,28 +18,27 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 
-import static java.lang.Math.max;
-
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.metrics.Snapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.Math.max;
 
 /**
- * limit adapter based sliding window metrics and AMID algorithm
+ * limit adapter based into sliding window metrics and AMID algorithm
  */
 public class AimdLimiter implements LimitPolicy {
 	private static final Logger LOG = LoggerFactory.getLogger(AimdLimiter.class);
 	private static final long MILLI_SCALE = 1_000_000L;
-	public static final String DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS = "Dropping the limit with new max concurrent calls {}";
+    private static final String DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS = "Dropping the limit with new max concurrent calls {}";
 	private final AtomicInteger currentMaxLimit;
 	private final AdaptiveBulkheadConfig<AimdConfig> amidConfigAdaptiveBulkheadConfig;
 	private final long desirableLatency;
@@ -51,10 +50,18 @@ public class AimdLimiter implements LimitPolicy {
 		desirableLatency = amidConfigAdaptiveBulkheadConfig.getConfiguration().getDesirableLatency().toNanos();
 	}
 
-	@Override
-	public LimitResult adaptLimitIfAny(@NonNull Snapshot snapshot, int inFlight) {
-		return checkIfThresholdsExceeded(snapshot, inFlight);
-	}
+    /**
+     * Adopt the internal bulkhead max concurrent calls limit and wait duration of permission
+     * acquiring based into AIMD algorithm
+     *
+     * @param snapshot the metrics snapshot
+     * @param inFlight concurrent in flight calls
+     * @return the updated max limit and wait duration
+     */
+    @Override
+    public LimitResult adaptLimitIfAny(@NonNull Snapshot snapshot, int inFlight) {
+        return checkIfThresholdsExceeded(snapshot, inFlight);
+    }
 
 	/**
 	 * Checks if the following :
@@ -65,15 +72,15 @@ public class AimdLimiter implements LimitPolicy {
 	 */
 	private LimitResult checkIfThresholdsExceeded(Snapshot snapshot, int inFlight) {
 		float failureRateInPercentage = getFailureRate(snapshot);
-		final Duration averageLatencySeconds = snapshot.getAverageDuration();
+        final Duration snapshotAverageDuration = snapshot.getAverageDuration();
 		final float slowCallRate = getSlowCallRate(snapshot);
 		Long waitTimeMillis = null;
 		if (failureRateInPercentage == -1 && slowCallRate == -1) {
 			// do nothing
 		} else if (failureRateInPercentage >= amidConfigAdaptiveBulkheadConfig.getConfiguration().getFailureRateThreshold()) {
-			waitTimeMillis = handleDropLimit(averageLatencySeconds);
+            waitTimeMillis = handleDropLimit(snapshotAverageDuration);
 		} else if (getSlowCallRate(snapshot) >= amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlowCallRateThreshold()) {
-			waitTimeMillis = handleDropLimit(averageLatencySeconds);
+            waitTimeMillis = handleDropLimit(snapshotAverageDuration);
 		} else {
 			if (inFlight * amidConfigAdaptiveBulkheadConfig.getConfiguration().getLimitIncrementInflightFactor() >= getCurrentLimit()) {
 				final int limit = currentMaxLimit.incrementAndGet();
@@ -92,35 +99,50 @@ public class AimdLimiter implements LimitPolicy {
 		return new LimitResult(updatedLimit, waitTimeMillis != null ? waitTimeMillis : 0);
 	}
 
-	private int getCurrentLimit() {
-		return currentMaxLimit.get();
-	}
+    private int getCurrentLimit() {
+        return currentMaxLimit.get();
+    }
 
-	private Long handleDropLimit(Duration averageLatencySeconds) {
-		Long waitTimeMillis;
-		waitTimeMillis = (max(0L, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
-		final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> max((int) (limit * amidConfigAdaptiveBulkheadConfig.getConfiguration().getConcurrencyDropMultiplier()), 1));
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
-		}
-		return waitTimeMillis;
-	}
+    /**
+     * Calculate the new wait duration and set the new reduced max concurrent limit
+     * - New wait duration --> max of desirable wait duration and the average max calculated latency
+     * - New reduced max limit --> max of current limit * concurrency drop multiplier and 1
+     * @param averageLatencySeconds new calculated average latency in milliseconds
+     * @return the updated waite duration if any
+     */
+    private Long handleDropLimit(Duration averageLatencySeconds) {
+        Long waitTimeMillis;
+        waitTimeMillis = (max(0L, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
+        final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> max((int) (limit * amidConfigAdaptiveBulkheadConfig.getConfiguration().getConcurrencyDropMultiplier()), 1));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
+        }
+        return waitTimeMillis;
+    }
 
-	private float getSlowCallRate(Snapshot snapshot) {
-		int bufferedCalls = snapshot.getTotalNumberOfCalls();
-		if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowSize()) {
-			return -1.0f;
-		}
-		return snapshot.getSlowCallRate();
-	}
+    /**
+     * @param snapshot the current metrics snapshot
+     * @return the slow call rate within the the sliding window size if any
+     */
+    private float getSlowCallRate(Snapshot snapshot) {
+        int bufferedCalls = snapshot.getTotalNumberOfCalls();
+        if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowSize()) {
+            return -1.0f;
+        }
+        return snapshot.getSlowCallRate();
+    }
 
-	private float getFailureRate(Snapshot snapshot) {
-		int bufferedCalls = snapshot.getTotalNumberOfCalls();
-		if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowSize()) {
-			return -1.0f;
-		}
-		return snapshot.getFailureRate();
-	}
+    /**
+     * @param snapshot the current metrics snapshot
+     * @return the failure call rate within the the sliding window size if any
+     */
+    private float getFailureRate(Snapshot snapshot) {
+        int bufferedCalls = snapshot.getTotalNumberOfCalls();
+        if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowSize()) {
+            return -1.0f;
+        }
+        return snapshot.getFailureRate();
+    }
 
 
 }

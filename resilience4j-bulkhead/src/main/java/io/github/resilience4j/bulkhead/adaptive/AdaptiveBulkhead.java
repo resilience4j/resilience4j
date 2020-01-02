@@ -86,7 +86,7 @@ public interface AdaptiveBulkhead {
 	/**
 	 * Records a failed call and releases a permission.
 	 */
-	void onError(long startTime, TimeUnit durationUnit,Throwable throwable);
+    void onError(long callDuration, TimeUnit durationUnit, Throwable throwable);
 
 
 	/**
@@ -187,15 +187,15 @@ public interface AdaptiveBulkhead {
 			boolean isFailed=false;
 			bulkhead.acquirePermission();
 			try {
-                start = System.currentTimeMillis();
+                start = System.nanoTime();
 				return supplier.apply();
 			} catch (Exception e) {
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				isFailed=true;
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -217,22 +217,24 @@ public interface AdaptiveBulkhead {
 			if (!bulkhead.tryAcquirePermission()) {
 				promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
 			} else {
-                long start = System.currentTimeMillis();
+                long start = System.nanoTime();
 				try {
 					supplier.get()
 							.whenComplete(
 									(result, throwable) -> {
 										if (throwable != null) {
-											bulkhead.onError(start, TimeUnit.MILLISECONDS,throwable);
+                                            bulkhead.onError(System.nanoTime() - start,
+                                                TimeUnit.NANOSECONDS, throwable);
 											promise.completeExceptionally(throwable);
 										} else {
-                                            bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                                            bulkhead.onSuccess(System.nanoTime() - start,
+                                                TimeUnit.NANOSECONDS);
 											promise.complete(result);
 										}
 									}
 							);
 				} catch (Exception e) {
-					bulkhead.onError(start, TimeUnit.MILLISECONDS,e);
+                    bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 					promise.completeExceptionally(e);
 				}
 			}
@@ -258,11 +260,11 @@ public interface AdaptiveBulkhead {
 				runnable.run();
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -286,11 +288,11 @@ public interface AdaptiveBulkhead {
 				return callable.call();
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -314,11 +316,11 @@ public interface AdaptiveBulkhead {
 				return supplier.get();
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -342,11 +344,11 @@ public interface AdaptiveBulkhead {
 				consumer.accept(t);
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -370,11 +372,11 @@ public interface AdaptiveBulkhead {
 				consumer.accept(t);
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -397,11 +399,11 @@ public interface AdaptiveBulkhead {
 				runnable.run();
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -426,11 +428,11 @@ public interface AdaptiveBulkhead {
 				return function.apply(t);
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};
@@ -455,11 +457,11 @@ public interface AdaptiveBulkhead {
 				return function.apply(t);
 			} catch (Exception e) {
 				isFailed=true;
-				bulkhead.onError( start,TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
 				throw e;
 			} finally {
 				if(start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 				}
 			}
 		};

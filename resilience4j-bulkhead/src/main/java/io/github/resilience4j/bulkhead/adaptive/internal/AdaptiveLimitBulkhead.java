@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -105,18 +104,17 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 	}
 
 	@Override
-	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
+    public void onError(long callDuration, TimeUnit durationUnit, Throwable throwable) {
 		//noinspection unchecked
 		if (adaptationConfig.getIgnoreExceptionPredicate().test(throwable)) {
             releasePermission();
 			publishBulkheadEvent(new BulkheadOnIgnoreEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
-		} else if (adaptationConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
-			Instant finish = Instant.now();
-			this.handleError(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit, throwable);
+        } else if (adaptationConfig.getRecordExceptionPredicate().test(throwable)
+            && callDuration != 0) {
+            this.handleError(callDuration, durationUnit, throwable);
 		} else {
-			if (start != 0) {
-				Instant finish = Instant.now();
-				this.onSuccess(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit);
+            if (callDuration != 0) {
+                this.onSuccess(callDuration, durationUnit);
 			}
 		}
 	}
@@ -310,19 +308,22 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 			LOG.debug("starting the adaption of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime, isSuccess, inFlight);
 		}
 		Snapshot snapshot;
-		final long callTimeNanos = TimeUnit.MILLISECONDS.toNanos(callTime);
 		final long desirableLatency = adaptationConfig.getConfiguration().getDesirableLatency().toNanos();
 		if (isSuccess) {
-			if (callTimeNanos > desirableLatency) {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_SUCCESS);
+            if (callTime > desirableLatency) {
+                snapshot = recordMetrics.record(callTime, TimeUnit.NANOSECONDS,
+                    io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_SUCCESS);
 			} else {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SUCCESS);
+                snapshot = recordMetrics.record(callTime, TimeUnit.NANOSECONDS,
+                    io.github.resilience4j.core.metrics.Metrics.Outcome.SUCCESS);
 			}
 		} else {
-			if (callTimeNanos > desirableLatency) {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_ERROR);
+            if (callTime > desirableLatency) {
+                snapshot = recordMetrics.record(callTime, TimeUnit.NANOSECONDS,
+                    io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_ERROR);
 			} else {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.ERROR);
+                snapshot = recordMetrics.record(callTime, TimeUnit.NANOSECONDS,
+                    io.github.resilience4j.core.metrics.Metrics.Outcome.ERROR);
 			}
 		}
 		return limitAdapter.adaptLimitIfAny(snapshot, inFlight);
