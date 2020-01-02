@@ -153,7 +153,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
      * @param tags Tags of the instance.
      * @return Map containing all tags
      */
-    protected io.vavr.collection.Map getAllTags(io.vavr.collection.Map<String, String> tags) {
+    protected io.vavr.collection.Map<String, String> getAllTags(io.vavr.collection.Map<String, String> tags) {
         return Objects.requireNonNull(tags, TAGS_MUST_NOT_BE_NULL).merge(registryTags);
     }
 
