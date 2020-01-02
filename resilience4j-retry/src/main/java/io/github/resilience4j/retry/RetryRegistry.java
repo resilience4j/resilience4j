@@ -223,23 +223,25 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
         io.vavr.collection.Map<String, String> tags);
 
     /**
-     * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
+     * Returns a managed {@link Retry} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the Retry
-     * @param configName a custom Retry configuration name
+     * @param configName the name of the shared configuration
      * @return The {@link Retry}
      */
     Retry retry(String name, String configName);
 
     /**
-     * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
+     * Returns a managed {@link Retry} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
      * @param name       the name of the Retry
-     * @param configName a custom Retry configuration name
+     * @param configName the name of the shared configuration
      * @param tags       tags added to the Retry
      * @return The {@link Retry}
      */

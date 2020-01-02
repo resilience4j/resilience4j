@@ -267,25 +267,25 @@ public interface ThreadPoolBulkheadRegistry extends
         io.vavr.collection.Map<String, String> tags);
 
     /**
-     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
-     * ThreadPoolBulkhead configuration.
+     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the ThreadPoolBulkhead
-     * @param configName a custom ThreadPoolBulkhead configuration name
+     * @param configName the name of the shared configuration
      * @return The {@link ThreadPoolBulkhead}
      */
     ThreadPoolBulkhead bulkhead(String name, String configName);
 
     /**
-     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
-     * ThreadPoolBulkhead configuration.
+     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
      * @param name       the name of the ThreadPoolBulkhead
-     * @param configName a custom ThreadPoolBulkhead configuration name
+     * @param configName the name of the shared configuration
      * @param tags       tags to add to the ThreadPoolBulkhead
      * @return The {@link ThreadPoolBulkhead}
      */
