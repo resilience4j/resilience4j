@@ -1,6 +1,7 @@
 package io.github.resilience4j.service.test;
 
 import io.github.resilience4j.bulkhead.ContextPropagator;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.customizer.Customizer;
 import org.springframework.boot.SpringApplication;
@@ -26,10 +27,13 @@ public class TestApplication {
     static class Config {
 
         @Bean
-        public Customizer<ThreadPoolBulkheadRegistry> threadpoolBulkheadCustomizer(
+        public Customizer<ThreadPoolBulkheadConfig.Builder> contextPropagatorBeanCustomizer(
             List<? extends ContextPropagator> contextPropagators) {
-            return (registry) -> registry.bulkhead("backendC").getBulkheadConfig()
-                .setContextPropagators(contextPropagators);
+            return (name, builder) -> {
+                if(name.equals("backendC")){
+                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()]));
+                }
+            };
         }
 
         @Bean

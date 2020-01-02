@@ -3,13 +3,14 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.TestThreadLocalContextPropagator;
 import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
+import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import io.github.resilience4j.customizer.Customizer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,14 +30,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {ThreadPoolBulkheadRegistryCustomizerTest.Config.class})
-public class ThreadPoolBulkheadRegistryCustomizerTest {
+@ContextConfiguration(classes = {ThreadPoolBulkheadBuilderCustomizerTest.Config.class})
+public class ThreadPoolBulkheadBuilderCustomizerTest {
 
     @Autowired
     private ThreadPoolBulkheadRegistry registry;
 
     @Autowired
-    private Customizer<ThreadPoolBulkheadRegistry> customizer;
+    private Customizer<ThreadPoolBulkheadConfig.Builder> customizer;
 
     @Test
     public void testThreadPoolBulkheadCustomizer() {
@@ -46,8 +46,8 @@ public class ThreadPoolBulkheadRegistryCustomizerTest {
         assertThat(customizer).isNotNull();
 
 
-        //All Customizer bean should be added to CompositeRegistryCustomizer as its primary bean.
-        assertThat(customizer.getClass()).isEqualTo(CompositeRegistryCustomizer.class);
+        //All Customizer bean should be added to CompositeBuilderCustomizer as its primary bean.
+        assertThat(customizer.getClass()).isEqualTo(CompositeBuilderCustomizer.class);
         List<Customizer> delegates = (List<Customizer>) getField(customizer, "delegates");
         assertThat(delegates).isNotNull();
         assertThat(delegates).hasSize(2);
@@ -101,21 +101,24 @@ public class ThreadPoolBulkheadRegistryCustomizerTest {
         }
 
         @Bean
-        public Customizer<ThreadPoolBulkheadRegistry> customizerB(
+        public Customizer<ThreadPoolBulkheadConfig.Builder> customizerB(
             List<? extends ContextPropagator> contextPropagators) {
-            return (registry) -> registry.getConfiguration("backendB")
-                .orElseThrow(
-                    () -> new IllegalArgumentException("backendC not present in the context"))
-                .setContextPropagators(contextPropagators);
+            return (name, builder) -> {
+                if(name.equals("backendB")){
+                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()]));
+                }
+            };
+
         }
 
         @Bean
-        public Customizer<ThreadPoolBulkheadRegistry> customizerD(
+        public Customizer<ThreadPoolBulkheadConfig.Builder> customizerD(
             List<? extends ContextPropagator> contextPropagators) {
-            return (registry) -> registry.getConfiguration("backendD")
-                .orElseThrow(
-                    () -> new IllegalArgumentException("backendD not present in the context"))
-                .setContextPropagators(contextPropagators);
+            return (name, builder) -> {
+                if(name.equals("backendD")){
+                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()]));
+                }
+            };
         }
 
         @Bean

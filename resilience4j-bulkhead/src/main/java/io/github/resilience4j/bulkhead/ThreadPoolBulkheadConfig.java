@@ -103,10 +103,6 @@ public class ThreadPoolBulkheadConfig {
         return contextPropagators;
     }
 
-    public void setContextPropagators(List<? extends ContextPropagator> contextPropagators) {
-        this.contextPropagators = contextPropagators;
-    }
-
     public static class Builder {
         private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
         private List<ContextPropagator> contextPropagators = new ArrayList<>();

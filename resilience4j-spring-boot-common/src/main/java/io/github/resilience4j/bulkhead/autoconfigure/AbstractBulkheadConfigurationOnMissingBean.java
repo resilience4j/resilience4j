@@ -18,6 +18,7 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
@@ -25,7 +26,6 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
 import io.github.resilience4j.customizer.Customizer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,18 +107,18 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Customizer<ThreadPoolBulkheadRegistry> compositeThreadPoolBulkheadRegistryCustomizer) {
+        Optional<Customizer<Builder>> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-            threadPoolBulkheadRegistryEventConsumer,compositeThreadPoolBulkheadRegistryCustomizer);
+            threadPoolBulkheadRegistryEventConsumer,compositeThreadPoolBulkheadBuilderCustomizer);
     }
 
     @Bean
     @Primary
-    public Customizer<ThreadPoolBulkheadRegistry> compositeThreadPoolBulkheadRegistryCustomizer(
-        Optional<List<Customizer<ThreadPoolBulkheadRegistry>>> customizers){
-        return threadPoolBulkheadConfiguration.compositeThreadPoolBulkheadRegistryCustomizer(customizers);
+    public Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer(
+        Optional<List<Customizer<Builder>>> customizers){
+        return threadPoolBulkheadConfiguration.compositeThreadPoolBulkheadBuilderCustomizer(customizers);
     }
 
     @Bean

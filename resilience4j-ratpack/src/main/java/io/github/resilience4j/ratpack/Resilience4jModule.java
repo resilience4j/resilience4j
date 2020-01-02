@@ -68,6 +68,7 @@ import ratpack.service.StartEvent;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -366,7 +367,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> threadPoolBulkheadProperties
-                        .createThreadPoolBulkheadConfig(entry.getValue())));
+                        .createThreadPoolBulkheadConfig(entry.getValue(), entry.getKey(), Optional.empty())));
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
                 .of(configs);
 
@@ -376,7 +377,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .forEach((name, threadPoolBulkheadConfig) -> {
                     io.github.resilience4j.bulkhead.ThreadPoolBulkhead threadPoolBulkhead =
                         threadPoolBulkheadRegistry.bulkhead(name, threadPoolBulkheadProperties
-                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig));
+                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig, name,Optional.empty()));
                     if (endpointsConfig.getThreadpoolbulkhead().isEnabled()) {
                         threadPoolBulkhead.getEventPublisher().onEvent(eventConsumerRegistry
                             .createEventConsumer(name,

@@ -1,18 +1,20 @@
 package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.TestThreadLocalContextPropagator;
-import io.github.resilience4j.bulkhead.*;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.Collections;
+import java.util.Optional;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +45,7 @@ public class BulkHeadConfigurationTest {
         //When
         ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
             .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), new CompositeRegistryCustomizer<>(Collections.emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()),Optional.empty());
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -103,8 +105,7 @@ public class BulkHeadConfigurationTest {
         try {
             ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
                 .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                    new CompositeRegistryEventConsumer<>(emptyList()),new CompositeRegistryCustomizer<>(
-                        Collections.emptyList()));
+                    new CompositeRegistryEventConsumer<>(emptyList()), Optional.empty());
             //Then
             assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
             // Should get default config and core number

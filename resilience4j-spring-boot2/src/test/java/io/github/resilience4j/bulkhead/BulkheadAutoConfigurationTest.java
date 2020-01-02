@@ -19,6 +19,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.TestThreadLocalContextPropagator;
 import io.github.resilience4j.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
 import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
@@ -26,7 +27,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
-import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
+import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import io.github.resilience4j.customizer.Customizer;
 import io.github.resilience4j.service.test.BeanContextPropagator;
 import io.github.resilience4j.service.test.DummyFeignClient;
@@ -79,11 +80,11 @@ public class BulkheadAutoConfigurationTest {
     @Autowired
     private DummyFeignClient dummyFeignClient;
     @Autowired
-    private Customizer<ThreadPoolBulkheadRegistry> customizer;
+    private Customizer<Builder> customizer;
 
     @Test
     public void testThreadPoolBulkheadCustomizer() {
-        assertThat(customizer).isNotNull().isInstanceOf(CompositeRegistryCustomizer.class);
+        assertThat(customizer).isNotNull().isInstanceOf(CompositeBuilderCustomizer.class);
         List<Customizer> delegates = (List<Customizer>) getField(customizer, "delegates");
         assertThat(delegates).isNotNull().hasSize(1);
 

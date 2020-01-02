@@ -22,11 +22,13 @@ import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.customizer.Customizer;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
@@ -55,34 +57,45 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
     // Thread pool bulkhead section
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend) {
-        return createThreadPoolBulkheadConfig(getBackendProperties(backend));
+        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, Optional.empty());
+    }
+
+    public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend,
+        Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
+        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, customizer);
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
-        InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties, String backendName,
+        Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties, backendName, customizer);
         }
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties);
+        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties, backendName, customizer);
     }
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
-        InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+        InstanceProperties baseProperties, InstanceProperties instanceProperties, String backendName,
+        Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
         ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
-            ThreadPoolBulkheadConfig.custom(), baseProperties);
+            ThreadPoolBulkheadConfig.custom(), baseProperties, backendName, customizer);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
-            instanceProperties);
+            instanceProperties, backendName, customizer);
     }
 
     public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
-        ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties) {
+        ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties,
+        String backendName, Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
+
         if (properties == null) {
-            return ThreadPoolBulkheadConfig.custom().build();
+            ThreadPoolBulkheadConfig.Builder customBuilder = ThreadPoolBulkheadConfig.custom();
+            customizer.ifPresent(c -> c.customize(backendName, builder));
+            return customBuilder.build();
         }
 
         if (properties.getQueueCapacity() > 0) {
@@ -103,6 +116,8 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         if(properties.getContextPropagators() != null){
             builder.contextPropagator(properties.getContextPropagators());
         }
+
+        customizer.ifPresent(c -> c.customize(backendName, builder));
 
         return builder.build();
     }
@@ -129,6 +144,8 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
         @Nullable
         private Class<? extends ContextPropagator>[] contextPropagators;
+
+
 
         public int getMaxThreadPoolSize() {
             return maxThreadPoolSize;

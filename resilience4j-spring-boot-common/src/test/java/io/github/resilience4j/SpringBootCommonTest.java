@@ -25,7 +25,6 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeRegistryCustomizer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -37,7 +36,6 @@ import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 
 import static java.util.Collections.emptyList;
@@ -58,8 +56,7 @@ public class SpringBootCommonTest {
         assertThat(bulkheadConfigurationOnMissingBean
             .threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()),new CompositeRegistryCustomizer<>(
-                    emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),Optional.empty())).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean

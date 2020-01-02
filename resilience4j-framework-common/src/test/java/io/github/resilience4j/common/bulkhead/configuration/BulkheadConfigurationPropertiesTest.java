@@ -25,6 +25,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -55,12 +56,12 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createThreadPoolBulkheadConfig("backend1");
+            .createThreadPoolBulkheadConfig("backend1", Optional.empty());
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(1);
 
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createThreadPoolBulkheadConfig("backend2");
+            .createThreadPoolBulkheadConfig("backend2", Optional.empty());
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(2);
 
@@ -102,19 +103,19 @@ public class BulkheadConfigurationPropertiesTest {
             assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
             // Should get default config and core number
             ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backendWithDefaultConfig");
+                .createThreadPoolBulkheadConfig("backendWithDefaultConfig", Optional.empty());
             assertThat(bulkhead1).isNotNull();
             assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
             assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
             // Should get shared config and overwrite core number
             ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backendWithSharedConfig");
+                .createThreadPoolBulkheadConfig("backendWithSharedConfig", Optional.empty());
             assertThat(bulkhead2).isNotNull();
             assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(4);
             assertThat(bulkhead2.getQueueCapacity()).isEqualTo(2);
             // Unknown backend should get default config of Registry
             ThreadPoolBulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("unknownBackend");
+                .createThreadPoolBulkheadConfig("unknownBackend", Optional.empty());
             assertThat(bulkhead3).isNotNull();
             assertThat(bulkhead3.getCoreThreadPoolSize())
                 .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);

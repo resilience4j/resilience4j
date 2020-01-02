@@ -8,16 +8,16 @@ import java.util.List;
  *
  * @param <T> supported types that could be customized
  */
-public class CompositeRegistryCustomizer<T> implements Customizer<T> {
+public class CompositeBuilderCustomizer<T> implements Customizer<T> {
 
     final private List<Customizer<T>> delegates;
 
-    public CompositeRegistryCustomizer(List<Customizer<T>> delegates) {
+    public CompositeBuilderCustomizer(List<Customizer<T>> delegates) {
         this.delegates = delegates;
     }
 
     @Override
-    public void customize(T registry) {
-        delegates.stream().forEach(delegate -> delegate.customize(registry));
+    public void customize(String name, T val) {
+        delegates.stream().forEach(delegate -> delegate.customize(name, val));
     }
 }
