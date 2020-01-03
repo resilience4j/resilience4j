@@ -11,10 +11,11 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.Optional;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +46,8 @@ public class BulkHeadConfigurationTest {
         //When
         ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
             .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()),Optional.empty());
+                new CompositeRegistryEventConsumer<>(emptyList()),new CompositeBuilderCustomizer<>(
+                    Collections.emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -105,7 +107,8 @@ public class BulkHeadConfigurationTest {
         try {
             ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
                 .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                    new CompositeRegistryEventConsumer<>(emptyList()), Optional.empty());
+                    new CompositeRegistryEventConsumer<>(emptyList()), new CompositeBuilderCustomizer<>(
+                        Collections.emptyList()));
             //Then
             assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
             // Should get default config and core number

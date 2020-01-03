@@ -58,7 +58,7 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Optional<Customizer<Builder>> compositeThreadPoolBulkheadBuilderCustomizer) {
+        Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,

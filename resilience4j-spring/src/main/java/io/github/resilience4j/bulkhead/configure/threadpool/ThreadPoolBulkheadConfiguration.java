@@ -34,6 +34,8 @@ import org.springframework.context.annotation.Primary;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * {@link Configuration Configuration} for {@link io.github.resilience4j.bulkhead.ThreadPoolBulkhead}
  */
@@ -50,16 +52,16 @@ public class ThreadPoolBulkheadConfiguration {
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Optional<Customizer<Builder>> compositeThreadPoolBulkheadBuilderCustomizer) {
+        Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(
-            bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadBuilderCustomizer);
+            bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer, ofNullable(compositeThreadPoolBulkheadBuilderCustomizer));
 
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
 
         bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry
-            .bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name, compositeThreadPoolBulkheadBuilderCustomizer)));
+            .bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name, ofNullable(compositeThreadPoolBulkheadBuilderCustomizer))));
 
 
 
@@ -122,8 +124,7 @@ public class ThreadPoolBulkheadConfiguration {
     private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
         ThreadPoolBulkhead bulkHead,
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        int eventConsumerBufferSize = Optional
-            .ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
+        int eventConsumerBufferSize = ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
             .map(
                 InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);

@@ -39,6 +39,8 @@ import org.springframework.context.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
@@ -107,11 +109,11 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Optional<Customizer<Builder>> compositeThreadPoolBulkheadBuilderCustomizer) {
+        Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-            threadPoolBulkheadRegistryEventConsumer,compositeThreadPoolBulkheadBuilderCustomizer);
+            threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadBuilderCustomizer);
     }
 
     @Bean
