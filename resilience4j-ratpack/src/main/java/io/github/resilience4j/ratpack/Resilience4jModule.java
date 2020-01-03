@@ -367,7 +367,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> threadPoolBulkheadProperties
-                        .createThreadPoolBulkheadConfig(entry.getValue(), entry.getKey(), Optional.empty())));
+                        .createThreadPoolBulkheadConfig(entry.getValue(), entry.getKey(), null)));
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
                 .of(configs);
 
@@ -377,7 +377,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .forEach((name, threadPoolBulkheadConfig) -> {
                     io.github.resilience4j.bulkhead.ThreadPoolBulkhead threadPoolBulkhead =
                         threadPoolBulkheadRegistry.bulkhead(name, threadPoolBulkheadProperties
-                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig, name,Optional.empty()));
+                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig, name,null));
                     if (endpointsConfig.getThreadpoolbulkhead().isEnabled()) {
                         threadPoolBulkhead.getEventPublisher().onEvent(eventConsumerRegistry
                             .createEventConsumer(name,

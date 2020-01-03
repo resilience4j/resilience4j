@@ -28,7 +28,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
@@ -57,17 +56,18 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
     // Thread pool bulkhead section
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend) {
-        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, Optional.empty());
+        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, null);
     }
 
+    @Nullable
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend,
-        Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
+        Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
         return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, customizer);
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
         InstanceProperties instanceProperties, String backendName,
-        Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
+        Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
@@ -81,7 +81,7 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
         InstanceProperties baseProperties, InstanceProperties instanceProperties, String backendName,
-        Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
+        Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
         ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
             ThreadPoolBulkheadConfig.custom(), baseProperties, backendName, customizer);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
@@ -90,11 +90,13 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
     public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
         ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties,
-        String backendName, Optional<Customizer<ThreadPoolBulkheadConfig.Builder>> customizer) {
+        String backendName, Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
 
         if (properties == null) {
             ThreadPoolBulkheadConfig.Builder customBuilder = ThreadPoolBulkheadConfig.custom();
-            customizer.ifPresent(c -> c.customize(backendName, builder));
+            if (customizer!=null) {
+                customizer.customize(backendName, builder);
+            }
             return customBuilder.build();
         }
 
@@ -117,7 +119,9 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
             builder.contextPropagator(properties.getContextPropagators());
         }
 
-        customizer.ifPresent(c -> c.customize(backendName, builder));
+        if (customizer!=null) {
+            customizer.customize(backendName, builder);
+        }
 
         return builder.build();
     }
