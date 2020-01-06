@@ -20,7 +20,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
 import io.github.resilience4j.common.CommonProperties;
-import io.github.resilience4j.common.customzier.Customizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -53,7 +52,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     public CircuitBreakerConfig createCircuitBreakerConfig(String backendName,
         InstanceProperties instanceProperties,
-        Map<String, Customizer<Builder>> customizerMap) {
+        Map<String, CircuitBreakerConfigCustomizer> customizerMap) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
@@ -67,7 +66,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
         InstanceProperties baseProperties,
-        Map<String, Customizer<Builder>> customizerMap, String backendName) {
+        Map<String, CircuitBreakerConfigCustomizer> customizerMap, String backendName) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
         CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties, customizerMap,
             backendName);
@@ -76,7 +75,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     @SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
     private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
-        Map<String, Customizer<Builder>> customizerMap, String backendName) {
+        Map<String, CircuitBreakerConfigCustomizer> customizerMap, String backendName) {
         if (properties == null) {
             return builder.build();
         }
@@ -147,7 +146,8 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
                 properties.automaticTransitionFromOpenToHalfOpenEnabled);
         }
         if (!customizerMap.isEmpty()) {
-            final Customizer<Builder> circuitBreakerCustomizer = customizerMap.get(backendName);
+            final CircuitBreakerConfigCustomizer circuitBreakerCustomizer = customizerMap
+                .get(backendName);
             if (circuitBreakerCustomizer != null) {
                 circuitBreakerCustomizer.customize(builder);
             }

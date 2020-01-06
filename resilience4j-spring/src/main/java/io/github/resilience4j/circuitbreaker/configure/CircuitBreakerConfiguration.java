@@ -19,7 +19,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.common.customzier.Customizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -57,11 +57,12 @@ public class CircuitBreakerConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        @Nullable List<Customizer<CircuitBreakerConfig.Builder>> customizers) {
+        @Nullable List<CircuitBreakerConfigCustomizer> customizers) {
         // create the map lookup here
-        final Map<String, Customizer<CircuitBreakerConfig.Builder>> customizerMap =
+        final Map<String, CircuitBreakerConfigCustomizer> customizerMap =
             customizers != null ? customizers.stream()
-                .collect(Collectors.toMap(Customizer::name, Function.identity()))
+                .collect(
+                    Collectors.toMap(CircuitBreakerConfigCustomizer::name, Function.identity()))
                 : Collections.emptyMap();
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
             circuitBreakerProperties, circuitBreakerRegistryEventConsumer, customizerMap);
@@ -122,7 +123,7 @@ public class CircuitBreakerConfiguration {
     CircuitBreakerRegistry createCircuitBreakerRegistry(
         CircuitBreakerConfigurationProperties circuitBreakerProperties,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        Map<String, Customizer<CircuitBreakerConfig.Builder>> customizerMap) {
+        Map<String, CircuitBreakerConfigCustomizer> customizerMap) {
 
         Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
@@ -141,7 +142,7 @@ public class CircuitBreakerConfiguration {
      * @param customizerMap
      */
     void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry,
-        Map<String, Customizer<CircuitBreakerConfig.Builder>> customizerMap) {
+        Map<String, CircuitBreakerConfigCustomizer> customizerMap) {
         circuitBreakerProperties.getInstances().forEach(
             (name, properties) -> circuitBreakerRegistry.circuitBreaker(name,
                 circuitBreakerProperties

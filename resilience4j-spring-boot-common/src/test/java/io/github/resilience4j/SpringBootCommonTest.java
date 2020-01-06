@@ -23,7 +23,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
-import io.github.resilience4j.common.customzier.Customizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
@@ -131,9 +131,7 @@ public class SpringBootCommonTest {
         }
     }
 
-    class TestCustomizer implements
-        Customizer<io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder> {
-
+    class TestCustomizer implements CircuitBreakerConfigCustomizer {
 
         @Override
         public void customize(

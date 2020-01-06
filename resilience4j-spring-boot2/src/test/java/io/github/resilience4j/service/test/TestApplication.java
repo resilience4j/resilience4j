@@ -1,7 +1,7 @@
 package io.github.resilience4j.service.test;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.common.customzier.Customizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -19,8 +19,8 @@ public class TestApplication {
     }
 
     @Bean
-    public Customizer<CircuitBreakerConfig.Builder> testCustomizer() {
-        return new Customizer<CircuitBreakerConfig.Builder>() {
+    public CircuitBreakerConfigCustomizer testCustomizer() {
+        return new CircuitBreakerConfigCustomizer() {
             @Override
             public void customize(CircuitBreakerConfig.Builder builder) {
                 builder.slidingWindowSize(100);
