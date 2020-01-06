@@ -24,6 +24,7 @@ import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreake
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
@@ -78,7 +79,8 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
             new CompositeRegistryEventConsumer<>(emptyList()),
-            Collections.singletonList(new TestCustomizer()))).isNotNull();
+            new CompositeCircuitBreakerCustomizer(Collections.singletonList(new TestCustomizer()))))
+            .isNotNull();
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));

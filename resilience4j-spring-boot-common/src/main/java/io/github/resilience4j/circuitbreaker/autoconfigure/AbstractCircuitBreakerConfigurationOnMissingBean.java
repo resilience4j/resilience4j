@@ -19,7 +19,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -53,10 +53,10 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        @Autowired(required = false) List<CircuitBreakerConfigCustomizer> customizers) {
+        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer) {
         return circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry, circuitBreakerRegistryEventConsumer,
-                customizers);
+                compositeCircuitBreakerCustomizer);
     }
 
     @Bean

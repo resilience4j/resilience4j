@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -40,7 +41,8 @@ public class CircuitBreakerConfigurationTest {
 
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeCircuitBreakerCustomizerTestInstance());
 
         assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder())
             .isEqualTo(400);
@@ -72,7 +74,8 @@ public class CircuitBreakerConfigurationTest {
 
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeCircuitBreakerCustomizerTestInstance());
 
         assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder())
             .isEqualTo(400);
@@ -115,7 +118,8 @@ public class CircuitBreakerConfigurationTest {
         DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeCircuitBreakerCustomizerTestInstance());
 
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
 
@@ -172,7 +176,8 @@ public class CircuitBreakerConfigurationTest {
 
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeCircuitBreakerCustomizerTestInstance());
 
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
         // Should get default config and overwrite setRingBufferSizeInHalfOpenState
@@ -213,9 +218,14 @@ public class CircuitBreakerConfigurationTest {
 
         assertThatThrownBy(() -> circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList()))
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeCircuitBreakerCustomizerTestInstance()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    private CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizerTestInstance() {
+        return new CompositeCircuitBreakerCustomizer(Collections.emptyList());
     }
 
 }

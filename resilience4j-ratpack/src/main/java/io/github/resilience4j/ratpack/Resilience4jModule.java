@@ -34,6 +34,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -208,7 +209,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> circuitBreakerProperties
                         .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
-                            Collections.emptyMap())));
+                            new CompositeCircuitBreakerCustomizer(Collections.emptyList()))));
             CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
             // build circuit breakers
@@ -218,7 +219,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                     circuitBreakerRegistry.circuitBreaker(name,
                         circuitBreakerProperties.createCircuitBreakerConfig(name,
                             circuitBreakerConfig,
-                            Collections.emptyMap()));
+                            new CompositeCircuitBreakerCustomizer(Collections.emptyList())));
                 if (endpointsConfig.getCircuitbreaker().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,

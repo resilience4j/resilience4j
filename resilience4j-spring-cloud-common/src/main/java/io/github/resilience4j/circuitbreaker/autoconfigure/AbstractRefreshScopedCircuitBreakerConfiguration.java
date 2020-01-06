@@ -5,16 +5,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
-
-import java.util.List;
 
 @Configuration
 public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
@@ -39,10 +36,10 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        @Nullable List<CircuitBreakerConfigCustomizer> customizers) {
+        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer) {
         return circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry, circuitBreakerRegistryEventConsumer,
-                customizers);
+                compositeCircuitBreakerCustomizer);
     }
 
 }
