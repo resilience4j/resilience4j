@@ -23,6 +23,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.customzier.Customizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
@@ -76,7 +77,8 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()),
+            Collections.singletonList(new TestCustomizer()))).isNotNull();
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
@@ -127,7 +129,22 @@ public class SpringBootCommonTest {
             CircuitBreakerConfigurationProperties circuitBreakerProperties) {
             super(circuitBreakerProperties);
         }
+    }
 
+    class TestCustomizer implements
+        Customizer<io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder> {
+
+
+        @Override
+        public void customize(
+            io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder builder) {
+            builder.slidingWindowSize(3000);
+        }
+
+        @Override
+        public String name() {
+            return "backendCustom";
+        }
     }
 
     class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationOnMissingBean {

@@ -20,6 +20,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
 import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.customzier.Customizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -50,26 +51,32 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         return Optional.ofNullable(instanceProperties);
     }
 
-    public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
+    public CircuitBreakerConfig createCircuitBreakerConfig(String backendName,
+        InstanceProperties instanceProperties,
+        Map<String, Customizer<Builder>> customizerMap) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(instanceProperties, baseProperties);
+            return buildConfigFromBaseConfig(instanceProperties, baseProperties, customizerMap,
+                backendName);
         }
-        return buildConfig(custom(), instanceProperties);
+        return buildConfig(custom(), instanceProperties, customizerMap, backendName);
     }
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
-        InstanceProperties baseProperties) {
+        InstanceProperties baseProperties,
+        Map<String, Customizer<Builder>> customizerMap, String backendName) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties);
-        return buildConfig(from(baseConfig), instanceProperties);
+        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties, customizerMap,
+            backendName);
+        return buildConfig(from(baseConfig), instanceProperties, customizerMap, backendName);
     }
 
     @SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
-    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
+    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
+        Map<String, Customizer<Builder>> customizerMap, String backendName) {
         if (properties == null) {
             return builder.build();
         }
@@ -138,6 +145,12 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
                 properties.automaticTransitionFromOpenToHalfOpenEnabled);
+        }
+        if (!customizerMap.isEmpty()) {
+            final Customizer<Builder> circuitBreakerCustomizer = customizerMap.get(backendName);
+            if (circuitBreakerCustomizer != null) {
+                circuitBreakerCustomizer.customize(builder);
+            }
         }
 
         return builder.build();

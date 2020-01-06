@@ -67,6 +67,7 @@ import ratpack.service.StartEvent;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -206,7 +207,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> circuitBreakerProperties
-                        .createCircuitBreakerConfig(entry.getValue())));
+                        .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
+                            Collections.emptyMap())));
             CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
             // build circuit breakers
@@ -214,7 +216,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             circuitBreakerProperties.getInstances().forEach((name, circuitBreakerConfig) -> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
                     circuitBreakerRegistry.circuitBreaker(name,
-                        circuitBreakerProperties.createCircuitBreakerConfig(circuitBreakerConfig));
+                        circuitBreakerProperties.createCircuitBreakerConfig(name,
+                            circuitBreakerConfig,
+                            Collections.emptyMap()));
                 if (endpointsConfig.getCircuitbreaker().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,

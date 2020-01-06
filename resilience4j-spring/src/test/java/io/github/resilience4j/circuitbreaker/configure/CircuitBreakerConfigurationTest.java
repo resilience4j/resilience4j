@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Collections;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,7 +40,7 @@ public class CircuitBreakerConfigurationTest {
 
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
 
         assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder())
             .isEqualTo(400);
@@ -70,7 +72,7 @@ public class CircuitBreakerConfigurationTest {
 
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
 
         assertThat(circuitBreakerConfigurationProperties.getCircuitBreakerAspectOrder())
             .isEqualTo(400);
@@ -113,7 +115,7 @@ public class CircuitBreakerConfigurationTest {
         DefaultEventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
 
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
 
@@ -170,7 +172,7 @@ public class CircuitBreakerConfigurationTest {
 
         CircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList());
 
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers().size()).isEqualTo(2);
         // Should get default config and overwrite setRingBufferSizeInHalfOpenState
@@ -211,7 +213,7 @@ public class CircuitBreakerConfigurationTest {
 
         assertThatThrownBy(() -> circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList())))
+                new CompositeRegistryEventConsumer<>(emptyList()), Collections.emptyList()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
