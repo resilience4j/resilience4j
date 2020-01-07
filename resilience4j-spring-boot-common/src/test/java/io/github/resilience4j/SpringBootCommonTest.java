@@ -25,6 +25,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
+import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
@@ -94,7 +95,8 @@ public class SpringBootCommonTest {
         assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRetryCustomizer(Collections.emptyList()))).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),

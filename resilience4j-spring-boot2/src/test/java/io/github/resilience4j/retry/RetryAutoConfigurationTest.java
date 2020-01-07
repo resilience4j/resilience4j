@@ -182,6 +182,11 @@ public class RetryAutoConfigurationTest {
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
             .isFalse();
         assertThat(retryAspect.getOrder()).isEqualTo(399);
+
+        // test Customizer effect
+        Retry retryCustom = retryRegistry.retry("retryBackendD");
+        assertThat(retryCustom.getRetryConfig().getMaxAttempts()).isEqualTo(4);
+
     }
 
     private RetryEventsEndpointResponse retryEvents(String s) {
