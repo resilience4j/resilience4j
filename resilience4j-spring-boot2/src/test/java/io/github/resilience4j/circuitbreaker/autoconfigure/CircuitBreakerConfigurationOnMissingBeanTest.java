@@ -64,11 +64,11 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
     @Configuration
     public static class ConfigWithOverrides {
 
-        public CircuitBreakerRegistry circuitBreakerRegistry;
+        CircuitBreakerRegistry circuitBreakerRegistry;
 
-        public CircuitBreakerAspect circuitBreakerAspect;
+        CircuitBreakerAspect circuitBreakerAspect;
 
-        public EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
+        EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
 
         @Bean
         public CircuitBreakerRegistry circuitBreakerRegistry() {

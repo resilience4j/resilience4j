@@ -34,6 +34,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -67,6 +68,7 @@ import ratpack.service.StartEvent;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -206,7 +208,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> circuitBreakerProperties
-                        .createCircuitBreakerConfig(entry.getValue())));
+                        .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
+                            new CompositeCircuitBreakerCustomizer(Collections.emptyList()))));
             CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
             // build circuit breakers
@@ -214,7 +217,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             circuitBreakerProperties.getInstances().forEach((name, circuitBreakerConfig) -> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
                     circuitBreakerRegistry.circuitBreaker(name,
-                        circuitBreakerProperties.createCircuitBreakerConfig(circuitBreakerConfig));
+                        circuitBreakerProperties.createCircuitBreakerConfig(name,
+                            circuitBreakerConfig,
+                            new CompositeCircuitBreakerCustomizer(Collections.emptyList())));
                 if (endpointsConfig.getCircuitbreaker().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,

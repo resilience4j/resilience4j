@@ -19,6 +19,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.*;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -51,17 +52,11 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer) {
-        CircuitBreakerRegistry circuitBreakerRegistry =
-            circuitBreakerConfiguration.createCircuitBreakerRegistry(circuitBreakerProperties,
-                circuitBreakerRegistryEventConsumer);
-        // Register the event consumers
-        circuitBreakerConfiguration
-            .registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
-        // Initialize backends that were initially configured.
-        circuitBreakerConfiguration.initCircuitBreakerRegistry(circuitBreakerRegistry);
-
-        return circuitBreakerRegistry;
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
+        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer) {
+        return circuitBreakerConfiguration
+            .circuitBreakerRegistry(eventConsumerRegistry, circuitBreakerRegistryEventConsumer,
+                compositeCircuitBreakerCustomizer);
     }
 
     @Bean
