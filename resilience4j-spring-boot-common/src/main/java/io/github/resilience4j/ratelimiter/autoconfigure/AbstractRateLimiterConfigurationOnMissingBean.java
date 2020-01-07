@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -48,10 +49,11 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     public RateLimiterRegistry rateLimiterRegistry(
         RateLimiterConfigurationProperties rateLimiterProperties,
         EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
+        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer) {
         return rateLimiterConfiguration
             .rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry,
-                rateLimiterRegistryEventConsumer);
+                rateLimiterRegistryEventConsumer, compositeRateLimiterCustomizer);
     }
 
     @Bean

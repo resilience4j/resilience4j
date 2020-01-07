@@ -35,6 +35,7 @@ import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfiguratio
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -251,7 +252,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .getRatelimiter();
             Map<String, RateLimiterConfig> configs = rateLimiterProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                    entry -> rateLimiterProperties.createRateLimiterConfig(entry.getValue())));
+                    entry -> rateLimiterProperties.createRateLimiterConfig(entry.getValue(),
+                        new CompositeRateLimiterCustomizer(Collections.emptyList()),
+                        entry.getKey())));
             RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(configs);
 
             // build ratelimiters
@@ -259,7 +262,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             rateLimiterProperties.getInstances().forEach((name, rateLimiterConfig) -> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
                     rateLimiterRegistry.rateLimiter(name,
-                        rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig));
+                        rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig,
+                            new CompositeRateLimiterCustomizer(Collections.emptyList()), name));
                 if (endpointsConfig.getRatelimiter().isEnabled()) {
                     rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,

@@ -25,6 +25,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
@@ -110,7 +111,8 @@ public class SpringBootCommonTest {
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistry(new RateLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRateLimiterCustomizer(Collections.emptyList()))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), Collections.emptyList(),
