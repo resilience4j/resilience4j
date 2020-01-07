@@ -19,10 +19,16 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.IntegerToDurationConverter;
 import io.github.resilience4j.common.StringToDurationConverter;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 @Configuration
 @Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
@@ -37,6 +43,13 @@ public class CircuitBreakerConfigurationOnMissingBean extends
     @Bean
     public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
         return circuitBreakerConfiguration.eventConsumerRegistry();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CompositeCircuitBreakerCustomizer circuitBreakerCustomizerFinder(
+        @Autowired(required = false) List<CircuitBreakerConfigCustomizer> customizers) {
+        return new CompositeCircuitBreakerCustomizer(customizers);
     }
 
 }

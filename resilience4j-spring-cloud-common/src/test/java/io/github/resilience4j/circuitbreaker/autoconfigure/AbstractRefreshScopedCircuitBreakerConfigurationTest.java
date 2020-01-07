@@ -17,6 +17,7 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import org.junit.Test;
@@ -24,6 +25,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +46,9 @@ public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
 
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(
             new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()),
+            new CompositeCircuitBreakerCustomizer(Collections.emptyList())))
+            .isNotNull();
     }
 
     static class CircuitBreakerConfig extends AbstractRefreshScopedCircuitBreakerConfiguration {

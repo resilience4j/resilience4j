@@ -177,11 +177,14 @@ public class CircuitBreakerAutoConfigurationTest {
         CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
         CircuitBreaker sharedB = circuitBreakerRegistry.circuitBreaker("backendSharedB");
         CircuitBreaker backendB = circuitBreakerRegistry.circuitBreaker("backendB");
+        CircuitBreaker backendC = circuitBreakerRegistry.circuitBreaker("backendC");
 
         Duration defaultWaitDuration = Duration.ofSeconds(10);
         float defaultFailureRate = 60f;
         int defaultPermittedNumberOfCallsInHalfOpenState = 10;
         int defaultRingBufferSizeInClosedState = 100;
+        // test the customizer effect which overload the sliding widow size
+        assertThat(backendC.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(100);
 
         assertThat(backendB.getCircuitBreakerConfig().getSlidingWindowType())
             .isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);

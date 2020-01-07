@@ -50,26 +50,34 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         return Optional.ofNullable(instanceProperties);
     }
 
-    public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
+    public CircuitBreakerConfig createCircuitBreakerConfig(String backendName,
+        InstanceProperties instanceProperties,
+        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(instanceProperties, baseProperties);
+            return buildConfigFromBaseConfig(instanceProperties, baseProperties,
+                compositeCircuitBreakerCustomizer,
+                backendName);
         }
-        return buildConfig(custom(), instanceProperties);
+        return buildConfig(custom(), instanceProperties, compositeCircuitBreakerCustomizer,
+            backendName);
     }
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
-        InstanceProperties baseProperties) {
+        InstanceProperties baseProperties,
+        CompositeCircuitBreakerCustomizer customizerMap, String backendName) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties);
-        return buildConfig(from(baseConfig), instanceProperties);
+        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties, customizerMap,
+            backendName);
+        return buildConfig(from(baseConfig), instanceProperties, customizerMap, backendName);
     }
 
     @SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
-    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
+    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
+        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer, String backendName) {
         if (properties == null) {
             return builder.build();
         }
@@ -139,7 +147,8 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
                 properties.automaticTransitionFromOpenToHalfOpenEnabled);
         }
-
+        compositeCircuitBreakerCustomizer.getCircuitBreakerConfigCustomizer(backendName).ifPresent(
+            circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
         return builder.build();
     }
 
