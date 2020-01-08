@@ -8,7 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * the composite  of any circuit breaker {@link RateLimiterConfigCustomizer} implementations.
+ * the composite  of any rate limiter {@link RateLimiterConfigCustomizer} implementations.
  */
 public class CompositeRateLimiterCustomizer {
 
