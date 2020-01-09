@@ -15,11 +15,16 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
+import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
+
+import java.util.List;
 
 @Configuration
 public class RateLimiterConfigurationOnMissingBean extends
@@ -29,5 +34,12 @@ public class RateLimiterConfigurationOnMissingBean extends
     @ConditionalOnMissingBean(value = RateLimiterEvent.class, parameterizedContainer = EventConsumerRegistry.class)
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
         return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CompositeRateLimiterCustomizer compositeRateLimiterCustomizer(@Nullable
+        List<RateLimiterConfigCustomizer> configCustomizers) {
+        return new CompositeRateLimiterCustomizer(configCustomizers);
     }
 }

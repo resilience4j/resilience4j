@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
@@ -286,7 +287,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         defaultProperties.setSlowCallDurationThreshold(Duration.ZERO);
     }
 
-    private CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer() {
-        return new CompositeCircuitBreakerCustomizer(Collections.emptyList());
+    private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 }

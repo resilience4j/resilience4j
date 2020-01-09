@@ -17,7 +17,7 @@
 package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(
             new DefaultEventConsumerRegistry<>(),
             new CompositeRegistryEventConsumer<>(emptyList()),
-            new CompositeCircuitBreakerCustomizer(Collections.emptyList())))
+            new CompositeCustomizer<>(Collections.emptyList())))
             .isNotNull();
     }
 

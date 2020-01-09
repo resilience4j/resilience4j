@@ -3,8 +3,9 @@ package io.github.resilience4j.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -224,8 +225,8 @@ public class CircuitBreakerConfigurationTest {
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    private CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizerTestInstance() {
-        return new CompositeCircuitBreakerCustomizer(Collections.emptyList());
+    private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizerTestInstance() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }
