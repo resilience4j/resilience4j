@@ -28,6 +28,8 @@ resilience4j.retry:
         - io.github.resilience4j.circuitbreaker.IgnoredException
     retryDummyFeignClient:
       baseConfig: default
+    retryBackendD:
+      baseConfig: default
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
