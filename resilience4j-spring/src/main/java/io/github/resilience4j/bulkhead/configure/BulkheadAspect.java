@@ -23,6 +23,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.ValueResolver;
 import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -32,8 +33,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
+import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -64,7 +67,7 @@ import java.util.concurrent.CompletionStage;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class BulkheadAspect implements Ordered {
+public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(BulkheadAspect.class);
 
@@ -74,6 +77,7 @@ public class BulkheadAspect implements Ordered {
     private final @Nullable
     List<BulkheadAspectExt> bulkheadAspectExts;
     private final FallbackDecorators fallbackDecorators;
+    private StringValueResolver embeddedValueResolver;
 
     public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry,
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, BulkheadRegistry bulkheadRegistry,
@@ -103,21 +107,22 @@ public class BulkheadAspect implements Ordered {
         }
         Class<?> returnType = method.getReturnType();
         String backend = bulkheadAnnotation.name();
+        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, bulkheadAnnotation.fallbackMethod());
         if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
-            if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
+            if (StringUtils.isEmpty(fallbackMethodValue)) {
                 return proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
                     backend);
             }
-            return executeFallBack(proceedingJoinPoint, bulkheadAnnotation.fallbackMethod(), method,
+            return executeFallBack(proceedingJoinPoint, fallbackMethodValue, method,
                 () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
                     backend));
         } else {
             io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName,
                 backend);
-            if (StringUtils.isEmpty(bulkheadAnnotation.fallbackMethod())) {
+            if (StringUtils.isEmpty(fallbackMethodValue)) {
                 return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             }
-            return executeFallBack(proceedingJoinPoint, bulkheadAnnotation.fallbackMethod(), method,
+            return executeFallBack(proceedingJoinPoint, fallbackMethodValue, method,
                 () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType));
         }
 
@@ -258,5 +263,10 @@ public class BulkheadAspect implements Ordered {
     @Override
     public int getOrder() {
         return bulkheadConfigurationProperties.getBulkheadAspectOrder();
+    }
+
+    @Override
+    public void setEmbeddedValueResolver(StringValueResolver resolver) {
+        this.embeddedValueResolver = resolver;
     }
 }
