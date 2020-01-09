@@ -21,6 +21,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.ValueResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,8 +30,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
+import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -63,7 +66,7 @@ import java.util.concurrent.CompletionStage;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class CircuitBreakerAspect implements Ordered {
+public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 
@@ -72,6 +75,7 @@ public class CircuitBreakerAspect implements Ordered {
     private final @Nullable
     List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
     private final FallbackDecorators fallbackDecorators;
+    private StringValueResolver embeddedValueResolver;
 
     public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
         CircuitBreakerRegistry circuitBreakerRegistry,
@@ -103,11 +107,12 @@ public class CircuitBreakerAspect implements Ordered {
             methodName, backend);
         Class<?> returnType = method.getReturnType();
 
-        if (StringUtils.isEmpty(circuitBreakerAnnotation.fallbackMethod())) {
+        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, circuitBreakerAnnotation.fallbackMethod());
+        if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-            .create(circuitBreakerAnnotation.fallbackMethod(), method,
+            .create(fallbackMethodValue, method,
                 proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
             () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
@@ -186,5 +191,10 @@ public class CircuitBreakerAspect implements Ordered {
     @Override
     public int getOrder() {
         return circuitBreakerProperties.getCircuitBreakerAspectOrder();
+    }
+
+    @Override
+    public void setEmbeddedValueResolver(StringValueResolver resolver) {
+        this.embeddedValueResolver = resolver;
     }
 }

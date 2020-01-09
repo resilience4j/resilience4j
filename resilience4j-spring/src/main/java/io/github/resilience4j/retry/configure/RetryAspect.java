@@ -21,6 +21,7 @@ import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.ValueResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,8 +30,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
+import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -60,7 +63,7 @@ import java.util.concurrent.*;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class RetryAspect implements Ordered {
+public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspect.class);
     private final static ScheduledExecutorService retryExecutorService = Executors
@@ -70,6 +73,7 @@ public class RetryAspect implements Ordered {
     private final @Nullable
     List<RetryAspectExt> retryAspectExtList;
     private final FallbackDecorators fallbackDecorators;
+    private StringValueResolver embeddedValueResolver;
 
     /**
      * @param retryConfigurationProperties spring retry config properties
@@ -108,11 +112,12 @@ public class RetryAspect implements Ordered {
         io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
         Class<?> returnType = method.getReturnType();
 
-        if (StringUtils.isEmpty(retryAnnotation.fallbackMethod())) {
+        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, retryAnnotation.fallbackMethod());
+        if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, retry, returnType);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-            .create(retryAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(),
+            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
                 proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
             () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
@@ -215,4 +220,8 @@ public class RetryAspect implements Ordered {
         }));
     }
 
+    @Override
+    public void setEmbeddedValueResolver(StringValueResolver resolver) {
+        this.embeddedValueResolver = resolver;
+    }
 }

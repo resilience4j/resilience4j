@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  */
 public class CompositeCircuitBreakerCustomizer {
 
-    final Map<String, CircuitBreakerConfigCustomizer> customizerMap = new HashMap<>();
+    private final Map<String, CircuitBreakerConfigCustomizer> customizerMap = new HashMap<>();
 
     public CompositeCircuitBreakerCustomizer(List<CircuitBreakerConfigCustomizer> customizers) {
 

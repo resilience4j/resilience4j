@@ -2,6 +2,11 @@ package io.github.resilience4j.bulkhead.annotation;
 
 import java.lang.annotation.*;
 
+/**
+ * This annotation can be applied to a class or a specific method. Applying it on a class is
+ * equivalent to applying it on all its public methods. If using Spring,
+ * {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
+ */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented

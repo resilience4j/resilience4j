@@ -42,8 +42,9 @@ public class RetryConfigurationProperties extends CommonProperties {
      * @param backend backend name
      * @return the retry configuration
      */
-    public RetryConfig createRetryConfig(String backend) {
-        return createRetryConfig(getBackendProperties(backend));
+    public RetryConfig createRetryConfig(String backend,
+        CompositeRetryCustomizer compositeRetryCustomizer) {
+        return createRetryConfig(getBackendProperties(backend), compositeRetryCustomizer, backend);
     }
 
     /**
@@ -80,23 +81,29 @@ public class RetryConfigurationProperties extends CommonProperties {
      * @param instanceProperties the retry backend spring properties
      * @return the retry configuration
      */
-    public RetryConfig createRetryConfig(InstanceProperties instanceProperties) {
+    public RetryConfig createRetryConfig(InstanceProperties instanceProperties,
+        CompositeRetryCustomizer compositeRetryCustomizer, String backend) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeRetryCustomizer, backend);
         }
-        return buildRetryConfig(RetryConfig.custom(), instanceProperties);
+        return buildRetryConfig(RetryConfig.custom(), instanceProperties, compositeRetryCustomizer,
+            backend);
     }
 
     private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties) {
-        RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
+        InstanceProperties instanceProperties, CompositeRetryCustomizer compositeRetryCustomizer,
+        String backend) {
+        RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties,
+            compositeRetryCustomizer, backend);
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties);
+        return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties,
+            compositeRetryCustomizer, backend);
     }
 
     /**
@@ -105,7 +112,8 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     @SuppressWarnings("unchecked")
     private RetryConfig buildRetryConfig(RetryConfig.Builder builder,
-        InstanceProperties properties) {
+        InstanceProperties properties, CompositeRetryCustomizer compositeRetryCustomizer,
+        String backend) {
         if (properties == null) {
             return builder.build();
         }
@@ -149,6 +157,9 @@ public class RetryConfigurationProperties extends CommonProperties {
                 }
             }
         }
+
+        compositeRetryCustomizer.getRetryConfigCustomizer(backend)
+            .ifPresent(customizer -> customizer.customize(builder));
 
         return builder.build();
     }

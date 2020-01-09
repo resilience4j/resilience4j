@@ -1,5 +1,6 @@
 package io.github.resilience4j.retry.configure;
 
+import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +40,7 @@ public class RetryConfigurationTest {
 
         RetryRegistry retryRegistry = retryConfiguration
             .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), compositeRetryCustomizerTest());
 
         assertThat(retryConfigurationProperties.getRetryAspectOrder()).isEqualTo(200);
         assertThat(retryRegistry.getAllRetries().size()).isEqualTo(2);
@@ -77,7 +79,7 @@ public class RetryConfigurationTest {
 
         RetryRegistry retryRegistry = retryConfiguration
             .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), compositeRetryCustomizerTest());
 
         assertThat(retryRegistry.getAllRetries().size()).isEqualTo(2);
         // Should get default config and overwrite max attempt and wait time
@@ -108,9 +110,13 @@ public class RetryConfigurationTest {
 
         assertThatThrownBy(() -> retryConfiguration
             .retryRegistry(retryConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList())))
+                new CompositeRegistryEventConsumer<>(emptyList()), compositeRetryCustomizerTest()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    private CompositeRetryCustomizer compositeRetryCustomizerTest() {
+        return new CompositeRetryCustomizer(Collections.emptyList());
     }
 
 }
