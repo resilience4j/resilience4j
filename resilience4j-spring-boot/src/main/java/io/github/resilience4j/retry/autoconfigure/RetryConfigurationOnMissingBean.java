@@ -17,18 +17,12 @@ package io.github.resilience4j.retry.autoconfigure;
 
 import io.github.resilience4j.common.IntegerToDurationConverter;
 import io.github.resilience4j.common.StringToDurationConverter;
-import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
-import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import java.util.List;
 
 /**
  * {@link Configuration Configuration} for resilience4j-retry.
@@ -48,12 +42,4 @@ public class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationO
     public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
         return retryConfiguration.retryEventConsumerRegistry();
     }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CompositeRetryCustomizer compositeRetryCustomizer(
-        @Autowired(required = false) List<RetryConfigCustomizer> customizers) {
-        return new CompositeRetryCustomizer(customizers);
-    }
-
 }

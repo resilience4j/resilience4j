@@ -16,7 +16,7 @@
 
 package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRefreshScopedRateLimiterConfiguration;
@@ -46,7 +46,7 @@ public class AbstractRefreshScopedRetryConfigurationTest {
 
         assertThat(retryConfig.retryRegistry(
             new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()), new CompositeRetryCustomizer(
+            new CompositeRegistryEventConsumer<>(emptyList()), new CompositeCustomizer<>(
                 Collections.emptyList()))).isNotNull();
     }
 

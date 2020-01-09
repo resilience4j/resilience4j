@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.ratelimiter.configuration;
 
 import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -43,7 +44,8 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
 
     public RateLimiterConfig createRateLimiterConfig(
         @Nullable InstanceProperties instanceProperties,
-        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer, String instanceName) {
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        String instanceName) {
         if (instanceProperties == null) {
             return RateLimiterConfig.ofDefaults();
         }
@@ -61,7 +63,8 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
         InstanceProperties instanceProperties,
-        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer, String instanceName) {
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        String instanceName) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
             baseProperties, compositeRateLimiterCustomizer, instanceName);
@@ -71,7 +74,8 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
 
     private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
         @Nullable InstanceProperties instanceProperties,
-        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer, String instanceName) {
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        String instanceName) {
         if (instanceProperties == null) {
             return builder.build();
         }
@@ -91,7 +95,7 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
         if (instanceProperties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
         }
-        compositeRateLimiterCustomizer.getRateLimiterConfigCustomizer(instanceName).ifPresent(
+        compositeRateLimiterCustomizer.getCustomizer(instanceName).ifPresent(
             rateLimiterConfigCustomizer -> rateLimiterConfigCustomizer.customize(builder));
         return builder.build();
     }
@@ -101,7 +105,7 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
     }
 
     public RateLimiterConfig createRateLimiterConfig(String limiter,
-        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer) {
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
         return createRateLimiterConfig(getLimiterProperties(limiter),
             compositeRateLimiterCustomizer, limiter);
     }

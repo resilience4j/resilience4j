@@ -1,6 +1,7 @@
 package io.github.resilience4j.ratelimiter.configure;
 
-import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -138,8 +139,8 @@ public class RateLimiterConfigurationTest {
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    public CompositeRateLimiterCustomizer compositeRateLimiterCustomizerTest() {
-        return new CompositeRateLimiterCustomizer(Collections.emptyList());
+    public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizerTest() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }

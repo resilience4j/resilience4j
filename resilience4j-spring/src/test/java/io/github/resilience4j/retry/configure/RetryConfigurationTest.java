@@ -1,6 +1,7 @@
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -115,8 +116,8 @@ public class RetryConfigurationTest {
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    private CompositeRetryCustomizer compositeRetryCustomizerTest() {
-        return new CompositeRetryCustomizer(Collections.emptyList());
+    private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizerTest() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }
