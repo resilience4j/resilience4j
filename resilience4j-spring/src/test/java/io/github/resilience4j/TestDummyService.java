@@ -49,6 +49,8 @@ public interface TestDummyService {
 
     Flowable<String> flowable();
 
+    String spelSync();
+
     default String syncError() {
         throw new RuntimeException("Test");
     }

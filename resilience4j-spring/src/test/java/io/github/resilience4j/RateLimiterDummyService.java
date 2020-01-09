@@ -76,4 +76,10 @@ public class RateLimiterDummyService implements TestDummyService {
     public Flowable<String> flowable() {
         return flowableError();
     }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "#{'recovery'}")
+    public String spelSync() {
+        return syncError();
+    }
 }
