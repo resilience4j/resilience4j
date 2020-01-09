@@ -1,5 +1,6 @@
 package io.github.resilience4j.retry.autoconfigure;
 
+import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.Retry;
@@ -31,10 +32,11 @@ public abstract class AbstractRefreshScopedRetryConfiguration {
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
         EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer,
+        CompositeRetryCustomizer compositeRetryCustomizer) {
         return retryConfiguration
             .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
-                retryRegistryEventConsumer);
+                retryRegistryEventConsumer, compositeRetryCustomizer);
     }
 
 }
