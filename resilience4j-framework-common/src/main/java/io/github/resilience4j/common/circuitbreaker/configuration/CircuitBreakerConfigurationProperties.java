@@ -20,6 +20,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
 import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -52,7 +53,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     public CircuitBreakerConfig createCircuitBreakerConfig(String backendName,
         InstanceProperties instanceProperties,
-        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
@@ -68,16 +69,20 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
         InstanceProperties baseProperties,
-        CompositeCircuitBreakerCustomizer customizerMap, String backendName) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
+        String backendName) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties, customizerMap,
+        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties,
+            compositeCircuitBreakerCustomizer,
             backendName);
-        return buildConfig(from(baseConfig), instanceProperties, customizerMap, backendName);
+        return buildConfig(from(baseConfig), instanceProperties, compositeCircuitBreakerCustomizer,
+            backendName);
     }
 
     @SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
     private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
-        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer, String backendName) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
+        String backendName) {
         if (properties == null) {
             return builder.build();
         }
@@ -147,7 +152,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
                 properties.automaticTransitionFromOpenToHalfOpenEnabled);
         }
-        compositeCircuitBreakerCustomizer.getCircuitBreakerConfigCustomizer(backendName).ifPresent(
+        compositeCircuitBreakerCustomizer.getCustomizer(backendName).ifPresent(
             circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
         return builder.build();
     }

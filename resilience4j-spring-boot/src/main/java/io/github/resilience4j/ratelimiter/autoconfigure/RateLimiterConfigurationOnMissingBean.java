@@ -17,11 +17,17 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 
 import io.github.resilience4j.common.IntegerToDurationConverter;
 import io.github.resilience4j.common.StringToDurationConverter;
+import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 @Configuration
 @Import({IntegerToDurationConverter.class, StringToDurationConverter.class})
@@ -31,5 +37,13 @@ public class RateLimiterConfigurationOnMissingBean extends
     @Bean
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
         return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CompositeRateLimiterCustomizer compositeRateLimiterCustomizer(
+        @Autowired(required = false)
+            List<RateLimiterConfigCustomizer> configCustomizers) {
+        return new CompositeRateLimiterCustomizer(configCustomizers);
     }
 }

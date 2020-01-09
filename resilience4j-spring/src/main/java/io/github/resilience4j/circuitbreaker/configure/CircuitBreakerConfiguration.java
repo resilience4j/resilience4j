@@ -19,8 +19,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -57,16 +57,16 @@ public class CircuitBreakerConfiguration {
     }
 
     @Bean
-    public CompositeCircuitBreakerCustomizer circuitBreakerCustomizerFinder(
+    public CompositeCustomizer<CircuitBreakerConfigCustomizer> circuitBreakerCustomizerFinder(
         @Nullable List<CircuitBreakerConfigCustomizer> customizers) {
-        return new CompositeCircuitBreakerCustomizer(customizers);
+        return new CompositeCustomizer<>(customizers);
     }
 
     @Bean
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        CompositeCircuitBreakerCustomizer circuitBreakerCustomizerFinder) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> circuitBreakerCustomizerFinder) {
 
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
             circuitBreakerProperties, circuitBreakerRegistryEventConsumer,
@@ -129,7 +129,7 @@ public class CircuitBreakerConfiguration {
     CircuitBreakerRegistry createCircuitBreakerRegistry(
         CircuitBreakerConfigurationProperties circuitBreakerProperties,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        CompositeCircuitBreakerCustomizer customizerMap) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
 
         Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
@@ -148,7 +148,7 @@ public class CircuitBreakerConfiguration {
      * @param customizerMap
      */
     void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry,
-        CompositeCircuitBreakerCustomizer customizerMap) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
         circuitBreakerProperties.getInstances().forEach(
             (name, properties) -> circuitBreakerRegistry.circuitBreaker(name,
                 circuitBreakerProperties

@@ -5,7 +5,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,7 +37,7 @@ public abstract class AbstractRefreshScopedCircuitBreakerConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        CompositeCircuitBreakerCustomizer compositeCircuitBreakerCustomizer) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
         return circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry, circuitBreakerRegistryEventConsumer,
                 compositeCircuitBreakerCustomizer);

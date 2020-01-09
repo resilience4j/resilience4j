@@ -1,11 +1,12 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.common.CustomizerWithName;
 
 /**
  * Enable customization circuit breaker configuration builders programmatically.
  */
-public interface CircuitBreakerConfigCustomizer {
+public interface CircuitBreakerConfigCustomizer extends CustomizerWithName {
 
     /**
      * Customize circuit breaker configuration builder.
@@ -14,8 +15,4 @@ public interface CircuitBreakerConfigCustomizer {
      */
     void customize(CircuitBreakerConfig.Builder configBuilder);
 
-    /**
-     * @return name of the circuit breaker instance to be customized
-     */
-    String name();
 }

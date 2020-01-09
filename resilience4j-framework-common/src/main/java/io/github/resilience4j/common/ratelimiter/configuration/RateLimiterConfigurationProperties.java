@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class RateLimiterConfigurationProperties extends CommonProperties{
+public class RateLimiterConfigurationProperties extends CommonProperties {
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -42,7 +42,8 @@ public class RateLimiterConfigurationProperties extends CommonProperties{
     }
 
     public RateLimiterConfig createRateLimiterConfig(
-        @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties,
+        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer, String instanceName) {
         if (instanceProperties == null) {
             return RateLimiterConfig.ofDefaults();
         }
@@ -51,21 +52,26 @@ public class RateLimiterConfigurationProperties extends CommonProperties{
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeRateLimiterCustomizer, instanceName);
         }
-        return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties);
+        return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties,
+            compositeRateLimiterCustomizer, instanceName);
     }
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties,
+        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer, String instanceName) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
-            baseProperties);
-        return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
+            baseProperties, compositeRateLimiterCustomizer, instanceName);
+        return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties,
+            compositeRateLimiterCustomizer, instanceName);
     }
 
     private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
-        @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties,
+        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer, String instanceName) {
         if (instanceProperties == null) {
             return builder.build();
         }
@@ -85,7 +91,8 @@ public class RateLimiterConfigurationProperties extends CommonProperties{
         if (instanceProperties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
         }
-
+        compositeRateLimiterCustomizer.getRateLimiterConfigCustomizer(instanceName).ifPresent(
+            rateLimiterConfigCustomizer -> rateLimiterConfigCustomizer.customize(builder));
         return builder.build();
     }
 
@@ -93,8 +100,10 @@ public class RateLimiterConfigurationProperties extends CommonProperties{
         return instances.get(limiter);
     }
 
-    public RateLimiterConfig createRateLimiterConfig(String limiter) {
-        return createRateLimiterConfig(getLimiterProperties(limiter));
+    public RateLimiterConfig createRateLimiterConfig(String limiter,
+        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer) {
+        return createRateLimiterConfig(getLimiterProperties(limiter),
+            compositeRateLimiterCustomizer, limiter);
     }
 
     @Nullable

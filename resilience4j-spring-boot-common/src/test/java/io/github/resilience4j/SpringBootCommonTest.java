@@ -22,9 +22,10 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
 import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -80,7 +81,7 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
             new CompositeRegistryEventConsumer<>(emptyList()),
-            new CompositeCircuitBreakerCustomizer(Collections.singletonList(new TestCustomizer()))))
+            new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer()))))
             .isNotNull();
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
@@ -112,7 +113,8 @@ public class SpringBootCommonTest {
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistry(new RateLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRateLimiterCustomizer(Collections.emptyList()))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), Collections.emptyList(),

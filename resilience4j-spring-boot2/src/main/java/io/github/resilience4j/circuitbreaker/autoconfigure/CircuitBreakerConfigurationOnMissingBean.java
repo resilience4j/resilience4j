@@ -17,8 +17,8 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -44,9 +44,9 @@ public class CircuitBreakerConfigurationOnMissingBean extends
 
     @Bean
     @ConditionalOnMissingBean
-    public CompositeCircuitBreakerCustomizer circuitBreakerCustomizerFinder(
+    public CompositeCustomizer<CircuitBreakerConfigCustomizer> circuitBreakerCustomizerFinder(
         @Nullable List<CircuitBreakerConfigCustomizer> customizers) {
-        return new CompositeCircuitBreakerCustomizer(customizers);
+        return new CompositeCustomizer<>(customizers);
     }
 
 }
