@@ -1,11 +1,12 @@
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import io.github.resilience4j.common.CustomizerWithName;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
 /**
  * Enable customization rate limiter configuration builders programmatically.
  */
-public interface RateLimiterConfigCustomizer {
+public interface RateLimiterConfigCustomizer extends CustomizerWithName {
 
     /**
      * Customize rate limiter configuration builder.
@@ -14,8 +15,4 @@ public interface RateLimiterConfigCustomizer {
      */
     void customize(RateLimiterConfig.Builder configBuilder);
 
-    /**
-     * @return name of the rate limiter instance to be customized
-     */
-    String name();
 }

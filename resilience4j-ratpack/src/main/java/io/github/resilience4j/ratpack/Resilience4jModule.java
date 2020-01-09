@@ -31,10 +31,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.common.circuitbreaker.configuration.CompositeCircuitBreakerCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
@@ -211,7 +211,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> circuitBreakerProperties
                         .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
-                            new CompositeCircuitBreakerCustomizer(Collections.emptyList()))));
+                            new CompositeCustomizer<>(Collections.emptyList()))));
             CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
             // build circuit breakers
@@ -221,7 +221,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                     circuitBreakerRegistry.circuitBreaker(name,
                         circuitBreakerProperties.createCircuitBreakerConfig(name,
                             circuitBreakerConfig,
-                            new CompositeCircuitBreakerCustomizer(Collections.emptyList())));
+                            new CompositeCustomizer<>(Collections.emptyList())));
                 if (endpointsConfig.getCircuitbreaker().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
