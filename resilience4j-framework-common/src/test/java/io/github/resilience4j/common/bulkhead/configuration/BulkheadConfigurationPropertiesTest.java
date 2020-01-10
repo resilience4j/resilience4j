@@ -17,12 +17,12 @@ package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.vavr.Tuple;
-import io.vavr.Tuple2;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -147,12 +147,12 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createBulkheadConfig(instanceProperties1);
+            .createBulkheadConfig(instanceProperties1, compositeBulkheadCustomizer(), "backend1");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
 
         BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createBulkheadConfig(instanceProperties2);
+            .createBulkheadConfig(instanceProperties2, compositeBulkheadCustomizer(), "backend2");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
 
@@ -196,21 +196,24 @@ public class BulkheadConfigurationPropertiesTest {
 
         // Should get default config and overwrite max calls and wait time
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createBulkheadConfig(backendWithDefaultConfig);
+            .createBulkheadConfig(backendWithDefaultConfig, compositeBulkheadCustomizer(),
+                "backendWithDefaultConfig");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
         assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createBulkheadConfig(backendWithSharedConfig);
+            .createBulkheadConfig(backendWithSharedConfig, compositeBulkheadCustomizer(),
+                "backendWithSharedConfig");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
         assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
 
         // Unknown backend should get default config of Registry
         BulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-            .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties());
+            .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties(),
+                compositeBulkheadCustomizer(), "unknown");
         assertThat(bulkhead3).isNotNull();
         assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(0L);
 
@@ -226,7 +229,8 @@ public class BulkheadConfigurationPropertiesTest {
 
         //When
         assertThatThrownBy(
-            () -> bulkheadConfigurationProperties.createBulkheadConfig(instanceProperties))
+            () -> bulkheadConfigurationProperties.createBulkheadConfig(instanceProperties,
+                compositeBulkheadCustomizer(), "unknownConfig"))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
@@ -253,6 +257,10 @@ public class BulkheadConfigurationPropertiesTest {
     public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSize() {
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setEventConsumerBufferSize(-1);
+    }
+
+    private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }

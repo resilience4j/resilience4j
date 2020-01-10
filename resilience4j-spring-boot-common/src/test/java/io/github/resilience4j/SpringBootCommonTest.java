@@ -55,7 +55,8 @@ public class SpringBootCommonTest {
         assertThat(bulkheadConfigurationOnMissingBean
             .bulkheadRegistry(new BulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean
             .threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
