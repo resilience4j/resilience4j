@@ -15,7 +15,8 @@
  */
 package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -28,6 +29,7 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
@@ -45,12 +47,20 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "compositeRateLimiterCustomizer")
+    @Qualifier("compositeRateLimiterCustomizer")
+    public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer(
+        @Autowired(required = false) List<RateLimiterConfigCustomizer> configCustomizers) {
+        return new CompositeCustomizer<>(configCustomizers);
+    }
+
+    @Bean
     @ConditionalOnMissingBean
     public RateLimiterRegistry rateLimiterRegistry(
         RateLimiterConfigurationProperties rateLimiterProperties,
         EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
         RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
-        CompositeRateLimiterCustomizer compositeRateLimiterCustomizer) {
+        @Qualifier("compositeRateLimiterCustomizer") CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
         return rateLimiterConfiguration
             .rateLimiterRegistry(rateLimiterProperties, rateLimiterEventsConsumerRegistry,
                 rateLimiterRegistryEventConsumer, compositeRateLimiterCustomizer);

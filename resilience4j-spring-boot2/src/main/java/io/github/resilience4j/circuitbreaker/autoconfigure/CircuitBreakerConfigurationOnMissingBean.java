@@ -17,15 +17,10 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
-
-import java.util.List;
 
 @Configuration
 public class CircuitBreakerConfigurationOnMissingBean extends
@@ -40,13 +35,6 @@ public class CircuitBreakerConfigurationOnMissingBean extends
     @ConditionalOnMissingBean(value = CircuitBreakerEvent.class, parameterizedContainer = EventConsumerRegistry.class)
     public EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry() {
         return circuitBreakerConfiguration.eventConsumerRegistry();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CompositeCustomizer<CircuitBreakerConfigCustomizer> circuitBreakerCustomizerFinder(
-        @Nullable List<CircuitBreakerConfigCustomizer> customizers) {
-        return new CompositeCustomizer<>(customizers);
     }
 
 }

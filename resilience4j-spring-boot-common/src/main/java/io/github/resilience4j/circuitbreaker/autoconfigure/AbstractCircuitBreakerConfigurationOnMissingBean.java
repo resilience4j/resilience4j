@@ -29,6 +29,7 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
@@ -50,11 +51,19 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "compositeCircuitBreakerCustomizer")
+    @Qualifier("compositeCircuitBreakerCustomizer")
+    public CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer(
+        @Autowired(required = false) List<CircuitBreakerConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+    @Bean
     @ConditionalOnMissingBean
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
+        @Qualifier("compositeCircuitBreakerCustomizer") CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
         return circuitBreakerConfiguration
             .circuitBreakerRegistry(eventConsumerRegistry, circuitBreakerRegistryEventConsumer,
                 compositeCircuitBreakerCustomizer);

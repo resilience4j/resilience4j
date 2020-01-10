@@ -30,11 +30,11 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.lang.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,8 +57,9 @@ public class CircuitBreakerConfiguration {
     }
 
     @Bean
-    public CompositeCustomizer<CircuitBreakerConfigCustomizer> circuitBreakerCustomizerFinder(
-        @Nullable List<CircuitBreakerConfigCustomizer> customizers) {
+    @Qualifier("compositeCircuitBreakerCustomizer")
+    public CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer(
+        @Autowired(required = false) List<CircuitBreakerConfigCustomizer> customizers) {
         return new CompositeCustomizer<>(customizers);
     }
 
@@ -66,14 +67,14 @@ public class CircuitBreakerConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> circuitBreakerCustomizerFinder) {
+        @Qualifier("compositeCircuitBreakerCustomizer") CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
 
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
             circuitBreakerProperties, circuitBreakerRegistryEventConsumer,
-            circuitBreakerCustomizerFinder);
+            compositeCircuitBreakerCustomizer);
         registerEventConsumer(circuitBreakerRegistry, eventConsumerRegistry);
         // then pass the map here
-        initCircuitBreakerRegistry(circuitBreakerRegistry, circuitBreakerCustomizerFinder);
+        initCircuitBreakerRegistry(circuitBreakerRegistry, compositeCircuitBreakerCustomizer);
         return circuitBreakerRegistry;
     }
 

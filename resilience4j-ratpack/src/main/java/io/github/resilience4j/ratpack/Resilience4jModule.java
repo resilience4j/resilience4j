@@ -35,9 +35,9 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.common.ratelimiter.configuration.CompositeRateLimiterCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
-import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -254,7 +254,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             Map<String, RateLimiterConfig> configs = rateLimiterProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> rateLimiterProperties.createRateLimiterConfig(entry.getValue(),
-                        new CompositeRateLimiterCustomizer(Collections.emptyList()),
+                        new CompositeCustomizer<RateLimiterConfigCustomizer>(
+                            Collections.emptyList()),
                         entry.getKey())));
             RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(configs);
 
@@ -264,7 +265,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
                     rateLimiterRegistry.rateLimiter(name,
                         rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig,
-                            new CompositeRateLimiterCustomizer(Collections.emptyList()), name));
+                            new CompositeCustomizer<>(Collections.emptyList()), name));
                 if (endpointsConfig.getRatelimiter().isEnabled()) {
                     rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
@@ -296,7 +297,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             Map<String, RetryConfig> configs = RetryProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> RetryProperties.createRetryConfig(entry.getValue(),
-                        new CompositeRetryCustomizer(Collections.emptyList()), entry.getKey())));
+                        new CompositeCustomizer<RetryConfigCustomizer>(Collections.emptyList()),
+                        entry.getKey())));
             RetryRegistry retryRegistry = RetryRegistry.of(configs);
 
             // build retries
@@ -304,7 +306,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             RetryProperties.getInstances().forEach((name, retryConfig) -> {
                 io.github.resilience4j.retry.Retry retry =
                     retryRegistry.retry(name, RetryProperties.createRetryConfig(retryConfig,
-                        new CompositeRetryCustomizer(Collections.emptyList()), name));
+                        new CompositeCustomizer<>(Collections.emptyList()), name));
                 if (endpointsConfig.getRetry().isEnabled()) {
                     retry.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,

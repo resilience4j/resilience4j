@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.common.retry.configuration.CompositeRetryCustomizer;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -30,11 +30,11 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.lang.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +50,10 @@ public class RetryConfiguration {
 
 
     @Bean
-    public CompositeRetryCustomizer compositeRetryCustomizer(
-        @Nullable List<RetryConfigCustomizer> configCustomizers) {
-        return new CompositeRetryCustomizer(configCustomizers);
+    @Qualifier("compositeRetryCustomizer")
+    public CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer(
+        @Autowired(required = false) List<RetryConfigCustomizer> configCustomizers) {
+        return new CompositeCustomizer<>(configCustomizers);
     }
 
     /**
@@ -65,7 +66,7 @@ public class RetryConfiguration {
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
         EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
         RegistryEventConsumer<Retry> retryRegistryEventConsumer,
-        CompositeRetryCustomizer compositeRetryCustomizer) {
+        @Qualifier("compositeRetryCustomizer") CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties,
             retryRegistryEventConsumer, compositeRetryCustomizer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry,
@@ -94,7 +95,7 @@ public class RetryConfiguration {
     private RetryRegistry createRetryRegistry(
         RetryConfigurationProperties retryConfigurationProperties,
         RegistryEventConsumer<Retry> retryRegistryEventConsumer,
-        CompositeRetryCustomizer compositeRetryCustomizer) {
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         Map<String, RetryConfig> configs = retryConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> retryConfigurationProperties
