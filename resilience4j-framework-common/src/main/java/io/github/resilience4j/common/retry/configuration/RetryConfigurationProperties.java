@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.retry.configuration;
 
 import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -43,7 +44,7 @@ public class RetryConfigurationProperties extends CommonProperties {
      * @return the retry configuration
      */
     public RetryConfig createRetryConfig(String backend,
-        CompositeRetryCustomizer compositeRetryCustomizer) {
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         return createRetryConfig(getBackendProperties(backend), compositeRetryCustomizer, backend);
     }
 
@@ -82,7 +83,7 @@ public class RetryConfigurationProperties extends CommonProperties {
      * @return the retry configuration
      */
     public RetryConfig createRetryConfig(InstanceProperties instanceProperties,
-        CompositeRetryCustomizer compositeRetryCustomizer, String backend) {
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer, String backend) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
@@ -97,7 +98,8 @@ public class RetryConfigurationProperties extends CommonProperties {
     }
 
     private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties, CompositeRetryCustomizer compositeRetryCustomizer,
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
         String backend) {
         RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties,
             compositeRetryCustomizer, backend);
@@ -112,7 +114,8 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     @SuppressWarnings("unchecked")
     private RetryConfig buildRetryConfig(RetryConfig.Builder builder,
-        InstanceProperties properties, CompositeRetryCustomizer compositeRetryCustomizer,
+        InstanceProperties properties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
         String backend) {
         if (properties == null) {
             return builder.build();
@@ -158,7 +161,7 @@ public class RetryConfigurationProperties extends CommonProperties {
             }
         }
 
-        compositeRetryCustomizer.getRetryConfigCustomizer(backend)
+        compositeRetryCustomizer.getCustomizer(backend)
             .ifPresent(customizer -> customizer.customize(builder));
 
         return builder.build();

@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * the composite  of any spring resilience4j type config customizer  implementations.
@@ -16,9 +14,16 @@ public class CompositeCustomizer<T extends CustomizerWithName> {
 
     public CompositeCustomizer(List<T> customizers) {
         if (customizers != null && !customizers.isEmpty()) {
-            customizerMap.putAll(customizers.stream()
-                .collect(
-                    Collectors.toMap(CustomizerWithName::name, Function.identity())));
+            customizers.forEach(customizer -> {
+                if (customizerMap.containsKey(customizer.name())) {
+                    throw new IllegalStateException(
+                        "It is not possible to define more than one customizer per instance name "
+                            + customizer.name());
+                } else {
+                    customizerMap.put(customizer.name(), customizer);
+                }
+
+            });
         }
     }
 

@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.junit.Test;
@@ -178,8 +179,8 @@ public class RateLimiterConfigurationPropertiesTest {
         defaultProperties.setEventConsumerBufferSize(-1);
     }
 
-    private CompositeRateLimiterCustomizer compositeRateLimiterCustomizer() {
-        return new CompositeRateLimiterCustomizer(Collections.emptyList());
+    private CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }

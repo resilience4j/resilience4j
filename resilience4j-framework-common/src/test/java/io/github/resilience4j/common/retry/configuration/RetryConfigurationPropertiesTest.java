@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.retry.configuration;
 
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
@@ -162,7 +163,7 @@ public class RetryConfigurationPropertiesTest {
         defaultProperties.setMaxRetryAttempts(0);
     }
 
-    private CompositeRetryCustomizer compositeRetryCustomizer() {
-        return new CompositeRetryCustomizer(Collections.emptyList());
+    private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 }
