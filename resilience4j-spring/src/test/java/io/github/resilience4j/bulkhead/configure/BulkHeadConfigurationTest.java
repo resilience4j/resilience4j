@@ -44,7 +44,8 @@ public class BulkHeadConfigurationTest {
         //When
         ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
             .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -96,7 +97,8 @@ public class BulkHeadConfigurationTest {
         try {
             ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
                 .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                    new CompositeRegistryEventConsumer<>(emptyList()));
+                    new CompositeRegistryEventConsumer<>(emptyList()),
+                    new CompositeCustomizer<>(Collections.emptyList()));
             //Then
             assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
             // Should get default config and core number

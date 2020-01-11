@@ -46,8 +46,8 @@ public class BulkheadConfigurationPropertiesTest {
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
         bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
-        Map<String,String> tags=new HashMap<>();
-        tags.put("testKey1","testKet2");
+        Map<String, String> tags = new HashMap<>();
+        tags.put("testKey1", "testKet2");
         bulkheadConfigurationProperties.setTags(tags);
 
         //Then
@@ -55,12 +55,12 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createThreadPoolBulkheadConfig("backend1");
+            .createThreadPoolBulkheadConfig("backend1", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(1);
 
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createThreadPoolBulkheadConfig("backend2");
+            .createThreadPoolBulkheadConfig("backend2", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(2);
 
@@ -102,19 +102,22 @@ public class BulkheadConfigurationPropertiesTest {
             assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
             // Should get default config and core number
             ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backendWithDefaultConfig");
+                .createThreadPoolBulkheadConfig("backendWithDefaultConfig",
+                    compositeThreadPoolBulkheadCustomizer());
             assertThat(bulkhead1).isNotNull();
             assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
             assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
             // Should get shared config and overwrite core number
             ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backendWithSharedConfig");
+                .createThreadPoolBulkheadConfig("backendWithSharedConfig",
+                    compositeThreadPoolBulkheadCustomizer());
             assertThat(bulkhead2).isNotNull();
             assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(4);
             assertThat(bulkhead2.getQueueCapacity()).isEqualTo(2);
             // Unknown backend should get default config of Registry
             ThreadPoolBulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("unknownBackend");
+                .createThreadPoolBulkheadConfig("unknownBackend",
+                    compositeThreadPoolBulkheadCustomizer());
             assertThat(bulkhead3).isNotNull();
             assertThat(bulkhead3.getCoreThreadPoolSize())
                 .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
@@ -140,8 +143,8 @@ public class BulkheadConfigurationPropertiesTest {
         BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         bulkheadConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-        Map<String,String> globalTags=new HashMap<>();
-        globalTags.put("testKey1","testKet2");
+        Map<String, String> globalTags = new HashMap<>();
+        globalTags.put("testKey1", "testKet2");
         bulkheadConfigurationProperties.setTags(globalTags);
         //Then
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
@@ -260,6 +263,10 @@ public class BulkheadConfigurationPropertiesTest {
     }
 
     private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
+    private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
 
