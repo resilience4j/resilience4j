@@ -21,7 +21,8 @@ import java.lang.annotation.*;
  * This annotation can be applied to a class or a specific method. Applying it on a class is
  * equivalent to applying it on all its public methods. The annotation enables throttling for all
  * methods where it is applied. Throttling monitoring is performed via a rate limiter. See {@link
- * io.github.resilience4j.ratelimiter.RateLimiter} for details.
+ * io.github.resilience4j.ratelimiter.RateLimiter} for details. If using Spring,
+ * {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})

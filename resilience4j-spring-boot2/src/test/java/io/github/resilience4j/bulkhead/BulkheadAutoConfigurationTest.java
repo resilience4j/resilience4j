@@ -19,16 +19,16 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.TestThreadLocalContextPropagator;
 import io.github.resilience4j.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
 import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
 import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
 import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventDTO;
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
-import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
-import io.github.resilience4j.customizer.Customizer;
 import io.github.resilience4j.service.test.BeanContextPropagator;
 import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.TestApplication;
@@ -45,6 +45,7 @@ import org.springframework.core.Ordered;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,14 +82,15 @@ public class BulkheadAutoConfigurationTest {
     @Autowired
     private DummyFeignClient dummyFeignClient;
     @Autowired
-    private CompositeBuilderCustomizer<Builder> customizer;
+    private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer;
+    @Autowired
+    private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer;
 
     @Test
     public void testThreadPoolBulkheadCustomizer() {
-        assertThat(customizer).isNotNull().isInstanceOf(CompositeBuilderCustomizer.class);
-        Map<String,Customizer> customizerMap = (Map<String,Customizer>) getField(customizer, "customizerMap");
+        Map<String, ThreadPoolBulkheadConfigCustomizer> customizerMap = (Map<String, ThreadPoolBulkheadConfigCustomizer>) getField(
+            compositeThreadPoolBulkheadCustomizer, "customizerMap");
         assertThat(customizerMap).isNotNull().hasSize(1).containsKeys("backendC");
-
 
         //ContextPropagator set by properties
         ThreadPoolBulkhead bulkheadD = threadPoolBulkheadRegistry
@@ -111,6 +113,22 @@ public class BulkheadAutoConfigurationTest {
         assertThat(bulkheadC.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
         assertThat(bulkheadC.getBulkheadConfig().getContextPropagator().get(0).getClass())
             .isEqualTo(BeanContextPropagator.class);
+    }
+
+    @Test
+    public void testBulkheadCustomizer() {
+        Map<String, BulkheadConfigCustomizer> customizerMap = (Map<String, BulkheadConfigCustomizer>) getField(
+            compositeBulkheadCustomizer, "customizerMap");
+        assertThat(customizerMap).isNotNull().hasSize(1).containsKeys("backendCustomizer");
+
+        Bulkhead backendCustomizer = bulkheadRegistry.bulkhead("backendCustomizer");
+
+        assertThat(backendCustomizer).isNotNull();
+        assertThat(backendCustomizer.getBulkheadConfig()).isNotNull();
+        assertThat(backendCustomizer.getBulkheadConfig().getMaxWaitDuration()).isEqualTo(Duration.ofMillis(100));
+
+        //updated by Customizer
+        assertThat(backendCustomizer.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(20);
     }
 
     /**
@@ -193,8 +211,8 @@ public class BulkheadAutoConfigurationTest {
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD",
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(7)
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD",
                 "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
@@ -297,8 +315,8 @@ public class BulkheadAutoConfigurationTest {
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD",
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(7)
+            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD",
                 "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
@@ -428,8 +446,8 @@ public class BulkheadAutoConfigurationTest {
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendB", "backendC", "backendD",
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(7)
+            .containsExactly("backendA", "backendB", "backendB", "backendC","backendCustomizer", "backendD",
                 "dummyFeignClient");
 
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(

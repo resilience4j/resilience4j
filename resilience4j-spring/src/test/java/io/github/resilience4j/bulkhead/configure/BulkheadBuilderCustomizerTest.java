@@ -1,26 +1,26 @@
 package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.TestThreadLocalContextPropagator;
-import io.github.resilience4j.bulkhead.ContextPropagator;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
-import io.github.resilience4j.customizer.Customizer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,33 +31,41 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {ThreadPoolBulkheadBuilderCustomizerTest.Config.class})
-public class ThreadPoolBulkheadBuilderCustomizerTest {
+@ContextConfiguration(classes = {BulkheadBuilderCustomizerTest.Config.class})
+public class BulkheadBuilderCustomizerTest {
 
     @Autowired
-    private ThreadPoolBulkheadRegistry registry;
+    private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
     @Autowired
-    private CompositeBuilderCustomizer<Builder> customizer;
+    private BulkheadRegistry bulkheadRegistry;
+
+    @Autowired
+    @Qualifier("compositeBulkheadCustomizer")
+    private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer;
+
+    @Autowired
+    @Qualifier("compositeThreadPoolBulkheadCustomizer")
+    private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer;
+
 
     @Test
     public void testThreadPoolBulkheadCustomizer() {
 
-        assertThat(registry).isNotNull();
-        assertThat(customizer).isNotNull();
-
+        assertThat(threadPoolBulkheadRegistry).isNotNull();
+        assertThat(compositeThreadPoolBulkheadCustomizer).isNotNull();
 
         //All Customizer bean should be added to CompositeBuilderCustomizer as its primary bean.
-        assertThat(customizer.getClass()).isEqualTo(CompositeBuilderCustomizer.class);
-        Map<String,Customizer> map = (Map<String,Customizer>) getField(customizer, "customizerMap");
+        Map<String, ThreadPoolBulkheadConfigCustomizer> map = (Map<String, ThreadPoolBulkheadConfigCustomizer>) getField(
+            compositeThreadPoolBulkheadCustomizer,
+            "customizerMap");
         assertThat(map).isNotNull();
         assertThat(map).hasSize(2).containsKeys("backendB", "backendD");
-
 
         //This test context propagator set to config by properties. R4J will invoke default
         // constructor of ContextPropagator class using reflection.
         //downside is that no dependencies can be added to ContextPropagators class
-        ThreadPoolBulkhead bulkheadA = registry.bulkhead("bulkheadA", "backendA");
+        ThreadPoolBulkhead bulkheadA = threadPoolBulkheadRegistry.bulkhead("bulkheadA", "backendA");
         assertThat(bulkheadA).isNotNull();
         assertThat(bulkheadA.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkheadA.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(4);
@@ -66,7 +74,7 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
             .isInstanceOf(TestThreadLocalContextPropagator.class);
 
         //This test context propagator bean set to config using Customizer interface via SpringContext
-        ThreadPoolBulkhead bulkheadB = registry.bulkhead("bulkheadB", "backendB");
+        ThreadPoolBulkhead bulkheadB = threadPoolBulkheadRegistry.bulkhead("bulkheadB", "backendB");
         assertThat(bulkheadB).isNotNull();
         assertThat(bulkheadB.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkheadB.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(4);
@@ -75,14 +83,14 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
             .isInstanceOf(BeanContextPropagator.class);
 
         //This test has no context propagator
-        ThreadPoolBulkhead bulkheadC = registry.bulkhead("bulkheadC", "backendC");
+        ThreadPoolBulkhead bulkheadC = threadPoolBulkheadRegistry.bulkhead("bulkheadC", "backendC");
         assertThat(bulkheadC).isNotNull();
         assertThat(bulkheadC.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkheadC.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(4);
         assertThat(bulkheadC.getBulkheadConfig().getContextPropagator()).hasSize(0);
 
         //This test context propagator bean set to config using Customizer interface via SpringContext
-        ThreadPoolBulkhead bulkheadD = registry.bulkhead("bulkheadD", "backendD");
+        ThreadPoolBulkhead bulkheadD = threadPoolBulkheadRegistry.bulkhead("bulkheadD", "backendD");
         assertThat(bulkheadD).isNotNull();
         assertThat(bulkheadD.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkheadD.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(4);
@@ -92,8 +100,37 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
 
     }
 
+    @Test
+    public void testBulkheadCustomizer() {
+
+        assertThat(bulkheadRegistry).isNotNull();
+        assertThat(compositeBulkheadCustomizer).isNotNull();
+
+        //All Customizer bean should be added to CompositeBuilderCustomizer as its primary bean.
+        Map<String, ThreadPoolBulkheadConfigCustomizer> map = (Map<String, ThreadPoolBulkheadConfigCustomizer>) getField(
+            compositeBulkheadCustomizer,
+            "customizerMap");
+        assertThat(map).isNotNull();
+        assertThat(map).hasSize(1).containsKeys("backendOne");
+
+        //This config is changed programmatically
+        Bulkhead bulkheadOne = bulkheadRegistry.bulkhead("bulkheadOne", "backendOne");
+        assertThat(bulkheadOne).isNotNull();
+        assertThat(bulkheadOne.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(20);
+        assertThat(bulkheadOne.getBulkheadConfig().getMaxWaitDuration())
+            .isEqualTo(Duration.ofSeconds(1));
+
+        Bulkhead bulkheadTwo = bulkheadRegistry.bulkhead("bulkheadTwo", "backendTwo");
+        assertThat(bulkheadTwo).isNotNull();
+        assertThat(bulkheadTwo.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(10);
+        assertThat(bulkheadTwo.getBulkheadConfig().getMaxWaitDuration())
+            .isEqualTo(Duration.ofSeconds(1));
+
+    }
+
+
     @Configuration
-    @Import(ThreadPoolBulkheadConfiguration.class)
+    @Import({ThreadPoolBulkheadConfiguration.class, BulkheadConfiguration.class})
     static class Config {
 
 
@@ -103,19 +140,27 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
         }
 
         @Bean
-        public Customizer<Builder> customizerB(
+        public ThreadPoolBulkheadConfigCustomizer customizerB(
             List<? extends ContextPropagator> contextPropagators) {
-            return Customizer.of("backendB", builder ->
+            return ThreadPoolBulkheadConfigCustomizer.of("backendB", builder ->
                 builder.contextPropagator(
                     contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
         }
 
         @Bean
-        public Customizer<Builder> customizerD(
+        public ThreadPoolBulkheadConfigCustomizer customizerD(
             List<? extends ContextPropagator> contextPropagators) {
-            return  Customizer.of("backendD", builder ->
-                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
-         }
+            return ThreadPoolBulkheadConfigCustomizer.of("backendD", builder ->
+                builder.contextPropagator(
+                    contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
+        }
+
+        @Bean
+        public BulkheadConfigCustomizer customizerOne(
+            List<? extends ContextPropagator> contextPropagators) {
+            return BulkheadConfigCustomizer.of("backendOne", builder ->
+                builder.maxConcurrentCalls(20));
+        }
 
         @Bean
         public BeanContextPropagator beanContextPropagator() {
@@ -125,6 +170,11 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
         @Bean
         public ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties() {
             return new ThreadPoolBulkheadConfigurationPropertiesTest();
+        }
+
+        @Bean
+        public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
+            return new BulkheadConfigurationPropertiesTest();
         }
 
         private class ThreadPoolBulkheadConfigurationPropertiesTest extends
@@ -153,6 +203,22 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
                 getConfigs().put("backendD", properties3);
             }
 
+        }
+
+        private class BulkheadConfigurationPropertiesTest extends
+            BulkheadConfigurationProperties {
+
+            BulkheadConfigurationPropertiesTest() {
+                InstanceProperties properties1 = new InstanceProperties();
+                properties1.setMaxConcurrentCalls(10);
+                properties1.setMaxWaitDuration(Duration.ofSeconds(1));
+                getConfigs().put("backendOne", properties1);
+
+                InstanceProperties properties2 = new InstanceProperties();
+                properties2.setMaxConcurrentCalls(10);
+                properties2.setMaxWaitDuration(Duration.ofSeconds(1));
+                getConfigs().put("backendTwo", properties2);
+            }
         }
     }
 

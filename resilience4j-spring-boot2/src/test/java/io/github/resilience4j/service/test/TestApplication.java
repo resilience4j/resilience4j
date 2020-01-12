@@ -1,15 +1,18 @@
 package io.github.resilience4j.service.test;
 
 import io.github.resilience4j.bulkhead.ContextPropagator;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-import io.github.resilience4j.customizer.Customizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+
 
 /**
  * @author bstorozhuk
@@ -22,19 +25,39 @@ public class TestApplication {
         SpringApplication.run(TestApplication.class, args);
     }
 
-    @Configuration
-    static class Config {
+    @Bean
+    public ThreadPoolBulkheadConfigCustomizer contextPropagatorBeanCustomizer(
+        List<? extends ContextPropagator> contextPropagators) {
+        return ThreadPoolBulkheadConfigCustomizer.of("backendC", (builder) ->
+            builder.contextPropagator(
+                contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
+    }
 
-        @Bean
-        public Customizer<ThreadPoolBulkheadConfig.Builder> contextPropagatorBeanCustomizer(
-            List<? extends ContextPropagator> contextPropagators) {
-            return Customizer.of("backendC", (builder) ->
-                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
-        }
+    @Bean
+    public BulkheadConfigCustomizer testBulkheadCustomizer() {
+        return BulkheadConfigCustomizer.of("backendCustomizer", builder -> builder.maxConcurrentCalls(20));
+    }
 
-        @Bean
-        public ContextPropagator beanContextPropagator() {
-            return new BeanContextPropagator();
-        }
+    @Bean
+    public ContextPropagator beanContextPropagator() {
+        return new BeanContextPropagator();
+    }
+
+    @Bean
+    public CircuitBreakerConfigCustomizer testCustomizer() {
+        return CircuitBreakerConfigCustomizer
+            .of("backendC", builder -> builder.slidingWindowSize(100));
+    }
+
+    @Bean
+    public RateLimiterConfigCustomizer testRateLimiterCustomizer() {
+        return RateLimiterConfigCustomizer
+            .of("backendCustomizer", builder -> builder.limitForPeriod(200));
+    }
+
+    @Bean
+    public RetryConfigCustomizer testRetryCustomizer() {
+        return RetryConfigCustomizer.of("retryBackendD",
+            builder -> builder.maxAttempts(4));
     }
 }

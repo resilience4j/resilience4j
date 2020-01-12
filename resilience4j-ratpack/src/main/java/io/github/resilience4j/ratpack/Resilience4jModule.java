@@ -31,10 +31,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -67,8 +70,8 @@ import ratpack.service.StartEvent;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -207,7 +210,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> circuitBreakerProperties
-                        .createCircuitBreakerConfig(entry.getValue())));
+                        .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
+                            new CompositeCustomizer<>(Collections.emptyList()))));
             CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(configs);
 
             // build circuit breakers
@@ -215,7 +219,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             circuitBreakerProperties.getInstances().forEach((name, circuitBreakerConfig) -> {
                 io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker =
                     circuitBreakerRegistry.circuitBreaker(name,
-                        circuitBreakerProperties.createCircuitBreakerConfig(circuitBreakerConfig));
+                        circuitBreakerProperties.createCircuitBreakerConfig(name,
+                            circuitBreakerConfig,
+                            new CompositeCustomizer<>(Collections.emptyList())));
                 if (endpointsConfig.getCircuitbreaker().isEnabled()) {
                     circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
@@ -247,7 +253,10 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .getRatelimiter();
             Map<String, RateLimiterConfig> configs = rateLimiterProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                    entry -> rateLimiterProperties.createRateLimiterConfig(entry.getValue())));
+                    entry -> rateLimiterProperties.createRateLimiterConfig(entry.getValue(),
+                        new CompositeCustomizer<RateLimiterConfigCustomizer>(
+                            Collections.emptyList()),
+                        entry.getKey())));
             RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.of(configs);
 
             // build ratelimiters
@@ -255,7 +264,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             rateLimiterProperties.getInstances().forEach((name, rateLimiterConfig) -> {
                 io.github.resilience4j.ratelimiter.RateLimiter rateLimiter =
                     rateLimiterRegistry.rateLimiter(name,
-                        rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig));
+                        rateLimiterProperties.createRateLimiterConfig(rateLimiterConfig,
+                            new CompositeCustomizer<>(Collections.emptyList()), name));
                 if (endpointsConfig.getRatelimiter().isEnabled()) {
                     rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
@@ -286,14 +296,17 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             RetryConfigurationProperties RetryProperties = resilience4jConfig.getRetry();
             Map<String, RetryConfig> configs = RetryProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                    entry -> RetryProperties.createRetryConfig(entry.getValue())));
+                    entry -> RetryProperties.createRetryConfig(entry.getValue(),
+                        new CompositeCustomizer<RetryConfigCustomizer>(Collections.emptyList()),
+                        entry.getKey())));
             RetryRegistry retryRegistry = RetryRegistry.of(configs);
 
             // build retries
             EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
             RetryProperties.getInstances().forEach((name, retryConfig) -> {
                 io.github.resilience4j.retry.Retry retry =
-                    retryRegistry.retry(name, RetryProperties.createRetryConfig(retryConfig));
+                    retryRegistry.retry(name, RetryProperties.createRetryConfig(retryConfig,
+                        new CompositeCustomizer<>(Collections.emptyList()), name));
                 if (endpointsConfig.getRetry().isEnabled()) {
                     retry.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
@@ -324,7 +337,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             BulkheadConfigurationProperties bulkheadProperties = resilience4jConfig.getBulkhead();
             Map<String, BulkheadConfig> configs = bulkheadProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                    entry -> bulkheadProperties.createBulkheadConfig(entry.getValue())));
+                    entry -> bulkheadProperties.createBulkheadConfig(entry.getValue(),
+                        entry.getKey(),
+                        new CompositeCustomizer<>(Collections.emptyList()))));
             BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
 
             // build bulkheads
@@ -332,7 +347,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             bulkheadProperties.getInstances().forEach((name, bulkheadConfig) -> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead =
                     bulkheadRegistry
-                        .bulkhead(name, bulkheadProperties.createBulkheadConfig(bulkheadConfig));
+                        .bulkhead(name, bulkheadProperties.createBulkheadConfig(bulkheadConfig,
+                            name,
+                            new CompositeCustomizer<>(Collections.emptyList())));
                 if (endpointsConfig.getBulkhead().isEnabled()) {
                     bulkhead.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
@@ -367,7 +384,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> threadPoolBulkheadProperties
-                        .createThreadPoolBulkheadConfig(entry.getValue(), entry.getKey(), null)));
+                        .createThreadPoolBulkheadConfig(entry.getValue(), entry.getKey(), new CompositeCustomizer<>(Collections.emptyList()))));
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
                 .of(configs);
 
@@ -377,7 +394,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .forEach((name, threadPoolBulkheadConfig) -> {
                     io.github.resilience4j.bulkhead.ThreadPoolBulkhead threadPoolBulkhead =
                         threadPoolBulkheadRegistry.bulkhead(name, threadPoolBulkheadProperties
-                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig, name,null));
+                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig, name,new CompositeCustomizer<>(Collections.emptyList())));
                     if (endpointsConfig.getThreadpoolbulkhead().isEnabled()) {
                         threadPoolBulkhead.getEventPublisher().onEvent(eventConsumerRegistry
                             .createEventConsumer(name,

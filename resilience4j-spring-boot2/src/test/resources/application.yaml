@@ -28,6 +28,8 @@ resilience4j.retry:
         - io.github.resilience4j.circuitbreaker.IgnoredException
     retryDummyFeignClient:
       baseConfig: default
+    retryBackendD:
+      baseConfig: default
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400
@@ -107,6 +109,10 @@ resilience4j.ratelimiter:
       limitForPeriod: 100
       limitRefreshPeriod: 500ms
       timeoutDuration: 3s
+    backendCustomizer:
+      limitForPeriod: 100
+      limitRefreshPeriod: 500ms
+      timeoutDuration: 3s
     rateLimiterDummyFeignClient:
       baseConfig: default
 
@@ -126,6 +132,9 @@ resilience4j.bulkhead:
     dummyFeignClient:
       maxWaitDuration: 100
       maxConcurrentCalls: 3
+    backendCustomizer:
+      maxWaitDuration: 100
+      maxConcurrentCalls: 10
 
 resilience4j.thread-pool-bulkhead":
   tags:

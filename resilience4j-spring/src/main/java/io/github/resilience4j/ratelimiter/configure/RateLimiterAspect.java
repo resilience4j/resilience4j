@@ -22,6 +22,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.github.resilience4j.utils.ValueResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,8 +31,10 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
+import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -64,7 +67,7 @@ import java.util.concurrent.CompletionStage;
  */
 
 @Aspect
-public class RateLimiterAspect implements Ordered {
+public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
 
     private static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
@@ -73,6 +76,7 @@ public class RateLimiterAspect implements Ordered {
     private final @Nullable
     List<RateLimiterAspectExt> rateLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
+    private StringValueResolver embeddedValueResolver;
 
     public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
         RateLimiterConfigurationProperties properties,
@@ -110,11 +114,12 @@ public class RateLimiterAspect implements Ordered {
             methodName, name);
         Class<?> returnType = method.getReturnType();
 
-        if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
+        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, rateLimiterAnnotation.fallbackMethod());
+        if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-            .create(rateLimiterAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(),
+            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
                 proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
             () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
@@ -196,5 +201,10 @@ public class RateLimiterAspect implements Ordered {
     @Override
     public int getOrder() {
         return properties.getRateLimiterAspectOrder();
+    }
+
+    @Override
+    public void setEmbeddedValueResolver(StringValueResolver resolver) {
+        this.embeddedValueResolver = resolver;
     }
 }

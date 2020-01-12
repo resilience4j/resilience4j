@@ -76,4 +76,10 @@ public class CircuitBreakerDummyService implements TestDummyService {
     public Flowable<String> flowable() {
         return flowableError();
     }
+
+    @Override
+    @CircuitBreaker(name = BACKEND, fallbackMethod = "#{'recovery'}")
+    public String spelSync() {
+        return syncError();
+    }
 }

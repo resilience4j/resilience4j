@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -27,6 +29,7 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
@@ -46,6 +49,14 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
         this.retryConfiguration = new RetryConfiguration();
     }
 
+    @Bean
+    @Qualifier("compositeRetryCustomizer")
+    @ConditionalOnMissingBean(name = "compositeRetryCustomizer")
+    public CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer(
+        @Autowired(required = false) List<RetryConfigCustomizer> configCustomizers) {
+        return new CompositeCustomizer<>(configCustomizers);
+    }
+
     /**
      * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring
      *                                     properties
@@ -56,10 +67,11 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
         EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer,
+        @Qualifier("compositeRetryCustomizer") CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         return retryConfiguration
             .retryRegistry(retryConfigurationProperties, retryEventConsumerRegistry,
-                retryRegistryEventConsumer);
+                retryRegistryEventConsumer, compositeRetryCustomizer);
     }
 
     @Bean

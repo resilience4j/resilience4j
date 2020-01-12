@@ -77,4 +77,10 @@ public class BulkheadDummyService implements TestDummyService {
     public Flowable<String> flowable() {
         return flowableError();
     }
+
+    @Override
+    @Bulkhead(name = BACKEND, fallbackMethod = "#{'recovery'}")
+    public String spelSync() {
+        return syncError();
+    }
 }

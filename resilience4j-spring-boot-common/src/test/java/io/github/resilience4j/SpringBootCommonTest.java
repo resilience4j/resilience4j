@@ -22,10 +22,13 @@ import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -54,12 +57,14 @@ public class SpringBootCommonTest {
         assertThat(bulkheadConfigurationOnMissingBean
             .bulkheadRegistry(new BulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.singletonList(BulkheadConfigCustomizer.of("backend", builder -> builder.maxConcurrentCalls(10)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean
             .threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()),new CompositeBuilderCustomizer<>(
-                    Collections.emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.singletonList(
+                    ThreadPoolBulkheadConfigCustomizer.of("backend", builder -> builder.coreThreadPoolSize(10)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean
@@ -78,7 +83,9 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()),
+            new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer()))))
+            .isNotNull();
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
@@ -92,7 +99,8 @@ public class SpringBootCommonTest {
         assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 emptyList(),
@@ -108,7 +116,8 @@ public class SpringBootCommonTest {
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistry(new RateLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), emptyList(),
@@ -129,7 +138,20 @@ public class SpringBootCommonTest {
             CircuitBreakerConfigurationProperties circuitBreakerProperties) {
             super(circuitBreakerProperties);
         }
+    }
 
+    class TestCustomizer implements CircuitBreakerConfigCustomizer {
+
+        @Override
+        public void customize(
+            io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder builder) {
+            builder.slidingWindowSize(3000);
+        }
+
+        @Override
+        public String name() {
+            return "backendCustom";
+        }
     }
 
     class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationOnMissingBean {

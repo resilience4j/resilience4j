@@ -7,11 +7,13 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -46,8 +48,7 @@ public class BulkHeadConfigurationTest {
         //When
         ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
             .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()),new CompositeBuilderCustomizer<>(
-                    Collections.emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()), compositeThreadPoolBulkheadCustomizerTestInstance());
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -56,14 +57,14 @@ public class BulkHeadConfigurationTest {
         assertThat(bulkhead1.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
         assertThat(bulkhead1.getBulkheadConfig().getContextPropagator()).isNotNull();
         assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
-        assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().get(0).getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
+        assertThat(bulkhead1.getBulkheadConfig().getContextPropagator().get(0).getClass())
+            .isEqualTo(TestThreadLocalContextPropagator.class);
 
         ThreadPoolBulkhead bulkhead2 = bulkheadRegistry.bulkhead("backend2");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isNotNull();
         assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isEmpty();
-
 
         assertThat(eventConsumerRegistry.getAllEventConsumer()).hasSize(2);
     }
@@ -107,8 +108,8 @@ public class BulkHeadConfigurationTest {
         try {
             ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
                 .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                    new CompositeRegistryEventConsumer<>(emptyList()), new CompositeBuilderCustomizer<>(
-                        Collections.emptyList()));
+                    new CompositeRegistryEventConsumer<>(emptyList()),
+                    compositeThreadPoolBulkheadCustomizerTestInstance());
             //Then
             assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
             // Should get default config and core number
@@ -126,7 +127,8 @@ public class BulkHeadConfigurationTest {
             assertThat(bulkhead2.getBulkheadConfig().getQueueCapacity()).isEqualTo(2);
             assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isNotNull();
             assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
-            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().get(0).getClass()).isEqualTo(TestThreadLocalContextPropagator.class);
+            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().get(0).getClass())
+                .isEqualTo(TestThreadLocalContextPropagator.class);
 
             // Unknown backend should get default config of Registry
             ThreadPoolBulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
@@ -164,7 +166,7 @@ public class BulkHeadConfigurationTest {
         //When
         BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()),compositeBulkheadCustomizerTestInstance());
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -217,7 +219,7 @@ public class BulkHeadConfigurationTest {
         //When
         BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()),compositeBulkheadCustomizerTestInstance());
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -256,9 +258,16 @@ public class BulkHeadConfigurationTest {
         //When
         assertThatThrownBy(() -> bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList())))
+                new CompositeRegistryEventConsumer<>(emptyList()),compositeBulkheadCustomizerTestInstance()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
+    private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizerTestInstance() {
+        return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
+    private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizerTestInstance() {
+        return new CompositeCustomizer<>(Collections.emptyList());
+    }
 }

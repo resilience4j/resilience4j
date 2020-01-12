@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.retry.configuration;
 
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
@@ -23,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,8 +63,10 @@ public class RetryConfigurationPropertiesTest {
         assertThat(retryConfigurationProperties.getTags().size()).isEqualTo(1);
         assertThat(retryConfigurationProperties.getInstances().size()).isEqualTo(2);
         assertThat(retryConfigurationProperties.getBackends().size()).isEqualTo(2);
-        final RetryConfig retry1 = retryConfigurationProperties.createRetryConfig("backend1");
-        final RetryConfig retry2 = retryConfigurationProperties.createRetryConfig("backend2");
+        final RetryConfig retry1 = retryConfigurationProperties
+            .createRetryConfig("backend1", compositeRetryCustomizer());
+        final RetryConfig retry2 = retryConfigurationProperties
+            .createRetryConfig("backend2", compositeRetryCustomizer());
         RetryConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = retryConfigurationProperties
             .getInstances().get("backend1");
         assertThat(instancePropertiesForRetry1.getWaitDuration().toMillis()).isEqualTo(1000);
@@ -106,20 +110,21 @@ public class RetryConfigurationPropertiesTest {
         //Then
         // Should get default config and overwrite max attempt and wait time
         RetryConfig retry1 = retryConfigurationProperties
-            .createRetryConfig("backendWithDefaultConfig");
+            .createRetryConfig("backendWithDefaultConfig", compositeRetryCustomizer());
         assertThat(retry1).isNotNull();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
         assertThat(retry1.getIntervalFunction().apply(1)).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         RetryConfig retry2 = retryConfigurationProperties
-            .createRetryConfig("backendWithSharedConfig");
+            .createRetryConfig("backendWithSharedConfig", compositeRetryCustomizer());
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
         assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(300L);
 
         // Unknown backend should get default config of Registry
-        RetryConfig retry3 = retryConfigurationProperties.createRetryConfig("unknownBackend");
+        RetryConfig retry3 = retryConfigurationProperties
+            .createRetryConfig("unknownBackend", compositeRetryCustomizer());
         assertThat(retry3).isNotNull();
         assertThat(retry3.getMaxAttempts()).isEqualTo(3);
 
@@ -134,7 +139,8 @@ public class RetryConfigurationPropertiesTest {
         retryConfigurationProperties.getInstances().put("backend", instanceProperties);
 
         //then
-        assertThatThrownBy(() -> retryConfigurationProperties.createRetryConfig("backend"))
+        assertThatThrownBy(() -> retryConfigurationProperties
+            .createRetryConfig("backend", compositeRetryCustomizer()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
@@ -155,5 +161,9 @@ public class RetryConfigurationPropertiesTest {
     public void testIllegalArgumentOnMaxRetryAttempts() {
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxRetryAttempts(0);
+    }
+
+    private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 }

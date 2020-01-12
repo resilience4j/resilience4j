@@ -17,10 +17,10 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -46,12 +46,12 @@ public class AbstractRefreshScopedBulkheadConfigurationTest {
 
         assertThat(bulkheadConfig.bulkheadRegistry(
             new BulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()),
+            new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
 
         assertThat(bulkheadConfig.threadPoolBulkheadRegistry(
             new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()), new CompositeBuilderCustomizer<>(
-                Collections.emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()),  new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
     }
 
     static class BulkheadConfig extends AbstractRefreshScopedBulkheadConfiguration {

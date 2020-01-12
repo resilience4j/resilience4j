@@ -21,7 +21,8 @@ import java.lang.annotation.*;
  * This annotation can be applied to a class or a specific method. Applying it on a class is
  * equivalent to applying it on all its public methods. The annotation enables backend monitoring
  * for all methods where it is applied. Backend monitoring is performed via a circuit breaker. See
- * {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} for details.
+ * {@link io.github.resilience4j.circuitbreaker.CircuitBreaker} for details. If using Spring,
+ * {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})

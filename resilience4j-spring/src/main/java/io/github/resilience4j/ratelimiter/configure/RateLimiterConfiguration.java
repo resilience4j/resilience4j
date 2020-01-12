@@ -16,6 +16,8 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -29,10 +31,12 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.lang.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,18 +52,27 @@ import java.util.stream.Collectors;
 public class RateLimiterConfiguration {
 
     @Bean
+    @Qualifier("compositeRateLimiterCustomizer")
+    public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer(
+        @Nullable List<RateLimiterConfigCustomizer> configCustomizers) {
+        return new CompositeCustomizer<>(configCustomizers);
+    }
+
+    @Bean
     public RateLimiterRegistry rateLimiterRegistry(
         RateLimiterConfigurationProperties rateLimiterProperties,
         EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
+        @Qualifier("compositeRateLimiterCustomizer") CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
         RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties,
-            rateLimiterRegistryEventConsumer);
+            rateLimiterRegistryEventConsumer, compositeRateLimiterCustomizer);
         registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry,
             rateLimiterProperties);
         rateLimiterProperties.getInstances().forEach(
             (name, properties) ->
                 rateLimiterRegistry
-                    .rateLimiter(name, rateLimiterProperties.createRateLimiterConfig(properties))
+                    .rateLimiter(name, rateLimiterProperties
+                        .createRateLimiterConfig(properties, compositeRateLimiterCustomizer, name))
         );
         return rateLimiterRegistry;
     }
@@ -76,15 +89,18 @@ public class RateLimiterConfiguration {
      * Initializes a rate limiter registry.
      *
      * @param rateLimiterConfigurationProperties The rate limiter configuration properties.
+     * @param compositeRateLimiterCustomizer the composite rate limiter customizer delegate
      * @return a RateLimiterRegistry
      */
     private RateLimiterRegistry createRateLimiterRegistry(
         RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
-        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer) {
+        RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
         Map<String, RateLimiterConfig> configs = rateLimiterConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> rateLimiterConfigurationProperties
-                    .createRateLimiterConfig(entry.getValue())));
+                    .createRateLimiterConfig(entry.getValue(), compositeRateLimiterCustomizer,
+                        entry.getKey())));
 
         return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
             io.vavr.collection.HashMap.ofAll(rateLimiterConfigurationProperties.getTags()));

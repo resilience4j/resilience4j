@@ -18,22 +18,23 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
-import io.github.resilience4j.customizer.Customizer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
@@ -56,14 +57,31 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "compositeBulkheadCustomizer")
+    @Qualifier("compositeBulkheadCustomizer")
+    public CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer(
+        @Autowired(required = false) List<BulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "compositeThreadPoolBulkheadCustomizer")
+    @Qualifier("compositeThreadPoolBulkheadCustomizer")
+    public CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer(
+        @Autowired(required = false) List<ThreadPoolBulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+    @Bean
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         return bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-                bulkheadRegistryEventConsumer);
+                bulkheadRegistryEventConsumer,compositeBulkheadCustomizer);
     }
 
     @Bean
@@ -108,18 +126,11 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-            threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadBuilderCustomizer);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer(
-        Optional<List<Customizer<Builder>>> customizers){
-        return threadPoolBulkheadConfiguration.compositeThreadPoolBulkheadBuilderCustomizer(customizers);
+            threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadCustomizer);
     }
 
     @Bean
