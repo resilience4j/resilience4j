@@ -1,23 +1,31 @@
 package io.github.resilience4j.customizer;
 
 import java.util.List;
+import java.util.Map;
+
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 /**
- * Convenience class that encapsulate {@link Customizer} instances and use Delegate design pattern
- * to call them in sequence.
+ * Convenience class that encapsulate {@link Customizer} instances, convert them into Map of
+ * InstanceName and Customizer instance
  *
  * @param <T> supported types that could be customized
  */
-public class CompositeBuilderCustomizer<T> implements Customizer<T> {
+public class CompositeBuilderCustomizer<T> {
 
-    final private List<Customizer<T>> delegates;
+    final private Map<String, Customizer<T>> customizerMap;
 
     public CompositeBuilderCustomizer(List<Customizer<T>> delegates) {
-        this.delegates = delegates;
+        this.customizerMap = delegates.stream()
+            .collect(toMap(Customizer::instanceName, identity()));
     }
 
-    @Override
-    public void customize(String name, T val) {
-        delegates.stream().forEach(delegate -> delegate.customize(name, val));
+    public void customize(String name, T t) {
+        Customizer<T> customizer = customizerMap.get(name);
+        if (customizer != null) {
+            customizer.customizeIfNameMatch(name, t);
+        }
     }
+
 }

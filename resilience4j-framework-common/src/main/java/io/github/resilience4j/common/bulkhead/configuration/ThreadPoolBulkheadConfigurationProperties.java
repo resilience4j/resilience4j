@@ -22,7 +22,7 @@ import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.customizer.Customizer;
+import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -61,41 +61,41 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
     @Nullable
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend,
-        Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
-        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, customizer);
+        CompositeBuilderCustomizer<ThreadPoolBulkheadConfig.Builder> compositeBuilderCustomizer) {
+        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, compositeBuilderCustomizer);
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
         InstanceProperties instanceProperties, String backendName,
-        Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
+        CompositeBuilderCustomizer<ThreadPoolBulkheadConfig.Builder> compositeBuilderCustomizer) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties, backendName, customizer);
+            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties, backendName, compositeBuilderCustomizer);
         }
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties, backendName, customizer);
+        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties, backendName, compositeBuilderCustomizer);
     }
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
         InstanceProperties baseProperties, InstanceProperties instanceProperties, String backendName,
-        Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
+        CompositeBuilderCustomizer<ThreadPoolBulkheadConfig.Builder> compositeBuilderCustomizer) {
         ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
-            ThreadPoolBulkheadConfig.custom(), baseProperties, backendName, customizer);
+            ThreadPoolBulkheadConfig.custom(), baseProperties, backendName, compositeBuilderCustomizer);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
-            instanceProperties, backendName, customizer);
+            instanceProperties, backendName, compositeBuilderCustomizer);
     }
 
     public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
         ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties,
-        String backendName, Customizer<ThreadPoolBulkheadConfig.Builder> customizer) {
+        String backendName, CompositeBuilderCustomizer<ThreadPoolBulkheadConfig.Builder> compositeBuilderCustomizer) {
 
         if (properties == null) {
             ThreadPoolBulkheadConfig.Builder customBuilder = ThreadPoolBulkheadConfig.custom();
-            if (customizer!=null) {
-                customizer.customize(backendName, builder);
+            if (compositeBuilderCustomizer!=null) {
+                compositeBuilderCustomizer.customize(backendName, builder);
             }
             return customBuilder.build();
         }
@@ -119,8 +119,8 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
             builder.contextPropagator(properties.getContextPropagators());
         }
 
-        if (customizer!=null) {
-            customizer.customize(backendName, builder);
+        if (compositeBuilderCustomizer!=null) {
+            compositeBuilderCustomizer.customize(backendName, builder);
         }
 
         return builder.build();

@@ -26,6 +26,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import io.github.resilience4j.customizer.Customizer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
@@ -38,8 +39,6 @@ import org.springframework.context.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
 
 /**
  * {@link Configuration Configuration} for resilience4j-bulkhead.
@@ -109,7 +108,7 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
+        CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
@@ -117,8 +116,8 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     }
 
     @Bean
-    @Primary
-    public Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer(
+    @ConditionalOnMissingBean
+    public CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer(
         Optional<List<Customizer<Builder>>> customizers){
         return threadPoolBulkheadConfiguration.compositeThreadPoolBulkheadBuilderCustomizer(customizers);
     }

@@ -3,7 +3,7 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.TestThreadLocalContextPropagator;
 import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -22,6 +22,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -37,7 +38,7 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
     private ThreadPoolBulkheadRegistry registry;
 
     @Autowired
-    private Customizer<ThreadPoolBulkheadConfig.Builder> customizer;
+    private CompositeBuilderCustomizer<Builder> customizer;
 
     @Test
     public void testThreadPoolBulkheadCustomizer() {
@@ -48,9 +49,10 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
 
         //All Customizer bean should be added to CompositeBuilderCustomizer as its primary bean.
         assertThat(customizer.getClass()).isEqualTo(CompositeBuilderCustomizer.class);
-        List<Customizer> delegates = (List<Customizer>) getField(customizer, "delegates");
-        assertThat(delegates).isNotNull();
-        assertThat(delegates).hasSize(2);
+        Map<String,Customizer> map = (Map<String,Customizer>) getField(customizer, "customizerMap");
+        assertThat(map).isNotNull();
+        assertThat(map).hasSize(2).containsKeys("backendB", "backendD");
+
 
         //This test context propagator set to config by properties. R4J will invoke default
         // constructor of ContextPropagator class using reflection.
@@ -101,25 +103,19 @@ public class ThreadPoolBulkheadBuilderCustomizerTest {
         }
 
         @Bean
-        public Customizer<ThreadPoolBulkheadConfig.Builder> customizerB(
+        public Customizer<Builder> customizerB(
             List<? extends ContextPropagator> contextPropagators) {
-            return (name, builder) -> {
-                if(name.equals("backendB")){
-                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()]));
-                }
-            };
-
+            return Customizer.of("backendB", builder ->
+                builder.contextPropagator(
+                    contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
         }
 
         @Bean
-        public Customizer<ThreadPoolBulkheadConfig.Builder> customizerD(
+        public Customizer<Builder> customizerD(
             List<? extends ContextPropagator> contextPropagators) {
-            return (name, builder) -> {
-                if(name.equals("backendD")){
-                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()]));
-                }
-            };
-        }
+            return  Customizer.of("backendD", builder ->
+                    builder.contextPropagator(contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
+         }
 
         @Bean
         public BeanContextPropagator beanContextPropagator() {

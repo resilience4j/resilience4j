@@ -47,6 +47,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 import static com.jayway.awaitility.Awaitility.await;
@@ -80,13 +81,14 @@ public class BulkheadAutoConfigurationTest {
     @Autowired
     private DummyFeignClient dummyFeignClient;
     @Autowired
-    private Customizer<Builder> customizer;
+    private CompositeBuilderCustomizer<Builder> customizer;
 
     @Test
     public void testThreadPoolBulkheadCustomizer() {
         assertThat(customizer).isNotNull().isInstanceOf(CompositeBuilderCustomizer.class);
-        List<Customizer> delegates = (List<Customizer>) getField(customizer, "delegates");
-        assertThat(delegates).isNotNull().hasSize(1);
+        Map<String,Customizer> customizerMap = (Map<String,Customizer>) getField(customizer, "customizerMap");
+        assertThat(customizerMap).isNotNull().hasSize(1).containsKeys("backendC");
+
 
         //ContextPropagator set by properties
         ThreadPoolBulkhead bulkheadD = threadPoolBulkheadRegistry

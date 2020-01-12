@@ -52,7 +52,7 @@ public class ThreadPoolBulkheadConfiguration {
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
+        CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(
             bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadBuilderCustomizer);
@@ -63,14 +63,11 @@ public class ThreadPoolBulkheadConfiguration {
         bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry
             .bulkhead(name, bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(name, compositeThreadPoolBulkheadBuilderCustomizer)));
 
-
-
         return bulkheadRegistry;
     }
 
     @Bean
-    @Primary
-    public Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer(Optional<List<Customizer<Builder>>> customizers){
+    public CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer(Optional<List<Customizer<Builder>>> customizers){
         return new CompositeBuilderCustomizer<>(customizers.isPresent()? customizers.get() : Collections.emptyList());
     }
 
@@ -92,7 +89,7 @@ public class ThreadPoolBulkheadConfiguration {
     private ThreadPoolBulkheadRegistry createBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Customizer<Builder> customizer) {
+        CompositeBuilderCustomizer<Builder> customizer) {
 
         Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties
             .getConfigs()

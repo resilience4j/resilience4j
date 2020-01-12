@@ -1,7 +1,10 @@
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.bulkhead.*;
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.Builder;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfiguration;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
@@ -9,13 +12,11 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.customizer.Customizer;
+import io.github.resilience4j.customizer.CompositeBuilderCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Optional;
 
 @Configuration
 public abstract class AbstractRefreshScopedBulkheadConfiguration {
@@ -58,7 +59,7 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        Customizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
+        CompositeBuilderCustomizer<Builder> compositeThreadPoolBulkheadBuilderCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
