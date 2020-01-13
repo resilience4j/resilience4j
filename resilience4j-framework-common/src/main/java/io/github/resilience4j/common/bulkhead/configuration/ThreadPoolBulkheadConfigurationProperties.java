@@ -194,8 +194,8 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
             return writableStackTraceEnabled;
         }
 
-        public InstanceProperties setWritableStackTraceEnabled(Integer eventConsumerBufferSize) {
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
+        public InstanceProperties setWritableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
             return this;
         }
 
