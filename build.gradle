@@ -6,7 +6,7 @@ plugins {
     id "com.jfrog.artifactory" version "4.9.5"
 }
 plugins.withType(JacocoPlugin) {
-    tasks["check"].finalizedBy 'jacocoTestReport'
+    tasks["check"].finalizedBy 'jacocoRootReport'
 }
 apply plugin: 'idea'
 apply from: "${rootDir}/libraries.gradle"
@@ -92,7 +92,9 @@ sonarqube {
 
 
 subprojects {
+    def jacocoExecutionDataFiles = fileTree(buildDir).include("/reports/jacoco/test/*.xml'")
     jacocoTestReport {
+        executionData.setFrom jacocoExecutionDataFiles
         reports {
             html.enabled = false
             xml.enabled = true
@@ -113,7 +115,7 @@ subprojects {
     }
 }
 
-//tasks.check.dependsOn tasks.jacocoTestReport
+tasks.check.dependsOn tasks.jacocoTestReport
 
 task jacocoRootReport(type: JacocoReport) {
     description = 'Generates an aggregate report from all subprojects'
@@ -121,8 +123,8 @@ task jacocoRootReport(type: JacocoReport) {
     additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.setFrom files(subprojects.sourceSets.main.output)
-    executionData.setFrom project.fileTree(dir: '.', include: '**/build/reports/jacoco/test/*.xml')
-    //executionData.setFrom files(subprojects.jacocoTestReport.executionData)
+   // executionData.setFrom project.fileTree(dir: '.', include: '**/build/reports/jacoco/test/*.xml')
+    executionData.setFrom files(subprojects.jacocoTestReport.executionData)
     reports {
         html.enabled = false
         xml.enabled = true
