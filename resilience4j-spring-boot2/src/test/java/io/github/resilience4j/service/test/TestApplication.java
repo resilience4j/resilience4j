@@ -1,10 +1,14 @@
 package io.github.resilience4j.service.test;
 
+import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.retry.RetryConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -69,5 +73,38 @@ public class TestApplication {
         };
 
     }
+
+    @Bean
+    public BulkheadConfigCustomizer testBulkheadConfigCustomizer() {
+        return new BulkheadConfigCustomizer() {
+            @Override
+            public void customize(BulkheadConfig.Builder configBuilder) {
+                configBuilder.maxConcurrentCalls(3);
+            }
+
+            @Override
+            public String name() {
+                return "backendD";
+            }
+        };
+    }
+
+    @Bean
+    public ThreadPoolBulkheadConfigCustomizer testThreadPoolBulkheadConfigCustomizer() {
+        return new ThreadPoolBulkheadConfigCustomizer() {
+
+            @Override
+            public String name() {
+                return "backendD";
+            }
+
+            @Override
+            public void customize(
+                ThreadPoolBulkheadConfig.Builder configBuilder) {
+                configBuilder.maxThreadPoolSize(2);
+            }
+        };
+    }
+
 
 }

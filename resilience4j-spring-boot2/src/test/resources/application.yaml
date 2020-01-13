@@ -129,6 +129,8 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+    backendD:
+      baseConfig: default
     dummyFeignClient:
       maxWaitDuration: 100
       maxConcurrentCalls: 3
@@ -148,6 +150,10 @@ resilience4j.thread-pool-bulkhead":
       tags:
       baseConfig: default
     backendC:
+      maxThreadPoolSize: 1
+      coreThreadPoolSize: 1
+      queueCapacity: 1
+    backendD:
       maxThreadPoolSize: 1
       coreThreadPoolSize: 1
       queueCapacity: 1

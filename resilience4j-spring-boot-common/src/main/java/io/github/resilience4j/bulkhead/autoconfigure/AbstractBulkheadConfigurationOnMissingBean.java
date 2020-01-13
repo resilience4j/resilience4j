@@ -22,6 +22,9 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
@@ -31,6 +34,7 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 
@@ -52,15 +56,25 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         this.bulkheadConfiguration = new BulkheadConfiguration();
     }
 
+
+    @Bean
+    @ConditionalOnMissingBean(name = "compositeBulkheadCustomizer")
+    @Qualifier("compositeBulkheadCustomizer")
+    public CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer(
+        @Autowired(required = false) List<BulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
     @Bean
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        @Qualifier("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         return bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-                bulkheadRegistryEventConsumer);
+                bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
     }
 
     @Bean
@@ -100,15 +114,25 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
 
     @Bean
+    @ConditionalOnMissingBean(name = "compositeThreadPoolBulkheadCustomizer")
+    @Qualifier("compositeThreadPoolBulkheadCustomizer")
+    public CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer(
+        @Autowired(required = false) List<ThreadPoolBulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+
+    @Bean
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
+        @Qualifier("compositeThreadPoolBulkheadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-            threadPoolBulkheadRegistryEventConsumer);
+            threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadCustomizer);
     }
 
     @Bean

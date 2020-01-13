@@ -21,6 +21,8 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -31,6 +33,7 @@ import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
 
 import java.util.ArrayList;
@@ -46,6 +49,13 @@ import java.util.stream.Collectors;
 @Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class})
 public class BulkheadConfiguration {
 
+    @Bean
+    @Qualifier("compositeBulkheadCustomizer")
+    public CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer(
+        @Autowired(required = false) List<BulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
     /**
      * @param bulkheadConfigurationProperties bulk head spring configuration properties
      * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
@@ -55,14 +65,17 @@ public class BulkheadConfiguration {
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        @Qualifier("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
-            bulkheadRegistryEventConsumer);
+            bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
         bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
             bulkheadRegistry
-                .bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
+                .bulkhead(name, bulkheadConfigurationProperties
+                    .createBulkheadConfig(properties, compositeBulkheadCustomizer,
+                        name)));
         return bulkheadRegistry;
     }
 
@@ -78,14 +91,17 @@ public class BulkheadConfiguration {
      * Initializes a bulkhead registry.
      *
      * @param bulkheadConfigurationProperties The bulkhead configuration properties.
+     * @param compositeBulkheadCustomizer
      * @return a BulkheadRegistry
      */
     private BulkheadRegistry createBulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
-        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
+                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue(),
+                    compositeBulkheadCustomizer, entry.getKey())));
 
         return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer,
             io.vavr.collection.HashMap.ofAll(bulkheadConfigurationProperties.getTags()));
