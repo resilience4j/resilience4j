@@ -32,6 +32,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
@@ -337,7 +338,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             BulkheadConfigurationProperties bulkheadProperties = resilience4jConfig.getBulkhead();
             Map<String, BulkheadConfig> configs = bulkheadProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                    entry -> bulkheadProperties.createBulkheadConfig(entry.getValue())));
+                    entry -> bulkheadProperties.createBulkheadConfig(entry.getValue(),
+                        new CompositeCustomizer<BulkheadConfigCustomizer>(Collections.emptyList()),
+                        entry.getKey())));
             BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(configs);
 
             // build bulkheads
@@ -345,7 +348,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             bulkheadProperties.getInstances().forEach((name, bulkheadConfig) -> {
                 io.github.resilience4j.bulkhead.Bulkhead bulkhead =
                     bulkheadRegistry
-                        .bulkhead(name, bulkheadProperties.createBulkheadConfig(bulkheadConfig));
+                        .bulkhead(name, bulkheadProperties.createBulkheadConfig(bulkheadConfig,
+                            new CompositeCustomizer<>(Collections.emptyList()), name));
                 if (endpointsConfig.getBulkhead().isEnabled()) {
                     bulkhead.getEventPublisher().onEvent(eventConsumerRegistry
                         .createEventConsumer(name,
@@ -380,7 +384,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                     entry -> threadPoolBulkheadProperties
-                        .createThreadPoolBulkheadConfig(entry.getValue())));
+                        .createThreadPoolBulkheadConfig(entry.getValue(),
+                            new CompositeCustomizer<>(Collections.emptyList()), entry.getKey())));
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
                 .of(configs);
 
@@ -390,7 +395,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 .forEach((name, threadPoolBulkheadConfig) -> {
                     io.github.resilience4j.bulkhead.ThreadPoolBulkhead threadPoolBulkhead =
                         threadPoolBulkheadRegistry.bulkhead(name, threadPoolBulkheadProperties
-                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig));
+                            .createThreadPoolBulkheadConfig(threadPoolBulkheadConfig,
+                                new CompositeCustomizer<>(Collections.emptyList()), name));
                     if (endpointsConfig.getThreadpoolbulkhead().isEnabled()) {
                         threadPoolBulkhead.getEventPublisher().onEvent(eventConsumerRegistry
                             .createEventConsumer(name,
