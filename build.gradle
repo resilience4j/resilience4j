@@ -89,9 +89,11 @@ sonarqube {
 
 
 subprojects {
-    jacocoTestReport {
+
+    jacocoTestReport{
         executionData.setFrom project.fileTree(buildDir).include("/jacoco/*.exec")
     }
+
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
         if (!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
@@ -108,17 +110,20 @@ subprojects {
 
 tasks.check.dependsOn tasks.jacocoTestReport
 
-task generateMergedReport(type: JacocoReport) {
+task jacocoRootReport(type: JacocoReport) {
     description = 'Generates an aggregate report from all subprojects'
     dependsOn = subprojects.test
     additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.setFrom files(subprojects.sourceSets.main.output)
-    executionData.setFrom project.fileTree(buildDir).include("/jacoco/*.exec")
-    reports {
-        xml.enabled false
-        csv.enabled false
-        html.enabled true
+    executionData.setFrom files(subprojects.jacocoTestReport.executionData)
+    onlyIf = {
+        true
+    }
+    doFirst {
+        executionData = files(executionData.findAll {
+            it.exists()
+        })
     }
 }
 
