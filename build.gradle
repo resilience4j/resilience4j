@@ -90,11 +90,7 @@ sonarqube {
 
 subprojects {
     jacocoTestReport {
-        reports {
-            html.enabled = true
-            xml.enabled = true
-            csv.enabled = false
-        }
+        executionData.setFrom project.fileTree(buildDir).include("/jacoco/*.exec")
     }
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
@@ -112,6 +108,19 @@ subprojects {
 
 tasks.check.dependsOn tasks.jacocoTestReport
 
+task generateMergedReport(type: JacocoReport) {
+    description = 'Generates an aggregate report from all subprojects'
+    dependsOn = subprojects.test
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom project.fileTree(buildDir).include("/jacoco/*.exec")
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.enabled true
+    }
+}
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
