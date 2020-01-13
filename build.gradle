@@ -5,6 +5,9 @@ plugins {
     id 'org.asciidoctor.convert' version '1.6.0'
     id "com.jfrog.artifactory" version "4.9.5"
 }
+plugins.withType(JacocoPlugin) {
+    tasks["check"].finalizedBy 'jacocoTestReport'
+}
 apply plugin: 'idea'
 apply from: "${rootDir}/libraries.gradle"
 
@@ -89,11 +92,13 @@ sonarqube {
 
 
 subprojects {
-
-    jacocoTestReport{
-        executionData.setFrom project.fileTree(buildDir).include("/jacoco/*.exec")
+    jacocoTestReport {
+        reports {
+            html.enabled = false
+            xml.enabled = true
+            csv.enabled = false
+        }
     }
-
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
         if (!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
@@ -108,7 +113,7 @@ subprojects {
     }
 }
 
-tasks.check.dependsOn tasks.jacocoTestReport
+//tasks.check.dependsOn tasks.jacocoTestReport
 
 task jacocoRootReport(type: JacocoReport) {
     description = 'Generates an aggregate report from all subprojects'
@@ -116,14 +121,12 @@ task jacocoRootReport(type: JacocoReport) {
     additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories.setFrom files(subprojects.sourceSets.main.output)
-    executionData.setFrom files(subprojects.jacocoTestReport.executionData)
-    onlyIf = {
-        true
-    }
-    doFirst {
-        executionData = files(executionData.findAll {
-            it.exists()
-        })
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/reports/jacoco/test/*.xml')
+    //executionData.setFrom files(subprojects.jacocoTestReport.executionData)
+    reports {
+        html.enabled = false
+        xml.enabled = true
+        csv.enabled = false
     }
 }
 
