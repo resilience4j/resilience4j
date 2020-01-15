@@ -22,6 +22,7 @@ import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.spring.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -47,6 +48,7 @@ public class BulkheadMicrometerAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(MeterRegistry.class)
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
     public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(
