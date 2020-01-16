@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
+import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS_AGGREGATED;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,11 +58,11 @@ public class TaggedRetryMetricsPublisherTest {
         Retry newRetry = retryRegistry.retry("backendB");
 
         assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendA")).hasSize(4);
-        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendB")).hasSize(4);
+        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendA")).hasSize(8);
+        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendB")).hasSize(8);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(8);
+        assertThat(meters).hasSize(16);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
 
@@ -75,7 +76,7 @@ public class TaggedRetryMetricsPublisherTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(4);
+        assertThat(meters).hasSize(8);
 
         assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendA");
         retryRegistry.remove("backendA");
@@ -119,6 +120,21 @@ public class TaggedRetryMetricsPublisherTest {
     }
 
     @Test
+    public void successfulWithoutRetryCallsGaugeReportsAggregatedValue() {
+        // when
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS_AGGREGATED).gauges();
+
+        // then
+        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges,
+            "successful_without_retry", retry.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().value())
+            .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+        assertThat(successfulWithoutRetry.get().value())
+            .isEqualTo(0);
+    }
+
+    @Test
     public void successfulWithRetryCallsGaugeReportsCorrespondingValue() {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
 
@@ -157,6 +173,7 @@ public class TaggedRetryMetricsPublisherTest {
         TaggedRetryMetricsPublisher taggedRetryMetricsPublisher = new TaggedRetryMetricsPublisher(
             TaggedRetryMetricsPublisher.MetricNames.custom()
                 .callsMetricName("custom_calls")
+                .callsAggregatedMetricName("custom_calls_aggregated")
                 .build(), meterRegistry);
         RetryRegistry retryRegistry = RetryRegistry
             .of(RetryConfig.ofDefaults(), taggedRetryMetricsPublisher);
@@ -168,6 +185,8 @@ public class TaggedRetryMetricsPublisherTest {
             .map(Meter.Id::getName)
             .collect(Collectors.toSet());
 
-        assertThat(metricNames).hasSameElementsAs(Collections.singletonList("custom_calls"));
+        assertThat(metricNames).hasSameElementsAs(Arrays.asList(
+            "custom_calls", "custom_calls_aggregated"
+        ));
     }
 }

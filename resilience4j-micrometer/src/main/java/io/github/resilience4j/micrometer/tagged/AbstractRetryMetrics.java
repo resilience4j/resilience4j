@@ -25,6 +25,7 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToDoubleFunction;
 
 import static java.util.Objects.requireNonNull;
 
@@ -72,13 +73,66 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
             .tag(TagNames.KIND, "failed_with_retry")
             .tags(customTags)
             .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
+            new DiffCallsSupplier(
+                rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()))
+            .description("The number of successful calls without a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "successful_without_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
+            new DiffCallsSupplier(
+                rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()))
+            .description("The number of successful calls after a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "successful_with_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
+            new DiffCallsSupplier(
+                rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()))
+            .description("The number of failed calls without a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "failed_without_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
+            new DiffCallsSupplier(
+                rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt()))
+            .description("The number of failed calls after a retry attempt")
+            .tag(TagNames.NAME, retry.getName())
+            .tag(TagNames.KIND, "failed_with_retry")
+            .tags(customTags)
+            .register(meterRegistry).getId());
         meterIdMap.put(retry.getName(), idSet);
+    }
+
+    private static class DiffCallsSupplier implements ToDoubleFunction<Retry> {
+
+        private double lastValue;
+
+        private final ToDoubleFunction<Retry> doubleSupplier;
+
+        private DiffCallsSupplier(ToDoubleFunction<Retry> doubleSupplier) {
+            this.doubleSupplier = doubleSupplier;
+        }
+
+        @Override
+        public double applyAsDouble(Retry value) {
+            double newValue = doubleSupplier.applyAsDouble(value);
+            double diff = newValue - lastValue;
+            lastValue = newValue;
+            return diff;
+        }
     }
 
 
     public static class MetricNames {
 
         public static final String DEFAULT_RETRY_CALLS = "resilience4j.retry.calls";
+        public static final String DEFAULT_RETRY_CALLS_AGGREGATED = DEFAULT_RETRY_CALLS +
+            ".aggregated";
 
         /**
          * Returns a builder for creating custom metric names. Note that names have default values,
@@ -100,6 +154,7 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         }
 
         private String callsMetricName = DEFAULT_RETRY_CALLS;
+        private String callsAggregatedMetricName = DEFAULT_RETRY_CALLS_AGGREGATED;
 
         private MetricNames() {
         }
@@ -111,6 +166,16 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
          */
         public String getCallsMetricName() {
             return callsMetricName;
+        }
+
+        /**
+         * Returns the metric name for retry aggregated calls, defaults to
+         * {@value DEFAULT_RETRY_CALLS_AGGREGATED}.
+         *
+         * @return The metric name for retry calls aggregated.
+         */
+        public String getCallsAggregatedMetricName() {
+            return callsAggregatedMetricName;
         }
 
         /**
@@ -129,6 +194,18 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
              */
             public Builder callsMetricName(String callsMetricName) {
                 metricNames.callsMetricName = requireNonNull(callsMetricName);
+                return this;
+            }
+
+            /**
+             * Overrides the default metric name {@value MetricNames#DEFAULT_RETRY_CALLS_AGGREGATED}
+             * with a given one.
+             *
+             * @param callsAggregatedMetricName The metric name for retry calls aggregated.
+             * @return The builder.
+             */
+            public Builder callsAggregatedMetricName(String callsAggregatedMetricName) {
+                metricNames.callsAggregatedMetricName = requireNonNull(callsAggregatedMetricName);
                 return this;
             }
 

@@ -58,11 +58,11 @@ public class TaggedRetryMetricsTest {
         Retry newRetry = retryRegistry.retry("backendB");
 
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendB")).hasSize(4);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(8);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendB")).hasSize(8);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(8);
+        assertThat(meters).hasSize(16);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
 
@@ -77,10 +77,10 @@ public class TaggedRetryMetricsTest {
     public void shouldAddCustomTags() {
         retryRegistry.retry("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendF");
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
-        assertThat(taggedRetryMetrics.meterIdMap.get("backendF")).hasSize(4);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(8);
+        assertThat(taggedRetryMetrics.meterIdMap.get("backendF")).hasSize(8);
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(8);
+        assertThat(meters).hasSize(16);
         assertThat(meterRegistry.get(DEFAULT_RETRY_CALLS).tag("key1", "value1")).isNotNull();
 
     }
@@ -88,7 +88,7 @@ public class TaggedRetryMetricsTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(4);
+        assertThat(meters).hasSize(8);
 
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA");
         retryRegistry.remove("backendA");
@@ -172,6 +172,7 @@ public class TaggedRetryMetricsTest {
         TaggedRetryMetrics.ofRetryRegistry(
             TaggedRetryMetrics.MetricNames.custom()
                 .callsMetricName("custom_calls")
+                .callsAggregatedMetricName("custom_calls_aggregated")
                 .build(),
             retryRegistry
         ).bindTo(meterRegistry);
@@ -182,6 +183,8 @@ public class TaggedRetryMetricsTest {
             .map(Meter.Id::getName)
             .collect(Collectors.toSet());
 
-        assertThat(metricNames).hasSameElementsAs(Collections.singletonList("custom_calls"));
+        assertThat(metricNames).hasSameElementsAs(Arrays.asList(
+            "custom_calls", "custom_calls_aggregated"
+        ));
     }
 }
