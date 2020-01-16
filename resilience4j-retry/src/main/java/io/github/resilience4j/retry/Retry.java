@@ -622,6 +622,8 @@ public interface Retry {
 
         EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> eventConsumer);
 
+        EventPublisher onSuccessWithoutError(EventConsumer<SuccessWithoutErrorEvent> eventConsumer);
+
         EventPublisher onError(EventConsumer<RetryOnErrorEvent> eventConsumer);
 
         EventPublisher onIgnoredError(EventConsumer<RetryOnIgnoredErrorEvent> eventConsumer);

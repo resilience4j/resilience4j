@@ -17,10 +17,7 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.retry.Retry;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -73,60 +70,45 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
             .tag(TagNames.KIND, "failed_with_retry")
             .tags(customTags)
             .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
-            new DiffCallsSupplier(
-                rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()))
+
+        Counter successfulWithoutRetry = Counter.builder(names.getCallsAggregatedMetricName())
             .description("The number of successful calls without a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "successful_without_retry")
             .tags(customTags)
-            .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
-            new DiffCallsSupplier(
-                rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()))
+            .register(meterRegistry);
+        Counter successfulWithRetry = Counter.builder(names.getCallsAggregatedMetricName())
             .description("The number of successful calls after a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "successful_with_retry")
             .tags(customTags)
-            .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
-            new DiffCallsSupplier(
-                rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()))
+            .register(meterRegistry);
+        Counter failedWithoutRetry = Counter.builder(names.getCallsAggregatedMetricName())
             .description("The number of failed calls without a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "failed_without_retry")
             .tags(customTags)
-            .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsAggregatedMetricName(), retry,
-            new DiffCallsSupplier(
-                rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt()))
+            .register(meterRegistry);
+        Counter failedWithRetry = Counter.builder(names.getCallsAggregatedMetricName())
             .description("The number of failed calls after a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "failed_with_retry")
             .tags(customTags)
-            .register(meterRegistry).getId());
+            .register(meterRegistry);
+
+        idSet.add(successfulWithoutRetry.getId());
+        idSet.add(successfulWithRetry.getId());
+        idSet.add(failedWithoutRetry.getId());
+        idSet.add(failedWithRetry.getId());
+
+        retry.getEventPublisher()
+            .onSuccessWithoutError(event -> successfulWithoutRetry.increment())
+            .onSuccess(event -> successfulWithRetry.increment())
+            .onError(event -> failedWithRetry.increment())
+            .onIgnoredError(event -> failedWithoutRetry.increment());
+
         meterIdMap.put(retry.getName(), idSet);
     }
-
-    private static class DiffCallsSupplier implements ToDoubleFunction<Retry> {
-
-        private double lastValue;
-
-        private final ToDoubleFunction<Retry> doubleSupplier;
-
-        private DiffCallsSupplier(ToDoubleFunction<Retry> doubleSupplier) {
-            this.doubleSupplier = doubleSupplier;
-        }
-
-        @Override
-        public double applyAsDouble(Retry value) {
-            double newValue = doubleSupplier.applyAsDouble(value);
-            double diff = newValue - lastValue;
-            lastValue = newValue;
-            return diff;
-        }
-    }
-
 
     public static class MetricNames {
 

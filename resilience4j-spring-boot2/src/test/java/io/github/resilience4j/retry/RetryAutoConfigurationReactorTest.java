@@ -91,11 +91,11 @@ public class RetryAutoConfigurationReactorTest {
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEventListBody("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
 
         retryEventList = retryEventListBody("/actuator/retryevents/" + BACKEND_C);
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListForCBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListForCBefore.getRetryEvents().size() + 4);
 
         assertThat(
             retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException()))

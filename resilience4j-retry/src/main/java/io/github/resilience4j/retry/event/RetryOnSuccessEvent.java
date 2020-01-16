@@ -32,7 +32,7 @@ public class RetryOnSuccessEvent extends AbstractRetryEvent {
 
     @Override
     public Type getEventType() {
-        return Type.SUCCESS;
+        return Type.SUCCESS_WITH_RETRY;
     }
 
     @Override

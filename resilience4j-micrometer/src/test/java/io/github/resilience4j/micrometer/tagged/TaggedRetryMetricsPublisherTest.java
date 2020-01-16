@@ -19,6 +19,7 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
 import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS_AGGREGATED;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -121,17 +123,13 @@ public class TaggedRetryMetricsPublisherTest {
 
     @Test
     public void successfulWithoutRetryCallsGaugeReportsAggregatedValue() {
-        // when
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS_AGGREGATED).gauges();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS_AGGREGATED).counters();
 
-        // then
-        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges,
+        Optional<Counter> successfulWithoutRetry = findCounterByKindAndNameTags(counters,
             "successful_without_retry", retry.getName());
         assertThat(successfulWithoutRetry).isPresent();
-        assertThat(successfulWithoutRetry.get().value())
+        assertThat(successfulWithoutRetry.get().count())
             .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
-        assertThat(successfulWithoutRetry.get().value())
-            .isEqualTo(0);
     }
 
     @Test

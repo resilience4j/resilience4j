@@ -73,9 +73,13 @@ public interface RetryEvent {
          */
         ERROR,
         /**
-         * A RetryEvent which informs that a call has been successful
+         * A RetryEvent which informs that a call has been successful with RETRY
          */
-        SUCCESS,
+        SUCCESS_WITH_RETRY,
+        /**
+         * A RetryEvent which informs that a call has been successful without RETRY
+         */
+        SUCCESS_WITHOUT_RETRY,
         /**
          * A RetryEvent which informs that an error has been ignored
          */

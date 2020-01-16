@@ -33,11 +33,17 @@ public class RetryEventDTOFactory {
                     .throwable(onErrorEvent.getLastThrowable())
                     .numberOfAttempts(onErrorEvent.getNumberOfRetryAttempts())
                     .build();
-            case SUCCESS:
+            case SUCCESS_WITH_RETRY:
                 RetryOnSuccessEvent onSuccessEvent = (RetryOnSuccessEvent) event;
                 return newRetryEventDTOBuilder(onSuccessEvent)
                     .numberOfAttempts(onSuccessEvent.getNumberOfRetryAttempts())
                     .throwable(onSuccessEvent.getLastThrowable())
+                    .build();
+            case SUCCESS_WITHOUT_RETRY:
+                SuccessWithoutErrorEvent successWithoutErrorEvent = (SuccessWithoutErrorEvent) event;
+                return newRetryEventDTOBuilder(successWithoutErrorEvent)
+                    .numberOfAttempts(successWithoutErrorEvent.getNumberOfRetryAttempts())
+                    .throwable(successWithoutErrorEvent.getLastThrowable())
                     .build();
             case RETRY:
                 RetryOnRetryEvent onStateTransitionEvent = (RetryOnRetryEvent) event;

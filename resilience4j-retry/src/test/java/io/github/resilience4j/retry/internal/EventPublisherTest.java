@@ -86,7 +86,7 @@ public class EventPublisherTest {
         assertThat(result.isSuccess()).isTrue();
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
         testSubscriber.assertValueCount(2)
-            .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.SUCCESS);
+            .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.SUCCESS_WITH_RETRY);
     }
 
     @Test

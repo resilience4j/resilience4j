@@ -94,7 +94,7 @@ public class RetryAutoConfigurationTest {
         // expect retry-event actuator endpoint recorded both events
         ResponseEntity<RetryEventsEndpointResponse> retryEventListA = restTemplate
             .getForEntity("/retries/events/" + RETRY_BACKEND_A, RetryEventsEndpointResponse.class);
-        assertThat(retryEventListA.getBody().getRetryEvents()).hasSize(3);
+        assertThat(retryEventListA.getBody().getRetryEvents()).hasSize(4);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))

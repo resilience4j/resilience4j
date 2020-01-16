@@ -164,6 +164,7 @@ public class RetryImpl<T> implements Retry {
                             "max retries is reached out for the result predicate check")));
                 } else {
                     succeededWithoutRetryCounter.increment();
+                    publishRetryEvent(() -> new SuccessWithoutErrorEvent(getName()));
                 }
             }
         }
@@ -273,7 +274,8 @@ public class RetryImpl<T> implements Retry {
                             "max retries is reached out for the result predicate check")));
                 } else {
                     succeededWithoutRetryCounter.increment();
-
+                    publishRetryEvent(
+                        () -> new SuccessWithoutErrorEvent(name));
                 }
             }
         }
@@ -371,6 +373,14 @@ public class RetryImpl<T> implements Retry {
         @Override
         public EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
             registerConsumer(RetryOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onSuccessWithoutError(
+            EventConsumer<SuccessWithoutErrorEvent> onSuccessWithoutErrorEventConsumer) {
+            registerConsumer(SuccessWithoutErrorEvent.class.getSimpleName(),
+                onSuccessWithoutErrorEventConsumer);
             return this;
         }
 

@@ -106,11 +106,11 @@ public class RetryAutoConfigurationAsyncTest {
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListForBBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListForBBefore.getRetryEvents().size() + 4);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))

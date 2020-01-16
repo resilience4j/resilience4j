@@ -90,11 +90,11 @@ public class RetryAutoConfigurationRxJavaTest {
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = getRetryEventsBody("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
 
         retryEventList = getRetryEventsBody("/actuator/retryevents/" + BACKEND_C);
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventsListOfCBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventsListOfCBefore.getRetryEvents().size() + 4);
 
         assertThat(
             retry.getRetryConfig().getExceptionPredicate().test(new IllegalArgumentException()))

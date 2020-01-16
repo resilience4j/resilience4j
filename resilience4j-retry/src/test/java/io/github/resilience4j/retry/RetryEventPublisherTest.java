@@ -65,7 +65,20 @@ public class RetryEventPublisherTest {
         retry.executeSupplier(helloWorldService::returnHelloWorld);
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
-        then(logger).should(times(1)).info("SUCCESS");
+        then(logger).should(times(1)).info("SUCCESS_WITH_RETRY");
+    }
+
+    @Test
+    public void shouldConsumeOnSuccessWithoutErrorEvent() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("Hello world");
+        retry.getEventPublisher().onSuccessWithoutError(
+            event -> logger.info(event.getEventType().toString()));
+
+        retry.executeSupplier(helloWorldService::returnHelloWorld);
+
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+        then(logger).should(times(1)).info("SUCCESS_WITHOUT_RETRY");
     }
 
     @Test

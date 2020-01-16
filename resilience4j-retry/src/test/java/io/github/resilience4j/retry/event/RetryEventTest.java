@@ -54,10 +54,21 @@ public class RetryEventTest {
             new IOException("Bla"));
         assertThat(retryOnSuccessEvent.getName()).isEqualTo("test");
         assertThat(retryOnSuccessEvent.getNumberOfRetryAttempts()).isEqualTo(2);
-        assertThat(retryOnSuccessEvent.getEventType()).isEqualTo(Type.SUCCESS);
+        assertThat(retryOnSuccessEvent.getEventType()).isEqualTo(Type.SUCCESS_WITH_RETRY);
         assertThat(retryOnSuccessEvent.getLastThrowable()).isInstanceOf(IOException.class);
         assertThat(retryOnSuccessEvent.toString()).contains(
             "Retry 'test' recorded a successful retry attempt. Number of retry attempts: '2', Last exception was: 'java.io.IOException: Bla'.");
+    }
+
+    @Test
+    public void testSuccessWithoutErrorEvent() {
+        SuccessWithoutErrorEvent successWithoutErrorEvent = new SuccessWithoutErrorEvent("test");
+        assertThat(successWithoutErrorEvent.getName()).isEqualTo("test");
+        assertThat(successWithoutErrorEvent.getNumberOfRetryAttempts()).isEqualTo(0);
+        assertThat(successWithoutErrorEvent.getEventType()).isEqualTo(Type.SUCCESS_WITHOUT_RETRY);
+        assertThat(successWithoutErrorEvent.getLastThrowable()).isEqualTo(null);
+        assertThat(successWithoutErrorEvent.toString()).contains(
+            "Retry 'test' recorded a successful without retry attempt. Number of retry attempts: '0', Last exception was: 'null'.");
     }
 
     @Test
