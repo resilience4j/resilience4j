@@ -47,7 +47,7 @@ public class RetryEventsEndpoint {
 
     @GetMapping(value = "events", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public RetryEventsEndpointResponse getAllRetryEvenets() {
+    public RetryEventsEndpointResponse getAllRetryEvents() {
         return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
             .flatMap(CircularEventConsumer::getBufferedEvents)
             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
@@ -56,7 +56,7 @@ public class RetryEventsEndpoint {
 
     @GetMapping(value = "events/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public RetryEventsEndpointResponse getEventsFilteredByRetryrName(
+    public RetryEventsEndpointResponse getEventsFilteredByRetryName(
         @PathVariable("name") String name) {
         return new RetryEventsEndpointResponse(getRetryEvents(name)
             .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
