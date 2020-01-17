@@ -465,7 +465,7 @@ public interface Bulkhead {
     Metrics getMetrics();
 
     /**
-     * Returns an unmodifiable map with tags assigned to this Blukhead.
+     * Returns an unmodifiable map with tags assigned to this Bulkhead.
      *
      * @return the tags assigned to this Retry in an unmodifiable map
      */

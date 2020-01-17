@@ -73,7 +73,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      *
      * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
-     * @param tags           the tags to add to the Bulkdhead
+     * @param tags           the tags to add to the Bulkhead
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig,
         Map<String, String> tags) {
