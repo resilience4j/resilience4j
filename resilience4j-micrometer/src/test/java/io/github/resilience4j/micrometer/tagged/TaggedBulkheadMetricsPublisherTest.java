@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedBulkheadMetricsPublisherTest {
@@ -69,7 +69,7 @@ public class TaggedBulkheadMetricsPublisherTest {
         Collection<Gauge> gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
 
-        Optional<Gauge> successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
+        Optional<Gauge> successful = findMeterByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
             .isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
@@ -94,7 +94,7 @@ public class TaggedBulkheadMetricsPublisherTest {
         Collection<Gauge> gauges = meterRegistry
             .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
 
-        Optional<Gauge> successful = findGaugeByNamesTag(gauges, bulkhead.getName());
+        Optional<Gauge> successful = findMeterByNamesTag(gauges, bulkhead.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
             .isEqualTo(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
@@ -107,7 +107,7 @@ public class TaggedBulkheadMetricsPublisherTest {
         gauges = meterRegistry.get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME)
             .gauges();
 
-        successful = findGaugeByNamesTag(gauges, newBulkhead.getName());
+        successful = findMeterByNamesTag(gauges, newBulkhead.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
             .isEqualTo(newBulkhead.getMetrics().getMaxAllowedConcurrentCalls());
