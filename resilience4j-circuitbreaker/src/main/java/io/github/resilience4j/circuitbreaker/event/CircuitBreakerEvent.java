@@ -82,7 +82,15 @@ public interface CircuitBreakerEvent {
         /**
          * A CircuitBreakerEvent which informs the CircuitBreaker has been disabled
          */
-        DISABLED(false);
+        DISABLED(false),
+        /**
+         * A CircuitBreakerEvent which informs the CircuitBreaker failure rate has been breached
+         */
+        FAILURE_RATE_EXCEEDED(false),
+        /**
+         * A CircuitBreakerEvent which informs the CircuitBreaker show call rate has been breached
+         */
+        SLOW_CALL_RATE_EXCEEDED(false);
 
         public final boolean forcePublish;
 

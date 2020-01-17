@@ -23,6 +23,10 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.IllegalStateTransitionException;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,14 +39,25 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Sliding
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 public class CircuitBreakerStateMachineTest {
 
     private CircuitBreaker circuitBreaker;
     private MockClock mockClock;
+    private EventConsumer<CircuitBreakerOnSuccessEvent> mockOnSuccessEventConsumer;
+    private EventConsumer<CircuitBreakerOnErrorEvent> mockOnErrorEventConsumer;
+    private EventConsumer<CircuitBreakerOnStateTransitionEvent> mockOnStateTransitionEventConsumer;
 
     @Before
     public void setUp() {
+        mockOnSuccessEventConsumer = (EventConsumer<CircuitBreakerOnSuccessEvent>) mock(EventConsumer.class);
+        mockOnErrorEventConsumer = (EventConsumer<CircuitBreakerOnErrorEvent>) mock(EventConsumer.class);
+        mockOnStateTransitionEventConsumer = (EventConsumer<CircuitBreakerOnStateTransitionEvent>) mock(EventConsumer.class);
         mockClock = MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC"));
         circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
             .failureRateThreshold(50)
@@ -459,6 +474,68 @@ public class CircuitBreakerStateMachineTest {
             new RuntimeException()); // Should not create a CircuitBreakerOnErrorEvent
 
         assertThatMetricsAreReset();
+    }
+
+    @Test
+    public void shouldUpdateCircuitBreakerStateToMetricsOnly() {
+        circuitBreaker.transitionToMetricsOnlyState();
+        circuitBreaker.getEventPublisher().onSuccess(mockOnSuccessEventConsumer);
+        circuitBreaker.getEventPublisher().onError(mockOnErrorEventConsumer);
+        circuitBreaker.getEventPublisher().onStateTransition(mockOnStateTransitionEventConsumer);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertThatMetricsAreReset();
+
+        // A ring buffer with size 5 is used in metrics_only state
+        // Initially the CircuitBreaker is in METRICS_ONLY state
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertThatMetricsAreReset();
+
+        // Call 1 is a failure
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 1, 1, 0L);
+        verify(mockOnErrorEventConsumer, times(1)).consumeEvent(any(CircuitBreakerOnErrorEvent.class));
+
+        // Call 2 is a failure
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 2, 2, 0L);
+        verify(mockOnErrorEventConsumer, times(2)).consumeEvent(any(CircuitBreakerOnErrorEvent.class));
+
+        // Call 3 is a failure
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 3, 3, 0L);
+        verify(mockOnErrorEventConsumer, times(3)).consumeEvent(any(CircuitBreakerOnErrorEvent.class));
+
+        // Call 4 is a success
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertCircuitBreakerMetricsEqualTo(-1f, 1, 4, 3, 0L);
+        verify(mockOnSuccessEventConsumer, times(1)).consumeEvent(any(CircuitBreakerOnSuccessEvent.class));
+
+        // Call 5 is a success
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        verify(mockOnSuccessEventConsumer, times(2)).consumeEvent(any(CircuitBreakerOnSuccessEvent.class));
+
+        // The ring buffer is filled and the failure rate is above 50%
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(5);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getFailureRate()).isEqualTo(60.0f);
+        assertCircuitBreakerMetricsEqualTo(60.0f, 2, 5, 3, 0L);
+
+        // Call 6 is a success
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        assertCircuitBreakerMetricsEqualTo(50.0f, 3, 6, 3, 0L);
+        verify(mockOnSuccessEventConsumer, times(3)).consumeEvent(any(CircuitBreakerOnSuccessEvent.class));
+        verify(mockOnStateTransitionEventConsumer, never()).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
     }
 
     @Test

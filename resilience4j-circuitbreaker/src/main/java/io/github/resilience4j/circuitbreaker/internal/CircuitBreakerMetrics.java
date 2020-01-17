@@ -84,6 +84,10 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
             circuitBreakerConfig);
     }
 
+    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig) {
+        return forClosed(circuitBreakerConfig);
+    }
+
     /**
      * Records a call which was not permitted, because the CircuitBreaker state is OPEN.
      */
@@ -130,17 +134,23 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     private Result checkIfThresholdsExceeded(Snapshot snapshot) {
         float failureRateInPercentage = getFailureRate(snapshot);
-        if (failureRateInPercentage == -1) {
-            return Result.BELOW_MINIMUM_CALLS_THRESHOLD;
+        float slowCallsInPercentage = getSlowCallRate(snapshot);
+
+        if (failureRateInPercentage == -1 || slowCallsInPercentage == -1) {
+            return Result.FAILURE_RATE_SLOW_CALL_RATE_BELOW_MINIMUM_CALLS_THRESHOLD;
         }
         if (failureRateInPercentage >= failureRateThreshold) {
-            return Result.ABOVE_THRESHOLDS;
+            if (slowCallsInPercentage >= slowCallRateThreshold) {
+                return Result.FAILURE_RATE_SLOW_CALL_RATE_ABOVE_THRESHOLDS;
+            } else {
+                return Result.FAILURE_RATE_ABOVE_THRESHOLDS;
+            }
         }
-        float slowCallsInPercentage = getSlowCallRate(snapshot);
+
         if (slowCallsInPercentage >= slowCallRateThreshold) {
-            return Result.ABOVE_THRESHOLDS;
+            return Result.SLOW_CALL_RATE_ABOVE_THRESHOLDS;
         }
-        return Result.BELOW_THRESHOLDS;
+        return Result.FAILURE_RATE_SLOW_CALL_BELOW_THRESHOLD;
     }
 
     private float getSlowCallRate(Snapshot snapshot) {
@@ -219,9 +229,33 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         return this.numberOfNotPermittedCalls.sum();
     }
 
-    enum Result {
+    enum ComputeResult {
         BELOW_THRESHOLDS,
         ABOVE_THRESHOLDS,
         BELOW_MINIMUM_CALLS_THRESHOLD
+    }
+
+    enum Result {
+        FAILURE_RATE_SLOW_CALL_RATE_BELOW_MINIMUM_CALLS_THRESHOLD(ComputeResult.BELOW_MINIMUM_CALLS_THRESHOLD, Outcome.SUCCESS),
+        FAILURE_RATE_SLOW_CALL_RATE_ABOVE_THRESHOLDS(ComputeResult.ABOVE_THRESHOLDS, Outcome.SLOW_ERROR),
+        FAILURE_RATE_ABOVE_THRESHOLDS(ComputeResult.ABOVE_THRESHOLDS, Outcome.ERROR),
+        SLOW_CALL_RATE_ABOVE_THRESHOLDS(ComputeResult.ABOVE_THRESHOLDS, Outcome.SLOW_SUCCESS),
+        FAILURE_RATE_SLOW_CALL_BELOW_THRESHOLD(ComputeResult.BELOW_THRESHOLDS, Outcome.SUCCESS);
+
+        private final ComputeResult computeResult;
+        private final Outcome outcome;
+
+        Result(ComputeResult computeResult, Outcome outcome) {
+            this.computeResult = computeResult;
+            this.outcome = outcome;
+        }
+
+        public ComputeResult getComputeResult() {
+            return computeResult;
+        }
+
+        public Outcome getOutcome() {
+            return outcome;
+        }
     }
 }
