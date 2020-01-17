@@ -41,7 +41,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
@@ -55,12 +54,12 @@ public class SpringBootCommonTest {
         assertThat(bulkheadConfigurationOnMissingBean
             .bulkheadRegistry(new BulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean
             .threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
@@ -68,9 +67,9 @@ public class SpringBootCommonTest {
             .bulkheadAspect(new BulkheadConfigurationProperties(),
                 ThreadPoolBulkheadRegistry.ofDefaults(), BulkheadRegistry.ofDefaults(),
                 Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
         assertThat(
-            bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty()));
+            bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
     @Test
@@ -80,13 +79,12 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()),
-            new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer()))))
-            .isNotNull();
+            new CompositeRegistryEventConsumer<>(Collections.emptyList()),
+            new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer())))).isNotNull();
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
-        assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty()));
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+        assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
     @Test
@@ -96,13 +94,13 @@ public class SpringBootCommonTest {
         assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
-        assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty()));
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+        assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
     @Test
@@ -113,14 +111,14 @@ public class SpringBootCommonTest {
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistry(new RateLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()))));
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
-            .rateLimiterRegistryEventConsumer(Optional.empty()));
+            .rateLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
 
