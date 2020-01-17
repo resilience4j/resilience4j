@@ -23,6 +23,9 @@ public class TimeLimiterConfig {
         return new Builder();
     }
 
+    public static Builder from(TimeLimiterConfig baseConfig) {
+        return new Builder(baseConfig);
+    }
     /**
      * Creates a default TimeLimiter configuration.
      *
@@ -54,7 +57,16 @@ public class TimeLimiterConfig {
 
     public static class Builder {
 
-        private TimeLimiterConfig config = new TimeLimiterConfig();
+        private Duration timeoutDuration = Duration.ofSeconds(1);
+        private boolean cancelRunningFuture = true;
+
+        public Builder() {
+        }
+
+        public Builder(TimeLimiterConfig baseConfig) {
+            this.timeoutDuration = baseConfig.timeoutDuration;
+            this.cancelRunningFuture = baseConfig.cancelRunningFuture;
+        }
 
         /**
          * Builds a TimeLimiterConfig
@@ -62,6 +74,9 @@ public class TimeLimiterConfig {
          * @return the TimeLimiterConfig
          */
         public TimeLimiterConfig build() {
+            TimeLimiterConfig config = new TimeLimiterConfig();
+            config.timeoutDuration = timeoutDuration;
+            config.cancelRunningFuture = cancelRunningFuture;
             return config;
         }
 
@@ -72,7 +87,7 @@ public class TimeLimiterConfig {
          * @return the TimeLimiterConfig.Builder
          */
         public Builder timeoutDuration(final Duration timeoutDuration) {
-            config.timeoutDuration = checkTimeoutDuration(timeoutDuration);
+            this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
             return this;
         }
 
@@ -83,7 +98,7 @@ public class TimeLimiterConfig {
          * @return the TimeLimiterConfig.Builder
          */
         public Builder cancelRunningFuture(final boolean cancelRunningFuture) {
-            config.cancelRunningFuture = cancelRunningFuture;
+            this.cancelRunningFuture = cancelRunningFuture;
             return this;
         }
 

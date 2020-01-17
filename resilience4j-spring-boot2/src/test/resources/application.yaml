@@ -158,6 +158,15 @@ resilience4j.thread-pool-bulkhead":
       coreThreadPoolSize: 1
       queueCapacity: 1
 
+resilience4j.timelimiter:
+  time-limiter-aspect-order: 398
+  configs:
+    default:
+      timeoutDuration: 2s
+      cancelRunningFuture: false
+  instances:
+    backendA:
+      timeoutDuration: 5s
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'

@@ -3,11 +3,14 @@ package io.github.resilience4j.service.test;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
+@TimeLimiter(name = DummyService.BACKEND)
 @CircuitBreaker(name = DummyService.BACKEND)
 @RateLimiter(name = DummyService.BACKEND)
 @Component

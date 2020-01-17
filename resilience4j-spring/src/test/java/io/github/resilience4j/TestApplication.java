@@ -25,6 +25,9 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -85,4 +88,16 @@ public class TestApplication {
     public RetryConfigurationProperties retryConfigurationProperties() {
         return new RetryConfigurationProperties();
     }
+
+    @Bean
+    public TimeLimiterRegistry timeLimiterRegistry() {
+        TimeLimiterConfig config = TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(1)).build();
+        return TimeLimiterRegistry.of(config);
+    }
+
+    @Bean
+    public TimeLimiterConfigurationProperties timeLimiterConfigurationProperties() {
+        return new TimeLimiterConfigurationProperties();
+    }
+
 }

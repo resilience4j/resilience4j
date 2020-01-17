@@ -18,4 +18,8 @@ io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMetricsAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMicrometerAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterPrometheusAutoConfiguration,\
-io.github.resilience4j.ratelimiter.autoconfigure.RateLimitersHealthIndicatorAutoConfiguration
+io.github.resilience4j.ratelimiter.autoconfigure.RateLimitersHealthIndicatorAutoConfiguration,\
+io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterAutoConfiguration,\
+io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterMetricsAutoConfiguration,\
+io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterMicrometerAutoConfiguration,\
+io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterPrometheusAutoConfiguration
