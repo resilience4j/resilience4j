@@ -15,6 +15,6 @@ public final class CircuitBreakerUtil {
      */
     public static boolean isCallPermitted(CircuitBreaker circuitBreaker) {
         State state = circuitBreaker.getState();
-        return state == CLOSED || state == HALF_OPEN || state == DISABLED;
+        return state == CLOSED || state == HALF_OPEN || state == DISABLED || state == METRICS_ONLY;
     }
 }

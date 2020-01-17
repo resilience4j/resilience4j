@@ -600,6 +600,16 @@ public interface CircuitBreaker {
     void transitionToDisabledState();
 
     /**
+     * Transitions the state machine to METRICS_ONLY state, stopping all state transitions but
+     * continues to capture metrics and publish events.
+     * <p>
+     * Should only be used when you want to collect metrics while keeping the circuit breaker
+     * disabled, allowing all calls to pass.
+     * To recover from this state you must force a new state transition.
+     */
+    void transitionToMetricsOnlyState();
+
+    /**
      * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and
      * event publishing.
      * <p>
@@ -870,6 +880,11 @@ public interface CircuitBreaker {
          */
         DISABLED(3, false),
         /**
+         * A METRICS_ONLY breaker is collecting metrics, publishing events and allowing all requests
+         * through but is not transitioning to other states.
+         */
+        METRICS_ONLY(5, true),
+        /**
          * A CLOSED breaker is operating normally and allowing requests through.
          */
         CLOSED(0, true),
@@ -917,23 +932,31 @@ public interface CircuitBreaker {
     enum StateTransition {
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
         CLOSED_TO_DISABLED(State.CLOSED, State.DISABLED),
+        CLOSED_TO_METRICS_ONLY(State.CLOSED, State.METRICS_ONLY),
         CLOSED_TO_FORCED_OPEN(State.CLOSED, State.FORCED_OPEN),
         HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
         HALF_OPEN_TO_DISABLED(State.HALF_OPEN, State.DISABLED),
+        HALF_OPEN_TO_METRICS_ONLY(State.HALF_OPEN, State.METRICS_ONLY),
         HALF_OPEN_TO_FORCED_OPEN(State.HALF_OPEN, State.FORCED_OPEN),
         OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
         OPEN_TO_DISABLED(State.OPEN, State.DISABLED),
+        OPEN_TO_METRICS_ONLY(State.OPEN, State.METRICS_ONLY),
         OPEN_TO_FORCED_OPEN(State.OPEN, State.FORCED_OPEN),
         FORCED_OPEN_TO_CLOSED(State.FORCED_OPEN, State.CLOSED),
         FORCED_OPEN_TO_OPEN(State.FORCED_OPEN, State.OPEN),
         FORCED_OPEN_TO_DISABLED(State.FORCED_OPEN, State.DISABLED),
+        FORCED_OPEN_TO_METRICS_ONLY(State.FORCED_OPEN, State.METRICS_ONLY),
         FORCED_OPEN_TO_HALF_OPEN(State.FORCED_OPEN, State.HALF_OPEN),
         DISABLED_TO_CLOSED(State.DISABLED, State.CLOSED),
         DISABLED_TO_OPEN(State.DISABLED, State.OPEN),
         DISABLED_TO_FORCED_OPEN(State.DISABLED, State.FORCED_OPEN),
-        DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN);
+        DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN),
+        DISABLED_TO_METRICS_ONLY(State.DISABLED, State.METRICS_ONLY),
+        METRICS_ONLY_TO_CLOSED(State.METRICS_ONLY, State.CLOSED),
+        METRICS_ONLY_TO_FORCED_OPEN(State.METRICS_ONLY, State.FORCED_OPEN),
+        METRICS_ONLY_TO_DISABLED(State.METRICS_ONLY, State.DISABLED);
 
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP = Arrays
             .stream(StateTransition.values())
@@ -990,6 +1013,12 @@ public interface CircuitBreaker {
 
         EventPublisher onCallNotPermitted(
             EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
+
+        EventPublisher onFailureRateExceeded(
+            EventConsumer<CircuitBreakerOnFailureRateExceededEvent> eventConsumer);
+
+        EventPublisher onSlowCallRateExceeded(
+            EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> eventConsumer);
     }
 
     interface Metrics {
