@@ -153,7 +153,7 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
     private static Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
                                           io.github.resilience4j.timelimiter.TimeLimiter timeLimiter)
             throws Throwable {
-        return timeLimiter.executeCompletionStage(timeLimiterExecutorService,
+        return timeLimiter.executeFutureSupplier(
             () -> CompletableFuture.supplyAsync(() -> {
                 try {
                     return proceedingJoinPoint.proceed();
