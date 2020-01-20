@@ -17,7 +17,7 @@
 package io.github.resilience4j.micrometer.tagged;
 
 import io.github.resilience4j.retry.Retry;
-import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -44,28 +44,28 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
 
     private void registerMetrics(MeterRegistry meterRegistry, Retry retry, List<Tag> customTags) {
         Set<Meter.Id> idSet = new HashSet<>();
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+        idSet.add(FunctionCounter.builder(names.getCallsMetricName(), retry,
             rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
             .description("The number of successful calls without a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "successful_without_retry")
             .tags(customTags)
             .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+        idSet.add(FunctionCounter.builder(names.getCallsMetricName(), retry,
             rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
             .description("The number of successful calls after a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "successful_with_retry")
             .tags(customTags)
             .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+        idSet.add(FunctionCounter.builder(names.getCallsMetricName(), retry,
             rt -> rt.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt())
             .description("The number of failed calls without a retry attempt")
             .tag(TagNames.NAME, retry.getName())
             .tag(TagNames.KIND, "failed_without_retry")
             .tags(customTags)
             .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getCallsMetricName(), retry,
+        idSet.add(FunctionCounter.builder(names.getCallsMetricName(), retry,
             rt -> rt.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
             .description("The number of failed calls after a retry attempt")
             .tag(TagNames.NAME, retry.getName())
