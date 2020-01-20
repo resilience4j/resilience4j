@@ -32,6 +32,7 @@ ext {
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.3.2'
     springBootOpenFeignVersion = '2.1.2.RELEASE'
+    blockhoundVersion = '1.0.1.RELEASE'
 
     libraries = [
             // compile
@@ -53,6 +54,7 @@ ext {
             reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
             reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
             mock_clock: "com.statemachinesystems:mock-clock:1.0",
+            blockhound: "io.projectreactor.tools:blockhound:${blockhoundVersion}",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
