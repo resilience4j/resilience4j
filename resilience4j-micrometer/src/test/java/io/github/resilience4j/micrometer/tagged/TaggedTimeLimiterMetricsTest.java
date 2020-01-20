@@ -32,7 +32,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static io.github.resilience4j.micrometer.tagged.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedTimeLimiterMetricsTest {
@@ -66,7 +66,7 @@ public class TaggedTimeLimiterMetricsTest {
 
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
 
-        Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
+        Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
             newTimeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
@@ -104,7 +104,7 @@ public class TaggedTimeLimiterMetricsTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onSuccess();
 
-        Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
+        Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
             timeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
@@ -114,7 +114,7 @@ public class TaggedTimeLimiterMetricsTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onError(new RuntimeException());
 
-        Optional<Counter> failed = findCounterByKindAndNameTags(counters, "failed",
+        Optional<Counter> failed = findMeterByKindAndNameTags(counters, "failed",
             timeLimiter.getName());
         assertThat(failed).map(Counter::count).contains(1d);
     }
@@ -124,7 +124,7 @@ public class TaggedTimeLimiterMetricsTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onError(new TimeoutException());
 
-        Optional<Counter> timeout = findCounterByKindAndNameTags(counters, "timeout",
+        Optional<Counter> timeout = findMeterByKindAndNameTags(counters, "timeout",
             timeLimiter.getName());
         assertThat(timeout).map(Counter::count).contains(1d);
     }
