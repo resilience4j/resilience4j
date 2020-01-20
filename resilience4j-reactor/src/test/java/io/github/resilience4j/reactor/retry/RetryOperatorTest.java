@@ -249,7 +249,7 @@ public class RetryOperatorTest {
             .expectNext("retry")
             .expectNext("success")
             .expectComplete()
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofMillis(100));
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
