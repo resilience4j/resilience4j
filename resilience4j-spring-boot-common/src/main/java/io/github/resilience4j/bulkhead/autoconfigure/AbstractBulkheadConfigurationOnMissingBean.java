@@ -56,6 +56,7 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         this.bulkheadConfiguration = new BulkheadConfiguration();
     }
 
+
     @Bean
     @ConditionalOnMissingBean(name = "compositeBulkheadCustomizer")
     @Qualifier("compositeBulkheadCustomizer")
@@ -65,23 +66,15 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "compositeThreadPoolBulkheadCustomizer")
-    @Qualifier("compositeThreadPoolBulkheadCustomizer")
-    public CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer(
-        @Autowired(required = false) List<ThreadPoolBulkheadConfigCustomizer> customizers) {
-        return new CompositeCustomizer<>(customizers);
-    }
-
-    @Bean
     @ConditionalOnMissingBean
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
-        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
+        @Qualifier("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         return bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-                bulkheadRegistryEventConsumer,compositeBulkheadCustomizer);
+                bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
     }
 
     @Bean
@@ -121,13 +114,21 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
 
     @Bean
+    @ConditionalOnMissingBean(name = "compositeThreadPoolBulkheadCustomizer")
+    @Qualifier("compositeThreadPoolBulkheadCustomizer")
+    public CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer(
+        @Autowired(required = false) List<ThreadPoolBulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+
+    @Bean
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
-
+        @Qualifier("compositeThreadPoolBulkheadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
             threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadCustomizer);

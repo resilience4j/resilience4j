@@ -8,8 +8,6 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -48,7 +46,8 @@ public class BulkHeadConfigurationTest {
         //When
         ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
             .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()), compositeThreadPoolBulkheadCustomizerTestInstance());
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -109,7 +108,7 @@ public class BulkHeadConfigurationTest {
             ThreadPoolBulkheadRegistry bulkheadRegistry = threadPoolBulkheadConfiguration
                 .threadPoolBulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
                     new CompositeRegistryEventConsumer<>(emptyList()),
-                    compositeThreadPoolBulkheadCustomizerTestInstance());
+                    new CompositeCustomizer<>(Collections.emptyList()));
             //Then
             assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
             // Should get default config and core number
@@ -166,7 +165,8 @@ public class BulkHeadConfigurationTest {
         //When
         BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()),compositeBulkheadCustomizerTestInstance());
+                new CompositeRegistryEventConsumer<>(emptyList()), new CompositeCustomizer<>(
+                    Collections.emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -219,7 +219,8 @@ public class BulkHeadConfigurationTest {
         //When
         BulkheadRegistry bulkheadRegistry = bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()),compositeBulkheadCustomizerTestInstance());
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList()));
 
         //Then
         assertThat(bulkheadRegistry.getAllBulkheads().size()).isEqualTo(2);
@@ -258,16 +259,10 @@ public class BulkHeadConfigurationTest {
         //When
         assertThatThrownBy(() -> bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()),compositeBulkheadCustomizerTestInstance()))
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                new CompositeCustomizer<>(Collections.emptyList())))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizerTestInstance() {
-        return new CompositeCustomizer<>(Collections.emptyList());
-    }
-
-    private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizerTestInstance() {
-        return new CompositeCustomizer<>(Collections.emptyList());
-    }
 }

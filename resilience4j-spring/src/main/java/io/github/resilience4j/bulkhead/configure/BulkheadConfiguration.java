@@ -55,6 +55,7 @@ public class BulkheadConfiguration {
         @Autowired(required = false) List<BulkheadConfigCustomizer> customizers) {
         return new CompositeCustomizer<>(customizers);
     }
+
     /**
      * @param bulkheadConfigurationProperties bulk head spring configuration properties
      * @param bulkheadEventConsumerRegistry   the bulk head event consumer registry
@@ -67,12 +68,14 @@ public class BulkheadConfiguration {
         RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
         @Qualifier("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
-            bulkheadRegistryEventConsumer,compositeBulkheadCustomizer);
+            bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
         bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
             bulkheadRegistry
-                .bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties, name, compositeBulkheadCustomizer)));
+                .bulkhead(name, bulkheadConfigurationProperties
+                    .createBulkheadConfig(properties, compositeBulkheadCustomizer,
+                        name)));
         return bulkheadRegistry;
     }
 
@@ -88,6 +91,7 @@ public class BulkheadConfiguration {
      * Initializes a bulkhead registry.
      *
      * @param bulkheadConfigurationProperties The bulkhead configuration properties.
+     * @param compositeBulkheadCustomizer
      * @return a BulkheadRegistry
      */
     private BulkheadRegistry createBulkheadRegistry(
@@ -96,8 +100,8 @@ public class BulkheadConfiguration {
         CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue(), entry.getKey(), compositeBulkheadCustomizer)));
-
+                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue(),
+                    compositeBulkheadCustomizer, entry.getKey())));
         return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer,
             io.vavr.collection.HashMap.ofAll(bulkheadConfigurationProperties.getTags()));
     }

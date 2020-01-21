@@ -566,7 +566,7 @@ public interface RateLimiter {
      * Will wait for required number of permits within default timeout duration.
      *
      * @param rateLimiter the RateLimiter to get permission from
-     * @param permits     numer of permits we have to acquire
+     * @param permits     number of permits we have to acquire
      * @throws RequestNotPermitted                 if waiting time elapsed before a permit was
      *                                             acquired.
      * @throws AcquirePermissionCancelledException if thread was interrupted during permission wait

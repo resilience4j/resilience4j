@@ -129,6 +129,8 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 1
     backendB:
       baseConfig: default
+    backendD:
+      baseConfig: default
     dummyFeignClient:
       maxWaitDuration: 100
       maxConcurrentCalls: 3

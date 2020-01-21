@@ -1,6 +1,8 @@
 package io.github.resilience4j.service.test;
 
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.ContextPropagator;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
@@ -35,7 +37,9 @@ public class TestApplication {
 
     @Bean
     public BulkheadConfigCustomizer testBulkheadCustomizer() {
-        return BulkheadConfigCustomizer.of("backendCustomizer", builder -> builder.maxConcurrentCalls(20));
+        return BulkheadConfigCustomizer.of(
+            "backendCustomizer",
+            builder -> builder.maxConcurrentCalls(20));
     }
 
     @Bean
@@ -59,5 +63,20 @@ public class TestApplication {
     public RetryConfigCustomizer testRetryCustomizer() {
         return RetryConfigCustomizer.of("retryBackendD",
             builder -> builder.maxAttempts(4));
+    }
+
+    @Bean
+    public BulkheadConfigCustomizer testBulkheadConfigCustomizer() {
+        return new BulkheadConfigCustomizer() {
+            @Override
+            public void customize(BulkheadConfig.Builder configBuilder) {
+                configBuilder.maxConcurrentCalls(3);
+            }
+
+            @Override
+            public String name() {
+                return "backendD";
+            }
+        };
     }
 }

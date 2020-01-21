@@ -33,39 +33,44 @@ public class BulkheadConfigurationProperties extends CommonProperties {
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
-    public BulkheadConfig createBulkheadConfig(InstanceProperties instanceProperties,String instanceName,
-        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
+    public BulkheadConfig createBulkheadConfig(InstanceProperties instanceProperties,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer,
+        String instanceName) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties, instanceName, compositeBulkheadCustomizer);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeBulkheadCustomizer, instanceName);
         }
-        return buildBulkheadConfig(BulkheadConfig.custom(), instanceProperties, instanceName, compositeBulkheadCustomizer);
+        return buildBulkheadConfig(BulkheadConfig.custom(), instanceProperties,
+            compositeBulkheadCustomizer, instanceName);
     }
 
     private BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties, String instanceName,
-        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadConfigCustomizer) {
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer,
+        String instanceName) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         BulkheadConfig baseConfig = buildBulkheadConfig(BulkheadConfig.custom(), baseProperties,
-            instanceName, compositeBulkheadConfigCustomizer);
+            compositeBulkheadCustomizer, instanceName);
         return buildBulkheadConfig(BulkheadConfig.from(baseConfig), instanceProperties,
-            instanceName,compositeBulkheadConfigCustomizer);
+            compositeBulkheadCustomizer, instanceName);
     }
 
     private BulkheadConfig buildBulkheadConfig(BulkheadConfig.Builder builder,
-        InstanceProperties instanceProperties,String instanceName,
-        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadConfigCustomizer) {
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer,
+        String instanceName) {
         if (instanceProperties.getMaxConcurrentCalls() != null) {
             builder.maxConcurrentCalls(instanceProperties.getMaxConcurrentCalls());
         }
         if (instanceProperties.getMaxWaitDuration() != null) {
             builder.maxWaitDuration(instanceProperties.getMaxWaitDuration());
         }
-        compositeBulkheadConfigCustomizer.getCustomizer(instanceName)
-            .ifPresent( bulkheadConfigCustomizer-> bulkheadConfigCustomizer.customize(builder));
+        compositeBulkheadCustomizer.getCustomizer(instanceName)
+            .ifPresent(bulkheadConfigCustomizer -> bulkheadConfigCustomizer.customize(builder));
         return builder.build();
     }
 

@@ -51,7 +51,8 @@ public class AbstractRefreshScopedBulkheadConfigurationTest {
 
         assertThat(bulkheadConfig.threadPoolBulkheadRegistry(
             new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()),  new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
+            new CompositeRegistryEventConsumer<>(emptyList()),
+            new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
     }
 
     static class BulkheadConfig extends AbstractRefreshScopedBulkheadConfiguration {

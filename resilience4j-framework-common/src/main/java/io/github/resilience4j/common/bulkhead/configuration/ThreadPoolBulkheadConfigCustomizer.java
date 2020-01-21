@@ -6,14 +6,13 @@ import io.github.resilience4j.core.lang.NonNull;
 
 import java.util.function.Consumer;
 
-
 /**
  * Enable customization thread pool bulkhead configuration builders programmatically.
  */
 public interface ThreadPoolBulkheadConfigCustomizer extends CustomizerWithName {
 
     /**
-     * Customize thread pool bulkhead configuration builder.
+     * Customize ThreadPoolBulkheadConfig configuration builder.
      *
      * @param configBuilder to be customized
      */

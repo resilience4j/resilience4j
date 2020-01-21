@@ -6,14 +6,13 @@ import io.github.resilience4j.core.lang.NonNull;
 
 import java.util.function.Consumer;
 
-
 /**
  * Enable customization bulkhead configuration builders programmatically.
  */
 public interface BulkheadConfigCustomizer extends CustomizerWithName {
 
     /**
-     * Customize bulkhead configuration builder.
+     * Customize BulkheadConfig configuration builder.
      *
      * @param configBuilder to be customized
      */

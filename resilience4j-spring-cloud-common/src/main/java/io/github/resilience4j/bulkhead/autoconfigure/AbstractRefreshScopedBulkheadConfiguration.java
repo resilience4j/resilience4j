@@ -46,7 +46,7 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
         @Qualifier("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         return bulkheadConfiguration
             .bulkheadRegistry(bulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-                bulkheadRegistryEventConsumer,compositeBulkheadCustomizer);
+                bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
     }
 
     /**
@@ -66,8 +66,7 @@ public abstract class AbstractRefreshScopedBulkheadConfiguration {
 
         return threadPoolBulkheadConfiguration.threadPoolBulkheadRegistry(
             threadPoolBulkheadConfigurationProperties, bulkheadEventConsumerRegistry,
-            threadPoolBulkheadRegistryEventConsumer,
-            compositeThreadPoolBulkheadCustomizer);
+            threadPoolBulkheadRegistryEventConsumer, compositeThreadPoolBulkheadCustomizer);
     }
 
 }

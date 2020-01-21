@@ -54,39 +54,45 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         return instances.get(backend);
     }
 
-    @Nullable
+    // Thread pool bulkhead section
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend,
         CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
-        return createThreadPoolBulkheadConfig(getBackendProperties(backend),backend, compositeThreadPoolBulkheadCustomizer);
+        return createThreadPoolBulkheadConfig(getBackendProperties(backend),
+            compositeThreadPoolBulkheadCustomizer, backend);
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
-        InstanceProperties instanceProperties, String instanceName,
-        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
+        String instanceName) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties, instanceName, compositeThreadPoolBulkheadCustomizer);
+            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeThreadPoolBulkheadCustomizer, instanceName);
         }
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties, instanceName, compositeThreadPoolBulkheadCustomizer);
+        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties,
+            compositeThreadPoolBulkheadCustomizer, instanceName);
     }
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
-        InstanceProperties baseProperties, InstanceProperties instanceProperties, String instanceName,
-        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
+        InstanceProperties baseProperties, InstanceProperties instanceProperties,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
+        String instanceName) {
         ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
-            ThreadPoolBulkheadConfig.custom(), baseProperties, instanceName, compositeThreadPoolBulkheadCustomizer);
+            ThreadPoolBulkheadConfig.custom(), baseProperties,
+            compositeThreadPoolBulkheadCustomizer, instanceName);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
-            instanceProperties, instanceName, compositeThreadPoolBulkheadCustomizer);
+            instanceProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
     }
 
     public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
         ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties,
-        String instanceName, CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
-
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
+        String instanceName) {
         if (properties == null) {
             return ThreadPoolBulkheadConfig.custom().build();
         }
@@ -109,10 +115,9 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         if(properties.getContextPropagators() != null){
             builder.contextPropagator(properties.getContextPropagators());
         }
-
-        compositeThreadPoolBulkheadCustomizer.getCustomizer(instanceName)
-            .ifPresent(threadPoolBulkheadConfigCustomizer -> threadPoolBulkheadConfigCustomizer.customize(builder));
-
+        compositeThreadPoolBulkheadCustomizer.getCustomizer(instanceName).ifPresent(
+            threadPoolBulkheadConfigCustomizer -> threadPoolBulkheadConfigCustomizer
+                .customize(builder));
         return builder.build();
     }
 
@@ -197,8 +202,8 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
             return writableStackTraceEnabled;
         }
 
-        public InstanceProperties setWritableStackTraceEnabled(Integer eventConsumerBufferSize) {
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
+        public InstanceProperties setWritableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
             return this;
         }
 
