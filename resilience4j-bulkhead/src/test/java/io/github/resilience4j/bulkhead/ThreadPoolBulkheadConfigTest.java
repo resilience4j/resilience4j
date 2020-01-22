@@ -21,9 +21,11 @@ package io.github.resilience4j.bulkhead;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -189,8 +191,11 @@ public class ThreadPoolBulkheadConfigTest {
 
         assertThat(config).isNotNull();
         assertThat(config.getContextPropagator()).isNotNull();
-        assertThat(config.getContextPropagator()).hasSize(1);
-        assertThat(config.getContextPropagator().get(0).getClass()).isEqualTo(TestCtxPropagator.class);
+        assertThat(config.getContextPropagator()).hasSize(2);
+        List<Class<? extends ContextPropagator>> ctxPropagators = config.getContextPropagator()
+            .stream().map(ct -> ((ContextPropagator) ct).getClass()).collect(Collectors.toList());
+        assertThat(ctxPropagators).containsExactlyInAnyOrder(TestCtxPropagator.class, TestCtxPropagator2.class);
+
     }
 
     public static class TestCtxPropagator implements ContextPropagator<Object> {

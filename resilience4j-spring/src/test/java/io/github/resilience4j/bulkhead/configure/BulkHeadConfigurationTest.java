@@ -1,10 +1,7 @@
 package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.TestThreadLocalContextPropagator;
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
@@ -16,6 +13,8 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -125,9 +124,14 @@ public class BulkHeadConfigurationTest {
             assertThat(bulkhead2.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(4);
             assertThat(bulkhead2.getBulkheadConfig().getQueueCapacity()).isEqualTo(2);
             assertThat(bulkhead2.getBulkheadConfig().getContextPropagator()).isNotNull();
-            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().size()).isEqualTo(1);
-            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().get(0).getClass())
-                .isEqualTo(TestThreadLocalContextPropagator.class);
+            assertThat(bulkhead2.getBulkheadConfig().getContextPropagator().size()).isEqualTo(2);
+            List<Class<? extends ContextPropagator>> ctxPropagators = bulkhead2
+                .getBulkheadConfig().getContextPropagator().stream().map(ctx -> ctx.getClass())
+                .collect(
+                    Collectors.toList());
+            assertThat(ctxPropagators).containsExactlyInAnyOrder(TestThreadLocalContextPropagator.class,
+                TestThreadLocalContextPropagator.class);
+
 
             // Unknown backend should get default config of Registry
             ThreadPoolBulkhead bulkhead3 = bulkheadRegistry.bulkhead("unknownBackend");
