@@ -1,8 +1,10 @@
 package io.github.resilience4j.service.test;
 
+import java.util.concurrent.CompletionStage;
+
 public interface TimeLimiterDummyService {
     String BACKEND = "backend";
 
-    void doSomething(boolean timeout) throws Exception;
+    CompletionStage<String> doSomething(boolean timeout) throws Exception;
 
 }

@@ -93,7 +93,7 @@ resilience4j.timelimiter:
   time-limiter-aspect-order: 500
   instances:
     backend:
-      timeoutDuration: 2s
+      timeoutDuration: 1s
 
 management.security.enabled: false
 management.endpoint.health.show-details: always

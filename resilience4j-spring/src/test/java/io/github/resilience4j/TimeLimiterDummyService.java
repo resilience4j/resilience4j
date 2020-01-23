@@ -12,9 +12,9 @@ import java.util.concurrent.CompletionStage;
 public class TimeLimiterDummyService implements TestDummyService {
 
     @Override
-    @TimeLimiter(name = BACKEND, fallbackMethod = "recovery")
     public String sync() {
-        return syncError();
+        //no-op
+        return null;
     }
 
     @Override

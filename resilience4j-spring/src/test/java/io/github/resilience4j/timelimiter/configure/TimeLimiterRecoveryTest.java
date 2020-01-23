@@ -21,11 +21,6 @@ public class TimeLimiterRecoveryTest {
     TestDummyService testDummyService;
 
     @Test
-    public void testRecovery() {
-        assertThat(testDummyService.sync()).isEqualTo("recovered");
-    }
-
-    @Test
     public void testAsyncRecovery() throws Exception {
         assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
     }

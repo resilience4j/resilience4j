@@ -110,8 +110,7 @@ public class CircuitBreakerAutoConfigurationTest {
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(
             "/actuator/circuitbreakerevents");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsForABefore = circuitBreakerEvents(
-            "/actuator" +
-                "/circuitbreakerevents/backendA");
+            "/actuator/circuitbreakerevents/backendA");
 
         try {
             dummyService.doSomething(true);

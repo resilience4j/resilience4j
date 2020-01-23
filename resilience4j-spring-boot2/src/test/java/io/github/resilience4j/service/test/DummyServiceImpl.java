@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-@TimeLimiter(name = DummyService.BACKEND)
 @CircuitBreaker(name = DummyService.BACKEND)
 @RateLimiter(name = DummyService.BACKEND)
 @Component
@@ -24,6 +23,7 @@ public class DummyServiceImpl implements DummyService {
     }
 
     @Override
+    @TimeLimiter(name = DummyService.BACKEND)
     public CompletableFuture<String> doSomethingAsync(boolean throwBackendTrouble)
         throws IOException {
         if (throwBackendTrouble) {

@@ -108,11 +108,11 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
             }
         }
 
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return handleJoinPointCompletableFuture(proceedingJoinPoint, timeLimiter);
+        if (false == CompletionStage.class.isAssignableFrom(returnType)) {
+            throw new IllegalStateException("Not supported type by TimeLimiterAspect");
         }
 
-        return handleJoinPoint(proceedingJoinPoint, timeLimiter);
+        return handleJoinPointCompletableFuture(proceedingJoinPoint, timeLimiter);
     }
 
     private io.github.resilience4j.timelimiter.TimeLimiter getOrCreateTimeLimiter(String methodName, String name) {
@@ -148,18 +148,6 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
                 throw new CompletionException(throwable);
             }
         });
-    }
-
-    private static Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-                                          io.github.resilience4j.timelimiter.TimeLimiter timeLimiter)
-            throws Throwable {
-        return timeLimiter.executeFutureSupplier(
-            () -> CompletableFuture.supplyAsync(() -> {
-                try {
-                    return proceedingJoinPoint.proceed();
-                } catch (Throwable throwable) {
-                    throw new CompletionException(throwable);
-                }}, timeLimiterExecutorService));
     }
 
     private void cleanup() {

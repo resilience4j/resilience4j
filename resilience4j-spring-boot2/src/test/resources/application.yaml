@@ -162,7 +162,7 @@ resilience4j.timelimiter:
   time-limiter-aspect-order: 398
   configs:
     default:
-      timeoutDuration: 2s
+      timeoutDuration: 1s
       cancelRunningFuture: false
   instances:
     backendA:
