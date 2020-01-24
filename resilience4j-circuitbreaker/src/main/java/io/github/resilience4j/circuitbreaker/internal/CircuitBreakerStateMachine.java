@@ -407,7 +407,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             publishCircuitFailureRateExceededEvent(getName(), metrics.getFailureRate());
         }
         if (Result.hasSlowCallRateExceededThreshold(result)) {
-            publishCircuitSlowCallRateExceededEvent(getName(), metrics.getFailureRate());
+            publishCircuitSlowCallRateExceededEvent(getName(), metrics.getSlowCallRate());
         }
     }
 
