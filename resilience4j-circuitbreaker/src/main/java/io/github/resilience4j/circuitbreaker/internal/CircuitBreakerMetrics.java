@@ -84,6 +84,10 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
             circuitBreakerConfig);
     }
 
+    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig) {
+        return forClosed(circuitBreakerConfig);
+    }
+
     /**
      * Records a call which was not permitted, because the CircuitBreaker state is OPEN.
      */
@@ -130,15 +134,21 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     private Result checkIfThresholdsExceeded(Snapshot snapshot) {
         float failureRateInPercentage = getFailureRate(snapshot);
-        if (failureRateInPercentage == -1) {
+        float slowCallsInPercentage = getSlowCallRate(snapshot);
+
+        if (failureRateInPercentage == -1 || slowCallsInPercentage == -1) {
             return Result.BELOW_MINIMUM_CALLS_THRESHOLD;
         }
-        if (failureRateInPercentage >= failureRateThreshold) {
+        if (failureRateInPercentage >= failureRateThreshold
+            && slowCallsInPercentage >= slowCallRateThreshold) {
             return Result.ABOVE_THRESHOLDS;
         }
-        float slowCallsInPercentage = getSlowCallRate(snapshot);
+        if (failureRateInPercentage >= failureRateThreshold) {
+            return Result.FAILURE_RATE_ABOVE_THRESHOLDS;
+        }
+
         if (slowCallsInPercentage >= slowCallRateThreshold) {
-            return Result.ABOVE_THRESHOLDS;
+            return Result.SLOW_CALL_RATE_ABOVE_THRESHOLDS;
         }
         return Result.BELOW_THRESHOLDS;
     }
@@ -221,7 +231,22 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     enum Result {
         BELOW_THRESHOLDS,
+        FAILURE_RATE_ABOVE_THRESHOLDS,
+        SLOW_CALL_RATE_ABOVE_THRESHOLDS,
         ABOVE_THRESHOLDS,
-        BELOW_MINIMUM_CALLS_THRESHOLD
+        BELOW_MINIMUM_CALLS_THRESHOLD;
+
+        public static boolean hasExceededThresholds(Result result) {
+            return hasFailureRateExceededThreshold(result) ||
+                hasSlowCallRateExceededThreshold(result);
+        }
+
+        public static boolean hasFailureRateExceededThreshold(Result result) {
+            return result == ABOVE_THRESHOLDS || result == FAILURE_RATE_ABOVE_THRESHOLDS;
+        }
+
+        public static boolean hasSlowCallRateExceededThreshold(Result result) {
+            return result == ABOVE_THRESHOLDS || result == SLOW_CALL_RATE_ABOVE_THRESHOLDS;
+        }
     }
 }

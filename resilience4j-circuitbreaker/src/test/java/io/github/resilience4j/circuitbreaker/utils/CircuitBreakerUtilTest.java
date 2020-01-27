@@ -14,6 +14,6 @@ public class CircuitBreakerUtilTest {
             .describedAs("List of statuses changed." +
                 "Please consider updating CircuitBreakerUtil#isCallPermitted to handle" +
                 "new status properly.")
-            .containsOnly(DISABLED, CLOSED, OPEN, FORCED_OPEN, HALF_OPEN);
+            .containsOnly(DISABLED, CLOSED, OPEN, FORCED_OPEN, HALF_OPEN, METRICS_ONLY);
     }
 }

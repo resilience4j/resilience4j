@@ -45,7 +45,6 @@ import java.util.function.UnaryOperator;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
-import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.ABOVE_THRESHOLDS;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
 import static java.time.temporal.ChronoUnit.MILLIS;
 
@@ -83,7 +82,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.clock = clock;
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
-        ;
     }
 
     /**
@@ -307,6 +305,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
+    public void transitionToMetricsOnlyState() {
+        stateTransition(METRICS_ONLY, currentState -> new MetricsOnlyState());
+    }
+
+    @Override
     public void transitionToForcedOpenState() {
         stateTransition(FORCED_OPEN,
             currentState -> new ForcedOpenState(currentState.attempts() + 1));
@@ -385,6 +388,27 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name,
             Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
         publishEventIfPossible(event);
+    }
+
+    private void publishCircuitFailureRateExceededEvent(String name, float failureRate) {
+        final CircuitBreakerOnFailureRateExceededEvent event = new CircuitBreakerOnFailureRateExceededEvent(name,
+            failureRate);
+        publishEventIfPossible(event);
+    }
+
+    private void publishCircuitSlowCallRateExceededEvent(String name, float slowCallRate) {
+        final CircuitBreakerOnSlowCallRateExceededEvent event = new CircuitBreakerOnSlowCallRateExceededEvent(name,
+            slowCallRate);
+        publishEventIfPossible(event);
+    }
+
+    private void publishCircuitThresholdsExceededEvent(Result result, CircuitBreakerMetrics metrics) {
+        if (Result.hasFailureRateExceededThreshold(result)) {
+            publishCircuitFailureRateExceededEvent(getName(), metrics.getFailureRate());
+        }
+        if (Result.hasSlowCallRateExceededThreshold(result)) {
+            publishCircuitSlowCallRateExceededEvent(getName(), metrics.getSlowCallRate());
+        }
     }
 
     @Override
@@ -473,6 +497,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
+        public EventPublisher onFailureRateExceeded(
+            EventConsumer<CircuitBreakerOnFailureRateExceededEvent> onFailureRateExceededConsumer) {
+            registerConsumer(CircuitBreakerOnFailureRateExceededEvent.class.getSimpleName(),
+                onFailureRateExceededConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onSlowCallRateExceeded(
+            EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> onSlowCallRateExceededConsumer) {
+            registerConsumer(CircuitBreakerOnSlowCallRateExceededEvent.class.getSimpleName(),
+                onSlowCallRateExceededConsumer);
+            return this;
+        }
+
+        @Override
         public void consumeEvent(CircuitBreakerEvent event) {
             super.processEvent(event);
         }
@@ -534,8 +574,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @param result the Result
          */
         private void checkIfThresholdsExceeded(Result result) {
-            if (result == ABOVE_THRESHOLDS) {
+            if (Result.hasExceededThresholds(result)) {
                 if (isClosed.compareAndSet(true, false)) {
+                    publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
                     transitionToOpenState();
                 }
             }
@@ -691,7 +732,6 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // noOp
         }
 
-
         @Override
         public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
             // noOp
@@ -716,7 +756,99 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         /**
-         * Get metricsof the CircuitBreaker
+         * Get metrics of the CircuitBreaker
+         */
+        @Override
+        public CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
+    }
+
+    private class MetricsOnlyState implements CircuitBreakerState {
+
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+        private final AtomicBoolean isFailureRateExceeded;
+        private final AtomicBoolean isSlowCallRateExceeded;
+
+        MetricsOnlyState() {
+            circuitBreakerMetrics = CircuitBreakerMetrics
+                .forMetricsOnly(getCircuitBreakerConfig());
+            isFailureRateExceeded = new AtomicBoolean(false);
+            isSlowCallRateExceeded = new AtomicBoolean(false);
+        }
+
+        /**
+         * Returns always true, because the CircuitBreaker is always closed in this state.
+         *
+         * @return always true, because the CircuitBreaker is always closed in this state.
+         */
+        @Override
+        public boolean tryAcquirePermission() {
+            return true;
+        }
+
+        /**
+         * Does not throw an exception, because the CircuitBreaker is always closed in this state.
+         */
+        @Override
+        public void acquirePermission() {
+            // noOp
+        }
+
+        @Override
+        public void releasePermission() {
+            // noOp
+        }
+
+        @Override
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
+            checkIfThresholdsExceeded(circuitBreakerMetrics.onError(duration, durationUnit));
+        }
+
+        @Override
+        public void onSuccess(long duration, TimeUnit durationUnit) {
+            checkIfThresholdsExceeded(circuitBreakerMetrics.onSuccess(duration, durationUnit));
+        }
+
+        private void checkIfThresholdsExceeded(Result result) {
+            if (!Result.hasExceededThresholds(result)) {
+                return;
+            }
+
+            if (shouldPublishFailureRateExceededEvent(result)) {
+                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+            }
+
+            if (shouldPublishSlowCallRateExceededEvent(result)) {
+                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+            }
+        }
+
+        private boolean shouldPublishFailureRateExceededEvent(Result result) {
+            return Result.hasFailureRateExceededThreshold(result) &&
+                isFailureRateExceeded.compareAndSet(false, true);
+        }
+
+        private boolean shouldPublishSlowCallRateExceededEvent(Result result) {
+            return Result.hasSlowCallRateExceededThreshold(result) &&
+                isSlowCallRateExceeded.compareAndSet(false, true);
+        }
+
+        @Override
+        public int attempts() {
+            return 0;
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        public CircuitBreaker.State getState() {
+            return CircuitBreaker.State.METRICS_ONLY;
+        }
+
+        /**
+         * Get metrics of the CircuitBreaker
          */
         @Override
         public CircuitBreakerMetrics getMetrics() {
@@ -797,7 +929,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicInteger permittedNumberOfCalls;
         private final AtomicBoolean isHalfOpen;
         private final int attempts;
-        private CircuitBreakerMetrics circuitBreakerMetrics;
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
@@ -864,7 +996,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @param result the result
          */
         private void checkIfThresholdsExceeded(Result result) {
-            if (result == ABOVE_THRESHOLDS) {
+            if (Result.hasExceededThresholds(result)) {
                 if (isHalfOpen.compareAndSet(true, false)) {
                     transitionToOpenState();
                 }
