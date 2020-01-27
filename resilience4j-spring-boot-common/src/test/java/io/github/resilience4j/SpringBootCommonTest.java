@@ -23,6 +23,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractCircuitBreakerConfigurationOnMissingBean;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -55,12 +57,13 @@ public class SpringBootCommonTest {
             .bulkheadRegistry(new BulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
-                new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
+                new CompositeCustomizer<>(Collections.singletonList(BulkheadConfigCustomizer.of("backend", builder -> builder.maxConcurrentCalls(10)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean
             .threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
-                new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
+                new CompositeCustomizer<>(Collections.singletonList(
+                    ThreadPoolBulkheadConfigCustomizer.of("backend", builder -> builder.coreThreadPoolSize(10)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean

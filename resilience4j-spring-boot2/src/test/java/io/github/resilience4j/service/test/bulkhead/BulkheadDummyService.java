@@ -6,8 +6,11 @@ public interface BulkheadDummyService {
 
     String BACKEND = "backendA";
     String BACKEND_C = "backendC";
+    String BACKEND_D = "backendD";
 
     void doSomething();
 
     CompletableFuture<String> doSomethingAsync() throws InterruptedException;
+
+    CompletableFuture<Object> doSomethingAsyncWithThreadLocal() throws InterruptedException;
 }

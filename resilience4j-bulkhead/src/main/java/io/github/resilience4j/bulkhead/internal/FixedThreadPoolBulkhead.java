@@ -20,6 +20,7 @@ package io.github.resilience4j.bulkhead.internal;
 
 
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -32,6 +33,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
@@ -137,14 +139,15 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     public <T> CompletableFuture<T> submit(Callable<T> callable) {
         final CompletableFuture<T> promise = new CompletableFuture<>();
         try {
-            CompletableFuture.supplyAsync(() -> {
+
+            CompletableFuture.supplyAsync(ContextPropagator.decorateSupplier(config.getContextPropagator(),() -> {
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
                     return callable.call();
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
-            }, executorService).whenComplete((result, throwable) -> {
+            }), executorService).whenComplete((result, throwable) -> {
                 publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
                 if (throwable != null) {
                     promise.completeExceptionally(throwable);
@@ -165,14 +168,14 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     @Override
     public void submit(Runnable runnable) {
         try {
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(ContextPropagator.decorateRunnable(config.getContextPropagator(),() -> {
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
                     runnable.run();
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
-            }, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(
+            }), executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(
                 () -> new BulkheadOnCallFinishedEvent(name)));
         } catch (RejectedExecutionException rejected) {
             publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));

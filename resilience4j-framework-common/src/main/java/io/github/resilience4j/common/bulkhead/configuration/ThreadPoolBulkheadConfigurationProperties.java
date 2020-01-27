@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
@@ -111,10 +112,12 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         if (properties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
         }
+        if(properties.getContextPropagators() != null){
+            builder.contextPropagator(properties.getContextPropagators());
+        }
         compositeThreadPoolBulkheadCustomizer.getCustomizer(instanceName).ifPresent(
             threadPoolBulkheadConfigCustomizer -> threadPoolBulkheadConfigCustomizer
                 .customize(builder));
-
         return builder.build();
     }
 
@@ -137,6 +140,11 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         private int coreThreadPoolSize;
         private int queueCapacity;
         private Duration keepAliveDuration;
+
+        @Nullable
+        private Class<? extends ContextPropagator>[] contextPropagators;
+
+
 
         public int getMaxThreadPoolSize() {
             return maxThreadPoolSize;
@@ -218,6 +226,23 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
          */
         public InstanceProperties setBaseConfig(String baseConfig) {
             this.baseConfig = baseConfig;
+            return this;
+        }
+
+        /**
+         * Getter return array of {@link ContextPropagator} class
+         * @return array of {@link ContextPropagator} classes
+         */
+        public Class<? extends ContextPropagator>[] getContextPropagators() { return contextPropagators; }
+
+        /**
+         * Set the class type of {@link ContextPropagator}
+         *
+         * @param contextPropagators subclass of {@link ContextPropagator}
+         * @return return builder instance back for fluent set up
+         */
+        public InstanceProperties setContextPropagator(Class<? extends ContextPropagator>... contextPropagators) {
+            this.contextPropagators = contextPropagators;
             return this;
         }
     }
