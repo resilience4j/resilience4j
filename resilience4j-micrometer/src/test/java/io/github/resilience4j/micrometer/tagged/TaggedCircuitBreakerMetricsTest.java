@@ -70,11 +70,11 @@ public class TaggedCircuitBreakerMetricsTest {
         newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(15);
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(15);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(16);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendB")).hasSize(16);
 
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(30);
+        assertThat(meters).hasSize(32);
 
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS)
             .gauges();
@@ -92,9 +92,9 @@ public class TaggedCircuitBreakerMetricsTest {
         CircuitBreaker circuitBreakerF = circuitBreakerRegistry.circuitBreaker("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
         circuitBreakerF.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendF");
-        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendF")).hasSize(15);
+        assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendF")).hasSize(16);
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(30);
+        assertThat(meters).hasSize(32);
         final RequiredSearch match = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).tags("key1", "value1");
         assertThat(match).isNotNull();
     }
@@ -102,7 +102,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldRemovedMetricsForRemovedRetry() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(15);
+        assertThat(meters).hasSize(16);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA");
         circuitBreakerRegistry.remove("backendA");
@@ -116,7 +116,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void notPermittedCallsCounterReportsCorrespondingValue() {
         List<Meter> meters = meterRegistry.getMeters();
-        assertThat(meters).hasSize(15);
+        assertThat(meters).hasSize(16);
 
         Collection<Counter> counters = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS).counters();
 

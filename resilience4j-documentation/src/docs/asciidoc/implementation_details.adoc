@@ -2,7 +2,7 @@
 
 === CircuitBreaker
 
-The CircuitBreaker is implemented via a finite state machine with three normal states: `CLOSED`, `OPEN` and `HALF_OPEN` and two special states `DISABLED` and `FORCED_OPEN`.
+The CircuitBreaker is implemented via a finite state machine with three normal states: `CLOSED`, `OPEN` and `HALF_OPEN` and three special states `METRICS_ONLY`, `DISABLED` and `FORCED_OPEN`.
 
 image::images/state_machine.jpg[]
 
@@ -48,7 +48,7 @@ CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 circuitBreaker.reset();
 ----
 
-The CircuitBreaker supports two more special states, `DISABLED` (always allow access) and `FORCED_OPEN` (always deny access). In these two states no CircuitBreakerEvents (apart from the state transition) are generated, and no metrics are recorded. The only way to exit from those states are to trigger a state transition or to reset the CircuitBreaker.
+The CircuitBreaker supports three more special states, `METRICS_ONLY` (always allow access), `DISABLED` (always allow access) and `FORCED_OPEN` (always deny access). In `METRICS_ONLY` state all Circuit Breaker events (except state transition) are generated and metrics are recorded, similar to `CLOSED` state but the only difference being, the circuit does not open when any of the thresholds are breached. In `DISABLED` and `FORCED_OPEN` states no CircuitBreakerEvents (apart from the state transition) are generated, and no metrics are recorded. The only way to exit from those states is to trigger a state transition or to reset the CircuitBreaker.
 
 [source,java]
 ----
