@@ -134,6 +134,9 @@ resilience4j.bulkhead:
     dummyFeignClient:
       maxWaitDuration: 100
       maxConcurrentCalls: 3
+    backendCustomizer:
+      maxWaitDuration: 100
+      maxConcurrentCalls: 10
 
 resilience4j.thread-pool-bulkhead":
   tags:
@@ -157,6 +160,8 @@ resilience4j.thread-pool-bulkhead":
       maxThreadPoolSize: 1
       coreThreadPoolSize: 1
       queueCapacity: 1
+      contextPropagator:
+        - io.github.resilience4j.TestThreadLocalContextPropagator
 
 
 management.security.enabled: false
