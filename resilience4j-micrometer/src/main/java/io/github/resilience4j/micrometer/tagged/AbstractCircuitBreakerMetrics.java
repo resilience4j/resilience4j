@@ -45,8 +45,11 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         registerMetrics(meterRegistry, circuitBreaker, customTags);
     }
 
-    private void registerMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker,
-        List<Tag> customTags) {
+    private void registerMetrics(
+        MeterRegistry meterRegistry, CircuitBreaker circuitBreaker, List<Tag> customTags) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, circuitBreaker.getName());
+
         Set<Meter.Id> idSet = new HashSet<>();
         final CircuitBreaker.State[] states = CircuitBreaker.State.values();
         for (CircuitBreaker.State state : states) {
