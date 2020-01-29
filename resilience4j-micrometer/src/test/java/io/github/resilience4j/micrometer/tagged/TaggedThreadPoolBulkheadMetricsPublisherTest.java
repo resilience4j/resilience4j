@@ -186,4 +186,41 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
             "resilience4j.bulkhead.thread.pool.size"
         ));
     }
+
+    @Test
+    public void testReplaceNewMeter(){
+        ThreadPoolBulkhead oldOne = ThreadPoolBulkhead.of("backendC", ThreadPoolBulkheadConfig.ofDefaults());
+        // add meters of old
+        taggedBulkheadMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.executeSupplier(() -> "Bla");
+
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(5);
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME)
+            .gauges();
+        Optional<Gauge> successful = findMeterByNamesTag(gauges, oldOne.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value())
+            .isEqualTo(oldOne.getMetrics().getMaximumThreadPoolSize());
+
+        ThreadPoolBulkhead newOne = ThreadPoolBulkhead.of("backendC", ThreadPoolBulkheadConfig.ofDefaults());
+
+        // add meters of new
+        taggedBulkheadMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.executeSupplier(() -> "Bla");
+        newOne.executeSupplier(() -> "Bla");
+        newOne.executeSupplier(() -> "Bla");
+
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(5);
+        gauges = meterRegistry.get(DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME)
+            .gauges();
+        successful = findMeterByNamesTag(gauges, newOne.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value())
+            .isEqualTo(newOne.getMetrics().getMaximumThreadPoolSize());
+    }
+
 }

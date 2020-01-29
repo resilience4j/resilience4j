@@ -157,4 +157,38 @@ public class TaggedRateLimiterMetricsPublisherTest {
             "custom_waiting_threads"
         ));
     }
+
+    @Test
+    public void testReplaceNewMeter() {
+        RateLimiter oldOne = RateLimiter.of("backendC", RateLimiterConfig.ofDefaults());
+        // add meters of old
+        taggedRateLimiterMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one permission class
+        oldOne.acquirePermission();
+
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
+            .gauges();
+        Optional<Gauge> available = findMeterByNamesTag(gauges, oldOne.getName());
+        assertThat(available).isPresent();
+        assertThat(available.get().value())
+            .isEqualTo(oldOne.getMetrics().getAvailablePermissions());
+
+        RateLimiter newOne = RateLimiter.of("backendC", RateLimiterConfig.ofDefaults());
+
+        // add meters of old
+        taggedRateLimiterMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three permission call
+        newOne.acquirePermission(3);
+
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
+            .gauges();
+        available = findMeterByNamesTag(gauges, newOne.getName());
+        assertThat(available).isPresent();
+        assertThat(available.get().value())
+            .isEqualTo(newOne.getMetrics().getAvailablePermissions());
+    }
 }

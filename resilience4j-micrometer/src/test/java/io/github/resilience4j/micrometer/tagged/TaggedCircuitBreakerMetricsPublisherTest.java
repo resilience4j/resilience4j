@@ -46,8 +46,8 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     @Before
     public void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        taggedCircuitBreakerMetricsPublisher = new TaggedCircuitBreakerMetricsPublisher(
-            meterRegistry);
+        taggedCircuitBreakerMetricsPublisher =
+            new TaggedCircuitBreakerMetricsPublisher(meterRegistry);
         circuitBreakerRegistry =
             CircuitBreakerRegistry
                 .of(CircuitBreakerConfig.ofDefaults(), taggedCircuitBreakerMetricsPublisher);
@@ -81,8 +81,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS)
             .gauges();
 
-        Optional<Gauge> successful = MetricsTestHelper
-            .findMeterByKindAndNameTags(gauges, "successful",
+        Optional<Gauge> successful = findMeterByKindAndNameTags(gauges, "successful",
             newCircuitBreaker.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
@@ -223,4 +222,38 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         ));
     }
 
+    @Test
+    public void testReplaceNewMeter(){
+        CircuitBreaker oldOne = CircuitBreaker.of("backendC", CircuitBreakerConfig.ofDefaults());
+        // add meters of old
+        taggedCircuitBreakerMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendC")).hasSize(16);
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
+        Optional<Gauge> successful = findMeterByKindAndNameTags(gauges, "successful", oldOne.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value())
+            .isEqualTo(oldOne.getMetrics().getNumberOfSuccessfulCalls());
+
+        CircuitBreaker newOne = CircuitBreaker.of("backendC", CircuitBreakerConfig.ofDefaults());
+
+        // add meters of new
+        taggedCircuitBreakerMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.onSuccess(0, TimeUnit.NANOSECONDS);
+        newOne.onSuccess(0, TimeUnit.NANOSECONDS);
+        newOne.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendC")).hasSize(16);
+        gauges = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges();
+        successful = findMeterByKindAndNameTags(gauges, "successful", newOne.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value())
+            .isEqualTo(newOne.getMetrics().getNumberOfSuccessfulCalls());
+
+    }
 }
