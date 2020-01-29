@@ -233,7 +233,7 @@ public class RetryImpl<T> implements Retry {
         }
 
         private void waitIntervalAfterFailure(int currentNumOfAttempts,
-            @Nullable Throwable throwable) {
+                                              @Nullable Throwable throwable) {
             // wait interval until the next attempt should start
             long interval = intervalFunction.apply(numOfAttempts.get());
             publishRetryEvent(
