@@ -115,14 +115,13 @@ public abstract class RateLimitersImplementationTest {
             long current = time.toMillis();
             long delta = Math.abs(previousDuration - current);
             runningDeltas.add(delta);
-            System.out.println("" + current + " [" + delta + "]");
             previousDuration = current;
         }
 
         then(runningDeltas.get(0)).isZero();
         then(runningDeltas.get(1)).isLessThan(20);
         then(runningDeltas.get(2)).isLessThan(20);
-        then(runningDeltas.get(3)).isBetween(200L, 1000L);
+        then(runningDeltas.get(3)).isBetween(200L, 1050L);
         then(runningDeltas.get(4)).isLessThan(20);
         then(runningDeltas.get(5)).isLessThan(20);
         then(times).hasSize(6);
