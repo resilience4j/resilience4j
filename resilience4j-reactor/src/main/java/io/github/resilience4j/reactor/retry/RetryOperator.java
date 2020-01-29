@@ -17,7 +17,6 @@ package io.github.resilience4j.reactor.retry;
 
 import io.github.resilience4j.reactor.IllegalPublisherException;
 import io.github.resilience4j.retry.Retry;
-import io.vavr.control.Try;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -81,13 +80,13 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
         }
 
         void handleResult(T result) {
-            long waitingDurationMillis = retryContext.onResult(result);
-            if (waitingDurationMillis != -1) {
-                throw new RetryDueToResultException(waitingDurationMillis);
+            long waitDurationMillis = retryContext.onResult(result);
+            if (waitDurationMillis != -1) {
+                throw new RetryDueToResultException(waitDurationMillis);
             }
         }
 
-        Mono<Long> handleErrors(Throwable throwable) {
+        Publisher<Long> handleErrors(Throwable throwable) {
             if (throwable instanceof RetryDueToResultException) {
                 long waitDurationMillis = ((RetryDueToResultException) throwable).waitDurationMillis;
                 return Mono.delay(Duration.ofMillis(waitDurationMillis));
@@ -97,15 +96,13 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
                 throw (Error) throwable;
             }
 
-            long waitingDurationMillis = Try.of(() -> retryContext
-                .onError(throwable))
-                .get();
+            long waitDurationMillis = retryContext.onError(throwable);
 
-            if (waitingDurationMillis == -1) {
-                Try.failure(throwable).get();
+            if (waitDurationMillis == -1) {
+                return Mono.error(throwable);
             }
 
-            return Mono.delay(Duration.ofMillis(waitingDurationMillis));
+            return Mono.delay(Duration.ofMillis(waitDurationMillis));
         }
 
         private static class RetryDueToResultException extends RuntimeException {

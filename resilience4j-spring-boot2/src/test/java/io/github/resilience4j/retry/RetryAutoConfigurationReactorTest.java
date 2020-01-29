@@ -66,15 +66,11 @@ public class RetryAutoConfigurationReactorTest {
             "/actuator/retryevents");
         RetryEventsEndpointResponse retryEventListForCBefore =
             retryEventListBody("/actuator/retryevents/" + BACKEND_C);
-        ;
 
-        try {
-            retryDummyService.doSomethingFlux(true)
-                .doOnError(throwable -> System.out.println("Exception received:" + throwable.getMessage()))
-                .blockLast();
-        } catch (IllegalArgumentException ex) {
-            // Do nothing. The IllegalArgumentException is recorded by the retry as it is one of failure exceptions
-        }
+        retryDummyService.doSomethingFlux(true)
+            .doOnError(throwable -> System.out.println("Exception received:" + throwable.getMessage()))
+            .blockLast();
+
         // The invocation is recorded by the CircuitBreaker as a success.
         retryDummyService.doSomethingFlux(false)
             .doOnError(throwable -> System.out.println("Exception received:" + throwable.getMessage()))
