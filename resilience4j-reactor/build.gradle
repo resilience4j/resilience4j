@@ -15,5 +15,6 @@ dependencies {
     testCompile(libraries.reactor_test)
     testCompile(libraries.assertj)
     testCompile(libraries.reactive_streams_tck)
+    testCompile(libraries.blockhound)
 }
 ext.moduleName = 'io.github.resilience4j.reactor'
