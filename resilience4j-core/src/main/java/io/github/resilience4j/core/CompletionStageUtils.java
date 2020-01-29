@@ -40,8 +40,8 @@ public class CompletionStageUtils {
             if (throwable != null) {
                 try {
                     promise.complete(exceptionHandler.apply(throwable));
-                } catch (Throwable fallbackThrowable) {
-                    promise.completeExceptionally(fallbackThrowable);
+                } catch (Exception fallbackException) {
+                    promise.completeExceptionally(fallbackException);
                 }
             } else {
                 promise.complete(result);
