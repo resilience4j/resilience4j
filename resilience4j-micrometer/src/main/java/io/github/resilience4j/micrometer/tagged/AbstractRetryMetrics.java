@@ -43,6 +43,9 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
     }
 
     private void registerMetrics(MeterRegistry meterRegistry, Retry retry, List<Tag> customTags) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, retry.getName());
+
         Set<Meter.Id> idSet = new HashSet<>();
         idSet.add(FunctionCounter.builder(names.getCallsMetricName(), retry,
             rt -> rt.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())

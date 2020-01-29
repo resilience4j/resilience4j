@@ -42,8 +42,11 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         registerMetrics(meterRegistry, rateLimiter, customTags);
     }
 
-    private void registerMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter,
-        List<Tag> customTags) {
+    private void registerMetrics(
+        MeterRegistry meterRegistry, RateLimiter rateLimiter, List<Tag> customTags) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, rateLimiter.getName());
+
         Set<Meter.Id> idSet = new HashSet<>();
         idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter,
             rl -> rl.getMetrics().getAvailablePermissions())

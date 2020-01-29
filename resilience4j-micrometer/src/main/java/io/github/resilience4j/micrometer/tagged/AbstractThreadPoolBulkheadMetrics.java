@@ -38,11 +38,14 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
 
     protected void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead) {
         List<Tag> customTags = mapToTagsList(bulkhead.getTags().toJavaMap());
-        addMetrics(meterRegistry, bulkhead, customTags);
+        registerMetrics(meterRegistry, bulkhead, customTags);
     }
 
-    private void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead,
-        List<Tag> customTags) {
+    private void registerMetrics(
+        MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead, List<Tag> customTags) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, bulkhead.getName());
+
         Set<Meter.Id> idSet = new HashSet<>();
         idSet.add(Gauge.builder(names.getQueueDepthMetricName(), bulkhead,
             bh -> bh.getMetrics().getQueueDepth())

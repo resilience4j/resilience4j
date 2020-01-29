@@ -177,4 +177,42 @@ public class TaggedRetryMetricsPublisherTest {
 
         assertThat(metricNames).hasSameElementsAs(Collections.singletonList("custom_calls"));
     }
+
+    @Test
+    public void testReplaceNewMeter() {
+        Retry oldOne = Retry.of("backendC", RetryConfig.ofDefaults());
+        // add meters of old
+        taggedRetryMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.executeRunnable(() -> { });
+
+        assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendC")).hasSize(4);
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
+        Optional<FunctionCounter> successfulWithoutRetry =
+            findMeterByKindAndNameTags(counters, "successful_without_retry", oldOne.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().count())
+            .isEqualTo(oldOne.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+
+
+        Retry newOne = Retry.of("backendC", RetryConfig.ofDefaults());
+        // add meters of old
+        taggedRetryMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.executeRunnable(() -> { });
+        newOne.executeRunnable(() -> { });
+        newOne.executeRunnable(() -> { });
+
+        assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendC")).hasSize(4);
+        counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
+        successfulWithoutRetry =
+            findMeterByKindAndNameTags(counters, "successful_without_retry", newOne.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().count())
+            .isEqualTo(newOne.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+    }
 }

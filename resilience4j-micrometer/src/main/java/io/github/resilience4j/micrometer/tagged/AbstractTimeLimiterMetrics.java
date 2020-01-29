@@ -40,6 +40,9 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, TimeLimiter timeLimiter) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, timeLimiter.getName());
+
         Counter successes = Counter.builder(names.getCallsMetricName())
             .description("The number of successful calls")
             .tag(TagNames.NAME, timeLimiter.getName())
