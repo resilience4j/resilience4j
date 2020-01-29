@@ -108,7 +108,7 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
             }
         }
 
-        if (false == CompletionStage.class.isAssignableFrom(returnType)) {
+        if (!CompletionStage.class.isAssignableFrom(returnType)) {
             throw new IllegalStateException("Not supported type by TimeLimiterAspect");
         }
 

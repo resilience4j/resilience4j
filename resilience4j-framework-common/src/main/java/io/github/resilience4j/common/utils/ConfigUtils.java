@@ -136,10 +136,9 @@ public class ConfigUtils {
 	 */
 	public static void mergePropertiesIfAny(TimeLimiterConfigurationProperties.InstanceProperties baseProperties,
 											TimeLimiterConfigurationProperties.InstanceProperties instanceProperties) {
-		if (instanceProperties.getEventConsumerBufferSize() == null) {
-			if (baseProperties.getEventConsumerBufferSize() != null) {
-				instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
-			}
+		if (instanceProperties.getEventConsumerBufferSize() == null
+            && baseProperties.getEventConsumerBufferSize() != null) {
+            instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
 		}
 	}
 
