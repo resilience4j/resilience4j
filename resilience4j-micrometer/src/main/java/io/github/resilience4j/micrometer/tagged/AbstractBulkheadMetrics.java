@@ -38,12 +38,15 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
 
     protected void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead) {
         List<Tag> customTags = mapToTagsList(bulkhead.getTags().toJavaMap());
-        addMetrics(meterRegistry, bulkhead, customTags);
+        registerMetrics(meterRegistry, bulkhead, customTags);
     }
 
-    private void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead, List<Tag> customTags) {
-        Set<Meter.Id> idSet = new HashSet<>();
+    private void registerMetrics(
+        MeterRegistry meterRegistry, Bulkhead bulkhead, List<Tag> customTags) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, bulkhead.getName());
 
+        Set<Meter.Id> idSet = new HashSet<>();
         idSet.add(Gauge.builder(names.getAvailableConcurrentCallsMetricName(), bulkhead,
             bh -> bh.getMetrics().getAvailableConcurrentCalls())
             .description("The number of available permissions")

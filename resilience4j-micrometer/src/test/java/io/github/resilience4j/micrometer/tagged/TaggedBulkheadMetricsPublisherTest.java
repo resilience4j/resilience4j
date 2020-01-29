@@ -160,4 +160,41 @@ public class TaggedBulkheadMetricsPublisherTest {
         ));
     }
 
+    @Test
+    public void testReplaceNewMeter(){
+        Bulkhead oldOne = Bulkhead.of("backendC", BulkheadConfig.ofDefaults());
+        // add meters of old
+        taggedBulkheadMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.tryAcquirePermission();
+
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        Collection<Gauge> gauges = meterRegistry
+            .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+        Optional<Gauge> successful = findMeterByNamesTag(gauges, oldOne.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value())
+            .isEqualTo(oldOne.getMetrics().getMaxAllowedConcurrentCalls());
+
+        Bulkhead newOne = Bulkhead.of("backendC", BulkheadConfig.ofDefaults());
+
+        // add meters of new
+        taggedBulkheadMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.tryAcquirePermission();
+        newOne.tryAcquirePermission();
+        newOne.tryAcquirePermission();
+
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedBulkheadMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        gauges = meterRegistry
+            .get(DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME).gauges();
+        successful = findMeterByNamesTag(gauges, newOne.getName());
+        assertThat(successful).isPresent();
+        assertThat(successful.get().value())
+            .isEqualTo(newOne.getMetrics().getMaxAllowedConcurrentCalls());
+
+    }
+
 }

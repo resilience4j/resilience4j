@@ -153,4 +153,37 @@ public class TaggedTimeLimiterMetricsPublisherTest {
             "custom_calls"
         ));
     }
+
+    @Test
+    public void testReplaceNewMeter(){
+        TimeLimiter oldOne = TimeLimiter.of("backendC", TimeLimiterConfig.ofDefaults());
+        // add meters of old
+        taggedTimeLimiterMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.onSuccess();
+
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(3);
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
+            oldOne.getName());
+        assertThat(successful).map(Counter::count).contains(1d);
+
+        TimeLimiter newOne = TimeLimiter.of("backendC", TimeLimiterConfig.ofDefaults());
+
+        // add meters of new
+        taggedTimeLimiterMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.onSuccess();
+        newOne.onSuccess();
+        newOne.onSuccess();
+
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(3);
+        counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        successful = findMeterByKindAndNameTags(counters, "successful",
+            newOne.getName());
+        assertThat(successful).map(Counter::count).contains(3d);
+    }
+
 }
