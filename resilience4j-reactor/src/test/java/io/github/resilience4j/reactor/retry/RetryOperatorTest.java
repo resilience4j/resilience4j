@@ -133,14 +133,14 @@ public class RetryOperatorTest {
             .compose(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofSeconds(50));
+            .verify(Duration.ofMillis(50));
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
             .subscribeOn(Schedulers.single())
             .compose(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofSeconds(50));
+            .verify(Duration.ofMillis(50));
 
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
