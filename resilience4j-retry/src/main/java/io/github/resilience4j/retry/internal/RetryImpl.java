@@ -169,23 +169,24 @@ public class RetryImpl<T> implements Retry {
         }
 
         @Override
-        public long onResultWaitingDurationMillis(T result) {
+        public boolean onResult(T result) {
             if (null != resultPredicate && resultPredicate.test(result)) {
                 int currentNumOfAttempts = numOfAttempts.incrementAndGet();
                 if (currentNumOfAttempts >= maxAttempts) {
-                    return -1;
+                    return false;
                 } else {
-                    return waitingDurationAfterFailureMillis(currentNumOfAttempts, null);
+                    waitIntervalAfterFailure(currentNumOfAttempts, null);
+                    return true;
                 }
             }
-            return -1;
+            return false;
         }
 
         @Override
-        public long onErrorWaitingDurationMillis(Exception exception) throws Exception {
+        public void onError(Exception exception) throws Exception {
             if (exceptionPredicate.test(exception)) {
                 lastException.set(exception);
-                return throwOrGetWaitingDurationAfterException();
+                throwOrSleepAfterException();
             } else {
                 failedWithoutRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), exception));
@@ -194,10 +195,10 @@ public class RetryImpl<T> implements Retry {
         }
 
         @Override
-        public long onRuntimeErrorWaitingDurationMillis(RuntimeException runtimeException) {
+        public void onRuntimeError(RuntimeException runtimeException) {
             if (exceptionPredicate.test(runtimeException)) {
                 lastRuntimeException.set(runtimeException);
-                return throwOrGetWaitingDurationAfterRuntimeException();
+                throwOrSleepAfterRuntimeException();
             } else {
                 failedWithoutRetryCounter.increment();
                 publishRetryEvent(() -> new RetryOnIgnoredErrorEvent(getName(), runtimeException));
@@ -205,7 +206,7 @@ public class RetryImpl<T> implements Retry {
             }
         }
 
-        private long throwOrGetWaitingDurationAfterException() throws Exception {
+        private void throwOrSleepAfterException() throws Exception {
             int currentNumOfAttempts = numOfAttempts.incrementAndGet();
             Exception throwable = lastException.get();
             if (currentNumOfAttempts >= maxAttempts) {
@@ -214,11 +215,11 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                return waitingDurationAfterFailureMillis(currentNumOfAttempts, throwable);
+                waitIntervalAfterFailure(currentNumOfAttempts, throwable);
             }
         }
 
-        private long throwOrGetWaitingDurationAfterRuntimeException() {
+        private void throwOrSleepAfterRuntimeException() {
             int currentNumOfAttempts = numOfAttempts.incrementAndGet();
             RuntimeException throwable = lastRuntimeException.get();
             if (currentNumOfAttempts >= maxAttempts) {
@@ -227,21 +228,16 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                return waitingDurationAfterFailureMillis(currentNumOfAttempts, throwable);
+                waitIntervalAfterFailure(currentNumOfAttempts, throwable);
             }
         }
 
-        private long waitingDurationAfterFailureMillis(int currentNumOfAttempts,
-                                                       @Nullable Throwable throwable) {
+        private void waitIntervalAfterFailure(int currentNumOfAttempts,
+                                              @Nullable Throwable throwable) {
             // wait interval until the next attempt should start
             long interval = intervalFunction.apply(numOfAttempts.get());
             publishRetryEvent(
                 () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));
-            return interval;
-        }
-
-        @Override
-        public void waitRetrying(long interval) {
             Try.run(() -> sleepFunction.accept(interval))
                 .getOrElseThrow(ex -> lastRuntimeException.get());
         }

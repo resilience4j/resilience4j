@@ -52,13 +52,13 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
     @Override
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
-            Context<T> context = new Context<>(retry.context());
+            Context<T> context = new Context<>(retry.asyncContext());
             Mono<T> upstream = (Mono<T>) publisher;
             return upstream.doOnNext(context::handleResult)
                 .retryWhen(errors -> errors.flatMap(context::handleErrors))
                 .doOnSuccess(t -> context.onComplete());
         } else if (publisher instanceof Flux) {
-            Context<T> context = new Context<>(retry.context());
+            Context<T> context = new Context<>(retry.asyncContext());
             Flux<T> upstream = (Flux<T>) publisher;
             return upstream.doOnNext(context::handleResult)
                 .retryWhen(errors -> errors.flatMap(context::handleErrors))
@@ -70,9 +70,9 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 
     private static class Context<T> {
 
-        private final Retry.Context<T> retryContext;
+        private final Retry.AsyncContext<T> retryContext;
 
-        Context(Retry.Context<T> retryContext) {
+        Context(Retry.AsyncContext<T> retryContext) {
             this.retryContext = retryContext;
         }
 
@@ -81,7 +81,7 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
         }
 
         void handleResult(T result) {
-            long waitingDurationMillis = retryContext.onResultWaitingDurationMillis(result);
+            long waitingDurationMillis = retryContext.onResult(result);
             if (waitingDurationMillis != -1) {
                 throw new RetryDueToResultException(waitingDurationMillis);
             }
@@ -98,15 +98,14 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
             }
 
             long waitingDurationMillis = Try.of(() -> retryContext
-                .onErrorWaitingDurationMillis(castToException(throwable)))
+                .onError(throwable))
                 .get();
 
-            return Mono.delay(Duration.ofMillis(waitingDurationMillis));
-        }
+            if (waitingDurationMillis == -1) {
+                Try.failure(throwable).get();
+            }
 
-        private Exception castToException(Throwable throwable) {
-            return throwable instanceof Exception ? (Exception) throwable
-                : new Exception(throwable);
+            return Mono.delay(Duration.ofMillis(waitingDurationMillis));
         }
 
         private static class RetryDueToResultException extends RuntimeException {

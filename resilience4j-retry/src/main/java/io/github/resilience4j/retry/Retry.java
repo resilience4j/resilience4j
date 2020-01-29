@@ -81,7 +81,7 @@ public interface Retry {
      * @return a Retry with a custom Retry configuration.
      */
     static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier,
-        Map<String, String> tags) {
+                    Map<String, String> tags) {
         return new RetryImpl(name, retryConfigSupplier.get(), tags);
     }
 
@@ -129,7 +129,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry,
-        CheckedFunction0<T> supplier) {
+                                                           CheckedFunction0<T> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
@@ -179,7 +179,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry,
-        CheckedFunction1<T, R> function) {
+                                                                 CheckedFunction1<T, R> function) {
         return (T t) -> {
             Retry.Context<R> context = retry.context();
             do {
@@ -232,7 +232,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <E extends Exception, T> Supplier<Either<E, T>> decorateEitherSupplier(Retry retry,
-        Supplier<Either<E, T>> supplier) {
+                                                                                  Supplier<Either<E, T>> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
@@ -483,7 +483,7 @@ public interface Retry {
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(ScheduledExecutorService scheduler,
-        Supplier<CompletionStage<T>> supplier) {
+                                                          Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStage(this, scheduler, supplier).get();
     }
 
@@ -588,28 +588,10 @@ public interface Retry {
         void onComplete();
 
         /**
-         * Checks if we need to retry based on the returned result from the called logic.
-         *
          * @param result the returned result from the called logic
          * @return true if we need to retry again or false if no retry anymore
          */
-        default boolean onResult(T result) {
-            long onResultWaitingDurationMillis = onResultWaitingDurationMillis(result);
-            if (onResultWaitingDurationMillis != -1) {
-                waitRetrying(onResultWaitingDurationMillis);
-                return true;
-            }
-
-            return false;
-        }
-
-        /**
-         * Calculates waiting duration for the next attempt based on the returned result from the called logic.
-         *
-         * @param result the returned result from the called logic
-         * @return waiting duration in milliseconds. {@code -1} if we shouldn't retry.
-         */
-        long onResultWaitingDurationMillis(T result);
+        boolean onResult(T result);
 
         /**
          * Handles a checked exception
@@ -617,18 +599,7 @@ public interface Retry {
          * @param exception the exception to handle
          * @throws Exception when retry count has exceeded
          */
-        default void onError(Exception exception) throws Exception {
-            waitRetrying(onErrorWaitingDurationMillis(exception));
-        }
-
-        /**
-         * Calculates waiting duration for the next attempt in case of a checked exception.
-         *
-         * @param exception the exception to handle
-         * @return waiting duration in milliseconds
-         * @throws Exception when retry count has exceeded
-         */
-        long onErrorWaitingDurationMillis(Exception exception) throws Exception;
+        void onError(Exception exception) throws Exception;
 
         /**
          * Handles a runtime exception
@@ -636,25 +607,7 @@ public interface Retry {
          * @param runtimeException the exception to handle
          * @throws RuntimeException when retry count has exceeded
          */
-        default void onRuntimeError(RuntimeException runtimeException) {
-            waitRetrying(onRuntimeErrorWaitingDurationMillis(runtimeException));
-        }
-
-        /**
-         * Calculates waiting duration for the next attempt in case of a runtime exception.
-         *
-         * @param runtimeException the exception to handle
-         * @return waiting duration in milliseconds
-         * @throws RuntimeException when retry count has exceeded
-         */
-        long onRuntimeErrorWaitingDurationMillis(RuntimeException runtimeException);
-
-        /**
-         * Waits given interval before the next attempt through blocking current thread.
-         *
-         * @param interval waiting duration in milliseconds
-         */
-        void waitRetrying(long interval);
+        void onRuntimeError(RuntimeException runtimeException);
     }
 
     /**
