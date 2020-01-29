@@ -36,25 +36,29 @@ import java.util.function.Supplier;
 public interface ThreadPoolBulkhead {
 
     /**
-     * Returns a callable which is decorated by a bulkhead.
+     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead and
+     * returns a CompletionStage representing the pending results of the task.
      *
      * @param bulkhead the bulkhead
      * @param callable the original Callable
-     * @param <T>      the result type of callable
-     * @return a supplier which is decorated by a Bulkhead.
+     * @param <T>      the result type of the callable
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task.
      */
-    static <T> Callable<CompletionStage<T>> decorateCallable(ThreadPoolBulkhead bulkhead,
+    static <T> Supplier<CompletionStage<T>> decorateCallable(ThreadPoolBulkhead bulkhead,
         Callable<T> callable) {
         return () -> bulkhead.submit(callable);
     }
 
     /**
-     * Returns a supplier which is decorated by a bulkhead.
+     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead
+     * and returns a CompletionStage representing the pending results of the task.
      *
      * @param bulkhead the bulkhead
-     * @param supplier the original supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return a supplier which is decorated by a Bulkhead.
+     * @param supplier the original Supplier
+     * @param <T>      the result type of the supplier
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task.
      */
     static <T> Supplier<CompletionStage<T>> decorateSupplier(ThreadPoolBulkhead bulkhead,
         Supplier<T> supplier) {
@@ -173,10 +177,38 @@ public interface ThreadPoolBulkhead {
     ThreadPoolBulkheadEventPublisher getEventPublisher();
 
     /**
-     * Decorates and executes the decorated Supplier.
+     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
+     * results of the task.
      *
      * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
+     * @param <T>      the result type of the supplier
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task.
+     */
+    default <T> Supplier<CompletionStage<T>> decorateSupplier(Supplier<T> supplier) {
+        return decorateSupplier(this, supplier);
+    }
+
+    /**
+     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
+     * results of the task.
+     *
+     * @param callable the original Callable
+     * @param <T>      the result type of the callable
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task.
+     */
+    default <T> Supplier<CompletionStage<T>> decorateCallable(Callable<T> callable) {
+        return decorateCallable(this, callable);
+    }
+
+
+    /**
+     * Submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
+     * results of the task.
+     *
+     * @param supplier the value-returning task
+     * @param <T>      the result type of the supplier
      * @return the result of the decorated Supplier.
      * @throws BulkheadFullException if the no permits
      */
@@ -185,15 +217,15 @@ public interface ThreadPoolBulkhead {
     }
 
     /**
-     * Decorates and executes the decorated Callable.
+     * Submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
+     * results of the task.
      *
-     * @param callable the original Callable
-     * @param <T>      the result type of callable
+     * @param callable the value-returning task
+     * @param <T>      the result type of the callable
      * @return the result of the decorated Callable.
-     * @throws Exception if unable to compute a result
      */
-    default <T> CompletionStage<T> executeCallable(Callable<T> callable) throws Exception {
-        return decorateCallable(this, callable).call();
+    default <T> CompletionStage<T> executeCallable(Callable<T> callable) {
+        return decorateCallable(this, callable).get();
     }
 
     /**
