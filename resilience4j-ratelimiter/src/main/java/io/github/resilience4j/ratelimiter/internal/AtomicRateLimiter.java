@@ -60,7 +60,7 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-        Map<String, String> tags) {
+                             Map<String, String> tags) {
         this.name = name;
         this.tags = tags;
 
@@ -197,7 +197,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * @return next {@link State}
      */
     private State calculateNextState(final int permits, final long timeoutInNanos,
-        final State activeState) {
+                                     final State activeState) {
         long cyclePeriodInNanos = activeState.config.getLimitRefreshPeriod().toNanos();
         int permissionsPerCycle = activeState.config.getLimitForPeriod();
 
@@ -235,16 +235,26 @@ public class AtomicRateLimiter implements RateLimiter {
      *                             wait for the next permission
      */
     private long nanosToWaitForPermission(final int permits, final long cyclePeriodInNanos,
-        final int permissionsPerCycle,
-        final int availablePermissions, final long currentNanos, final long currentCycle) {
+                                          final int permissionsPerCycle,
+                                          final int availablePermissions, final long currentNanos, final long currentCycle) {
         if (availablePermissions >= permits) {
             return 0L;
         }
         long nextCycleTimeInNanos = (currentCycle + 1) * cyclePeriodInNanos;
         long nanosToNextCycle = nextCycleTimeInNanos - currentNanos;
         int permissionsAtTheStartOfNextCycle = availablePermissions + permissionsPerCycle;
-        int fullCyclesToWait = -(permissionsAtTheStartOfNextCycle - permits) / permissionsPerCycle;
+        int fullCyclesToWait = divCeil(-(permissionsAtTheStartOfNextCycle - permits), permissionsPerCycle);
         return (fullCyclesToWait * cyclePeriodInNanos) + nanosToNextCycle;
+    }
+
+    /**
+     * Divide two integers and round result to the bigger near mathematical integer.
+     *
+     * @param x - should be > 0
+     * @param y - should be > 0
+     */
+    private static int divCeil(int x, int y) {
+        return (x + y - 1) / y;
     }
 
     /**
@@ -261,8 +271,8 @@ public class AtomicRateLimiter implements RateLimiter {
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
     private State reservePermissions(final RateLimiterConfig config, final int permits,
-        final long timeoutInNanos,
-        final long cycle, final int permissions, final long nanosToWait) {
+                                     final long timeoutInNanos,
+                                     final long cycle, final int permissions, final long nanosToWait) {
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
         int permissionsWithReservation = permissions;
         if (canAcquireInTime) {
@@ -281,7 +291,7 @@ public class AtomicRateLimiter implements RateLimiter {
      * not exceed timeout
      */
     private boolean waitForPermissionIfNecessary(final long timeoutInNanos,
-        final long nanosToWait) {
+                                                 final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
 
@@ -409,7 +419,7 @@ public class AtomicRateLimiter implements RateLimiter {
         private final long nanosToWait;
 
         private State(RateLimiterConfig config,
-            final long activeCycle, final int activePermissions, final long nanosToWait) {
+                      final long activeCycle, final int activePermissions, final long nanosToWait) {
             this.config = config;
             this.activeCycle = activeCycle;
             this.activePermissions = activePermissions;
