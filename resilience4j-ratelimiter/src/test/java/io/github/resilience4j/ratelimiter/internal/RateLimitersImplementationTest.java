@@ -25,7 +25,7 @@ public abstract class RateLimitersImplementationTest {
     protected abstract RateLimiter buildRateLimiter(RateLimiterConfig config);
 
     @Test
-    public void aquireBigNumberOfPermitsAtStartOfCycleTest() {
+    public void acquireBigNumberOfPermitsAtStartOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -50,7 +50,7 @@ public abstract class RateLimitersImplementationTest {
     }
 
     @Test
-    public void tryAquiringBigNumberOfPermitsAtEndOfCycleTest() {
+    public void tryToAcquireBigNumberOfPermitsAtEndOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -118,6 +118,7 @@ public abstract class RateLimitersImplementationTest {
             previousDuration = current;
         }
 
+        System.out.println(runningDeltas);
         then(runningDeltas.get(0)).isZero();
         then(runningDeltas.get(1)).isLessThan(20);
         then(runningDeltas.get(2)).isLessThan(20);
