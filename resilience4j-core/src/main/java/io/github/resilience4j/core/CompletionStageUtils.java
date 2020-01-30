@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.core;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -30,11 +31,14 @@ public class CompletionStageUtils {
     /**
      * Returns a CompletionStage that is recovered from any exception.
      *
-     * @param <T>              return type of after
+     * @param completionStage the completionStage should be recovered from any exception
      * @param exceptionHandler the function applied after callable has failed
      * @return a CompletionStage that is recovered from any exception.
      */
     public static <T> CompletionStage<T> recover(CompletionStage<T> completionStage, Function<Throwable, T> exceptionHandler){
+        Objects.requireNonNull(completionStage, "completionStage is null");
+        Objects.requireNonNull(exceptionHandler, "exceptionHandler is null");
+
         CompletableFuture<T> promise = new CompletableFuture<>();
         completionStage.whenComplete((result, throwable) -> {
             if (throwable != null) {
@@ -42,6 +46,37 @@ public class CompletionStageUtils {
                     promise.complete(exceptionHandler.apply(throwable));
                 } catch (Exception fallbackException) {
                     promise.completeExceptionally(fallbackException);
+                }
+            } else {
+                promise.complete(result);
+            }
+        });
+        return promise;
+    }
+
+    /**
+     * Returns a CompletionStage that is recovered from a specific exception.
+     *
+     * @param completionStage the completionStage should be recovered from a certain exception
+     * @param exceptionType the specific exception type that should be recovered
+     * @param exceptionHandler the function applied after callable has failed
+     * @return a CompletionStage that is recovered from a specific exception.
+     */
+    public static <X extends Throwable, T> CompletionStage<T> recover(CompletionStage<T> completionStage, Class<X> exceptionType, Function<Throwable, T> exceptionHandler){
+        Objects.requireNonNull(completionStage, "completionStage is null");
+        Objects.requireNonNull(exceptionType, "exceptionType is null");
+        Objects.requireNonNull(exceptionHandler, "exceptionHandler is null");
+        CompletableFuture<T> promise = new CompletableFuture<>();
+        completionStage.whenComplete((result, throwable) -> {
+            if (throwable != null){
+                if(exceptionType.isAssignableFrom(throwable.getClass())) {
+                    try {
+                        promise.complete(exceptionHandler.apply(throwable));
+                    } catch (Exception fallbackException) {
+                        promise.completeExceptionally(fallbackException);
+                    }
+                }else{
+                    promise.completeExceptionally(throwable);
                 }
             } else {
                 promise.complete(result);
