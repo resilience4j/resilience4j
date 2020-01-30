@@ -104,7 +104,6 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
         Publisher<Long> handleFlowableErrors(Throwable throwable) {
             if (throwable instanceof RetryDueToResultException) {
                 long waitDurationMillis = ((RetryDueToResultException) throwable).waitDurationMillis;
-                //return Flowable.just(waitDurationMillis);
                 return Flowable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
             }
             // Filter Error to not retry on it
@@ -118,14 +117,12 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
                 return Flowable.error(throwable);
             }
 
-            //return Flowable.just(waitDurationMillis);
             return Flowable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
         }
 
         ObservableSource<Long> handleObservableErrors(Throwable throwable) {
             if (throwable instanceof RetryDueToResultException) {
                 long waitDurationMillis = ((RetryDueToResultException) throwable).waitDurationMillis;
-                //return Observable.just(waitDurationMillis);
                 return Observable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
             }
             // Filter Error to not retry on it
@@ -139,7 +136,6 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
                 return Observable.error(throwable);
             }
 
-            //return Observable.just(waitDurationMillis);
             return Observable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
         }
 
