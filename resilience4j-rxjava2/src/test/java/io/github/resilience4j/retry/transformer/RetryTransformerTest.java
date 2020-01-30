@@ -42,7 +42,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingSingle() {
+    public void returnOnCompleteUsingSingle() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         given(helloWorldService.returnHelloWorld())
@@ -54,12 +54,14 @@ public class RetryTransformerTest {
         Single.fromCallable(helloWorldService::returnHelloWorld)
             .compose(RetryTransformer.of(retry))
             .test()
+            .await()
             .assertValueCount(1)
             .assertValues("Hello world")
             .assertComplete();
         Single.fromCallable(helloWorldService::returnHelloWorld)
             .compose(RetryTransformer.of(retry))
             .test()
+            .await()
             .assertValueCount(1)
             .assertValues("Hello world")
             .assertComplete();
@@ -210,7 +212,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingMaybe() {
+    public void returnOnCompleteUsingMaybe() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -222,12 +224,14 @@ public class RetryTransformerTest {
         Maybe.fromCallable(helloWorldService::returnHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertValueCount(1)
             .assertValues("Hello world")
             .assertComplete();
         Maybe.fromCallable(helloWorldService::returnHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertValueCount(1)
             .assertValues("Hello world")
             .assertComplete();
@@ -342,7 +346,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingCompletable() {
+    public void returnOnCompleteUsingCompletable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -354,11 +358,13 @@ public class RetryTransformerTest {
         Completable.fromRunnable(helloWorldService::sayHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertNoValues()
             .assertComplete();
         Completable.fromRunnable(helloWorldService::sayHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertNoValues()
             .assertComplete();
 
@@ -422,7 +428,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingObservable() {
+    public void returnOnCompleteUsingObservable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -432,12 +438,14 @@ public class RetryTransformerTest {
         Observable.fromCallable(helloWorldService::returnHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertError(HelloWorldException.class)
             .assertNotComplete()
             .assertSubscribed();
         Observable.fromCallable(helloWorldService::returnHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertError(HelloWorldException.class)
             .assertNotComplete()
             .assertSubscribed();
@@ -549,7 +557,7 @@ public class RetryTransformerTest {
     }
 
     @Test
-    public void returnOnCompleteUsingFlowable() {
+    public void returnOnCompleteUsingFlowable() throws InterruptedException {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
         RetryTransformer<Object> retryTransformer = RetryTransformer.of(retry);
@@ -559,6 +567,7 @@ public class RetryTransformerTest {
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertError(HelloWorldException.class)
             .assertNotComplete()
             .assertSubscribed();
@@ -566,6 +575,7 @@ public class RetryTransformerTest {
         Flowable.fromCallable(helloWorldService::returnHelloWorld)
             .compose(retryTransformer)
             .test()
+            .await()
             .assertError(HelloWorldException.class)
             .assertNotComplete()
             .assertSubscribed();
