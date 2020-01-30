@@ -5,6 +5,7 @@ import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
@@ -345,6 +346,12 @@ public interface Decorators {
 
         public DecorateCompletionStage<T> withBulkhead(Bulkhead bulkhead) {
             stageSupplier = Bulkhead.decorateCompletionStage(bulkhead, stageSupplier);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withTimeLimiter(TimeLimiter timeLimiter,
+            ScheduledExecutorService scheduler) {
+            stageSupplier =  timeLimiter.decorateCompletionStage(scheduler, stageSupplier);
             return this;
         }
 
