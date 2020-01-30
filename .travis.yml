@@ -9,9 +9,6 @@ jobs:
 before_install:
   - chmod +x gradlew
 
-script:
-- ./gradlew clean check test --info
-
 after_success:
   - if [ -n "$SONAR_TOKEN" ]; then ./gradlew sonarqube; fi
   - if [ "$TRAVIS_BRANCH" = "master" ] &&  [ -n "$BINTRAY_USER" ] && [ -n "$PUBLISH" ]; then
