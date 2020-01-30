@@ -27,7 +27,6 @@ import reactor.blockhound.BlockHound;
 import reactor.blockhound.integration.ReactorIntegration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -64,16 +63,16 @@ public class RetryOperatorTest {
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
 
-        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator)
-            .subscribeOn(Schedulers.single()))
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(retryOperator))
             .expectNext("Hello world")
             .expectComplete()
-            .verify(Duration.ofMillis(50));
-        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld).compose(retryOperator)
-            .subscribeOn(Schedulers.single()))
+            .verify(Duration.ofSeconds(1));
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(retryOperator))
             .expectNext("Hello world")
             .expectComplete()
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should(times(4)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -96,7 +95,7 @@ public class RetryOperatorTest {
             .compose(retryOperator))
             .expectSubscription()
             .expectError(StackOverflowError.class)
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
     }
 
     @Test
@@ -111,7 +110,7 @@ public class RetryOperatorTest {
             .compose(retryOperator))
             .expectSubscription()
             .expectError(Error.class)
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -129,18 +128,16 @@ public class RetryOperatorTest {
             .willThrow(new HelloWorldException());
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .subscribeOn(Schedulers.single())
             .compose(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .subscribeOn(Schedulers.single())
             .compose(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -162,7 +159,7 @@ public class RetryOperatorTest {
             .compose(RetryOperator.of(retry)))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -182,11 +179,11 @@ public class RetryOperatorTest {
             .willReturn("success");
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .subscribeOn(Schedulers.single())
             .compose(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNext("success")
-            .expectComplete().verify(Duration.ofMillis(50));
+            .expectComplete()
+            .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -205,11 +202,11 @@ public class RetryOperatorTest {
             .willReturn("retry");
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .subscribeOn(Schedulers.single())
             .compose(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNextCount(1)
-            .expectComplete().verify(Duration.ofMillis(50));
+            .expectComplete()
+            .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
@@ -221,11 +218,10 @@ public class RetryOperatorTest {
         RetryOperator<Object> retryOperator = RetryOperator.of(retry);
 
         StepVerifier.create(Flux.error(new HelloWorldException())
-            .subscribeOn(Schedulers.single())
             .compose(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofMillis(50));
+            .verify(Duration.ofSeconds(1));
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -243,7 +239,6 @@ public class RetryOperatorTest {
         Retry retry = Retry.of("testName", config);
 
         StepVerifier.create(Flux.just("retry", "success")
-            .subscribeOn(Schedulers.single())
             .compose(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNext("retry")
@@ -265,11 +260,11 @@ public class RetryOperatorTest {
         Retry retry = Retry.of("testName", config);
 
         StepVerifier.create(Flux.just("retry")
-            .subscribeOn(Schedulers.single())
             .compose(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNextCount(1)
-            .expectComplete().verify(Duration.ofMillis(50));
+            .expectComplete()
+            .verify(Duration.ofSeconds(1));
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
