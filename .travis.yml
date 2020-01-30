@@ -8,6 +8,7 @@ jobs:
     #- jdk: openjdk11
 before_install:
   - chmod +x gradlew
+
 after_success:
   - if [ -n "$SONAR_TOKEN" ]; then ./gradlew sonarqube; fi
   - if [ "$TRAVIS_BRANCH" = "master" ] &&  [ -n "$BINTRAY_USER" ] && [ -n "$PUBLISH" ]; then
@@ -22,10 +23,12 @@ addons:
     organization: "resilience4j" # the key of the org you chose at step #3
     token:
       secure: $SONAR_TOKEN  # Set in the settings page of your repository, as a secure variable
-#cache:
-#  directories:
-#  - "$HOME/.gradle/caches/"
-#  - "$HOME/.gradle/wrapper/"
+
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+
 env:
   global:
   - secure: nOtAW6cNMwPwU7KTIwmEnEpksjDRZN1iPV65V2ZZZ+Qpvry+bhzMcf6ZqSAznMUHlAZrHrk47eDb/39hzT4RED1RSPgYFfIni+ktU10A7i+60kpRUF37yTl2WT95h/oNZ2eZuXZNApthBOW+tDHz58Y0ZW2ta9YS/V4XtaQXQC/2C+Po3LmBsInuncipuj4NJtzS7/j/Ybl7fkDrROuprlY4jKUrQs3KEl4uuyw13rZqHd9FMaLhhD+zo0Ej5Hk/M5JUQIWKko5WAZssTcIxeYUWsp9b/Sfu14o82a76Wtq7pQkf8iKJL7TjLNp5v/De4rbGpsUUNOXlGvXFAAJd1iTPoAeklFb160AR5XBVmtuyLLCPKSqw640GPuPx8qdLHwbejsgzGMSGS24rDeTRV2vNuKRge4JGwOLnHTE+aKjVVmu2DFN2enNrsL5KvAA6C/qYwAN5M7QacYNJpZBOdrgxrzypTj5ydzR2EyoHbbKKCGBRLbOe4WQ5RR9xYA2LoKM0DxBxiAjZDqcJ7L5v780x9sb3TRQM6dmuJ60l7qY+O5ic+2G7ti1xK2gcrSHLZ1W/blQh/kn6qthovhADKduGTeQ3E1EdHKv9ymD9fBZOGQX25Gva+5F7/fcM/U4oc0i/REw90T/kfAv2yFXmjbUpTUO5AgUHvHr5Dsy5XME=
