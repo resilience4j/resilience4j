@@ -19,6 +19,7 @@
 package io.github.resilience4j.decorators;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -26,6 +27,8 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.test.HelloWorldService;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
@@ -35,14 +38,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -56,6 +57,53 @@ public class DecoratorsTest {
     @Before
     public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
+    }
+
+    @Test
+    public void testExecuteSupplierInThreadPoolBulkhead() throws ExecutionException, InterruptedException {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        CompletionStage<String> completionStage = Decorators
+            .ofCompletionStage(bulkhead.decorateSupplier(() -> helloWorldService.returnHelloWorld()))
+            .withCircuitBreaker(circuitBreaker)
+            .get();
+
+        String value = completionStage.toCompletableFuture().get();
+
+        assertThat(value).isEqualTo("Hello world");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void shouldThrowTimeoutException() {
+        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(100)).build());
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        CompletionStage<String> completionStage = Decorators
+            .ofCompletionStage(bulkhead.decorateSupplier(() -> {
+                try {
+                    Thread.sleep(1000);
+                    return "Bla";
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return "Bla";
+                }
+            }))
+            .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
+            .withCircuitBreaker(circuitBreaker)
+            .get();
+
+        assertThatThrownBy(() -> completionStage.toCompletableFuture().get())
+            .hasCauseInstanceOf(TimeoutException.class);
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
