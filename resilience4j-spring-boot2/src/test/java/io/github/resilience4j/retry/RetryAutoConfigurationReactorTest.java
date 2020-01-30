@@ -66,7 +66,6 @@ public class RetryAutoConfigurationReactorTest {
             "/actuator/retryevents");
         RetryEventsEndpointResponse retryEventListForCBefore =
             retryEventListBody("/actuator/retryevents/" + BACKEND_C);
-        ;
 
         try {
             retryDummyService.doSomethingFlux(true)

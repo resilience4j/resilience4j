@@ -17,7 +17,6 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.reactor.retry.RetryExceptionWrapper;
 import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.service.test.TestApplication;
@@ -71,13 +70,9 @@ public class RetryAutoConfigurationRxJavaTest {
         assertThat(retry).isNotNull();
         Retry.Metrics metricsBefore = retry.getMetrics();
 
-        try {
-            retryDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
-                throwable -> System.out.println("Exception received:" + throwable.getMessage()));
-        } catch (RetryExceptionWrapper ex) {
-            assertThat(ex.getCause()).hasCauseInstanceOf(IllegalArgumentException.class);
-            // Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
-        }
+        retryDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
+            throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+
         // The invocation is recorded by the CircuitBreaker as a success.
         retryDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase,
             throwable -> System.out.println("Exception received:" + throwable.getMessage()));
