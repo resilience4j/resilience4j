@@ -19,10 +19,7 @@
 package io.github.resilience4j.core;
 
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class SupplierUtils {
 
@@ -74,7 +71,7 @@ public class SupplierUtils {
      * @return a function composed of supplier and exceptionHandler
      */
     public static <T> Supplier<T> recover(Supplier<T> supplier,
-        Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        Predicate<T> resultPredicate, UnaryOperator<T> resultHandler) {
         return () -> {
             T result = supplier.get();
             if(resultPredicate.test(result)){

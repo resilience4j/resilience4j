@@ -107,7 +107,7 @@ public interface Decorators {
             return this;
         }
 
-        public DecorateSupplier<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        public DecorateSupplier<T> withFallback(Predicate<T> resultPredicate, UnaryOperator<T> resultHandler) {
             supplier = SupplierUtils.recover(supplier, resultPredicate, resultHandler);
             return this;
         }
@@ -265,7 +265,7 @@ public interface Decorators {
             return this;
         }
 
-        public DecorateCallable<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        public DecorateCallable<T> withFallback(Predicate<T> resultPredicate, UnaryOperator<T> resultHandler) {
             callable = CallableUtils.recover(callable, resultPredicate, resultHandler);
             return this;
         }
@@ -499,7 +499,7 @@ public interface Decorators {
             return this;
         }
 
-        public DecorateCompletionStage<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        public DecorateCompletionStage<T> withFallback(Predicate<T> resultPredicate, UnaryOperator<T> resultHandler) {
             stageSupplier = CompletionStageUtils.recover(stageSupplier, resultPredicate, resultHandler);
             return this;
         }

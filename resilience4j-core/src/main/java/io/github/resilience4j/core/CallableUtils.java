@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public class CallableUtils {
 
@@ -118,7 +119,7 @@ public class CallableUtils {
      * @return a function composed of supplier and exceptionHandler
      */
     public static <T> Callable<T> recover(Callable<T> callable,
-        Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        Predicate<T> resultPredicate, UnaryOperator<T> resultHandler) {
         return () -> {
             T result = callable.call();
             if(resultPredicate.test(result)){

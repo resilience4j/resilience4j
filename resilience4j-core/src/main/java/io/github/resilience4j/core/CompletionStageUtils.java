@@ -23,10 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class CompletionStageUtils {
 
@@ -52,7 +49,7 @@ public class CompletionStageUtils {
      * @param exceptionHandler the function applied after callable has failed
      * @return a CompletionStage that is recovered from a specific exception.
      */
-    public static <X extends Throwable, T> CompletionStage<T> recover(CompletionStage<T> completionStage, List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler){
+    public static <T> CompletionStage<T> recover(CompletionStage<T> completionStage, List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler){
         CompletableFuture<T> promise = new CompletableFuture<>();
         completionStage.whenComplete((result, throwable) -> {
             if (throwable != null){
@@ -157,7 +154,7 @@ public class CompletionStageUtils {
      * @param exceptionHandler the function applied after callable has failed
      * @return a CompletionStage that is recovered from a specific exception.
      */
-    public static <T, X extends Throwable> Supplier<CompletionStage<T>> recover(
+    public static <T> Supplier<CompletionStage<T>> recover(
         Supplier<CompletionStage<T>> completionStageSupplier, List<Class<? extends Throwable>> exceptionTypes,
         Function<Throwable, T> exceptionHandler) {
         return () -> recover(completionStageSupplier.get(), exceptionTypes, exceptionHandler);
@@ -174,7 +171,7 @@ public class CompletionStageUtils {
      */
     public static <T> CompletionStage<T> recover(
         CompletionStage<T> completionStage, Predicate<T> resultPredicate,
-        Function<T, T> resultHandler) {
+        UnaryOperator<T> resultHandler) {
         return completionStage.thenApply(result -> {
             if(resultPredicate.test(result)){
                 return resultHandler.apply(result);
@@ -195,7 +192,7 @@ public class CompletionStageUtils {
      */
     public static <T> Supplier<CompletionStage<T>> recover(
         Supplier<CompletionStage<T>> completionStageSupplier, Predicate<T> resultPredicate,
-        Function<T, T> resultHandler) {
+        UnaryOperator<T> resultHandler) {
         return () -> recover(completionStageSupplier.get(), resultPredicate, resultHandler);
     }
 
