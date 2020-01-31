@@ -19,10 +19,11 @@
 package io.github.resilience4j.core;
 
 import io.vavr.CheckedFunction0;
+import io.vavr.CheckedFunction1;
+import io.vavr.CheckedFunction2;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CheckFunctionUtils {
@@ -41,7 +42,7 @@ public class CheckFunctionUtils {
      * @return a function composed of callable and exceptionHandler
      */
     public static <T> CheckedFunction0<T> recover(CheckedFunction0<T> function,
-        Function<Throwable, T> exceptionHandler) {
+        CheckedFunction1<Throwable, T> exceptionHandler) {
         return () -> {
             try {
                 return function.apply();
@@ -62,7 +63,7 @@ public class CheckFunctionUtils {
      * @return a function composed of supplier and handler
      */
     public static <T, R> CheckedFunction0<R> andThen(CheckedFunction0<T> function,
-        BiFunction<T, Throwable, R> handler) {
+        CheckedFunction2<T, Throwable, R> handler) {
         return () -> {
             try {
                 return handler.apply(function.apply(), null);
@@ -82,7 +83,7 @@ public class CheckFunctionUtils {
      * @return a function composed of supplier and exceptionHandler
      */
     public static <T> CheckedFunction0<T> recover(CheckedFunction0<T> function,
-        Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        Predicate<T> resultPredicate, CheckedFunction1<T, T> resultHandler) {
         return () -> {
             T result = function.apply();
             if(resultPredicate.test(result)){
@@ -104,7 +105,7 @@ public class CheckFunctionUtils {
      */
     public static <T> CheckedFunction0<T> recover(CheckedFunction0<T> function,
         List<Class<? extends Throwable>> exceptionTypes,
-        Function<Throwable, T> exceptionHandler) {
+        CheckedFunction1<Throwable, T> exceptionHandler) {
         return () -> {
             try {
                 return function.apply();
@@ -130,7 +131,7 @@ public class CheckFunctionUtils {
      */
     public static <X extends Throwable, T> CheckedFunction0<T> recover(CheckedFunction0<T> function,
         Class<X> exceptionType,
-        Function<Throwable, T> exceptionHandler) {
+        CheckedFunction1<Throwable, T> exceptionHandler) {
         return () -> {
             try {
                 return function.apply();

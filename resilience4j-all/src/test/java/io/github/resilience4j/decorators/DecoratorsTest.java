@@ -148,7 +148,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Callable<String> decoratedSupplier = Decorators
-            .ofCallable(() -> helloWorldService.returnHelloWorld())
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException ())
             .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
             .withCircuitBreaker(circuitBreaker)
             .decorate();
@@ -167,7 +167,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedFunction0<String> decoratedSupplier = Decorators
-            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
             .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
             .withCircuitBreaker(circuitBreaker)
             .decorate();
@@ -183,7 +183,7 @@ public class DecoratorsTest {
 
     @Test
     public void testDecorateCompletionStageWithFallbackFromResult() throws Throwable {
-        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         Supplier<CompletionStage<String>> completionStageSupplier =
@@ -200,7 +200,7 @@ public class DecoratorsTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test

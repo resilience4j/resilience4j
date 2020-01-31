@@ -13,6 +13,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
+import io.vavr.CheckedFunction2;
 import io.vavr.CheckedRunnable;
 
 import java.util.List;
@@ -334,27 +335,27 @@ public interface Decorators {
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(BiFunction<T, Throwable, T> handler) {
+        public DecorateCheckedSupplier<T> withFallback(CheckedFunction2<T, Throwable, T> handler) {
             supplier = CheckFunctionUtils.andThen(supplier, handler);
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, CheckedFunction1<T, T> resultHandler) {
             supplier = CheckFunctionUtils.recover(supplier, resultPredicate, resultHandler);
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler) {
+        public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction1<Throwable, T> exceptionHandler) {
             supplier = CheckFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(Function<Throwable, T> exceptionHandler) {
+        public DecorateCheckedSupplier<T> withFallback(CheckedFunction1<Throwable, T> exceptionHandler) {
             supplier = CheckFunctionUtils.recover(supplier, exceptionHandler);
             return this;
         }
 
-        public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, Function<Throwable, T> exceptionHandler) {
+        public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, CheckedFunction1<Throwable, T> exceptionHandler) {
             supplier = CheckFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
             return this;
         }
