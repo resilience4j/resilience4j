@@ -21,6 +21,7 @@ package io.github.resilience4j.decorators;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -42,12 +43,12 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 public class DecoratorsTest {
 
@@ -85,15 +86,11 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         CompletionStage<String> completionStage = Decorators
-            .ofCompletionStage(bulkhead.decorateSupplier(() -> {
-                try {
-                    Thread.sleep(1000);
-                    return "Bla";
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    return "Bla";
-                }
-            }))
+            .ofCallable(() -> {
+                Thread.sleep(1000);
+                return "Bla";
+            })
+            .withThreadPoolBulkhead(bulkhead)
             .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
             .withCircuitBreaker(circuitBreaker)
             .get();
@@ -128,6 +125,168 @@ public class DecoratorsTest {
     }
 
     @Test
+    public void testDecorateSupplierWithFallbackFromResult() {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Supplier<String> decoratedSupplier = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .decorate();
+
+        String result = decoratedSupplier.get();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCallableWithFallbackFromResult() throws Exception {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Callable<String> decoratedSupplier = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException ())
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .decorate();
+
+        String result = decoratedSupplier.call();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateCheckedSupplierWithFallbackFromResult() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        CheckedFunction0<String> decoratedSupplier = Decorators
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .decorate();
+
+        String result = decoratedSupplier.apply();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateCompletionStageWithFallbackFromResult() throws Throwable {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Supplier<CompletionStage<String>> completionStageSupplier =
+            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+        CompletionStage<String> completionStage = Decorators
+            .ofCompletionStage(completionStageSupplier)
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateSupplierWithThreadPoolBulkhead()
+        throws ExecutionException, InterruptedException {
+
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        CompletableFuture<String> future = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withThreadPoolBulkhead(ThreadPoolBulkhead.ofDefaults("helloBackend"))
+            .withTimeLimiter(TimeLimiter.ofDefaults(), Executors.newSingleThreadScheduledExecutor())
+            .withCircuitBreaker(circuitBreaker)
+            .get().toCompletableFuture();
+
+        String result = future.get();
+
+        assertThat(result).isEqualTo("Hello world");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateRunnableWithThreadPoolBulkhead()
+        throws ExecutionException, InterruptedException {
+
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        CompletableFuture<Void> future = Decorators
+            .ofRunnable(() -> helloWorldService.sayHelloWorld())
+            .withThreadPoolBulkhead(ThreadPoolBulkhead.ofDefaults("helloBackend"))
+            .withCircuitBreaker(circuitBreaker)
+            .get().toCompletableFuture();
+
+        future.get();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).sayHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCallable() throws Exception {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Callable<String> decoratedCallable = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
+
+        String result = decoratedCallable.call();
+
+        assertThat(result).isEqualTo("Hello world");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateSupplierWithFallback() {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+
+        Supplier<String> decoratedSupplier = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(asList(IOException.class, CallNotPermittedException.class), (e) -> "Fallback")
+            .decorate();
+
+        String result = decoratedSupplier.get();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        then(helloWorldService).should(never()).returnHelloWorld();
+    }
+
+    @Test
     public void testDecorateCheckedSupplier() throws IOException {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -146,6 +305,68 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateCheckedSupplierWithFallback() throws Throwable {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+
+        CheckedFunction0<String> checkedSupplier = Decorators
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(CallNotPermittedException.class, e -> "Fallback")
+            .decorate();
+
+        String result = checkedSupplier.apply();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        then(helloWorldService).should(never()).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCallableWithFallback() throws Throwable {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+
+        Callable<String> callable = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(CallNotPermittedException.class, e -> "Fallback")
+            .decorate();
+
+        String result = callable.call();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        then(helloWorldService).should(never()).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCompletionStageWithFallback() throws ExecutionException, InterruptedException {
+        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(100)).build());
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        CompletionStage<String> completionStage = Decorators
+            .ofCallable(() -> {
+                Thread.sleep(1000);
+                return "Bla";
+            })
+            .withThreadPoolBulkhead(bulkhead)
+            .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(asList(TimeoutException.class, CallNotPermittedException.class), (e) -> "Fallback")
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test
@@ -190,29 +411,6 @@ public class DecoratorsTest {
 
     @Test
     public void testDecorateCompletionStage() throws ExecutionException, InterruptedException {
-        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        Supplier<CompletionStage<String>> completionStageSupplier =
-            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
-        CompletionStage<String> completionStage = Decorators
-            .ofCompletionStage(completionStageSupplier)
-            .withCircuitBreaker(circuitBreaker)
-            .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
-            .withBulkhead(Bulkhead.ofDefaults("testName"))
-            .get();
-
-        String value = completionStage.toCompletableFuture().get();
-
-        assertThat(value).isEqualTo("Hello world");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        then(helloWorldService).should(times(1)).returnHelloWorld();
-    }
-
-    @Test
-    public void testDecorateCompletionStageNewAPI()
-        throws ExecutionException, InterruptedException {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Supplier<CompletionStage<String>> completionStageSupplier =
