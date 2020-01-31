@@ -97,4 +97,15 @@ public class CompletionStageUtilsTest {
         assertThat(result).isEqualTo("fallback");
     }
 
+    @Test
+    public void shouldRecoverSupplierFromSpecificResult()
+        throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<String> future = CompletableFuture.completedFuture("Wrong Result");
+
+        String result = recover(future, (r) -> r.equals("Wrong Result"), (r) -> "Bla").toCompletableFuture()
+            .get(1, TimeUnit.SECONDS);
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
 }

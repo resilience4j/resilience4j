@@ -37,6 +37,50 @@ public class CheckFunctionUtilsTest {
         assertThat(result).isEqualTo("Bla");
     }
 
+    @Test
+    public void shouldRecoverFromResult() throws Throwable {
+        CheckedFunction0<String> callable = () -> "Wrong Result";
+
+        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.andThen(callable, (result, ex) -> {
+            if(result.equals("Wrong Result")){
+                return "Bla";
+            }
+            return result;
+        });
+
+        String result = callableWithRecovery.apply();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
+    public void shouldRecoverFromException2() throws Throwable {
+        CheckedFunction0<String> callable = () -> {
+            throw new IllegalArgumentException("BAM!");
+        };
+        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.andThen(callable, (result, ex) -> {
+            if(ex instanceof IllegalArgumentException){
+                return "Bla";
+            }
+            return result;
+        });
+
+        String result = callableWithRecovery.apply();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
+    public void shouldRecoverFromSpecificResult() throws Throwable {
+        CheckedFunction0<String> supplier = () -> "Wrong Result";
+
+        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
+        String result = callableWithRecovery.apply();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+
     @Test(expected = RuntimeException.class)
     public void shouldRethrowException() throws Throwable {
         CheckedFunction0<String> callable = () -> {

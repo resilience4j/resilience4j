@@ -21,7 +21,9 @@ package io.github.resilience4j.core;
 import io.vavr.CheckedFunction0;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class CheckFunctionUtils {
 
@@ -46,6 +48,47 @@ public class CheckFunctionUtils {
             } catch (Throwable throwable) {
                 return exceptionHandler.apply(throwable);
             }
+        };
+    }
+
+    /**
+     * Returns a composed function that first applies the function and then applies {@linkplain
+     * BiFunction} {@code after} to the result.
+     *
+     * @param <T>     return type of callable
+     * @param <R>     return type of handler
+     * @param function the function
+     * @param handler the function applied after callable
+     * @return a function composed of supplier and handler
+     */
+    public static <T, R> CheckedFunction0<R> andThen(CheckedFunction0<T> function,
+        BiFunction<T, Throwable, R> handler) {
+        return () -> {
+            try {
+                return handler.apply(function.apply(), null);
+            } catch (Throwable throwable) {
+                return handler.apply(null, throwable);
+            }
+        };
+    }
+
+    /**
+     * Returns a composed function that first executes the function and optionally recovers from a specific result.
+     *
+     * @param <T>              return type of after
+     * @param function the function
+     * @param resultPredicate the result predicate
+     * @param resultHandler the result handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> CheckedFunction0<T> recover(CheckedFunction0<T> function,
+        Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        return () -> {
+            T result = function.apply();
+            if(resultPredicate.test(result)){
+                return resultHandler.apply(result);
+            }
+            return result;
         };
     }
 

@@ -125,6 +125,85 @@ public class DecoratorsTest {
     }
 
     @Test
+    public void testDecorateSupplierWithFallbackFromResult() {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Supplier<String> decoratedSupplier = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .decorate();
+
+        String result = decoratedSupplier.get();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCallableWithFallbackFromResult() throws Exception {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Callable<String> decoratedSupplier = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorld())
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .decorate();
+
+        String result = decoratedSupplier.call();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateCheckedSupplierWithFallbackFromResult() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        CheckedFunction0<String> decoratedSupplier = Decorators
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .decorate();
+
+        String result = decoratedSupplier.apply();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateCompletionStageWithFallbackFromResult() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        Supplier<CompletionStage<String>> completionStageSupplier =
+            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
+        CompletionStage<String> completionStage = Decorators
+            .ofCompletionStage(completionStageSupplier)
+            .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
+            .withCircuitBreaker(circuitBreaker)
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Bla");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
     public void testDecorateSupplierWithThreadPoolBulkhead()
         throws ExecutionException, InterruptedException {
 

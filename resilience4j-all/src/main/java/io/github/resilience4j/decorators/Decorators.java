@@ -19,9 +19,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * A Decorator builder which can be used to apply multiple decorators to a (Checked-)Supplier,
@@ -105,6 +103,16 @@ public interface Decorators {
 
         public DecorateSupplier<T> withFallback(Function<Throwable, T> exceptionHandler) {
             supplier = SupplierUtils.recover(supplier, exceptionHandler);
+            return this;
+        }
+
+        public DecorateSupplier<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+            supplier = SupplierUtils.recover(supplier, resultPredicate, resultHandler);
+            return this;
+        }
+
+        public DecorateSupplier<T> withFallback(BiFunction<T, Throwable, T> handler) {
+            supplier = SupplierUtils.andThen(supplier, handler);
             return this;
         }
 
@@ -251,6 +259,16 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCallable<T> withFallback(BiFunction<T, Throwable, T> handler) {
+            callable = CallableUtils.andThen(callable, handler);
+            return this;
+        }
+
+        public DecorateCallable<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+            callable = CallableUtils.recover(callable, resultPredicate, resultHandler);
+            return this;
+        }
+
         public DecorateCallable<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler) {
             callable = CallableUtils.recover(callable, exceptionTypes, exceptionHandler);
             return this;
@@ -313,6 +331,16 @@ public interface Decorators {
 
         public DecorateCheckedSupplier<T> withBulkhead(Bulkhead bulkhead) {
             supplier = Bulkhead.decorateCheckedSupplier(bulkhead, supplier);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(BiFunction<T, Throwable, T> handler) {
+            supplier = CheckFunctionUtils.andThen(supplier, handler);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+            supplier = CheckFunctionUtils.recover(supplier, resultPredicate, resultHandler);
             return this;
         }
 
@@ -467,6 +495,16 @@ public interface Decorators {
         public DecorateCompletionStage<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
             stageSupplier = RateLimiter
                 .decorateCompletionStage(rateLimiter, permits, stageSupplier);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withFallback(Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+            stageSupplier = CompletionStageUtils.recover(stageSupplier, resultPredicate, resultHandler);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withFallback(BiFunction<T, Throwable, T> handler) {
+            stageSupplier = CompletionStageUtils.andThen(stageSupplier, handler);
             return this;
         }
 

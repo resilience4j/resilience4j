@@ -60,6 +60,16 @@ public class SupplierUtilsTest {
     }
 
     @Test
+    public void shouldRecoverSupplierFromSpecificResult() {
+        Supplier<String> supplier = () -> "Wrong Result";
+
+        Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
+        String result = supplierWithRecovery.get();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
     public void shouldRecoverSupplierFromSpecificException() {
         Supplier<String> supplier = () -> {
             throw new IllegalArgumentException("BAM!");

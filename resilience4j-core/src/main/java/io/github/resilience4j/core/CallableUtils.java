@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class CallableUtils {
 
@@ -104,6 +105,26 @@ public class CallableUtils {
             } catch (Exception exception) {
                 return exceptionHandler.apply(exception);
             }
+        };
+    }
+
+    /**
+     * Returns a composed Callable that first executes the Callable and optionally recovers from a specific result.
+     *
+     * @param <T>              return type of after
+     * @param callable the callable
+     * @param resultPredicate the result predicate
+     * @param resultHandler the result handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> Callable<T> recover(Callable<T> callable,
+        Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        return () -> {
+            T result = callable.call();
+            if(resultPredicate.test(result)){
+                return resultHandler.apply(result);
+            }
+            return result;
         };
     }
 

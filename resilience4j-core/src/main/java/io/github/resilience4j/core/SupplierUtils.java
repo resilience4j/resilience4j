@@ -21,6 +21,7 @@ package io.github.resilience4j.core;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class SupplierUtils {
@@ -29,7 +30,7 @@ public class SupplierUtils {
     }
 
     /**
-     * Returns a composed function that first applies the Supplier and then applies the
+     * Returns a composed Supplier that first applies the Supplier and then applies the
      * resultHandler.
      *
      * @param <T>           return type of callable
@@ -43,7 +44,7 @@ public class SupplierUtils {
     }
 
     /**
-     * Returns a composed function that first applies the Supplier and then applies {@linkplain
+     * Returns a composed Supplier that first applies the Supplier and then applies {@linkplain
      * BiFunction} {@code after} to the result.
      *
      * @param <T>     return type of after
@@ -60,6 +61,26 @@ public class SupplierUtils {
             } catch (Exception exception) {
                 return handler.apply(null, exception);
             }
+        };
+    }
+
+    /**
+     * Returns a composed Supplier that first executes the Supplier and optionally recovers from a specific result.
+     *
+     * @param <T>              return type of after
+     * @param supplier the supplier
+     * @param resultPredicate the result predicate
+     * @param resultHandler the result handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> Supplier<T> recover(Supplier<T> supplier,
+        Predicate<T> resultPredicate, Function<T, T> resultHandler) {
+        return () -> {
+            T result = supplier.get();
+            if(resultPredicate.test(result)){
+                return resultHandler.apply(result);
+            }
+            return result;
         };
     }
 

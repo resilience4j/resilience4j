@@ -23,7 +23,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class CompletionStageUtils {
@@ -159,5 +161,55 @@ public class CompletionStageUtils {
         Supplier<CompletionStage<T>> completionStageSupplier, List<Class<? extends Throwable>> exceptionTypes,
         Function<Throwable, T> exceptionHandler) {
         return () -> recover(completionStageSupplier.get(), exceptionTypes, exceptionHandler);
+    }
+
+    /**
+     * Returns a composed CompletionStage that first executes the CompletionStage and optionally recovers from a specific result.
+     *
+     * @param <T>              return type of after
+     * @param completionStage  the completionStage which should be recovered from a certain exception
+     * @param resultPredicate the result predicate
+     * @param resultHandler the result handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> CompletionStage<T> recover(
+        CompletionStage<T> completionStage, Predicate<T> resultPredicate,
+        Function<T, T> resultHandler) {
+        return completionStage.thenApply(result -> {
+            if(resultPredicate.test(result)){
+                return resultHandler.apply(result);
+            }else{
+                return result;
+            }
+        });
+    }
+
+    /**
+     * Returns a composed CompletionStage that first executes the CompletionStage and optionally recovers from a specific result.
+     *
+     * @param <T>              return type of after
+     * @param completionStageSupplier the CompletionStage supplier
+     * @param resultPredicate the result predicate
+     * @param resultHandler the result handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> Supplier<CompletionStage<T>> recover(
+        Supplier<CompletionStage<T>> completionStageSupplier, Predicate<T> resultPredicate,
+        Function<T, T> resultHandler) {
+        return () -> recover(completionStageSupplier.get(), resultPredicate, resultHandler);
+    }
+
+    /**
+     * Returns a composed CompletionStage that first applies the CompletionStage and then applies {@linkplain
+     * BiFunction} {@code after} to the result.
+     *
+     * @param <T>     return type of after
+     * @param completionStageSupplier the CompletionStage supplier
+     * @param handler the function applied after supplier
+     * @return a function composed of supplier and handler
+     */
+    public static <T, R> Supplier<CompletionStage<R>> andThen(Supplier<CompletionStage<T>> completionStageSupplier,
+        BiFunction<T, Throwable, R> handler) {
+        return () -> completionStageSupplier.get().handle(handler);
     }
 }
