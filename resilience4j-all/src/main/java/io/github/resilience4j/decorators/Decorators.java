@@ -23,8 +23,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.*;
 
 /**
- * A Decorator builder which can be used to apply multiple decorators to a (Checked-)Supplier,
- * (Checked-)Function, (Checked-)Runnable, (Checked-)CompletionStage or (Checked-)Consumer.
+ * A Decorator builder which can be used to apply multiple decorators to a Supplier, Callable
+ * Function, Runnable, CompletionStage or Consumer.
  * <p></p>
  * Decorators are applied in the order of the builder chain. For example, consider:
  *
