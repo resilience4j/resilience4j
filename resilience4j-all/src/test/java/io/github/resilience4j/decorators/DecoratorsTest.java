@@ -43,6 +43,7 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -99,30 +100,6 @@ public class DecoratorsTest {
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-    }
-
-    @Test
-    public void shouldRecoverTimeoutException() throws ExecutionException, InterruptedException {
-        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
-            .timeoutDuration(Duration.ofMillis(100)).build());
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
-        CompletionStage<String> completionStage = Decorators
-            .ofCallable(() -> {
-                Thread.sleep(1000);
-                return "Bla";
-            })
-            .withThreadPoolBulkhead(bulkhead)
-            .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
-            .withCircuitBreaker(circuitBreaker)
-            .withFallback(TimeoutException.class, (e) -> "Fallback")
-            .get();
-
-        String result = completionStage.toCompletableFuture().get();
-
-        assertThat(result).isEqualTo("Fallback");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
@@ -219,7 +196,7 @@ public class DecoratorsTest {
         Supplier<String> decoratedSupplier = Decorators
             .ofSupplier(() -> helloWorldService.returnHelloWorld())
             .withCircuitBreaker(circuitBreaker)
-            .withFallback(CallNotPermittedException.class, e -> "Fallback")
+            .withFallback(asList(IOException.class, CallNotPermittedException.class), (e) -> "Fallback")
             .decorate();
 
         String result = decoratedSupplier.get();
@@ -287,6 +264,30 @@ public class DecoratorsTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
         then(helloWorldService).should(never()).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCompletionStageWithFallback() throws ExecutionException, InterruptedException {
+        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(100)).build());
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        CompletionStage<String> completionStage = Decorators
+            .ofCallable(() -> {
+                Thread.sleep(1000);
+                return "Bla";
+            })
+            .withThreadPoolBulkhead(bulkhead)
+            .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(asList(TimeoutException.class, CallNotPermittedException.class), (e) -> "Fallback")
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
     @Test

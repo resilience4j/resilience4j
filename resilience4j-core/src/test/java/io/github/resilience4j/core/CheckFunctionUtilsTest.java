@@ -5,16 +5,32 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CheckFunctionUtilsTest {
 
     @Test
-    public void shouldRecoverCallableFromException() throws Throwable {
+    public void shouldRecoverFromException() throws Throwable {
         CheckedFunction0<String> callable = () -> {
             throw new IOException("BAM!");
         };
         CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(callable, (ex) -> "Bla");
+
+        String result = callableWithRecovery.apply();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
+    public void shouldRecoverFromSpecificExceptions() throws Throwable {
+        CheckedFunction0<String> callable = () -> {
+            throw new IOException("BAM!");
+        };
+
+        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(callable,
+            asList(IllegalArgumentException.class, IOException.class),
+            (ex) -> "Bla");
 
         String result = callableWithRecovery.apply();
 

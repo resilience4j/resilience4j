@@ -2,8 +2,10 @@ package io.github.resilience4j.core;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SupplierUtilsTest {
@@ -63,6 +65,21 @@ public class SupplierUtilsTest {
             throw new IllegalArgumentException("BAM!");
         };
         Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, RuntimeException.class, (ex) -> "Bla");
+
+        String result = supplierWithRecovery.get();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
+    public void shouldRecoverSupplierFromSpecificExceptions() {
+        Supplier<String> supplier = () -> {
+            throw new IllegalArgumentException("BAM!");
+        };
+
+        Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier,
+            asList(IllegalArgumentException.class, IOException.class),
+            (ex) -> "Bla");
 
         String result = supplierWithRecovery.get();
 

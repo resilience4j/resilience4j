@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.core;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -45,6 +46,31 @@ public class CompletionStageUtils {
      * Returns a CompletionStage that is recovered from a specific exception.
      *
      * @param completionStage the completionStage which should be recovered from a certain exception
+     * @param exceptionTypes the specific exception types that should be recovered
+     * @param exceptionHandler the function applied after callable has failed
+     * @return a CompletionStage that is recovered from a specific exception.
+     */
+    public static <X extends Throwable, T> CompletionStage<T> recover(CompletionStage<T> completionStage, List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler){
+        CompletableFuture<T> promise = new CompletableFuture<>();
+        completionStage.whenComplete((result, throwable) -> {
+            if (throwable != null){
+                if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
+                    tryRecover(exceptionTypes, exceptionHandler, promise, throwable.getCause());
+                }else{
+                    tryRecover(exceptionTypes, exceptionHandler, promise, throwable);
+                }
+
+            } else {
+                promise.complete(result);
+            }
+        });
+        return promise;
+    }
+
+    /**
+     * Returns a CompletionStage that is recovered from a specific exception.
+     *
+     * @param completionStage the completionStage which should be recovered from a certain exception
      * @param exceptionType the specific exception type that should be recovered
      * @param exceptionHandler the function applied after callable has failed
      * @return a CompletionStage that is recovered from a specific exception.
@@ -64,6 +90,20 @@ public class CompletionStageUtils {
             }
         });
         return promise;
+    }
+
+    private static <T> void tryRecover(List<Class<? extends Throwable>> exceptionTypes,
+        Function<Throwable, T> exceptionHandler, CompletableFuture<T> promise,
+        Throwable throwable) {
+        if(exceptionTypes.stream().anyMatch(exceptionType -> exceptionType.isAssignableFrom(throwable.getClass()))) {
+            try {
+                promise.complete(exceptionHandler.apply(throwable));
+            } catch (Exception fallbackException) {
+                promise.completeExceptionally(fallbackException);
+            }
+        }else{
+            promise.completeExceptionally(throwable);
+        }
     }
 
     private static <X extends Throwable, T> void tryRecover(Class<X> exceptionType,
@@ -105,5 +145,19 @@ public class CompletionStageUtils {
         Supplier<CompletionStage<T>> completionStageSupplier, Class<X> exceptionType,
         Function<Throwable, T> exceptionHandler) {
         return () -> recover(completionStageSupplier.get(), exceptionType, exceptionHandler);
+    }
+
+    /**
+     * Returns a decorated CompletionStage that is recovered from a specific exception.
+     *
+     * @param completionStageSupplier a supplier of the completionStage which should be recovered from a certain exception
+     * @param exceptionTypes the specific exception types that should be recovered
+     * @param exceptionHandler the function applied after callable has failed
+     * @return a CompletionStage that is recovered from a specific exception.
+     */
+    public static <T, X extends Throwable> Supplier<CompletionStage<T>> recover(
+        Supplier<CompletionStage<T>> completionStageSupplier, List<Class<? extends Throwable>> exceptionTypes,
+        Function<Throwable, T> exceptionHandler) {
+        return () -> recover(completionStageSupplier.get(), exceptionTypes, exceptionHandler);
     }
 }

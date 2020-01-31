@@ -15,6 +15,7 @@ import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
@@ -107,8 +108,8 @@ public interface Decorators {
             return this;
         }
 
-        public <X extends Throwable> DecorateSupplier<T> withFallback(Class<X> exceptionType, Function<Throwable, T> exceptionHandler) {
-            supplier = SupplierUtils.recover(supplier, exceptionType, exceptionHandler);
+        public DecorateSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler) {
+            supplier = SupplierUtils.recover(supplier, exceptionTypes, exceptionHandler);
             return this;
         }
 
@@ -123,8 +124,6 @@ public interface Decorators {
         public T get() {
             return supplier.get();
         }
-
-
     }
 
     class DecorateFunction<T, R> {
@@ -252,6 +251,11 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCallable<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler) {
+            callable = CallableUtils.recover(callable, exceptionTypes, exceptionHandler);
+            return this;
+        }
+
         public DecorateCallable<T> withFallback(Function<Throwable, T> exceptionHandler) {
             callable = CallableUtils.recover(callable, exceptionHandler);
             return this;
@@ -309,6 +313,11 @@ public interface Decorators {
 
         public DecorateCheckedSupplier<T> withBulkhead(Bulkhead bulkhead) {
             supplier = Bulkhead.decorateCheckedSupplier(bulkhead, supplier);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler) {
+            supplier = CheckFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
             return this;
         }
 
@@ -458,6 +467,11 @@ public interface Decorators {
         public DecorateCompletionStage<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
             stageSupplier = RateLimiter
                 .decorateCompletionStage(rateLimiter, permits, stageSupplier);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, T> exceptionHandler) {
+            stageSupplier = CompletionStageUtils.recover(stageSupplier, exceptionTypes, exceptionHandler);
             return this;
         }
 

@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.core;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -78,6 +79,32 @@ public class SupplierUtils {
                 return supplier.get();
             } catch (Exception exception) {
                 return exceptionHandler.apply(exception);
+            }
+        };
+    }
+
+    /**
+     * Returns a composed function that first executes the Supplier and optionally recovers from an
+     * exception.
+     *
+     * @param <T>              return type of after
+     * @param supplier the supplier which should be recovered from a certain exception
+     * @param exceptionTypes the specific exception types that should be recovered
+     * @param exceptionHandler the exception handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> Supplier<T> recover(Supplier<T> supplier,
+        List<Class<? extends Throwable>> exceptionTypes,
+        Function<Throwable, T> exceptionHandler) {
+        return () -> {
+            try {
+                return supplier.get();
+            } catch (Exception exception) {
+                if(exceptionTypes.stream().anyMatch(exceptionType -> exceptionType.isAssignableFrom(exception.getClass()))){
+                    return exceptionHandler.apply(exception);
+                }else{
+                    throw exception;
+                }
             }
         };
     }

@@ -20,6 +20,7 @@ package io.github.resilience4j.core;
 
 import io.vavr.CheckedFunction0;
 
+import java.util.List;
 import java.util.function.Function;
 
 public class CheckFunctionUtils {
@@ -29,7 +30,7 @@ public class CheckFunctionUtils {
 
 
     /**
-     * Returns a composed function that first executes the Callable and optionally recovers from an
+     * Returns a composed function that first executes the function and optionally recovers from an
      * exception.
      *
      * @param <T>              return type of after
@@ -49,7 +50,33 @@ public class CheckFunctionUtils {
     }
 
     /**
-     * Returns a composed function that first executes the Callable and optionally recovers from an
+     * Returns a composed function that first executes the function and optionally recovers from an
+     * exception.
+     *
+     * @param <T>              return type of after
+     * @param function the function which should be recovered from a certain exception
+     * @param exceptionTypes the specific exception types that should be recovered
+     * @param exceptionHandler the exception handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> CheckedFunction0<T> recover(CheckedFunction0<T> function,
+        List<Class<? extends Throwable>> exceptionTypes,
+        Function<Throwable, T> exceptionHandler) {
+        return () -> {
+            try {
+                return function.apply();
+            } catch (Exception exception) {
+                if(exceptionTypes.stream().anyMatch(exceptionType -> exceptionType.isAssignableFrom(exception.getClass()))){
+                    return exceptionHandler.apply(exception);
+                }else{
+                    throw exception;
+                }
+            }
+        };
+    }
+
+    /**
+     * Returns a composed function that first executes the function and optionally recovers from an
      * exception.
      *
      * @param <T>              return type of after

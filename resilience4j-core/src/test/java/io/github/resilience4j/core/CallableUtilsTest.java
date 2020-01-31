@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CallableUtilsTest {
@@ -52,6 +53,21 @@ public class CallableUtilsTest {
             throw new IOException("BAM!");
         };
         Callable<String> callableWithRecovery = CallableUtils.recover(callable, (ex) -> "Bla");
+
+        String result = callableWithRecovery.call();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
+    @Test
+    public void shouldRecoverSupplierFromSpecificExceptions() throws Exception {
+        Callable<String> callable = () -> {
+            throw new IOException("BAM!");
+        };
+
+        Callable<String> callableWithRecovery = CallableUtils.recover(callable,
+            asList(IllegalArgumentException.class, IOException.class),
+            (ex) -> "Bla");
 
         String result = callableWithRecovery.call();
 
