@@ -72,7 +72,7 @@ public interface ThreadPoolBulkhead {
      * @param runnable the original runnable
      * @return a runnable which is decorated by a bulkhead.
      */
-    static Runnable decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) {
+    static Supplier<CompletionStage<Void>> decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) {
         return () -> bulkhead.submit(runnable);
     }
 
@@ -127,18 +127,19 @@ public interface ThreadPoolBulkhead {
      *
      * @param task the task to submit
      * @param <T>  the type of the task's result
-     * @return a CompletableFuture representing listenable future completion of the task
+     * @return a CompletionStage representing the pending results of the task
      * @throws BulkheadFullException if the no permits
      */
     <T> CompletionStage<T> submit(Callable<T> task);
 
     /**
-     * Submits a task for execution.
+     * Returns a supplier which submits a task for execution to the ThreadPoolBulkhead and returns a CompletionStage.
      *
      * @param task the task to submit
+     * @return a CompletionStage representing the pending task
      * @throws BulkheadFullException if the no permits
      */
-    void submit(Runnable task);
+    CompletionStage<Void> submit(Runnable task);
 
     /**
      * Returns the name of this bulkhead.
@@ -202,6 +203,17 @@ public interface ThreadPoolBulkhead {
         return decorateCallable(this, callable);
     }
 
+    /**
+     * Returns a supplier which submits a task for execution to the ThreadPoolBulkhead and returns a CompletionStage.
+     *
+     * @param runnable the original Runnable
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task.
+     */
+    default Supplier<CompletionStage<Void>> decorateRunnable(Runnable runnable) {
+        return decorateRunnable(this, runnable);
+    }
+
 
     /**
      * Submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
@@ -229,12 +241,13 @@ public interface ThreadPoolBulkhead {
     }
 
     /**
-     * Decorates and executes the decorated Runnable.
+     * Submits a task for execution to the ThreadPoolBulkhead and returns a CompletionStage.
      *
-     * @param runnable the original Runnable
+     * @param runnable the task
+     * @return the result of the decorated Callable.
      */
-    default void executeRunnable(Runnable runnable) {
-        decorateRunnable(this, runnable).run();
+    default CompletionStage<Void> executeRunnable(Runnable runnable) {
+        return decorateRunnable(this, runnable).get();
     }
 
     interface Metrics {

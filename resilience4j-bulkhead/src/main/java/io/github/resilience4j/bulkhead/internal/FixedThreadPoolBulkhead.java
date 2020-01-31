@@ -33,7 +33,6 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
@@ -139,7 +138,6 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     public <T> CompletableFuture<T> submit(Callable<T> callable) {
         final CompletableFuture<T> promise = new CompletableFuture<>();
         try {
-
             CompletableFuture.supplyAsync(ContextPropagator.decorateSupplier(config.getContextPropagator(),() -> {
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
@@ -166,7 +164,8 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
      * @param runnable the runnable to execute through bulk head thread pool
      */
     @Override
-    public void submit(Runnable runnable) {
+    public CompletableFuture<Void> submit(Runnable runnable) {
+        final CompletableFuture<Void> promise = new CompletableFuture<>();
         try {
             CompletableFuture.runAsync(ContextPropagator.decorateRunnable(config.getContextPropagator(),() -> {
                 try {
@@ -175,12 +174,19 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
-            }), executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(
-                () -> new BulkheadOnCallFinishedEvent(name)));
+            }), executorService).whenComplete((result, throwable) -> {
+                publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
+                if (throwable != null) {
+                    promise.completeExceptionally(throwable);
+                } else {
+                    promise.complete(result);
+                }
+            });
         } catch (RejectedExecutionException rejected) {
             publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
             throw BulkheadFullException.createBulkheadFullException(this);
         }
+        return promise;
     }
 
     /**

@@ -18,9 +18,12 @@
  */
 package io.github.resilience4j.core;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public class CallableUtils {
 
@@ -33,6 +36,7 @@ public class CallableUtils {
      *
      * @param <T>           return type of callable
      * @param <R>           return type of handler
+     * @param callable the callable
      * @param resultHandler the function applied after callable
      * @return a function composed of supplier and resultHandler
      */
@@ -46,11 +50,12 @@ public class CallableUtils {
      *
      * @param <T>     return type of callable
      * @param <R>     return type of handler
+     * @param callable the callable
      * @param handler the function applied after callable
      * @return a function composed of supplier and handler
      */
     public static <T, R> Callable<R> andThen(Callable<T> callable,
-        BiFunction<T, Exception, R> handler) {
+        BiFunction<T, Throwable, R> handler) {
         return () -> {
             try {
                 T result = callable.call();
@@ -67,12 +72,13 @@ public class CallableUtils {
      *
      * @param <T>              return type of callable
      * @param <R>              return type of resultHandler and exceptionHandler
+     * @param callable the callable
      * @param resultHandler    the function applied after callable was successful
      * @param exceptionHandler the function applied after callable has failed
      * @return a function composed of supplier and handler
      */
     public static <T, R> Callable<R> andThen(Callable<T> callable, Function<T, R> resultHandler,
-        Function<Exception, R> exceptionHandler) {
+        Function<Throwable, R> exceptionHandler) {
         return () -> {
             try {
                 T result = callable.call();
@@ -88,16 +94,89 @@ public class CallableUtils {
      * exception.
      *
      * @param <T>              return type of after
+     * @param callable the callable which should be recovered from a certain exception
      * @param exceptionHandler the exception handler
      * @return a function composed of callable and exceptionHandler
      */
     public static <T> Callable<T> recover(Callable<T> callable,
-        Function<Exception, T> exceptionHandler) {
+        Function<Throwable, T> exceptionHandler) {
         return () -> {
             try {
                 return callable.call();
             } catch (Exception exception) {
                 return exceptionHandler.apply(exception);
+            }
+        };
+    }
+
+    /**
+     * Returns a composed Callable that first executes the Callable and optionally recovers from a specific result.
+     *
+     * @param <T>              return type of after
+     * @param callable the callable
+     * @param resultPredicate the result predicate
+     * @param resultHandler the result handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> Callable<T> recover(Callable<T> callable,
+        Predicate<T> resultPredicate, UnaryOperator<T> resultHandler) {
+        return () -> {
+            T result = callable.call();
+            if(resultPredicate.test(result)){
+                return resultHandler.apply(result);
+            }
+            return result;
+        };
+    }
+
+    /**
+     * Returns a composed function that first executes the Callable and optionally recovers from an
+     * exception.
+     *
+     * @param <T>              return type of after
+     * @param callable the callable which should be recovered from a certain exception
+     * @param exceptionTypes the specific exception types that should be recovered
+     * @param exceptionHandler the exception handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <T> Callable<T> recover(Callable<T> callable,
+        List<Class<? extends Throwable>> exceptionTypes,
+        Function<Throwable, T> exceptionHandler) {
+        return () -> {
+            try {
+                return callable.call();
+            } catch (Exception exception) {
+                if(exceptionTypes.stream().anyMatch(exceptionType -> exceptionType.isAssignableFrom(exception.getClass()))){
+                    return exceptionHandler.apply(exception);
+                }else{
+                    throw exception;
+                }
+            }
+        };
+    }
+
+    /**
+     * Returns a composed function that first executes the Callable and optionally recovers from an
+     * exception.
+     *
+     * @param <T>              return type of after
+     * @param callable the callable which should be recovered from a certain exception
+     * @param exceptionType the specific exception type that should be recovered
+     * @param exceptionHandler the exception handler
+     * @return a function composed of callable and exceptionHandler
+     */
+    public static <X extends Throwable, T> Callable<T> recover(Callable<T> callable,
+        Class<X> exceptionType,
+        Function<Throwable, T> exceptionHandler) {
+        return () -> {
+            try {
+                return callable.call();
+            } catch (Exception exception) {
+                if(exceptionType.isAssignableFrom(exception.getClass())) {
+                    return exceptionHandler.apply(exception);
+                }else{
+                    throw exception;
+                }
             }
         };
     }
