@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.core;
 
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -39,8 +38,6 @@ public class CompletionStageUtils {
      * @return a CompletionStage that is recovered from any exception.
      */
     public static <T> CompletionStage<T> recover(CompletionStage<T> completionStage, Function<Throwable, T> exceptionHandler){
-        Objects.requireNonNull(completionStage, "completionStage is null");
-        Objects.requireNonNull(exceptionHandler, "exceptionHandler is null");
         return completionStage.exceptionally(exceptionHandler);
     }
 
@@ -53,9 +50,6 @@ public class CompletionStageUtils {
      * @return a CompletionStage that is recovered from a specific exception.
      */
     public static <X extends Throwable, T> CompletionStage<T> recover(CompletionStage<T> completionStage, Class<X> exceptionType, Function<Throwable, T> exceptionHandler){
-        Objects.requireNonNull(completionStage, "completionStage is null");
-        Objects.requireNonNull(exceptionType, "exceptionType is null");
-        Objects.requireNonNull(exceptionHandler, "exceptionHandler is null");
         CompletableFuture<T> promise = new CompletableFuture<>();
         completionStage.whenComplete((result, throwable) -> {
             if (throwable != null){
@@ -96,8 +90,6 @@ public class CompletionStageUtils {
     public static <T> Supplier<CompletionStage<T>> recover(
         Supplier<CompletionStage<T>> completionStageSupplier,
         Function<Throwable, T> exceptionHandler) {
-        Objects.requireNonNull(completionStageSupplier, "completionStageSupplier is null");
-        Objects.requireNonNull(exceptionHandler, "exceptionHandler is null");
         return () -> recover(completionStageSupplier.get(), exceptionHandler);
     }
 
@@ -112,9 +104,6 @@ public class CompletionStageUtils {
     public static <T, X extends Throwable> Supplier<CompletionStage<T>> recover(
         Supplier<CompletionStage<T>> completionStageSupplier, Class<X> exceptionType,
         Function<Throwable, T> exceptionHandler) {
-        Objects.requireNonNull(completionStageSupplier, "completionStageSupplier is null");
-        Objects.requireNonNull(exceptionType, "exceptionType is null");
-        Objects.requireNonNull(exceptionHandler, "exceptionHandler is null");
         return () -> recover(completionStageSupplier.get(), exceptionType, exceptionHandler);
     }
 }

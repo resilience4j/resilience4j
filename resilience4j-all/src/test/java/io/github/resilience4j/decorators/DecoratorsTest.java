@@ -85,15 +85,11 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         CompletionStage<String> completionStage = Decorators
-            .ofCompletionStage(bulkhead.decorateSupplier(() -> {
-                try {
-                    Thread.sleep(1000);
-                    return "Bla";
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    return "Bla";
-                }
-            }))
+            .ofCallable(() -> {
+                Thread.sleep(1000);
+                return "Bla";
+            })
+            .withThreadPoolBulkhead(bulkhead)
             .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
             .withCircuitBreaker(circuitBreaker)
             .get();
@@ -103,6 +99,30 @@ public class DecoratorsTest {
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldRecoverTimeoutException() throws ExecutionException, InterruptedException {
+        TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
+            .timeoutDuration(Duration.ofMillis(100)).build());
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        CompletionStage<String> completionStage = Decorators
+            .ofCallable(() -> {
+                Thread.sleep(1000);
+                return "Bla";
+            })
+            .withThreadPoolBulkhead(bulkhead)
+            .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(TimeoutException.class, (e) -> "Fallback")
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
     }
 
@@ -311,29 +331,6 @@ public class DecoratorsTest {
 
     @Test
     public void testDecorateCompletionStage() throws ExecutionException, InterruptedException {
-        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        Supplier<CompletionStage<String>> completionStageSupplier =
-            () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
-        CompletionStage<String> completionStage = Decorators
-            .ofCompletionStage(completionStageSupplier)
-            .withCircuitBreaker(circuitBreaker)
-            .withRetry(Retry.ofDefaults("id"), Executors.newSingleThreadScheduledExecutor())
-            .withBulkhead(Bulkhead.ofDefaults("testName"))
-            .get();
-
-        String value = completionStage.toCompletableFuture().get();
-
-        assertThat(value).isEqualTo("Hello world");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        then(helloWorldService).should(times(1)).returnHelloWorld();
-    }
-
-    @Test
-    public void testDecorateCompletionStageNewAPI()
-        throws ExecutionException, InterruptedException {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         Supplier<CompletionStage<String>> completionStageSupplier =
