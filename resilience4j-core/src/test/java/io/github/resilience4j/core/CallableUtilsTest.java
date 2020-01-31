@@ -69,4 +69,14 @@ public class CallableUtilsTest {
 
         callableWithRecovery.call();
     }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldRethrowException2() throws Exception {
+        Callable<String> callable = () -> {
+            throw new RuntimeException("BAM!");
+        };
+        Callable<String> callableWithRecovery = CallableUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
+
+        callableWithRecovery.call();
+    }
 }

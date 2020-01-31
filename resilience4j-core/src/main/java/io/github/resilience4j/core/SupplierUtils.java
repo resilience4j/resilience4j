@@ -33,6 +33,7 @@ public class SupplierUtils {
      *
      * @param <T>           return type of callable
      * @param <R>           return type of handler
+     * @param supplier the supplier
      * @param resultHandler the function applied after supplier
      * @return a function composed of supplier and resultHandler
      */
@@ -45,11 +46,12 @@ public class SupplierUtils {
      * BiFunction} {@code after} to the result.
      *
      * @param <T>     return type of after
+     * @param supplier the supplier
      * @param handler the function applied after supplier
      * @return a function composed of supplier and handler
      */
     public static <T, R> Supplier<R> andThen(Supplier<T> supplier,
-        BiFunction<T, Exception, R> handler) {
+        BiFunction<T, Throwable, R> handler) {
         return () -> {
             try {
                 T result = supplier.get();
@@ -65,11 +67,12 @@ public class SupplierUtils {
      * exception.
      *
      * @param <T>              return type of after
+     * @param supplier the supplier
      * @param exceptionHandler the exception handler
      * @return a function composed of supplier and exceptionHandler
      */
     public static <T> Supplier<T> recover(Supplier<T> supplier,
-        Function<Exception, T> exceptionHandler) {
+        Function<Throwable, T> exceptionHandler) {
         return () -> {
             try {
                 return supplier.get();
@@ -80,16 +83,43 @@ public class SupplierUtils {
     }
 
     /**
+     * Returns a composed function that first executes the Supplier and optionally recovers from an
+     * exception.
+     *
+     * @param <T>              return type of after
+     * @param supplier the supplier which should be recovered from a certain exception
+     * @param exceptionType the specific exception type that should be recovered
+     * @param exceptionHandler the exception handler
+     * @return a function composed of supplier and exceptionHandler
+     */
+    public static <X extends Throwable, T> Supplier<T> recover(Supplier<T> supplier,
+        Class<X> exceptionType,
+        Function<Throwable, T> exceptionHandler) {
+        return () -> {
+            try {
+                return supplier.get();
+            } catch (RuntimeException exception) {
+                if(exceptionType.isAssignableFrom(exception.getClass())) {
+                    return exceptionHandler.apply(exception);
+                }else{
+                    throw exception;
+                }
+            }
+        };
+    }
+
+    /**
      * Returns a composed function that first applies the Supplier and then applies either the
      * resultHandler or exceptionHandler.
      *
      * @param <T>              return type of after
+     * @param supplier the supplier which should be recovered from a certain exception
      * @param resultHandler    the function applied after Supplier was successful
      * @param exceptionHandler the function applied after Supplier has failed
      * @return a function composed of supplier and handler
      */
     public static <T, R> Supplier<R> andThen(Supplier<T> supplier, Function<T, R> resultHandler,
-        Function<Exception, R> exceptionHandler) {
+        Function<Throwable, R> exceptionHandler) {
         return () -> {
             try {
                 T result = supplier.get();

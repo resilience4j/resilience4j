@@ -1,8 +1,13 @@
 package io.github.resilience4j.decorators;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.CallableUtils;
+import io.github.resilience4j.core.CheckFunctionUtils;
+import io.github.resilience4j.core.CompletionStageUtils;
+import io.github.resilience4j.core.SupplierUtils;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
@@ -10,6 +15,7 @@ import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
@@ -32,6 +38,10 @@ public interface Decorators {
 
     static DecorateRunnable ofRunnable(Runnable runnable) {
         return new DecorateRunnable(runnable);
+    }
+
+    static <T> DecorateCallable<T> ofCallable(Callable<T> callable) {
+        return new DecorateCallable<>(callable);
     }
 
     static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(CheckedFunction0<T> supplier) {
@@ -92,6 +102,20 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateSupplier<T> withFallback(Function<Throwable, T> exceptionHandler) {
+            supplier = SupplierUtils.recover(supplier, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateSupplier<T> withFallback(Class<X> exceptionType, Function<Throwable, T> exceptionHandler) {
+            supplier = SupplierUtils.recover(supplier, exceptionType, exceptionHandler);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
+            return Decorators.ofCompletionStage(threadPoolBulkhead.decorateSupplier(supplier));
+        }
+
         public Supplier<T> decorate() {
             return supplier;
         }
@@ -99,6 +123,8 @@ public interface Decorators {
         public T get() {
             return supplier.get();
         }
+
+
     }
 
     class DecorateFunction<T, R> {
@@ -180,12 +206,72 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCompletionStage<Void> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
+            return Decorators.ofCompletionStage(threadPoolBulkhead.decorateRunnable(runnable));
+        }
+
         public Runnable decorate() {
             return runnable;
         }
 
         public void run() {
             runnable.run();
+        }
+    }
+
+    class DecorateCallable<T> {
+
+        private Callable<T> callable;
+
+        private DecorateCallable(Callable<T> callable) {
+            this.callable = callable;
+        }
+
+
+        public DecorateCallable<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            callable = CircuitBreaker.decorateCallable(circuitBreaker, callable);
+            return this;
+        }
+
+        public DecorateCallable<T> withRetry(Retry retryContext) {
+            callable = Retry.decorateCallable(retryContext, callable);
+            return this;
+        }
+
+        public DecorateCallable<T> withRateLimiter(RateLimiter rateLimiter) {
+            return withRateLimiter(rateLimiter, 1);
+        }
+
+        public DecorateCallable<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+            callable = RateLimiter.decorateCallable(rateLimiter, permits, callable);
+            return this;
+        }
+
+        public DecorateCallable<T> withBulkhead(Bulkhead bulkhead) {
+            callable = Bulkhead.decorateCallable(bulkhead, callable);
+            return this;
+        }
+
+        public DecorateCallable<T> withFallback(Function<Throwable, T> exceptionHandler) {
+            callable = CallableUtils.recover(callable, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateCallable<T> withFallback(Class<X> exceptionType, Function<Throwable, T> exceptionHandler) {
+            callable = CallableUtils.recover(callable, exceptionType, exceptionHandler);
+            return this;
+        }
+
+        public DecorateCompletionStage<T> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
+            return Decorators.ofCompletionStage(threadPoolBulkhead.decorateCallable(callable));
+        }
+
+        public Callable<T> decorate() {
+            return callable;
+        }
+
+        public T call() throws Exception {
+            return callable.call();
         }
     }
 
@@ -223,6 +309,16 @@ public interface Decorators {
 
         public DecorateCheckedSupplier<T> withBulkhead(Bulkhead bulkhead) {
             supplier = Bulkhead.decorateCheckedSupplier(bulkhead, supplier);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(Function<Throwable, T> exceptionHandler) {
+            supplier = CheckFunctionUtils.recover(supplier, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, Function<Throwable, T> exceptionHandler) {
+            supplier = CheckFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
             return this;
         }
 
@@ -365,6 +461,16 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCompletionStage<T> withFallback(Function<Throwable, T> exceptionHandler) {
+            stageSupplier = CompletionStageUtils.recover(stageSupplier, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateCompletionStage<T> withFallback(Class<X> exceptionType, Function<Throwable, T> exceptionHandler) {
+            stageSupplier = CompletionStageUtils.recover(stageSupplier, exceptionType, exceptionHandler);
+            return this;
+        }
+
         public Supplier<CompletionStage<T>> decorate() {
             return stageSupplier;
         }
@@ -411,8 +517,8 @@ public interface Decorators {
             return consumer;
         }
 
-        public void accept(T obj) {
-            consumer.accept(obj);
+        public void accept(T t) {
+            consumer.accept(t);
         }
     }
 }

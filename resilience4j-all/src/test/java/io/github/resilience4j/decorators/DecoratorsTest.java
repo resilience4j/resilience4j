@@ -21,6 +21,7 @@ package io.github.resilience4j.decorators;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -46,8 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 public class DecoratorsTest {
 
@@ -128,6 +128,89 @@ public class DecoratorsTest {
     }
 
     @Test
+    public void testDecorateSupplierWithThreadPoolBulkhead()
+        throws ExecutionException, InterruptedException {
+
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        CompletableFuture<String> future = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withThreadPoolBulkhead(ThreadPoolBulkhead.ofDefaults("helloBackend"))
+            .withTimeLimiter(TimeLimiter.ofDefaults(), Executors.newSingleThreadScheduledExecutor())
+            .withCircuitBreaker(circuitBreaker)
+            .get().toCompletableFuture();
+
+        String result = future.get();
+
+        assertThat(result).isEqualTo("Hello world");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateRunnableWithThreadPoolBulkhead()
+        throws ExecutionException, InterruptedException {
+
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        CompletableFuture<Void> future = Decorators
+            .ofRunnable(() -> helloWorldService.sayHelloWorld())
+            .withThreadPoolBulkhead(ThreadPoolBulkhead.ofDefaults("helloBackend"))
+            .withCircuitBreaker(circuitBreaker)
+            .get().toCompletableFuture();
+
+        future.get();
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).sayHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCallable() throws Exception {
+        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Callable<String> decoratedCallable = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
+
+        String result = decoratedCallable.call();
+
+        assertThat(result).isEqualTo("Hello world");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateSupplierWithFallback() {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+
+        Supplier<String> decoratedSupplier = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(CallNotPermittedException.class, e -> "Fallback")
+            .decorate();
+
+        String result = decoratedSupplier.get();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        then(helloWorldService).should(never()).returnHelloWorld();
+    }
+
+    @Test
     public void testDecorateCheckedSupplier() throws IOException {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -146,6 +229,44 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateCheckedSupplierWithFallback() throws Throwable {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+
+        CheckedFunction0<String> checkedSupplier = Decorators
+            .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(CallNotPermittedException.class, e -> "Fallback")
+            .decorate();
+
+        String result = checkedSupplier.apply();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        then(helloWorldService).should(never()).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCallableWithFallback() throws Throwable {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+
+        Callable<String> callable = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(CallNotPermittedException.class, e -> "Fallback")
+            .decorate();
+
+        String result = callable.call();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        then(helloWorldService).should(never()).returnHelloWorld();
     }
 
     @Test

@@ -57,6 +57,18 @@ public class SupplierUtilsTest {
         assertThat(result).isEqualTo("Bla");
     }
 
+    @Test
+    public void shouldRecoverSupplierFromSpecificException() {
+        Supplier<String> supplier = () -> {
+            throw new IllegalArgumentException("BAM!");
+        };
+        Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, RuntimeException.class, (ex) -> "Bla");
+
+        String result = supplierWithRecovery.get();
+
+        assertThat(result).isEqualTo("Bla");
+    }
+
     @Test(expected = RuntimeException.class)
     public void shouldRethrowException() {
         Supplier<String> supplier = () -> {
@@ -65,6 +77,16 @@ public class SupplierUtilsTest {
         Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, (ex) -> {
             throw new RuntimeException();
         });
+
+        supplierWithRecovery.get();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldRethrowException2() {
+        Supplier<String> supplier = () -> {
+            throw new RuntimeException("BAM!");
+        };
+        Supplier<String> supplierWithRecovery = SupplierUtils.recover(supplier, IllegalArgumentException.class, (ex) -> "Bla");
 
         supplierWithRecovery.get();
     }
