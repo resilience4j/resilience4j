@@ -24,7 +24,24 @@ import java.util.function.*;
 
 /**
  * A Decorator builder which can be used to apply multiple decorators to a (Checked-)Supplier,
- * (Checked-)Function, (Checked-)Runnable, (Checked-)CompletionStage or (Checked-)Consumer
+ * (Checked-)Function, (Checked-)Runnable, (Checked-)CompletionStage or (Checked-)Consumer.
+ * <p></p>
+ * Decorators are applied in the order of the builder chain. For example, consider:
+ *
+ * <pre>{@code
+ * Supplier<String> supplier = Decorators
+ *     .ofSupplier(() -> service.method())
+ *     .withCircuitBreaker(CircuitBreaker.ofDefaults("id"))
+ *     .withRetry(Retry.ofDefaults("id"))
+ *     .withFallback(CallNotPermittedException.class, e -> service.fallbackMethod())
+ *     .decorate();
+ * }</pre>
+ *
+ * This results in the following composition when executing the supplier: <br/>
+ * <pre>Fallback(Retry(CircuitBreaker(Supplier)))</pre>
+ *
+ * This means the Supplier is called first, then it’s result is handled by the CircuitBreaker, then Retry and then Fallback.
+ * Each Decorator makes its own determination whether an exception represents a failure.
  */
 public interface Decorators {
 
