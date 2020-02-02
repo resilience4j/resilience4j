@@ -502,6 +502,28 @@ public class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    public void shouldForceCloseCircuitBreaker() {
+        circuitBreaker
+            .transitionToForcedCloseState();
+
+        assertThat(circuitBreaker.getState()).isEqualTo(
+            CircuitBreaker.State.FORCED_CLOSE); // Should create a CircuitBreakerOnStateTransitionEvent
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onSuccess(1, TimeUnit.SECONDS);
+
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        circuitBreaker.onError(1, TimeUnit.SECONDS, new NumberFormatException());
+
+        assertThat(circuitBreaker.getState()).isEqualTo(
+            CircuitBreaker.State.FORCED_CLOSE); // Should create a CircuitBreakerOnStateTransitionEvent
+
+        CircuitBreaker.Metrics metric = circuitBreaker.getMetrics();
+        assertThat(metric.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(metric.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
     public void shouldReleasePermissionWhenExceptionIgnored() {
         circuitBreaker.transitionToOpenState();
         circuitBreaker.transitionToHalfOpenState();

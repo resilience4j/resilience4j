@@ -503,7 +503,7 @@ public interface CircuitBreaker {
      * If a call is not permitted, the number of not permitted calls is increased.
      * <p>
      * Returns false when the state is OPEN or FORCED_OPEN. Returns true when the state is CLOSED or
-     * DISABLED. Returns true when the state is HALF_OPEN and further test calls are allowed.
+     * DISABLED or FORCED_CLOSE. Returns true when the state is HALF_OPEN and further test calls are allowed.
      * Returns false when the state is HALF_OPEN and the number of test calls has been reached. If
      * the state is HALF_OPEN, the number of allowed test calls is decreased. Important: Make sure
      * to call onSuccess or onError after the call is finished. If the call is cancelled before it
@@ -529,7 +529,7 @@ public interface CircuitBreaker {
      * permitted calls is increased.
      * <p>
      * Throws a CallNotPermittedException when the state is OPEN or FORCED_OPEN. Returns when the
-     * state is CLOSED or DISABLED. Returns when the state is HALF_OPEN and further test calls are
+     * state is CLOSED or FORCED_CLOSE or DISABLED. Returns when the state is HALF_OPEN and further test calls are
      * allowed. Throws a CallNotPermittedException when the state is HALF_OPEN and the number of
      * test calls has been reached. If the state is HALF_OPEN, the number of allowed test calls is
      * decreased. Important: Make sure to call onSuccess or onError after the call is finished. If
@@ -617,6 +617,14 @@ public interface CircuitBreaker {
      * To recover from this state you must force a new state transition
      */
     void transitionToForcedOpenState();
+
+    /**
+     * Transitions the state machine to a FORCED_CLOSE state.
+     * <p>
+     * Should only be used, when you want to force the circuit breaker allowing all call to pass.
+     * To recover from this state you must force a new state transition
+     */
+    void transitionToForcedCloseState();
 
     /**
      * Returns the name of this CircuitBreaker.
@@ -889,6 +897,10 @@ public interface CircuitBreaker {
          */
         CLOSED(0, true),
         /**
+         * A FORCED_CLOSE breaker is operating normally and allowing requests through.
+         */
+        FORCED_CLOSE(6, true),
+        /**
          * An OPEN breaker has tripped and will not allow requests through.
          */
         OPEN(1, true),
@@ -934,17 +946,27 @@ public interface CircuitBreaker {
         CLOSED_TO_DISABLED(State.CLOSED, State.DISABLED),
         CLOSED_TO_METRICS_ONLY(State.CLOSED, State.METRICS_ONLY),
         CLOSED_TO_FORCED_OPEN(State.CLOSED, State.FORCED_OPEN),
+        CLOSED_TO_FORCED_CLOSE(State.CLOSED, State.FORCED_CLOSE),
+        FORCED_CLOSE_TO_FORCED_OPEN(State.FORCED_CLOSE, State.FORCED_OPEN),
+        FORCED_CLOSE_TO_CLOSED(State.FORCED_CLOSE, State.CLOSED),
+        FORCED_CLOSE_TO_OPEN(State.FORCED_CLOSE, State.OPEN),
+        FORCED_CLOSE_TO_DISABLED(State.FORCED_CLOSE, State.DISABLED),
+        FORCED_CLOSE_TO_METRICS_ONLY(State.FORCED_CLOSE, State.METRICS_ONLY),
+        FORCED_CLOSE_TO_HALF_OPEN(State.FORCED_CLOSE, State.HALF_OPEN),
         HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
         HALF_OPEN_TO_DISABLED(State.HALF_OPEN, State.DISABLED),
         HALF_OPEN_TO_METRICS_ONLY(State.HALF_OPEN, State.METRICS_ONLY),
         HALF_OPEN_TO_FORCED_OPEN(State.HALF_OPEN, State.FORCED_OPEN),
+        HALF_OPEN_TO_FORCED_CLOSE(State.HALF_OPEN, State.FORCED_CLOSE),
         OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
         OPEN_TO_DISABLED(State.OPEN, State.DISABLED),
         OPEN_TO_METRICS_ONLY(State.OPEN, State.METRICS_ONLY),
         OPEN_TO_FORCED_OPEN(State.OPEN, State.FORCED_OPEN),
+        OPEN_TO_FORCED_CLOSE(State.OPEN, State.FORCED_CLOSE),
         FORCED_OPEN_TO_CLOSED(State.FORCED_OPEN, State.CLOSED),
+        FORCED_OPEN_TO_FORCED_CLOSE(State.FORCED_OPEN, State.FORCED_CLOSE),
         FORCED_OPEN_TO_OPEN(State.FORCED_OPEN, State.OPEN),
         FORCED_OPEN_TO_DISABLED(State.FORCED_OPEN, State.DISABLED),
         FORCED_OPEN_TO_METRICS_ONLY(State.FORCED_OPEN, State.METRICS_ONLY),
@@ -952,10 +974,12 @@ public interface CircuitBreaker {
         DISABLED_TO_CLOSED(State.DISABLED, State.CLOSED),
         DISABLED_TO_OPEN(State.DISABLED, State.OPEN),
         DISABLED_TO_FORCED_OPEN(State.DISABLED, State.FORCED_OPEN),
+        DISABLED_TO_FORCED_CLOSE(State.DISABLED, State.FORCED_CLOSE),
         DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN),
         DISABLED_TO_METRICS_ONLY(State.DISABLED, State.METRICS_ONLY),
         METRICS_ONLY_TO_CLOSED(State.METRICS_ONLY, State.CLOSED),
         METRICS_ONLY_TO_FORCED_OPEN(State.METRICS_ONLY, State.FORCED_OPEN),
+        METRICS_ONLY_TO_FORCED_CLOSE(State.METRICS_ONLY, State.FORCED_CLOSE),
         METRICS_ONLY_TO_DISABLED(State.METRICS_ONLY, State.DISABLED);
 
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP = Arrays

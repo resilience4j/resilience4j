@@ -316,6 +316,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
+    public void transitionToForcedCloseState() {
+        stateTransition(FORCED_CLOSE,
+            currentState -> new ForceClosedState());
+    }
+
+    @Override
     public void transitionToClosedState() {
         stateTransition(CLOSED, currentState -> new ClosedState());
     }
@@ -698,6 +704,70 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             }
         }
 
+    }
+
+    private class ForceClosedState implements CircuitBreakerState {
+        private final CircuitBreakerMetrics circuitBreakerMetrics;
+
+        ForceClosedState() {
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedClosed(getCircuitBreakerConfig());
+        }
+
+        /**
+         * Returns always true, because the CircuitBreaker is closed.
+         *
+         * @return always true, because the CircuitBreaker is closed.
+         */
+        @Override
+        public boolean tryAcquirePermission() {
+            return true;
+        }
+
+        /**
+         * Does not throw an exception, because the CircuitBreaker is forced closed.
+         */
+        @Override
+        public void acquirePermission() {
+            // noOp
+        }
+
+        @Override
+        public void releasePermission() {
+            // noOp
+        }
+
+        @Override
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
+            // CircuitBreakerMetrics is thread-safe
+            circuitBreakerMetrics.onError(duration, durationUnit);
+        }
+
+        @Override
+        public void onSuccess(long duration, TimeUnit durationUnit) {
+            // CircuitBreakerMetrics is thread-safe
+            circuitBreakerMetrics.onSuccess(duration, durationUnit);
+        }
+
+        @Override
+        public int attempts() {
+            return 0;
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        public CircuitBreaker.State getState() {
+            return CircuitBreaker.State.FORCED_CLOSE;
+        }
+
+        /**
+         * Get metrics of the CircuitBreaker
+         */
+        @Override
+        public CircuitBreakerMetrics getMetrics() {
+            return circuitBreakerMetrics;
+        }
     }
 
     private class DisabledState implements CircuitBreakerState {

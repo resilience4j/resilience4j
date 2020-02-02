@@ -35,6 +35,7 @@ public class CircuitBreakerUtilIsCallPermittedTest {
             {State.CLOSED, CALL_PERMITTED},
             {State.OPEN, CALL_NOT_PERMITTED},
             {State.FORCED_OPEN, CALL_NOT_PERMITTED},
+            {State.FORCED_CLOSE, CALL_PERMITTED},
             {State.HALF_OPEN, CALL_PERMITTED},
         });
     }
