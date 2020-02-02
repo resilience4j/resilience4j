@@ -710,7 +710,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final CircuitBreakerMetrics circuitBreakerMetrics;
 
         ForceClosedState() {
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedClosed(getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedClose(getCircuitBreakerConfig());
         }
 
         /**
