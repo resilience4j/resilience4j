@@ -74,7 +74,7 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
             CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forForcedClosed(CircuitBreakerConfig circuitBreakerConfig) {
+    static CircuitBreakerMetrics forForcedClose(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
             circuitBreakerConfig);
     }
