@@ -277,3 +277,23 @@ NOTE: Breaking changes:
 * Issue #701: Allow custom Prometheus Histogram buckets
 * Issue #756: Spring Boot module must work without a Spring actuator
 * PR #722: Health indicator overall status can be controlled with allowHealthIndicatorToFail property
+
+== Version 1.3.0
+* Issue #822: Fixed the case where resilience4j rateLimiter seems to ignore configuration
+* Issue #816: Fixed Reactor RetryOperator throws exception wrapped by RetryExceptionWrapper
+* Issue #806: Switched aggregated retry.calls metric to a counter from a gauage
+* Issue #803: Added new Circuit breaker state -> METRICS_ONLY
+* Issue #799: Fixed WritableStackTraceEnabled config setting in ThreadPool bulkhead configuration
+* Issue #775: Added Getter for RetryOnRetryEvent
+* Issue #769: Fixed Duplicated auto complete support in IDEA
+* Issue #765: Added support to use Retry with Feign client
+* Issue #751: Vavr upgrade to 0.10.2 
+* Issue #718: Fixed blocking behavior in Reactor Retry Operator 
+* Issue #711: Added support to use SpEL in resilienec4j spring annoations
+* Issue #751: Fixed Resilience4j Spring boot modules MetricsAutoConfiguration
+* Issue #565: Added ThreadLocal passing support to the Threadpool bulkhead implementation 
+* Issue #430: Added TimeLimiter spring boot starter support 
+* Issue #509: Added support to extend Micrometer tags
+* PR #831: non backward compatible API change in ThreadPoolBulkhead decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) now return Supplier<CompletionStage<Void>> instead of Runnable
+
+
