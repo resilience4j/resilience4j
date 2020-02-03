@@ -7,6 +7,7 @@ dependencies {
     testCompile project(':resilience4j-reactor')
     testCompile project(':resilience4j-rxjava2')
     testCompile(libraries.rxjava2)
+    testCompile(libraries.reactor)
     testCompile(libraries.spring_boot2_test)
     testCompile(libraries.spring_boot2_aop)
     testCompile(libraries.spring_boot2_actuator)

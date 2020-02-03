@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.fallback.autoconfigure;
 
-import io.github.resilience4j.fallback.FallbackDecorator;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.*;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -41,27 +41,27 @@ public class FallbackConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean
-    public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorators) {
+    public FallbackDecorators fallbackDecorators(@Autowired(required = false) List<FallbackDecorator> fallbackDecorators) {
         return fallbackConfiguration.fallbackDecorators(fallbackDecorators);
     }
 
     @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public FallbackDecorator rxJava2FallbackDecorator() {
+    public RxJava2FallbackDecorator rxJava2FallbackDecorator() {
         return fallbackConfiguration.rxJava2FallbackDecorator();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public FallbackDecorator reactorFallbackDecorator() {
+    public ReactorFallbackDecorator reactorFallbackDecorator() {
         return fallbackConfiguration.reactorFallbackDecorator();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public FallbackDecorator completionStageFallbackDecorator() {
+    public CompletionStageFallbackDecorator completionStageFallbackDecorator() {
         return fallbackConfiguration.completionStageFallbackDecorator();
     }
 }
