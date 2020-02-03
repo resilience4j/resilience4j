@@ -18,6 +18,7 @@ package io.github.resilience4j.fallback.configure;
 import io.github.resilience4j.fallback.*;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -32,23 +33,23 @@ public class FallbackConfiguration {
 
     @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class})
-    public FallbackDecorator rxJava2FallbackDecorator() {
+    public RxJava2FallbackDecorator rxJava2FallbackDecorator() {
         return new RxJava2FallbackDecorator();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class})
-    public FallbackDecorator reactorFallbackDecorator() {
+    public ReactorFallbackDecorator reactorFallbackDecorator() {
         return new ReactorFallbackDecorator();
     }
 
     @Bean
-    public FallbackDecorator completionStageFallbackDecorator() {
+    public CompletionStageFallbackDecorator completionStageFallbackDecorator() {
         return new CompletionStageFallbackDecorator();
     }
 
     @Bean
-    public FallbackDecorators fallbackDecorators(List<FallbackDecorator> fallbackDecorator) {
+    public FallbackDecorators fallbackDecorators(@Autowired(required = false) List<FallbackDecorator> fallbackDecorator) {
         return new FallbackDecorators(fallbackDecorator);
     }
 }
