@@ -19,6 +19,7 @@ import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfiguratio
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties;
 
 /**
  * resilience4j configuration util
@@ -126,5 +127,19 @@ public class ConfigUtils {
             }
         }
     }
+
+	/**
+	 * merge only properties that are not part of timeLimiter config if any match the conditions of merge
+	 *
+	 * @param baseProperties     base config properties
+	 * @param instanceProperties instance properties
+	 */
+	public static void mergePropertiesIfAny(TimeLimiterConfigurationProperties.InstanceProperties baseProperties,
+											TimeLimiterConfigurationProperties.InstanceProperties instanceProperties) {
+		if (instanceProperties.getEventConsumerBufferSize() == null
+            && baseProperties.getEventConsumerBufferSize() != null) {
+            instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+		}
+	}
 
 }

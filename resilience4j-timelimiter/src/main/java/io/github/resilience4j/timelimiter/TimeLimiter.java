@@ -31,6 +31,15 @@ public interface TimeLimiter {
     }
 
     /**
+     * Creates a TimeLimiter decorator with a default TimeLimiterConfig configuration.
+     *
+     * @return The {@link TimeLimiter}
+     */
+    static TimeLimiter ofDefaults(String name) {
+        return new TimeLimiterImpl(name, TimeLimiterConfig.ofDefaults());
+    }
+
+    /**
      * Creates a TimeLimiter decorator with a TimeLimiterConfig configuration.
      *
      * @param timeLimiterConfig the TimeLimiterConfig

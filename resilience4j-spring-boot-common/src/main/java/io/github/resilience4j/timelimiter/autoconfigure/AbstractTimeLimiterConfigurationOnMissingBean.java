@@ -1,0 +1,87 @@
+/*
+ * Copyright 2020 Ingyu Hwang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.github.resilience4j.timelimiter.autoconfigure;
+
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.configure.*;
+import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@Configuration
+@Import(FallbackConfigurationOnMissingBean.class)
+public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
+    protected final TimeLimiterConfiguration timeLimiterConfiguration;
+
+    protected AbstractTimeLimiterConfigurationOnMissingBean() {
+        this.timeLimiterConfiguration = new TimeLimiterConfiguration();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public TimeLimiterRegistry timeLimiterRegistry(TimeLimiterConfigurationProperties timeLimiterProperties,
+                                                   EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventsConsumerRegistry,
+                                                   RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer) {
+        return timeLimiterConfiguration.timeLimiterRegistry(
+                timeLimiterProperties, timeLimiterEventsConsumerRegistry, timeLimiterRegistryEventConsumer);
+    }
+
+    @Bean
+    @Primary
+    public RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<TimeLimiter>>> optionalRegistryEventConsumers) {
+        return timeLimiterConfiguration.timeLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
+    }
+
+    @Bean
+    @Conditional(AspectJOnClasspathCondition.class)
+    @ConditionalOnMissingBean
+    public TimeLimiterAspect timeLimiterAspect(TimeLimiterConfigurationProperties timeLimiterProperties,
+                                               TimeLimiterRegistry timeLimiterRegistry,
+                                               @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
+                                               FallbackDecorators fallbackDecorators) {
+        return timeLimiterConfiguration.timeLimiterAspect(
+                timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackDecorators);
+    }
+
+    @Bean
+    @Conditional({RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava2TimeLimiterAspectExt rxJava2TimeLimiterAspectExt() {
+        return timeLimiterConfiguration.rxJava2TimeLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional({ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public ReactorTimeLimiterAspectExt reactorTimeLimiterAspectExt() {
+        return timeLimiterConfiguration.reactorTimeLimiterAspectExt();
+    }
+
+}

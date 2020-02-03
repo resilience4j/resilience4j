@@ -3,6 +3,8 @@ package io.github.resilience4j.service.test;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -21,6 +23,7 @@ public class DummyServiceImpl implements DummyService {
     }
 
     @Override
+    @TimeLimiter(name = DummyService.BACKEND)
     public CompletableFuture<String> doSomethingAsync(boolean throwBackendTrouble)
         throws IOException {
         if (throwBackendTrouble) {

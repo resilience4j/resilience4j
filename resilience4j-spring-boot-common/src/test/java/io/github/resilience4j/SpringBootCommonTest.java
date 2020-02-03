@@ -37,6 +37,9 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.autoconfigure.AbstractTimeLimiterConfigurationOnMissingBean;
+import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -124,6 +127,22 @@ public class SpringBootCommonTest {
             .rateLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
+    @Test
+    public void testTimeLimiterCommonConfig() {
+        TimeLimiterConfigurationOnMissingBean timeLimiterConfigurationOnMissingBean = new TimeLimiterConfigurationOnMissingBean();
+        assertThat(timeLimiterConfigurationOnMissingBean.reactorTimeLimiterAspectExt()).isNotNull();
+        assertThat(timeLimiterConfigurationOnMissingBean.rxJava2TimeLimiterAspectExt()).isNotNull();
+        assertThat(timeLimiterConfigurationOnMissingBean
+            .timeLimiterRegistry(new TimeLimiterConfigurationProperties(),
+                new DefaultEventConsumerRegistry<>(),
+                new CompositeRegistryEventConsumer<>(Collections.emptyList()))).isNotNull();
+        assertThat(timeLimiterConfigurationOnMissingBean
+            .timeLimiterAspect(new TimeLimiterConfigurationProperties(),
+                TimeLimiterRegistry.ofDefaults(), Collections.emptyList(),
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+        assertThat(timeLimiterConfigurationOnMissingBean
+            .timeLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
+    }
 
     // testing config samples
     class BulkheadConfigurationOnMissingBean extends AbstractBulkheadConfigurationOnMissingBean {
@@ -159,5 +178,8 @@ public class SpringBootCommonTest {
     class RateLimiterConfigurationOnMissingBean extends
         AbstractRateLimiterConfigurationOnMissingBean {
 
+    }
+
+    class TimeLimiterConfigurationOnMissingBean extends AbstractTimeLimiterConfigurationOnMissingBean {
     }
 }

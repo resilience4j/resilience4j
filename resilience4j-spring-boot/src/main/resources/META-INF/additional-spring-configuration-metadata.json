@@ -71,6 +71,18 @@
       "type": "java.lang.Boolean",
       "description": "Whether to enable the legacy-retry-metrics.",
       "defaultValue": "false"
+    },
+    {
+      "name": "resilience4j.timelimiter.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the timelimiter-metrics.",
+      "defaultValue": "true"
+    },
+    {
+      "name": "resilience4j.timelimiter.metrics.legacy.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the legacy-timelimiter-metrics.",
+      "defaultValue": "false"
     }
   ]
 }
