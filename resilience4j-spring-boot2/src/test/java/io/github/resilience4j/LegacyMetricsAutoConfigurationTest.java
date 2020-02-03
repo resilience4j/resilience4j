@@ -37,7 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
         "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled=true",
         "resilience4j.circuitbreaker.metrics.legacy.enabled=true",
         "resilience4j.ratelimiter.metrics.legacy.enabled=true",
-        "resilience4j.retry.metrics.legacy.enabled=true"
+        "resilience4j.retry.metrics.legacy.enabled=true",
+        "resilience4j.timelimiter.metrics.legacy.enabled=true"
     })
 public class LegacyMetricsAutoConfigurationTest {
 
@@ -58,6 +59,9 @@ public class LegacyMetricsAutoConfigurationTest {
 
     @Autowired(required = false)
     TaggedRetryMetrics taggedRetryMetrics;
+
+    @Autowired(required = false)
+    TaggedTimeLimiterMetrics taggedTimeLimiterMetrics;
 
     @Test
     public void newMetricsPublisherIsNotBound() {
@@ -87,6 +91,11 @@ public class LegacyMetricsAutoConfigurationTest {
     @Test
     public void legacyRetryBinderIsBound() {
         assertThat(taggedRetryMetrics).isNotNull();
+    }
+
+    @Test
+    public void legacyTimeLimiterBinderIsBound() {
+        assertThat(taggedTimeLimiterMetrics).isNotNull();
     }
 
 }

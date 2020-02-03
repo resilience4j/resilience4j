@@ -163,6 +163,15 @@ resilience4j.thread-pool-bulkhead":
       contextPropagator:
         - io.github.resilience4j.TestThreadLocalContextPropagator
 
+resilience4j.timelimiter:
+  time-limiter-aspect-order: 398
+  configs:
+    default:
+      timeoutDuration: 1s
+      cancelRunningFuture: false
+  instances:
+    backendA:
+      timeoutDuration: 5s
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'

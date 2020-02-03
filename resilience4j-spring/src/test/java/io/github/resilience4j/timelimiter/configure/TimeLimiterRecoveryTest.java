@@ -1,0 +1,68 @@
+package io.github.resilience4j.timelimiter.configure;
+
+import io.github.resilience4j.TestApplication;
+import io.github.resilience4j.TestDummyService;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = TestApplication.class)
+public class TimeLimiterRecoveryTest {
+    @Autowired
+    @Qualifier("timeLimiterDummyService")
+    TestDummyService testDummyService;
+
+    @Test
+    public void testAsyncRecovery() throws Exception {
+        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testMonoRecovery() {
+        assertThat(testDummyService.mono("test").block()).isEqualTo("test");
+    }
+
+    @Test
+    public void testFluxRecovery() {
+        assertThat(testDummyService.flux().blockFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testObservableRecovery() {
+        assertThat(testDummyService.observable().blockingFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testSingleRecovery() {
+        assertThat(testDummyService.single().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testCompletableRecovery() {
+        assertThat(testDummyService.completable().blockingGet()).isNull();
+    }
+
+    @Test
+    public void testMaybeRecovery() {
+        assertThat(testDummyService.maybe().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testFlowableRecovery() {
+        assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testSpelRecovery() {
+        assertThat(testDummyService.spelSync()).isEqualTo("recovered");
+    }
+
+}

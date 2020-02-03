@@ -44,6 +44,9 @@ public class MetricsAutoConfigurationTest {
     @Autowired(required = false)
     TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
 
+    @Autowired(required = false)
+    TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher;
+
     @Test
     public void newCircuitBreakerPublisherIsBound() {
         assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
@@ -69,4 +72,8 @@ public class MetricsAutoConfigurationTest {
         assertThat(taggedRetryMetricsPublisher).isNotNull();
     }
 
+	@Test
+	public void newTimeLimiterPublisherIsBound() {
+		assertThat(taggedTimeLimiterMetricsPublisher).isNotNull();
+	}
 }

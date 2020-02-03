@@ -89,6 +89,12 @@ resilience4j.bulkhead:
       maxWaitDuration: 10
       maxConcurrentCalls: 2
 
+resilience4j.timelimiter:
+  time-limiter-aspect-order: 500
+  instances:
+    backend:
+      timeoutDuration: 1s
+
 management.security.enabled: false
 management.endpoint.health.show-details: always
 

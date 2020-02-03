@@ -1,0 +1,135 @@
+/*
+ * Copyright 2020 Ingyu Hwang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.github.resilience4j.timelimiter.configure;
+
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
+import io.github.resilience4j.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * {@link Configuration} for resilience4j-timelimiter.
+ */
+@Configuration
+public class TimeLimiterConfiguration {
+
+    @Bean
+    public TimeLimiterRegistry timeLimiterRegistry(TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
+                                                   EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventConsumerRegistry,
+                                                   RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer) {
+        TimeLimiterRegistry timeLimiterRegistry =
+                createTimeLimiterRegistry(timeLimiterConfigurationProperties, timeLimiterRegistryEventConsumer);
+        registerEventConsumer(timeLimiterRegistry, timeLimiterEventConsumerRegistry, timeLimiterConfigurationProperties);
+        timeLimiterConfigurationProperties.getInstances().forEach((name, properties) ->
+                timeLimiterRegistry.timeLimiter(name, timeLimiterConfigurationProperties.createTimeLimiterConfig(properties)));
+        return timeLimiterRegistry;
+    }
+
+    @Bean
+    @Primary
+    public RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer(
+            Optional<List<RegistryEventConsumer<TimeLimiter>>> optionalRegistryEventConsumers) {
+        return new CompositeRegistryEventConsumer<>(optionalRegistryEventConsumers.orElseGet(ArrayList::new));
+    }
+
+    @Bean
+    @Conditional(AspectJOnClasspathCondition.class)
+    public TimeLimiterAspect timeLimiterAspect(TimeLimiterConfigurationProperties timeLimiterConfigurationProperties, TimeLimiterRegistry timeLimiterRegistry,
+                                                     @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
+                                                     FallbackDecorators fallbackDecorators) {
+        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackDecorators);
+    }
+
+    @Bean
+    @Conditional({RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public RxJava2TimeLimiterAspectExt rxJava2TimeLimiterAspectExt() {
+        return new RxJava2TimeLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional({ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public ReactorTimeLimiterAspectExt reactorTimeLimiterAspectExt() {
+        return new ReactorTimeLimiterAspectExt();
+    }
+
+    /**
+     * The EventConsumerRegistry is used to manage EventConsumer instances.
+     * The EventConsumerRegistry is used by the TimeLimiter events monitor to show the latest TimeLimiter events
+     * for each TimeLimiter instance.
+     *
+     * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
+     */
+    @Bean
+    public EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventsConsumerRegistry() {
+        return new DefaultEventConsumerRegistry<>();
+    }
+    /**
+     * Initializes a timeLimiter registry.
+     *
+     * @param timeLimiterConfigurationProperties The timeLimiter configuration properties.
+     * @return a timeLimiterRegistry
+     */
+    private static TimeLimiterRegistry createTimeLimiterRegistry(TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
+                                                                 RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer) {
+        Map<String, TimeLimiterConfig> configs = timeLimiterConfigurationProperties.getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> timeLimiterConfigurationProperties.createTimeLimiterConfig(entry.getValue())));
+
+        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer);
+    }
+
+    /**
+     * Registers the post creation consumer function that registers the consumer events to the timeLimiters.
+     *
+     * @param timeLimiterRegistry   The timeLimiter registry.
+     * @param eventConsumerRegistry The event consumer registry.
+     * @param timeLimiterConfigurationProperties timeLimiter configuration properties
+     */
+    private static void registerEventConsumer(TimeLimiterRegistry timeLimiterRegistry,
+                                              EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry,
+                                              TimeLimiterConfigurationProperties timeLimiterConfigurationProperties) {
+        timeLimiterRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), timeLimiterConfigurationProperties));
+    }
+
+    private static void registerEventConsumer(EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry, TimeLimiter timeLimiter,
+                                              TimeLimiterConfigurationProperties timeLimiterConfigurationProperties) {
+        int eventConsumerBufferSize = Optional.ofNullable(timeLimiterConfigurationProperties.getInstanceProperties(timeLimiter.getName()))
+                .map(io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+                .orElse(100);
+        timeLimiter.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(timeLimiter.getName(), eventConsumerBufferSize));
+    }
+
+}

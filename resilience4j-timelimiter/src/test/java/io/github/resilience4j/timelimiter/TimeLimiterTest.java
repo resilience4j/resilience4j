@@ -149,4 +149,10 @@ public class TimeLimiterTest {
 
         assertThat(decoratedResult.getCause() instanceof RuntimeException).isTrue();
     }
+
+    @Test
+    public void shouldSetGivenName() {
+        TimeLimiter timeLimiter = TimeLimiter.ofDefaults("TEST");
+        assertThat(timeLimiter.getName()).isEqualTo("TEST");
+    }
 }

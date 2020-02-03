@@ -9,4 +9,6 @@ io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMetricsAutoCon
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakersHealthIndicatorAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterMetricsAutoConfiguration,\
-io.github.resilience4j.ratelimiter.autoconfigure.RateLimitersHealthIndicatorAutoConfiguration
+io.github.resilience4j.ratelimiter.autoconfigure.RateLimitersHealthIndicatorAutoConfiguration,\
+io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterAutoConfiguration,\
+io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterMetricsAutoConfiguration
