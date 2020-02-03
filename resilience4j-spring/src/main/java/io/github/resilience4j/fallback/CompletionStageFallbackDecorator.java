@@ -18,7 +18,9 @@ package io.github.resilience4j.fallback;
 import io.vavr.CheckedFunction0;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 
 /**
  * fallbackMethod decorator for {@link CompletionStage}
@@ -35,23 +37,14 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
     public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
         CheckedFunction0<Object> supplier) {
         return supplier.andThen(request -> {
-            CompletionStage completionStage = (CompletionStage) request;
-
+            CompletionStage<Object> completionStage = (CompletionStage) request;
             CompletableFuture promise = new CompletableFuture();
-
             completionStage.whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    try {
-                        ((CompletionStage) fallbackMethod.fallback((Throwable) throwable))
-                            .whenComplete((fallbackResult, fallbackThrowable) -> {
-                                if (fallbackThrowable != null) {
-                                    promise.completeExceptionally((Throwable) fallbackThrowable);
-                                } else {
-                                    promise.complete(fallbackResult);
-                                }
-                            });
-                    } catch (Throwable fallbackThrowable) {
-                        promise.completeExceptionally(fallbackThrowable);
+                if (throwable != null){
+                    if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
+                        tryRecover(fallbackMethod, promise, throwable.getCause());
+                    }else{
+                        tryRecover(fallbackMethod, promise, throwable);
                     }
                 } else {
                     promise.complete(result);
@@ -60,5 +53,22 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
 
             return promise;
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void tryRecover(FallbackMethod fallbackMethod, CompletableFuture promise,
+        Throwable throwable) {
+        try {
+            CompletionStage<Object> completionStage = (CompletionStage) fallbackMethod.fallback(throwable);
+            completionStage.whenComplete((fallbackResult, fallbackThrowable) -> {
+                    if (fallbackThrowable != null) {
+                        promise.completeExceptionally(fallbackThrowable);
+                    } else {
+                        promise.complete(fallbackResult);
+                    }
+                });
+        } catch (Throwable fallbackThrowable) {
+            promise.completeExceptionally(fallbackThrowable);
+        }
     }
 }
