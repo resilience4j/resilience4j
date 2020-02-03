@@ -18,6 +18,7 @@ package io.github.resilience4j.fallback;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +34,16 @@ public class FallbackMethodTest {
             .create("fallbackMethod", testMethod, new Object[]{"test"}, target);
         assertThat(fallbackMethod.fallback(new RuntimeException("err")))
             .isEqualTo("recovered-RuntimeException");
+    }
+
+    @Test
+    public void fallbackFuture() throws Throwable {
+        FallbackMethodTest target = new FallbackMethodTest();
+        Method testMethod = target.getClass().getMethod("testFutureMethod", String.class);
+        FallbackMethod fallbackMethod = FallbackMethod
+            .create("futureFallbackMethod", testMethod, new Object[]{"test"}, target);
+        CompletableFuture future = (CompletableFuture) fallbackMethod.fallback(new IllegalStateException("err"));
+        assertThat(future.get()).isEqualTo("recovered-IllegalStateException");
     }
 
     @Test
@@ -134,12 +145,20 @@ public class FallbackMethodTest {
         return "test";
     }
 
+    public CompletableFuture<String> testFutureMethod(String parameter) {
+        return CompletableFuture.completedFuture("test");
+    }
+
     public String fallbackMethod(String parameter, RuntimeException exception) {
         return "recovered-RuntimeException";
     }
 
     public String fallbackMethod(IllegalStateException exception) {
         return "recovered-IllegalStateException";
+    }
+
+    public CompletableFuture<String> futureFallbackMethod(String parameter, IllegalStateException exception) {
+        return CompletableFuture.completedFuture("recovered-IllegalStateException");
     }
 
     public String fallbackMethod(String parameter, IllegalArgumentException exception) {
