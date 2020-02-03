@@ -50,4 +50,8 @@ public class FallbackDecorators {
             .findFirst()
             .orElse(defaultFallbackDecorator);
     }
+
+    public List<FallbackDecorator> getFallbackDecorators() {
+        return fallbackDecorators;
+    }
 }
