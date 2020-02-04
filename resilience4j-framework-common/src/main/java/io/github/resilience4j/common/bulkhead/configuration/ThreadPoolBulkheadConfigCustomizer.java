@@ -24,10 +24,9 @@ public interface ThreadPoolBulkheadConfigCustomizer extends CustomizerWithName {
      * @param instanceName the name of the instance
      * @param consumer     delegate call to Consumer when  {@link ThreadPoolBulkheadConfigCustomizer#customize(ThreadPoolBulkheadConfig.Builder)}
      *                     is called
-     * @param <T>          generic type of Customizer
      * @return Customizer instance
      */
-    static <T> ThreadPoolBulkheadConfigCustomizer of(@NonNull String instanceName,
+    static ThreadPoolBulkheadConfigCustomizer of(@NonNull String instanceName,
         @NonNull Consumer<ThreadPoolBulkheadConfig.Builder> consumer) {
         return new ThreadPoolBulkheadConfigCustomizer() {
 

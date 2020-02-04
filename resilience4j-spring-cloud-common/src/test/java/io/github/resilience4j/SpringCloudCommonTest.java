@@ -20,6 +20,7 @@ import io.github.resilience4j.bulkhead.autoconfigure.AbstractRefreshScopedBulkhe
 import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractRefreshScopedCircuitBreakerConfiguration;
 import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRefreshScopedRateLimiterConfiguration;
 import io.github.resilience4j.retry.autoconfigure.AbstractRefreshScopedRetryConfiguration;
+import io.github.resilience4j.timelimiter.autoconfigure.AbstractRefreshScopedTimeLimiterConfiguration;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SpringCloudCommonTest {
 
     @Test
-    public void shouldHaveRefreshScopeAnnotation() {
+    public void testRefreshScopedBulkheadConfig() {
         Arrays.stream(AbstractRefreshScopedBulkheadConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
@@ -58,4 +59,10 @@ public class SpringCloudCommonTest {
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
+    @Test
+    public void testRefreshScopedTimeLimiterConfig() {
+        Arrays.stream(AbstractRefreshScopedTimeLimiterConfiguration.class.getMethods())
+            .filter(method -> method.isAnnotationPresent(Bean.class))
+            .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
+    }
 }

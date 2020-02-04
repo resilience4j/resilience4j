@@ -17,6 +17,7 @@
 package io.github.resilience4j.common.timelimiter.configuration;
 
 import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -24,6 +25,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +52,9 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
         return instances.get(backend);
     }
 
-    public TimeLimiterConfig createTimeLimiterConfig(@Nullable InstanceProperties instanceProperties) {
+    public TimeLimiterConfig createTimeLimiterConfig(String backendName,
+        @Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
         if (instanceProperties == null) {
             return TimeLimiterConfig.ofDefaults();
         }
@@ -59,20 +63,28 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeTimeLimiterCustomizer, backendName);
         }
-        return buildTimeLimiterConfig(TimeLimiterConfig.custom(), instanceProperties);
+        return buildTimeLimiterConfig(TimeLimiterConfig.custom(), instanceProperties,
+            compositeTimeLimiterCustomizer, backendName);
     }
 
     private static TimeLimiterConfig buildConfigFromBaseConfig(
-            InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+        InstanceProperties baseProperties, InstanceProperties instanceProperties,
+        CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer, String backendName) {
+
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        TimeLimiterConfig baseConfig = buildTimeLimiterConfig(TimeLimiterConfig.custom(), baseProperties);
-        return buildTimeLimiterConfig(TimeLimiterConfig.from(baseConfig), instanceProperties);
+        TimeLimiterConfig baseConfig = buildTimeLimiterConfig(TimeLimiterConfig.custom(), baseProperties,
+            compositeTimeLimiterCustomizer, backendName);
+        return buildTimeLimiterConfig(TimeLimiterConfig.from(baseConfig), instanceProperties,
+            compositeTimeLimiterCustomizer, backendName);
     }
 
     private static TimeLimiterConfig buildTimeLimiterConfig(
-            TimeLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties) {
+        TimeLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer, String backendName) {
+
         if (instanceProperties == null) {
             return builder.build();
         }
@@ -85,11 +97,15 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
             builder.cancelRunningFuture(instanceProperties.getCancelRunningFuture());
         }
 
+        compositeTimeLimiterCustomizer.getCustomizer(backendName).ifPresent(
+            timeLimiterConfigCustomizer -> timeLimiterConfigCustomizer.customize(builder));
+
         return builder.build();
     }
 
     public TimeLimiterConfig createTimeLimiterConfig(String limiter) {
-        return createTimeLimiterConfig(getInstanceProperties(limiter));
+        return createTimeLimiterConfig(limiter, getInstanceProperties(limiter),
+            new CompositeCustomizer<>(Collections.emptyList()));
     }
 
     public static class InstanceProperties {

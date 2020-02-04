@@ -24,10 +24,9 @@ public interface BulkheadConfigCustomizer extends CustomizerWithName {
      * @param instanceName the name of the instance
      * @param consumer     delegate call to Consumer when  {@link BulkheadConfigCustomizer#customize(BulkheadConfig.Builder)}
      *                     is called
-     * @param <T>          generic type of Customizer
      * @return Customizer instance
      */
-    static <T> BulkheadConfigCustomizer of(@NonNull String instanceName,
+    static  BulkheadConfigCustomizer of(@NonNull String instanceName,
         @NonNull Consumer<BulkheadConfig.Builder> consumer) {
         return new BulkheadConfigCustomizer() {
 
