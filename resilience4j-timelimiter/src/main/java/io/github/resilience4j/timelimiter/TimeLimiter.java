@@ -61,16 +61,16 @@ public interface TimeLimiter {
     }
 
     /**
-     * Creates a CircuitBreaker with a custom CircuitBreaker configuration.
+     * Creates a TimeLimiter with a custom TimeLimiter configuration.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
-     * @param name                 the name of the CircuitBreaker
-     * @param timeLimiterConfig a custom CircuitBreaker configuration
+     * @param name                 the name of the TimeLimiter
+     * @param timeLimiterConfig    a custom TimeLimiter configuration
      * @param tags                 tags added to the Retry
-     * @return a CircuitBreaker with a custom CircuitBreaker configuration.
+     * @return a TimeLimiter with a custom TimeLimiter configuration.
      */
     static TimeLimiter of(String name, TimeLimiterConfig timeLimiterConfig,
         io.vavr.collection.Map<String, String> tags) {
