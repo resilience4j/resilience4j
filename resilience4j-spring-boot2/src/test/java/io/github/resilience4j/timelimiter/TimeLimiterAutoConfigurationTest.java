@@ -46,6 +46,7 @@ public class TimeLimiterAutoConfigurationTest {
     public void testTimeLimiterAutoConfigurationTest() throws Exception {
         assertThat(timeLimiterRegistry).isNotNull();
         assertThat(timeLimiterProperties).isNotNull();
+        assertThat(timeLimiterRegistry.getTags()).isNotEmpty();
 
         TimeLimiterEventsEndpointResponse timeLimiterEventsBefore =
             timeLimiterEvents("/actuator/timelimiterevents");
