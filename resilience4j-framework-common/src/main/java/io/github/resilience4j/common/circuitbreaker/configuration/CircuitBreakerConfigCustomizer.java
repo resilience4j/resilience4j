@@ -24,10 +24,9 @@ public interface CircuitBreakerConfigCustomizer extends CustomizerWithName {
      * @param instanceName the name of the instance
      * @param consumer     delegate call to Consumer when  {@link CircuitBreakerConfigCustomizer#customize(CircuitBreakerConfig.Builder)}
      *                     is called
-     * @param <T>          generic type of Customizer
      * @return Customizer instance
      */
-    static <T> CircuitBreakerConfigCustomizer of(@NonNull String instanceName,
+    static CircuitBreakerConfigCustomizer of(@NonNull String instanceName,
         @NonNull Consumer<CircuitBreakerConfig.Builder> consumer) {
         return new CircuitBreakerConfigCustomizer() {
 

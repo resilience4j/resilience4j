@@ -1,10 +1,13 @@
 package io.github.resilience4j.common.timelimiter.configuration;
 
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.vavr.collection.List;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -128,4 +131,17 @@ public class TimeLimiterConfigurationPropertiesTest {
         defaultProperties.setTimeoutDuration(Duration.ofMillis(-1000));
     }
 
+    @Test
+    public void testCustomizeTimeLimiterConfig() {
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
+        TimeLimiterConfigCustomizer customizer = TimeLimiterConfigCustomizer.of("backend",
+            builder -> builder.timeoutDuration(Duration.ofSeconds(10)));
+        TimeLimiterConfigurationProperties.InstanceProperties instanceProperties = new TimeLimiterConfigurationProperties.InstanceProperties();
+        instanceProperties.setTimeoutDuration(Duration.ofSeconds(3));
+        TimeLimiterConfig config = timeLimiterConfigurationProperties.createTimeLimiterConfig("backend", instanceProperties,
+            new CompositeCustomizer<>(Collections.singletonList(customizer)));
+
+        assertThat(config).isNotNull();
+        assertThat(config.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(10));
+    }
 }

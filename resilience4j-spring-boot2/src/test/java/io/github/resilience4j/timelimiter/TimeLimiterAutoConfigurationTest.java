@@ -1,6 +1,8 @@
 package io.github.resilience4j.timelimiter;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.monitoring.endpoint.TimeLimiterEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
@@ -34,6 +36,9 @@ public class TimeLimiterAutoConfigurationTest {
     TimeLimiterAspect timeLimiterAspect;
 
     @Autowired
+    CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterConfigCustomizer;
+
+    @Autowired
     private DummyService dummyService;
 
     @Autowired
@@ -46,6 +51,8 @@ public class TimeLimiterAutoConfigurationTest {
     public void testTimeLimiterAutoConfigurationTest() throws Exception {
         assertThat(timeLimiterRegistry).isNotNull();
         assertThat(timeLimiterProperties).isNotNull();
+        assertThat(compositeTimeLimiterConfigCustomizer).isNotNull();
+        assertThat(compositeTimeLimiterConfigCustomizer.getCustomizer("timeLimiterBackendD").isPresent()).isTrue();
         assertThat(timeLimiterRegistry.getTags()).isNotEmpty();
 
         TimeLimiterEventsEndpointResponse timeLimiterEventsBefore =
