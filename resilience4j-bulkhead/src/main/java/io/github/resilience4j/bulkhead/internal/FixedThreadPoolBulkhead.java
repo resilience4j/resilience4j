@@ -143,6 +143,9 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
                     return callable.call();
                 } catch (Exception e) {
+                    if(e instanceof CompletionException){
+                        throw (CompletionException)e;
+                    }
                     throw new CompletionException(e);
                 }
             }), executorService).whenComplete((result, throwable) -> {

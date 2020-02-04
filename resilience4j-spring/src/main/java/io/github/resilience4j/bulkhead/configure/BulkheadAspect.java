@@ -43,6 +43,7 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead}
@@ -249,8 +250,10 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
                 try {
                     return ((CompletionStage<?>) proceedingJoinPoint.proceed())
                         .toCompletableFuture().get();
-                } catch (Throwable throwable) {
-                    throw new CompletionException(throwable);
+                } catch (ExecutionException e) {
+                    throw new CompletionException(e.getCause());
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
                 }
             });
         } else {
