@@ -16,6 +16,8 @@
 
 package io.github.resilience4j.timelimiter.configure;
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -30,6 +32,7 @@ import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import io.vavr.collection.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -48,14 +51,24 @@ import java.util.stream.Collectors;
 public class TimeLimiterConfiguration {
 
     @Bean
-    public TimeLimiterRegistry timeLimiterRegistry(TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
-                                                   EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventConsumerRegistry,
-                                                   RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer) {
+    @Qualifier("compositeTimeLimiterCustomizer")
+    public CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer(
+        @Autowired(required = false) List<TimeLimiterConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+    @Bean
+    public TimeLimiterRegistry timeLimiterRegistry(
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
+        EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventConsumerRegistry,
+        RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer,
+        @Qualifier("compositeTimeLimiterCustomizer") CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
         TimeLimiterRegistry timeLimiterRegistry =
-                createTimeLimiterRegistry(timeLimiterConfigurationProperties, timeLimiterRegistryEventConsumer);
+                createTimeLimiterRegistry(timeLimiterConfigurationProperties, timeLimiterRegistryEventConsumer,
+                    compositeTimeLimiterCustomizer);
         registerEventConsumer(timeLimiterRegistry, timeLimiterEventConsumerRegistry, timeLimiterConfigurationProperties);
-        timeLimiterConfigurationProperties.getInstances().forEach((name, properties) ->
-                timeLimiterRegistry.timeLimiter(name, timeLimiterConfigurationProperties.createTimeLimiterConfig(properties)));
+
+        initTimeLimiterRegistry(timeLimiterRegistry, timeLimiterConfigurationProperties, compositeTimeLimiterCustomizer);
         return timeLimiterRegistry;
     }
 
@@ -103,16 +116,37 @@ public class TimeLimiterConfiguration {
      * @param timeLimiterConfigurationProperties The timeLimiter configuration properties.
      * @return a timeLimiterRegistry
      */
-    private static TimeLimiterRegistry createTimeLimiterRegistry(TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
-                                                                 RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer) {
+    private static TimeLimiterRegistry createTimeLimiterRegistry(
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
+        RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer,
+        CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
+
         Map<String, TimeLimiterConfig> configs = timeLimiterConfigurationProperties.getConfigs()
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> timeLimiterConfigurationProperties.createTimeLimiterConfig(entry.getValue())));
+                        entry -> timeLimiterConfigurationProperties.createTimeLimiterConfig(
+                            entry.getKey(), entry.getValue(), compositeTimeLimiterCustomizer)));
 
         return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer,
             HashMap.ofAll(timeLimiterConfigurationProperties.getTags()));
     }
 
+    /**
+     * Initializes the TimeLimiter registry.
+     *
+     * @param timeLimiterRegistry The time limiter registry.
+     * @param compositeTimeLimiterCustomizer The Composite time limiter customizer
+     */
+    void initTimeLimiterRegistry(
+        TimeLimiterRegistry timeLimiterRegistry,
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
+        CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
+
+        timeLimiterConfigurationProperties.getInstances().forEach(
+            (name, properties) -> timeLimiterRegistry.timeLimiter(name,
+                timeLimiterConfigurationProperties
+                    .createTimeLimiterConfig(name, properties, compositeTimeLimiterCustomizer))
+        );
+    }
     /**
      * Registers the post creation consumer function that registers the consumer events to the timeLimiters.
      *

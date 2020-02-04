@@ -8,11 +8,13 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 
+import java.time.Duration;
 import java.util.List;
 
 
@@ -63,6 +65,13 @@ public class TestApplication {
     public RetryConfigCustomizer testRetryCustomizer() {
         return RetryConfigCustomizer.of("retryBackendD",
             builder -> builder.maxAttempts(4));
+    }
+
+
+    @Bean
+    public TimeLimiterConfigCustomizer testTimeLimiterCustomizer() {
+        return TimeLimiterConfigCustomizer.of("timeLimiterBackendD",
+            builder -> builder.timeoutDuration(Duration.ofSeconds(3)));
     }
 
     @Bean

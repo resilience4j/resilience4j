@@ -27,6 +27,7 @@ import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustom
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
@@ -42,6 +43,7 @@ import io.github.resilience4j.timelimiter.autoconfigure.AbstractTimeLimiterConfi
 import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -135,7 +137,10 @@ public class SpringBootCommonTest {
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterRegistry(new TimeLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
-                new CompositeRegistryEventConsumer<>(Collections.emptyList()))).isNotNull();
+                new CompositeRegistryEventConsumer<>(Collections.emptyList()),
+                new CompositeCustomizer<>(Collections.singletonList(
+                    TimeLimiterConfigCustomizer.of("backend", builder -> builder.timeoutDuration(
+                        Duration.ofSeconds(10))))))).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterAspect(new TimeLimiterConfigurationProperties(),
                 TimeLimiterRegistry.ofDefaults(), Collections.emptyList(),

@@ -1,5 +1,8 @@
 package io.github.resilience4j.timelimiter.configure;
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -11,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +42,7 @@ public class TimeLimiterConfigurationTest {
         DefaultEventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         // When
-        TimeLimiterRegistry timeLimiterRegistry = timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
+        TimeLimiterRegistry timeLimiterRegistry = timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()), compositeTimeLimiterCustomizerTestInstance());
 
         // Then
         assertThat(timeLimiterConfigurationProperties.getTimeLimiterAspectOrder()).isEqualTo(200);
@@ -84,7 +88,7 @@ public class TimeLimiterConfigurationTest {
         DefaultEventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         // When
-        TimeLimiterRegistry timeLimiterRegistry = timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()));
+        TimeLimiterRegistry timeLimiterRegistry = timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()), compositeTimeLimiterCustomizerTestInstance());
 
         // Then
         assertThat(timeLimiterRegistry.getAllTimeLimiters().size()).isEqualTo(2);
@@ -121,8 +125,13 @@ public class TimeLimiterConfigurationTest {
         DefaultEventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry = new DefaultEventConsumerRegistry<>();
 
         //When
-        assertThatThrownBy(() -> timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList())))
+        assertThatThrownBy(() -> timeLimiterConfiguration.timeLimiterRegistry(timeLimiterConfigurationProperties, eventConsumerRegistry, new CompositeRegistryEventConsumer<>(emptyList()), compositeTimeLimiterCustomizerTestInstance()))
                 .isInstanceOf(ConfigurationNotFoundException.class)
                 .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
+
+    private CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizerTestInstance() {
+        return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
 }
