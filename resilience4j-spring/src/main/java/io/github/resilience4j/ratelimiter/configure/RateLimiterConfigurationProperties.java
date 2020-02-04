@@ -20,7 +20,7 @@ import org.springframework.core.Ordered;
 public class RateLimiterConfigurationProperties extends
     io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties {
 
-    private int rateLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 1;
+    private int rateLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 2;
 
     /**
      * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then
