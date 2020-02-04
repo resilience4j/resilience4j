@@ -32,6 +32,7 @@ import io.vavr.control.Option;
 import io.vavr.control.Try;
 
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
@@ -282,7 +283,7 @@ public class RetryImpl<T> implements Retry {
         public long onError(Throwable throwable) {
             // Handle the case if the completable future throw CompletionException wrapping the original exception
             // where original exception is the the one to retry not the CompletionException.
-            if (throwable instanceof CompletionException) {
+            if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
                 Throwable cause = throwable.getCause();
                 return handleThrowable(cause);
             } else {
