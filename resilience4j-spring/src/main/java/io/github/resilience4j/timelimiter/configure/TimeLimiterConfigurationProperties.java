@@ -21,7 +21,7 @@ import org.springframework.core.Ordered;
 public class TimeLimiterConfigurationProperties extends
     io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties {
 
-    private int timeLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 4;
+    private int timeLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 1;
 
     public int getTimeLimiterAspectOrder() {
         return timeLimiterAspectOrder;
