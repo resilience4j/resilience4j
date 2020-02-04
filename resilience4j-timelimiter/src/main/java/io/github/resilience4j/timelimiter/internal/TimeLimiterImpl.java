@@ -6,9 +6,12 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
@@ -17,14 +20,23 @@ public class TimeLimiterImpl implements TimeLimiter {
     private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterImpl.class);
 
     private final String name;
+    private final Map<String, String> tags;
     private final TimeLimiterConfig timeLimiterConfig;
     private final TimeLimiterEventProcessor eventProcessor;
 
     public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig) {
+        this(name, timeLimiterConfig, HashMap.empty());
+
+    }
+
+    public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig,
+        io.vavr.collection.Map<String, String> tags) {
         this.name = name;
+        this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.timeLimiterConfig = timeLimiterConfig;
         this.eventProcessor = new TimeLimiterEventProcessor();
     }
+
 
     @Override
     public <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier) {
@@ -99,6 +111,11 @@ public class TimeLimiterImpl implements TimeLimiter {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     @Override

@@ -5,6 +5,8 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,8 +29,12 @@ public class TimeLimiterConfigurationPropertiesTest {
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
         timeLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         timeLimiterConfigurationProperties.getInstances().put("backend2", instanceProperties2);
+        Map<String,String> tags = new HashMap<>();
+        tags.put("testKey1","testKet2");
+        timeLimiterConfigurationProperties.setTags(tags);
 
         // Then
+        assertThat(timeLimiterConfigurationProperties.getTags()).isNotEmpty();
         assertThat(timeLimiterConfigurationProperties.getInstances().size()).isEqualTo(2);
         final TimeLimiterConfig timeLimiter1 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backend1");
         final TimeLimiterConfig timeLimiter2 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backend2");
@@ -71,7 +77,12 @@ public class TimeLimiterConfigurationPropertiesTest {
         timeLimiterConfigurationProperties.getInstances().put("backendWithDefaultConfig", backendWithDefaultConfig);
         timeLimiterConfigurationProperties.getInstances().put("backendWithSharedConfig", backendWithSharedConfig);
 
+        Map<String,String> globalTags = new HashMap<>();
+        globalTags.put("testKey1","testKet2");
+        timeLimiterConfigurationProperties.setTags(globalTags);
+
         //Then
+        assertThat(timeLimiterConfigurationProperties.getTags()).isNotEmpty();
         // Should get default config and overwrite max attempt and wait time
         TimeLimiterConfig timeLimiter1 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backendWithDefaultConfig");
         assertThat(timeLimiter1).isNotNull();

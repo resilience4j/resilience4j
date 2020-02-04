@@ -91,6 +91,20 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     }
 
     /**
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations.
+     * <p>
+     * Tags added to the registry will be added to every instance created by this registry.
+     *
+     * @param configs a Map of shared TimeLimiter configurations
+     * @param tags    default tags to add to the registry
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations.
+     */
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
+        io.vavr.collection.Map<String, String> tags) {
+        return new InMemoryTimeLimiterRegistry(configs, tags);
+    }
+
+    /**
      * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a
      * TimeLimiter registry event consumer.
      *
@@ -102,6 +116,22 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
         RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
         return new InMemoryTimeLimiterRegistry(configs, registryEventConsumer);
+    }
+
+    /**
+     * Creates a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a
+     * TimeLimiter registry event consumer.
+     *
+     * @param configs               a Map of shared TimeLimiter configurations.
+     * @param registryEventConsumer a TimeLimiter registry event consumer.
+     * @param tags                  default tags to add to the registry
+     * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations and a
+     * TimeLimiter registry event consumer.
+     */
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        return new InMemoryTimeLimiterRegistry(configs, registryEventConsumer, tags);
     }
 
     /**
@@ -135,6 +165,20 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     TimeLimiter timeLimiter(String name);
 
     /**
+     * Returns a managed {@link TimeLimiter} or creates a new one with the default TimeLimiter
+     * configuration.
+     * <p>
+     * The {@code tags} passed will be appended to the tags already configured for the registry.
+     * When tags (keys) of the two collide the tags passed with this method will override the tags
+     * of the registry.
+     *
+     * @param name the name of the TimeLimiter
+     * @param tags tags added to the TimeLimiter
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name, io.vavr.collection.Map<String, String> tags);
+
+    /**
      * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
      * configuration.
      *
@@ -143,6 +187,22 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @return The {@link TimeLimiter}
      */
     TimeLimiter timeLimiter(String name, TimeLimiterConfig timeLimiterConfig);
+
+    /**
+     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
+     * configuration.
+     * <p>
+     * The {@code tags} passed will be appended to the tags already configured for the registry.
+     * When tags (keys) of the two collide the tags passed with this method will override the tags
+     * of the registry.
+     *
+     * @param name              the name of the TimeLimiter
+     * @param timeLimiterConfig a custom TimeLimiter configuration
+     * @param tags              tags added to the TimeLimiter
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name, TimeLimiterConfig timeLimiterConfig,
+        io.vavr.collection.Map<String, String> tags);
 
     /**
      * Returns a managed {@link TimeLimiterConfig} or creates a new one with a custom
@@ -155,6 +215,23 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
     TimeLimiter timeLimiter(String name, Supplier<TimeLimiterConfig> timeLimiterConfigSupplier);
 
     /**
+     * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
+     * configuration.
+     * <p>
+     * The {@code tags} passed will be appended to the tags already configured for the registry.
+     * When tags (keys) of the two collide the tags passed with this method will override the tags
+     * of the registry.
+     *
+     * @param name                      the name of the TimeLimiter
+     * @param timeLimiterConfigSupplier a supplier of a custom TimeLimiter configuration
+     * @param tags                      tags added to the TimeLimiter
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name,
+        Supplier<TimeLimiterConfig> timeLimiterConfigSupplier,
+        io.vavr.collection.Map<String, String> tags);
+
+    /**
      * Returns a managed {@link TimeLimiter} or creates a new one.
      * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
@@ -163,5 +240,21 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @return The {@link TimeLimiter}
      */
     TimeLimiter timeLimiter(String name, String configName);
+
+    /**
+     * Returns a managed {@link TimeLimiter} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
+     * <p>
+     * The {@code tags} passed will be appended to the tags already configured for the registry.
+     * When tags (keys) of the two collide the tags passed with this method will override the tags
+     * of the registry.
+     *
+     * @param name       the name of the TimeLimiter
+     * @param configName the name of the shared configuration
+     * @param tags       tags added to the TimeLimiter
+     * @return The {@link TimeLimiter}
+     */
+    TimeLimiter timeLimiter(String name, String configName,
+        io.vavr.collection.Map<String, String> tags);
 
 }

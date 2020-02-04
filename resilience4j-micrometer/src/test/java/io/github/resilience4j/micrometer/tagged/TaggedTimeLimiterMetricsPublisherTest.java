@@ -22,6 +22,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,6 +72,18 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
             newTimeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
+    }
+
+    @Test
+    public void shouldAddCustomTags() {
+        TimeLimiter timeLimiterF = timeLimiterRegistry.timeLimiter("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        timeLimiterF.onSuccess();
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendA", "backendF");
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendF")).hasSize(3);
+
+        assertThat(meterRegistry.getMeters()).hasSize(6);
+        RequiredSearch match = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).tags("key1", "value1");
+        assertThat(match).isNotNull();
     }
 
     @Test

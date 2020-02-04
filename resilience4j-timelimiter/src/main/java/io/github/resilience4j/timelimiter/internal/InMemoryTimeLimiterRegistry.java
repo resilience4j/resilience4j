@@ -25,6 +25,7 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.vavr.collection.Array;
+import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
 import java.util.List;
@@ -42,11 +43,21 @@ public class InMemoryTimeLimiterRegistry extends
      * The constructor with default default.
      */
     public InMemoryTimeLimiterRegistry() {
-        this(TimeLimiterConfig.ofDefaults());
+        this(TimeLimiterConfig.ofDefaults(), HashMap.empty());
+    }
+
+    public InMemoryTimeLimiterRegistry(io.vavr.collection.Map<String, String> tags) {
+        this(TimeLimiterConfig.ofDefaults(), tags);
     }
 
     public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs) {
         this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()));
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
+        io.vavr.collection.Map<String, String> tags) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), tags);
         this.configurations.putAll(configs);
     }
 
@@ -58,9 +69,25 @@ public class InMemoryTimeLimiterRegistry extends
     }
 
     public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()), registryEventConsumer,
+            tags);
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
         List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
         this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()),
             registryEventConsumers);
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
+        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers,
+        io.vavr.collection.Map<String, String> tags) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()),
+            registryEventConsumers, tags);
         this.configurations.putAll(configs);
     }
 
@@ -74,13 +101,30 @@ public class InMemoryTimeLimiterRegistry extends
     }
 
     public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
+        io.vavr.collection.Map<String, String> tags) {
+        super(defaultConfig, tags);
+    }
+
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
         RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
     public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer,
+        io.vavr.collection.Map<String, String> tags) {
+        super(defaultConfig, registryEventConsumer, tags);
+    }
+
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
         List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
+    }
+
+    public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
+        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers,
+        io.vavr.collection.Map<String, String> tags) {
+        super(defaultConfig, registryEventConsumers, tags);
     }
 
     /**
@@ -96,7 +140,13 @@ public class InMemoryTimeLimiterRegistry extends
      */
     @Override
     public TimeLimiter timeLimiter(final String name) {
-        return timeLimiter(name, getDefaultConfig());
+        return timeLimiter(name, getDefaultConfig(), HashMap.empty());
+    }
+
+    @Override
+    public TimeLimiter timeLimiter(String name,
+        io.vavr.collection.Map<String, String> tags) {
+        return timeLimiter(name, getDefaultConfig(), tags);
     }
 
     /**
@@ -104,8 +154,15 @@ public class InMemoryTimeLimiterRegistry extends
      */
     @Override
     public TimeLimiter timeLimiter(final String name, final TimeLimiterConfig config) {
-        return computeIfAbsent(name, () -> new TimeLimiterImpl(name,
-            Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL)));
+        return timeLimiter(name, config, HashMap.empty());
+    }
+
+    @Override
+    public TimeLimiter timeLimiter(String name,
+        TimeLimiterConfig timeLimiterConfig,
+        io.vavr.collection.Map<String, String> tags) {
+        return computeIfAbsent(name, () -> TimeLimiter.of(name,
+            Objects.requireNonNull(timeLimiterConfig, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
     }
 
     /**
@@ -114,12 +171,16 @@ public class InMemoryTimeLimiterRegistry extends
     @Override
     public TimeLimiter timeLimiter(final String name,
         final Supplier<TimeLimiterConfig> timeLimiterConfigSupplier) {
-        return computeIfAbsent(name, () -> {
-            TimeLimiterConfig config = Objects
-                .requireNonNull(timeLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get();
-            return new TimeLimiterImpl(name,
-                Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL));
-        });
+        return timeLimiter(name, timeLimiterConfigSupplier, HashMap.empty());
+    }
+
+    @Override
+    public TimeLimiter timeLimiter(String name,
+        Supplier<TimeLimiterConfig> timeLimiterConfigSupplier,
+        io.vavr.collection.Map<String, String> tags) {
+        return computeIfAbsent(name, () -> TimeLimiter.of(name, Objects.requireNonNull(
+            Objects.requireNonNull(timeLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
+            CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
     }
 
     /**
@@ -127,10 +188,14 @@ public class InMemoryTimeLimiterRegistry extends
      */
     @Override
     public TimeLimiter timeLimiter(String name, String configName) {
-        return computeIfAbsent(name, () -> {
-            TimeLimiterConfig config = getConfiguration(configName)
-                .orElseThrow(() -> new ConfigurationNotFoundException(configName));
-            return TimeLimiter.of(name, config);
-        });
+        return timeLimiter(name, configName, HashMap.empty());
+    }
+
+    @Override
+    public TimeLimiter timeLimiter(String name, String configName,
+        io.vavr.collection.Map<String, String> tags) {
+        TimeLimiterConfig config = getConfiguration(configName)
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName));
+        return timeLimiter(name, config, tags);
     }
 }
