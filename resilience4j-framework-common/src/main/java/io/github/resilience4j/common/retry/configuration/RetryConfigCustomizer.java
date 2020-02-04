@@ -24,10 +24,9 @@ public interface RetryConfigCustomizer extends CustomizerWithName {
      * @param instanceName the name of the instance
      * @param consumer     delegate call to Consumer when  {@link RetryConfigCustomizer#customize(RetryConfig.Builder)}
      *                     is called
-     * @param <T>          generic type of Customizer
      * @return Customizer instance
      */
-    static <T> RetryConfigCustomizer of(@NonNull String instanceName,
+    static RetryConfigCustomizer of(@NonNull String instanceName,
         @NonNull Consumer<RetryConfig.Builder> consumer) {
         return new RetryConfigCustomizer() {
 

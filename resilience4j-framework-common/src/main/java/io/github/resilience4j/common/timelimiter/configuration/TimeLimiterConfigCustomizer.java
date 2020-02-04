@@ -39,10 +39,9 @@ public interface TimeLimiterConfigCustomizer extends CustomizerWithName {
      * @param instanceName the name of the instance
      * @param consumer     delegate call to Consumer when  {@link TimeLimiterConfigCustomizer#customize(TimeLimiterConfig.Builder)}
      *                     is called
-     * @param <T>          generic type of Customizer
      * @return Customizer instance
      */
-    static <T> TimeLimiterConfigCustomizer of(@NonNull String instanceName,
+    static TimeLimiterConfigCustomizer of(@NonNull String instanceName,
         @NonNull Consumer<TimeLimiterConfig.Builder> consumer) {
         return new TimeLimiterConfigCustomizer() {
 
