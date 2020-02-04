@@ -28,6 +28,7 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.vavr.collection.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -108,7 +109,8 @@ public class TimeLimiterConfiguration {
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> timeLimiterConfigurationProperties.createTimeLimiterConfig(entry.getValue())));
 
-        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer);
+        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer,
+            HashMap.ofAll(timeLimiterConfigurationProperties.getTags()));
     }
 
     /**

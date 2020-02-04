@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.common.timelimiter.configuration;
 
+import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -27,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class TimeLimiterConfigurationProperties {
+public class TimeLimiterConfigurationProperties extends CommonProperties {
 
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private final Map<String, InstanceProperties> configs = new HashMap<>();

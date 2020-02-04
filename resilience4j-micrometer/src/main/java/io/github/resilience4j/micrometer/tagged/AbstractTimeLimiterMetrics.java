@@ -20,6 +20,7 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,6 +41,11 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, TimeLimiter timeLimiter) {
+        List<Tag> customTags = mapToTagsList(timeLimiter.getTags().toJavaMap());
+        registerMetrics(meterRegistry, timeLimiter, customTags);
+    }
+
+    protected void registerMetrics(MeterRegistry meterRegistry, TimeLimiter timeLimiter, List<Tag> customTags) {
         // Remove previous meters before register
         removeMetrics(meterRegistry, timeLimiter.getName());
 
@@ -47,16 +53,19 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
             .description("The number of successful calls")
             .tag(TagNames.NAME, timeLimiter.getName())
             .tag(TagNames.KIND, KIND_SUCCESSFUL)
+            .tags(customTags)
             .register(meterRegistry);
         Counter failures = Counter.builder(names.getCallsMetricName())
             .description("The number of failed calls")
             .tag(TagNames.NAME, timeLimiter.getName())
             .tag(TagNames.KIND, KIND_FAILED)
+            .tags(customTags)
             .register(meterRegistry);
         Counter timeouts = Counter.builder(names.getCallsMetricName())
             .description("The number of timed out calls")
             .tag(TagNames.NAME, timeLimiter.getName())
             .tag(TagNames.KIND, KIND_TIMEOUT)
+            .tags(customTags)
             .register(meterRegistry);
 
         timeLimiter.getEventPublisher()

@@ -61,6 +61,23 @@ public interface TimeLimiter {
     }
 
     /**
+     * Creates a TimeLimiter with a custom TimeLimiter configuration.
+     * <p>
+     * The {@code tags} passed will be appended to the tags already configured for the registry.
+     * When tags (keys) of the two collide the tags passed with this method will override the tags
+     * of the registry.
+     *
+     * @param name                 the name of the TimeLimiter
+     * @param timeLimiterConfig    a custom TimeLimiter configuration
+     * @param tags                 tags added to the Retry
+     * @return a TimeLimiter with a custom TimeLimiter configuration.
+     */
+    static TimeLimiter of(String name, TimeLimiterConfig timeLimiterConfig,
+        io.vavr.collection.Map<String, String> tags) {
+        return new TimeLimiterImpl(name, timeLimiterConfig, tags);
+    }
+
+    /**
      * Creates a TimeLimiter decorator with a timeout Duration.
      *
      * @param timeoutDuration the timeout Duration
@@ -103,6 +120,13 @@ public interface TimeLimiter {
     }
 
     String getName();
+
+    /**
+     * Returns an unmodifiable map with tags assigned to this TimeLimiter.
+     *
+     * @return the tags assigned to this TimeLimiter in an unmodifiable map
+     */
+    io.vavr.collection.Map<String, String> getTags();
 
     /**
      * Get the TimeLimiterConfig of this TimeLimiter decorator.

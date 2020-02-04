@@ -138,7 +138,7 @@ resilience4j.bulkhead:
       maxWaitDuration: 100
       maxConcurrentCalls: 10
 
-resilience4j.thread-pool-bulkhead":
+resilience4j.thread-pool-bulkhead:
   tags:
     tag1: tag1Value
     tag2: tag2Value
@@ -164,6 +164,9 @@ resilience4j.thread-pool-bulkhead":
         - io.github.resilience4j.TestThreadLocalContextPropagator
 
 resilience4j.timelimiter:
+  tags:
+    tag1: tag1Value
+    tag2: tag2Value
   time-limiter-aspect-order: 398
   configs:
     default:
