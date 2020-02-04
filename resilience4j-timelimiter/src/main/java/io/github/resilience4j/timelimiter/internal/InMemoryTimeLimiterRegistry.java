@@ -171,11 +171,7 @@ public class InMemoryTimeLimiterRegistry extends
     @Override
     public TimeLimiter timeLimiter(final String name,
         final Supplier<TimeLimiterConfig> timeLimiterConfigSupplier) {
-        return computeIfAbsent(name, () -> {
-            TimeLimiterConfig config = Objects
-                .requireNonNull(timeLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get();
-            return timeLimiter(name, Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL), HashMap.empty());
-        });
+        return timeLimiter(name, timeLimiterConfigSupplier, HashMap.empty());
     }
 
     @Override
@@ -198,10 +194,8 @@ public class InMemoryTimeLimiterRegistry extends
     @Override
     public TimeLimiter timeLimiter(String name, String configName,
         io.vavr.collection.Map<String, String> tags) {
-        return computeIfAbsent(name, () -> {
-            TimeLimiterConfig config = getConfiguration(configName)
-                .orElseThrow(() -> new ConfigurationNotFoundException(configName));
-            return TimeLimiter.of(name, config, tags);
-        });
+        TimeLimiterConfig config = getConfiguration(configName)
+            .orElseThrow(() -> new ConfigurationNotFoundException(configName));
+        return timeLimiter(name, config, tags);
     }
 }
