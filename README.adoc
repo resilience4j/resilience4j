@@ -113,22 +113,17 @@ Resilience4j provides several core modules and add-on modules:
 
 [cols="<.<*", options="header"]
 |===
-|name |how does it work? | description |slogans |links
+|name |how does it work? | description |links
 
 |*Retry*
 |repeats failed executions
 |Many faults are transient and may self-correct after a short delay.
-|"Insert coin to try again",
-"Maybe it’s just a blip"
 |<<circuitbreaker-retry-fallback,overview>>,
 https://resilience4j.readme.io/docs/retry[documentation]
 
 |**Circuit Breaker**
 |temporary blocks possible failures
 |When a system is seriously struggling, failing fast is better than making clients wait.
-|"Stop doing it if it hurts",
-"Give that system a break",
-"Baby, don't hurt me, no more"
 |<<circuitbreaker-retry-fallback,overview>>,
 https://resilience4j.readme.io/docs/circuitbreaker[documentation],
 link:resilience4j-feign/README.adoc[Feign],
@@ -136,9 +131,7 @@ link:resilience4j-retrofit/README.adoc[Retrofit]
 
 |**Rate Limiter**
 | limits executions/period
-| Prepare for a scale and establish reliability and HA of your service.
-|"That's enough for this minute!",
-"Well, it'll work next time"
+| Limit the rate of incoming requests.
 |<<bulkhead,overview>>,
 https://resilience4j.readme.io/docs/ratelimiter[documentation],
 link:resilience4j-feign/README.adoc[Feign],
@@ -146,29 +139,23 @@ link:resilience4j-retrofit/README.adoc[Retrofit]
 
 |**Time Limiter**
 |limits duration of execution
-|Beyond a certain wait, a success result is unlikely.
-|"Don’t wait forever"
+|Beyond a certain wait interval, a successful result is unlikely.
 |
 
 |**Bulkhead**
 |limits concurrent executions
-| Resources are isolated into pools so that if one fails, the others will continue.
-|"One fault shouldn’t sink the whole ship",
-"Please, please, not all at once."
+| Resources are isolated into pools so that if one fails, the others will continue working.
 | <<bulkhead,overview>>,
 https://resilience4j.readme.io/docs/bulkhead[documentation]
 
 |**Cache**
 |memorizes a successful result
 | Some proportion of requests may be similar.
-|"You’ve asked that one before"
 |
 
 |**Fallback**
 |provides an alternative result for failures
 |Things will still fail - plan what you will do when that happens.
-|"Degrade gracefully",
-"A bird in the hand is worth two in the bush"
 |<<circuitbreaker-retry-fallback,Try::recover>>,
 https://resilience4j.readme.io/docs/getting-started-3#section-annotations[Spring],
 link:resilience4j-feign/README.adoc[Feign]
