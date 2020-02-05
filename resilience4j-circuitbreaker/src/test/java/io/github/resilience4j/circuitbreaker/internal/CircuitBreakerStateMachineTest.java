@@ -143,6 +143,38 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(false);
     }
 
+
+    @Test
+    public void shouldOpenAfterFailureRateThresholdExceeded2() {
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        mockClock.advanceBySeconds(1);
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
     @Test
     public void shouldOpenAfterFailureRateThresholdExceeded() {
         // A ring buffer with size 5 is used in closed state
@@ -275,10 +307,10 @@ public class CircuitBreakerStateMachineTest {
         CircuitBreaker intervalCircuitBreaker = new CircuitBreakerStateMachine("testName",
             CircuitBreakerConfig.custom()
                 .failureRateThreshold(50)
-                .ringBufferSizeInClosedState(5)
-                .ringBufferSizeInHalfOpenState(4)
+                .slidingWindowSize(5)
+                .permittedNumberOfCallsInHalfOpenState(4)
                 .waitIntervalFunctionInOpenState(IntervalFunction.ofExponentialBackoff(5000L))
-                .recordFailure(error -> !(error instanceof NumberFormatException))
+                .recordException(error -> !(error instanceof NumberFormatException))
                 .build(), mockClock);
 
         // Initially the CircuitBreaker is open
