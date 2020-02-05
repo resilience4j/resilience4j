@@ -52,15 +52,6 @@ public class SlidingTimeWindowMetrics implements Metrics {
     int headIndex;
 
     /**
-     * Creates a new {@link SlidingTimeWindowMetrics} with the given time window size.
-     *
-     * @param timeWindowSizeInSeconds the window time size in seconds
-     */
-    public SlidingTimeWindowMetrics(int timeWindowSizeInSeconds) {
-        this(timeWindowSizeInSeconds, Clock.systemUTC());
-    }
-
-    /**
      * Creates a new {@link SlidingTimeWindowMetrics} with the given clock and window of time.
      *
      * @param timeWindowSizeInSeconds the window time size in seconds

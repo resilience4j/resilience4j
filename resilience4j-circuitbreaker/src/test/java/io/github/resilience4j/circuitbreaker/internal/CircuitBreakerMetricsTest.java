@@ -18,9 +18,11 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import com.statemachinesystems.mockclock.MockClock;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.Test;
 
+import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
@@ -35,7 +37,7 @@ public class CircuitBreakerMetricsTest {
             .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
-            .forClosed(circuitBreakerConfig);
+            .forClosed(circuitBreakerConfig, MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC")));
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
