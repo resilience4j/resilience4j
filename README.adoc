@@ -101,7 +101,7 @@ Setup and usage is described in our *https://resilience4j.readme.io/docs[User Gu
 
 Resilience4j provides several core modules and add-on modules:
 
-=== All-inclusive package
+=== All core modules and the Decorators class
 
 * resilience4j-all
 
