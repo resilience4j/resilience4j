@@ -77,9 +77,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.name = name;
         this.circuitBreakerConfig = Objects
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
-        this.stateReference = new AtomicReference<>(new ClosedState());
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = clock;
+        this.stateReference = new AtomicReference<>(new ClosedState());
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
     }
@@ -524,7 +524,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isClosed;
 
         ClosedState() {
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig());
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig(), clock);
             this.isClosed = new AtomicBoolean(true);
         }
 
@@ -706,7 +706,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         DisabledState() {
             this.circuitBreakerMetrics = CircuitBreakerMetrics
-                .forDisabled(getCircuitBreakerConfig());
+                .forDisabled(getCircuitBreakerConfig(), clock);
         }
 
         /**
@@ -772,7 +772,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         MetricsOnlyState() {
             circuitBreakerMetrics = CircuitBreakerMetrics
-                .forMetricsOnly(getCircuitBreakerConfig());
+                .forMetricsOnly(getCircuitBreakerConfig(), clock);
             isFailureRateExceeded = new AtomicBoolean(false);
             isSlowCallRateExceeded = new AtomicBoolean(false);
         }
@@ -863,7 +863,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         ForcedOpenState(int attempts) {
             this.attempts = attempts;
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedOpen(circuitBreakerConfig);
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedOpen(circuitBreakerConfig, clock);
         }
 
         /**
@@ -935,7 +935,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
                 .getPermittedNumberOfCallsInHalfOpenState();
             this.circuitBreakerMetrics = CircuitBreakerMetrics
-                .forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
+                .forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig(), clock);
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
