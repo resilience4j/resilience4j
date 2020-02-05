@@ -85,8 +85,10 @@ publishing {
             pom.withXml {
                 def devs = ['RobWin': 'Robert Winkler',
                             'storozhukBM': 'Bogdan Storozhuk',
-                            'drmaas': 'Dan Maas',
-                            'Romeh': 'Mahmoud Romeh']
+                            'Romeh': 'Mahmoud Romeh',
+                            'dlsrb6342': 'Ingyu Hwhang',
+                            'Hexmind': 'Tomasz Skowroński',
+                            'drmaas': 'Dan Maas']
                 def root = asNode()
 
                 root.dependencies.'*'.findAll() {
