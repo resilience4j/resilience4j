@@ -130,9 +130,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     }
 
     /**
-     * @param callable the callable to execute through bulk head thread pool
-     * @param <T>      the result type
-     * @return the callable returned result
+     * {@inheritDoc}
      */
     @Override
     public <T> CompletableFuture<T> submit(Callable<T> callable) {
@@ -163,7 +161,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     }
 
     /**
-     * @param runnable the runnable to execute through bulk head thread pool
+     * {@inheritDoc}
      */
     @Override
     public CompletableFuture<Void> submit(Runnable runnable) {
