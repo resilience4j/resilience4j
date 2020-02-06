@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
@@ -41,6 +42,7 @@ import org.springframework.util.StringValueResolver;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
@@ -101,7 +103,7 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
         if (bulkheadAnnotation == null) {
-            bulkheadAnnotation = geBulkheadAnnotation(proceedingJoinPoint);
+            bulkheadAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
         }
         if (bulkheadAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
@@ -181,7 +183,7 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
      * @return Bulkhead annotation
      */
     @Nullable
-    private Bulkhead geBulkheadAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+    private Bulkhead getBulkheadAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
         if (logger.isDebugEnabled()) {
             logger.debug("bulkhead parameter is null");
         }
@@ -221,8 +223,8 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
         return bulkhead.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();
-            } catch (Throwable throwable) {
-                throw new CompletionException(throwable);
+            } catch (Throwable e) {
+                throw new CompletionException(e);
             }
         });
     }
@@ -246,16 +248,24 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
         }
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return threadPoolBulkhead.executeSupplier(() -> {
-                try {
-                    return ((CompletionStage<?>) proceedingJoinPoint.proceed())
-                        .toCompletableFuture().get();
-                } catch (ExecutionException e) {
-                    throw new CompletionException(e.getCause());
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            });
+            // threadPoolBulkhead.executeSupplier throws a BulkheadFullException, if the Bulkhead is full.
+            // The RuntimeException is converted into an exceptionally completed future
+            try {
+                return threadPoolBulkhead.executeSupplier(() -> {
+                    try {
+                        return ((CompletionStage<?>) proceedingJoinPoint.proceed())
+                            .toCompletableFuture().get();
+                    } catch (ExecutionException e) {
+                        throw new CompletionException(e.getCause());
+                    } catch (Throwable e) {
+                        throw new CompletionException(e);
+                    }
+                });
+            } catch (BulkheadFullException ex){
+                CompletableFuture<?> future = new CompletableFuture<>();
+                future.completeExceptionally(ex);
+                return future;
+            }
         } else {
             throw new IllegalStateException(
                 "ThreadPool bulkhead is only applicable for completable futures ");

@@ -19,6 +19,7 @@
 package io.github.resilience4j.decorators;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -58,25 +59,6 @@ public class DecoratorsTest {
     @Before
     public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
-    }
-
-    @Test
-    public void testExecuteSupplierInThreadPoolBulkhead() throws ExecutionException, InterruptedException {
-        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
-        CompletionStage<String> completionStage = Decorators
-            .ofCompletionStage(bulkhead.decorateSupplier(() -> helloWorldService.returnHelloWorld()))
-            .withCircuitBreaker(circuitBreaker)
-            .get();
-
-        String value = completionStage.toCompletableFuture().get();
-
-        assertThat(value).isEqualTo("Hello world");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
@@ -346,7 +328,81 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCompletionStageWithFallback() throws ExecutionException, InterruptedException {
+    public void testDecorateSupplierWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
+        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+
+        CompletionStage<String> completionStage = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withThreadPoolBulkhead(bulkheadMock)
+            .withFallback(BulkheadFullException.class, (e) -> "Fallback")
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Fallback");
+    }
+
+    @Test
+    public void testDecorateCallableWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
+        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+
+        CompletionStage<String> completionStage = Decorators
+            .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
+            .withThreadPoolBulkhead(bulkheadMock)
+            .withFallback(BulkheadFullException.class, (e) -> "Fallback")
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Fallback");
+    }
+
+    @Test
+    public void testDecorateRunnableWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
+        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+
+        CompletionStage<Void> completionStage = Decorators
+            .ofRunnable(() -> helloWorldService.sayHelloWorld())
+            .withThreadPoolBulkhead(bulkheadMock)
+            .withFallback(BulkheadFullException.class, (e) -> {
+                helloWorldService.sayHelloWorld();
+                return null;
+            })
+            .get();
+
+        completionStage.toCompletableFuture().get();
+
+        then(helloWorldService).should(times(1)).sayHelloWorld();
+    }
+
+
+    @Test
+    public void testDecorateCompletionStageWithCallNotPermittedExceptionFallback() throws ExecutionException, InterruptedException {
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        circuitBreaker.transitionToOpenState();
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
+        CompletionStage<String> completionStage = Decorators
+            .ofSupplier(() -> helloWorldService.returnHelloWorld())
+            .withThreadPoolBulkhead(bulkhead)
+            .withCircuitBreaker(circuitBreaker)
+            .withFallback(CallNotPermittedException.class, (e) -> "Fallback")
+            .get();
+
+        String result = completionStage.toCompletableFuture().get();
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateCompletionStageWithTimeoutExceptionFallback() throws ExecutionException, InterruptedException {
         TimeLimiter timeLimiter = TimeLimiter.of("helloBackend", TimeLimiterConfig.custom()
             .timeoutDuration(Duration.ofMillis(100)).build());
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -359,7 +415,7 @@ public class DecoratorsTest {
             .withThreadPoolBulkhead(bulkhead)
             .withTimeLimiter(timeLimiter, Executors.newSingleThreadScheduledExecutor())
             .withCircuitBreaker(circuitBreaker)
-            .withFallback(asList(TimeoutException.class, CallNotPermittedException.class), (e) -> "Fallback")
+            .withFallback(TimeoutException.class, (e) -> "Fallback")
             .get();
 
         String result = completionStage.toCompletableFuture().get();
