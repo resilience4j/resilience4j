@@ -296,4 +296,5 @@ NOTE: Breaking changes:
 * Issue #509: Added support to extend Micrometer tags
 * PR #831: non backward compatible API change in ThreadPoolBulkhead decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) now return Supplier<CompletionStage<Void>> instead of Runnable
 
-
+=== Version 1.3.0
+* Issue #596: Fixed a bug that a fallback method is not invoked when using CompletableFutures and a ThreadPoolBulkhead annotation
