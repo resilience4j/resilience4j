@@ -1,6 +1,7 @@
 package io.github.resilience4j.decorators;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -18,6 +19,7 @@ import io.vavr.CheckedRunnable;
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.*;
@@ -140,7 +142,20 @@ public interface Decorators {
         }
 
         public DecorateCompletionStage<T> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
-            return Decorators.ofCompletionStage(threadPoolBulkhead.decorateSupplier(supplier));
+            return Decorators.ofCompletionStage(getCompletionStageSupplier(threadPoolBulkhead));
+        }
+
+        private Supplier<CompletionStage<T>> getCompletionStageSupplier(
+            ThreadPoolBulkhead threadPoolBulkhead) {
+            return () -> {
+                try {
+                    return threadPoolBulkhead.executeSupplier(supplier);
+                } catch (BulkheadFullException ex) {
+                    CompletableFuture<T> future = new CompletableFuture<>();
+                    future.completeExceptionally(ex);
+                    return future;
+                }
+            };
         }
 
         public Supplier<T> decorate() {
@@ -232,7 +247,20 @@ public interface Decorators {
         }
 
         public DecorateCompletionStage<Void> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
-            return Decorators.ofCompletionStage(threadPoolBulkhead.decorateRunnable(runnable));
+            return Decorators.ofCompletionStage(getCompletionStageSupplier(threadPoolBulkhead));
+        }
+
+        private Supplier<CompletionStage<Void>> getCompletionStageSupplier(
+            ThreadPoolBulkhead threadPoolBulkhead) {
+            return () -> {
+                try {
+                    return threadPoolBulkhead.executeRunnable(runnable);
+                } catch (BulkheadFullException ex) {
+                    CompletableFuture<Void> future = new CompletableFuture<>();
+                    future.completeExceptionally(ex);
+                    return future;
+                }
+            };
         }
 
         public Runnable decorate() {
@@ -303,7 +331,20 @@ public interface Decorators {
         }
 
         public DecorateCompletionStage<T> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
-            return Decorators.ofCompletionStage(threadPoolBulkhead.decorateCallable(callable));
+            return Decorators.ofCompletionStage(getCompletionStageSupplier(threadPoolBulkhead));
+        }
+
+        private Supplier<CompletionStage<T>> getCompletionStageSupplier(
+            ThreadPoolBulkhead threadPoolBulkhead) {
+            return () -> {
+                try {
+                    return threadPoolBulkhead.executeCallable(callable);
+                } catch (BulkheadFullException ex) {
+                    CompletableFuture<T> future = new CompletableFuture<>();
+                    future.completeExceptionally(ex);
+                    return future;
+                }
+            };
         }
 
         public Callable<T> decorate() {

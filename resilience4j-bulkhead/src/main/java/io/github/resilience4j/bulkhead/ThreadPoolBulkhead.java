@@ -36,14 +36,16 @@ import java.util.function.Supplier;
 public interface ThreadPoolBulkhead {
 
     /**
-     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead and
-     * returns a CompletionStage representing the pending results of the task.
+     * Returns a supplier which submits a value-returning task for execution and
+     * returns a {@link CompletionStage} representing the pending results of the task.
+     *
+     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
      *
      * @param bulkhead the bulkhead
-     * @param callable the original Callable
+     * @param callable the value-returning task to submit
      * @param <T>      the result type of the callable
      * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
-     * results of the task.
+     * results of the task
      */
     static <T> Supplier<CompletionStage<T>> decorateCallable(ThreadPoolBulkhead bulkhead,
         Callable<T> callable) {
@@ -51,14 +53,16 @@ public interface ThreadPoolBulkhead {
     }
 
     /**
-     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead
-     * and returns a CompletionStage representing the pending results of the task.
+     * Returns a supplier which submits a value-returning task for execution
+     * and returns a {@link CompletionStage} representing the pending results of the task.
+     *
+     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
      *
      * @param bulkhead the bulkhead
-     * @param supplier the original Supplier
+     * @param supplier the value-returning task to submit
      * @param <T>      the result type of the supplier
      * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
-     * results of the task.
+     * results of the task
      */
     static <T> Supplier<CompletionStage<T>> decorateSupplier(ThreadPoolBulkhead bulkhead,
         Supplier<T> supplier) {
@@ -66,11 +70,14 @@ public interface ThreadPoolBulkhead {
     }
 
     /**
-     * Returns a runnable which is decorated by a bulkhead.
+     * Returns a supplier which submits a task for execution and returns a {@link CompletionStage} representing the state of the task.
+     *
+     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
      *
      * @param bulkhead the bulkhead
-     * @param runnable the original runnable
-     * @return a runnable which is decorated by a bulkhead.
+     * @param runnable the to submit
+     * @return a supplier which submits a task for execution to the ThreadPoolBulkhead
+     * and returns a CompletionStage representing the state of the task
      */
     static Supplier<CompletionStage<Void>> decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) {
         return () -> bulkhead.submit(runnable);
@@ -122,22 +129,25 @@ public interface ThreadPoolBulkhead {
     }
 
     /**
-     * Submits a value-returning task for execution and returns a Future representing the pending
-     * results of the task.
+     * Submits a value-returning task for execution and returns a {@link CompletionStage} representing the
+     * asynchronous computation  of the task.
      *
-     * @param task the task to submit
-     * @param <T>  the type of the task's result
-     * @return a CompletionStage representing the pending results of the task
-     * @throws BulkheadFullException if the no permits
+     * @param task the value-returning task to submit
+     * @param <T> the type of the task's result
+     * @return CompletionStage representing the asynchronous computation of the task. The CompletionStage is completed exceptionally with a {@link BulkheadFullException}
+     * when the task could not be submitted, because the Bulkhead was full
+     * @throws BulkheadFullException if the task cannot be submitted, because the Bulkhead is full
      */
     <T> CompletionStage<T> submit(Callable<T> task);
 
     /**
-     * Returns a supplier which submits a task for execution to the ThreadPoolBulkhead and returns a CompletionStage.
+     * Submits a task for execution to the ThreadPoolBulkhead and returns a {@link CompletionStage} representing the
+     * asynchronous computation  of the task.
+     *
      *
      * @param task the task to submit
-     * @return a CompletionStage representing the pending task
-     * @throws BulkheadFullException if the no permits
+     * @return CompletionStage representing the asynchronous computation of the task.
+     * @throws BulkheadFullException if the task cannot be submitted, because the Bulkhead is full
      */
     CompletionStage<Void> submit(Runnable task);
 
@@ -178,73 +188,82 @@ public interface ThreadPoolBulkhead {
     ThreadPoolBulkheadEventPublisher getEventPublisher();
 
     /**
-     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
-     * results of the task.
+     * Returns a supplier which submits a value-returning task for execution and
+     * returns a CompletionStage representing the asynchronous computation of the task.
      *
-     * @param supplier the original Supplier
-     * @param <T>      the result type of the supplier
-     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
-     * results of the task.
+     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
+     *
+     * @param supplier the value-returning task to submit
+     * @param <T>      the result type of the callable
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing
+     * the asynchronous computation of the task
      */
     default <T> Supplier<CompletionStage<T>> decorateSupplier(Supplier<T> supplier) {
         return decorateSupplier(this, supplier);
     }
 
     /**
-     * Returns a supplier which submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
-     * results of the task.
+     * Returns a supplier which submits a value-returning task for execution and
+     * returns a CompletionStage representing the asynchronous computation of the task.
      *
-     * @param callable the original Callable
+     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
+     *
+     * @param callable the value-returning task to submit
      * @param <T>      the result type of the callable
-     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
-     * results of the task.
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing
+     * the asynchronous computation of the task
      */
     default <T> Supplier<CompletionStage<T>> decorateCallable(Callable<T> callable) {
         return decorateCallable(this, callable);
     }
 
     /**
-     * Returns a supplier which submits a task for execution to the ThreadPoolBulkhead and returns a CompletionStage.
+     * Returns a supplier which submits a task for execution and returns a {@link CompletionStage} representing the
+     * asynchronous computation of the task.
      *
-     * @param runnable the original Runnable
-     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
-     * results of the task.
+     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
+     *
+     * @param runnable the task to submit
+     * @return a supplier which submits a task for execution and returns a CompletionStage representing
+     * the asynchronous computation of the task
      */
     default Supplier<CompletionStage<Void>> decorateRunnable(Runnable runnable) {
         return decorateRunnable(this, runnable);
     }
 
-
     /**
-     * Submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
-     * results of the task.
+     * Submits a value-returning task for execution and returns a {@link CompletionStage} representing the
+     * asynchronous computation of the task.
      *
-     * @param supplier the value-returning task
-     * @param <T>      the result type of the supplier
-     * @return the result of the decorated Supplier.
-     * @throws BulkheadFullException if the no permits
+     * @param supplier the value-returning task to submit
+     * @param <T> the type of the task's result
+     * @return a CompletionStage representing the asynchronous computation of the task.
+     * @throws BulkheadFullException if the task cannot be submitted, because the Bulkhead is full
      */
     default <T> CompletionStage<T> executeSupplier(Supplier<T> supplier) {
         return decorateSupplier(this, supplier).get();
     }
 
     /**
-     * Submits a value-returning task for execution to the ThreadPoolBulkhead and returns a CompletionStage representing the pending
-     * results of the task.
+     * Submits a value-returning task for execution and returns a {@link CompletionStage} representing the
+     * asynchronous computation  of the task.
      *
-     * @param callable the value-returning task
-     * @param <T>      the result type of the callable
-     * @return the result of the decorated Callable.
+     * @param callable the value-returning task to submit
+     * @param <T>      the result type of the Callable
+     * @return a {@link CompletionStage} representing the asynchronous computation of the task.
+     * @throws BulkheadFullException if the task cannot be submitted, because the Bulkhead is full
      */
     default <T> CompletionStage<T> executeCallable(Callable<T> callable) {
         return decorateCallable(this, callable).get();
     }
 
     /**
-     * Submits a task for execution to the ThreadPoolBulkhead and returns a CompletionStage.
+     * Submits a task for execution and returns a {@link CompletionStage} representing the
+     * asynchronous computation  of the task.
      *
-     * @param runnable the task
-     * @return the result of the decorated Callable.
+     * @param runnable the task to submit
+     * @return CompletionStage representing the asynchronous computation of the task.
+     * @throws BulkheadFullException if the task cannot be submitted, because the Bulkhead is full
      */
     default CompletionStage<Void> executeRunnable(Runnable runnable) {
         return decorateRunnable(this, runnable).get();
