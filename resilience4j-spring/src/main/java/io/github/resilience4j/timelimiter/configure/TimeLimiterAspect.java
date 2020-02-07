@@ -109,7 +109,8 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
         }
 
         if (!CompletionStage.class.isAssignableFrom(returnType)) {
-            throw new IllegalStateException("Not supported type by TimeLimiterAspect");
+            throw new IllegalReturnTypeException(returnType, methodName,
+                "CompletionStage expected.");
         }
 
         return handleJoinPointCompletableFuture(proceedingJoinPoint, timeLimiter);

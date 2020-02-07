@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,11 +41,19 @@ public class ReactorTimeLimiterAspectExtTest {
         assertThat(reactorTimeLimiterAspectExt.handle(proceedingJoinPoint, timeLimiter, "testMethod")).isNotNull();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldThrowIllegalArgumentExceptionWithNotReactorType() throws Throwable{
         TimeLimiter timeLimiter = TimeLimiter.ofDefaults("test");
         when(proceedingJoinPoint.proceed()).thenReturn("NOT REACTOR TYPE");
-        reactorTimeLimiterAspectExt.handle(proceedingJoinPoint, timeLimiter, "testMethod");
+
+        try {
+            reactorTimeLimiterAspectExt.handle(proceedingJoinPoint, timeLimiter, "testMethod");
+            fail("exception missed");
+        } catch (Throwable e) {
+            assertThat(e).isInstanceOf(IllegalReturnTypeException.class)
+                .hasMessage(
+                    "java.lang.String testMethod has unsupported by @TimeLimiter return type. Reactor expects Mono/Flux.");
+        }
     }
 
 }

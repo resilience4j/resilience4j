@@ -20,8 +20,6 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.transformer.TimeLimiterTransformer;
 import io.reactivex.*;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
@@ -29,7 +27,6 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 public class RxJava2TimeLimiterAspectExt implements TimeLimiterAspectExt {
 
-    private static final Logger logger = LoggerFactory.getLogger(RxJava2TimeLimiterAspectExt.class);
     private final Set<Class<?>> rxSupportedTypes = newHashSet(ObservableSource.class,
         SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
@@ -54,11 +51,12 @@ public class RxJava2TimeLimiterAspectExt implements TimeLimiterAspectExt {
         throws Throwable {
         TimeLimiterTransformer<?> timeLimiterTransformer = TimeLimiterTransformer.of(timeLimiter);
         Object returnValue = proceedingJoinPoint.proceed();
-        return executeRxJava2Aspect(timeLimiterTransformer, returnValue);
+        return executeRxJava2Aspect(timeLimiterTransformer, returnValue, methodName);
     }
 
     @SuppressWarnings("unchecked")
-    private static Object executeRxJava2Aspect(TimeLimiterTransformer timeLimiterTransformer, Object returnValue) {
+    private static Object executeRxJava2Aspect(TimeLimiterTransformer timeLimiterTransformer,
+        Object returnValue, String methodName) {
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable<?>) returnValue;
             return observable.compose(timeLimiterTransformer);
@@ -75,9 +73,8 @@ public class RxJava2TimeLimiterAspectExt implements TimeLimiterAspectExt {
             Flowable<?> flowable = (Flowable<?>) returnValue;
             return flowable.compose(timeLimiterTransformer);
         } else {
-            logger.error("Unsupported type for TimeLimiter RxJava2 {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException(
-                "Not Supported type for the TimeLimiter in RxJava2 :" + returnValue.getClass().getName());
+            throw new IllegalReturnTypeException(returnValue.getClass(), methodName,
+                "RxJava2 expects Flowable/Single/...");
         }
     }
 }

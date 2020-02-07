@@ -22,7 +22,8 @@ public class TimeLimiterRecoveryTest {
 
     @Test
     public void testAsyncRecovery() throws Exception {
-        assertThat(testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS)).isEqualTo("recovered");
+        String result = testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS);
+        assertThat(result).isEqualTo("recovered");
     }
 
     @Test
@@ -60,9 +61,9 @@ public class TimeLimiterRecoveryTest {
         assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
     }
 
-    @Test
+    @Test(expected = IllegalReturnTypeException.class)
     public void testSpelRecovery() {
-        assertThat(testDummyService.spelSync()).isEqualTo("recovered");
+        testDummyService.spelSync();
     }
 
 }
