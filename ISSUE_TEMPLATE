@@ -1,9 +1,7 @@
-Thanks for raising a Resilience4j issue.
-Please provide a brief description of your problem along with the versions you are using.
-If possible, please also consider putting together a complete JUnit test that reproduces the issue.
-
 Resilience4j version:
 
 Java version:
 
-Problem description:
+Thanks for raising a Resilience4j issue.
+Please replace this text with a brief description of your problem along with the versions you are using.
+If possible, please also consider putting together a complete JUnit test that reproduces the issue.
