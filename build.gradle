@@ -75,6 +75,8 @@ configure(project.coreProjects) {
     }
 }
 
+def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report.xml"
+
 sonarqube {
     properties {
         property "sonar.projectName", "resilience4j"
@@ -84,12 +86,14 @@ sonarqube {
         property "sonar.links.scm", "https://github.com/resilience4j/resilience4j"
         property "sonar.links.issue", "https://github.com/resilience4j/resilience4j/issues"
         property "sonar.language", "java"
+        property "sonar.coverage.jacoco.xmlReportPaths", allTestCoverageFile
     }
 }
 
 subprojects {
     jacocoTestReport {
         reports {
+            xml.destination file(allTestCoverageFile)
             xml.enabled true
         }
     }
