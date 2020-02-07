@@ -10,7 +10,7 @@ before_install:
   - chmod +x gradlew
 
 after_success:
-  - if [ -n "$SONAR_TOKEN" ]; then ./gradlew sonarqube; fi
+  - if [ -n "$SONAR_TOKEN" ]; then ./gradlew jacocoTestReport sonarqube; fi
   - if [ "$TRAVIS_BRANCH" = "master" ] &&  [ -n "$BINTRAY_USER" ] && [ -n "$PUBLISH" ]; then
       ./gradlew artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}";
     fi
