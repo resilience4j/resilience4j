@@ -578,8 +578,8 @@ public interface AdaptiveBulkhead {
         }
     }
 
-    interface Metrics extends Bulkhead.Metrics {
-
+	interface Metrics extends Bulkhead.Metrics {
+        
         /**
          * Returns the current failure rate in percentage. If the number of measured calls is below
          * the minimum number of measured calls, it returns -1.
