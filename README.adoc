@@ -51,7 +51,7 @@ Retry retry = Retry.ofDefaults("backendService");
 Bulkhead bulkhead = Bulkhead.ofDefaults("backendService");
 
 Supplier<String> supplier = () -> backendService
-  .doSomething(param1, param2)
+  .doSomething(param1, param2);
 
 // Decorate your call to backendService.doSomething() 
 // with a Bulkhead, CircuitBreaker and Retry
