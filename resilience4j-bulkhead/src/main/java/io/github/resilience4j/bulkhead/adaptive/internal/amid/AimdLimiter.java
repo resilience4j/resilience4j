@@ -41,11 +41,11 @@ public class AimdLimiter implements LimitPolicy {
 	private static final long MILLI_SCALE = 1_000_000L;
 	public static final String DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS = "Dropping the limit with new max concurrent calls {}";
 	private final AtomicInteger currentMaxLimit;
-	private final AdaptiveBulkheadConfig<AimdConfig> amidConfigAdaptiveBulkheadConfig;
+	private final AdaptiveBulkheadConfig amidConfigAdaptiveBulkheadConfig;
 	private final long desirableLatency;
 
 
-	public AimdLimiter(@NonNull AdaptiveBulkheadConfig<AimdConfig> config) {
+	public AimdLimiter(@NonNull AdaptiveBulkheadConfig config) {
 		this.amidConfigAdaptiveBulkheadConfig = config;
 		this.currentMaxLimit = new AtomicInteger(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit());
 		desirableLatency = amidConfigAdaptiveBulkheadConfig.getConfiguration().getDesirableLatency().toNanos();
@@ -108,7 +108,7 @@ public class AimdLimiter implements LimitPolicy {
 
 	private float getSlowCallRate(Snapshot snapshot) {
 		int bufferedCalls = snapshot.getTotalNumberOfCalls();
-		if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowSize()) {
+		if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getSlidingWindowSize()) {
 			return -1.0f;
 		}
 		return snapshot.getSlowCallRate();
@@ -116,7 +116,7 @@ public class AimdLimiter implements LimitPolicy {
 
 	private float getFailureRate(Snapshot snapshot) {
 		int bufferedCalls = snapshot.getTotalNumberOfCalls();
-		if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlidingWindowSize()) {
+		if (bufferedCalls == 0 || bufferedCalls < amidConfigAdaptiveBulkheadConfig.getSlidingWindowSize()) {
 			return -1.0f;
 		}
 		return snapshot.getFailureRate();

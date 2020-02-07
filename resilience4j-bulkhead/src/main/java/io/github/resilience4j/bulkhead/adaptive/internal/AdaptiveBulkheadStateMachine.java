@@ -22,20 +22,13 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
-import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AbstractConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.core.lang.NonNull;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
-import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,39 +38,45 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static java.util.Objects.requireNonNull;
+import static io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadMetrics.Result.ABOVE_THRESHOLDS;
 
-public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
-	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveLimitBulkhead.class);
-	private static final AdaptiveBulkheadEventProcessor eventProcessor = new AdaptiveBulkheadEventProcessor();
+public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
+
+	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveBulkheadStateMachine.class);
+
 	private final String name;
-	private final AdaptiveBulkheadConfig adaptationConfig;
-	private final InternalMetrics metrics;
+    private final AtomicReference<AdaptiveBulkheadState> stateReference;
+    private final AdaptiveBulkheadConfig adaptiveBulkheadConfig;
+    private final AdaptiveBulkheadEventProcessor eventProcessor;
+	private final AdaptiveBulkheadMetrics metrics;
 	private final Bulkhead bulkhead;
 	private final AtomicInteger inFlight = new AtomicInteger();
-	// current settings and measurements that you can read concurrently to expose metrics
-	private final BulkheadConfig currentConfig; // immutable object
-	@NonNull
-	private final LimitPolicy limitAdapter;
-	@NonNull
-	private final io.github.resilience4j.core.metrics.Metrics recordMetrics;
 
-	private AdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @NonNull LimitPolicy limitAdapter, @NonNull BulkheadConfig bulkheadConfig, io.github.resilience4j.core.metrics.Metrics recordMetrics) {
+	public AdaptiveBulkheadStateMachine(@NonNull String name, @NonNull AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
 		this.name = name;
-		this.limitAdapter = limitAdapter;
-		this.adaptationConfig = config;
-		this.currentConfig = bulkheadConfig;
-		bulkhead = new SemaphoreBulkhead(name + "-internal", this.currentConfig);
-		metrics = new InternalMetrics();
-		this.recordMetrics = recordMetrics;
+        this.adaptiveBulkheadConfig = Objects
+            .requireNonNull(adaptiveBulkheadConfig, "Config must not be null");
+        this.metrics = new AdaptiveBulkheadMetrics(adaptiveBulkheadConfig);
+        this.stateReference = new AtomicReference<>(new SlowStartState(metrics));
+        this.eventProcessor = new AdaptiveBulkheadEventProcessor();
+
+        BulkheadConfig internalBulkheadConfig = BulkheadConfig.custom()
+            .maxConcurrentCalls(adaptiveBulkheadConfig.getInitialConcurrentCalls())
+            .maxWaitDuration(adaptiveBulkheadConfig.getMaxWaitDuration())
+            .build();
+
+		bulkhead = new SemaphoreBulkhead(name + "-internal", internalBulkheadConfig);
 	}
 
 	@Override
 	public boolean tryAcquirePermission() {
-		boolean isAcquire = bulkhead.tryAcquirePermission();
+		boolean isAcquire = stateReference.get().tryAcquirePermission();
 		if (isAcquire) {
 			inFlight.incrementAndGet();
 		}
@@ -86,31 +85,33 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 
 	@Override
 	public void acquirePermission() {
-		bulkhead.acquirePermission();
+        stateReference.get().acquirePermission();
 		inFlight.incrementAndGet();
 	}
 
 	@Override
 	public void releasePermission() {
-		bulkhead.releasePermission();
+        stateReference.get().releasePermission();
 		inFlight.decrementAndGet();
 	}
 
 	@Override
-	public void onSuccess(long callTime, TimeUnit durationUnit) {
-		bulkhead.onComplete();
+	public void onSuccess(long duration, TimeUnit durationUnit) {
+        stateReference.get().onSuccess(duration, durationUnit);
+
+        // TODO
 		publishBulkheadEvent(new BulkheadOnSuccessEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), Collections.emptyMap()));
-		final LimitResult limitResult = record(callTime, true, inFlight.getAndDecrement());
+		final LimitResult limitResult = record(duration, true, inFlight.getAndDecrement());
 		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
 
 	@Override
 	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
 		//noinspection unchecked
-		if (adaptationConfig.getIgnoreExceptionPredicate().test(throwable)) {
+		if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
             releasePermission();
 			publishBulkheadEvent(new BulkheadOnIgnoreEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
-		} else if (adaptationConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
+		} else if (adaptiveBulkheadConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
 			Instant finish = Instant.now();
 			this.handleError(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit, throwable);
 		} else {
@@ -123,7 +124,7 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 
 	@Override
 	public AdaptiveBulkheadConfig getBulkheadConfig() {
-		return adaptationConfig;
+		return adaptiveBulkheadConfig;
 	}
 
 	@Override
@@ -141,49 +142,81 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		return name;
 	}
 
-	private final class InternalMetrics implements Metrics {
 
-		@Override
-		public double getFailureRate() {
-			return recordMetrics.getSnapshot().getFailureRate();
-		}
+    private class SlowStartState implements AdaptiveBulkheadState {
 
-		@Override
-		public double getSlowCallRate() {
-			return recordMetrics.getSnapshot().getSlowCallRate();
-		}
+        private final AdaptiveBulkheadMetrics adaptiveBulkheadMetrics;
+        private final AtomicBoolean isSlowStart;
 
-		@Override
-		public int getNumberOfSlowCalls() {
-			return recordMetrics.getSnapshot().getTotalNumberOfSlowCalls();
-		}
+        SlowStartState(AdaptiveBulkheadMetrics adaptiveBulkheadMetrics) {
+            this.adaptiveBulkheadMetrics = adaptiveBulkheadMetrics;
+            this.isSlowStart = new AtomicBoolean(true);
+        }
 
-		@Override
-		public int getNumberOfFailedCalls() {
-			return recordMetrics.getSnapshot().getNumberOfFailedCalls();
-		}
+        /**
+         * Returns always true, because the CircuitBreaker is closed.
+         *
+         * @return always true, because the CircuitBreaker is closed.
+         */
+        @Override
+        public boolean tryAcquirePermission() {
+            return isSlowStart.get();
+        }
 
-		@Override
-		public int getNumberOfSuccessfulCalls() {
-			return recordMetrics.getSnapshot().getNumberOfSuccessfulCalls();
-		}
+        /**
+         * Does not throw an exception, because the CircuitBreaker is closed.
+         */
+        @Override
+        public void acquirePermission() {
+            // noOp
+        }
 
-		@Override
-		public double getAverageLatencyMillis() {
-			return recordMetrics.getSnapshot().getAverageDuration().toMillis();
-		}
+        @Override
+        public void releasePermission() {
+            // noOp
+        }
 
-		@Override
-		public int getAvailableConcurrentCalls() {
-			return bulkhead.getMetrics().getAvailableConcurrentCalls();
-		}
+        @Override
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
+            // CircuitBreakerMetrics is thread-safe
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(duration, durationUnit));
+        }
 
-		@Override
-		public int getMaxAllowedConcurrentCalls() {
-			return currentConfig.getMaxConcurrentCalls();
-		}
-	}
+        @Override
+        public void onSuccess(long duration, TimeUnit durationUnit) {
+            // CircuitBreakerMetrics is thread-safe
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(duration, durationUnit));
+        }
 
+        /**
+         * Transitions to open state when thresholds have been exceeded.
+         *
+         * @param result the Result
+         */
+        private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
+            if (result == ABOVE_THRESHOLDS) {
+                if (isSlowStart.compareAndSet(true, false)) {
+                    // TODO DECREASE LIMIT
+                }
+            }
+        }
+
+        /**
+         * Get the state of the CircuitBreaker
+         */
+        @Override
+        public AdaptiveBulkhead.State getState() {
+            return State.SLOW_START;
+        }
+
+        /**
+         * Get metrics of the CircuitBreaker
+         */
+        @Override
+        public AdaptiveBulkheadMetrics getMetrics() {
+            return adaptiveBulkheadMetrics;
+        }
+    }
 
     private static class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
 
@@ -228,65 +261,31 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		return String.format("AdaptiveBulkhead '%s'", this.name);
 	}
 
+    private interface AdaptiveBulkheadState {
 
-	public static AdaptiveBulkheadFactory factory() {
-		return new AdaptiveBulkheadFactory();
-	}
+        boolean tryAcquirePermission();
 
-	/**
-	 * the adaptive bulkhead factory class
-	 */
-	public static class AdaptiveBulkheadFactory {
-		private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+        void acquirePermission();
 
-		private AdaptiveBulkheadFactory() {
-		}
+        void releasePermission();
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config) {
-			return createAdaptiveLimitBulkhead(name, config, null);
-		}
+        void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
+        void onSuccess(long duration, TimeUnit durationUnit);
 
-		public AdaptiveLimitBulkhead createAdaptiveLimitBulkhead(@NonNull String name, @NonNull AdaptiveBulkheadConfig config, @Nullable LimitPolicy customLimitAdapter) {
-			LimitPolicy limitAdapter = null;
-			io.github.resilience4j.core.metrics.Metrics metrics;
-			requireNonNull(config, CONFIG_MUST_NOT_BE_NULL);
-			int minLimit = 0;
-			if (customLimitAdapter != null) {
-				limitAdapter = customLimitAdapter;
-			}
-            if (config.getConfiguration().getSlidingWindowType() == AbstractConfig.SlidingWindow.COUNT_BASED) {
-				metrics = new FixedSizeSlidingWindowMetrics(config.getConfiguration().getSlidingWindowSize());
-			} else {
-				metrics = new SlidingTimeWindowMetrics(config.getConfiguration().getSlidingWindowTime());
-			}
-			if (limitAdapter == null) {
-				// default to AIMD limiter
-				@SuppressWarnings("unchecked")
-				AdaptiveBulkheadConfig<AimdConfig> aimdConfig = (AdaptiveBulkheadConfig<AimdConfig>) config;
-				minLimit = aimdConfig.getConfiguration().getMinLimit();
-				limitAdapter = new AimdLimiter(aimdConfig);
-			}
+        AdaptiveBulkhead.State getState();
 
-			int initialConcurrency = calculateConcurrency(minLimit, config);
-			BulkheadConfig currentConfig = BulkheadConfig.custom()
-					.maxConcurrentCalls(initialConcurrency)
-					.maxWaitDuration(Duration.ofMillis(0))
-					.build();
+        AdaptiveBulkheadMetrics getMetrics();
 
-			return new AdaptiveLimitBulkhead(name, config, limitAdapter, currentConfig, metrics);
-		}
-
-		private int calculateConcurrency(int minLimit, AdaptiveBulkheadConfig config) {
-			if (minLimit != 0) {
-				return (minLimit) > 0 ? minLimit : 1;
-			} else {
-				return config.getInitialConcurrency();
-			}
-		}
-
-
-	}
+        /**
+         * Should the AdaptiveBulkhead in this state publish events
+         *
+         * @return a boolean signaling if the events should be published
+         */
+        default boolean shouldPublishEvents(AdaptiveBulkheadEvent event) {
+            return event.getEventType().forcePublish || getState().allowPublish;
+        }
+    }
 
 	/**
 	 * @param eventSupplier the event supplier to be pushed to consumers
@@ -311,15 +310,15 @@ public class AdaptiveLimitBulkhead implements AdaptiveBulkhead {
 		}
 		Snapshot snapshot;
 		final long callTimeNanos = TimeUnit.MILLISECONDS.toNanos(callTime);
-		final long desirableLatency = adaptationConfig.getConfiguration().getDesirableLatency().toNanos();
+		final long slowCallDurationThresholdInNanos = adaptiveBulkheadConfig.getSlowCallDurationThreshold().toNanos();
 		if (isSuccess) {
-			if (callTimeNanos > desirableLatency) {
+			if (callTimeNanos > slowCallDurationThresholdInNanos) {
 				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_SUCCESS);
 			} else {
 				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SUCCESS);
 			}
 		} else {
-			if (callTimeNanos > desirableLatency) {
+			if (callTimeNanos > slowCallDurationThresholdInNanos) {
 				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_ERROR);
 			} else {
 				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.ERROR);

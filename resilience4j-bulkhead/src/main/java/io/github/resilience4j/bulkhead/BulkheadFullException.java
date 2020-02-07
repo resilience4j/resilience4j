@@ -69,7 +69,7 @@ public class BulkheadFullException extends RuntimeException {
     /**
      * The constructor with a message.
      *
-     * @param bulkhead the AdaptiveLimitBulkhead.
+     * @param bulkhead the AdaptiveBulkheadStateMachine.
      */
     public static BulkheadFullException createBulkheadFullException(AdaptiveBulkhead bulkhead) {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();

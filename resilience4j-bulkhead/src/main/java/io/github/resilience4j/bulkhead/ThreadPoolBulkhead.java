@@ -173,6 +173,17 @@ public interface ThreadPoolBulkhead {
     ThreadPoolBulkheadEventPublisher getEventPublisher();
 
     /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param supplier the original supplier
+     * @param <T>      the type of results supplied by this supplier
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    default <T> Supplier<CompletionStage<T>> decorateSupplier(Supplier<T> supplier) {
+        return decorateSupplier(this, supplier);
+    }
+
+    /**
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier
