@@ -118,6 +118,7 @@ tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
+    finalizedBy jacocoTestReport
 }
 
 artifactory {
