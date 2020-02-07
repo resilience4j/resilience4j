@@ -53,13 +53,13 @@ Bulkhead bulkhead = Bulkhead.ofDefaults("backendService");
 Supplier<String> supplier = () -> backendService
   .doSomething(param1, param2);
 
-// Decorate your call to backendService.doSomething() 
+// Decorate your call to backendService.doSomething()
 // with a Bulkhead, CircuitBreaker and Retry
 // **note: you will need the resilience4j-all dependency for this
 Supplier<String> decoratedSupplier = Decorators.ofSupplier(supplier)
   .withCircuitBreaker(circuitBreaker)
   .withBulkhead(bulkhead)
-  .withRetry(retry)  
+  .withRetry(retry)
   .decorate();
 
 // Execute the decorated supplier and recover from any exception
@@ -83,7 +83,7 @@ CompletableFuture<String> future = Decorators.ofSupplier(supplier)
     .withThreadPoolBulkhead(threadPoolBulkhead)
     .withTimeLimiter(timeLimiter, scheduledExecutorService)
     .withCircuitBreaker(circuitBreaker)
-    .withFallback(asList(TimeoutException.class, CallNotPermittedException.class, BulkheadFullException.class),  
+    .withFallback(asList(TimeoutException.class, CallNotPermittedException.class, BulkheadFullException.class),
       throwable -> "Hello from Recovery")
     .get().toCompletableFuture();
 ----
@@ -99,13 +99,7 @@ Setup and usage is described in our *https://resilience4j.readme.io/docs[User Gu
 
 == Overview
 
-Resilience4j provides several core modules and add-on modules:
-
-=== All core modules and the Decorators class
-
-* resilience4j-all
-
-=== Core modules
+Resilience4j provides several core modules:
 
 * resilience4j-circuitbreaker: Circuit breaking
 * resilience4j-ratelimiter: Rate limiting
@@ -114,32 +108,11 @@ Resilience4j provides several core modules and add-on modules:
 * resilience4j-timelimiter: Timeout handling
 * resilience4j-cache: Result caching
 
-=== Add-on modules
+There are also add-on modules for metrics, Retrofit, Feign, Kotlin, Spring, Ratpack, Vertx, RxJava2 and more.
 
-* resilience4j-retrofit: Retrofit adapter
-* resilience4j-feign: Feign adapter
-* resilience4j-consumer: Circular Buffer Event consumer
-* resilience4j-kotlin: Kotlin coroutines support
+NOTE: Find out full list of modules in our *https://resilience4j.readme.io/docs#section-modularization[User Guide]*.
 
-==== Frameworks modules
-
-* resilience4j-spring-boot: Spring Boot Starter
-* resilience4j-spring-boot2: Spring Boot 2 Starter
-* resilience4j-spring-boot-cloud: Spring Cloud Config Server
-* resilience4j-spring-boot-cloud2: Spring Cloud 2 Config Server
-* resilience4j-ratpack: Ratpack Starter
-* resilience4j-vertx: Vertx Future decorator
-
-==== Reactive modules
-
-* resilience4j-rxjava2: Custom RxJava2 operators
-* resilience4j-reactor: Custom Spring Reactor operators
-
-==== Metrics modules
-
-* resilience4j-micrometer: Micrometer Metrics exporter
-* resilience4j-metrics: Dropwizard Metrics exporter
-* resilience4j-prometheus: Prometheus Metrics exporter
+TIP: For core modules package or `Decorators` builder see *https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-all[resilience4j-all]*.
 
 == Resilience patterns
 
@@ -391,10 +364,10 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 [cols="4*"]
 |===
 
-|0:37
-|https://www.youtube.com/watch?v=YXP6RKdQkz0[Battle of the Circuit Breakers: Resilience4J vs Istio]
+|0:33
+|https://www.youtube.com/watch?v=AwcjOhD91Q0[Battle of the Circuit Breakers: Istio vs. Hystrix/Resilience4J]
 |Nicolas Frankel
-|GOTO Berlin
+|JFuture
 
 |0:42
 |https://www.youtube.com/watch?v=KosSsZEqS-k&t=157[Resilience patterns in the post-Hystrix world]
@@ -425,7 +398,7 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 
 == License
 
-Copyright 2019 Robert Winkler, Bohdan Storozhuk, Mahmoud Romeh and Dan Maas
+Copyright 2020 Robert Winkler, Bohdan Storozhuk, Mahmoud Romeh, Dan Maas and others
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
