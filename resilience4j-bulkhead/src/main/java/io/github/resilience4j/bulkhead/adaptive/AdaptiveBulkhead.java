@@ -20,7 +20,7 @@ package io.github.resilience4j.bulkhead.adaptive;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveLimitBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMachine;
 import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
@@ -475,22 +475,8 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead ofDefaults(String name) {
-		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, AdaptiveBulkheadConfig.ofDefaults());
+		return new AdaptiveBulkheadStateMachine(name, AdaptiveBulkheadConfig.ofDefaults());
 	}
-
-
-	/**
-	 * Creates a bulkhead with a custom configuration and custom limiter
-	 *
-	 * @param name         the name of the bulkhead
-	 * @param config       a custom BulkheadConfig configuration
-	 * @param limitAdapter the custom limit adopter
-	 * @return a Bulkhead instance
-	 */
-	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, LimitPolicy limitAdapter) {
-		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config, limitAdapter);
-	}
-
 	/**
 	 * Creates a bulkhead with a custom configuration
 	 *
@@ -499,7 +485,7 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config) {
-		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, config);
+		return new AdaptiveBulkheadStateMachine(name, config);
 	}
 
 	/**
@@ -510,45 +496,110 @@ public interface AdaptiveBulkhead {
 	 * @return a Bulkhead instance
 	 */
 	static AdaptiveBulkhead of(String name, Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
-		return AdaptiveLimitBulkhead.factory().createAdaptiveLimitBulkhead(name, bulkheadConfigSupplier.get());
+		return new AdaptiveBulkheadStateMachine(name, bulkheadConfigSupplier.get());
 	}
 
+    /**
+     * States of the AdaptiveBulkhead.
+     */
+    enum State {
+        /**
+         * A DISABLED adaptive bulkhead is not operating (no state transition, no events) and no limit changes.
+         */
+        DISABLED(3, false),
+        /**
+         * A FORCED_OPEN breaker is not operating (no state transition, no events) and not allowing
+         * any requests through.
+         */
+        SLOW_START(1, true),
+
+        CONGESTION_AVOIDANCE(2, true);
+
+        public final boolean allowPublish;
+        private final int order;
+
+        /**
+         * Order is a FIXED integer, it should be preserved regardless of the ordinal number of the
+         * enumeration. While a State.ordinal() does mostly the same, it is prone to changing the
+         * order based on how the programmer  sets the enum. If more states are added the "order"
+         * should be preserved. For example, if there is a state inserted between CLOSED and
+         * HALF_OPEN (say FIXED_OPEN) then the order of HALF_OPEN remains at 2 and the new state
+         * takes 3 regardless of its order in the enum.
+         *
+         * @param order
+         * @param allowPublish
+         */
+        State(int order, boolean allowPublish) {
+            this.order = order;
+            this.allowPublish = allowPublish;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+    }
+
 	interface Metrics extends Bulkhead.Metrics {
-		/**
-		 * Returns the current total number of calls which were slower than a certain threshold.
-		 *
-		 * @return the current total number of calls which were slower than a certain threshold
-		 */
-		int getNumberOfSlowCalls();
+        
+        /**
+         * Returns the current failure rate in percentage. If the number of measured calls is below
+         * the minimum number of measured calls, it returns -1.
+         *
+         * @return the failure rate in percentage
+         */
+        float getFailureRate();
 
-		/**
-		 * Returns the current number of failed buffered calls in the ring buffer.
-		 *
-		 * @return the current number of failed buffered calls in the ring buffer
-		 */
-		int getNumberOfFailedCalls();
+        /**
+         * Returns the current percentage of calls which were slower than a certain threshold. If
+         * the number of measured calls is below the minimum number of measured calls, it returns
+         * -1.
+         *
+         * @return the failure rate in percentage
+         */
+        float getSlowCallRate();
 
-		/**
-		 * Returns the current number of successful buffered calls in the ring buffer.
-		 *
-		 * @return the current number of successful buffered calls in the ring buffer
-		 */
-		int getNumberOfSuccessfulCalls();
+        /**
+         * Returns the current total number of calls which were slower than a certain threshold.
+         *
+         * @return the current total number of calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowCalls();
 
-		/**
-		 * @return average latency for service calls in millis
-		 */
-		double getAverageLatencyMillis();
+        /**
+         * Returns the current number of successful calls which were slower than a certain
+         * threshold.
+         *
+         * @return the current number of successful calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowSuccessfulCalls();
 
-		/**
-		 * @return current failure rate for recorded calls if error check is enabled for related exceptions
-		 */
-		double getFailureRate();
+        /**
+         * Returns the current number of failed calls which were slower than a certain threshold.
+         *
+         * @return the current number of failed calls which were slower than a certain threshold
+         */
+        int getNumberOfSlowFailedCalls();
 
-		/**
-		 * @return current slow call rate for the recorded calls
-		 */
-		double getSlowCallRate();
+        /**
+         * Returns the current total number of buffered calls in the sliding window.
+         *
+         * @return he current total number of buffered calls in the sliding window
+         */
+        int getNumberOfBufferedCalls();
+
+        /**
+         * Returns the current number of failed buffered calls in the sliding window.
+         *
+         * @return the current number of failed buffered calls in the sliding window
+         */
+        int getNumberOfFailedCalls();
+
+        /**
+         * Returns the current number of successful buffered calls in the sliding window.
+         *
+         * @return the current number of successful buffered calls in the sliding window
+         */
+        int getNumberOfSuccessfulCalls();
 	}
 
 	/**

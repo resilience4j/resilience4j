@@ -43,18 +43,36 @@ public interface AdaptiveBulkheadEvent {
 		/**
 		 * A AdaptiveBulkheadEvent which informs that a limit has been increased
 		 */
-		LIMIT_INCREASED,
+		LIMIT_INCREASED(false),
 		/**
 		 * A AdaptiveBulkheadEvent which informs that a limit has been decreased
 		 */
-		LIMIT_DECREASED,
+		LIMIT_DECREASED(false),
 		/** An adaptive bulkhead event which informs that an error has been recorded */
-		ERROR,
+		ERROR(false),
 		/** An adaptive bulkhead  which informs that an error has been ignored */
-		IGNORED_ERROR,
+		IGNORED_ERROR(false),
 		/** An adaptive bulkhead  which informs that a success has been recorded */
-		SUCCESS
+		SUCCESS(false),
 
-	}
+        /**
+         * A AdaptiveBulkheadEvent which informs the state of the AdaptiveBulkhead has been changed
+         */
+        STATE_TRANSITION(true),
+        /**
+         * A AdaptiveBulkheadEvent which informs the AdaptiveBulkhead has been reset
+         */
+        RESET(true),
+        /**
+         * A AdaptiveBulkheadEvent which informs the AdaptiveBulkhead has been disabled
+         */
+        DISABLED(false);
+
+        public final boolean forcePublish;
+
+        Type(boolean forcePublish) {
+            this.forcePublish = forcePublish;
+        }
+    }
 
 }
