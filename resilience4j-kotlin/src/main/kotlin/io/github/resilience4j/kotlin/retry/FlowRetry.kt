@@ -56,7 +56,7 @@ fun <T> Flow<T>.retry(retry: Retry): Flow<T> {
 
     }.onCompletion { e ->
         if (e == null)
-            retryContext.onSuccess()
+            retryContext.onComplete()
     }
 
 }
