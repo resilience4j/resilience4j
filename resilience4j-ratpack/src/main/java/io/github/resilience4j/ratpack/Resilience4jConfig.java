@@ -21,6 +21,7 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties;
 import ratpack.func.Function;
 
 import static ratpack.util.Exceptions.uncheck;
@@ -33,6 +34,7 @@ public class Resilience4jConfig {
     private CircuitBreakerConfigurationProperties circuitbreaker = new CircuitBreakerConfigurationProperties();
     private RateLimiterConfigurationProperties ratelimiter = new RateLimiterConfigurationProperties();
     private RetryConfigurationProperties retry = new RetryConfigurationProperties();
+    private TimeLimiterConfigurationProperties timeLimiter = new TimeLimiterConfigurationProperties();
     private boolean metrics = false;
     private boolean prometheus = false;
     private EndpointsConfig endpoints = new EndpointsConfig();
@@ -117,6 +119,22 @@ public class Resilience4jConfig {
         }
     }
 
+    public Resilience4jConfig timeLimiter(String name) {
+        return timeLimiter(name, config -> config);
+    }
+
+    public Resilience4jConfig timeLimiter(String name,
+                                          Function<? super TimeLimiterConfigurationProperties.InstanceProperties, ? extends TimeLimiterConfigurationProperties.InstanceProperties> configure) {
+        try {
+            TimeLimiterConfigurationProperties.InstanceProperties finalConfig = configure
+                .apply(new TimeLimiterConfigurationProperties.InstanceProperties());
+            timeLimiter.getInstances().put(name, finalConfig);
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
     public Resilience4jConfig metrics(boolean metrics) {
         this.metrics = metrics;
         return this;
@@ -155,6 +173,10 @@ public class Resilience4jConfig {
 
     public ThreadPoolBulkheadConfigurationProperties getThreadpoolbulkhead() {
         return threadpoolbulkhead;
+    }
+
+    public TimeLimiterConfigurationProperties getTimeLimiter() {
+        return timeLimiter;
     }
 
     public boolean isMetrics() {
