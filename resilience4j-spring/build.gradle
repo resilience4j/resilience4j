@@ -5,7 +5,7 @@ dependencies {
 
     compileOnly(libraries.aspectj)
     compileOnly(libraries.hibernate_validator)
-    compileOnly(libraries.spring_core, libraries.spring_context)
+    compileOnly(libraries.spring_core,libraries.spring_context)
     compileOnly(libraries.rxjava2)
     compileOnly(libraries.reactor)
 
@@ -23,8 +23,8 @@ dependencies {
     testCompile project(':resilience4j-rxjava2')
     testCompile(libraries.spring_context)
     testCompile(libraries.spring_test)
-    testCompile(libraries.spring_boot_web)
-    testCompile(libraries.spring_boot_aop)
-    testCompile(libraries.spring_boot_test)
+    testCompile(libraries.spring_boot2_web)
+    testCompile(libraries.spring_boot2_test)
+    testCompile(libraries.spring_boot2_aop)
 }
 ext.moduleName = 'io.github.resilience4j.spring'

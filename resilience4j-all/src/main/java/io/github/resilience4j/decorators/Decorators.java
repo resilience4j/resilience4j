@@ -42,7 +42,7 @@ import java.util.function.*;
  * This results in the following composition when executing the supplier: <br>
  * <pre>Fallback(Retry(CircuitBreaker(Supplier)))</pre>
  *
- * This means the Supplier is called first, then it’s result is handled by the CircuitBreaker, then Retry and then Fallback.
+ * This means the Supplier is called first, then its result is handled by the CircuitBreaker, then Retry and then Fallback.
  * Each Decorator makes its own determination whether an exception represents a failure.
  */
 public interface Decorators {
