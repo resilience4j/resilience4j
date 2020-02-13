@@ -67,7 +67,6 @@ configure(project.coreProjects) {
         options.deprecation = true
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
-
     }
 
     jmh {
@@ -90,10 +89,36 @@ sonarqube {
     }
 }
 
+task jacocoMergeTest(type: JacocoMerge) {
+    destinationFile = file(allTestCoverageFile)
+    executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+}
+
+task jacocoRootTestReport(type: JacocoReport) {
+
+    subprojects.each { dependsOn("${it.name}:test") }
+    subprojects.each { dependsOn("${it.name}:jacocoTestReport") }
+
+    additionalSourceDirs.from = subprojects.sourceSets.main.allSource.srcDirs
+    sourceDirectories.from = subprojects.sourceSets.main.allSource.srcDirs
+    classDirectories.from = subprojects.sourceSets.main.output
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+
+    onlyIf {
+        true
+    }
+
+    reports {
+        xml.enabled true
+        xml.destination file(allTestCoverageFile)
+        html.enabled true
+        csv.enabled false
+    }
+}
+
 subprojects {
     jacocoTestReport {
         reports {
-            xml.destination file(allTestCoverageFile)
             xml.enabled true
         }
     }
@@ -112,9 +137,8 @@ subprojects {
     }
 }
 
-tasks.check.dependsOn tasks.jacocoTestReport
-tasks.sonarqube.dependsOn tasks.jacocoTestReport
-
+tasks.check.dependsOn tasks.jacocoRootTestReport
+tasks.jacocoRootTestReport.dependsOn tasks.test
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
