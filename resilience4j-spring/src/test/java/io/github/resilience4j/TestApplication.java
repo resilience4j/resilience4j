@@ -15,25 +15,16 @@
  */
 package io.github.resilience4j;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
 
 @SpringBootApplication
 @Configuration
@@ -41,11 +32,6 @@ public class TestApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(TestApplication.class, args);
-    }
-
-    @Bean
-    public BulkheadRegistry bulkheadRegistry() {
-        return BulkheadRegistry.ofDefaults();
     }
 
     @Bean
@@ -59,18 +45,8 @@ public class TestApplication {
     }
 
     @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry() {
-        return CircuitBreakerRegistry.ofDefaults();
-    }
-
-    @Bean
     public CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties() {
         return new CircuitBreakerConfigurationProperties();
-    }
-
-    @Bean
-    public RateLimiterRegistry rateLimiterRegistry() {
-        return RateLimiterRegistry.ofDefaults();
     }
 
     @Bean
@@ -79,20 +55,8 @@ public class TestApplication {
     }
 
     @Bean
-    public RetryRegistry retryRegistry() {
-        RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(50)).build();
-        return RetryRegistry.of(config);
-    }
-
-    @Bean
     public RetryConfigurationProperties retryConfigurationProperties() {
         return new RetryConfigurationProperties();
-    }
-
-    @Bean
-    public TimeLimiterRegistry timeLimiterRegistry() {
-        TimeLimiterConfig config = TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(1)).build();
-        return TimeLimiterRegistry.of(config);
     }
 
     @Bean
