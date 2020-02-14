@@ -19,6 +19,10 @@ package io.github.resilience4j.feign;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 /**
  * Main class for combining feign with Resilience4j.
  *
@@ -37,6 +41,11 @@ public final class Resilience4jFeign {
 
     public static Builder builder(FeignDecorator invocationDecorator) {
         return new Builder(invocationDecorator);
+    }
+
+    public static <T> Feign.Builder builder(
+        Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper) {
+        return new PostponedBuilder<T>(completionStageWrapper);
     }
 
     public static final class Builder extends Feign.Builder {
@@ -61,6 +70,34 @@ public final class Resilience4jFeign {
             super.invocationHandlerFactory(
                 (target, dispatch) -> new DecoratorInvocationHandler(target, dispatch,
                     invocationDecorator));
+            return super.build();
+        }
+
+    }
+
+    public static final class PostponedBuilder<T> extends Feign.Builder {
+
+        private final Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper;
+
+        public PostponedBuilder(
+            Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper) {
+            this.completionStageWrapper = completionStageWrapper;
+        }
+
+        /**
+         * Will throw an {@link UnsupportedOperationException} exception.
+         */
+        @Override
+        public Feign.Builder invocationHandlerFactory(
+            InvocationHandlerFactory invocationHandlerFactory) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Feign build() {
+            super.invocationHandlerFactory((target, dispatch) ->
+                new DecoratorPostponedInvocationHandler<T>(
+                    target, dispatch, completionStageWrapper));
             return super.build();
         }
 
