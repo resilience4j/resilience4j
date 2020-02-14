@@ -40,6 +40,7 @@ import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfig
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.metrics.*;
@@ -56,10 +57,16 @@ import io.github.resilience4j.ratpack.ratelimiter.RateLimiterMethodInterceptor;
 import io.github.resilience4j.ratpack.ratelimiter.monitoring.endpoint.RateLimiterChain;
 import io.github.resilience4j.ratpack.retry.RetryMethodInterceptor;
 import io.github.resilience4j.ratpack.retry.monitoring.endpoint.RetryChain;
+import io.github.resilience4j.ratpack.timelimiter.TimeLimiterMethodInterceptor;
+import io.github.resilience4j.ratpack.timelimiter.monitoring.endpoint.TimeLimiterChain;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.prometheus.client.CollectorRegistry;
 import ratpack.dropwizard.metrics.DropwizardMetricsModule;
 import ratpack.guice.ConfigurableModule;
@@ -108,6 +115,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             injected(new RetryMethodInterceptor()));
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Bulkhead.class),
             injected(new BulkheadMethodInterceptor()));
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(TimeLimiter.class),
+            injected(new TimeLimiterMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(CircuitBreaker.class), Matchers.any(),
             injected(new CircuitBreakerMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(RateLimiter.class), Matchers.any(),
@@ -116,6 +125,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             injected(new RetryMethodInterceptor()));
         bindInterceptor(Matchers.annotatedWith(Bulkhead.class), Matchers.any(),
             injected(new BulkheadMethodInterceptor()));
+        bindInterceptor(Matchers.annotatedWith(TimeLimiter.class), Matchers.any(),
+            injected(new TimeLimiterMethodInterceptor()));
 
         // default registries
         OptionalBinder.newOptionalBinder(binder(), CircuitBreakerRegistry.class).setDefault()
@@ -128,6 +139,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             .toProvider(BulkheadRegistryProvider.class).in(Scopes.SINGLETON);
         OptionalBinder.newOptionalBinder(binder(), ThreadPoolBulkheadRegistry.class).setDefault()
             .toProvider(ThreadPoolBulkheadRegistryProvider.class).in(Scopes.SINGLETON);
+        OptionalBinder.newOptionalBinder(binder(), TimeLimiterRegistry.class).setDefault()
+            .toProvider(TimeLimiterRegistryProvider.class).in(Scopes.SINGLETON);
 
         // event consumers
         bind(new TypeLiteral<EventConsumerRegistry<CircuitBreakerEvent>>() {
@@ -138,6 +151,8 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         }).toInstance(new DefaultEventConsumerRegistry<>());
         bind(new TypeLiteral<EventConsumerRegistry<BulkheadEvent>>() {
         }).toInstance(new DefaultEventConsumerRegistry<>());
+        bind(new TypeLiteral<EventConsumerRegistry<TimeLimiterEvent>>() {
+        }).toInstance(new DefaultEventConsumerRegistry<>());
 
         // event chains
         Multibinder<HandlerDecorator> binder = Multibinder
@@ -146,6 +161,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
         bind(RateLimiterChain.class).in(Scopes.SINGLETON);
         bind(RetryChain.class).in(Scopes.SINGLETON);
         bind(BulkheadChain.class).in(Scopes.SINGLETON);
+        bind(TimeLimiterChain.class).in(Scopes.SINGLETON);
         binder.addBinding().toProvider(() -> (registry, rest) -> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getCircuitbreaker()
                 .isEnabled()) {
@@ -176,6 +192,14 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             if (registry.get(Resilience4jConfig.class).getEndpoints().getBulkhead().isEnabled()) {
                 return Handlers
                     .chain(Handlers.chain(registry, registry.get(BulkheadChain.class)), rest);
+            } else {
+                return rest;
+            }
+        });
+        binder.addBinding().toProvider(() -> (registry, rest) -> {
+            if (registry.get(Resilience4jConfig.class).getEndpoints().getTimelimiter().isEnabled()) {
+                return Handlers
+                    .chain(Handlers.chain(registry, registry.get(TimeLimiterChain.class)), rest);
             } else {
                 return rest;
             }
@@ -406,6 +430,49 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 });
 
             return threadPoolBulkheadRegistry;
+        }
+    }
+
+    private static class TimeLimiterRegistryProvider implements Provider<TimeLimiterRegistry> {
+
+        private Resilience4jConfig resilience4jConfig;
+        private EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry;
+
+        @Inject
+        public TimeLimiterRegistryProvider(Resilience4jConfig resilience4jConfig,
+                                           EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry) {
+            this.resilience4jConfig = resilience4jConfig;
+            this.eventConsumerRegistry = eventConsumerRegistry;
+        }
+
+        @Override
+        public TimeLimiterRegistry get() {
+            // build configs
+            TimeLimiterConfigurationProperties timeLimiterProperties = resilience4jConfig
+                .getTimeLimiter();
+            Map<String, TimeLimiterConfig> configs = timeLimiterProperties
+                .getConfigs()
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                    entry -> timeLimiterProperties.createTimeLimiterConfig(entry.getKey(), entry.getValue(),
+                        new CompositeCustomizer<>(Collections.emptyList()))));
+            TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.of(configs);
+
+            // build timelimiters
+            EndpointsConfig endpointsConfig = resilience4jConfig.getEndpoints();
+            timeLimiterProperties.getInstances().forEach((name, timeLimiterConfig) -> {
+                io.github.resilience4j.timelimiter.TimeLimiter timeLimiter =
+                    timeLimiterRegistry.timeLimiter(name,
+                        timeLimiterProperties.createTimeLimiterConfig(name, timeLimiterConfig,
+                            new CompositeCustomizer<>(Collections.emptyList())));
+                if (endpointsConfig.getTimelimiter().isEnabled()) {
+                    timeLimiter.getEventPublisher().onEvent(eventConsumerRegistry
+                        .createEventConsumer(name,
+                            timeLimiterConfig.getEventConsumerBufferSize() != null
+                                ? timeLimiterConfig.getEventConsumerBufferSize() : 100));
+                }
+            });
+
+            return timeLimiterRegistry;
         }
     }
 

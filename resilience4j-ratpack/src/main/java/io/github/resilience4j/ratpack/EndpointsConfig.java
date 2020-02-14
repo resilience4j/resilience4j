@@ -28,6 +28,7 @@ public class EndpointsConfig {
     private EndpointConfig retry = new EndpointConfig("retry");
     private EndpointConfig bulkhead = new EndpointConfig("bulkhead");
     private EndpointConfig threadpoolbulkhead = new EndpointConfig("threadpoolbulkhead");
+    private EndpointConfig timelimiter = new EndpointConfig("timelimiter");
 
     public EndpointConfig getCircuitbreaker() {
         return circuitbreaker;
@@ -92,7 +93,21 @@ public class EndpointsConfig {
     public EndpointsConfig threadPoolBulkheads(
         Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
         try {
-            threadpoolbulkhead = configure.apply(new EndpointConfig("threadpoolpulkhead"));
+            threadpoolbulkhead = configure.apply(new EndpointConfig("threadpoolbulkhead"));
+            return this;
+        } catch (Exception e) {
+            throw uncheck(e);
+        }
+    }
+
+    public EndpointConfig getTimelimiter() {
+        return timelimiter;
+    }
+
+    public EndpointsConfig timeLimiters(
+        Function<? super EndpointConfig, ? extends EndpointConfig> configure) {
+        try {
+            timelimiter = configure.apply(new EndpointConfig("timelimiter"));
             return this;
         } catch (Exception e) {
             throw uncheck(e);

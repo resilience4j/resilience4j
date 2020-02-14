@@ -18,7 +18,7 @@ ext {
     springVersion = '5.1.6.RELEASE'
     springBoot2Version = '2.1.4.RELEASE'
     springCloudContext2Version = '2.1.2.RELEASE'
-    ratpackVersion = '1.6.1'
+    ratpackVersion = '1.7.6'
     spockVersion = '1.3-groovy-2.5'
     retrofitVersion = '2.5.0'
     feignVersion = '10.2.0'
