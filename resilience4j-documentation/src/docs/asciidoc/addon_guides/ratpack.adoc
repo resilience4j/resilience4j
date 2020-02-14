@@ -21,13 +21,13 @@ dependencies {
 
 ==== Basic Usage
 
-Installing the `Resilience4jModule` module provides a `BulkheadRegistry` `CircuitBreakerRegistry`, `RateLimiterRegistry`,
-and `RetryRegistry` with the default configurations. It also install the Guice method interceptors
-for Bulkheads, CircuitBreakers, RateLimiters, and Retries. Finally, it allows configuration of metrics
-and even the building of Bulkheads, CircuitBreakers, RateLimiters, and Retries. See below for configuration details.
+Installing the `Resilience4jModule` module provides a `BulkheadRegistry`,  `CircuitBreakerRegistry`, `RateLimiterRegistry`,
+`RetryRegistry`, `ThreadPoolBulkheadRegistry`, and `TimeLimiterRegisty` with the default configurations. It also installs Guice method interceptors
+for `Bulkheads`, `CircuitBreakers`, `RateLimiters`, `Retries`, ``ThreadPoolBulkheads`, and `TimeLimiters`. Finally, it allows configuration of metrics
+and even the building of `Bulkheads`, `CircuitBreakers`, `RateLimiters`, `Retries`, `ThreadPoolBulkheads`, and `TimeLimiters`. See below for configuration details.
 
-Note: If you don't register a `CircuitBreakerRegistry` or `RateLimiterRegistry` or `RetryRegistry`, the defaults
-will be used.
+Note: If you don't register a `BulkheadRegistry`, `CircuitBreakerRegistry`, `RateLimiterRegistry`, `RetryRegistry`,
+`ThreadPoolBulkheadRegistry`, or `TimeLimiterRegisty`, the defaults will be used.
 
 For example
 
@@ -167,6 +167,18 @@ public Promise<String> methodWhichReturnsAPromise() {
 }
 ----
 
+===== TimeLimiter
+
+You can easily apply a TimeLimiter to any Ratpack Promise, given an existing `TimeLimiter` instance called `timeLimiter`.
+
+[source,java]
+----
+public Promise<String> methodWhichReturnsAPromise() {
+    return backendBConnector.methodWhichReturnsAPromise()
+            .transform(TimeLimiterTransformer.of(timeLimiter).recover(t -> "recovered"));
+}
+----
+
 ==== Guice AOP
 
 Guice provides method interception capabilities. Here are provided some annotations which support
@@ -174,9 +186,9 @@ methods returning types:
 
 * Promise
 * CompletionStage
-* Object
 * Flux
 * Mono
+* Object (except for a `TimeLimiter`, where the asynchronous nature of the timer threads are non-intuitive)
 
 ===== A Note About Fallback Methods
 
@@ -322,9 +334,25 @@ public class BackendAConnector implements Connector {
 Where `fallbackMethod` is a method in the same class that provides
 a fallback value that is returned when the rate limiter rate limit identified by `name` is exceeded.
 
+===== TimeLimiter
+The demo shows how to use the `TimeLimiter` annotation to make your Ratpack application more fault tolerant.
+You can either annotate a class in order to protect all public methods or just some specific methods.
+For example:
+
+[source,java]
+----
+@TimeLimiter(name = "backendA", fallbackMethod = "fallback")
+@Singleton
+public class BackendAConnector implements Connector {
+    ...
+}
+----
+Where `fallbackMethod` is a method in the same class that provides
+a fallback value that is returned when the time limiter timeout identified by `name` is exceeded.
+
 ==== Functional style
 
-You can still use a functional programming style for Bulkhead, CircuitBreaker, Retry, and RateLimiter. For example:
+You can still use a functional programming style for Bulkhead, CircuitBreaker, Retry, RateLimiter, and TimeLimiter. For example:
 
 [source,java]
 ----
@@ -345,7 +373,7 @@ public class BusinessBService implements BusinessService  {
 }
 ----
 
-==== Adding Bulkheads, CircuitBreakers, RateLimiters, and Retries
+==== Adding Bulkheads, CircuitBreakers, RateLimiters, Retries, and TimeLimiters
 These can be defined in the module configuration or in an external configuration.
 Note that the module only provide default registries, which you can replace by
 binding your own.
@@ -354,7 +382,9 @@ Module configuration example:
 
 [source,java]
 ----
-import java.time.Duration;public class MyModule extends AbstractModule {
+import java.time.Duration;
+
+public class MyModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -387,6 +417,9 @@ import java.time.Duration;public class MyModule extends AbstractModule {
                 .setMaxAttempts(3)
                 .setWaitDuration(Duration.ofMillis(1000))
             )
+            .timeLimiter("test1", cb -> cb
+                .setTimeout(Duration.ofMillis(1000))
+            )
         );
         install(module);
     }
@@ -413,7 +446,7 @@ ratpack {
 }
 ----
 
-Note that `recordFailurePredicate` cannot be specified via `yaml` configuration. Instead specify `recordExceptions` and `ignoreExceptions`.
+Note that `recordFailurePredicate` cannot be specified via `yml` configuration. Instead specify `recordExceptions` and `ignoreExceptions`.
 The below example will record everything exception `java.io.IOException`.
 
 [source,yaml]
@@ -497,11 +530,20 @@ resilience4j:
             test2:
                 maxRetryAttempts: 3
                 waitDurationInMillis: 1000
+    timeLimiter:
+        configs:
+            default:
+                timeoutInMillis: 1000
+        instances:
+            test1:
+                baseConfig: default
+            test2:
+                timeoutInMillis: 2000
 ----
 
 ==== Metrics
 Both dropwizard and prometheus metrics can be auto configured and enabled for all registered
-bulkhead instances, circuitbreaker instances, ratelimiter instances, and retry instances.
+bulkhead instances, circuitbreaker instances, ratelimiter instances, retry instances, and timelimiter instances.
 
 For dropwizard metrics to work, add a gradle compile dependency on resilience4j-metrics and ratpack-dropwizard-metrics
 and then bind a MetricRegistry instance.
@@ -709,7 +751,7 @@ For example /circuitbreaker/events/backendA/ERROR`:
 ----
 
 ===== RateLimiter
-These are the same endpoints as implemented for CircuitBreaker,
+These are the same endpoints as implemented for RateLimiter,
 so for detailed documentation please refer to previous section.
 
 List of available endpoints:
@@ -745,7 +787,7 @@ Example of response:
 ----
 
 ===== Retry
-These are the same endpoints as implemented for CircuitBreaker,
+These are the same endpoints as implemented for Retry,
 so for detailed documentation please refer to previous sections.
 
 List of available endpoints:
@@ -778,6 +820,42 @@ Example of response:
       "retryEventType": "ERROR",
       "numberOfRetryAttempts":3,
       "retryCreationTime": "2017-05-05T21:29:41.268+03:00[Europe/Uzhgorod]"
+    }
+  ]
+}
+----
+
+===== TimeLimiter
+These are the same endpoints as implemented for TimeLimiter,
+so for detailed documentation please refer to previous section.
+
+List of available endpoints:
+
+* `/timelimiter/events`
+* `/timelimiter/stream/events`
+* `/timelimiter/events/{retryName}`
+* `/timelimiter/stream/events/{retryName}`
+* `/timelimiter/events/{retryName}/{eventType}`
+* `/timelimiter/stream/events/{retryName}/{eventType}`
+
+Example of response:
+----
+{
+  "timeLimiterEvents": [
+    {
+      "timeLimiterName": "backendA",
+      "type": "SUCCESS",
+      "creationTime": "2020-02-13T21:42:58.757127-06:00[America/Chicago]"
+    },
+    {
+      "timeLimiterName": "backendA",
+      "type": "SUCCESS",
+      "creationTime": "2020-02-13T21:42:59.262522-06:00[America/Chicago]"
+    },
+    {
+      "timeLimiterName": "backendB",
+      "type": "TIMEOUT",
+      "creationTime": "2020-02-13T21:42:59.669971-06:00[America/Chicago]"
     }
   ]
 }
