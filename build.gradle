@@ -1,5 +1,5 @@
 plugins {
-    id "org.sonarqube" version "2.7"
+    id "org.sonarqube" version "2.8"
     id "com.jfrog.bintray" version "1.8.4"
     id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
@@ -67,13 +67,14 @@ configure(project.coreProjects) {
         options.deprecation = true
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
-
     }
 
     jmh {
         duplicateClassesStrategy = 'warn'
     }
 }
+
+def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report.xml"
 
 sonarqube {
     properties {
@@ -84,25 +85,44 @@ sonarqube {
         property "sonar.links.scm", "https://github.com/resilience4j/resilience4j"
         property "sonar.links.issue", "https://github.com/resilience4j/resilience4j/issues"
         property "sonar.language", "java"
+        property "sonar.coverage.jacoco.xmlReportPaths", allTestCoverageFile
     }
 }
-def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
 
 task jacocoMergeTest(type: JacocoMerge) {
     destinationFile = file(allTestCoverageFile)
     executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
 }
 
-task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
-    // used to run the other merge tasks
+task jacocoRootTestReport(type: JacocoReport) {
+
+    subprojects.each { dependsOn("${it.name}:test") }
+    subprojects.each { dependsOn("${it.name}:jacocoTestReport") }
+
+    additionalSourceDirs.from = subprojects.sourceSets.main.allSource.srcDirs
+    sourceDirectories.from = subprojects.sourceSets.main.allSource.srcDirs
+    classDirectories.from = subprojects.sourceSets.main.output
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+
+    onlyIf {
+        true
+    }
+
+    reports {
+        xml.enabled true
+        xml.destination file(allTestCoverageFile)
+        html.enabled true
+        csv.enabled false
+    }
 }
 
 subprojects {
-    sonarqube {
-        properties {
-            property "sonar.jacoco.reportPaths", allTestCoverageFile
+    jacocoTestReport {
+        reports {
+            xml.enabled true
         }
     }
+
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
         if (!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
@@ -117,8 +137,8 @@ subprojects {
     }
 }
 
-tasks.check.dependsOn tasks.jacocoTestReport
-
+tasks.check.dependsOn tasks.jacocoRootTestReport
+tasks.jacocoRootTestReport.dependsOn tasks.test
 
 test {
     dependsOn(subprojects.test) // required by cobertura to aggregate report
