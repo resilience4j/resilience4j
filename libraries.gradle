@@ -15,7 +15,7 @@ ext {
     metricsVersion = '3.2.6'
     vertxVersion = '3.7.0'
     aspectjVersion = '1.9.2'
-    springVersion = '5.1.6.RELEASE'
+    springVersion = '5.1.13.RELEASE'
     springBoot2Version = '2.1.4.RELEASE'
     springCloudContext2Version = '2.1.2.RELEASE'
     ratpackVersion = '1.7.6'
