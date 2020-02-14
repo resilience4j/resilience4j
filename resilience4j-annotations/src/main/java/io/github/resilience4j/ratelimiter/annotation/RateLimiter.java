@@ -27,6 +27,7 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Documented
+@Repeatable(RateLimiters.class)
 public @interface RateLimiter {
 
     /**
@@ -38,7 +39,7 @@ public @interface RateLimiter {
 
     /**
      * fallbackMethod method name.
-     *
+     *T
      * @return fallbackMethod method name.
      */
     String fallbackMethod() default "";
