@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.jayway.awaitility.Awaitility.matches;
 import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,21 +61,21 @@ public class FixedThreadPoolBulkheadTest {
         CompletableFuture<Object> future = fixedThreadPoolBulkhead
             .submit(() -> TestThreadLocalContextHolder.get().orElse(null));
 
-        waitAtMost(5, TimeUnit.SECONDS)
-            .until(() -> "ValueShouldCrossThreadBoundary" == future.get());
+        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
     }
 
     @Test
     public void testRunnableThreadLocalContextPropagator() {
 
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
-        AtomicReference reference = new AtomicReference();
+        AtomicReference<String> reference = new AtomicReference<>();
 
         fixedThreadPoolBulkhead
-            .submit(() -> reference.set(TestThreadLocalContextHolder.get().orElse(null)));
+            .submit(() -> reference.set((String) TestThreadLocalContextHolder.get().orElse(null)));
 
-        waitAtMost(5, TimeUnit.SECONDS)
-            .until(() -> "ValueShouldCrossThreadBoundary" == reference.get());
+        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(reference).hasValue("ValueShouldCrossThreadBoundary")));
     }
 
     @Test
@@ -106,6 +107,5 @@ public class FixedThreadPoolBulkheadTest {
         assertThat(bulkhead.getBulkheadConfig().getQueueCapacity())
             .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY);
     }
-
 
 }

@@ -6,20 +6,20 @@ import java.util.function.Supplier;
 
 public class TestContextPropagators {
 
-    public static class TestThreadLocalContextPropagator<T> implements ContextPropagator<T> {
-        private ThreadLocal threadLocal;
+    public static class TestThreadLocalContextPropagator implements ContextPropagator<String> {
+        private ThreadLocal<String> threadLocal;
 
-        public TestThreadLocalContextPropagator(ThreadLocal threadLocal) {
+        public TestThreadLocalContextPropagator(ThreadLocal<String> threadLocal) {
             this.threadLocal = threadLocal;
         }
 
         @Override
-        public Supplier<Optional<T>> retrieve() {
-            return () -> (Optional<T>) Optional.ofNullable(threadLocal.get());
+        public Supplier<Optional<String>> retrieve() {
+            return () -> (Optional<String>) Optional.ofNullable(threadLocal.get());
         }
 
         @Override
-        public Consumer<Optional<T>> copy() {
+        public Consumer<Optional<String>> copy() {
             return (t) -> t.ifPresent(e -> {
                 if (threadLocal.get() != null) {
                     threadLocal.set(null);
@@ -30,7 +30,7 @@ public class TestContextPropagators {
         }
 
         @Override
-        public Consumer<Optional<T>> clear() {
+        public Consumer<Optional<String>> clear() {
             return (t) -> {
                 if (threadLocal.get() != null) {
                     threadLocal.set(null);
@@ -57,12 +57,12 @@ public class TestContextPropagators {
 
         @Override
         public Consumer<Optional<T>> clear() {
-            return (t) -> TestThreadLocalContextHolder.clear();
+            return t -> TestThreadLocalContextHolder.clear();
         }
 
         public static class TestThreadLocalContextHolder {
 
-            private static final ThreadLocal threadLocal = new ThreadLocal();
+            private static final ThreadLocal<Object> threadLocal = new ThreadLocal<>();
 
             private TestThreadLocalContextHolder() {
             }
@@ -81,7 +81,7 @@ public class TestContextPropagators {
                 }
             }
 
-            public static Optional<Object> get() {
+            public static Optional<?> get() {
                 return Optional.ofNullable(threadLocal.get());
             }
         }
