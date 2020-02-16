@@ -488,9 +488,9 @@ public interface Retry {
     }
 
     /**
-     * Get the Metrics of this RateLimiter.
+     * Get the Metrics of this Retry instance.
      *
-     * @return the Metrics of this RateLimiter
+     * @return the Metrics of this Retry instance
      */
     Metrics getMetrics();
 
