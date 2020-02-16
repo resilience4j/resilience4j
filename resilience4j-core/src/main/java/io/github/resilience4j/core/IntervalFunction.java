@@ -59,10 +59,10 @@ public interface IntervalFunction extends Function<Integer, Long> {
     }
 
     /**
-     * Creates an IntervalFunction which returns a fixed interval in milliseconds.
+     * Creates an IntervalFunction which returns a fixed interval specified by a given {@link Duration}.
      *
      * @param interval the interval
-     * @return an IntervalFunction which returns a fixed interval in milliseconds.
+     * @return an IntervalFunction which returns a fixed interval specified by a given {@link Duration}.
      */
     static IntervalFunction of(Duration interval) {
         return of(interval.toMillis());
