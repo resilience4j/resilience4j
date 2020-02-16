@@ -193,7 +193,7 @@ public class ThreadPoolBulkheadConfigTest {
         assertThat(config.getContextPropagator()).isNotNull();
         assertThat(config.getContextPropagator()).hasSize(2);
         List<Class<? extends ContextPropagator>> ctxPropagators = config.getContextPropagator()
-            .stream().map(ct -> ((ContextPropagator) ct).getClass()).collect(Collectors.toList());
+            .stream().map(ct -> ct.getClass()).collect(Collectors.toList());
         assertThat(ctxPropagators).containsExactlyInAnyOrder(TestCtxPropagator.class, TestCtxPropagator2.class);
 
     }
