@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead}
- * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * annotation. The aspect will decorate methods that return a RxJava2 reactive type, Spring Reactor
  * reactive type, CompletionStage type, or value type.
  * <p>
  * The BulkheadRegistry is used to retrieve an instance of a Bulkhead for a specific name.
@@ -212,7 +212,7 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
     }
 
     /**
-     * handle the asynchronous completable future flow
+     * decorate the asynchronous completable future flow
      *
      * @param proceedingJoinPoint AOPJoinPoint
      * @param bulkhead            configured bulkhead

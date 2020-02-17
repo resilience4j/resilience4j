@@ -16,7 +16,7 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -35,30 +35,30 @@ import static org.mockito.Mockito.when;
 public class ReactorRateLimiterAspectExtTest {
 
     @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
+    CheckedFunction0<Object> function;
 
     @InjectMocks
-    ReactorRateLimiterAspectExt reactorRateLimiterAspectExt;
+    ReactorDecoratorExt reactorRateLimiterAspectExt;
 
 
     @Test
     public void testCheckTypes() {
-        assertThat(reactorRateLimiterAspectExt.canHandleReturnType(Mono.class)).isTrue();
-        assertThat(reactorRateLimiterAspectExt.canHandleReturnType(Flux.class)).isTrue();
+        assertThat(reactorRateLimiterAspectExt.canDecorateReturnType(Mono.class)).isTrue();
+        assertThat(reactorRateLimiterAspectExt.canDecorateReturnType(Flux.class)).isTrue();
     }
 
     @Test
     public void testReactorTypes() throws Throwable {
         RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
+        when(function.apply()).thenReturn(Mono.just("Test"));
         assertThat(
-            reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            reactorRateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
+        when(function.apply()).thenReturn(Flux.just("Test"));
         assertThat(
-            reactorRateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            reactorRateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
     }
 

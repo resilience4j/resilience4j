@@ -17,7 +17,7 @@ package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.*;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -34,45 +34,45 @@ import static org.mockito.Mockito.when;
 public class RxJava2RateLimiterAspectExtTest {
 
     @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
+    CheckedFunction0<Object> function;
 
     @InjectMocks
-    RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt;
+    RxJava2DecoratorExt rxJava2RateLimiterAspectExt;
 
 
     @Test
     public void testCheckTypes() {
-        assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Flowable.class)).isTrue();
-        assertThat(rxJava2RateLimiterAspectExt.canHandleReturnType(Single.class)).isTrue();
+        assertThat(rxJava2RateLimiterAspectExt.canDecorateReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2RateLimiterAspectExt.canDecorateReturnType(Single.class)).isTrue();
     }
 
     @Test
     public void testReactorTypes() throws Throwable {
         RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Single.just("Test"));
+        when(function.apply()).thenReturn(Single.just("Test"));
         assertThat(
-            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Flowable.just("Test"));
+        when(function.apply()).thenReturn(Flowable.just("Test"));
         assertThat(
-            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Completable.complete());
+        when(function.apply()).thenReturn(Completable.complete());
         assertThat(
-            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Maybe.just("Test"));
+        when(function.apply()).thenReturn(Maybe.just("Test"));
         assertThat(
-            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Observable.just("Test"));
+        when(function.apply()).thenReturn(Observable.just("Test"));
         assertThat(
-            rxJava2RateLimiterAspectExt.handle(proceedingJoinPoint, rateLimiter, "testMethod"))
+            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
             .isNotNull();
 
 

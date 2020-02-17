@@ -141,7 +141,7 @@ public class RateLimiterConfiguration {
     public RateLimiterAspect rateLimiterAspect(
         RateLimiterConfigurationProperties rateLimiterProperties,
         RateLimiterRegistry rateLimiterRegistry,
-        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+        @Autowired(required = false) List<RateLimiterDecoratorExt> rateLimiterAspectExtList,
         FallbackDecorators fallbackDecorators) {
         return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties,
             rateLimiterAspectExtList, fallbackDecorators);
@@ -149,14 +149,19 @@ public class RateLimiterConfiguration {
 
     @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
-    public RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt() {
-        return new RxJava2RateLimiterAspectExt();
+    public RxJava2DecoratorExt rxJava2RateLimiterAspectExt() {
+        return new RxJava2DecoratorExt();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
-    public ReactorRateLimiterAspectExt reactorRateLimiterAspectExt() {
-        return new ReactorRateLimiterAspectExt();
+    public ReactorDecoratorExt reactorRateLimiterAspectExt() {
+        return new ReactorDecoratorExt();
+    }
+
+    @Bean
+    public CompletionStageDecoratorExt completionStageDecoratorExt() {
+        return new CompletionStageDecoratorExt();
     }
 
     /**

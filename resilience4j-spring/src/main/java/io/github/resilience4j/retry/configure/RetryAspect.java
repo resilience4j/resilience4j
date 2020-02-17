@@ -42,7 +42,7 @@ import java.util.concurrent.*;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry}
- * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * annotation. The aspect will decorate methods that return a RxJava2 reactive type, Spring Reactor
  * reactive type, CompletionStage type, or value type.
  * <p>
  * The RetryRegistry is used to retrieve an instance of a Retry for a specific name.

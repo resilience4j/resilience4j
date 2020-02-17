@@ -43,7 +43,7 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
+     * decorate the Spring web flux (Flux /Mono) return types AOP based into reactor circuit-breaker
      * See {@link io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator} for
      * details.
      *

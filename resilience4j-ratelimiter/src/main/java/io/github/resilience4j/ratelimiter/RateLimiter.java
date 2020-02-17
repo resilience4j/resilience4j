@@ -699,6 +699,17 @@ public interface RateLimiter {
     EventPublisher getEventPublisher();
 
     /**
+     * Returns a supplier which is decorated by a RateLimiter.
+     *
+     * @param checkedSupplier the original supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return a supplier which is decorated by a RateLimiter.
+     */
+    default <T> CheckedFunction0<T> decorateCheckedSupplier(CheckedFunction0<T> checkedSupplier) {
+        return decorateCheckedSupplier(this, checkedSupplier);
+    }
+
+    /**
      * Decorates and executes the decorated Supplier.
      *
      * @param supplier the original Supplier

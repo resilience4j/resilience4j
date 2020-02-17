@@ -7,7 +7,7 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
-import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterDecoratorExt;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -80,8 +80,8 @@ public class RateLimiterConfigurationOnMissingBeanTest {
 
         @Bean
         public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-            @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators) {
+                                                   @Autowired(required = false) List<RateLimiterDecoratorExt> rateLimiterAspectExtList,
+                                                   FallbackDecorators fallbackDecorators) {
             rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
                 new RateLimiterConfigurationProperties(), rateLimiterAspectExtList,
                 fallbackDecorators);

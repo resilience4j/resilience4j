@@ -18,7 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
 import io.reactivex.*;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,39 +27,40 @@ import java.util.Set;
 import static io.github.resilience4j.utils.AspectUtil.newHashSet;
 
 /**
- * the Rx RateLimiter logic support for the spring AOP conditional on the presence of Rx classes on
- * the spring class loader
+ * Decorator support for return types which belong to RxJava2
  */
-public class RxJava2RateLimiterAspectExt implements RateLimiterAspectExt {
+public class RxJava2DecoratorExt implements RateLimiterDecoratorExt {
 
-    private static final Logger logger = LoggerFactory.getLogger(RxJava2RateLimiterAspectExt.class);
+    private static final Logger logger = LoggerFactory.getLogger(RxJava2DecoratorExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
         SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class
-     * @return boolean if the method has Rx java 2 rerun type
+     * @return boolean if the return type belongs to RxJava2
      */
     @SuppressWarnings("unchecked")
     @Override
-    public boolean canHandleReturnType(Class returnType) {
+    public boolean canDecorateReturnType(Class returnType) {
         return rxSupportedTypes.stream()
             .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
-     * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param rateLimiter         the configured rateLimiter
-     * @param methodName          the method name
+     * Decorate a function with a RateLimiter.
+     *
+     * @param rateLimiter         the  rateLimiter
+     * @param function The function
+
      * @return the result object
-     * @throws Throwable exception in case of faulty flow
      */
     @Override
-    public Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
-        String methodName) throws Throwable {
-        RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
-        Object returnValue = proceedingJoinPoint.proceed();
-        return executeRxJava2Aspect(rateLimiterOperator, returnValue);
+    public CheckedFunction0<Object> decorate(RateLimiter rateLimiter, CheckedFunction0<Object> function) {
+        return () -> {
+            RateLimiterOperator<?> rateLimiterOperator = RateLimiterOperator.of(rateLimiter);
+            Object returnValue = function.apply();
+            return executeRxJava2Aspect(rateLimiterOperator, returnValue);
+        };
     }
 
     @SuppressWarnings("unchecked")

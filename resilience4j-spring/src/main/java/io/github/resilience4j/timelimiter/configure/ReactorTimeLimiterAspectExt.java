@@ -34,7 +34,7 @@ public class ReactorTimeLimiterAspectExt implements TimeLimiterAspectExt{
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor time limiter
+     * decorate the Spring web flux (Flux /Mono) return types AOP based into reactor time limiter
      * See {@link TimeLimiter} for details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint

@@ -16,15 +16,14 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 
 /**
- * RateLimiter aspect extension support interface type if you want to support new types
+ * RateLimiter decorator extension which can be used to add decorators for new return types.
  */
-public interface RateLimiterAspectExt {
+public interface RateLimiterDecoratorExt {
 
-    boolean canHandleReturnType(Class returnType);
+    boolean canDecorateReturnType(Class returnType);
 
-    Object handle(ProceedingJoinPoint proceedingJoinPoint, RateLimiter rateLimiter,
-        String methodName) throws Throwable;
+    CheckedFunction0<Object> decorate(RateLimiter rateLimiter, CheckedFunction0<Object> callable);
 }

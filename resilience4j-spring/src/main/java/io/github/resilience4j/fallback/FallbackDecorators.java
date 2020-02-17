@@ -36,13 +36,13 @@ public class FallbackDecorators {
      * supplier
      *
      * @param fallbackMethod fallback method that handles supplier's exception
-     * @param supplier       original function
+     * @param callable       original function
      * @return a function which is decorated by a {@link FallbackMethod}
      */
     public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-        CheckedFunction0<Object> supplier) {
+                                             CheckedFunction0<Object> callable) {
         return get(fallbackMethod.getReturnType())
-            .decorate(fallbackMethod, supplier);
+            .decorate(fallbackMethod, callable);
     }
 
     private FallbackDecorator get(Class<?> returnType) {

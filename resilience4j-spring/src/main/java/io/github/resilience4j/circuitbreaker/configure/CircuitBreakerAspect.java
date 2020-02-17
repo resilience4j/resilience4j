@@ -43,7 +43,7 @@ import java.util.concurrent.CompletionStage;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker}
- * annotation. The aspect will handle methods that return a RxJava2 reactive type, Spring Reactor
+ * annotation. The aspect will decorate methods that return a RxJava2 reactive type, Spring Reactor
  * reactive type, CompletionStage type, or value type.
  * <p>
  * The CircuitBreakerRegistry is used to retrieve an instance of a CircuitBreaker for a specific
@@ -167,7 +167,7 @@ public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered
     }
 
     /**
-     * handle the CompletionStage return types AOP based into configured circuit-breaker
+     * decorate the CompletionStage return types AOP based into configured circuit-breaker
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) {

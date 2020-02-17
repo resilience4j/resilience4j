@@ -42,7 +42,7 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor retry See {@link
+     * decorate the Spring web flux (Flux /Mono) return types AOP based into reactor retry See {@link
      * io.github.resilience4j.retry.Retry} for details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint

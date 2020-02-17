@@ -42,7 +42,7 @@ public class ReactorBulkheadAspectExt implements BulkheadAspectExt {
     }
 
     /**
-     * handle the Spring web flux (Flux /Mono) return types AOP based into reactor bulk head See
+     * decorate the Spring web flux (Flux /Mono) return types AOP based into reactor bulk head See
      * {@link Bulkhead} for details.
      *
      * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
