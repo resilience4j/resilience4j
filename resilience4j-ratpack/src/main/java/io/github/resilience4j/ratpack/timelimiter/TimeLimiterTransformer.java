@@ -17,11 +17,10 @@ package io.github.resilience4j.ratpack.timelimiter;
 
 import io.github.resilience4j.ratpack.internal.AbstractTransformer;
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import ratpack.exec.Execution;
-import ratpack.exec.Promise;
-import ratpack.exec.Upstream;
+import ratpack.exec.*;
 import ratpack.func.Function;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -63,62 +62,75 @@ public class TimeLimiterTransformer<T> extends AbstractTransformer<T> {
             ScheduledExecutorService scheduler = Execution.current().getController().getExecutor();
             AtomicBoolean done = new AtomicBoolean(false);
             Promise<? extends T> timedPromise = Promise.async(innerDown -> {
-                ScheduledFuture<?> timeoutFuture = scheduler.schedule(() -> {
-                    if (!done.getAndSet(true)) {
-                        Throwable t = new TimeoutException();
-                        if (recoverer != null) {
-                            try {
-                                innerDown.success(recoverer.apply(t));
-                            } catch (Throwable t2) {
-                                innerDown.error(t2);
-                            }
-                        } else {
-                            innerDown.error(t);
-                        }
-                    }
-                }, timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis(), TimeUnit.MILLISECONDS);
-                Execution.fork().start(e ->
-                    promise.result(execResult -> {
-                        if (!done.getAndSet(true)) {
-                            if (!timeoutFuture.isDone()) {
-                                timeoutFuture.cancel(false);
-                            }
-                            if (execResult.getThrowable() != null) {
-                                innerDown.error(execResult.getThrowable());
-                            }
-                            if (execResult.getValue() != null) {
-                                innerDown.success(execResult.getValue());
-                            }
-                        }
-                    })
+                ScheduledFuture<?> timeoutFuture = scheduler.schedule(() -> scheduleTimeout(done, innerDown),
+                    timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis(),
+                    TimeUnit.MILLISECONDS);
+                Execution.fork().start(execution ->
+                    promise.result(execResult -> onPromiseResult(done, innerDown, timeoutFuture, execResult))
                 );
             });
-            timedPromise.result(execResult -> {
-                T result = execResult.getValue();
-                Throwable throwable = execResult.getThrowable();
-                // complete
-                if (result != null) {
-                    timeLimiter.onSuccess();
-                    down.success(result);
-                }
-                // exceptionally
-                if (throwable != null) {
-                    Throwable cause;
-                    if (throwable instanceof CompletionException) {
-                        cause = throwable.getCause();
-                    } else if (throwable instanceof ExecutionException) {
-                        cause = throwable.getCause();
-                        if (cause == null) {
-                            cause = throwable;
-                        }
-                    } else {
-                        cause = throwable;
-                    }
-                    timeLimiter.onError(cause);
-                    down.error(cause);
-                }
-            });
+            timedPromise.result(execResult -> onTimedPromiseResult(down, execResult));
         };
+    }
+
+    public void scheduleTimeout(AtomicBoolean done, Downstream<? super T> innerDownstream) {
+        if (!done.getAndSet(true)) {
+            Throwable t = new TimeoutException();
+            if (recoverer != null) {
+                try {
+                    innerDownstream.success(recoverer.apply(t));
+                } catch (Throwable t2) {
+                    innerDownstream.error(t2);
+                }
+            } else {
+                innerDownstream.error(t);
+            }
+        }
+    }
+
+    public void onPromiseResult(AtomicBoolean done,
+                                Downstream<? super T> innerDownstream,
+                                ScheduledFuture<?> timeoutFuture,
+                                ExecResult<? extends T> execResult) {
+        if (!done.getAndSet(true)) {
+            if (!timeoutFuture.isDone()) {
+                timeoutFuture.cancel(false);
+            }
+            if (execResult.getThrowable() != null) {
+                innerDownstream.error(execResult.getThrowable());
+            }
+            if (execResult.getValue() != null) {
+                innerDownstream.success(execResult.getValue());
+            }
+        }
+    }
+
+    public void onTimedPromiseResult(Downstream<? super T> downstream, ExecResult<? extends T> execResult) {
+        T result = execResult.getValue();
+        Throwable throwable = execResult.getThrowable();
+        if (result != null) {
+            timeLimiter.onSuccess();
+            downstream.success(result);
+        }
+        onException(downstream, throwable);
+    }
+
+    public void onException(Downstream<? super T> downstream, Throwable throwable) {
+        if (throwable != null) {
+            Throwable cause;
+            if (throwable instanceof CompletionException) {
+                cause = throwable.getCause();
+            } else if (throwable instanceof ExecutionException) {
+                cause = throwable.getCause();
+                if (cause == null) {
+                    cause = throwable;
+                }
+            } else {
+                cause = throwable;
+            }
+            timeLimiter.onError(cause);
+            downstream.error(cause);
+        }
     }
 
 }
