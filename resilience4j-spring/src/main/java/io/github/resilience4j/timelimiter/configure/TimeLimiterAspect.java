@@ -67,6 +67,7 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
     public void matchAnnotatedClassOrMethod(TimeLimiter timeLimiter) {
+        // a marker method
     }
 
     @Around(value = "matchAnnotatedClassOrMethod(timeLimiterAnnotation)", argNames = "proceedingJoinPoint, timeLimiterAnnotation")

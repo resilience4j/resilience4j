@@ -136,7 +136,7 @@ public interface Bulkhead {
                 return promise;
             }
             try {
-                return new BulkheadFuture<T>(bulkhead, supplier.get());
+                return new BulkheadFuture<>(bulkhead, supplier.get());
             } catch (Throwable e) {
                 bulkhead.onComplete();
                 throw e;
@@ -255,7 +255,7 @@ public interface Bulkhead {
      * @return a consumer which is decorated by a Bulkhead.
      */
     static <T> Consumer<T> decorateConsumer(Bulkhead bulkhead, Consumer<T> consumer) {
-        return (t) -> {
+        return t -> {
             bulkhead.acquirePermission();
             try {
                 consumer.accept(t);
@@ -275,7 +275,7 @@ public interface Bulkhead {
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead,
         CheckedConsumer<T> consumer) {
-        return (t) -> {
+        return t -> {
             bulkhead.acquirePermission();
             try {
                 consumer.accept(t);
@@ -582,6 +582,7 @@ public interface Bulkhead {
     /**
      * An EventPublisher which can be used to register event consumers.
      */
+    @SuppressWarnings("squid:S2176")
     interface EventPublisher extends io.github.resilience4j.core.EventPublisher<BulkheadEvent> {
 
         EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> eventConsumer);
@@ -597,8 +598,8 @@ public interface Bulkhead {
      * @param <T> of return type
      */
     final class BulkheadFuture<T> implements Future<T> {
-        final private Future<T> future;
-        final private OnceConsumer<Bulkhead> onceToBulkhead;
+        private final Future<T> future;
+        private final OnceConsumer<Bulkhead> onceToBulkhead;
 
         BulkheadFuture(Bulkhead bulkhead, Future<T> future) {
             Objects.requireNonNull(future, "Non null Future is required to decorate");
@@ -627,7 +628,7 @@ public interface Bulkhead {
             try {
                 return future.get();
             }  finally {
-                onceToBulkhead.applyOnce(bh -> bh.onComplete());
+                onceToBulkhead.applyOnce(Bulkhead::onComplete);
             }
         }
 
@@ -636,7 +637,7 @@ public interface Bulkhead {
             try {
                 return future.get(timeout, unit);
             } finally {
-                onceToBulkhead.applyOnce(bh -> bh.onComplete());
+                onceToBulkhead.applyOnce(Bulkhead::onComplete);
             }
         }
     }
