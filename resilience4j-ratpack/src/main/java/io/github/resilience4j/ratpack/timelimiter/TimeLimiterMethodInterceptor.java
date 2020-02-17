@@ -71,7 +71,6 @@ public class TimeLimiterMethodInterceptor extends AbstractMethodInterceptor {
     @Nullable
     private TimeLimiterRegistry registry;
 
-    @SuppressWarnings("unchecked")
     @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -86,49 +85,76 @@ public class TimeLimiterMethodInterceptor extends AbstractMethodInterceptor {
         if (registry == null) {
             registry = TimeLimiterRegistry.ofDefaults();
         }
-        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter = registry
-            .timeLimiter(annotation.name());
+        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter = registry.timeLimiter(annotation.name());
         Class<?> returnType = invocation.getMethod().getReturnType();
         if (Promise.class.isAssignableFrom(returnType)) {
-            Promise<?> result = (Promise<?>) proceed(invocation);
-            if (result != null) {
-                TimeLimiterTransformer transformer = TimeLimiterTransformer.of(timeLimiter)
-                    .recover(fallbackMethod);
-                result = result.transform(transformer);
-            }
-            return result;
+            return invokeForPromise(invocation, fallbackMethod, timeLimiter);
         } else if (Flux.class.isAssignableFrom(returnType)) {
-            Flux<?> result = (Flux<?>) proceed(invocation);
-            if (result != null) {
-                TimeLimiterOperator operator = TimeLimiterOperator.of(timeLimiter);
-                result = fallbackMethod.onErrorResume(result.transform(operator));
-            }
-            return result;
+            return invokeForFlux(invocation, fallbackMethod, timeLimiter);
         } else if (Mono.class.isAssignableFrom(returnType)) {
-            Mono<?> result = (Mono<?>) proceed(invocation);
-            if (result != null) {
-                TimeLimiterOperator operator = TimeLimiterOperator.of(timeLimiter);
-                result = fallbackMethod.onErrorResume(result.transform(operator));
-            }
-            return result;
+            return invokeForMono(invocation, fallbackMethod, timeLimiter);
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
-            ScheduledExecutorService scheduler = Execution.current().getController().getExecutor();
-            CompletableFuture<?> future = timeLimiter.executeCompletionStage(scheduler, () -> {
-                try {
-                    return (CompletionStage)proceed(invocation);
-                } catch (Throwable t) {
-                    final CompletableFuture<?> promise = new CompletableFuture<>();
-                    promise.completeExceptionally(t);
-                    return (CompletionStage)promise;
-                }
-            }).toCompletableFuture();
-            completeFailedFuture(new TimeoutException(), fallbackMethod, future);
-            return future;
+            return invokeForCompletionStage(invocation, fallbackMethod, timeLimiter);
         } else {
             throw new IllegalArgumentException(String.join(" ", returnType.getName(),
                 invocation.getMethod().getName(),
                 "has unsupported by @TimeLimiter return type.", "Promise, Mono, Flux, or CompletionStage expected."));
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object invokeForPromise(MethodInvocation invocation,
+                                   RecoveryFunction<?> fallbackMethod,
+                                   io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) throws Throwable {
+        Promise<?> result = (Promise<?>) proceed(invocation);
+        if (result != null) {
+            TimeLimiterTransformer transformer = TimeLimiterTransformer.of(timeLimiter)
+                .recover(fallbackMethod);
+            result = result.transform(transformer);
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object invokeForFlux(MethodInvocation invocation,
+                                RecoveryFunction<?> fallbackMethod,
+                                io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) throws Throwable {
+        Flux<?> result = (Flux<?>) proceed(invocation);
+        if (result != null) {
+            TimeLimiterOperator operator = TimeLimiterOperator.of(timeLimiter);
+            result = fallbackMethod.onErrorResume(result.transform(operator));
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object invokeForMono(MethodInvocation invocation,
+                                RecoveryFunction<?> fallbackMethod,
+                                io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) throws Throwable {
+        Mono<?> result = (Mono<?>) proceed(invocation);
+        if (result != null) {
+            TimeLimiterOperator operator = TimeLimiterOperator.of(timeLimiter);
+            result = fallbackMethod.onErrorResume(result.transform(operator));
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object invokeForCompletionStage(MethodInvocation invocation,
+                                           RecoveryFunction<?> fallbackMethod,
+                                           io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) {
+        ScheduledExecutorService scheduler = Execution.current().getController().getExecutor();
+        CompletableFuture<?> future = timeLimiter.executeCompletionStage(scheduler, () -> {
+            try {
+                return (CompletionStage) proceed(invocation);
+            } catch (Throwable t) {
+                final CompletableFuture<?> promise = new CompletableFuture<>();
+                promise.completeExceptionally(t);
+                return (CompletionStage) promise;
+            }
+        }).toCompletableFuture();
+        completeFailedFuture(new TimeoutException(), fallbackMethod, future);
+        return future;
     }
 
 }
