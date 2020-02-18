@@ -16,7 +16,7 @@ ext {
     vertxVersion = '3.7.0'
     aspectjVersion = '1.9.2'
     springVersion = '5.1.13.RELEASE'
-    springBoot2Version = '2.1.4.RELEASE'
+    springBoot2Version = '2.2.4.RELEASE'
     springCloudContext2Version = '2.1.2.RELEASE'
     ratpackVersion = '1.7.6'
     spockVersion = '1.3-groovy-2.5'
@@ -26,7 +26,7 @@ ext {
     reactiveStreamsVersion = '1.0.2'
     micrometerVersion = '1.1.4'
     hibernateValidatorVersion = '6.0.16.Final'
-    wiremockVersion = '2.22.0'
+    wiremockVersion = '2.26.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.3.2'
     springBootOpenFeignVersion = '2.1.2.RELEASE'
@@ -89,12 +89,12 @@ ext {
             // Retrofit addon
             retrofit: "com.squareup.retrofit2:retrofit:${retrofitVersion}",
             retrofit_test: "com.squareup.retrofit2:converter-scalars:${retrofitVersion}",
-            retrofit_wiremock: "com.github.tomakehurst:wiremock:${wiremockVersion}",
+            retrofit_wiremock: "com.github.tomakehurst:wiremock-jre8:${wiremockVersion}",
             retrofit_rxjava: "com.squareup.retrofit2:adapter-rxjava2:2.3.0",
 
             // Feign addon
             feign: "io.github.openfeign:feign-core:${feignVersion}",
-            feign_wiremock: "com.github.tomakehurst:wiremock:${wiremockVersion}",
+            feign_wiremock: "com.github.tomakehurst:wiremock-jre8:${wiremockVersion}",
 
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
