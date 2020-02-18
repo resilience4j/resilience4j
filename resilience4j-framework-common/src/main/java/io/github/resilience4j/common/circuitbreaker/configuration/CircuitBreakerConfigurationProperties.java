@@ -171,32 +171,36 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         if (properties.getWaitDurationInOpenState() != null
             && properties.getWaitDurationInOpenState().toMillis() > 0) {
             Duration waitDuration = properties.getWaitDurationInOpenState();
-            if (properties.getEnableExponentialBackoff() != null && properties
-                .getEnableExponentialBackoff()) {
-                if (properties.getExponentialBackoffMultiplier() != null) {
-                    builder.waitIntervalFunctionInOpenState(IntervalFunction
-                        .ofExponentialBackoff(waitDuration.toMillis(),
-                            properties.getExponentialBackoffMultiplier()));
-                } else {
-                    builder.waitIntervalFunctionInOpenState(IntervalFunction
-                        .ofExponentialBackoff(properties.getWaitDurationInOpenState().toMillis()));
-                }
-            } else if (properties.getEnableRandomizedWait() != null && properties
-                .getEnableRandomizedWait()) {
-                if (properties.getRandomizedWaitFactor() != null) {
-                    builder.waitIntervalFunctionInOpenState(IntervalFunction
-                        .ofRandomized(waitDuration.toMillis(),
-                            properties.getRandomizedWaitFactor()));
-                } else {
-                    builder.waitIntervalFunctionInOpenState(
-                        IntervalFunction.ofRandomized(waitDuration));
-                }
+            if (properties.getEnableExponentialBackoff() != null
+                && properties.getEnableExponentialBackoff()) {
+                configureEnableExponentialBackoff(properties, builder, waitDuration);
+            } else if (properties.getEnableRandomizedWait() != null
+                && properties.getEnableRandomizedWait()) {
+                configureEnableRandomizedWait(properties, builder, waitDuration);
             } else {
                 builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
             }
         }
     }
 
+    private void configureEnableExponentialBackoff(InstanceProperties properties, Builder builder, Duration waitDuration) {
+        if (properties.getExponentialBackoffMultiplier() != null) {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
+        } else {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofExponentialBackoff(properties.getWaitDurationInOpenState().toMillis()));
+        }
+    }
+
+    private void configureEnableRandomizedWait(InstanceProperties properties, Builder builder, Duration waitDuration) {
+        if (properties.getRandomizedWaitFactor() != null) {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
+        } else {
+            builder.waitIntervalFunctionInOpenState(IntervalFunction.ofRandomized(waitDuration));
+        }
+    }
 
     private void buildRecordFailurePredicate(InstanceProperties properties, Builder builder) {
         if (properties.getRecordFailurePredicate() != null) {

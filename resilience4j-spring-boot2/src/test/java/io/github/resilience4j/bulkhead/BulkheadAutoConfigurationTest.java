@@ -120,7 +120,7 @@ public class BulkheadAutoConfigurationTest {
     public void testBulkheadCustomizer() {
         Map<String, BulkheadConfigCustomizer> customizerMap = (Map<String, BulkheadConfigCustomizer>) getField(
             compositeBulkheadCustomizer, "customizerMap");
-        assertThat(customizerMap).isNotNull().hasSize(2).containsKeys("backendCustomizer","backendD");
+        assertThat(customizerMap).isNotNull().hasSize(2).containsKeys("backendCustomizer", "backendD");
 
         Bulkhead backendCustomizer = bulkheadRegistry.bulkhead("backendCustomizer");
 
@@ -213,7 +213,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(8)
-            .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD","backendD",
+            .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD", "backendD",
                 "dummyFeignClient");
 
         for (int i = 0; i < 5; i++) {
@@ -273,20 +273,20 @@ public class BulkheadAutoConfigurationTest {
         assertThat(value).isEqualTo("SurviveThreadBoundary");
         // Test Actuator endpoints
 
-        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(
-            "/actuator/bulkheadevents");
+        ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody()
-            .getBulkheadEvents();
-
-        bulkheadEventsByBackend = bulkheadEventsByBackend.stream().filter(b -> "backendD".equals(b.getBulkheadName())).collect(
-            Collectors.toList());
+            .getBulkheadEvents().stream()
+            .filter(b -> "backendD".equals(b.getBulkheadName()))
+            .collect(Collectors.toList());
 
         assertThat(bulkheadEventsByBackend).isNotNull();
         assertThat(bulkheadEventsByBackend.size()).isEqualTo(2);
         assertThat(bulkheadEventsByBackend.stream()
-            .filter(it -> it.getType() == BulkheadEvent.Type.CALL_PERMITTED).count() == 1);
+            .filter(it -> it.getType() == BulkheadEvent.Type.CALL_PERMITTED))
+            .hasSize(1);
         assertThat(bulkheadEventsByBackend.stream()
-            .filter(it -> it.getType() == BulkheadEvent.Type.CALL_FINISHED).count() == 1);
+            .filter(it -> it.getType() == BulkheadEvent.Type.CALL_FINISHED))
+            .hasSize(1);
     }
 
 
@@ -324,7 +324,7 @@ public class BulkheadAutoConfigurationTest {
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(8)
             .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer",
-                "dummyFeignClient","backendD","backendD");
+                "dummyFeignClient", "backendD", "backendD");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
@@ -457,7 +457,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
         assertThat(bulkheadList.getBody().getBulkheads()).hasSize(8)
-            .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC","backendCustomizer", "backendD","backendD",
+            .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD", "backendD",
                 "dummyFeignClient");
 
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(

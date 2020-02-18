@@ -19,14 +19,10 @@ package io.github.resilience4j.timelimiter.configure;
 import io.github.resilience4j.reactor.timelimiter.TimeLimiterOperator;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ReactorTimeLimiterAspectExt implements TimeLimiterAspectExt{
-
-    private static final Logger logger = LoggerFactory.getLogger(ReactorTimeLimiterAspectExt.class);
 
     /**
      * @param returnType the AOP method return type class
@@ -58,10 +54,8 @@ public class ReactorTimeLimiterAspectExt implements TimeLimiterAspectExt{
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
             return monoReturnValue.compose(TimeLimiterOperator.of(timeLimiter));
         } else {
-            logger.error("Unsupported type for Reactor timeLimiter {}", returnValue.getClass().getTypeName());
-            throw new IllegalArgumentException(
-                "Not Supported type for the timeLimiter in Reactor :" + returnValue.getClass().getName());
-
+            throw new IllegalReturnTypeException(returnValue.getClass(), methodName,
+                "Reactor expects Mono/Flux.");
         }
     }
 

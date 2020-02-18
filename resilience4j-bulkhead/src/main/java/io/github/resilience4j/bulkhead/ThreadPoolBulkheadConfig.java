@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
@@ -25,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.github.resilience4j.core.ClassUtils.instantiateClassDefConstructor;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -48,7 +48,7 @@ public class ThreadPoolBulkheadConfig {
     private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
     private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
-    private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
+    private List<ContextPropagator> contextPropagators = new ArrayList<>();
 
     private ThreadPoolBulkheadConfig() {
     }
@@ -98,7 +98,7 @@ public class ThreadPoolBulkheadConfig {
         return writableStackTraceEnabled;
     }
 
-    public List<? extends ContextPropagator> getContextPropagator() {
+    public List<ContextPropagator> getContextPropagator() {
         return contextPropagators;
     }
 
@@ -221,13 +221,13 @@ public class ThreadPoolBulkheadConfig {
                     "maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
             }
             if (contextPropagatorClasses.length > 0) {
-                config.contextPropagators.addAll((List)stream(contextPropagatorClasses)
-                    .map(c -> instantiateClassDefConstructor(c))
+                config.contextPropagators.addAll(stream(contextPropagatorClasses)
+                    .map(ClassUtils::instantiateClassDefConstructor)
                     .collect(toList()));
             }
             //setting bean of type context propagator overrides the class type.
-            if (contextPropagators.size() > 0){
-                config.contextPropagators.addAll((List)this.contextPropagators);
+            if (!contextPropagators.isEmpty()){
+                config.contextPropagators.addAll(this.contextPropagators);
             }
 
             return config;

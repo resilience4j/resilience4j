@@ -18,6 +18,7 @@ package io.github.resilience4j.timelimiter.configure;
 
 import org.springframework.core.Ordered;
 
+@SuppressWarnings("squid:S2176")
 public class TimeLimiterConfigurationProperties extends
     io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties {
 
