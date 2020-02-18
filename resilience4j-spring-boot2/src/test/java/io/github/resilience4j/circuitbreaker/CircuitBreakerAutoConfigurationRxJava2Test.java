@@ -108,12 +108,11 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 
         // expect no health indicator for backendB, as it is disabled via properties
         ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
-            .getForEntity("/actuator/health", CompositeHealthResponse.class);
+            .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
         assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers").getDetails()
+        assertThat(healthResponse.getBody().getDetails()
             .get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("circuitBreakers").getDetails()
+        assertThat(healthResponse.getBody().getDetails()
             .get("backendB")).isNull();
 
         // Observable test
