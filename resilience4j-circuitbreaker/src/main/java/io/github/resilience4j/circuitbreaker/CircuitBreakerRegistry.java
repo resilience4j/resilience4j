@@ -21,10 +21,12 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -260,5 +262,61 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
     CircuitBreaker circuitBreaker(String name,
         Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier,
         io.vavr.collection.Map<String, String> tags);
+
+    static Builder custom() {
+        return new Builder();
+    }
+
+    class Builder {
+
+        private static final String DEFAULT_CONFIG = "default";
+        private RegistryStore registryStore;
+        private Map<String, CircuitBreakerConfig> circuitBreakerConfigsMap;
+        private List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers;
+        private io.vavr.collection.Map<String, String> tags;
+
+        public Builder() {
+            this.circuitBreakerConfigsMap = new java.util.HashMap<>();
+            this.registryEventConsumers = new ArrayList<>();
+        }
+
+        public Builder withRegistryStore(RegistryStore registryStore) {
+            this.registryStore = registryStore;
+            return this;
+        }
+
+        public Builder withCircuitBreakerConfig(CircuitBreakerConfig circuitBreakerConfig) {
+            circuitBreakerConfigsMap.put(DEFAULT_CONFIG, circuitBreakerConfig);
+            return this;
+        }
+
+        public Builder withCircuitBreakerConfigDefaults() {
+            circuitBreakerConfigsMap.put(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults());
+            return this;
+        }
+
+        public Builder addCircuitBreakerConfig(String configName, CircuitBreakerConfig configuration) {
+            if (configName.equals(DEFAULT_CONFIG)) {
+                throw new IllegalArgumentException(
+                    "You cannot add another configuration with name 'default' as it is preserved for default configuration");
+            }
+            circuitBreakerConfigsMap.put(configName, configuration);
+            return this;
+        }
+
+        public Builder addRegistryEventConsumer(RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
+            this.registryEventConsumers.add(registryEventConsumer);
+            return this;
+        }
+
+        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        public CircuitBreakerRegistry build(){
+            return new InMemoryCircuitBreakerRegistry(circuitBreakerConfigsMap, registryEventConsumers, tags, registryStore);
+        }
+    }
 
 }

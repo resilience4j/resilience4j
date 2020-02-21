@@ -145,7 +145,7 @@ public class AbstractRegistryTest {
         TestRegistry testRegistry = new TestRegistry();
 
         assertThat(testRegistry.find("test")).isEmpty();
-        testRegistry.entryMap.put("test", "value");
+        testRegistry.entryMap.putIfAbsent("test", "value");
         assertThat(testRegistry.find("test")).contains("value");
     }
 

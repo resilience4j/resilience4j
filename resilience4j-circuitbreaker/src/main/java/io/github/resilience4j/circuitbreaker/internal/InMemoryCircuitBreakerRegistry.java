@@ -22,7 +22,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.HashMap;
@@ -31,6 +33,7 @@ import io.vavr.collection.Seq;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -73,6 +76,15 @@ public final class InMemoryCircuitBreakerRegistry extends
         io.vavr.collection.Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()),
             registryEventConsumer, tags);
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryCircuitBreakerRegistry(Map<String, CircuitBreakerConfig> configs,
+                                          List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers,
+                                          io.vavr.collection.Map<String, String> tags, RegistryStore<CircuitBreaker> registryStore) {
+        super(configs.getOrDefault(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults()),
+            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
+            Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
         this.configurations.putAll(configs);
     }
 
