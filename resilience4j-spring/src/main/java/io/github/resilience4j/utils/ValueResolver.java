@@ -6,10 +6,11 @@ import org.springframework.util.StringValueResolver;
 
 public class ValueResolver {
 
+    @Nullable
     public static String resolve(@Nullable StringValueResolver valueResolver, String value) {
         if (StringUtils.hasText(value)) {
             if(valueResolver != null){
-                valueResolver.resolveStringValue(value);
+                return valueResolver.resolveStringValue(value);
             }
         }
         return value;

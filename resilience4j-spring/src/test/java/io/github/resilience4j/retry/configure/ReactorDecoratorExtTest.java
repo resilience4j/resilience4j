@@ -52,11 +52,11 @@ public class ReactorDecoratorExtTest {
         Retry retry = Retry.ofDefaults("test");
 
         when(function.apply()).thenReturn(Mono.just("Test"));
-        assertThat(reactorRetryAspectExt.decorate(retry, function))
+        assertThat(reactorRetryAspectExt.decorate(retry, function).apply())
             .isNotNull();
 
         when(function.apply()).thenReturn(Flux.just("Test"));
-        assertThat(reactorRetryAspectExt.decorate(retry, function))
+        assertThat(reactorRetryAspectExt.decorate(retry, function).apply())
             .isNotNull();
     }
 

@@ -52,11 +52,11 @@ public class RxJava2DecoratorExtTest {
         Retry retry = Retry.ofDefaults("test");
 
         when(function.apply()).thenReturn(Single.just("Test"));
-        assertThat(rxJava2RetryAspectExt.decorate(retry, function))
+        assertThat(rxJava2RetryAspectExt.decorate(retry, function).apply())
             .isNotNull();
 
         when(function.apply()).thenReturn(Flowable.just("Test"));
-        assertThat(rxJava2RetryAspectExt.decorate(retry, function))
+        assertThat(rxJava2RetryAspectExt.decorate(retry, function).apply())
             .isNotNull();
     }
 }
