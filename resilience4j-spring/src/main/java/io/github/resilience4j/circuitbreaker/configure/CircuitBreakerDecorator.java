@@ -98,6 +98,6 @@ public class CircuitBreakerDecorator implements EmbeddedValueResolverAware {
 
     @Override
     public void setEmbeddedValueResolver(StringValueResolver resolver) {
-
+        this.resolver = resolver;
     }
 }
