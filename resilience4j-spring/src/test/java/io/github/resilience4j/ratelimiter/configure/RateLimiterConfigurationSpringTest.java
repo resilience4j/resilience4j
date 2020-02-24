@@ -28,7 +28,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.StringValueResolver;
 
 import java.util.List;
 
@@ -75,9 +74,9 @@ public class RateLimiterConfigurationSpringTest {
         @Bean
         public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
             @Autowired(required = false) List<RateLimiterDecoratorExt> rateLimiterAspectExts,
-            FallbackDecorators recoveryDecorators, StringValueResolver resolver                         ) {
+            FallbackDecorators recoveryDecorators                        ) {
             rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
-                rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators, resolver);
+                rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators);
             return rateLimiterAspect;
         }
 
