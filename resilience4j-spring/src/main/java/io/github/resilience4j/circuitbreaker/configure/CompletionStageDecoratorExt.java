@@ -25,12 +25,7 @@ import java.util.concurrent.*;
  */
 public class CompletionStageDecoratorExt implements CircuitBreakerDecoratorExt {
 
-    private final static ScheduledExecutorService retryExecutorService = Executors
-        .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-
-
     public CompletionStageDecoratorExt(){
-        cleanup();
     }
 
 
@@ -60,21 +55,4 @@ public class CompletionStageDecoratorExt implements CircuitBreakerDecoratorExt {
             }
         });
     }
-
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            retryExecutorService.shutdown();
-            try {
-                if (!retryExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    retryExecutorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!retryExecutorService.isTerminated()) {
-                    retryExecutorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
-            }
-        }));
-    }
-
 }

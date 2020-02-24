@@ -25,9 +25,10 @@ import org.springframework.util.ClassUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.*;
-import java.util.function.Function;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.UnaryOperator;
 
 public class ProceedingJoinPointWrapper {
 
@@ -42,13 +43,6 @@ public class ProceedingJoinPointWrapper {
         ProceedingJoinPoint proceedingJoinPoint) {
         this.proceedingJoinPoint = proceedingJoinPoint;
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-
-        if(proceedingJoinPoint.getTarget() instanceof Proxy){
-            Class<?>[] binterfaces = AopUtils.getTargetClass(proceedingJoinPoint.getTarget()).getInterfaces();
-           // AnnotationExtractor.extractAnnotationFromProxy(binterfaces);
-
-        }
-
         this.targetClass = AopUtils.getTargetClass(proceedingJoinPoint.getTarget());
         this.method = ClassUtils.getMostSpecificMethod(method, targetClass);
         this.declaringMethodName =  targetClass.getName() + "#" + method.getName();
@@ -57,7 +51,7 @@ public class ProceedingJoinPointWrapper {
     }
 
     public ProceedingJoinPointWrapper decorate(
-        Function<CheckedFunction0<Object>, CheckedFunction0<Object>> decorator) {
+        UnaryOperator<CheckedFunction0<Object>> decorator) {
         proceedFunction = decorator.apply(proceedFunction);
         return this;
     }

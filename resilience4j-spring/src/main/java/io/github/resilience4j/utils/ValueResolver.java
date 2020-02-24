@@ -8,10 +8,8 @@ public class ValueResolver {
 
     @Nullable
     public static String resolve(@Nullable StringValueResolver valueResolver, String value) {
-        if (StringUtils.hasText(value)) {
-            if(valueResolver != null){
-                return valueResolver.resolveStringValue(value);
-            }
+        if (StringUtils.hasText(value) && valueResolver != null) {
+            return valueResolver.resolveStringValue(value);
         }
         return value;
     }

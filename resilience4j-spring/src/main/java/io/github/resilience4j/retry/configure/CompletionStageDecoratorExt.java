@@ -25,7 +25,7 @@ import java.util.concurrent.*;
  */
 public class CompletionStageDecoratorExt implements RetryDecoratorExt {
 
-    private final static ScheduledExecutorService retryExecutorService = Executors
+    private static final ScheduledExecutorService retryExecutorService = Executors
         .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
 
