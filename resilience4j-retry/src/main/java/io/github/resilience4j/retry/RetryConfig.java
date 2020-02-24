@@ -77,7 +77,7 @@ public class RetryConfig {
     }
 
     /**
-     * @return the maximum allowed retries to make.
+     * @return the maximum allowed attempts to make.
      */
     public int getMaxAttempts() {
         return maxAttempts;
@@ -169,7 +169,7 @@ public class RetryConfig {
          * stays the same.
          *
          * @param f Function to modify the interval after a failure
-         * @return the CircuitBreakerConfig.Builder
+         * @return the RetryConfig.Builder
          */
         public Builder<T> intervalFunction(IntervalFunction f) {
             this.intervalFunction = f;
