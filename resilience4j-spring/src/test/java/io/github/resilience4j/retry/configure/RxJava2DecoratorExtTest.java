@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.ratelimiter.configure;
+package io.github.resilience4j.retry.configure;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.retry.Retry;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.vavr.CheckedFunction0;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -32,35 +32,31 @@ import static org.mockito.Mockito.when;
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ReactorRateLimiterAspectExtTest {
+public class RxJava2DecoratorExtTest {
 
     @Mock
     CheckedFunction0<Object> function;
 
     @InjectMocks
-    ReactorDecoratorExt reactorRateLimiterAspectExt;
+    RxJava2DecoratorExt rxJava2RetryAspectExt;
 
 
     @Test
     public void testCheckTypes() {
-        assertThat(reactorRateLimiterAspectExt.canDecorateReturnType(Mono.class)).isTrue();
-        assertThat(reactorRateLimiterAspectExt.canDecorateReturnType(Flux.class)).isTrue();
+        assertThat(rxJava2RetryAspectExt.canDecorateReturnType(Flowable.class)).isTrue();
+        assertThat(rxJava2RetryAspectExt.canDecorateReturnType(Single.class)).isTrue();
     }
 
     @Test
     public void testReactorTypes() throws Throwable {
-        RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
+        Retry retry = Retry.ofDefaults("test");
 
-        when(function.apply()).thenReturn(Mono.just("Test"));
-        assertThat(
-            reactorRateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
+        when(function.apply()).thenReturn(Single.just("Test"));
+        assertThat(rxJava2RetryAspectExt.decorate(retry, function))
             .isNotNull();
 
-        when(function.apply()).thenReturn(Flux.just("Test"));
-        assertThat(
-            reactorRateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
+        when(function.apply()).thenReturn(Flowable.just("Test"));
+        assertThat(rxJava2RetryAspectExt.decorate(retry, function))
             .isNotNull();
     }
-
-
 }

@@ -91,7 +91,7 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
-        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        @Autowired(required = false) List<RetryDecoratorExt> retryAspectExtList,
         FallbackDecorators fallbackDecorators) {
         return retryConfiguration
             .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
@@ -101,15 +101,21 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
+    public RxJava2DecoratorExt rxJava2RetryAspectExt() {
         return retryConfiguration.rxJava2RetryAspectExt();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public ReactorRetryAspectExt reactorRetryAspectExt() {
+    public ReactorDecoratorExt reactorRetryAspectExt() {
         return retryConfiguration.reactorRetryAspectExt();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CompletionStageDecoratorExt completionStageRetryDecoratorExt() {
+        return retryConfiguration.completionStageRetryDecoratorExt();
     }
 
 }

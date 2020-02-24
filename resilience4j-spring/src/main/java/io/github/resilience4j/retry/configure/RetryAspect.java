@@ -17,28 +17,23 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.annotation.Retries;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.ValueResolver;
+import io.github.resilience4j.utils.ProceedingJoinPointWrapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.Set;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Retry}
@@ -66,14 +61,8 @@ import java.util.concurrent.*;
 public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspect.class);
-    private final static ScheduledExecutorService retryExecutorService = Executors
-        .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     private final RetryConfigurationProperties retryConfigurationProperties;
-    private final RetryRegistry retryRegistry;
-    private final @Nullable
-    List<RetryAspectExt> retryAspectExtList;
-    private final FallbackDecorators fallbackDecorators;
-    private StringValueResolver embeddedValueResolver;
+    private final RetryDecorator retryDecorator;
 
     /**
      * @param retryConfigurationProperties spring retry config properties
@@ -83,119 +72,58 @@ public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
      */
     public RetryAspect(RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
-        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        @Autowired(required = false) List<RetryDecoratorExt> retryAspectExtList,
         FallbackDecorators fallbackDecorators) {
         this.retryConfigurationProperties = retryConfigurationProperties;
-        this.retryRegistry = retryRegistry;
-        this.retryAspectExtList = retryAspectExtList;
-        this.fallbackDecorators = fallbackDecorators;
-        cleanup();
+        this.retryDecorator = new
+            RetryDecorator(retryRegistry, retryAspectExtList, fallbackDecorators);
 
+    }
+
+    /**
+     * Method used as pointcut
+     *
+     * @param retries - matched annotation
+     */
+    @Pointcut(value = "@within(retries) || @annotation(retries)", argNames = "retries")
+    public void matchRepeatedAnnotatedClassOrMethod(Retries retries) {
+        // Method used as pointcut
     }
 
     @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
     public void matchAnnotatedClassOrMethod(Retry retry) {
     }
 
+    @Around(
+        value = "matchRepeatedAnnotatedClassOrMethod(retries)",
+        argNames = "proceedingJoinPoint, retries")
+    public Object repeatedRetryAroundAdvice(
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable Retries retries) throws Throwable {
+
+        return proceed(proceedingJoinPoint);
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(retryAnnotation)", argNames = "proceedingJoinPoint, retryAnnotation")
     public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable Retry retryAnnotation) throws Throwable {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (retryAnnotation == null) {
-            retryAnnotation = getRetryAnnotation(proceedingJoinPoint);
-        }
-        if (retryAnnotation == null) { //because annotations wasn't found
-            return proceedingJoinPoint.proceed();
-        }
-        String backend = retryAnnotation.name();
-        io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
-        Class<?> returnType = method.getReturnType();
 
-        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, retryAnnotation.fallbackMethod());
-        if (StringUtils.isEmpty(fallbackMethodValue)) {
-            return proceed(proceedingJoinPoint, methodName, retry, returnType);
-        }
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
-                proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+        return proceed(proceedingJoinPoint);
     }
 
-    private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-        io.github.resilience4j.retry.Retry retry, Class<?> returnType) throws Throwable {
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return handleJoinPointCompletableFuture(proceedingJoinPoint, retry);
-        }
-        if (retryAspectExtList != null && !retryAspectExtList.isEmpty()) {
-            for (RetryAspectExt retryAspectExt : retryAspectExtList) {
-                if (retryAspectExt.canHandleReturnType(returnType)) {
-                    return retryAspectExt.handle(proceedingJoinPoint, retry, methodName);
-                }
+    public Object proceed(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        ProceedingJoinPointWrapper joinPointWrapper = new ProceedingJoinPointWrapper(proceedingJoinPoint);
+
+        // Find method or class annotations.
+        // Method annotations override class annotations.
+        Set<Retry> retryAnnotations = joinPointWrapper.findRepeatableAnnotations(Retry.class);
+        if (!retryAnnotations.isEmpty()) {
+            for (Retry retryAnnotation : retryAnnotations) {
+                joinPointWrapper = retryDecorator.decorate(joinPointWrapper, retryAnnotation);
             }
         }
-        return handleDefaultJoinPoint(proceedingJoinPoint, retry);
-    }
 
-    /**
-     * @param methodName the retry method name
-     * @param backend    the retry backend name
-     * @return the configured retry
-     */
-    private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
-        io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug(
-                "Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
-                backend, retry.getRetryConfig().getResultPredicate(), methodName);
-        }
-        return retry;
-    }
-
-    /**
-     * @param proceedingJoinPoint the aspect joint point
-     * @return the retry annotation
-     */
-    @Nullable
-    private Retry getRetryAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger.debug("The retry annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor
-                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Retry.class);
-        } else {
-            return AnnotationExtractor
-                .extract(proceedingJoinPoint.getTarget().getClass(), Retry.class);
-        }
-    }
-
-    /**
-     * @param proceedingJoinPoint the AOP logic joint point
-     * @param retry               the configured sync retry
-     * @return the result object if any
-     * @throws Throwable
-     */
-    private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-        io.github.resilience4j.retry.Retry retry) throws Throwable {
-        return retry.executeCheckedSupplier(proceedingJoinPoint::proceed);
-    }
-
-    /**
-     * @param proceedingJoinPoint the AOP logic joint point
-     * @param retry               the configured async retry
-     * @return the result object if any
-     */
-    @SuppressWarnings("unchecked")
-    private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-        io.github.resilience4j.retry.Retry retry) {
-        return retry.executeCompletionStage(retryExecutorService, () -> {
-            try {
-                return (CompletionStage<Object>) proceedingJoinPoint.proceed();
-            } catch (Throwable throwable) {
-                throw new CompletionException(throwable);
-            }
-        });
+        return joinPointWrapper.proceed();
     }
 
 
@@ -204,24 +132,9 @@ public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
         return retryConfigurationProperties.getRetryAspectOrder();
     }
 
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            retryExecutorService.shutdown();
-            try {
-                if (!retryExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    retryExecutorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!retryExecutorService.isTerminated()) {
-                    retryExecutorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
-            }
-        }));
-    }
 
     @Override
     public void setEmbeddedValueResolver(StringValueResolver resolver) {
-        this.embeddedValueResolver = resolver;
+        retryDecorator.setEmbeddedValueResolver(resolver);
     }
 }

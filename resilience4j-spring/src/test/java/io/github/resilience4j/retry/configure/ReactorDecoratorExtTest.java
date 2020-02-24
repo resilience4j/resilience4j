@@ -16,7 +16,7 @@
 package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.retry.Retry;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -32,31 +32,31 @@ import static org.mockito.Mockito.when;
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ReactorRetryAspectExtTest {
+public class ReactorDecoratorExtTest {
 
     @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
+    CheckedFunction0<Object> function;
 
     @InjectMocks
-    ReactorRetryAspectExt reactorRetryAspectExt;
+    ReactorDecoratorExt reactorRetryAspectExt;
 
 
     @Test
     public void testCheckTypes() {
-        assertThat(reactorRetryAspectExt.canHandleReturnType(Mono.class)).isTrue();
-        assertThat(reactorRetryAspectExt.canHandleReturnType(Flux.class)).isTrue();
+        assertThat(reactorRetryAspectExt.canDecorateReturnType(Mono.class)).isTrue();
+        assertThat(reactorRetryAspectExt.canDecorateReturnType(Flux.class)).isTrue();
     }
 
     @Test
     public void testReactorTypes() throws Throwable {
         Retry retry = Retry.ofDefaults("test");
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
-        assertThat(reactorRetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod"))
+        when(function.apply()).thenReturn(Mono.just("Test"));
+        assertThat(reactorRetryAspectExt.decorate(retry, function))
             .isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
-        assertThat(reactorRetryAspectExt.handle(proceedingJoinPoint, retry, "testMethod"))
+        when(function.apply()).thenReturn(Flux.just("Test"));
+        assertThat(reactorRetryAspectExt.decorate(retry, function))
             .isNotNull();
     }
 

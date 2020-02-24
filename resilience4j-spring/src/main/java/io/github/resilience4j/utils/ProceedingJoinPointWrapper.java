@@ -25,9 +25,8 @@ import org.springframework.util.ClassUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.lang.reflect.Proxy;
+import java.util.*;
 import java.util.function.Function;
 
 public class ProceedingJoinPointWrapper {
@@ -43,7 +42,14 @@ public class ProceedingJoinPointWrapper {
         ProceedingJoinPoint proceedingJoinPoint) {
         this.proceedingJoinPoint = proceedingJoinPoint;
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        this.targetClass = AopUtils.getTargetClass(proceedingJoinPoint.getThis());
+
+        if(proceedingJoinPoint.getTarget() instanceof Proxy){
+            Class<?>[] binterfaces = AopUtils.getTargetClass(proceedingJoinPoint.getTarget()).getInterfaces();
+           // AnnotationExtractor.extractAnnotationFromProxy(binterfaces);
+
+        }
+
+        this.targetClass = AopUtils.getTargetClass(proceedingJoinPoint.getTarget());
         this.method = ClassUtils.getMostSpecificMethod(method, targetClass);
         this.declaringMethodName =  targetClass.getName() + "#" + method.getName();
         this.returnType = method.getReturnType();
@@ -72,14 +78,34 @@ public class ProceedingJoinPointWrapper {
         return returnType;
     }
 
-    public <A extends Annotation> Set<A> findAllRepeatableAnnotations(Class<A> annotationClass) {
-        Set<A> repeatableAnnotations = findRepeatableClassAnnotations(annotationClass);
-        Set<A> methodAnnotations = findRepeatableMethodAnnotations(annotationClass);
-        repeatableAnnotations.addAll(methodAnnotations);
-        return repeatableAnnotations;
+    /**
+     * 	Find <em>repeatable</em> {@linkplain Annotation annotations} of
+     * 	{@code annotationType} from the {@link ProceedingJoinPoint}.
+     * 	Method-level annotations override class-level annotations.
+     *
+     * @param annotationClass the annotation class to look for
+     * @return the annotations found or an empty set
+     */
+    public <A extends Annotation> Set<A> findRepeatableAnnotations(Class<A> annotationClass) {
+        Set<A> annotations = findRepeatableMethodAnnotations(annotationClass);
+        if(annotations.isEmpty()){
+            annotations = findRepeatableClassAnnotations(annotationClass);
+        }
+        if(annotations.isEmpty()){
+            findAnnotation(annotationClass).ifPresent(annotations::add);
+        }
+        return annotations;
     }
 
-
+    /**
+     * 	Find a {@linkplain Annotation annotation} of
+     * 	{@code annotationType} from the {@link ProceedingJoinPoint}.
+     *
+     * 	A method-level annotation overrides a class-level annotation.
+     *
+     * @param annotationClass the annotation class to look for
+     * @return the annotation found
+     */
     public <A extends Annotation> Optional<A> findAnnotation(Class<A> annotationClass) {
         A annotation = findMethodAnnotation(annotationClass);
         if(annotation == null){
@@ -89,11 +115,11 @@ public class ProceedingJoinPointWrapper {
     }
 
     private <A extends Annotation> Set<A> findRepeatableMethodAnnotations(Class<A> annotationClass) {
-        return new HashSet<>(AnnotationUtils.getRepeatableAnnotations(this.method, annotationClass));
+        return new LinkedHashSet<>(AnnotationUtils.getRepeatableAnnotations(this.method, annotationClass));
     }
 
     private <A extends Annotation> Set<A> findRepeatableClassAnnotations(Class<A> annotationClass) {
-        return new HashSet<>(AnnotationUtils.getRepeatableAnnotations(this.targetClass, annotationClass));
+        return new LinkedHashSet<>(AnnotationUtils.getRepeatableAnnotations(this.targetClass, annotationClass));
     }
 
     @Nullable

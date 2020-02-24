@@ -160,7 +160,7 @@ public class RateLimiterConfiguration {
     }
 
     @Bean
-    public CompletionStageDecoratorExt completionStageDecoratorExt() {
+    public CompletionStageDecoratorExt completionStageRateLimiterDecoratorExt() {
         return new CompletionStageDecoratorExt();
     }
 

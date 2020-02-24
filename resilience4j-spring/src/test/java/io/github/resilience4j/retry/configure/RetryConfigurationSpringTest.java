@@ -74,7 +74,7 @@ public class RetryConfigurationSpringTest {
 
         @Bean
         public RetryAspect retryAspect(RetryRegistry retryRegistry,
-            @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
+            @Autowired(required = false) List<RetryDecoratorExt> retryAspectExts,
             FallbackDecorators fallbackDecorators) {
             retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry,
                 retryAspectExts, fallbackDecorators);

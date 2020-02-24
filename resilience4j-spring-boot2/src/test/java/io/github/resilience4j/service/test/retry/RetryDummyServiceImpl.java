@@ -10,6 +10,7 @@ import java.util.concurrent.CompletionStage;
 
 
 @Component
+@Retry(name = "Blub")
 public class RetryDummyServiceImpl implements RetryDummyService {
 
     @Retry(name = RetryDummyService.RETRY_BACKEND_A)

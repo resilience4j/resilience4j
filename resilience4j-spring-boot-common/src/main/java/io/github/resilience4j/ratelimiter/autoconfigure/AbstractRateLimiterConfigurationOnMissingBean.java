@@ -103,8 +103,8 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean
-    public CompletionStageDecoratorExt completionStageDecoratorExt() {
-        return rateLimiterConfiguration.completionStageDecoratorExt();
+    public CompletionStageDecoratorExt completionStageRateLimiterDecoratorExt() {
+        return rateLimiterConfiguration.completionStageRateLimiterDecoratorExt();
     }
 
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 public class DummyServiceImpl implements DummyService {
 
     @Override
+
     public void doSomething(boolean throwBackendTrouble) throws IOException {
         if (throwBackendTrouble) {
             throw new IOException("Test Message");

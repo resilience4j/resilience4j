@@ -16,13 +16,14 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.reactivex.*;
 import io.vavr.CheckedFunction0;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -31,50 +32,35 @@ import static org.mockito.Mockito.when;
  * aspect unit test
  */
 @RunWith(MockitoJUnitRunner.class)
-public class RxJava2RateLimiterAspectExtTest {
+public class ReactorDecoratorExtTest {
 
     @Mock
     CheckedFunction0<Object> function;
 
     @InjectMocks
-    RxJava2DecoratorExt rxJava2RateLimiterAspectExt;
+    ReactorDecoratorExt reactorRateLimiterAspectExt;
 
 
     @Test
     public void testCheckTypes() {
-        assertThat(rxJava2RateLimiterAspectExt.canDecorateReturnType(Flowable.class)).isTrue();
-        assertThat(rxJava2RateLimiterAspectExt.canDecorateReturnType(Single.class)).isTrue();
+        assertThat(reactorRateLimiterAspectExt.canDecorateReturnType(Mono.class)).isTrue();
+        assertThat(reactorRateLimiterAspectExt.canDecorateReturnType(Flux.class)).isTrue();
     }
 
     @Test
     public void testReactorTypes() throws Throwable {
         RateLimiter rateLimiter = RateLimiter.ofDefaults("test");
 
-        when(function.apply()).thenReturn(Single.just("Test"));
+        when(function.apply()).thenReturn(Mono.just("Test"));
         assertThat(
-            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
+            reactorRateLimiterAspectExt.decorate(rateLimiter, function).apply())
             .isNotNull();
 
-        when(function.apply()).thenReturn(Flowable.just("Test"));
+        when(function.apply()).thenReturn(Flux.just("Test"));
         assertThat(
-            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
+            reactorRateLimiterAspectExt.decorate(rateLimiter, function).apply())
             .isNotNull();
-
-        when(function.apply()).thenReturn(Completable.complete());
-        assertThat(
-            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
-            .isNotNull();
-
-        when(function.apply()).thenReturn(Maybe.just("Test"));
-        assertThat(
-            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
-            .isNotNull();
-
-        when(function.apply()).thenReturn(Observable.just("Test"));
-        assertThat(
-            rxJava2RateLimiterAspectExt.decorate(function, rateLimiter, "testMethod").apply())
-            .isNotNull();
-
-
     }
+
+
 }

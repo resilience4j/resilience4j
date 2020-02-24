@@ -21,16 +21,16 @@ public class RateLimiterDecorator implements EmbeddedValueResolverAware {
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterDecorator.class);
     private final RateLimiterRegistry rateLimiterRegistry;
     private final @Nullable
-    List<RateLimiterDecoratorExt> rateLimiterAspectExtList;
+    List<RateLimiterDecoratorExt> rateLimiterDecoratorExtList;
     private final FallbackDecorators fallbackDecorators;
     private @Nullable StringValueResolver resolver;
 
     RateLimiterDecorator(
         RateLimiterRegistry rateLimiterRegistry,
-        @Nullable List<RateLimiterDecoratorExt> rateLimiterAspectExtList,
+        @Nullable List<RateLimiterDecoratorExt> rateLimiterDecoratorExtList,
         FallbackDecorators fallbackDecorators) {
         this.rateLimiterRegistry = rateLimiterRegistry;
-        this.rateLimiterAspectExtList = rateLimiterAspectExtList;
+        this.rateLimiterDecoratorExtList = rateLimiterDecoratorExtList;
         this.fallbackDecorators = fallbackDecorators;
     }
 
@@ -69,8 +69,8 @@ public class RateLimiterDecorator implements EmbeddedValueResolverAware {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
         Class<?> returnType = joinPointHelper.getReturnType();
 
-        if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
-            for (RateLimiterDecoratorExt rateLimiterAspectExt : rateLimiterAspectExtList) {
+        if (rateLimiterDecoratorExtList != null && !rateLimiterDecoratorExtList.isEmpty()) {
+            for (RateLimiterDecoratorExt rateLimiterAspectExt : rateLimiterDecoratorExtList) {
                 if (rateLimiterAspectExt.canDecorateReturnType(returnType)) {
                     return joinPointHelper.decorate(function ->
                         rateLimiterAspectExt.decorate(rateLimiter, function));

@@ -10,10 +10,12 @@ import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RE
 
 @FeignClient(url = "localhost:8090", name = RETRY_DUMMY_FEIGN_CLIENT_NAME)
 @Retry(name = RETRY_DUMMY_FEIGN_CLIENT_NAME)
+
 public interface RetryDummyFeignClient {
 
     String RETRY_DUMMY_FEIGN_CLIENT_NAME = "retryDummyFeignClient";
 
     @GetMapping(path = "/retry/{error}")
+    @Retry(name = RETRY_DUMMY_FEIGN_CLIENT_NAME)
     void doSomething(@PathVariable(name = "error") String error);
 }

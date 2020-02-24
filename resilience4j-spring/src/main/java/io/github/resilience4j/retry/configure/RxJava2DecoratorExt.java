@@ -18,7 +18,7 @@ package io.github.resilience4j.retry.configure;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.transformer.RetryTransformer;
 import io.reactivex.*;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +30,9 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
  * the Rx Retry logic support for the spring AOP conditional on the presence of Rx classes on the
  * spring class loader
  */
-public class RxJava2RetryAspectExt implements RetryAspectExt {
+public class RxJava2DecoratorExt implements RetryDecoratorExt {
 
-    private static final Logger logger = LoggerFactory.getLogger(RxJava2RetryAspectExt.class);
+    private static final Logger logger = LoggerFactory.getLogger(RxJava2DecoratorExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
         SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
@@ -42,24 +42,25 @@ public class RxJava2RetryAspectExt implements RetryAspectExt {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public boolean canHandleReturnType(Class returnType) {
+    public boolean canDecorateReturnType(Class returnType) {
         return rxSupportedTypes.stream()
             .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
-     * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param retry               the configured Retry
-     * @param methodName          the method name
+     * Decorate a function with a RateLimiter.
+     *
+     * @param retry         the retry
+     * @param function the function
      * @return the result object
-     * @throws Throwable exception in case of faulty flow
      */
     @Override
-    public Object handle(ProceedingJoinPoint proceedingJoinPoint, Retry retry, String methodName)
-        throws Throwable {
-        RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
-        Object returnValue = proceedingJoinPoint.proceed();
-        return executeRxJava2Aspect(retryTransformer, returnValue);
+    public CheckedFunction0<Object> decorate(Retry retry, CheckedFunction0<Object> function){
+        return () -> {
+            RetryTransformer<?> retryTransformer = RetryTransformer.of(retry);
+            Object returnValue = function.apply();
+            return executeRxJava2Aspect(retryTransformer, returnValue);
+        };
     }
 
     @SuppressWarnings("unchecked")

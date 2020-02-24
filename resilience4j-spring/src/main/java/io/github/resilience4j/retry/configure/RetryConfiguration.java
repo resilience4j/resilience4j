@@ -141,7 +141,7 @@ public class RetryConfiguration {
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
-        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+        @Autowired(required = false) List<RetryDecoratorExt> retryAspectExtList,
         FallbackDecorators fallbackDecorators) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
             fallbackDecorators);
@@ -149,14 +149,19 @@ public class RetryConfiguration {
 
     @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
-    public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
-        return new RxJava2RetryAspectExt();
+    public RxJava2DecoratorExt rxJava2RetryAspectExt() {
+        return new RxJava2DecoratorExt();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
-    public ReactorRetryAspectExt reactorRetryAspectExt() {
-        return new ReactorRetryAspectExt();
+    public ReactorDecoratorExt reactorRetryAspectExt() {
+        return new ReactorDecoratorExt();
+    }
+
+    @Bean()
+    public CompletionStageDecoratorExt completionStageRetryDecoratorExt() {
+        return new CompletionStageDecoratorExt();
     }
 
     /**

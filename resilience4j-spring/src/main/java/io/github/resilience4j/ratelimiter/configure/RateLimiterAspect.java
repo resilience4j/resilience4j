@@ -33,7 +33,6 @@ import org.springframework.core.Ordered;
 import org.springframework.util.StringValueResolver;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -65,7 +64,7 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
     private final RateLimiterConfigurationProperties properties;
-    private RateLimiterDecorator rateLimiterDecorator;
+    private final RateLimiterDecorator rateLimiterDecorator;
 
     public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
         RateLimiterConfigurationProperties properties,
@@ -102,11 +101,17 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
     public Object repeatedRateLimiterAroundAdvice(
         ProceedingJoinPoint proceedingJoinPoint,
         @Nullable RateLimiters rateLimiters) throws Throwable {
+        return proceed(proceedingJoinPoint);
+    }
+
+    public Object proceed(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         ProceedingJoinPointWrapper joinPointWrapper = new ProceedingJoinPointWrapper(proceedingJoinPoint);
 
-        Set<RateLimiter> rateLimiterAnnotations = joinPointWrapper.findAllRepeatableAnnotations(RateLimiter.class);
-        if(!rateLimiterAnnotations.isEmpty()){
-            for(RateLimiter rateLimiterAnnotation : rateLimiterAnnotations) {
+        // Find method or class annotations.
+        // Method annotations override class annotations.
+        Set<RateLimiter> rateLimiterAnnotations = joinPointWrapper.findRepeatableAnnotations(RateLimiter.class);
+        if (!rateLimiterAnnotations.isEmpty()) {
+            for (RateLimiter rateLimiterAnnotation : rateLimiterAnnotations) {
                 joinPointWrapper = rateLimiterDecorator.decorate(joinPointWrapper, rateLimiterAnnotation);
             }
         }
@@ -116,15 +121,8 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
 
     @Around(value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)", argNames = "proceedingJoinPoint, rateLimiterAnnotation")
     public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-        @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
-        ProceedingJoinPointWrapper joinPointWrapper = new ProceedingJoinPointWrapper(proceedingJoinPoint);
-
-        Optional<RateLimiter> optionalAnnotation = joinPointWrapper.findAnnotation(RateLimiter.class);
-        if(optionalAnnotation.isPresent()){
-            joinPointWrapper = rateLimiterDecorator.decorate(joinPointWrapper, optionalAnnotation.get());
-        }
-
-        return joinPointWrapper.proceed();
+        @Nullable RateLimiter annotation) throws Throwable {
+        return proceed(proceedingJoinPoint);
     }
 
     @Override
