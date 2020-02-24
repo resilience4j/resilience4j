@@ -16,7 +16,7 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 public class ReactorCircuitBreakerAspectExtTest {
 
     @Mock
-    ProceedingJoinPoint proceedingJoinPoint;
+    CheckedFunction0<Object> function;
 
     @InjectMocks
     ReactorDecoratorExt reactorCircuitBreakerAspectExt;
@@ -43,21 +43,21 @@ public class ReactorCircuitBreakerAspectExtTest {
 
     @Test
     public void testCheckTypes() {
-        assertThat(reactorCircuitBreakerAspectExt.canHandleReturnType(Mono.class)).isTrue();
-        assertThat(reactorCircuitBreakerAspectExt.canHandleReturnType(Flux.class)).isTrue();
+        assertThat(reactorCircuitBreakerAspectExt.canDecorateReturnType(Mono.class)).isTrue();
+        assertThat(reactorCircuitBreakerAspectExt.canDecorateReturnType(Flux.class)).isTrue();
     }
 
     @Test
     public void testReactorTypes() throws Throwable {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Mono.just("Test"));
+        when(function.apply()).thenReturn(Mono.just("Test"));
         assertThat(reactorCircuitBreakerAspectExt
-            .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
+            .decorate(circuitBreaker, function).apply()).isNotNull();
 
-        when(proceedingJoinPoint.proceed()).thenReturn(Flux.just("Test"));
+        when(function.apply()).thenReturn(Flux.just("Test"));
         assertThat(reactorCircuitBreakerAspectExt
-            .handle(proceedingJoinPoint, circuitBreaker, "testMethod")).isNotNull();
+            .decorate(circuitBreaker, function).apply()).isNotNull();
     }
 
 
