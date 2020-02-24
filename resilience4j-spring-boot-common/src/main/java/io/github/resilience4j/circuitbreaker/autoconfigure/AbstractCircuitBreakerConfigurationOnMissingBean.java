@@ -81,7 +81,7 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        @Autowired(required = false) List<CircuitBreakerDecoratorExt> circuitBreakerAspectExtList,
         FallbackDecorators fallbackDecorators) {
         return circuitBreakerConfiguration
             .circuitBreakerAspect(circuitBreakerRegistry, circuitBreakerAspectExtList,
@@ -89,16 +89,22 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     }
 
     @Bean
+    @ConditionalOnMissingBean
+    public CompletionStageDecoratorExt completionStageDecoratorExt() {
+        return circuitBreakerConfiguration.completionStageDecoratorExt();
+    }
+
+    @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
+    public RxJava2DecoratorExt rxJava2CircuitBreakerAspect() {
         return circuitBreakerConfiguration.rxJava2CircuitBreakerAspect();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
+    public ReactorDecoratorExt reactorCircuitBreakerAspect() {
         return circuitBreakerConfiguration.reactorCircuitBreakerAspect();
     }
 

@@ -18,7 +18,7 @@ package io.github.resilience4j.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.reactivex.*;
-import org.aspectj.lang.ProceedingJoinPoint;
+import io.vavr.CheckedFunction0;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +30,10 @@ import static io.github.resilience4j.utils.AspectUtil.newHashSet;
  * the Rx circuit breaker logic support for the spring AOP conditional on the presence of Rx classes
  * on the spring class loader
  */
-public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
+public class RxJava2DecoratorExt implements CircuitBreakerDecoratorExt {
 
     private static final Logger logger = LoggerFactory
-        .getLogger(RxJava2CircuitBreakerAspectExt.class);
+        .getLogger(RxJava2DecoratorExt.class);
     private final Set<Class> rxSupportedTypes = newHashSet(ObservableSource.class,
         SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
@@ -43,31 +43,33 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public boolean canHandleReturnType(Class returnType) {
+    public boolean canDecorateReturnType(Class returnType) {
         return rxSupportedTypes.stream()
             .anyMatch(classType -> classType.isAssignableFrom(returnType));
     }
 
     /**
-     * @param proceedingJoinPoint Spring AOP proceedingJoinPoint
-     * @param circuitBreaker      the configured circuitBreaker
-     * @param methodName          the method name
-     * @return the result object
-     * @throws Throwable exception in case of faulty flow
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public Object handle(ProceedingJoinPoint proceedingJoinPoint, CircuitBreaker circuitBreaker,
-        String methodName) throws Throwable {
-        CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
-        Object returnValue = proceedingJoinPoint.proceed();
+     * Decorate a function with a CircuitBreaker.
+     *
+     * @param circuitBreaker         the  CircuitBreaker
+     * @param function The function
 
-        return executeRxJava2Aspect(circuitBreakerOperator, returnValue, methodName);
+     * @return the result object
+     */
+    @Override
+    public CheckedFunction0<Object> decorate(CircuitBreaker circuitBreaker, CheckedFunction0<Object> function) {
+        return () -> {
+            CircuitBreakerOperator circuitBreakerOperator = CircuitBreakerOperator.of(circuitBreaker);
+            Object returnValue = function.apply();
+
+            return executeRxJava2Aspect(circuitBreakerOperator, returnValue);
+        };
+
     }
 
     @SuppressWarnings("unchecked")
     private Object executeRxJava2Aspect(CircuitBreakerOperator circuitBreakerOperator,
-        Object returnValue, String methodName) {
+        Object returnValue) {
         if (returnValue instanceof ObservableSource) {
             Observable<?> observable = (Observable) returnValue;
             return observable.compose(circuitBreakerOperator);
@@ -84,12 +86,12 @@ public class RxJava2CircuitBreakerAspectExt implements CircuitBreakerAspectExt {
             Flowable<?> flowable = (Flowable) returnValue;
             return flowable.compose(circuitBreakerOperator);
         } else {
-            logger
-                .error("Unsupported type for RxJava2 circuit breaker return type {} for method {}",
-                    returnValue.getClass().getTypeName(), methodName);
+            logger.error("Unsupported type for RxJava2 circuit breaker {}",
+                returnValue.getClass().getTypeName());
             throw new IllegalArgumentException(
                 "Not Supported type for the circuit breaker in RxJava2:" + returnValue.getClass()
                     .getName());
+
         }
     }
 }

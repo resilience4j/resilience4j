@@ -38,7 +38,7 @@ public class ReactorCircuitBreakerAspectExtTest {
     ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
-    ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspectExt;
+    ReactorDecoratorExt reactorCircuitBreakerAspectExt;
 
 
     @Test

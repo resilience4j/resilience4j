@@ -89,23 +89,28 @@ public class CircuitBreakerConfiguration {
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
-        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        @Autowired(required = false) List<CircuitBreakerDecoratorExt> circuitBreakerAspectExtList,
         FallbackDecorators fallbackDecorators) {
         return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry,
             circuitBreakerAspectExtList, fallbackDecorators);
     }
 
+    @Bean
+    public CompletionStageDecoratorExt completionStageDecoratorExt() {
+        return new CompletionStageDecoratorExt();
+    }
+
 
     @Bean
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
-    public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
-        return new RxJava2CircuitBreakerAspectExt();
+    public RxJava2DecoratorExt rxJava2CircuitBreakerAspect() {
+        return new RxJava2DecoratorExt();
     }
 
     @Bean
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
-    public ReactorCircuitBreakerAspectExt reactorCircuitBreakerAspect() {
-        return new ReactorCircuitBreakerAspectExt();
+    public ReactorDecoratorExt reactorCircuitBreakerAspect() {
+        return new ReactorDecoratorExt();
     }
 
     /**

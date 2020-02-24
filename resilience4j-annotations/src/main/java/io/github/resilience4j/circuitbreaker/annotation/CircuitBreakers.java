@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2020 Robert Winkler
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker.configure;
+package io.github.resilience4j.circuitbreaker.annotation;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.aspectj.lang.ProceedingJoinPoint;
+import java.lang.annotation.*;
 
-/**
- * circuit breaker aspect extension support interface type if you want to support new types
- */
-public interface CircuitBreakerAspectExt {
+@Retention(value = RetentionPolicy.RUNTIME)
+@Target(value = {ElementType.METHOD, ElementType.TYPE})
+@Documented
+public @interface CircuitBreakers {
 
-    boolean canHandleReturnType(Class returnType);
-
-    Object handle(ProceedingJoinPoint proceedingJoinPoint,
-        CircuitBreaker circuitBreaker, String methodName) throws Throwable;
+    CircuitBreaker[] value();
 }

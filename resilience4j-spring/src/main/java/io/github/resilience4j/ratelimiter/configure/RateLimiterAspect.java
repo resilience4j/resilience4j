@@ -25,8 +25,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
@@ -62,7 +60,6 @@ import java.util.Set;
 @Aspect
 public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
 
-    private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
     private final RateLimiterConfigurationProperties properties;
     private final RateLimiterDecorator rateLimiterDecorator;
 
@@ -90,7 +87,7 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
      *
      * @param rateLimiters - matched annotation
      */
-    @Pointcut(value = "@within(rateLimiter) || @annotation(rateLimiter)", argNames = "rateLimiter")
+    @Pointcut(value = "@within(rateLimiters) || @annotation(rateLimiters)", argNames = "rateLimiters")
     public void matchRepeatedAnnotatedClassOrMethod(RateLimiters rateLimiters) {
         // Method used as pointcut
     }

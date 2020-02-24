@@ -38,7 +38,7 @@ public class RxJava2CircuitBreakerAspectExtTest {
     ProceedingJoinPoint proceedingJoinPoint;
 
     @InjectMocks
-    RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspectExt;
+    RxJava2DecoratorExt rxJava2CircuitBreakerAspectExt;
 
 
     @Test

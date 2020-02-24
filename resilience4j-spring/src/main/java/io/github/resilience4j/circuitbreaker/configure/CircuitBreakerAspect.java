@@ -17,29 +17,21 @@ package io.github.resilience4j.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreakers;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
-import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.ValueResolver;
+import io.github.resilience4j.utils.ProceedingJoinPointWrapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
+import java.util.Set;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link CircuitBreaker}
@@ -68,124 +60,63 @@ import java.util.concurrent.CompletionStage;
 @Aspect
 public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered {
 
-    private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
-
     private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-    private final @Nullable
-    List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
-    private final FallbackDecorators fallbackDecorators;
-    private StringValueResolver embeddedValueResolver;
+    private final CircuitBreakerDecorator circuitBreakerDecorator;
 
     public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
         CircuitBreakerRegistry circuitBreakerRegistry,
-        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+        @Autowired(required = false) List<CircuitBreakerDecoratorExt> circuitBreakerDecoratorExtList,
         FallbackDecorators fallbackDecorators) {
         this.circuitBreakerProperties = circuitBreakerProperties;
-        this.circuitBreakerRegistry = circuitBreakerRegistry;
-        this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
-        this.fallbackDecorators = fallbackDecorators;
+        this.circuitBreakerDecorator = new
+            CircuitBreakerDecorator(circuitBreakerRegistry, circuitBreakerDecoratorExtList, fallbackDecorators);
     }
+
+    /**
+     * Method used as pointcut
+     *
+     * @param circuitBreakers - matched annotation
+     */
+    @Pointcut(value = "@within(circuitBreakers) || @annotation(circuitBreakers)", argNames = "circuitBreakers")
+    public void matchRepeatedAnnotatedClassOrMethod(CircuitBreakers circuitBreakers) {
+        // Method used as pointcut
+    }
+
 
     @Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
     public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
     }
 
+    @Around(
+        value = "matchRepeatedAnnotatedClassOrMethod(circuitBreakers)",
+        argNames = "proceedingJoinPoint, circuitBreakers")
+    public Object repeatedCircuitBreakerAroundAdvice(
+        ProceedingJoinPoint proceedingJoinPoint,
+        @Nullable CircuitBreakers circuitBreakers) throws Throwable {
+        return proceed(proceedingJoinPoint);
+    }
+
+
     @Around(value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)", argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (circuitBreakerAnnotation == null) {
-            circuitBreakerAnnotation = getCircuitBreakerAnnotation(proceedingJoinPoint);
-        }
-        if (circuitBreakerAnnotation == null) { //because annotations wasn't found
-            return proceedingJoinPoint.proceed();
-        }
-        String backend = circuitBreakerAnnotation.name();
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
-            methodName, backend);
-        Class<?> returnType = method.getReturnType();
 
-        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, circuitBreakerAnnotation.fallbackMethod());
-        if (StringUtils.isEmpty(fallbackMethodValue)) {
-            return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
-        }
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallbackMethodValue, method,
-                proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
+        return proceed(proceedingJoinPoint);
     }
 
-    private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, Class<?> returnType)
-        throws Throwable {
-        if (circuitBreakerAspectExtList != null && !circuitBreakerAspectExtList.isEmpty()) {
-            for (CircuitBreakerAspectExt circuitBreakerAspectExt : circuitBreakerAspectExtList) {
-                if (circuitBreakerAspectExt.canHandleReturnType(returnType)) {
-                    return circuitBreakerAspectExt
-                        .handle(proceedingJoinPoint, circuitBreaker, methodName);
-                }
+    public Object proceed(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        ProceedingJoinPointWrapper joinPointWrapper = new ProceedingJoinPointWrapper(proceedingJoinPoint);
+
+        // Find method or class annotations.
+        // Method annotations override class annotations.
+        Set<CircuitBreaker> annotations = joinPointWrapper.findRepeatableAnnotations(CircuitBreaker.class);
+        if (!annotations.isEmpty()) {
+            for (CircuitBreaker annotation : annotations) {
+                joinPointWrapper = circuitBreakerDecorator.decorate(joinPointWrapper, annotation);
             }
         }
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return handleJoinPointCompletableFuture(proceedingJoinPoint, circuitBreaker);
-        }
-        return defaultHandling(proceedingJoinPoint, circuitBreaker);
-    }
 
-    private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(
-        String methodName, String backend) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(backend);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug(
-                "Created or retrieved circuit breaker '{}' with failure rate '{}' for method: '{}'",
-                backend, circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold(),
-                methodName);
-        }
-
-        return circuitBreaker;
-    }
-
-    @Nullable
-    private CircuitBreaker getCircuitBreakerAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("circuitBreaker parameter is null");
-        }
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger.debug(
-                "The circuit breaker annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor
-                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), CircuitBreaker.class);
-        } else {
-            return AnnotationExtractor
-                .extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
-        }
-    }
-
-    /**
-     * decorate the CompletionStage return types AOP based into configured circuit-breaker
-     */
-    private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) {
-        return circuitBreaker.executeCompletionStage(() -> {
-            try {
-                return (CompletionStage<?>) proceedingJoinPoint.proceed();
-            } catch (Throwable throwable) {
-                throw new CompletionException(throwable);
-            }
-        });
-    }
-
-    /**
-     * the default Java types handling for the circuit breaker AOP
-     */
-    private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint,
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
-        return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
+        return joinPointWrapper.proceed();
     }
 
     @Override
@@ -195,6 +126,6 @@ public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered
 
     @Override
     public void setEmbeddedValueResolver(StringValueResolver resolver) {
-        this.embeddedValueResolver = resolver;
+        circuitBreakerDecorator.setEmbeddedValueResolver(resolver);
     }
 }
