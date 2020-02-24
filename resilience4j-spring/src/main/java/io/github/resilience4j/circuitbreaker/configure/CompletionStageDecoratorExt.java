@@ -25,10 +25,6 @@ import java.util.concurrent.*;
  */
 public class CompletionStageDecoratorExt implements CircuitBreakerDecoratorExt {
 
-    public CompletionStageDecoratorExt(){
-    }
-
-
     /**
      * @param returnType the AOP method return type class
      * @return boolean if the return type implements CompletionStage

@@ -42,9 +42,8 @@ public class ProceedingJoinPointWrapper {
     public ProceedingJoinPointWrapper(
         ProceedingJoinPoint proceedingJoinPoint) {
         this.proceedingJoinPoint = proceedingJoinPoint;
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         this.targetClass = AopUtils.getTargetClass(proceedingJoinPoint.getTarget());
-        this.method = ClassUtils.getMostSpecificMethod(method, targetClass);
+        this.method = ClassUtils.getMostSpecificMethod(((MethodSignature) proceedingJoinPoint.getSignature()).getMethod(), targetClass);
         this.declaringMethodName =  targetClass.getName() + "#" + method.getName();
         this.returnType = method.getReturnType();
         this.proceedFunction = proceedingJoinPoint::proceed;
