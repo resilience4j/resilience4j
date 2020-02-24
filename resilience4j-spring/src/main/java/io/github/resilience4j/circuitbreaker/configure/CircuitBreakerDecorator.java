@@ -36,7 +36,7 @@ public class CircuitBreakerDecorator implements EmbeddedValueResolverAware {
 
     public ProceedingJoinPointWrapper decorate(
         ProceedingJoinPointWrapper joinPointHelper,
-        CircuitBreaker circuitBreakerAnnotation) throws Throwable {
+        CircuitBreaker circuitBreakerAnnotation) throws NoSuchMethodException {
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
             joinPointHelper.getDeclaringMethodName(), circuitBreakerAnnotation.name());
 

@@ -36,7 +36,7 @@ public class RateLimiterDecorator implements EmbeddedValueResolverAware {
 
     public ProceedingJoinPointWrapper decorate(
         ProceedingJoinPointWrapper joinPointHelper,
-        RateLimiter rateLimiterAnnotation) throws Throwable {
+        RateLimiter rateLimiterAnnotation) throws NoSuchMethodException {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
             joinPointHelper.getDeclaringMethodName(), rateLimiterAnnotation.name());
 

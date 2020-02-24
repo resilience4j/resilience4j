@@ -35,7 +35,7 @@ public class RetryDecorator implements EmbeddedValueResolverAware {
 
     public ProceedingJoinPointWrapper decorate(
         ProceedingJoinPointWrapper joinPointHelper,
-        Retry retryAnnotation) throws Throwable {
+        Retry retryAnnotation) throws NoSuchMethodException {
         io.github.resilience4j.retry.Retry retry = getOrCreateRetry(
             joinPointHelper.getDeclaringMethodName(), retryAnnotation.name());
 
