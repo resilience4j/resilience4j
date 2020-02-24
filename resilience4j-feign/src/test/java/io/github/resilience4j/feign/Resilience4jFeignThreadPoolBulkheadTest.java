@@ -44,8 +44,9 @@ public class Resilience4jFeignThreadPoolBulkheadTest {
     @Before
     public void setUp() {
         bulkhead = createThreadPoolBulkhead();
-        PostponedDecorators<?> postponedDecorators = PostponedDecorators.builder()
-            .withThreadPoolBulkhead(bulkhead);
+        PostponedDecorators<CompletionStageTestService> postponedDecorators =
+            PostponedDecorators.<CompletionStageTestService>builder()
+                .withThreadPoolBulkhead(bulkhead);
         testService = createFeignTestService(postponedDecorators);
     }
 
@@ -64,8 +65,8 @@ public class Resilience4jFeignThreadPoolBulkheadTest {
     }
 
     public CompletionStageTestService createFeignTestService(
-        PostponedDecorators<?> postponedDecorators) {
-        return Resilience4jFeign.builder(postponedDecorators::build)
+        PostponedDecorators<CompletionStageTestService> postponedDecorators) {
+        return Resilience4jFeign.builder(postponedDecorators)
             .decoder(new CompletableFutureDecoder(new StringDecoder()))
             .target(CompletionStageTestService.class, MOCK_URL);
     }
@@ -96,9 +97,10 @@ public class Resilience4jFeignThreadPoolBulkheadTest {
         CircuitBreaker circuitBreaker = CircuitBreaker
             .of("test", CircuitBreakerConfig.ofDefaults());
         bulkhead = createThreadPoolBulkhead();
-        PostponedDecorators<?> postponedDecorators = PostponedDecorators.builder()
-            .withThreadPoolBulkhead(bulkhead)
-            .withCircuitBreaker(circuitBreaker);
+        PostponedDecorators<CompletionStageTestService> postponedDecorators =
+            PostponedDecorators.<CompletionStageTestService>builder()
+                .withThreadPoolBulkhead(bulkhead)
+                .withCircuitBreaker(circuitBreaker);
         testService = createFeignTestService(postponedDecorators);
         givenHelloWithResponse(200);
 
@@ -115,9 +117,10 @@ public class Resilience4jFeignThreadPoolBulkheadTest {
         AtomicReference<CircuitBreakerEvent> pastEvent = new AtomicReference<>();
         circuitBreaker.getEventPublisher().onEvent(pastEvent::set);
         bulkhead = createThreadPoolBulkhead();
-        PostponedDecorators<?> postponedDecorators = PostponedDecorators.builder()
-            .withThreadPoolBulkhead(bulkhead)
-            .withCircuitBreaker(circuitBreaker);
+        PostponedDecorators<CompletionStageTestService> postponedDecorators =
+            PostponedDecorators.<CompletionStageTestService>builder()
+                .withThreadPoolBulkhead(bulkhead)
+                .withCircuitBreaker(circuitBreaker);
         testService = createFeignTestService(postponedDecorators);
         givenHelloWithResponse(200);
 

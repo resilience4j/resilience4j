@@ -29,7 +29,6 @@ import org.junit.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore
 /**
  * Tests the integration of the {@link Resilience4jFeign} with the lambda as a fallback.
  */
@@ -46,7 +45,7 @@ public class Resilience4jFeignFallbackLambdaTest {
     public void setUp() {
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
             .withFallback(Issue560.createLambdaFallback());
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
     }
 

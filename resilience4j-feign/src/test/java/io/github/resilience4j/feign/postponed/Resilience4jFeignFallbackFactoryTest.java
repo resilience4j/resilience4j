@@ -17,13 +17,13 @@
 package io.github.resilience4j.feign.postponed;
 
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import feign.FeignException;
 import io.github.resilience4j.feign.PostponedDecorators;
 import io.github.resilience4j.feign.Resilience4jFeign;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceFallbackThrowingException;
 import io.github.resilience4j.feign.test.TestServiceFallbackWithException;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,7 +39,6 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests on fallback factories.
  */
-@Ignore
 public class Resilience4jFeignFallbackFactoryTest {
 
     @ClassRule
@@ -51,7 +50,7 @@ public class Resilience4jFeignFallbackFactoryTest {
     private static TestService buildTestService(Function<Exception, ?> fallbackSupplier) {
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
             .withFallbackFactory(fallbackSupplier);
-        return Resilience4jFeign.builder(decorators::build)
+        return Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
     }
 
@@ -116,9 +115,9 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallbackFactory(TestServiceFallbackWithException::new, FeignException.class)
+            .withFallbackFactory(TestServiceFallbackWithException::new, FeignException.class)
             .withFallbackFactory(e -> uselessFallback);
-        TestService testService = Resilience4jFeign.builder(decorators::build)
+        TestService testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
@@ -134,11 +133,10 @@ public class Resilience4jFeignFallbackFactoryTest {
         setupStub(400);
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
-//        FeignDecorators decorators = FeignDecorators.builder()
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallbackFactory(e -> uselessFallback, MyException.class)
+            .withFallbackFactory(e -> uselessFallback, MyException.class)
             .withFallbackFactory(TestServiceFallbackWithException::new);
-        TestService testService = Resilience4jFeign.builder(decorators::build)
+        TestService testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
@@ -155,10 +153,10 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallbackFactory(TestServiceFallbackWithException::new,
-//                FeignException.class::isInstance)
+            .withFallbackFactory(TestServiceFallbackWithException::new,
+                FeignException.class::isInstance)
             .withFallbackFactory(e -> uselessFallback);
-        TestService testService = Resilience4jFeign.builder(decorators::build)
+        TestService testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();
@@ -175,9 +173,9 @@ public class Resilience4jFeignFallbackFactoryTest {
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallbackFactory(e -> uselessFallback, MyException.class::isInstance)
+            .withFallbackFactory(e -> uselessFallback, MyException.class::isInstance)
             .withFallbackFactory(TestServiceFallbackWithException::new);
-        TestService testService = Resilience4jFeign.builder(decorators::build)
+        TestService testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
 
         String result = testService.greeting();

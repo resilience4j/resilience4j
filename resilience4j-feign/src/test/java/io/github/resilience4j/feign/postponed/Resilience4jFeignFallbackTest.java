@@ -17,11 +17,12 @@
 package io.github.resilience4j.feign.postponed;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.feign.PostponedDecorators;
 import io.github.resilience4j.feign.Resilience4jFeign;
 import io.github.resilience4j.feign.test.TestService;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
 
-@Ignore
 /**
  * Tests the integration of the {@link Resilience4jFeign} with a fallback.
  */
@@ -50,10 +50,10 @@ public class Resilience4jFeignFallbackTest {
         testServiceFallback = mock(TestService.class);
         when(testServiceFallback.greeting()).thenReturn("fallback");
 
-        PostponedDecorators<?> decorators = PostponedDecorators.builder()
+        PostponedDecorators<TestService> decorators = PostponedDecorators.<TestService>builder()
             .withFallback(testServiceFallback);
 
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
     }
 
@@ -70,9 +70,9 @@ public class Resilience4jFeignFallbackTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidFallback() throws Throwable {
-        PostponedDecorators<?> decorators = PostponedDecorators.builder()
+        PostponedDecorators<TestService> decorators = PostponedDecorators.<TestService>builder()
             .withFallback("not a fallback");
-        Resilience4jFeign.builder(decorators::build)
+        Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
     }
 
@@ -88,17 +88,16 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
-    @Ignore
     @Test
     public void testFallbackExceptionFilter() throws Exception {
         final TestService testServiceExceptionFallback = mock(TestService.class);
         when(testServiceExceptionFallback.greeting()).thenReturn("exception fallback");
 
-        PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallback(testServiceExceptionFallback, FeignException.class)
+        PostponedDecorators<TestService> decorators = PostponedDecorators.<TestService>builder()
+            .withFallback(testServiceExceptionFallback, FeignException.class)
             .withFallback(testServiceFallback);
 
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
         setupStub(400);
 
@@ -111,17 +110,16 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
-    @Ignore
     @Test
     public void testFallbackExceptionFilterNotCalled() throws Exception {
         final TestService testServiceExceptionFallback = mock(TestService.class);
         when(testServiceExceptionFallback.greeting()).thenReturn("exception fallback");
 
-        PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallback(testServiceExceptionFallback, CallNotPermittedException.class)
+        PostponedDecorators<TestService> decorators = PostponedDecorators.<TestService>builder()
+            .withFallback(testServiceExceptionFallback, CallNotPermittedException.class)
             .withFallback(testServiceFallback);
 
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
         setupStub(400);
 
@@ -134,17 +132,16 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
-    @Ignore
     @Test
     public void testFallbackFilter() throws Exception {
         final TestService testServiceFilterFallback = mock(TestService.class);
         when(testServiceFilterFallback.greeting()).thenReturn("filter fallback");
 
-        PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallback(testServiceFilterFallback, ex -> true)
+        PostponedDecorators<TestService> decorators = PostponedDecorators.<TestService>builder()
+            .withFallback(testServiceFilterFallback, ex -> true)
             .withFallback(testServiceFallback);
 
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
         setupStub(400);
 
@@ -157,17 +154,16 @@ public class Resilience4jFeignFallbackTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
-    @Ignore
     @Test
     public void testFallbackFilterNotCalled() throws Exception {
         final TestService testServiceFilterFallback = mock(TestService.class);
         when(testServiceFilterFallback.greeting()).thenReturn("filter fallback");
 
-        PostponedDecorators<?> decorators = PostponedDecorators.builder()
-//            .withFallback(testServiceFilterFallback, ex -> false)
+        PostponedDecorators<TestService> decorators = PostponedDecorators.<TestService>builder()
+            .withFallback(testServiceFilterFallback, ex -> false)
             .withFallback(testServiceFallback);
 
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
         setupStub(400);
 

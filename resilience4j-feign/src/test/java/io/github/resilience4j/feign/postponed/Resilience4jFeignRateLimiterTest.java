@@ -49,7 +49,7 @@ public class Resilience4jFeignRateLimiterTest {
         rateLimiter = mock(RateLimiter.class);
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
             .withRateLimiter(rateLimiter);
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, MOCK_URL);
     }
 

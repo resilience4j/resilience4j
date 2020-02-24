@@ -52,7 +52,7 @@ public class Resilience4jFeignCircuitBreakerTest {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
             .withCircuitBreaker(circuitBreaker);
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
             .target(TestService.class, "http://localhost:8080/");
     }
 

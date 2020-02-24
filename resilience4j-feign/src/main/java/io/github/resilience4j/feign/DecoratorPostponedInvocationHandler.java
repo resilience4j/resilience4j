@@ -40,12 +40,15 @@ import static feign.Util.checkNotNull;
 class DecoratorPostponedInvocationHandler<T> implements InvocationHandler {
 
     private final Target<?> target;
+    private final FeignDecorator fallback;
     private final Map<Method, CheckedFunction1<Object[], Object>> decoratedDispatch;
 
     public DecoratorPostponedInvocationHandler(Target<?> target,
-        Map<Method, MethodHandler> dispatch,
-        Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper) {
+                                               Map<Method, MethodHandler> dispatch,
+                                               Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper,
+                                               FeignDecorator fallback) {
         this.target = checkNotNull(target, "target");
+        this.fallback = checkNotNull(fallback, "fallback");
         checkNotNull(dispatch, "dispatch");
         this.decoratedDispatch = decorateMethodHandlers(dispatch, completionStageWrapper, target);
     }
@@ -73,7 +76,8 @@ class DecoratorPostponedInvocationHandler<T> implements InvocationHandler {
             final Method method = entry.getKey();
             final MethodHandler methodHandler = entry.getValue();
             if (methodHandler != null) {
-                CheckedFunction1<Object[], Object> checkedMethodHandler = methodHandler::invoke;
+                CheckedFunction1<Object[], Object> checkedMethodHandler = fallback
+                    .decorate(methodHandler::invoke, method, methodHandler, target);
                 CheckedFunction1<Object[], Object> decorated = args ->
                     completionStageWrapper.apply(() ->
                         (T) // TODO

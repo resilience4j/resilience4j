@@ -25,6 +25,7 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+// PostponedDecorators isn't used
 @Ignore
 public class FeignDecoratorsTest {
 

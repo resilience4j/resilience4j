@@ -35,7 +35,7 @@ public class Resilience4jFeignBulkheadTest {
         bulkhead = spy(Bulkhead.of("bulkheadTest", BulkheadConfig.ofDefaults()));
         PostponedDecorators<?> decorators = PostponedDecorators.builder()
             .withBulkhead(bulkhead);
-        testService = Resilience4jFeign.builder(decorators::build)
+        testService = Resilience4jFeign.builder(decorators)
                 .target(TestService.class, MOCK_URL);
     }
 

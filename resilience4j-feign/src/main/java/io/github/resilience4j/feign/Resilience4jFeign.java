@@ -19,6 +19,8 @@ package io.github.resilience4j.feign;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -43,8 +45,15 @@ public final class Resilience4jFeign {
         return new Builder(invocationDecorator);
     }
 
+    @Deprecated
+    public static Feign.Builder builder1(
+        Function<Supplier<Object>, Supplier<CompletionStage<Object>>> completionStageWrapper) {
+        return new PostponedBuilder(completionStageWrapper);
+    }
+
+
     public static <T> Feign.Builder builder(
-        Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper) {
+        PostponedDecorators<T> completionStageWrapper) {
         return new PostponedBuilder<T>(completionStageWrapper);
     }
 
@@ -77,11 +86,20 @@ public final class Resilience4jFeign {
 
     public static final class PostponedBuilder<T> extends Feign.Builder {
 
-        private final Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper;
+        private final Function<Supplier<Object>, Supplier<CompletionStage<Object>>> completionStageWrapper;
+        private final List<FeignDecorator> fallbacks;
+
+        @Deprecated
+        public PostponedBuilder(
+            Function<Supplier<Object>, Supplier<CompletionStage<Object>>> completionStageWrapper) {
+            this.completionStageWrapper = completionStageWrapper;
+            this.fallbacks = Collections.emptyList();
+        }
 
         public PostponedBuilder(
-            Function<Supplier<T>, Supplier<CompletionStage<T>>> completionStageWrapper) {
-            this.completionStageWrapper = completionStageWrapper;
+            PostponedDecorators<T> completionStageWrapper) {
+            this.completionStageWrapper = completionStageWrapper::build;
+            this.fallbacks = completionStageWrapper.getFallbacks();
         }
 
         /**
@@ -95,9 +113,10 @@ public final class Resilience4jFeign {
 
         @Override
         public Feign build() {
+            FeignDecorators fallback = new FeignDecorators(fallbacks);
             super.invocationHandlerFactory((target, dispatch) ->
-                new DecoratorPostponedInvocationHandler<T>(
-                    target, dispatch, completionStageWrapper));
+                new DecoratorPostponedInvocationHandler<>(
+                    target, dispatch, completionStageWrapper, fallback));
             return super.build();
         }
 
