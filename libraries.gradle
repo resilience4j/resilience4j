@@ -2,7 +2,8 @@
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
     vavrVersion = '0.10.2'
-    rxJavaVersion = '2.2.8'
+    rxJava2Version = '2.2.8'
+    rxJava3Version = '3.0.0'
     reactorVersion = '3.2.8.RELEASE'
     junitVersion = '4.12'
     slf4jVersion = '1.7.26'
@@ -10,6 +11,7 @@ ext {
     logbackVersion = '1.2.3'
     mockitoVersion = '2.25.1'
     powermockVersion = '2.0.0'
+    jcacheVersion = '1.1.0'
     jcacheVersion = '1.1.0'
     awaitilityVersion = '1.7.0'
     metricsVersion = '3.2.6'
@@ -36,7 +38,8 @@ ext {
             // compile
             vavr: "io.vavr:vavr:${vavrVersion}",
             slf4j: "org.slf4j:slf4j-api:${slf4jVersion}",
-            rxjava2: "io.reactivex.rxjava2:rxjava:${rxJavaVersion}",
+            rxjava2: "io.reactivex.rxjava2:rxjava:${rxJava2Version}",
+            rxjava3: "io.reactivex.rxjava3:rxjava:${rxJava3Version}",
             jcache: "javax.cache:cache-api:${jcacheVersion}",
             reactor: "io.projectreactor:reactor-core:${reactorVersion}",
 
