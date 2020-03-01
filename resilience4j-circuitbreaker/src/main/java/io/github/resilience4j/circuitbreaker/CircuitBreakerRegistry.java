@@ -263,6 +263,11 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
         Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier,
         io.vavr.collection.Map<String, String> tags);
 
+    /**
+     * Returns a builder to create a custom CircuitBreakerRegistry.
+     *
+     * @return a {@link CircuitBreakerRegistry.Builder}
+     */
     static Builder custom() {
         return new Builder();
     }
@@ -285,16 +290,25 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
             return this;
         }
 
+        /**
+         * Configures a CircuitBreakerRegistry with a custom default CircuitBreaker configuration.
+         *
+         * @param circuitBreakerConfig a custom default CircuitBreaker configuration
+         * @return a {@link CircuitBreakerRegistry.Builder}
+         */
         public Builder withCircuitBreakerConfig(CircuitBreakerConfig circuitBreakerConfig) {
             circuitBreakerConfigsMap.put(DEFAULT_CONFIG, circuitBreakerConfig);
             return this;
         }
 
-        public Builder withCircuitBreakerConfigDefaults() {
-            circuitBreakerConfigsMap.put(DEFAULT_CONFIG, CircuitBreakerConfig.ofDefaults());
-            return this;
-        }
-
+        /**
+         * Configures a CircuitBreakerRegistry with a custom CircuitBreaker configuration.
+         *
+         * @param configName configName for a custom shared CircuitBreaker configuration
+         * @param configuration a custom shared CircuitBreaker configuration
+         * @return a {@link CircuitBreakerRegistry.Builder}
+         * @throws IllegalArgumentException if {@code configName.equals("default")}
+         */
         public Builder addCircuitBreakerConfig(String configName, CircuitBreakerConfig configuration) {
             if (configName.equals(DEFAULT_CONFIG)) {
                 throw new IllegalArgumentException(
@@ -304,18 +318,38 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
             return this;
         }
 
+        /**
+         * Configures a CircuitBreakerRegistry with a CircuitBreaker registry event consumer.
+         *
+         * @param registryEventConsumer a CircuitBreaker registry event consumer.
+         * @return a {@link CircuitBreakerRegistry.Builder}
+         */
         public Builder addRegistryEventConsumer(RegistryEventConsumer<CircuitBreaker> registryEventConsumer) {
             this.registryEventConsumers.add(registryEventConsumer);
             return this;
         }
 
+        /**
+         * Configures a CircuitBreakerRegistry with Tags.
+         * <p>
+         * Tags added to the registry will be added to every instance created by this registry.
+         *
+         * @param tags default tags to add to the registry.
+         * @return a {@link CircuitBreakerRegistry.Builder}
+         */
         public Builder withTags(io.vavr.collection.Map<String, String> tags) {
             this.tags = tags;
             return this;
         }
 
-        public CircuitBreakerRegistry build(){
-            return new InMemoryCircuitBreakerRegistry(circuitBreakerConfigsMap, registryEventConsumers, tags, registryStore);
+        /**
+         * Builds a CircuitBreakerRegistry
+         *
+         * @return the CircuitBreakerRegistry
+         */
+        public CircuitBreakerRegistry build() {
+            return new InMemoryCircuitBreakerRegistry(circuitBreakerConfigsMap, registryEventConsumers, tags,
+                registryStore);
         }
     }
 
