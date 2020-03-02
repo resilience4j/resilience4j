@@ -626,15 +626,6 @@ public class CircuitBreakerStateMachineTest {
     }
 
     @Test
-    public void shouldNotAllowTransitionFromClosedToClosed() {
-        assertThatThrownBy(() -> circuitBreaker.transitionToClosedState())
-            .isInstanceOf(IllegalStateTransitionException.class)
-            .hasMessage(
-                "CircuitBreaker 'testName' tried an illegal state transition from CLOSED to CLOSED");
-        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-    }
-
-    @Test
     public void shouldResetToClosedState() {
         circuitBreaker.transitionToOpenState();
         circuitBreaker.reset();
@@ -721,6 +712,56 @@ public class CircuitBreakerStateMachineTest {
         verify(mockOnFailureRateExceededEventConsumer, times(1)).consumeEvent(any(CircuitBreakerOnFailureRateExceededEvent.class));
         verify(mockOnErrorEventConsumer, times(4)).consumeEvent(any(CircuitBreakerOnErrorEvent.class));
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+    }
+
+    @Test
+    public void allCircuitBreakerStatesAllowTransitionToMetricsOnlyMode() {
+        for (final CircuitBreaker.State state : CircuitBreaker.State.values()) {
+            CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, CircuitBreaker.State.METRICS_ONLY);
+        }
+    }
+
+    @Test
+    public void allCircuitBreakerStatesAllowTransitionToItsOwnState() {
+        for (final CircuitBreaker.State state : CircuitBreaker.State.values()) {
+            CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, state);
+        }
+    }
+
+    @Test
+    public void circuitBreakerDoesNotPublishStateTransitionEventsForInternalTransitions() {
+        circuitBreaker.getEventPublisher().onStateTransition(mockOnStateTransitionEventConsumer);
+        int expectedNumberOfStateTransitions = 0;
+
+        circuitBreaker.transitionToOpenState();
+        expectedNumberOfStateTransitions++;
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+        circuitBreaker.transitionToOpenState();
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+
+        circuitBreaker.transitionToHalfOpenState();
+        expectedNumberOfStateTransitions++;
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+        circuitBreaker.transitionToHalfOpenState();
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+
+        circuitBreaker.transitionToDisabledState();
+        expectedNumberOfStateTransitions++;
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+        circuitBreaker.transitionToDisabledState();
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+
+        circuitBreaker.transitionToMetricsOnlyState();
+        expectedNumberOfStateTransitions++;
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+        circuitBreaker.transitionToMetricsOnlyState();
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+
+        circuitBreaker.transitionToClosedState();
+        expectedNumberOfStateTransitions++;
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+        circuitBreaker.transitionToClosedState();
+        verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
     }
 
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate,
