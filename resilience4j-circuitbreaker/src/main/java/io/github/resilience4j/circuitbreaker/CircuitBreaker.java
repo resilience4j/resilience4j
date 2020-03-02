@@ -567,7 +567,8 @@ public interface CircuitBreaker {
     void reset();
 
     /**
-     * Transitions the state machine to CLOSED state.
+     * Transitions the state machine to CLOSED state. This call is idempotent and will not have
+     * any effect if the state machine is already in CLOSED state.
      * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
@@ -575,7 +576,8 @@ public interface CircuitBreaker {
     void transitionToClosedState();
 
     /**
-     * Transitions the state machine to OPEN state.
+     * Transitions the state machine to OPEN state. This call is idempotent and will not have
+     * any effect if the state machine is already in OPEN state.
      * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
@@ -583,7 +585,8 @@ public interface CircuitBreaker {
     void transitionToOpenState();
 
     /**
-     * Transitions the state machine to HALF_OPEN state.
+     * Transitions the state machine to HALF_OPEN state. This call is idempotent and will not have
+     * any effect if the state machine is already in HALF_OPEN state.
      * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
@@ -592,7 +595,8 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to a DISABLED state, stopping state transition, metrics and
-     * event publishing.
+     * event publishing. This call is idempotent and will not have any effect if the
+     * state machine is already in DISABLED state.
      * <p>
      * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
      * To recover from this state you must force a new state transition
@@ -601,7 +605,8 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to METRICS_ONLY state, stopping all state transitions but
-     * continues to capture metrics and publish events.
+     * continues to capture metrics and publish events. This call is idempotent and will not have
+     * any effect if the state machine is already in METRICS_ONLY state.
      * <p>
      * Should only be used when you want to collect metrics while keeping the circuit breaker
      * disabled, allowing all calls to pass.
@@ -611,7 +616,8 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and
-     * event publishing.
+     * event publishing. This call is idempotent and will not have any effect if the state machine
+     * is already in FORCED_OPEN state.
      * <p>
      * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
      * To recover from this state you must force a new state transition
@@ -930,30 +936,36 @@ public interface CircuitBreaker {
      * State transitions of the CircuitBreaker state machine.
      */
     enum StateTransition {
+        CLOSED_TO_CLOSED(State.CLOSED, State.CLOSED),
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
         CLOSED_TO_DISABLED(State.CLOSED, State.DISABLED),
         CLOSED_TO_METRICS_ONLY(State.CLOSED, State.METRICS_ONLY),
         CLOSED_TO_FORCED_OPEN(State.CLOSED, State.FORCED_OPEN),
+        HALF_OPEN_TO_HALF_OPEN(State.HALF_OPEN, State.HALF_OPEN),
         HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
         HALF_OPEN_TO_DISABLED(State.HALF_OPEN, State.DISABLED),
         HALF_OPEN_TO_METRICS_ONLY(State.HALF_OPEN, State.METRICS_ONLY),
         HALF_OPEN_TO_FORCED_OPEN(State.HALF_OPEN, State.FORCED_OPEN),
+        OPEN_TO_OPEN(State.OPEN, State.OPEN),
         OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
         OPEN_TO_DISABLED(State.OPEN, State.DISABLED),
         OPEN_TO_METRICS_ONLY(State.OPEN, State.METRICS_ONLY),
         OPEN_TO_FORCED_OPEN(State.OPEN, State.FORCED_OPEN),
+        FORCED_OPEN_TO_FORCED_OPEN(State.FORCED_OPEN, State.FORCED_OPEN),
         FORCED_OPEN_TO_CLOSED(State.FORCED_OPEN, State.CLOSED),
         FORCED_OPEN_TO_OPEN(State.FORCED_OPEN, State.OPEN),
         FORCED_OPEN_TO_DISABLED(State.FORCED_OPEN, State.DISABLED),
         FORCED_OPEN_TO_METRICS_ONLY(State.FORCED_OPEN, State.METRICS_ONLY),
         FORCED_OPEN_TO_HALF_OPEN(State.FORCED_OPEN, State.HALF_OPEN),
+        DISABLED_TO_DISABLED(State.DISABLED, State.DISABLED),
         DISABLED_TO_CLOSED(State.DISABLED, State.CLOSED),
         DISABLED_TO_OPEN(State.DISABLED, State.OPEN),
         DISABLED_TO_FORCED_OPEN(State.DISABLED, State.FORCED_OPEN),
         DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN),
         DISABLED_TO_METRICS_ONLY(State.DISABLED, State.METRICS_ONLY),
+        METRICS_ONLY_TO_METRICS_ONLY(State.METRICS_ONLY, State.METRICS_ONLY),
         METRICS_ONLY_TO_CLOSED(State.METRICS_ONLY, State.CLOSED),
         METRICS_ONLY_TO_FORCED_OPEN(State.METRICS_ONLY, State.FORCED_OPEN),
         METRICS_ONLY_TO_DISABLED(State.METRICS_ONLY, State.DISABLED);
@@ -985,6 +997,10 @@ public interface CircuitBreaker {
 
         public State getToState() {
             return toState;
+        }
+
+        public static boolean isInternalTransition(final StateTransition transition) {
+            return transition.getToState() == transition.getFromState();
         }
 
         @Override
