@@ -1,5 +1,5 @@
 dependencies {
-    compile project(':resilience4j-spring-boot-common')
+    compile project(':resilience4j-spring')
     compile project(':resilience4j-micrometer')
 
     compileOnly(libraries.spring_boot2_aop)

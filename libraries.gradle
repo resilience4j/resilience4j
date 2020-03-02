@@ -12,7 +12,6 @@ ext {
     mockitoVersion = '2.25.1'
     powermockVersion = '2.0.0'
     jcacheVersion = '1.1.0'
-    jcacheVersion = '1.1.0'
     awaitilityVersion = '1.7.0'
     metricsVersion = '3.2.6'
     vertxVersion = '3.7.0'
