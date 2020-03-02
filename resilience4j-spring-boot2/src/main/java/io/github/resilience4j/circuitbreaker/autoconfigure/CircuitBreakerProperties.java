@@ -1,4 +1,3 @@
-package io.github.resilience4j.circuitbreaker.autoconfigure;
 /*
  * Copyright 2017 Robert Winkler
  *
@@ -14,6 +13,7 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
