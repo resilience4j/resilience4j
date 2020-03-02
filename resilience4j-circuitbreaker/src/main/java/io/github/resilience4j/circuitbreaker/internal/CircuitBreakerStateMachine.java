@@ -354,6 +354,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void publishStateTransitionEvent(final StateTransition stateTransition) {
+        if (StateTransition.isInternalTransition(stateTransition)) {
+            return;
+        }
         final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(
             name, stateTransition);
         publishEventIfPossible(event);
