@@ -16,11 +16,11 @@
 
 package io.github.resilience4j;
 
-import io.github.resilience4j.bulkhead.autoconfigure.AbstractRefreshScopedBulkheadConfiguration;
-import io.github.resilience4j.circuitbreaker.autoconfigure.AbstractRefreshScopedCircuitBreakerConfiguration;
-import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRefreshScopedRateLimiterConfiguration;
-import io.github.resilience4j.retry.autoconfigure.AbstractRefreshScopedRetryConfiguration;
-import io.github.resilience4j.timelimiter.autoconfigure.AbstractRefreshScopedTimeLimiterConfiguration;
+import io.github.resilience4j.bulkhead.autoconfigure.RefreshScopedBulkheadAutoConfiguration;
+import io.github.resilience4j.circuitbreaker.autoconfigure.RefreshScopedCircuitBreakerAutoConfiguration;
+import io.github.resilience4j.ratelimiter.autoconfigure.RefreshScopedRateLimiterAutoConfiguration;
+import io.github.resilience4j.retry.autoconfigure.RefreshScopedRetryAutoConfiguration;
+import io.github.resilience4j.timelimiter.autoconfigure.RefreshScopedTimeLimiterAutoConfiguration;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -33,35 +33,35 @@ public class SpringCloudCommonTest {
 
     @Test
     public void testRefreshScopedBulkheadConfig() {
-        Arrays.stream(AbstractRefreshScopedBulkheadConfiguration.class.getMethods())
+        Arrays.stream(RefreshScopedBulkheadAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedCircuitBreakerConfig() {
-        Arrays.stream(AbstractRefreshScopedCircuitBreakerConfiguration.class.getMethods())
+        Arrays.stream(RefreshScopedCircuitBreakerAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedRetryConfig() {
-        Arrays.stream(AbstractRefreshScopedRetryConfiguration.class.getMethods())
+        Arrays.stream(RefreshScopedRetryAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedRateLimiterConfig() {
-        Arrays.stream(AbstractRefreshScopedRateLimiterConfiguration.class.getMethods())
+        Arrays.stream(RefreshScopedRateLimiterAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
     public void testRefreshScopedTimeLimiterConfig() {
-        Arrays.stream(AbstractRefreshScopedTimeLimiterConfiguration.class.getMethods())
+        Arrays.stream(RefreshScopedTimeLimiterAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }

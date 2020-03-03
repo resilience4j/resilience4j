@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.bulkhead.autoconfigure;
+package io.github.resilience4j.retry.autoconfigure;
 
-import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -31,31 +30,27 @@ import java.util.Collections;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AbstractRefreshScopedBulkheadConfigurationTest {
+public class RefreshScopedRetryConfigurationTest {
 
     @Test
-    public void shouldHaveRefreshScopeAnnotation() {
-        Arrays.stream(AbstractRefreshScopedBulkheadConfiguration.class.getMethods())
+    public void testRefreshScopedRateLimiterConfig() {
+        Arrays.stream(RefreshScopedRetryAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
-    public void testBulkheadCloudCommonConfig() {
-        BulkheadConfig bulkheadConfig = new BulkheadConfig();
+    public void testRetryCloudCommonConfig() {
+        RetryConfig retryConfig = new RetryConfig();
 
-        assertThat(bulkheadConfig.bulkheadRegistry(
-            new BulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()),
-            new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
-
-        assertThat(bulkheadConfig.threadPoolBulkheadRegistry(
-            new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()),
-            new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
+        assertThat(retryConfig.retryRegistry(
+            new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
+            new CompositeRegistryEventConsumer<>(emptyList()), new CompositeCustomizer<>(
+                Collections.emptyList()))).isNotNull();
     }
 
-    static class BulkheadConfig extends AbstractRefreshScopedBulkheadConfiguration {
+
+    static class RetryConfig extends RefreshScopedRetryAutoConfiguration {
 
     }
 }

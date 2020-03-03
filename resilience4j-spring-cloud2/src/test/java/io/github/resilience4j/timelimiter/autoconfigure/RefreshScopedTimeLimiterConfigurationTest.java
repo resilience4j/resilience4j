@@ -13,11 +13,11 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AbstractRefreshScopedTimeLimiterConfigurationTest {
+public class RefreshScopedTimeLimiterConfigurationTest {
 
     @Test
     public void testRefreshScopedTimeLimiterConfig() {
-        Arrays.stream(AbstractRefreshScopedTimeLimiterConfiguration.class.getMethods())
+        Arrays.stream(RefreshScopedTimeLimiterAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
@@ -33,7 +33,7 @@ public class AbstractRefreshScopedTimeLimiterConfigurationTest {
     }
 
 
-    static class TimeLimiterConfig extends AbstractRefreshScopedTimeLimiterConfiguration {
+    static class TimeLimiterConfig extends RefreshScopedTimeLimiterAutoConfiguration {
 
     }
 }
