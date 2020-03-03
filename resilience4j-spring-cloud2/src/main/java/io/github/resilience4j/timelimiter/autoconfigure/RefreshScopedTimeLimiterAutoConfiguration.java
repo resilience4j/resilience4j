@@ -15,19 +15,50 @@
  */
 package io.github.resilience4j.timelimiter.autoconfigure;
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.configure.TimeLimiterConfiguration;
+import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
+import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.cloud.context.scope.refresh.RefreshScope;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnClass({TimeLimiter.class, RefreshScope.class})
 @AutoConfigureAfter(RefreshAutoConfiguration.class)
 @AutoConfigureBefore(TimeLimiterAutoConfiguration.class)
-public class RefreshScopedTimeLimiterAutoConfiguration
-    extends AbstractRefreshScopedTimeLimiterConfiguration {
+public class RefreshScopedTimeLimiterAutoConfiguration {
+    private final TimeLimiterConfiguration timeLimiterConfiguration;
+
+    public RefreshScopedTimeLimiterAutoConfiguration() {
+        this.timeLimiterConfiguration = new TimeLimiterConfiguration();
+    }
+
+    /**
+     * @return the RefreshScoped TimeLimiterRegistry
+     */
+    @Bean
+    @org.springframework.cloud.context.config.annotation.RefreshScope
+    @ConditionalOnMissingBean
+    public TimeLimiterRegistry timeLimiterRegistry(
+        TimeLimiterConfigurationProperties timeLimiterProperties,
+        EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventsConsumerRegistry,
+        RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer,
+        @Qualifier("compositeTimeLimiterCustomizer") CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
+        return timeLimiterConfiguration.timeLimiterRegistry(
+            timeLimiterProperties, timeLimiterEventsConsumerRegistry,
+            timeLimiterRegistryEventConsumer, compositeTimeLimiterCustomizer);
+    }
 
 }

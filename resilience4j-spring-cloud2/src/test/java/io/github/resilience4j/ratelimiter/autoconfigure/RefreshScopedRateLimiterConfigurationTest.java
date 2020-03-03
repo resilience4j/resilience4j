@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.github.resilience4j.circuitbreaker.autoconfigure;
+package io.github.resilience4j.ratelimiter.autoconfigure;
 
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
+import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import org.junit.Test;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -30,31 +30,26 @@ import java.util.Collections;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AbstractRefreshScopedCircuitBreakerConfigurationTest {
+public class RefreshScopedRateLimiterConfigurationTest {
 
     @Test
-    public void testRefreshScopedCircuitBreakerConfig() {
-        Arrays.stream(AbstractRefreshScopedCircuitBreakerConfiguration.class.getMethods())
+    public void testRefreshScopedRetryConfig() {
+        Arrays.stream(RefreshScopedRateLimiterAutoConfiguration.class.getMethods())
             .filter(method -> method.isAnnotationPresent(Bean.class))
             .forEach(method -> assertThat(method.isAnnotationPresent(RefreshScope.class)).isTrue());
     }
 
     @Test
-    public void testCircuitBreakerCloudCommonConfig() {
-        CircuitBreakerConfig circuitBreakerConfig = new CircuitBreakerConfig(
-            new CircuitBreakerConfigurationProperties());
+    public void testRateLimiterCloudCommonConfig() {
+        RateLimiterConfig rateLimiterConfig = new RateLimiterConfig();
 
-        assertThat(circuitBreakerConfig.circuitBreakerRegistry(
-            new DefaultEventConsumerRegistry<>(),
-            new CompositeRegistryEventConsumer<>(emptyList()),
-            new CompositeCustomizer<>(Collections.emptyList())))
-            .isNotNull();
+        assertThat(rateLimiterConfig.rateLimiterRegistry(
+            new RateLimiterConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
+            new CompositeRegistryEventConsumer<>(emptyList()), new CompositeCustomizer<>(
+                Collections.emptyList()))).isNotNull();
     }
 
-    static class CircuitBreakerConfig extends AbstractRefreshScopedCircuitBreakerConfiguration {
+    static class RateLimiterConfig extends RefreshScopedRateLimiterAutoConfiguration {
 
-        CircuitBreakerConfig(CircuitBreakerConfigurationProperties circuitBreakerProperties) {
-            super(circuitBreakerProperties);
-        }
     }
 }

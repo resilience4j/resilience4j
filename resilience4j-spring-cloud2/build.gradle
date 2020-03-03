@@ -1,6 +1,5 @@
 dependencies {
-    compile project(':resilience4j-spring-cloud-common')
-
+    compile project(':resilience4j-spring')
     compile project(':resilience4j-spring-boot2')
 
     compileOnly(libraries.spring_cloud_context2)
