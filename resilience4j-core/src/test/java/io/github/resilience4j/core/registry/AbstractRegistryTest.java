@@ -1,5 +1,6 @@
 package io.github.resilience4j.core.registry;
 
+import io.github.resilience4j.core.RegistryStore;
 import io.vavr.Tuple;
 import io.vavr.collection.Map;
 import org.junit.Test;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import static io.github.resilience4j.core.registry.RegistryEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
 
 
 public class AbstractRegistryTest {
@@ -145,7 +147,7 @@ public class AbstractRegistryTest {
         TestRegistry testRegistry = new TestRegistry();
 
         assertThat(testRegistry.find("test")).isEmpty();
-        testRegistry.entryMap.put("test", "value");
+        testRegistry.entryMap.putIfAbsent("test", "value");
         assertThat(testRegistry.find("test")).contains("value");
     }
 
@@ -165,6 +167,58 @@ public class AbstractRegistryTest {
             super("default", tags);
             this.configurations.put(DEFAULT_CONFIG, "default");
         }
+
+        TestRegistry(List<RegistryEventConsumer<String>> registryEventConsumer, Map<String,String> tags, RegistryStore registryStore) {
+            super("default", registryEventConsumer, tags, registryStore);
+            this.configurations.put(DEFAULT_CONFIG, "default");
+        }
     }
 
+    @Test
+    public void shouldCreateRegistryWithRegistryStore() {
+        List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
+        List<EntryRemovedEvent<String>> removedEvents = new ArrayList<>();
+        List<EntryReplacedEvent<String>> replacedEvents = new ArrayList<>();
+        RegistryEventConsumer<String> registryEventConsumer = new RegistryEventConsumer<String>() {
+            @Override
+            public void onEntryAddedEvent(EntryAddedEvent<String> entryAddedEvent) {
+                addedEvents.add(entryAddedEvent);
+            }
+
+            @Override
+            public void onEntryRemovedEvent(EntryRemovedEvent<String> entryRemoveEvent) {
+                removedEvents.add(entryRemoveEvent);
+            }
+
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<String> entryReplacedEvent) {
+                replacedEvents.add(entryReplacedEvent);
+            }
+        };
+        List<RegistryEventConsumer<String>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(registryEventConsumer);
+        TestRegistry testRegistry  = new TestRegistry(
+            registryEventConsumers, io.vavr.collection.HashMap.of("Tag1","Tag1Value"), new InMemoryRegistryStore());
+
+        assertEquals("Wrong Value", "default", testRegistry.getDefaultConfig());
+        assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
+        assertThat(testRegistry.getTags()).isNotEmpty();
+        assertThat(testRegistry.getTags()).containsOnly(Tuple.of("Tag1","Tag1Value"));
+
+        String addedEntry1 = testRegistry.computeIfAbsent("name", () -> "entry1");
+        assertThat(addedEntry1).isEqualTo("entry1");
+
+        String addedEntry2 = testRegistry.computeIfAbsent("name2", () -> "entry2");
+        assertThat(addedEntry2).isEqualTo("entry2");
+
+        Optional<String> removedEntry = testRegistry.remove("name");
+        assertThat(removedEntry).isNotEmpty().hasValue("entry1");
+
+        Optional<String> replacedEntry = testRegistry.replace("name2", "entry3");
+        assertThat(replacedEntry).isNotEmpty().hasValue("entry2");
+
+        assertThat(addedEvents).hasSize(2);
+        assertThat(removedEvents).hasSize(1);
+        assertThat(replacedEvents).hasSize(1);
+    }
 }
