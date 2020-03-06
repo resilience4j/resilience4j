@@ -506,10 +506,7 @@ public interface AdaptiveBulkhead {
          * A DISABLED adaptive bulkhead is not operating (no state transition, no events) and no limit changes.
          */
         DISABLED(3, false),
-        /**
-         * A FORCED_OPEN breaker is not operating (no state transition, no events) and not allowing
-         * any requests through.
-         */
+
         SLOW_START(1, true),
 
         CONGESTION_AVOIDANCE(2, true);
