@@ -230,21 +230,14 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @return true if caller was able to wait for permission without {@link Thread#interrupt}
      */
     boolean tryEnterBulkhead() {
-
-        boolean callPermitted;
         long timeout = config.getMaxWaitDuration().toMillis();
 
-        if (timeout == 0) {
-            callPermitted = semaphore.tryAcquire();
-        } else {
-            try {
-                callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                callPermitted = false;
-            }
+        try {
+            return semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
         }
-        return callPermitted;
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
