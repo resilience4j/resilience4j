@@ -19,10 +19,12 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -251,4 +253,93 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
     RateLimiter rateLimiter(String name, String configName,
         io.vavr.collection.Map<String, String> tags);
 
+    /**
+     * Returns a builder to create a custom RateLimiterRegistry.
+     *
+     * @return a {@link RateLimiterRegistry.Builder}
+     */
+    static Builder custom() {
+        return new Builder();
+    }
+
+    class Builder {
+
+        private static final String DEFAULT_CONFIG = "default";
+        private RegistryStore registryStore;
+        private Map<String, RateLimiterConfig> rateLimiterConfigsMap;
+        private List<RegistryEventConsumer<RateLimiter>> registryEventConsumers;
+        private io.vavr.collection.Map<String, String> tags;
+
+        public Builder() {
+            this.rateLimiterConfigsMap = new java.util.HashMap<>();
+            this.registryEventConsumers = new ArrayList<>();
+        }
+
+        public Builder withRegistryStore(RegistryStore registryStore) {
+            this.registryStore = registryStore;
+            return this;
+        }
+
+        /**
+         * Configures a RateLimiterRegistry with a custom default RateLimiter configuration.
+         *
+         * @param rateLimiterConfig a custom default RateLimiter configuration
+         * @return a {@link RateLimiterRegistry.Builder}
+         */
+        public Builder withRateLimiterConfig(RateLimiterConfig rateLimiterConfig) {
+            rateLimiterConfigsMap.put(DEFAULT_CONFIG, rateLimiterConfig);
+            return this;
+        }
+
+        /**
+         * Configures a RateLimiterRegistry with a custom RateLimiter configuration.
+         *
+         * @param configName configName for a custom shared RateLimiter configuration
+         * @param configuration a custom shared RateLimiter configuration
+         * @return a {@link RateLimiterRegistry.Builder}
+         * @throws IllegalArgumentException if {@code configName.equals("default")}
+         */
+        public Builder addRateLimiterConfig(String configName, RateLimiterConfig configuration) {
+            if (configName.equals(DEFAULT_CONFIG)) {
+                throw new IllegalArgumentException(
+                    "You cannot add another configuration with name 'default' as it is preserved for default configuration");
+            }
+            rateLimiterConfigsMap.put(configName, configuration);
+            return this;
+        }
+
+        /**
+         * Configures a RateLimiterRegistry with a RateLimiter registry event consumer.
+         *
+         * @param registryEventConsumer a RateLimiter registry event consumer.
+         * @return a {@link RateLimiterRegistry.Builder}
+         */
+        public Builder addRegistryEventConsumer(RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+            this.registryEventConsumers.add(registryEventConsumer);
+            return this;
+        }
+
+        /**
+         * Configures a RateLimiterRegistry with Tags.
+         * <p>
+         * Tags added to the registry will be added to every instance created by this registry.
+         *
+         * @param tags default tags to add to the registry.
+         * @return a {@link RateLimiterRegistry.Builder}
+         */
+        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        /**
+         * Builds a RateLimiterRegistry
+         *
+         * @return the RateLimiterRegistry
+         */
+        public RateLimiterRegistry build() {
+            return new InMemoryRateLimiterRegistry(rateLimiterConfigsMap, registryEventConsumers, tags,
+                registryStore);
+        }
+    }
 }

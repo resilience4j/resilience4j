@@ -3,10 +3,7 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.core.registry.*;
 import io.vavr.Tuple;
 import org.junit.Test;
 
@@ -165,9 +162,9 @@ public class RateLimiterRegistryTest {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
             .of("key1", "value1", "key2", "value2");
-        RateLimiter circuitBreaker = rateLimiterRegistry.rateLimiter("testName", retryTags);
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName", retryTags);
 
-        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(retryTags);
+        assertThat(rateLimiter.getTags()).containsOnlyElementsOf(retryTags);
     }
 
     @Test
@@ -189,9 +186,9 @@ public class RateLimiterRegistryTest {
 
     @Test
     public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
-        RateLimiterConfig circuitBreakerConfig = RateLimiterConfig.ofDefaults();
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.ofDefaults();
         Map<String, RateLimiterConfig> rateLimiterConfigs = Collections
-            .singletonMap("default", circuitBreakerConfig);
+            .singletonMap("default", rateLimiterConfig);
         io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap
             .of("key1", "value1", "key2", "value2");
         io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
@@ -199,7 +196,7 @@ public class RateLimiterRegistryTest {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry
             .of(rateLimiterConfigs, registryTags);
         RateLimiter rateLimiter = rateLimiterRegistry
-            .rateLimiter("testName", circuitBreakerConfig, instanceTags);
+            .rateLimiter("testName", rateLimiterConfig, instanceTags);
 
         io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
             .of("key1", "value3", "key2", "value2", "key4", "value4");
@@ -220,5 +217,122 @@ public class RateLimiterRegistryTest {
         @Override
         public void onEntryReplacedEvent(EntryReplacedEvent<RateLimiter> entryReplacedEvent) {
         }
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultConfig() {
+        RateLimiterRegistry rateLimiterRegistry =
+            RateLimiterRegistry.custom().withRateLimiterConfig(RateLimiterConfig.ofDefaults()).build();
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName");
+        RateLimiter rateLimiter2 = rateLimiterRegistry.rateLimiter("otherTestName");
+        assertThat(rateLimiter).isNotSameAs(rateLimiter2);
+
+        assertThat(rateLimiterRegistry.getAllRateLimiters()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCustomConfig() {
+        int limitForPeriod = 10;
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(10).build();
+
+        RateLimiterRegistry rateLimiterRegistry =
+            RateLimiterRegistry.custom().withRateLimiterConfig(rateLimiterConfig).build();
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName");
+
+        assertThat(rateLimiter.getRateLimiterConfig().getLimitForPeriod())
+            .isEqualTo(limitForPeriod);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithoutDefaultConfig() {
+        int limitForPeriod = 10;
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(limitForPeriod).build();
+
+        RateLimiterRegistry rateLimiterRegistry =
+            RateLimiterRegistry.custom().addRateLimiterConfig("someSharedConfig", rateLimiterConfig).build();
+
+        assertThat(rateLimiterRegistry.getDefaultConfig()).isNotNull();
+        assertThat(rateLimiterRegistry.getDefaultConfig().getLimitForPeriod())
+            .isEqualTo(50);
+        assertThat(rateLimiterRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+
+        RateLimiter rateLimiter = rateLimiterRegistry
+            .rateLimiter("name", "someSharedConfig");
+
+        assertThat(rateLimiter.getRateLimiterConfig()).isEqualTo(rateLimiterConfig);
+        assertThat(rateLimiter.getRateLimiterConfig().getLimitForPeriod())
+            .isEqualTo(limitForPeriod);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(10).build();
+        RateLimiterRegistry.custom().addRateLimiterConfig("default", rateLimiterConfig).build();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(10).build();
+        RateLimiterConfig customRateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(20).build();
+
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.custom()
+            .withRateLimiterConfig(rateLimiterConfig)
+            .addRateLimiterConfig("custom", customRateLimiterConfig)
+            .build();
+
+        assertThat(rateLimiterRegistry.getDefaultConfig()).isNotNull();
+        assertThat(rateLimiterRegistry.getDefaultConfig().getLimitForPeriod())
+            .isEqualTo(10);
+        assertThat(rateLimiterRegistry.getConfiguration("custom")).isNotEmpty();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithNullConfig() {
+        assertThatThrownBy(
+            () -> RateLimiterRegistry.custom().withRateLimiterConfig(null).build())
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.custom()
+            .withRateLimiterConfig(RateLimiterConfig.ofDefaults())
+            .addRegistryEventConsumer(new NoOpRateLimiterEventConsumer())
+            .addRegistryEventConsumer(new NoOpRateLimiterEventConsumer())
+            .build();
+
+        getEventProcessor(rateLimiterRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryTags() {
+        io.vavr.collection.Map<String, String> rateLimiterTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.custom()
+            .withRateLimiterConfig(RateLimiterConfig.ofDefaults())
+            .withTags(rateLimiterTags)
+            .build();
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName");
+
+        assertThat(rateLimiter.getTags()).containsOnlyElementsOf(rateLimiterTags);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryStore() {
+        RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.custom()
+            .withRateLimiterConfig(RateLimiterConfig.ofDefaults())
+            .withRegistryStore(new InMemoryRegistryStore())
+            .build();
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName");
+        RateLimiter rateLimiter2 = rateLimiterRegistry.rateLimiter("otherTestName");
+
+        assertThat(rateLimiter).isNotSameAs(rateLimiter2);
+        assertThat(rateLimiterRegistry.getAllRateLimiters()).hasSize(2);
     }
 }
