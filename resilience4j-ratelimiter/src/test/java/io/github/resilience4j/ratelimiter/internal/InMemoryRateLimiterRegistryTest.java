@@ -18,15 +18,21 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
+import io.github.resilience4j.core.registry.*;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,6 +146,39 @@ public class InMemoryRateLimiterRegistryTest {
 
         assertThat(registry.getAllRateLimiters().size()).isEqualTo(1);
         assertThat(registry.getAllRateLimiters().get(0).getName()).isEqualTo("foo");
+    }
+
+    @Test
+    public void shouldCreateRateLimiterRegistryWithRegistryStore() {
+        RegistryEventConsumer<RateLimiter> registryEventConsumer = getNoOpsRegistryEventConsumer();
+        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(registryEventConsumer);
+        Map<String, RateLimiterConfig> configs = new HashMap<>();
+        final RateLimiterConfig defaultConfig = RateLimiterConfig.ofDefaults();
+        configs.put("default", defaultConfig);
+        final InMemoryRateLimiterRegistry inMemoryRateLimiterRegistry =
+            new InMemoryRateLimiterRegistry(configs, registryEventConsumers,
+                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore());
+
+        AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry).isNotNull();
+        AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry.getDefaultConfig()).isEqualTo(defaultConfig);
+        AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry.getConfiguration("testNotFound")).isEmpty();
+        inMemoryRateLimiterRegistry.addConfiguration("testConfig", defaultConfig);
+        AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry.getConfiguration("testConfig")).isNotNull();
+    }
+
+    private RegistryEventConsumer<RateLimiter> getNoOpsRegistryEventConsumer() {
+        return new RegistryEventConsumer<RateLimiter>() {
+            @Override
+            public void onEntryAddedEvent(EntryAddedEvent<RateLimiter> entryAddedEvent) {
+            }
+            @Override
+            public void onEntryRemovedEvent(EntryRemovedEvent<RateLimiter> entryRemoveEvent) {
+            }
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<RateLimiter> entryReplacedEvent) {
+            }
+        };
     }
 
 }
