@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019: authors
+ *  Copyright 2019: Brad Newman
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,14 +22,12 @@ import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
 
-class FlowRateLimiterTest {
+class CoroutineRateLimiterTest {
 
     private fun noWaitConfig() = RateLimiterConfig
         .custom()
@@ -46,12 +44,12 @@ class FlowRateLimiterTest {
             val helloWorldService = CoroutineHelloWorldService()
 
             //When
-            val testFlow = flow {
-                emit(helloWorldService.returnHelloWorld())
-            }.rateLimiter(rateLimiter)
+            val result = rateLimiter.executeSuspendFunction {
+                helloWorldService.returnHelloWorld()
+            }
 
             //Then
-            Assertions.assertThat(testFlow.single()).isEqualTo("Hello world")
+            Assertions.assertThat(result).isEqualTo("Hello world")
             Assertions.assertThat(metrics.availablePermissions).isEqualTo(9)
             Assertions.assertThat(metrics.numberOfWaitingThreads).isEqualTo(0)
             // Then the helloWorldService should be invoked 1 time
@@ -68,10 +66,9 @@ class FlowRateLimiterTest {
 
             //When
             try {
-                flow { emit(helloWorldService.throwException()) }
-                    .rateLimiter(rateLimiter)
-                    .single()
-
+                rateLimiter.executeSuspendFunction {
+                    helloWorldService.throwException()
+                }
                 Assertions.failBecauseExceptionWasNotThrown<Nothing>(IllegalStateException::class.java)
             } catch (e: IllegalStateException) {
                 // nothing - proceed
@@ -93,16 +90,16 @@ class FlowRateLimiterTest {
             val helloWorldService = CoroutineHelloWorldService()
 
             for (i in 0 until 10) {
-                flow { emit(helloWorldService.returnHelloWorld()) }
-                    .rateLimiter(rateLimiter)
-                    .single()
+                rateLimiter.executeSuspendFunction {
+                    helloWorldService.returnHelloWorld()
+                }
             }
 
             //When
             try {
-                flow { emit(helloWorldService.returnHelloWorld()) }
-                    .rateLimiter(rateLimiter)
-                    .single()
+                rateLimiter.executeSuspendFunction {
+                    helloWorldService.returnHelloWorld()
+                }
                 Assertions.failBecauseExceptionWasNotThrown<Nothing>(RequestNotPermitted::class.java)
             } catch (e: RequestNotPermitted) {
                 // nothing - proceed
@@ -113,6 +110,27 @@ class FlowRateLimiterTest {
             Assertions.assertThat(metrics.numberOfWaitingThreads).isEqualTo(0)
             // Then the helloWorldService should not be invoked after the initial 10 times to use up the permits
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(10)
+        }
+    }
+
+    @Test
+    fun `should decorate successful function`() {
+        runBlocking {
+            val rateLimiter = RateLimiter.of("testName", noWaitConfig())
+            val metrics = rateLimiter.metrics
+            val helloWorldService = CoroutineHelloWorldService()
+
+            //When
+            val function = rateLimiter.decorateSuspendFunction {
+                helloWorldService.returnHelloWorld()
+            }
+
+            //Then
+            Assertions.assertThat(function()).isEqualTo("Hello world")
+            Assertions.assertThat(metrics.availablePermissions).isEqualTo(9)
+            Assertions.assertThat(metrics.numberOfWaitingThreads).isEqualTo(0)
+            // Then the helloWorldService should be invoked 1 time
+            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
     }
 }
