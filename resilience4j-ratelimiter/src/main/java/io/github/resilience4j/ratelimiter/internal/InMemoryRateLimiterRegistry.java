@@ -19,7 +19,9 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -31,6 +33,7 @@ import io.vavr.collection.Seq;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -120,6 +123,15 @@ public class InMemoryRateLimiterRegistry extends
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
         io.vavr.collection.Map<String, String> tags) {
         super(defaultConfig, registryEventConsumers, tags);
+    }
+
+    public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
+                                          List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
+                                          io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
+        super(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()),
+            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
+            Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
+        this.configurations.putAll(configs);
     }
 
     /**
