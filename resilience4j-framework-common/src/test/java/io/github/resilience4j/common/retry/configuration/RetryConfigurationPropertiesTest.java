@@ -154,7 +154,7 @@ public class RetryConfigurationPropertiesTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnWaitDuration() {
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDuration(Duration.ofMillis(50));
+        defaultProperties.setWaitDuration(Duration.ofMillis(-1));
     }
 
     @Test(expected = IllegalArgumentException.class)
