@@ -278,7 +278,7 @@ public class RetryConfigurationProperties extends CommonProperties {
             Objects.requireNonNull(waitDuration);
             if (waitDuration.toMillis() < 0) {
                 throw new IllegalArgumentException(
-                    "waitDurationInOpenStateMillis must be a positive value");
+                    "waitDuration must be a positive value");
             }
 
             this.waitDuration = waitDuration;
