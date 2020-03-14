@@ -4,8 +4,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.monitoring.health.RateLimitersHealthIndicator;
-import org.springframework.boot.actuate.autoconfigure.health.HealthIndicatorAutoConfiguration;
-import org.springframework.boot.actuate.health.HealthAggregator;
+import org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -18,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnClass({RateLimiter.class, HealthIndicator.class})
 @AutoConfigureAfter(RateLimiterAutoConfiguration.class)
-@AutoConfigureBefore(HealthIndicatorAutoConfiguration.class)
+@AutoConfigureBefore(HealthContributorAutoConfiguration.class)
 public class RateLimitersHealthIndicatorAutoConfiguration {
 
     @Bean
@@ -26,10 +25,8 @@ public class RateLimitersHealthIndicatorAutoConfiguration {
     @ConditionalOnProperty(prefix = "management.health.ratelimiters", name = "enabled")
     public RateLimitersHealthIndicator rateLimitersHealthIndicator(
         RateLimiterRegistry rateLimiterRegistry,
-        RateLimiterConfigurationProperties rateLimiterProperties,
-        HealthAggregator healthAggregator) {
-        return new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties,
-            healthAggregator);
+        RateLimiterConfigurationProperties rateLimiterProperties) {
+        return new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties);
     }
 
 }

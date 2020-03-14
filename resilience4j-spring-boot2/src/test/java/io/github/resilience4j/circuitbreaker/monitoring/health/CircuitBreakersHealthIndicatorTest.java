@@ -37,10 +37,8 @@ public class CircuitBreakersHealthIndicatorTest {
             mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
         CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(
             CircuitBreakerConfigurationProperties.class);
-        HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties,
-                healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties);
 
         //when
         when(config.getFailureRateThreshold()).thenReturn(30f);
@@ -106,10 +104,8 @@ public class CircuitBreakersHealthIndicatorTest {
         expectedStateToCircuitBreaker.forEach(
             (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
 
-        HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties,
-                healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties);
 
         // then
         Health health = healthIndicator.health();
@@ -148,9 +144,8 @@ public class CircuitBreakersHealthIndicatorTest {
         expectedStateToCircuitBreaker.forEach(
             (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
 
-        HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties);
 
 
         // then
