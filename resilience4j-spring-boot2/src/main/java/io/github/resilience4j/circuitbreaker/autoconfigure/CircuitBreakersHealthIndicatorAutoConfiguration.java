@@ -6,6 +6,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.circuitbreaker.monitoring.health.CircuitBreakersHealthIndicator;
 import org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.StatusAggregator;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,8 +26,9 @@ public class CircuitBreakersHealthIndicatorAutoConfiguration {
     @ConditionalOnProperty(prefix = "management.health.circuitbreakers", name = "enabled")
     public CircuitBreakersHealthIndicator circuitBreakersHealthIndicator(
         CircuitBreakerRegistry circuitBreakerRegistry,
-        CircuitBreakerConfigurationProperties circuitBreakerProperties) {
-        return new CircuitBreakersHealthIndicator(circuitBreakerRegistry, circuitBreakerProperties);
+        CircuitBreakerConfigurationProperties circuitBreakerProperties,
+        StatusAggregator statusAggregator) {
+        return new CircuitBreakersHealthIndicator(circuitBreakerRegistry, circuitBreakerProperties, statusAggregator);
     }
 
 }

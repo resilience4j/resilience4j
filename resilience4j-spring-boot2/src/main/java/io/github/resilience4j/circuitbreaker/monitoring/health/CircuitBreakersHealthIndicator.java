@@ -49,10 +49,11 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
     private final StatusAggregator statusAggregator;
 
     public CircuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
-                                          CircuitBreakerConfigurationProperties circuitBreakerProperties) {
+                                          CircuitBreakerConfigurationProperties circuitBreakerProperties,
+                                          StatusAggregator statusAggregator) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerProperties = circuitBreakerProperties;
-        this.statusAggregator = new SimpleStatusAggregator();
+        this.statusAggregator = statusAggregator;
     }
 
     private static Health.Builder addDetails(Health.Builder builder,

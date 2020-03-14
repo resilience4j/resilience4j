@@ -33,10 +33,11 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
     private final StatusAggregator statusAggregator;
 
     public RateLimitersHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
-        RateLimiterConfigurationProperties rateLimiterProperties) {
+        RateLimiterConfigurationProperties rateLimiterProperties,
+        StatusAggregator statusAggregator) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.rateLimiterProperties = rateLimiterProperties;
-        this.statusAggregator = new SimpleStatusAggregator();
+        this.statusAggregator = statusAggregator;
     }
 
     private static Health rateLimiterHealth(Status status, int availablePermissions,

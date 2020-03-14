@@ -7,6 +7,7 @@ import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.collection.Array;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.SimpleStatusAggregator;
 import org.springframework.boot.actuate.health.Status;
 
 import java.time.Duration;
@@ -58,7 +59,7 @@ public class RateLimitersHealthIndicatorTest {
 
         // then
         RateLimitersHealthIndicator healthIndicator =
-            new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties);
+            new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties, new SimpleStatusAggregator());
 
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UP);
@@ -111,7 +112,7 @@ public class RateLimitersHealthIndicatorTest {
 
         // then
         RateLimitersHealthIndicator healthIndicator =
-                new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties);
+                new RateLimitersHealthIndicator(rateLimiterRegistry, rateLimiterProperties, new SimpleStatusAggregator());
 
         Health health = healthIndicator.health();
         then(health.getStatus()).isEqualTo(Status.UNKNOWN);
