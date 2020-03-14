@@ -30,7 +30,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
 
     private final RetryRegistry retryRegistry;
 
-    private TaggedRetryMetrics(MetricNames names, RetryRegistry retryRegistry) {
+    private TaggedRetryMetrics(RetryMetricNames names, RetryRegistry retryRegistry) {
         super(names);
         this.retryRegistry = requireNonNull(retryRegistry);
     }
@@ -42,7 +42,7 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
      * @return The {@link TaggedRetryMetrics} instance.
      */
     public static TaggedRetryMetrics ofRetryRegistry(RetryRegistry retryRegistry) {
-        return new TaggedRetryMetrics(MetricNames.ofDefaults(), retryRegistry);
+        return new TaggedRetryMetrics(RetryMetricNames.ofDefaults(), retryRegistry);
     }
 
     /**
@@ -52,8 +52,23 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
      * @param retryRegistry the source of retries
      * @return The {@link TaggedRetryMetrics} instance.
      */
+    public static TaggedRetryMetrics ofRetryRegistry(RetryMetricNames names,
+                                                     RetryRegistry retryRegistry) {
+        return new TaggedRetryMetrics(names, retryRegistry);
+    }
+
+    /**
+     * Creates a new binder that uses given {@code registry} as source of retries.
+     *
+     * @deprecated Use {@link TaggedRetryMetrics#ofRetryRegistry(RetryMetricNames, RetryRegistry)} instead
+     *
+     * @param names         custom metric names
+     * @param retryRegistry the source of retries
+     * @return The {@link TaggedRetryMetrics} instance.
+     */
+    @Deprecated
     public static TaggedRetryMetrics ofRetryRegistry(MetricNames names,
-        RetryRegistry retryRegistry) {
+                                                     RetryRegistry retryRegistry) {
         return new TaggedRetryMetrics(names, retryRegistry);
     }
 

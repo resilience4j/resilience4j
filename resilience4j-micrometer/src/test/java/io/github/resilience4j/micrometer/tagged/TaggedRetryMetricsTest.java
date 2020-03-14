@@ -28,7 +28,7 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
+import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -176,7 +176,7 @@ public class TaggedRetryMetricsTest {
         RetryRegistry retryRegistry = RetryRegistry.ofDefaults();
         retryRegistry.retry("backendA");
         TaggedRetryMetrics.ofRetryRegistry(
-            TaggedRetryMetrics.MetricNames.custom()
+            RetryMetricNames.custom()
                 .callsMetricName("custom_calls")
                 .build(),
             retryRegistry

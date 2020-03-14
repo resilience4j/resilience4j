@@ -28,8 +28,8 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractThreadPoolBulkheadMetrics.MetricNames.*;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
+import static io.github.resilience4j.micrometer.tagged.ThreadPoolBulkheadMetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedThreadPoolBulkheadMetricsTest {
@@ -176,7 +176,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         ThreadPoolBulkheadRegistry bulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");
         TaggedThreadPoolBulkheadMetrics.ofThreadPoolBulkheadRegistry(
-            TaggedThreadPoolBulkheadMetrics.MetricNames.custom()
+            ThreadPoolBulkheadMetricNames.custom()
                 .maxThreadPoolSizeMetricName("custom.max.thread.pool.size")
                 .coreThreadPoolSizeMetricName("custom.core.thread.pool.size")
                 .build(),

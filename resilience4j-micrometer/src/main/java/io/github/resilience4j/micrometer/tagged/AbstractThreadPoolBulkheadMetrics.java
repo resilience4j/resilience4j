@@ -30,8 +30,13 @@ import static java.util.Objects.requireNonNull;
 
 abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
 
-    protected final MetricNames names;
+    protected final ThreadPoolBulkheadMetricNames names;
 
+    protected AbstractThreadPoolBulkheadMetrics(ThreadPoolBulkheadMetricNames names) {
+        this.names = requireNonNull(names);
+    }
+
+    @Deprecated
     protected AbstractThreadPoolBulkheadMetrics(MetricNames names) {
         this.names = requireNonNull(names);
     }
@@ -84,176 +89,7 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         meterIdMap.put(bulkhead.getName(), idSet);
     }
 
-    public static class MetricNames {
-
-        private static final String DEFAULT_PREFIX = "resilience4j.bulkhead";
-
-        public static final String DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME =
-            DEFAULT_PREFIX + ".queue.depth";
-        public static final String DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME =
-            DEFAULT_PREFIX + ".queue.capacity";
-        public static final String DEFAULT_THREAD_POOL_SIZE_METRIC_NAME =
-            DEFAULT_PREFIX + ".thread.pool.size";
-        public static final String DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME =
-            DEFAULT_PREFIX + ".max.thread.pool.size";
-        public static final String DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME =
-            DEFAULT_PREFIX + ".core.thread.pool.size";
-        private String queueDepthMetricName = DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME;
-        private String threadPoolSizeMetricName = DEFAULT_THREAD_POOL_SIZE_METRIC_NAME;
-        private String maxThreadPoolSizeMetricName = DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME;
-        private String coreThreadPoolSizeMetricName = DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME;
-        private String queueCapacityMetricName = DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME;
-
-        private MetricNames() {
-        }
-
-        /**
-         * Returns a builder for creating custom metric names. Note that names have default values,
-         * so only desired metrics can be renamed.
-         *
-         * @return The builder.
-         */
-        public static Builder custom() {
-            return new Builder();
-        }
-
-        /**
-         * Returns default metric names.
-         *
-         * @return The default {@link MetricNames} instance.
-         */
-        public static MetricNames ofDefaults() {
-            return new MetricNames();
-        }
-
-        /**
-         * Returns the metric name for queue depth, defaults to {@value
-         * DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME}.
-         *
-         * @return The queue depth metric name.
-         */
-        public String getQueueDepthMetricName() {
-            return queueDepthMetricName;
-        }
-
-        /**
-         * Returns the metric name for thread pool size, defaults to {@value
-         * DEFAULT_THREAD_POOL_SIZE_METRIC_NAME}.
-         *
-         * @return The thread pool size metric name.
-         */
-        public String getThreadPoolSizeMetricName() {
-            return threadPoolSizeMetricName;
-        }
-
-        /**
-         * Returns the metric name for max thread pool size, defaults to {@value
-         * DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME}.
-         *
-         * @return The max thread pool size metric name.
-         */
-        public String getMaxThreadPoolSizeMetricName() {
-            return maxThreadPoolSizeMetricName;
-        }
-
-        /**
-         * Returns the metric name for core thread pool size, defaults to {@value
-         * DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME}.
-         *
-         * @return The core thread pool size metric name.
-         */
-        public String getCoreThreadPoolSizeMetricName() {
-            return coreThreadPoolSizeMetricName;
-        }
-
-        /**
-         * Returns the metric name for queue capacity, defaults to {@value
-         * DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME}.
-         *
-         * @return The queue capacity metric name.
-         */
-        public String getQueueCapacityMetricName() {
-            return queueCapacityMetricName;
-        }
-
-        /**
-         * Helps building custom instance of {@link MetricNames}.
-         */
-        public static class Builder {
-
-            private final MetricNames metricNames = new MetricNames();
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME}
-             * with a given one.
-             *
-             * @param queueDepthMetricName The queue depth metric name.
-             * @return The builder.
-             */
-            public Builder queueDepthMetricName(String queueDepthMetricName) {
-                metricNames.queueDepthMetricName = requireNonNull(queueDepthMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_THREAD_POOL_SIZE_METRIC_NAME}
-             * with a given one.
-             *
-             * @param threadPoolSizeMetricName The thread pool size metric name.
-             * @return The builder.
-             */
-            public Builder threadPoolSizeMetricName(String threadPoolSizeMetricName) {
-                metricNames.threadPoolSizeMetricName = requireNonNull(threadPoolSizeMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME}
-             * with a given one.
-             *
-             * @param maxThreadPoolSizeMetricName The max thread pool size metric name.
-             * @return The builder.
-             */
-            public Builder maxThreadPoolSizeMetricName(String maxThreadPoolSizeMetricName) {
-                metricNames.maxThreadPoolSizeMetricName = requireNonNull(
-                    maxThreadPoolSizeMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME}
-             * with a given one.
-             *
-             * @param coreThreadPoolSizeMetricName The core thread pool size metric name.
-             * @return The builder.
-             */
-            public Builder coreThreadPoolSizeMetricName(String coreThreadPoolSizeMetricName) {
-                metricNames.coreThreadPoolSizeMetricName = requireNonNull(
-                    coreThreadPoolSizeMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME}
-             * with a given one.
-             *
-             * @param queueCapacityMetricName The queue capacity metric name.
-             * @return The builder.
-             */
-            public Builder queueCapacityMetricName(String queueCapacityMetricName) {
-                metricNames.queueCapacityMetricName = requireNonNull(queueCapacityMetricName);
-                return this;
-            }
-
-            /**
-             * Builds {@link MetricNames} instance.
-             *
-             * @return The built {@link MetricNames} instance.
-             */
-            public MetricNames build() {
-                return metricNames;
-            }
-        }
+    @Deprecated
+    public static class MetricNames extends ThreadPoolBulkheadMetricNames {
     }
-
 }

@@ -29,7 +29,7 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
 
     private final TimeLimiterRegistry timeLimiterRegistry;
 
-    private TaggedTimeLimiterMetrics(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
+    private TaggedTimeLimiterMetrics(TimeLimiterMetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
         super(names);
         this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
     }
@@ -42,7 +42,7 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
      */
     public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(
         TimeLimiterRegistry timeLimiterRegistry) {
-        return new TaggedTimeLimiterMetrics(MetricNames.ofDefaults(), timeLimiterRegistry);
+        return new TaggedTimeLimiterMetrics(TimeLimiterMetricNames.ofDefaults(), timeLimiterRegistry);
     }
 
     /**
@@ -52,8 +52,23 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
      * @param timeLimiterRegistry the source of time limiters
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
+    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterMetricNames names,
+                                                                 TimeLimiterRegistry timeLimiterRegistry) {
+        return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
+    }
+
+    /**
+     * Creates a new binder that uses given {@code registry} as source of time limiters.
+     *
+     * @deprecated Use {@link TaggedTimeLimiterMetrics#ofTimeLimiterRegistry(TimeLimiterMetricNames, TimeLimiterRegistry)} instead
+     *
+     * @param names               custom metric names
+     * @param timeLimiterRegistry the source of time limiters
+     * @return The {@link TaggedTimeLimiterMetrics} instance.
+     */
+    @Deprecated
     public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(MetricNames names,
-        TimeLimiterRegistry timeLimiterRegistry) {
+                                                                 TimeLimiterRegistry timeLimiterRegistry) {
         return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
     }
 
