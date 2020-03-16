@@ -16,7 +16,9 @@
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -28,6 +30,7 @@ import io.vavr.collection.Seq;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -80,6 +83,15 @@ public final class InMemoryRetryRegistry extends AbstractRegistry<Retry, RetryCo
         io.vavr.collection.Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()),
             registryEventConsumers, tags);
+        this.configurations.putAll(configs);
+    }
+
+    public InMemoryRetryRegistry(Map<String, RetryConfig> configs,
+                                          List<RegistryEventConsumer<Retry>> registryEventConsumers,
+                                          io.vavr.collection.Map<String, String> tags, RegistryStore<Retry> registryStore) {
+        super(configs.getOrDefault(DEFAULT_CONFIG, RetryConfig.ofDefaults()),
+            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
+            Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
         this.configurations.putAll(configs);
     }
 

@@ -17,11 +17,13 @@ package io.github.resilience4j.retry;
 
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -246,5 +248,94 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @return The {@link Retry}
      */
     Retry retry(String name, String configName, io.vavr.collection.Map<String, String> tags);
+
+    /**
+     * Returns a builder to create a custom RetryRegistry.
+     *
+     * @return a {@link RetryRegistry.Builder}
+     */
+    static Builder custom() {
+        return new Builder();
+    }
+
+    class Builder {
+
+        private static final String DEFAULT_CONFIG = "default";
+        private RegistryStore registryStore;
+        private Map<String, RetryConfig> retryConfigsMap;
+        private List<RegistryEventConsumer<Retry>> registryEventConsumers;
+        private io.vavr.collection.Map<String, String> tags;
+
+        public Builder() {
+            this.retryConfigsMap = new java.util.HashMap<>();
+            this.registryEventConsumers = new ArrayList<>();
+        }
+
+        public Builder withRegistryStore(RegistryStore registryStore) {
+            this.registryStore = registryStore;
+            return this;
+        }
+
+        /**
+         * Configures a RetryRegistry with a custom default Retry configuration.
+         *
+         * @param retryConfig a custom default Retry configuration
+         * @return a {@link RetryRegistry.Builder}
+         */
+        public Builder withRetryConfig(RetryConfig retryConfig) {
+            retryConfigsMap.put(DEFAULT_CONFIG, retryConfig);
+            return this;
+        }
+
+        /**
+         * Configures a RetryRegistry with a custom Retry configuration.
+         *
+         * @param configName configName for a custom shared Retry configuration
+         * @param configuration a custom shared Retry configuration
+         * @return a {@link RetryRegistry.Builder}
+         * @throws IllegalArgumentException if {@code configName.equals("default")}
+         */
+        public Builder addRetryConfig(String configName, RetryConfig configuration) {
+            if (configName.equals(DEFAULT_CONFIG)) {
+                throw new IllegalArgumentException(
+                    "You cannot add another configuration with name 'default' as it is preserved for default configuration");
+            }
+            retryConfigsMap.put(configName, configuration);
+            return this;
+        }
+
+        /**
+         * Configures a RetryRegistry with a Retry registry event consumer.
+         *
+         * @param registryEventConsumer a Retry registry event consumer.
+         * @return a {@link RetryRegistry.Builder}
+         */
+        public Builder addRegistryEventConsumer(RegistryEventConsumer<Retry> registryEventConsumer) {
+            this.registryEventConsumers.add(registryEventConsumer);
+            return this;
+        }
+
+        /**
+         * Configures a RetryRegistry with Tags.
+         * <p>
+         * Tags added to the registry will be added to every instance created by this registry.
+         *
+         * @param tags default tags to add to the registry.
+         * @return a {@link RetryRegistry.Builder}
+         */
+        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        /**
+         * Builds a RetryRegistry
+         *
+         * @return the RetryRegistry
+         */
+        public RetryRegistry build() {
+            return new InMemoryRetryRegistry(retryConfigsMap, registryEventConsumers, tags, registryStore);
+        }
+    }
 
 }
