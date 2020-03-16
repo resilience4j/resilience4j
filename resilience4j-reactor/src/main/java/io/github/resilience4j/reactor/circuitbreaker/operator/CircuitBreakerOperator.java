@@ -63,10 +63,11 @@ public class CircuitBreakerOperator<T> implements UnaryOperator<Publisher<T>> {
     }
 
     /**
+     * Creates a CircuitBreakerOperator with response predicate
      *
      * @param circuitBreaker the circuit breaker
      * @param responseValidator response will be considered failure if it fails this predicate
-     * @param throwable throwable to be recorded in
+     * @param throwable throwable to be recorded in circuit breaker
      * @param <T> the value type of the upstream and downstream
      * @return a CircuitBreakerOperator
      */
