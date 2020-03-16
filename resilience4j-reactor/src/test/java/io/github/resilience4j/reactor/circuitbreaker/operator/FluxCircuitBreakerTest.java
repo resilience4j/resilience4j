@@ -181,4 +181,25 @@ public class FluxCircuitBreakerTest {
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
     }
+
+    @Test
+    public void shouldRecordFailureWhenPredicateFails() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+            Flux.just("Hello World", "Bye World")
+                .compose(CircuitBreakerOperator.of(circuitBreaker, "Bye World"::equals, new DummyException())))
+            .expectNext("Hello World")
+            .expectNext("Bye World")
+            .expectComplete()
+            .verify();
+
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(DummyException.class));
+    }
+
+    static class DummyException extends Exception {
+        DummyException() {
+            super();
+        }
+    }
 }

@@ -21,21 +21,27 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 
+import java.util.function.Predicate;
+
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class FluxCircuitBreaker<T> extends FluxOperator<T, T> {
 
     private CircuitBreaker circuitBreaker;
+    private final Predicate<T> responseValidator;
+    private final Throwable throwable;
 
-    FluxCircuitBreaker(Flux<? extends T> source, CircuitBreaker circuitBreaker) {
+    FluxCircuitBreaker(Flux<? extends T> source, CircuitBreaker circuitBreaker, Predicate<T> responseValidator, Throwable throwable) {
         super(source);
         this.circuitBreaker = circuitBreaker;
+        this.responseValidator = responseValidator;
+        this.throwable = throwable;
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
         if (circuitBreaker.tryAcquirePermission()) {
-            source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, false));
+            source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, false, responseValidator, throwable));
         } else {
             Operators.error(actual, createCallNotPermittedException(circuitBreaker));
         }

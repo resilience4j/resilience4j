@@ -21,21 +21,27 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoOperator;
 import reactor.core.publisher.Operators;
 
+import java.util.function.Predicate;
+
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
 
     private CircuitBreaker circuitBreaker;
+    private final Predicate<T> responseValidator;
+    private final Throwable throwable;
 
-    MonoCircuitBreaker(Mono<? extends T> source, CircuitBreaker circuitBreaker) {
+    MonoCircuitBreaker(Mono<? extends T> source, CircuitBreaker circuitBreaker, Predicate<T> responseValidator, Throwable throwable) {
         super(source);
         this.circuitBreaker = circuitBreaker;
+        this.responseValidator = responseValidator;
+        this.throwable = throwable;
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
         if (circuitBreaker.tryAcquirePermission()) {
-            source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true));
+            source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true, responseValidator, throwable));
         } else {
             Operators.error(actual, createCallNotPermittedException(circuitBreaker));
         }

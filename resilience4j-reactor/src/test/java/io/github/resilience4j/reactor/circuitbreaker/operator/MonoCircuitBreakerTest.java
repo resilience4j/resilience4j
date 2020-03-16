@@ -17,6 +17,7 @@ package io.github.resilience4j.reactor.circuitbreaker.operator;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
@@ -207,6 +208,27 @@ public class MonoCircuitBreakerTest {
 
         } catch (InterruptedException | ExecutionException e) {
             fail();
+        }
+    }
+
+    @Test
+    public void shouldRecordFailureWhenPredicateFails() {
+        given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+
+        StepVerifier.create(
+            Mono.just("Hello World")
+                .compose(CircuitBreakerOperator.of(circuitBreaker, "Bye World"::equals, new DummyException())))
+            .expectNext("Hello World")
+            .expectComplete()
+            .verify();
+
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(DummyException.class));
+    }
+
+    static class DummyException extends Exception {
+        DummyException() {
+            super();
         }
     }
 }

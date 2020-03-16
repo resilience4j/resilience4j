@@ -22,6 +22,7 @@ import reactor.core.CoreSubscriber;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,24 +40,36 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     private final AtomicBoolean successSignaled = new AtomicBoolean(false);
     private final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
+    private final AtomicBoolean validResponse = new AtomicBoolean(true);
+    private final Predicate<T> responseValidator;
+    private final Throwable throwable;
 
     protected CircuitBreakerSubscriber(CircuitBreaker circuitBreaker,
-        CoreSubscriber<? super T> downstreamSubscriber,
-        boolean singleProducer) {
+                                       CoreSubscriber<? super T> downstreamSubscriber,
+                                       boolean singleProducer, Predicate<T> responseValidator, Throwable throwable) {
         super(downstreamSubscriber);
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.singleProducer = singleProducer;
         this.start = System.nanoTime();
+        this.responseValidator = requireNonNull(responseValidator);
+        this.throwable = requireNonNull(throwable);
     }
 
     @Override
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
             if (singleProducer && successSignaled.compareAndSet(false, true)) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                if(responseValidator.test(value)){
+                    circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                } else {
+                    circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, throwable);
+                }
+            } else if(!singleProducer){
+                if(!responseValidator.test(value)) {
+                    validResponse.set(false);
+                }
             }
             eventWasEmitted.set(true);
-
             downstreamSubscriber.onNext(value);
         }
     }
@@ -64,7 +77,11 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     protected void hookOnComplete() {
         if (successSignaled.compareAndSet(false, true)) {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            if(validResponse.get()){
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            } else {
+                circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, throwable);
+            }
         }
 
         downstreamSubscriber.onComplete();
