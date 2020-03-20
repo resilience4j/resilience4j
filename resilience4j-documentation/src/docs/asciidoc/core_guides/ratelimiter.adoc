@@ -59,7 +59,7 @@ Try.run(restrictedCall)
     .andThenTry(restrictedCall)
     .onFailure((RequestNotPermitted throwable) -> LOG.info("Wait before call it again :)"));
 
-// durring second refresh cycle limiter will get 100 permissions
+// during second refresh cycle limiter will get 100 permissions
 rateLimiter.changeLimitForPeriod(100);
 ----
 
@@ -143,6 +143,6 @@ our lower level APIs like `getPermission` and `reservePermission` methods.
 You can interrupt threads that are blocked or waiting inside rate limiters.
 Our implementations don't throw `InterruptedException`, but set `Thread.isInterrupted` status into true,
  so you are responsible for handling this state in your client code.
-In the case where we should interrupt the positive flow of code after `Thread.interrupt'ion
+In the case where we should interrupt the positive flow of code after `Thread.interrupt'ion`
  we throw `AcquirePermissionCancelledException` that is extended from IllegalStateException
  to preserve backward compatibility with version 1.0.0 of Resilience4j.
