@@ -21,9 +21,11 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Seq;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -268,4 +270,93 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      */
     Bulkhead bulkhead(String name, String configName, io.vavr.collection.Map<String, String> tags);
 
+    /**
+     * Returns a builder to create a custom BulkheadRegistry.
+     *
+     * @return a {@link BulkheadRegistry.Builder}
+     */
+    static Builder custom() {
+        return new Builder();
+    }
+
+    class Builder {
+
+        private static final String DEFAULT_CONFIG = "default";
+        private RegistryStore registryStore;
+        private Map<String, BulkheadConfig> bulkheadConfigsMap;
+        private List<RegistryEventConsumer<Bulkhead>> registryEventConsumers;
+        private io.vavr.collection.Map<String, String> tags;
+
+        public Builder() {
+            this.bulkheadConfigsMap = new java.util.HashMap<>();
+            this.registryEventConsumers = new ArrayList<>();
+        }
+
+        public Builder withRegistryStore(RegistryStore registryStore) {
+            this.registryStore = registryStore;
+            return this;
+        }
+
+        /**
+         * Configures a BulkheadRegistry with a custom default Bulkhead configuration.
+         *
+         * @param bulkheadConfig a custom default Bulkhead configuration
+         * @return a {@link BulkheadRegistry.Builder}
+         */
+        public Builder withBulkheadConfig(BulkheadConfig bulkheadConfig) {
+            bulkheadConfigsMap.put(DEFAULT_CONFIG, bulkheadConfig);
+            return this;
+        }
+
+        /**
+         * Configures a BulkheadRegistry with a custom Bulkhead configuration.
+         *
+         * @param configName configName for a custom shared Bulkhead configuration
+         * @param configuration a custom shared Bulkhead configuration
+         * @return a {@link BulkheadRegistry.Builder}
+         * @throws IllegalArgumentException if {@code configName.equals("default")}
+         */
+        public Builder addBulkheadConfig(String configName, BulkheadConfig configuration) {
+            if (configName.equals(DEFAULT_CONFIG)) {
+                throw new IllegalArgumentException(
+                    "You cannot add another configuration with name 'default' as it is preserved for default configuration");
+            }
+            bulkheadConfigsMap.put(configName, configuration);
+            return this;
+        }
+
+        /**
+         * Configures a BulkheadRegistry with a Bulkhead registry event consumer.
+         *
+         * @param registryEventConsumer a Bulkhead registry event consumer.
+         * @return a {@link BulkheadRegistry.Builder}
+         */
+        public Builder addRegistryEventConsumer(RegistryEventConsumer<Bulkhead> registryEventConsumer) {
+            this.registryEventConsumers.add(registryEventConsumer);
+            return this;
+        }
+
+        /**
+         * Configures a BulkheadRegistry with Tags.
+         * <p>
+         * Tags added to the registry will be added to every instance created by this registry.
+         *
+         * @param tags default tags to add to the registry.
+         * @return a {@link BulkheadRegistry.Builder}
+         */
+        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        /**
+         * Builds a BulkheadRegistry
+         *
+         * @return the BulkheadRegistry
+         */
+        public BulkheadRegistry build() {
+            return new InMemoryBulkheadRegistry(bulkheadConfigsMap, registryEventConsumers, tags,
+                registryStore);
+        }
+    }
 }
