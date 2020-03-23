@@ -20,10 +20,7 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.core.registry.*;
 import io.vavr.Tuple;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -32,6 +29,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 
 
@@ -252,5 +250,122 @@ public class BulkheadRegistryTest {
         @Override
         public void onEntryReplacedEvent(EntryReplacedEvent<Bulkhead> entryReplacedEvent) {
         }
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultConfig() {
+        BulkheadRegistry bulkheadRegistry =
+            BulkheadRegistry.custom().withBulkheadConfig(BulkheadConfig.ofDefaults()).build();
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
+        Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("otherTestName");
+        assertThat(bulkhead).isNotSameAs(bulkhead2);
+
+        assertThat(bulkheadRegistry.getAllBulkheads()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCustomConfig() {
+        int maxConcurrentCalls = 100;
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrentCalls).build();
+
+        BulkheadRegistry bulkheadRegistry =
+            BulkheadRegistry.custom().withBulkheadConfig(bulkheadConfig).build();
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
+
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls())
+            .isEqualTo(maxConcurrentCalls);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithoutDefaultConfig() {
+        int maxConcurrentCalls = 100;
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrentCalls).build();
+
+        BulkheadRegistry bulkheadRegistry =
+            BulkheadRegistry.custom().addBulkheadConfig("someSharedConfig", bulkheadConfig).build();
+
+        assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(bulkheadRegistry.getDefaultConfig().getMaxConcurrentCalls())
+            .isEqualTo(25);
+        assertThat(bulkheadRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+
+        Bulkhead bulkhead = bulkheadRegistry
+            .bulkhead("name", "someSharedConfig");
+
+        assertThat(bulkhead.getBulkheadConfig()).isEqualTo(bulkheadConfig);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls())
+            .isEqualTo(maxConcurrentCalls);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom()
+            .maxConcurrentCalls(100).build();
+        BulkheadRegistry.custom().addBulkheadConfig("default", bulkheadConfig).build();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+        BulkheadConfig bulkheadConfig = BulkheadConfig.custom()
+            .maxConcurrentCalls(100).build();
+        BulkheadConfig customBulkheadConfig = BulkheadConfig.custom()
+            .maxConcurrentCalls(200).build();
+
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.custom()
+            .withBulkheadConfig(bulkheadConfig)
+            .addBulkheadConfig("custom", customBulkheadConfig)
+            .build();
+
+        assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(bulkheadRegistry.getDefaultConfig().getMaxConcurrentCalls())
+            .isEqualTo(100);
+        assertThat(bulkheadRegistry.getConfiguration("custom")).isNotEmpty();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithNullConfig() {
+        assertThatThrownBy(
+            () -> BulkheadRegistry.custom().withBulkheadConfig(null).build())
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.custom()
+            .withBulkheadConfig(BulkheadConfig.ofDefaults())
+            .addRegistryEventConsumer(new NoOpBulkheadEventConsumer())
+            .addRegistryEventConsumer(new NoOpBulkheadEventConsumer())
+            .build();
+
+        getEventProcessor(bulkheadRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryTags() {
+        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.custom()
+            .withBulkheadConfig(BulkheadConfig.ofDefaults())
+            .withTags(bulkheadTags)
+            .build();
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
+
+        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryStore() {
+        BulkheadRegistry bulkheadRegistry = BulkheadRegistry.custom()
+            .withBulkheadConfig(BulkheadConfig.ofDefaults())
+            .withRegistryStore(new InMemoryRegistryStore())
+            .build();
+        Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
+        Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("otherTestName");
+
+        assertThat(bulkhead).isNotSameAs(bulkhead2);
+        assertThat(bulkheadRegistry.getAllBulkheads()).hasSize(2);
     }
 }

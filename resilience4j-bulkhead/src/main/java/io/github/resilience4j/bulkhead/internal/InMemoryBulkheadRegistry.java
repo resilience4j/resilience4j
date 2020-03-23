@@ -22,7 +22,9 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.HashMap;
@@ -31,6 +33,7 @@ import io.vavr.collection.Seq;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -123,6 +126,15 @@ public final class InMemoryBulkheadRegistry extends
         RegistryEventConsumer<Bulkhead> registryEventConsumer,
         io.vavr.collection.Map<String, String> tags) {
         super(defaultConfig, registryEventConsumer, tags);
+    }
+
+    public InMemoryBulkheadRegistry(Map<String, BulkheadConfig> configs,
+                                          List<RegistryEventConsumer<Bulkhead>> registryEventConsumers,
+                                          io.vavr.collection.Map<String, String> tags, RegistryStore<Bulkhead> registryStore) {
+        super(configs.getOrDefault(DEFAULT_CONFIG, BulkheadConfig.ofDefaults()),
+            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
+            Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
+        this.configurations.putAll(configs);
     }
 
     /**
