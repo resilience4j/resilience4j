@@ -23,11 +23,17 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
+import io.github.resilience4j.core.registry.*;
 import io.reactivex.subscribers.TestSubscriber;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -514,5 +520,38 @@ public class SemaphoreBulkheadTest {
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(4);
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
             .isEqualTo(3); // main thread is still holding
+    }
+
+    @Test
+    public void shouldCreateBulkheadRegistryWithRegistryStore() {
+        RegistryEventConsumer<Bulkhead> registryEventConsumer = getNoOpsRegistryEventConsumer();
+        List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(registryEventConsumer);
+        Map<String, BulkheadConfig> configs = new HashMap<>();
+        final BulkheadConfig defaultConfig = BulkheadConfig.ofDefaults();
+        configs.put("default", defaultConfig);
+        final InMemoryBulkheadRegistry inMemoryBulkheadRegistry =
+            new InMemoryBulkheadRegistry(configs, registryEventConsumers,
+                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore());
+
+        AssertionsForClassTypes.assertThat(inMemoryBulkheadRegistry).isNotNull();
+        AssertionsForClassTypes.assertThat(inMemoryBulkheadRegistry.getDefaultConfig()).isEqualTo(defaultConfig);
+        AssertionsForClassTypes.assertThat(inMemoryBulkheadRegistry.getConfiguration("testNotFound")).isEmpty();
+        inMemoryBulkheadRegistry.addConfiguration("testConfig", defaultConfig);
+        AssertionsForClassTypes.assertThat(inMemoryBulkheadRegistry.getConfiguration("testConfig")).isNotNull();
+    }
+
+    private RegistryEventConsumer<Bulkhead> getNoOpsRegistryEventConsumer() {
+        return new RegistryEventConsumer<Bulkhead>() {
+            @Override
+            public void onEntryAddedEvent(EntryAddedEvent<Bulkhead> entryAddedEvent) {
+            }
+            @Override
+            public void onEntryRemovedEvent(EntryRemovedEvent<Bulkhead> entryRemoveEvent) {
+            }
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<Bulkhead> entryReplacedEvent) {
+            }
+        };
     }
 }
