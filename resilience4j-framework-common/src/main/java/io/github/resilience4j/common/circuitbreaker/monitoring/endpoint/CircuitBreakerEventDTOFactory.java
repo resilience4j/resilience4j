@@ -54,6 +54,10 @@ public class CircuitBreakerEventDTOFactory {
                 CircuitBreakerOnCallNotPermittedEvent onCallNotPermittedEvent = (CircuitBreakerOnCallNotPermittedEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onCallNotPermittedEvent)
                     .build();
+            case FAILURE_RATE_EXCEEDED:
+                CircuitBreakerOnFailureRateExceededEvent onFailureRateExceededEvent = (CircuitBreakerOnFailureRateExceededEvent) event;
+                return newCircuitBreakerEventDTOBuilder(onFailureRateExceededEvent)
+                    .build();
             default:
                 throw new IllegalArgumentException("Invalid event");
         }
