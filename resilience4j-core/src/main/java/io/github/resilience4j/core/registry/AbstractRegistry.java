@@ -21,14 +21,11 @@ package io.github.resilience4j.core.registry;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -44,7 +41,9 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     protected static final String SUPPLIER_MUST_NOT_BE_NULL = "Supplier must not be null";
     protected static final String TAGS_MUST_NOT_BE_NULL = "Tags must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-    protected final ConcurrentMap<String, E> entryMap;
+    private static final String REGISTRY_STORE_MUST_NOT_BE_NULL = "Registry Store must not be null";
+
+    protected final RegistryStore<E> entryMap;
 
     protected final ConcurrentMap<String, C> configurations;
     /**
@@ -80,7 +79,18 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers,
         Map<String, String> tags) {
         this.configurations = new ConcurrentHashMap<>();
-        this.entryMap = new ConcurrentHashMap<>();
+        this.entryMap = new InMemoryRegistryStore<E>();
+        this.eventProcessor = new RegistryEventProcessor(
+            Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
+        this.registryTags = Objects.requireNonNull(tags, TAGS_MUST_NOT_BE_NULL);
+        this.configurations
+            .put(DEFAULT_CONFIG, Objects.requireNonNull(defaultConfig, CONFIG_MUST_NOT_BE_NULL));
+    }
+
+    public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers,
+                            Map<String, String> tags, RegistryStore<E> registryStore) {
+        this.configurations = new ConcurrentHashMap<>();
+        this.entryMap = Objects.requireNonNull(registryStore, REGISTRY_STORE_MUST_NOT_BE_NULL);
         this.eventProcessor = new RegistryEventProcessor(
             Objects.requireNonNull(registryEventConsumers, CONSUMER_MUST_NOT_BE_NULL));
         this.registryTags = Objects.requireNonNull(tags, TAGS_MUST_NOT_BE_NULL);
@@ -98,12 +108,12 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     @Override
     public Optional<E> find(String name) {
-        return Optional.ofNullable(entryMap.get(name));
+        return entryMap.find(name);
     }
 
     @Override
     public Optional<E> remove(String name) {
-        Optional<E> removedEntry = Optional.ofNullable(entryMap.remove(name));
+        Optional<E> removedEntry = entryMap.remove(name);
         removedEntry
             .ifPresent(entry -> eventProcessor.processEvent(new EntryRemovedEvent<>(entry)));
         return removedEntry;
@@ -111,7 +121,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     @Override
     public Optional<E> replace(String name, E newEntry) {
-        Optional<E> replacedEntry = Optional.ofNullable(entryMap.replace(name, newEntry));
+        Optional<E> replacedEntry = entryMap.replace(name, newEntry);
         replacedEntry.ifPresent(
             oldEntry -> eventProcessor.processEvent(new EntryReplacedEvent<>(oldEntry, newEntry)));
         return replacedEntry;

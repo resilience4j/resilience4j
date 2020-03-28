@@ -23,10 +23,16 @@ import io.github.resilience4j.bulkhead.TestContextPropagators;
 import io.github.resilience4j.bulkhead.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.core.registry.*;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -108,4 +114,36 @@ public class FixedThreadPoolBulkheadTest {
             .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_QUEUE_CAPACITY);
     }
 
+    @Test
+    public void shouldCreateThreadPoolBulkheadRegistryWithRegistryStore() {
+        RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer = getNoOpsRegistryEventConsumer();
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(registryEventConsumer);
+        Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+        final ThreadPoolBulkheadConfig defaultConfig = ThreadPoolBulkheadConfig.ofDefaults();
+        configs.put("default", defaultConfig);
+        final InMemoryThreadPoolBulkheadRegistry inMemoryThreadPoolBulkheadRegistry =
+            new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumers,
+                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore());
+
+        AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry).isNotNull();
+        AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getDefaultConfig()).isEqualTo(defaultConfig);
+        AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getConfiguration("testNotFound")).isEmpty();
+        inMemoryThreadPoolBulkheadRegistry.addConfiguration("testConfig", defaultConfig);
+        AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getConfiguration("testConfig")).isNotNull();
+    }
+
+    private RegistryEventConsumer<ThreadPoolBulkhead> getNoOpsRegistryEventConsumer() {
+        return new RegistryEventConsumer<ThreadPoolBulkhead>() {
+            @Override
+            public void onEntryAddedEvent(EntryAddedEvent<ThreadPoolBulkhead> entryAddedEvent) {
+            }
+            @Override
+            public void onEntryRemovedEvent(EntryRemovedEvent<ThreadPoolBulkhead> entryRemoveEvent) {
+            }
+            @Override
+            public void onEntryReplacedEvent(EntryReplacedEvent<ThreadPoolBulkhead> entryReplacedEvent) {
+            }
+        };
+    }
 }

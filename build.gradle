@@ -30,7 +30,7 @@ artifactoryPublish.skip = true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
-        p -> !p.name.contains("documentation") && !p.name.endsWith("-bom")
+        p -> !p.name.endsWith("-bom")
     }
 }
 
@@ -125,7 +125,7 @@ subprojects {
 
     afterEvaluate {
         // exclude subprojects that don't produce a jar file or by design.
-        if (!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
+        if (!project.name.equals('resilience4j-bom')
                 && !project.name.equals('resilience4j-test')) {
             jar {
                 inputs.property('moduleName', moduleName)

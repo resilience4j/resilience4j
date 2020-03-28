@@ -22,7 +22,9 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.Array;
 import io.vavr.collection.HashMap;
@@ -31,6 +33,7 @@ import io.vavr.collection.Seq;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -129,6 +132,15 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
         List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers,
         io.vavr.collection.Map<String, String> tags) {
         super(defaultConfig, registryEventConsumers, tags);
+    }
+
+    public InMemoryThreadPoolBulkheadRegistry(Map<String, ThreadPoolBulkheadConfig> configs,
+                                          List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers,
+                                          io.vavr.collection.Map<String, String> tags, RegistryStore<ThreadPoolBulkhead> registryStore) {
+        super(configs.getOrDefault(DEFAULT_CONFIG, ThreadPoolBulkheadConfig.ofDefaults()),
+            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
+            Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
+        this.configurations.putAll(configs);
     }
 
     /**

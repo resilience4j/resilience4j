@@ -76,7 +76,7 @@ public class TimeLimiterImpl implements TimeLimiter {
             CompletableFuture<T> future = supplier.get().toCompletableFuture();
             ScheduledFuture<?> timeoutFuture =
                 Timeout
-                    .of(future, scheduler, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
+                    .of(future, scheduler, name, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
                         TimeUnit.MILLISECONDS);
 
             return future.whenComplete((result, throwable) -> {
@@ -177,11 +177,11 @@ public class TimeLimiterImpl implements TimeLimiter {
         }
 
         static ScheduledFuture<?> of(
-            CompletableFuture<?> future, ScheduledExecutorService scheduler, long delay,
+            CompletableFuture<?> future, ScheduledExecutorService scheduler, String name, long delay,
             TimeUnit unit) {
             return scheduler.schedule(() -> {
                 if (future != null && !future.isDone()) {
-                    future.completeExceptionally(new TimeoutException());
+                    future.completeExceptionally(new TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception." , name)));
                 }
             }, delay, unit);
         }

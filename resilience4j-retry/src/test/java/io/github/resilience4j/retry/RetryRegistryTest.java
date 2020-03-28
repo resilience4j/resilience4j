@@ -18,10 +18,7 @@ package io.github.resilience4j.retry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.core.registry.*;
 import io.vavr.Tuple;
 import org.junit.Before;
 import org.junit.Test;
@@ -277,5 +274,121 @@ public class RetryRegistryTest {
         @Override
         public void onEntryReplacedEvent(EntryReplacedEvent<Retry> entryReplacedEvent) {
         }
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultConfig() {
+        RetryRegistry retryRegistry =
+            RetryRegistry.custom().withRetryConfig(RetryConfig.ofDefaults()).build();
+        Retry retry = retryRegistry.retry("testName");
+        Retry retry2 = retryRegistry.retry("otherTestName");
+        assertThat(retry).isNotSameAs(retry2);
+        assertThat(retryRegistry.getAllRetries()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCustomConfig() {
+        int maxAttempts = 1000;
+        RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(maxAttempts).build();
+
+        RetryRegistry retryRegistry =
+            RetryRegistry.custom().withRetryConfig(retryConfig).build();
+        Retry retry = retryRegistry.retry("testName");
+
+        assertThat(retry.getRetryConfig().getMaxAttempts())
+            .isEqualTo(maxAttempts);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithoutDefaultConfig() {
+        int maxAttempts = 1000;
+        RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(maxAttempts).build();
+
+        RetryRegistry retryRegistry =
+            RetryRegistry.custom().addRetryConfig("someSharedConfig", retryConfig).build();
+
+        assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+        assertThat(retryRegistry.getDefaultConfig().getMaxAttempts())
+            .isEqualTo(3);
+        assertThat(retryRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+
+        Retry retry = retryRegistry
+            .retry("name", "someSharedConfig");
+
+        assertThat(retry.getRetryConfig()).isEqualTo(retryConfig);
+        assertThat(retry.getRetryConfig().getMaxAttempts())
+            .isEqualTo(maxAttempts);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+        RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(1000).build();
+        RetryRegistry.custom().addRetryConfig("default", retryConfig).build();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+        RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(1000).build();
+        RetryConfig customRetryConfig = RetryConfig.custom()
+            .maxAttempts(300).build();
+
+        RetryRegistry retryRegistry = RetryRegistry.custom()
+            .withRetryConfig(retryConfig)
+            .addRetryConfig("custom", customRetryConfig)
+            .build();
+
+        assertThat(retryRegistry.getDefaultConfig()).isNotNull();
+        assertThat(retryRegistry.getDefaultConfig().getMaxAttempts())
+            .isEqualTo(1000);
+        assertThat(retryRegistry.getConfiguration("custom")).isNotEmpty();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithNullConfig() {
+        assertThatThrownBy(
+            () -> RetryRegistry.custom().withRetryConfig(null).build())
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+        RetryRegistry retryRegistry = RetryRegistry.custom()
+            .withRetryConfig(RetryConfig.ofDefaults())
+            .addRegistryEventConsumer(new NoOpRetryEventConsumer())
+            .addRegistryEventConsumer(new NoOpRetryEventConsumer())
+            .build();
+
+        getEventProcessor(retryRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryTags() {
+        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        RetryRegistry retryRegistry = RetryRegistry.custom()
+            .withRetryConfig(RetryConfig.ofDefaults())
+            .withTags(retryTags)
+            .build();
+        Retry retry = retryRegistry.retry("testName");
+
+        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryStore() {
+        RetryRegistry retryRegistry = RetryRegistry.custom()
+            .withRetryConfig(RetryConfig.ofDefaults())
+            .withRegistryStore(new InMemoryRegistryStore())
+            .build();
+        Retry retry = retryRegistry.retry("testName");
+        Retry retry2 = retryRegistry.retry("otherTestName");
+
+        assertThat(retry).isNotSameAs(retry2);
+        assertThat(retryRegistry.getAllRetries()).hasSize(2);
     }
 }
