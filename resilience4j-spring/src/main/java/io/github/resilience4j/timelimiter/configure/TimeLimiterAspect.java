@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @Aspect
-public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
+public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(TimeLimiterAspect.class);
 
     private final TimeLimiterRegistry timeLimiterRegistry;
@@ -62,7 +62,6 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
         this.properties = properties;
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
-        cleanup();
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
@@ -152,22 +151,6 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
         });
     }
 
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            timeLimiterExecutorService.shutdown();
-            try {
-                if (!timeLimiterExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    timeLimiterExecutorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!timeLimiterExecutorService.isTerminated()) {
-                    timeLimiterExecutorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
-            }
-        }));
-    }
-
     @Override
     public int getOrder() {
         return properties.getTimeLimiterAspectOrder();
@@ -176,5 +159,20 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered {
     @Override
     public void setEmbeddedValueResolver(StringValueResolver resolver) {
         this.embeddedValueResolver = resolver;
+    }
+
+    @Override
+    public void close() throws Exception {
+        timeLimiterExecutorService.shutdown();
+        try {
+            if (!timeLimiterExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                timeLimiterExecutorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            if (!timeLimiterExecutorService.isTerminated()) {
+                timeLimiterExecutorService.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
+        }
     }
 }
