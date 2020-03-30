@@ -50,10 +50,28 @@ suspend fun <T> Retry.executeSuspendFunction(block: suspend () -> T): T {
 }
 
 /**
- * Decorates the given suspend function [block] and returns it.
+ * Decorates the given function [block] and returns it.
  *
  * Between attempts, suspends based on the configured interval function.
  */
 fun <T> Retry.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
+}
+
+/**
+ * Decorates the given function [block] and returns it.
+ *
+ * Between attempts, suspends based on the configured interval function.
+ */
+fun <T> Retry.decorateFunction(block: () -> T): () -> T = {
+    executeFunction(block)
+}
+
+/**
+ * Decorates and executes the given function [block].
+ *
+ * Between attempts, suspends based on the configured interval function.
+ */
+fun <T> Retry.executeFunction(block: () -> T): T {
+    return this.executeCallable(block)
 }

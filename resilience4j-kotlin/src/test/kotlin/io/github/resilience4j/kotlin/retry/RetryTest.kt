@@ -21,140 +21,130 @@ package io.github.resilience4j.kotlin.retry
 import io.github.resilience4j.kotlin.HelloWorldService
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
-import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
 
 class RetryTest {
+
     @Test
     fun `should execute successful function`() {
-        runBlocking {
-            val retry = Retry.ofDefaults("testName")
-            val metrics = retry.metrics
-            val helloWorldService = HelloWorldService()
+        val retry = Retry.ofDefaults("testName")
+        val metrics = retry.metrics
+        val helloWorldService = HelloWorldService()
 
-            //When
-            val result = retry.executeSuspendFunction {
-                helloWorldService.returnHelloWorld()
-            }
-
-            //Then
-            Assertions.assertThat(result).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
-            // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        //When
+        val result = retry.executeFunction {
+            helloWorldService.returnHelloWorld()
         }
+
+        //Then
+        Assertions.assertThat(result).isEqualTo("Hello world")
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+        // Then the helloWorldService should be invoked 1 time
+        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
     }
 
     @Test
     fun `should execute function with retries`() {
-        runBlocking {
-            val retry = Retry.of("testName") {
-                RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
-            }
-            val metrics = retry.metrics
-            val helloWorldService = HelloWorldService()
-
-            //When
-            val result = retry.executeSuspendFunction {
-                when (helloWorldService.invocationCounter) {
-                    0 -> helloWorldService.throwException()
-                    else -> helloWorldService.returnHelloWorld()
-                }
-            }
-
-            //Then
-            Assertions.assertThat(result).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
-            // Then the helloWorldService should be invoked twice
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
+        val retry = Retry.of("testName") {
+            RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
         }
+        val metrics = retry.metrics
+        val helloWorldService = HelloWorldService()
+
+        //When
+        val result = retry.executeFunction {
+            when (helloWorldService.invocationCounter) {
+                0 -> helloWorldService.throwException()
+                else -> helloWorldService.returnHelloWorld()
+            }
+        }
+
+        //Then
+        Assertions.assertThat(result).isEqualTo("Hello world")
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+        // Then the helloWorldService should be invoked twice
+        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
     }
 
     @Test
     fun `should execute function with retry of result`() {
-        runBlocking {
-            val helloWorldService = HelloWorldService()
-            val retry = Retry.of("testName") {
-                RetryConfig.custom<Any?>()
-                    .waitDuration(Duration.ofMillis(10))
-                    .retryOnResult { helloWorldService.invocationCounter < 2 }
-                    .build()
-            }
-            val metrics = retry.metrics
-
-            //When
-            val result = retry.executeSuspendFunction {
-                helloWorldService.returnHelloWorld()
-            }
-
-            //Then
-            Assertions.assertThat(result).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
-            // Then the helloWorldService should be invoked twice
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
+        val helloWorldService = HelloWorldService()
+        val retry = Retry.of("testName") {
+            RetryConfig.custom<Any?>()
+                .waitDuration(Duration.ofMillis(10))
+                .retryOnResult { helloWorldService.invocationCounter < 2 }
+                .build()
         }
+        val metrics = retry.metrics
+
+        //When
+        val result = retry.executeFunction {
+            helloWorldService.returnHelloWorld()
+        }
+
+        //Then
+        Assertions.assertThat(result).isEqualTo("Hello world")
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+        // Then the helloWorldService should be invoked twice
+        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
     }
 
     @Test
     fun `should execute function with repeated failures`() {
-        runBlocking {
-            val retry = Retry.of("testName") {
-                RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
-            }
-            val metrics = retry.metrics
-            val helloWorldService = HelloWorldService()
-
-            //When
-            try {
-                retry.executeSuspendFunction {
-                    helloWorldService.throwException()
-                }
-                Assertions.failBecauseExceptionWasNotThrown<Nothing>(IllegalStateException::class.java)
-            } catch (e: IllegalStateException) {
-                // nothing - proceed
-            }
-
-            //Then
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
-            // Then the helloWorldService should be invoked the maximum number of times
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
+        val retry = Retry.of("testName") {
+            RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
         }
+        val metrics = retry.metrics
+        val helloWorldService = HelloWorldService()
+
+        //When
+        try {
+            retry.executeFunction {
+                helloWorldService.throwException()
+            }
+            Assertions.failBecauseExceptionWasNotThrown<Nothing>(IllegalStateException::class.java)
+        } catch (e: IllegalStateException) {
+            // nothing - proceed
+        }
+
+        //Then
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
+        // Then the helloWorldService should be invoked the maximum number of times
+        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
     }
 
     @Test
     fun `should decorate successful function`() {
-        runBlocking {
-            val retry = Retry.ofDefaults("testName")
-            val metrics = retry.metrics
-            val helloWorldService = HelloWorldService()
+        val retry = Retry.ofDefaults("testName")
+        val metrics = retry.metrics
+        val helloWorldService = HelloWorldService()
 
-            //When
-            val function = retry.decorateSuspendFunction {
-                helloWorldService.returnHelloWorld()
-            }
-
-            //Then
-            Assertions.assertThat(function()).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
-            // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        //When
+        val function = retry.decorateFunction {
+            helloWorldService.returnHelloWorld()
         }
+
+        //Then
+        Assertions.assertThat(function()).isEqualTo("Hello world")
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
+        Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
+        Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+        // Then the helloWorldService should be invoked 1 time
+        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
     }
 }
