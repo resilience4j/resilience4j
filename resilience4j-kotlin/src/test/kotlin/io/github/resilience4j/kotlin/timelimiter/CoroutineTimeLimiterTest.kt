@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.kotlin.timelimiter
 
-import io.github.resilience4j.kotlin.HelloWorldService
+import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.timelimiter.TimeLimiter
 import io.github.resilience4j.timelimiter.TimeLimiterConfig
 import kotlinx.coroutines.CancellationException
@@ -27,12 +27,12 @@ import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
 
-class TimeLimiterTest {
+class CoroutineTimeLimiterTest {
     @Test
     fun `should execute successful function`() {
         runBlocking {
             val timelimiter = TimeLimiter.ofDefaults()
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             val result = timelimiter.executeSuspendFunction {
@@ -50,7 +50,7 @@ class TimeLimiterTest {
     fun `should execute unsuccessful function`() {
         runBlocking {
             val timelimiter = TimeLimiter.ofDefaults()
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             try {
@@ -73,7 +73,7 @@ class TimeLimiterTest {
         runBlocking {
             val timelimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(Duration.ofMillis(10)).build())
 
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             try {
@@ -95,7 +95,7 @@ class TimeLimiterTest {
     fun `should decorate successful function`() {
         runBlocking {
             val timelimiter = TimeLimiter.ofDefaults()
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             val function = timelimiter.decorateSuspendFunction {

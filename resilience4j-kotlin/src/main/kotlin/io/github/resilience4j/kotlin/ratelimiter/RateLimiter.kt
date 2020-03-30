@@ -43,6 +43,24 @@ fun <T> RateLimiter.decorateSuspendFunction(block: suspend () -> T): suspend () 
     executeSuspendFunction(block)
 }
 
+/**
+ * Decorates and executes the given function [block].
+ *
+ * If [RateLimiterConfig.timeoutDuration] is non-zero, the returned function suspends until a permission is available.
+ */
+fun <T> RateLimiter.executeFunction(block: () -> T): T {
+    return this.executeCallable(block)
+}
+
+/**
+ * Decorates the given function [block] and returns it.
+ *
+ * If [RateLimiterConfig.timeoutDuration] is non-zero, the returned function suspends until a permission is available.
+ */
+fun <T> RateLimiter.decorateFunction(block: () -> T): () -> T = {
+    executeFunction(block)
+}
+
 internal suspend fun RateLimiter.awaitPermission() {
     val waitTimeNs = reservePermission()
     when {
