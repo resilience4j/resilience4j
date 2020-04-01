@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
  */
-public interface ThreadPoolBulkhead {
+public interface ThreadPoolBulkhead extends AutoCloseable {
 
     /**
      * Returns a supplier which submits a value-returning task for execution and
