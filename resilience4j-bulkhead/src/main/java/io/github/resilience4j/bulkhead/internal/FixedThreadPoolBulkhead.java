@@ -85,7 +85,6 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
             new ArrayBlockingQueue<>(config.getQueueCapacity()),
             new NamingThreadFactory(name));
         // adding prover jvm executor shutdown
-        cleanup();
         this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
         this.eventProcessor = new FixedThreadPoolBulkhead.BulkheadEventProcessor();
     }
@@ -240,20 +239,19 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         return String.format("FixedThreadPoolBulkhead '%s'", this.name);
     }
 
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    executorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!executorService.isTerminated()) {
-                    executorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
+    @Override
+    public void close() {
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
             }
-        }));
+        } catch (InterruptedException e) {
+            if (!executorService.isTerminated()) {
+                executorService.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
+        }
     }
 
     private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements

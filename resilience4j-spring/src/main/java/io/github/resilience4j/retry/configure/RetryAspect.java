@@ -63,7 +63,7 @@ import java.util.concurrent.*;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
+public class RetryAspect implements EmbeddedValueResolverAware, Ordered, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspect.class);
     private final static ScheduledExecutorService retryExecutorService = Executors
@@ -89,8 +89,6 @@ public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
         this.retryRegistry = retryRegistry;
         this.retryAspectExtList = retryAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
-        cleanup();
-
     }
 
     @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
@@ -204,24 +202,23 @@ public class RetryAspect implements EmbeddedValueResolverAware, Ordered {
         return retryConfigurationProperties.getRetryAspectOrder();
     }
 
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            retryExecutorService.shutdown();
-            try {
-                if (!retryExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    retryExecutorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!retryExecutorService.isTerminated()) {
-                    retryExecutorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
-            }
-        }));
-    }
-
     @Override
     public void setEmbeddedValueResolver(StringValueResolver resolver) {
         this.embeddedValueResolver = resolver;
+    }
+
+    @Override
+    public void close() throws Exception {
+        retryExecutorService.shutdown();
+        try {
+            if (!retryExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                retryExecutorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            if (!retryExecutorService.isTerminated()) {
+                retryExecutorService.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
+        }
     }
 }
