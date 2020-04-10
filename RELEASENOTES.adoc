@@ -310,6 +310,6 @@ NOTE: Breaking changes:
 * Issue #887: Fixing Spring Boot Common and Spring Boot 2 modules share the same packages which is not allowed in the Java Module system
 * Issue #886: Add support for RxJava 3
 * Issue #913: Add proper graceful cleanup of resilience4j thread pool executors which make it properly cleaned on spring boot applications
-* Issue #939: FIx actuator shows Whitelabel error page with "Invalid Event"
+* Issue #939: Fix actuator shows Whitelabel error page with "Invalid Event"
 * PR #914: Adding non-coroutine kotlin wrapper functions as a convenience
-* PR #943 : Removed deprecated documentation
+* PR #943: Removed deprecated documentation
