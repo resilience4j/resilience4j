@@ -296,5 +296,20 @@ NOTE: Breaking changes:
 * Issue #509: Added support to extend Micrometer tags
 * PR #831: non backward compatible API change in ThreadPoolBulkhead decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) now return Supplier<CompletionStage<Void>> instead of Runnable
 
-=== Version 1.3.0
+=== Version 1.3.1
 * Issue #596: Fixed a bug that a fallback method is not invoked when using CompletableFutures and a ThreadPoolBulkhead annotation
+
+=== Version 1.4.0
+
+* Issue #703: Add a feature that allows to plug-in your own Registry implementation which can be based on a cache library if needed.
+* Issue #933: Add RegistryStore and builder methods to create BulkheadRegistry and ThreadPoolBulkheadRegistry
+* Issue #924: Add RegistryStore and builder methods to create RetryRegistry
+* Issue #910: Add RegistryStore and builder methods to create RateLimiter Registry
+* Issue #928: Fix TimeLimiter does not set a message for TimeoutException
+* Issue #916: Allow setting Retry Wait Duration Limit to value equal >= zero
+* Issue #887: Fixing Spring Boot Common and Spring Boot 2 modules share the same packages which is not allowed in the Java Module system
+* Issue #886: Add support for RxJava 3
+* Issue #913: Add proper graceful cleanup of resilience4j thread pool executors which make it properly cleaned on spring boot applications
+* Issue #939: Fix actuator shows Whitelabel error page with "Invalid Event"
+* PR #914: Adding non-coroutine kotlin wrapper functions as a convenience
+* PR #943: Removed deprecated documentation
