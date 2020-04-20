@@ -34,8 +34,8 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.TimeLimiterMetricNames.DEFAULT_TIME_LIMITER_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedTimeLimiterMetricsPublisherTest {
@@ -148,7 +148,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher = new TaggedTimeLimiterMetricsPublisher(
-            TaggedTimeLimiterMetricsPublisher.MetricNames.custom()
+            TimeLimiterMetricNames.custom()
                 .callsMetricName("custom_calls")
                 .build(), meterRegistry);
 

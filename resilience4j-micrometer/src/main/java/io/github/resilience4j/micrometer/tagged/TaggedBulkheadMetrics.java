@@ -30,7 +30,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
 
     private final BulkheadRegistry bulkheadRegistry;
 
-    private TaggedBulkheadMetrics(MetricNames names, BulkheadRegistry bulkheadRegistry) {
+    private TaggedBulkheadMetrics(BulkheadMetricNames names, BulkheadRegistry bulkheadRegistry) {
         super(names);
         this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
@@ -42,7 +42,7 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
     public static TaggedBulkheadMetrics ofBulkheadRegistry(BulkheadRegistry bulkheadRegistry) {
-        return new TaggedBulkheadMetrics(MetricNames.ofDefaults(), bulkheadRegistry);
+        return new TaggedBulkheadMetrics(BulkheadMetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     /**
@@ -53,8 +53,24 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedBulkheadMetrics} instance.
      */
+    public static TaggedBulkheadMetrics ofBulkheadRegistry(BulkheadMetricNames names,
+                                                           BulkheadRegistry bulkheadRegistry) {
+        return new TaggedBulkheadMetrics(names, bulkheadRegistry);
+    }
+
+    /**
+     * Creates a new binder defining custom metric names and using given {@code registry} as source
+     * of bulkheads.
+     *
+     * @deprecated Use {@link TaggedBulkheadMetrics#ofBulkheadRegistry(BulkheadMetricNames, BulkheadRegistry)} instead
+     *
+     * @param names            custom names of the metrics
+     * @param bulkheadRegistry the source of bulkheads
+     * @return The {@link TaggedBulkheadMetrics} instance.
+     */
+    @Deprecated
     public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names,
-        BulkheadRegistry bulkheadRegistry) {
+                                                           BulkheadRegistry bulkheadRegistry) {
         return new TaggedBulkheadMetrics(names, bulkheadRegistry);
     }
 
