@@ -43,7 +43,7 @@ public class MonoBulkheadTest {
 
         StepVerifier.create(
             Mono.just("Event")
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectNext("Event")
             .verifyComplete();
 
@@ -56,7 +56,7 @@ public class MonoBulkheadTest {
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(IOException.class)
             .verify(Duration.ofSeconds(1));
@@ -70,7 +70,7 @@ public class MonoBulkheadTest {
 
         StepVerifier.create(
             Mono.just("Event")
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(BulkheadFullException.class)
             .verify(Duration.ofSeconds(1));
@@ -84,7 +84,7 @@ public class MonoBulkheadTest {
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(BulkheadFullException.class)
             .verify(Duration.ofSeconds(1));
@@ -97,7 +97,7 @@ public class MonoBulkheadTest {
         StepVerifier.create(
             Mono.just("Event")
                 .delayElement(Duration.ofHours(1))
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .thenCancel()
             .verify();

@@ -237,7 +237,7 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 Mono.fromCallable(backendService::doSomething)
-    .compose(CircuitBreakerOperator.of(circuitBreaker))
+    .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`.
