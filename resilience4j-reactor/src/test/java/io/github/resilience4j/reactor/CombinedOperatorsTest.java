@@ -45,9 +45,9 @@ public class CombinedOperatorsTest {
     public void shouldEmitEvents() {
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
         ).expectNext("Event 1")
             .expectNext("Event 2")
             .verifyComplete();
@@ -57,10 +57,10 @@ public class CombinedOperatorsTest {
     public void shouldEmitEventsWithRetry() {
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
-                .compose(retryOperator)
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(retryOperator)
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
         ).expectNext("Event 1")
             .expectNext("Event 2")
             .verifyComplete();
@@ -70,9 +70,9 @@ public class CombinedOperatorsTest {
     public void shouldEmitEvent() {
         StepVerifier.create(
             Mono.just("Event 1")
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
         ).expectNext("Event 1")
             .verifyComplete();
     }
@@ -81,10 +81,10 @@ public class CombinedOperatorsTest {
     public void shouldEmitEventWithRetry() {
         StepVerifier.create(
             Mono.just("Event 1")
-                .compose(retryOperator)
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(retryOperator)
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
         ).expectNext("Event 1")
             .verifyComplete();
     }
@@ -93,9 +93,9 @@ public class CombinedOperatorsTest {
     public void shouldPropagateError() {
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
         ).expectError(IOException.class)
             .verify(Duration.ofSeconds(1));
     }
@@ -105,9 +105,9 @@ public class CombinedOperatorsTest {
         circuitBreaker.transitionToOpenState();
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
         ).expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
     }
@@ -117,9 +117,9 @@ public class CombinedOperatorsTest {
         circuitBreaker.transitionToOpenState();
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .compose(BulkheadOperator.of(bulkhead))
-                .compose(RateLimiterOperator.of(rateLimiter))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(BulkheadOperator.of(bulkhead))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter))
         ).expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
     }

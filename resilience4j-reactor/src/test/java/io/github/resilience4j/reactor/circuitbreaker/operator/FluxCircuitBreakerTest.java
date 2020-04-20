@@ -45,7 +45,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectNext("Event 1")
             .expectNext("Event 2")
             .verifyComplete();
@@ -61,7 +61,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(IOException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -76,7 +76,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(IOException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -91,7 +91,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(Flux.just("Event 1", "Event 2")
             .flatMap(value -> Mono.just("Bla " + value)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))))
             .expectNext("Bla Event 1")
             .expectNext("Bla Event 2")
             .verifyComplete();
@@ -107,7 +107,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -122,7 +122,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -137,7 +137,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -153,7 +153,7 @@ public class FluxCircuitBreakerTest {
         StepVerifier.create(
             Flux.just("Event")
                 .delayElements(Duration.ofDays(1))
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectSubscription()
             .thenCancel()
             .verify();
@@ -170,7 +170,7 @@ public class FluxCircuitBreakerTest {
 
         StepVerifier.create(
             Flux.just("Event1", "Event2", "Event3")
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectSubscription()
             .thenRequest(1)
             .thenCancel()
