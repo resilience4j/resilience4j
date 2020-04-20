@@ -30,7 +30,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
 
     private final RateLimiterRegistry rateLimiterRegistry;
 
-    private TaggedRateLimiterMetrics(MetricNames names, RateLimiterRegistry rateLimiterRegistry) {
+    private TaggedRateLimiterMetrics(RateLimiterMetricNames names, RateLimiterRegistry rateLimiterRegistry) {
         super(names);
         this.rateLimiterRegistry = requireNonNull(rateLimiterRegistry);
     }
@@ -43,7 +43,7 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
      */
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(
         RateLimiterRegistry rateLimiterRegistry) {
-        return new TaggedRateLimiterMetrics(MetricNames.ofDefaults(), rateLimiterRegistry);
+        return new TaggedRateLimiterMetrics(RateLimiterMetricNames.ofDefaults(), rateLimiterRegistry);
     }
 
     /**
@@ -53,8 +53,23 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
      * @param rateLimiterRegistry the source of rate limiters
      * @return The {@link TaggedRateLimiterMetrics} instance.
      */
+    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(RateLimiterMetricNames names,
+                                                                 RateLimiterRegistry rateLimiterRegistry) {
+        return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
+    }
+
+    /**
+     * Creates a new binder that uses given {@code registry} as source of rate limiters.
+     *
+     * @deprecated Use {@link TaggedRateLimiterMetrics#ofRateLimiterRegistry(RateLimiterMetricNames, RateLimiterRegistry)} instead
+     *
+     * @param names               custom metric names
+     * @param rateLimiterRegistry the source of rate limiters
+     * @return The {@link TaggedRateLimiterMetrics} instance.
+     */
+    @Deprecated
     public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names,
-        RateLimiterRegistry rateLimiterRegistry) {
+                                                                 RateLimiterRegistry rateLimiterRegistry) {
         return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
     }
 

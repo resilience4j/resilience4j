@@ -32,8 +32,8 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
 
     private final ThreadPoolBulkheadRegistry bulkheadRegistry;
 
-    private TaggedThreadPoolBulkheadMetrics(MetricNames names,
-        ThreadPoolBulkheadRegistry bulkheadRegistry) {
+    private TaggedThreadPoolBulkheadMetrics(ThreadPoolBulkheadMetricNames names,
+                                            ThreadPoolBulkheadRegistry bulkheadRegistry) {
         super(names);
         this.bulkheadRegistry = requireNonNull(bulkheadRegistry);
     }
@@ -46,7 +46,7 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
      */
     public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(
         ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        return new TaggedThreadPoolBulkheadMetrics(MetricNames.ofDefaults(), bulkheadRegistry);
+        return new TaggedThreadPoolBulkheadMetrics(ThreadPoolBulkheadMetricNames.ofDefaults(), bulkheadRegistry);
     }
 
     /**
@@ -57,8 +57,24 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
      * @param bulkheadRegistry the source of bulkheads
      * @return The {@link TaggedThreadPoolBulkheadMetrics} instance.
      */
+    public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(ThreadPoolBulkheadMetricNames names,
+                                                                               ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        return new TaggedThreadPoolBulkheadMetrics(names, bulkheadRegistry);
+    }
+
+    /**
+     * Creates a new binder defining custom metric names and using given {@code registry} as source
+     * of bulkheads.
+     *
+     * @deprecated Use {@link TaggedThreadPoolBulkheadMetrics#ofThreadPoolBulkheadRegistry(ThreadPoolBulkheadMetricNames, ThreadPoolBulkheadRegistry)} instead
+     *
+     * @param names            custom names of the metrics
+     * @param bulkheadRegistry the source of bulkheads
+     * @return The {@link TaggedThreadPoolBulkheadMetrics} instance.
+     */
+    @Deprecated
     public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(MetricNames names,
-        ThreadPoolBulkheadRegistry bulkheadRegistry) {
+                                                                               ThreadPoolBulkheadRegistry bulkheadRegistry) {
         return new TaggedThreadPoolBulkheadMetrics(names, bulkheadRegistry);
     }
 
