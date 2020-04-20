@@ -19,7 +19,6 @@
 package io.github.resilience4j.kotlin.bulkhead
 
 import io.github.resilience4j.bulkhead.Bulkhead
-import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import kotlinx.coroutines.channels.Channel
@@ -70,10 +69,10 @@ class CoroutineBulkheadTest {
     fun `should not execute function when full`() {
         runBlocking {
             val bulkhead = Bulkhead.of("testName") {
-                BulkheadConfig.custom()
-                    .maxConcurrentCalls(1)
-                    .maxWaitDuration(Duration.ZERO)
-                    .build()
+                BulkheadConfig {
+                    maxConcurrentCalls(1)
+                    maxWaitDuration(Duration.ZERO)
+                }
             }.registerEventListener()
 
             val sync = Channel<Unit>(Channel.RENDEZVOUS)

@@ -20,7 +20,6 @@ package io.github.resilience4j.kotlin.timelimiter
 
 import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.timelimiter.TimeLimiter
-import io.github.resilience4j.timelimiter.TimeLimiterConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -85,7 +84,7 @@ class FlowTimeLimiterTest {
     @Test
     fun `should cancel operation that times out`() {
         runBlocking {
-            val timelimiter = TimeLimiter.of(TimeLimiterConfig.custom().timeoutDuration(Duration.ofMillis(10)).build())
+            val timelimiter = TimeLimiter.of(TimeLimiterConfig { timeoutDuration(Duration.ofMillis(10)) })
 
             val helloWorldService = CoroutineHelloWorldService()
             val resultList = mutableListOf<String>()

@@ -20,7 +20,6 @@ package io.github.resilience4j.kotlin.retry
 
 import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.retry.Retry
-import io.github.resilience4j.retry.RetryConfig
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -65,7 +64,7 @@ class FlowRetryTest {
     fun `should execute function with retries`() {
         runBlocking {
             val retry = Retry.of("testName") {
-                RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
+                RetryConfig { waitDuration(Duration.ofMillis(10)) }
             }
             val metrics = retry.metrics
             val helloWorldService = CoroutineHelloWorldService()
@@ -104,10 +103,10 @@ class FlowRetryTest {
             val helloWorldService = CoroutineHelloWorldService()
             val resultList = mutableListOf<String>()
             val retry = Retry.of("testName") {
-                RetryConfig.custom<Any?>()
-                    .waitDuration(Duration.ofMillis(10))
-                    .retryOnResult { helloWorldService.invocationCounter < 2 }
-                    .build()
+                RetryConfig {
+                    waitDuration(Duration.ofMillis(10))
+                    retryOnResult { helloWorldService.invocationCounter < 2 }
+                }
             }
             val metrics = retry.metrics
 
@@ -132,7 +131,7 @@ class FlowRetryTest {
     fun `should execute function with repeated failures`() {
         runBlocking {
             val retry = Retry.of("testName") {
-                RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
+                RetryConfig { waitDuration(Duration.ofMillis(10)) }
             }
             val metrics = retry.metrics
             val helloWorldService = CoroutineHelloWorldService()
