@@ -134,7 +134,7 @@ public class BulkHeadConfigurationSpringTest {
 
             ThreadPoolBulkheadConfigurationPropertiesTest() {
                 InstanceProperties instanceProperties = new InstanceProperties();
-                instanceProperties.setContextPropagator(TestThreadLocalContextPropagator.class);
+                instanceProperties.setContextPropagators(TestThreadLocalContextPropagator.class);
                 getConfigs().put("sharedBackend", instanceProperties);
             }
 
