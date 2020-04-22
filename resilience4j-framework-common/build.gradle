@@ -7,4 +7,4 @@ dependencies {
     compile project(':resilience4j-timelimiter')
 }
 
-ext.moduleName = 'io.github.resilience4j.framework-common'
+ext.moduleName = 'io.github.resilience4j.frameworkcommon'
