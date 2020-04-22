@@ -7,7 +7,7 @@ ext {
 }
 
 def projectArtifactId = 'resilience4j'
-def url = "https://github.com/resilience4j/resilience4j"
+def url = "https://resilience4j.readme.io"
 
 jar {
     manifest {
