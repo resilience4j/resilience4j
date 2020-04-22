@@ -30,7 +30,7 @@ public class BulkHeadConfigurationTest {
         //Given
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties1.setCoreThreadPoolSize(1);
-        backendProperties1.setContextPropagator(TestThreadLocalContextPropagator.class);
+        backendProperties1.setContextPropagators(TestThreadLocalContextPropagator.class);
 
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties2 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties2.setCoreThreadPoolSize(2);
@@ -79,7 +79,7 @@ public class BulkHeadConfigurationTest {
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         sharedProperties.setCoreThreadPoolSize(2);
         sharedProperties.setQueueCapacity(2);
-        sharedProperties.setContextPropagator(TestThreadLocalContextPropagator.class);
+        sharedProperties.setContextPropagators(TestThreadLocalContextPropagator.class);
 
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("default");
@@ -88,7 +88,7 @@ public class BulkHeadConfigurationTest {
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendWithSharedConfig.setBaseConfig("sharedConfig");
         backendWithSharedConfig.setCoreThreadPoolSize(4);
-        backendWithSharedConfig.setContextPropagator(TestThreadLocalContextPropagator.class);
+        backendWithSharedConfig.setContextPropagators(TestThreadLocalContextPropagator.class);
 
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);

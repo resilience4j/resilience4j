@@ -184,7 +184,7 @@ public class BulkheadBuilderCustomizerTest {
                 InstanceProperties properties1 = new InstanceProperties();
                 properties1.setCoreThreadPoolSize(2);
                 properties1.setMaxThreadPoolSize(4);
-                properties1.setContextPropagator(TestThreadLocalContextPropagator.class);
+                properties1.setContextPropagators(TestThreadLocalContextPropagator.class);
                 getConfigs().put("backendA", properties1);
 
                 InstanceProperties properties2 = new InstanceProperties();

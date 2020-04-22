@@ -311,5 +311,6 @@ NOTE: Breaking changes:
 * Issue #886: Add support for RxJava 3
 * Issue #913: Add proper graceful cleanup of resilience4j thread pool executors which make it properly cleaned on spring boot applications
 * Issue #939: Fix actuator shows Whitelabel error page with "Invalid Event"
+* Issue #958: Added missing method to set contextProgagators in ThreadPoolBulkheadConfigurationProperties
 * PR #914: Adding non-coroutine kotlin wrapper functions as a convenience
 * PR #943: Removed deprecated documentation
