@@ -148,7 +148,7 @@ artifactory {
             password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
         }
         defaults {
-            publications('mavenJava', 'mavenPlatform')
+            publications('resilience4j')
         }
     }
     if (System.properties['https.proxyHost']) {
