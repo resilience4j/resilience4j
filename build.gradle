@@ -24,6 +24,8 @@ allprojects {
     repositories {
         jcenter()
         mavenCentral()
+        maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://oss.jfrog.org/oss-snapshot-local" }
     }
 }
 artifactoryPublish.skip = true // apply to all projects except the root
