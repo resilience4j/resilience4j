@@ -1,29 +1,82 @@
-description = "resilience4j bom"
-
-apply plugin: 'maven-publish'
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+    id 'com.jfrog.bintray'
+    id 'com.jfrog.artifactory'
+}
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            pom.withXml {
-                asNode().appendNode('packaging', 'pom')
+        resilience4j(MavenPublication) {
+           from components.javaPlatform
+        }
+    }
+}
 
-                def license = asNode().appendNode('licenses').appendNode('license')
-                license.appendNode('name', 'Apache-2.0')
-                license.appendNode('url', 'https://github.com/resilience4j/resilience4j/blob/master/LICENSE.txt')
-                license.appendNode('distribution', 'repo')
+def projectArtifactId = 'resilience4j'
+def url = "https://resilience4j.readme.io"
 
-                asNode().appendNode('scm').appendNode('url', 'https://github.com/resilience4j/resilience4j.git')
-
-                Node deps = asNode().appendNode('dependencyManagement').appendNode('dependencies')
-                coreProjects.each {
-                    Node dep = deps.appendNode('dependency')
-                    dep.appendNode('groupId').value = it.group
-                    dep.appendNode('artifactId').value = it.name
-                    dep.appendNode('version').value = it.version
-                }
+bintray {
+    user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = true //If version should be auto published after an upload
+    publications = ['resilience4j']
+    pkg {
+        repo = 'Maven'
+        name = "${projectArtifactId}"
+        userOrg = "${projectArtifactId}"
+        websiteUrl = "${url}"
+        issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
+        vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
+        desc = project.description
+        licenses = ['Apache-2.0']
+        version {
+            name = project.version
+            vcsTag = "v${project.version}"
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                //Optional. The passphrase for GPG signing'
+                passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
+            }
+            mavenCentralSync {
+                sync = true
+                //Optional (true by default). Determines whether to sync the version to Maven Central.
+                user = project.hasProperty('ossUser') ? project.property('ossUser') : ''
+                //OSS user token
+                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : ''
+                //OSS user password
             }
         }
+    }
+}
+
+dependencies {
+    constraints {
+        api project(":resilience4j-core")
+        api project(":resilience4j-ratelimiter")
+        api project(":resilience4j-cache")
+        api project(":resilience4j-retry")
+        api project(":resilience4j-circuitbreaker")
+        api project(":resilience4j-bulkhead")
+        api project(":resilience4j-all")
+        api project(":resilience4j-circularbuffer")
+        api project(":resilience4j-metrics")
+        api project(":resilience4j-consumer")
+        api project(":resilience4j-vertx")
+        api project(":resilience4j-annotations")
+        api project(":resilience4j-spring")
+        api project(":resilience4j-spring-boot2")
+        api project(":resilience4j-spring-cloud2")
+        api project(":resilience4j-retrofit")
+        api project(":resilience4j-feign")
+        api project(":resilience4j-ratpack")
+        api project(":resilience4j-prometheus")
+        api project(":resilience4j-timelimiter")
+        api project(":resilience4j-rxjava2")
+        api project(":resilience4j-rxjava3")
+        api project(":resilience4j-reactor")
+        api project(":resilience4j-micrometer")
+        api project(":resilience4j-kotlin")
     }
 }
