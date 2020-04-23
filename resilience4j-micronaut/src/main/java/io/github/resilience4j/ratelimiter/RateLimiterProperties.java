@@ -15,18 +15,10 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.common.CommonProperties;
-import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
-import io.micronaut.context.annotation.EachProperty;
-import io.micronaut.context.annotation.Parameter;
-import io.micronaut.core.convert.format.MapFormat;
-import io.micronaut.core.naming.conventions.StringConvention;
 import io.micronaut.core.util.Toggleable;
 
-import javax.annotation.Nonnull;
-import java.time.Duration;
-import java.util.*;
+import java.util.Map;
 
 /**
  * Configuration for generic rate limiting options.

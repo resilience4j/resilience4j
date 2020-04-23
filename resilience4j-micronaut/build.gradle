@@ -18,6 +18,7 @@ dependencies {
     compileOnly project(':resilience4j-rxjava2')
     compileOnly project(':resilience4j-bulkhead')
     compileOnly project(':resilience4j-annotations')
+    compileOnly project(':resilience4j-consumer')
     compile project(':resilience4j-framework-common')
 
     testCompile project(':resilience4j-circuitbreaker')
