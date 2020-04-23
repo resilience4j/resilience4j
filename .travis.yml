@@ -21,8 +21,7 @@ before_cache:
 addons:
   sonarcloud:
     organization: "resilience4j" # the key of the org you chose at step #3
-    token:
-      secure: $SONAR_TOKEN  # Set in the settings page of your repository, as a secure variable
+    token: $SONAR_TOKEN  # Set in the settings page of your repository, as a secure variable
 
 cache:
   directories:

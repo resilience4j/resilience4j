@@ -7,7 +7,7 @@ ext {
 }
 
 def projectArtifactId = 'resilience4j'
-def url = "https://github.com/resilience4j/resilience4j"
+def url = "https://resilience4j.readme.io"
 
 jar {
     manifest {
@@ -30,11 +30,11 @@ jar {
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 
@@ -48,7 +48,7 @@ bintray {
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
     dryRun = false //Whether to run this as dry-run, without deploying
     publish = true //If version should be auto published after an upload
-    publications = ['mavenJava']
+    publications = ['resilience4j']
     pkg {
         repo = 'Maven'
         name = "${projectArtifactId}"
@@ -80,7 +80,7 @@ bintray {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        resilience4j(MavenPublication) {
             from components.java
             pom.withXml {
                 def devs = ['RobWin': 'Robert Winkler',

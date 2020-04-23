@@ -4,8 +4,9 @@ plugins {
     id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
     id "com.jfrog.artifactory" version "4.9.5"
+    id 'idea'
 }
-apply plugin: 'idea'
+
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
@@ -14,8 +15,6 @@ ext {
 
 allprojects {
     apply plugin: 'jacoco'
-    apply plugin: 'me.champeau.gradle.jmh'
-    apply plugin: 'com.jfrog.artifactory'
 
     version = '1.5.0-SNAPSHOT'
     group = 'io.github.resilience4j'
@@ -40,8 +39,9 @@ configure(project.coreProjects) {
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'com.jfrog.artifactory'
     apply from: "${rootDir}/publishing.gradle"
-    apply plugin: 'jacoco'
+    apply plugin: 'me.champeau.gradle.jmh'
 
     dependencies {
         compile(libraries.vavr)
@@ -72,6 +72,23 @@ configure(project.coreProjects) {
     jmh {
         duplicateClassesStrategy = 'warn'
     }
+
+
+
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+        }
+    }
+
+    afterEvaluate {
+        jar {
+            inputs.property('moduleName', moduleName)
+            manifest.attributes(
+                    'Automatic-Module-Name': moduleName
+            )
+        }
+    }
 }
 
 def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report.xml"
@@ -96,12 +113,12 @@ task jacocoMergeTest(type: JacocoMerge) {
 
 task jacocoRootTestReport(type: JacocoReport) {
 
-    subprojects.each { dependsOn("${it.name}:test") }
-    subprojects.each { dependsOn("${it.name}:jacocoTestReport") }
+    coreProjects.each { dependsOn("${it.name}:test") }
+    coreProjects.each { dependsOn("${it.name}:jacocoTestReport") }
 
-    additionalSourceDirs.from = subprojects.sourceSets.main.allSource.srcDirs
-    sourceDirectories.from = subprojects.sourceSets.main.allSource.srcDirs
-    classDirectories.from = subprojects.sourceSets.main.output
+    additionalSourceDirs.from = coreProjects.sourceSets.main.allSource.srcDirs
+    sourceDirectories.from = coreProjects.sourceSets.main.allSource.srcDirs
+    classDirectories.from = coreProjects.sourceSets.main.output
     executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
 
     onlyIf {
@@ -116,33 +133,8 @@ task jacocoRootTestReport(type: JacocoReport) {
     }
 }
 
-subprojects {
-    jacocoTestReport {
-        reports {
-            xml.enabled true
-        }
-    }
-
-    afterEvaluate {
-        // exclude subprojects that don't produce a jar file or by design.
-        if (!project.name.equals('resilience4j-bom')
-                && !project.name.equals('resilience4j-test')) {
-            jar {
-                inputs.property('moduleName', moduleName)
-                manifest.attributes(
-                        'Automatic-Module-Name': moduleName
-                )
-            }
-        }
-    }
-}
-
 tasks.check.dependsOn tasks.jacocoRootTestReport
 tasks.jacocoRootTestReport.dependsOn tasks.test
-
-test {
-    dependsOn(subprojects.test) // required by cobertura to aggregate report
-}
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
@@ -161,7 +153,7 @@ artifactory {
             password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
         }
         defaults {
-            publications('mavenJava')
+            publications('resilience4j')
         }
     }
     if (System.properties['https.proxyHost']) {
