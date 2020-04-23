@@ -2,7 +2,10 @@
 
 package io.github.resilience4j.kotlin.circuitbreaker
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.vavr.Tuple2 as VavrTuple2
+import io.vavr.collection.HashMap as VavrHashMap
 
 /**
  * Creates new custom [CircuitBreakerRegistry].
@@ -20,4 +23,114 @@ inline fun CircuitBreakerRegistry(
     config: CircuitBreakerRegistry.Builder.() -> Unit
 ): CircuitBreakerRegistry {
     return CircuitBreakerRegistry.custom().apply(config).build()
+}
+
+/**
+ * Configures a [CircuitBreakerRegistry] with a custom default CircuitBreaker configuration.
+ *
+ * ```kotlin
+ * val circuitBreakerRegistry = CircuitBreakerRegistry {
+ *     withCircuitBreakerConfig {
+ *         maxConcurrentCalls(2)
+ *         maxWaitDuration(Duration.ZERO)
+ *     }
+ * }
+ * ```
+ *
+ * @param config methods of [CircuitBreakerConfig.Builder] that customize the default `CircuitBreakerConfig`
+ */
+inline fun CircuitBreakerRegistry.Builder.withCircuitBreakerConfig(
+    config: CircuitBreakerConfig.Builder.() -> Unit
+) {
+    withCircuitBreakerConfig(CircuitBreakerConfig(config))
+}
+
+/**
+ * Configures a [CircuitBreakerRegistry] with a custom default CircuitBreaker configuration.
+ *
+ * ```kotlin
+ * val circuitBreakerRegistry = CircuitBreakerRegistry {
+ *     withCircuitBreakerConfig(baseCircuitBreakerConfig) {
+ *         maxConcurrentCalls(2)
+ *         maxWaitDuration(Duration.ZERO)
+ *     }
+ * }
+ * ```
+ *
+ * @param baseConfig base `CircuitBreakerConfig`
+ * @param config methods of [CircuitBreakerConfig.Builder] that customize the default `CircuitBreakerConfig`
+ */
+inline fun CircuitBreakerRegistry.Builder.withCircuitBreakerConfig(
+    baseConfig: CircuitBreakerConfig,
+    config: CircuitBreakerConfig.Builder.() -> Unit
+) {
+    withCircuitBreakerConfig(CircuitBreakerConfig(baseConfig, config))
+}
+
+/**
+ * Configures a [CircuitBreakerRegistry] with a custom CircuitBreaker configuration.
+ *
+ * ```kotlin
+ * val circuitBreakerRegistry = CircuitBreakerRegistry {
+ *     addCircuitBreakerConfig("sharedConfig1") {
+ *         maxConcurrentCalls(2)
+ *         maxWaitDuration(Duration.ZERO)
+ *     }
+ * }
+ * ```
+ *
+ * @param configName configName for a custom shared CircuitBreaker configuration
+ * @param config methods of [CircuitBreakerConfig.Builder] that customize resulting `CircuitBreakerConfig`
+ */
+inline fun CircuitBreakerRegistry.Builder.addCircuitBreakerConfig(
+    configName: String,
+    config: CircuitBreakerConfig.Builder.() -> Unit
+) {
+    addCircuitBreakerConfig(configName, CircuitBreakerConfig(config))
+}
+
+/**
+ * Configures a [CircuitBreakerRegistry] with a custom CircuitBreaker configuration.
+ *
+ * ```kotlin
+ * val circuitBreakerRegistry = CircuitBreakerRegistry {
+ *     addCircuitBreakerConfig("sharedConfig1", baseCircuitBreakerConfig) {
+ *         maxConcurrentCalls(2)
+ *         maxWaitDuration(Duration.ZERO)
+ *     }
+ * }
+ * ```
+ *
+ * @param configName configName for a custom shared CircuitBreaker configuration
+ * @param baseConfig base `CircuitBreakerConfig`
+ * @param config methods of [CircuitBreakerConfig.Builder] that customize resulting `CircuitBreakerConfig`
+ */
+inline fun CircuitBreakerRegistry.Builder.addCircuitBreakerConfig(
+    configName: String,
+    baseConfig: CircuitBreakerConfig,
+    config: CircuitBreakerConfig.Builder.() -> Unit
+) {
+    addCircuitBreakerConfig(configName, CircuitBreakerConfig(baseConfig, config))
+}
+
+/**
+ * Configures a [CircuitBreakerRegistry] with Tags.
+ *
+ * Tags added to the registry will be added to every instance created by this registry.
+ *
+ * @param tags default tags to add to the registry.
+ */
+fun CircuitBreakerRegistry.Builder.withTags(tags: Map<String, String>) {
+    withTags(VavrHashMap.ofAll(tags))
+}
+
+/**
+ * Configures a [CircuitBreakerRegistry] with Tags.
+ *
+ * Tags added to the registry will be added to every instance created by this registry.
+ *
+ * @param tags default tags to add to the registry.
+ */
+fun CircuitBreakerRegistry.Builder.withTags(vararg tags: Pair<String, String>) {
+    withTags(VavrHashMap.ofEntries(tags.map { VavrTuple2(it.first, it.second) }))
 }

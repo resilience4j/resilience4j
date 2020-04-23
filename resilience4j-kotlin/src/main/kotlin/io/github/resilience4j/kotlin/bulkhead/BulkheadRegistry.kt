@@ -4,7 +4,7 @@ package io.github.resilience4j.kotlin.bulkhead
 
 import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.bulkhead.BulkheadRegistry
-import io.vavr.Tuple2
+import io.vavr.Tuple2 as VavrTuple2
 import io.vavr.collection.HashMap as VavrHashMap
 
 /**
@@ -37,7 +37,7 @@ inline fun BulkheadRegistry(
  * }
  * ```
  *
- * @param config methods of [BulkheadConfig.Builder] that customize resulting `BulkheadConfig`
+ * @param config methods of [BulkheadConfig.Builder] that customize the default `BulkheadConfig`
  */
 inline fun BulkheadRegistry.Builder.withBulkheadConfig(
     config: BulkheadConfig.Builder.() -> Unit
@@ -58,7 +58,7 @@ inline fun BulkheadRegistry.Builder.withBulkheadConfig(
  * ```
  *
  * @param baseConfig base `BulkheadConfig`
- * @param config methods of [BulkheadConfig.Builder] that customize resulting `BulkheadConfig`
+ * @param config methods of [BulkheadConfig.Builder] that customize the default `BulkheadConfig`
  */
 inline fun BulkheadRegistry.Builder.withBulkheadConfig(
     baseConfig: BulkheadConfig,
@@ -132,5 +132,5 @@ fun BulkheadRegistry.Builder.withTags(tags: Map<String, String>) {
  * @param tags default tags to add to the registry.
  */
 fun BulkheadRegistry.Builder.withTags(vararg tags: Pair<String, String>) {
-    withTags(VavrHashMap.ofEntries(tags.map { Tuple2(it.first, it.second) }))
+    withTags(VavrHashMap.ofEntries(tags.map { VavrTuple2(it.first, it.second) }))
 }
