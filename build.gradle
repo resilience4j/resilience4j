@@ -73,6 +73,8 @@ configure(project.coreProjects) {
         duplicateClassesStrategy = 'warn'
     }
 
+
+
     jacocoTestReport {
         reports {
             xml.enabled true
@@ -130,6 +132,9 @@ task jacocoRootTestReport(type: JacocoReport) {
         csv.enabled false
     }
 }
+
+tasks.check.dependsOn tasks.jacocoRootTestReport
+tasks.jacocoRootTestReport.dependsOn tasks.test
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
