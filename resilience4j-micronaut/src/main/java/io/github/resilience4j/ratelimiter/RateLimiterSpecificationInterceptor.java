@@ -1,13 +1,9 @@
 package io.github.resilience4j.ratelimiter;
 
-
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
-import io.micronaut.aop.Interceptor;
-import io.micronaut.aop.InvocationContext;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
-import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.ReturnType;
@@ -16,6 +12,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,10 +41,9 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
             if (result == null) {
                 return result;
             } else {
-                return null;
+                // TODO: need to work out completition stage
+                return io.github.resilience4j.ratelimiter.RateLimiter.decorateCompletionStage(rateLimiter, () -> ((CompletableFuture<?>) result));
             }
-
-
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             ConversionService<?> conversionService = ConversionService.SHARED;
             Object result = context.proceed();
@@ -60,8 +56,14 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
                 return observable.compose(RateLimiterOperator.of(rateLimiter));
             }
         }
-        return null;
+        try {
+            return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, context::proceed).apply();
+        } catch (Throwable throwable) {
+            // TODO: need to call recovertable function
+            return null;
+        }
     }
+
     /**
      * Cached invocation associating a method with a definition a transaction manager.
      */

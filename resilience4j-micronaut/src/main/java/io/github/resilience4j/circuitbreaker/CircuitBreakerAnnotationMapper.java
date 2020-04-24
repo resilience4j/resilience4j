@@ -1,4 +1,4 @@
-package io.github.resilience4j.ratelimiter;
+package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -10,11 +10,11 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
-public class RateLimiterAnnotationMapper implements NamedAnnotationMapper {
+public class CircuitBreakerAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
     @Override
     public String getName() {
-        return "io.github.resilience4j.ratelimiter.annotation.RateLimiter";
+        return "io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker";
     }
 
     @Override

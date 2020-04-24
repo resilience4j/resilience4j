@@ -14,6 +14,7 @@ import io.micronaut.context.annotation.Primary;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,7 @@ public class RateLimiterRegistryFactory {
         return new CompositeCustomizer<>(configCustomizers);
     }
 
-
-    @Factory
+    @Singleton
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterProperties rateLimiterProperties,
                                                    EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
                                                    RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
@@ -105,6 +105,7 @@ public class RateLimiterRegistryFactory {
         RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
         RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
         CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
+
         Map<String, RateLimiterConfig> configs = rateLimiterConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> rateLimiterConfigurationProperties
