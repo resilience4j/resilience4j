@@ -1,7 +1,8 @@
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.inject.annotation.NamedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -19,6 +20,9 @@ public class RateLimiterAnnotationMapper implements NamedAnnotationMapper {
 
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
-        return Collections.singletonList(AnnotationValue.builder(CircuitBreaker.class).build());
+        final AnnotationValueBuilder<RateLimiter> builder = AnnotationValue.builder(RateLimiter.class);
+        annotation.stringValue("fallbackMethod").ifPresent(c -> builder.member("fallbackMethod", c));
+        AnnotationValue<RateLimiter> ann = builder.build();
+        return Collections.singletonList(ann);
     }
 }

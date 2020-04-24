@@ -2,6 +2,7 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.inject.annotation.NamedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -19,6 +20,9 @@ public class CircuitBreakerAnnotationMapper implements NamedAnnotationMapper {
 
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
-        return Collections.singletonList(AnnotationValue.builder(CircuitBreaker.class).build());
+        final AnnotationValueBuilder<CircuitBreaker> builder = AnnotationValue.builder(CircuitBreaker.class);
+        annotation.stringValue("fallbackMethod").ifPresent(c -> builder.member("fallbackMethod", c));
+        AnnotationValue<CircuitBreaker> ann = builder.build();
+        return Collections.singletonList(ann);
     }
 }

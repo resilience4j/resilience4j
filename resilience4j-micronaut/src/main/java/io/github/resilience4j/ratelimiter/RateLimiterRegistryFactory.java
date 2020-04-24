@@ -11,6 +11,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
+import io.micronaut.context.annotation.Requires;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Factory
+@Requires(property = "resilience4j.ratelimiter.enabled")
 public class RateLimiterRegistryFactory {
 
     @Bean

@@ -29,6 +29,7 @@ dependencies {
     testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-retry')
     testCompile project(':resilience4j-annotations')
+    testCompile project(':resilience4j-consumer')
 
 
     testImplementation "io.micronaut:micronaut-http-client"
