@@ -1,20 +1,26 @@
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
-import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Factory
 @Requires(property = "resilience4j.circuitbreaker.enabled")
@@ -29,10 +35,96 @@ public class CircuitBreakerRegistryFactory {
     @Singleton
     @Requires(beans = CircuitBreakerProperties.class)
     public CircuitBreakerRegistry circuitBreakerRegistry(
-        CircuitBreakerProperties timeLimiterProperties,
-        EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventsConsumerRegistry,
-        RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer,
-        @Named("compositeTimeLimiterCustomizer") CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
-        return null;
+        CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties,
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
+        @Named("compositeTimeLimiterCustomizer") CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
+        CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
+            circuitBreakerConfigurationProperties, circuitBreakerRegistryEventConsumer,
+            compositeCircuitBreakerCustomizer);
+        registerEventConsumer(circuitBreakerConfigurationProperties, circuitBreakerRegistry, eventConsumerRegistry);
+        initCircuitBreakerRegistry(circuitBreakerConfigurationProperties, circuitBreakerRegistry, compositeCircuitBreakerCustomizer);
+        return circuitBreakerRegistry;
+    }
+
+
+    @Bean
+    @Primary
+    public RegistryEventConsumer<CircuitBreaker> timeLimiterRegistryEventConsumer(
+        Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers
+    ) {
+        return new CompositeRegistryEventConsumer<>(
+            optionalRegistryEventConsumers.orElseGet(ArrayList::new)
+        );
+    }
+
+    @Bean
+    public EventConsumerRegistry<CircuitBreakerEvent> timeLimiterEventsConsumerRegistry() {
+        return new DefaultEventConsumerRegistry<>();
+    }
+
+
+    /**
+     * Initializes the CircuitBreaker registry.
+     *
+     * @param circuitBreakerRegistry The circuit breaker registry.
+     * @param customizerMap
+     */
+    void initCircuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties,
+                                    CircuitBreakerRegistry circuitBreakerRegistry,
+                                    CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
+        circuitBreakerConfigurationProperties.getInstances().forEach(
+            (name, properties) -> circuitBreakerRegistry.circuitBreaker(name,
+                circuitBreakerConfigurationProperties
+                    .createCircuitBreakerConfig(name, properties, customizerMap))
+        );
+    }
+
+    /**
+     * Initializes a circuitBreaker registry.
+     *
+     * @param circuitBreakerProperties The circuit breaker configuration properties.
+     * @param customizerMap
+     * @return a CircuitBreakerRegistry
+     */
+    CircuitBreakerRegistry createCircuitBreakerRegistry(
+        CircuitBreakerConfigurationProperties circuitBreakerProperties,
+        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
+
+        Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
+            .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> circuitBreakerProperties
+                    .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
+                        customizerMap)));
+
+        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(circuitBreakerProperties.getTags()));
+    }
+
+    /**
+     * Registers the post creation consumer function that registers the consumer events to the
+     * circuit breakers.
+     *
+     * @param circuitBreakerRegistry The circuit breaker registry.
+     * @param eventConsumerRegistry  The event consumer registry.
+     */
+    public void registerEventConsumer(CircuitBreakerConfigurationProperties circuitBreakerProperties,CircuitBreakerRegistry circuitBreakerRegistry,
+                                      EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+        circuitBreakerRegistry.getEventPublisher().onEntryAdded(
+            event -> registerEventConsumer(circuitBreakerProperties, eventConsumerRegistry, event.getAddedEntry()));
+    }
+
+
+    private void registerEventConsumer( CircuitBreakerConfigurationProperties circuitBreakerRegistry,
+        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        CircuitBreaker circuitBreaker) {
+        int eventConsumerBufferSize = circuitBreakerRegistry
+            .findCircuitBreakerProperties(circuitBreaker.getName())
+            .map(
+                io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .orElse(100);
+        circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
+            .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
     }
 }

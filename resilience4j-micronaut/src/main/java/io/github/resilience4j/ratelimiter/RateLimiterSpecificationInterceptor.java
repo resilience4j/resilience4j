@@ -47,9 +47,21 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return invokeForCompletion(context, rateLimiter);
+            Object result = context.proceed();
+            if (result == null) {
+                return result;
+            }
+            return rateLimiter.executeCompletionStage(() -> ((CompletableFuture<?>) result));
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
-            return invokeForPublisher(context, rateLimiter);
+            ConversionService<?> conversionService = ConversionService.SHARED;
+            Object result = context.proceed();
+            if (result == null) {
+                return result;
+            }
+            Flowable<?> observable = conversionService
+                .convert(result, Flowable.class)
+                .orElseThrow(() -> new IllegalStateException("Unconvertible Reactive type: " + result));
+            return observable.compose(RateLimiterOperator.of(rateLimiter));
         }
         try {
             return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, context::proceed).apply();
@@ -57,25 +69,5 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
             throw new RuntimeException("//TODO: need to implement");
         }
 
-    }
-
-    public Object invokeForCompletion(MethodInvocationContext<Object, Object> context, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
-        Object result = context.proceed();
-        if (result == null) {
-            return result;
-        }
-        return rateLimiter.executeCompletionStage(() -> ((CompletableFuture<?>) result));
-    }
-
-    public Object invokeForPublisher(MethodInvocationContext<Object, Object> context, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
-        ConversionService<?> conversionService = ConversionService.SHARED;
-        Object result = context.proceed();
-        if (result == null) {
-            return result;
-        }
-        Flowable<?> observable = conversionService
-            .convert(result, Flowable.class)
-            .orElseThrow(() -> new IllegalStateException("Unconvertible Reactive type: " + result));
-        return observable.compose(RateLimiterOperator.of(rateLimiter));
     }
 }
