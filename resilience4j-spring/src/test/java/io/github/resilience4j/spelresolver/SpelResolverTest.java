@@ -185,6 +185,16 @@ public class SpelResolverTest {
         assertThat(result).isEqualTo("");
     }
 
+    @Test
+    public void dollarTest() throws Exception {
+        SpelResolverTest target = new SpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{}, "$");
+
+        assertThat(result).isEqualTo("$");
+    }
+
     public String testMethod(String parameter) {
         return "test";
     }

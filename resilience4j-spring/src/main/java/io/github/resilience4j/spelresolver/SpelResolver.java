@@ -25,8 +25,8 @@ import org.springframework.util.StringValueResolver;
 import java.lang.reflect.Method;
 
 public class SpelResolver implements EmbeddedValueResolverAware {
-    private static final String NON_SPEL_REGEX = "^[^#$].+$";
     private static final String BEAN_SPEL_REGEX = "^[$#]\\{.+}$";
+    private static final String METHOD_SPEL_REGEX = "^#.+$";
 
     private final SpelExpressionParser expressionParser;
     private final ParameterNameDiscoverer parameterNameDiscoverer;
@@ -38,7 +38,7 @@ public class SpelResolver implements EmbeddedValueResolverAware {
     }
 
     public String resolve(Method method, Object[] arguments, String spelExpression) {
-        if (StringUtils.isEmpty(spelExpression) || spelExpression.matches(NON_SPEL_REGEX)) {
+        if (StringUtils.isEmpty(spelExpression)) {
             return spelExpression;
         }
 
@@ -46,11 +46,15 @@ public class SpelResolver implements EmbeddedValueResolverAware {
             return stringValueResolver.resolveStringValue(spelExpression);
         }
 
-        SpelRootObject rootObject = new SpelRootObject(method, arguments);
-        MethodBasedEvaluationContext evaluationContext = new MethodBasedEvaluationContext(rootObject, method, arguments, parameterNameDiscoverer);
-        Object evaluated = expressionParser.parseExpression(spelExpression).getValue(evaluationContext);
+        if (spelExpression.matches(METHOD_SPEL_REGEX)) {
+            SpelRootObject rootObject = new SpelRootObject(method, arguments);
+            MethodBasedEvaluationContext evaluationContext = new MethodBasedEvaluationContext(rootObject, method, arguments, parameterNameDiscoverer);
+            Object evaluated = expressionParser.parseExpression(spelExpression).getValue(evaluationContext);
 
-        return (String) evaluated;
+            return (String) evaluated;
+        }
+
+        return spelExpression;
     }
 
     @Override
