@@ -20,6 +20,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,7 @@ public class RateLimiterConfigurationSpringTest {
     }
 
     @Configuration
-    @ComponentScan({"io.github.resilience4j.ratelimiter", "io.github.resilience4j.fallback"})
+    @ComponentScan({"io.github.resilience4j.ratelimiter", "io.github.resilience4j.fallback", "io.github.resilience4j.spelresolver"})
     public static class ConfigWithOverrides {
 
         private RateLimiterRegistry rateLimiterRegistry;
@@ -72,11 +73,14 @@ public class RateLimiterConfigurationSpringTest {
         }
 
         @Bean
-        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
+        public RateLimiterAspect rateLimiterAspect(
+            RateLimiterRegistry rateLimiterRegistry,
             @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
-            FallbackDecorators recoveryDecorators) {
+            FallbackDecorators recoveryDecorators,
+            SpelResolver spelResolver
+        ) {
             rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
-                rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators);
+                rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators, spelResolver);
             return rateLimiterAspect;
         }
 

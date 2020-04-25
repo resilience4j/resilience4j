@@ -26,6 +26,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -139,12 +140,15 @@ public class RetryConfiguration {
      */
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
+    public RetryAspect retryAspect(
+        RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-            fallbackDecorators);
+            fallbackDecorators, spelResolver);
     }
 
     @Bean

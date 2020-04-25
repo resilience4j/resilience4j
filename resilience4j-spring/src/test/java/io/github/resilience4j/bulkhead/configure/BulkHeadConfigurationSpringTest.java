@@ -23,7 +23,7 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
-import org.assertj.core.api.Assertions;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +63,7 @@ public class BulkHeadConfigurationSpringTest {
     }
 
     @Configuration
-    @ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback"})
+    @ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback", "io.github.resilience4j.spelresolver"})
     public static class ConfigWithOverrides {
 
         private BulkheadRegistry bulkheadRegistry;
@@ -91,13 +91,16 @@ public class BulkHeadConfigurationSpringTest {
         }
 
         @Bean
-        public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
+        public BulkheadAspect bulkheadAspect(
+            BulkheadRegistry bulkheadRegistry,
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
             @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-            FallbackDecorators fallbackDecorators) {
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
             bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(),
                 threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
-                fallbackDecorators);
+                fallbackDecorators, spelResolver);
             return bulkheadAspect;
         }
 

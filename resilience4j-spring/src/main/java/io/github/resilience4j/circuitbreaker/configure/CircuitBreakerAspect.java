@@ -20,8 +20,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.ValueResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,10 +30,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
-import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -66,7 +64,7 @@ import java.util.concurrent.CompletionStage;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered {
+public class CircuitBreakerAspect implements Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(CircuitBreakerAspect.class);
 
@@ -75,16 +73,18 @@ public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered
     private final @Nullable
     List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
     private final FallbackDecorators fallbackDecorators;
-    private StringValueResolver embeddedValueResolver;
+    private final SpelResolver spelResolver;
 
     public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
-        CircuitBreakerRegistry circuitBreakerRegistry,
-        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+                                CircuitBreakerRegistry circuitBreakerRegistry,
+                                @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+                                FallbackDecorators fallbackDecorators,
+                                SpelResolver spelResolver) {
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
+        this.spelResolver = spelResolver;
     }
 
     @Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
@@ -102,12 +102,12 @@ public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered
         if (circuitBreakerAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
-        String backend = circuitBreakerAnnotation.name();
+        String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), circuitBreakerAnnotation.name());
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
             methodName, backend);
         Class<?> returnType = method.getReturnType();
 
-        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, circuitBreakerAnnotation.fallbackMethod());
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), circuitBreakerAnnotation.fallbackMethod());
         if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         }
@@ -191,10 +191,5 @@ public class CircuitBreakerAspect implements EmbeddedValueResolverAware, Ordered
     @Override
     public int getOrder() {
         return circuitBreakerProperties.getCircuitBreakerAspectOrder();
-    }
-
-    @Override
-    public void setEmbeddedValueResolver(StringValueResolver resolver) {
-        this.embeddedValueResolver = resolver;
     }
 }

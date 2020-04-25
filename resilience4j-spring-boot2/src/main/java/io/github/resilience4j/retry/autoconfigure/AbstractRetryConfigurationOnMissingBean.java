@@ -25,6 +25,8 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.*;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -40,7 +42,7 @@ import java.util.Optional;
  * {@link Configuration Configuration} for resilience4j-retry.
  */
 @Configuration
-@Import(FallbackConfigurationOnMissingBean.class)
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
 public abstract class AbstractRetryConfigurationOnMissingBean {
 
     protected final RetryConfiguration retryConfiguration;
@@ -89,13 +91,16 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
     @ConditionalOnMissingBean
-    public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
+    public RetryAspect retryAspect(
+        RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return retryConfiguration
             .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-                fallbackDecorators);
+                fallbackDecorators, spelResolver);
     }
 
     @Bean

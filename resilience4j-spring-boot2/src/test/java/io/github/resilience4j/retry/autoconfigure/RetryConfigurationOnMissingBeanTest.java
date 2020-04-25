@@ -24,6 +24,7 @@ import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.retry.configure.RetryAspectExt;
 import io.github.resilience4j.retry.configure.RetryConfiguration;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,11 +89,14 @@ public class RetryConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public RetryAspect retryAspect(RetryRegistry retryRegistry,
+        public RetryAspect retryAspect(
+            RetryRegistry retryRegistry,
             @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
-            FallbackDecorators fallbackDecorators) {
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
             this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry,
-                retryAspectExts, fallbackDecorators);
+                retryAspectExts, fallbackDecorators, spelResolver);
             return retryAspect;
         }
 
