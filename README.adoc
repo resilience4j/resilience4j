@@ -118,52 +118,58 @@ TIP: For core modules package or `Decorators` builder see *https://mvnrepository
 
 [cols="<.<*", options="header"]
 |===
-|name |how does it work? | description |links
+|name |how does it work? |description |links
 
 |*Retry*
 |repeats failed executions
 |Many faults are transient and may self-correct after a short delay.
 |<<circuitbreaker-retry-fallback,overview>>,
-https://resilience4j.readme.io/docs/retry[documentation]
+https://resilience4j.readme.io/docs/retry[documentation],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Circuit Breaker**
 |temporary blocks possible failures
 |When a system is seriously struggling, failing fast is better than making clients wait.
 |<<circuitbreaker-retry-fallback,overview>>,
 https://resilience4j.readme.io/docs/circuitbreaker[documentation],
-link:resilience4j-feign/README.adoc[Feign],
-link:resilience4j-retrofit/README.adoc[Retrofit]
+https://resilience4j.readme.io/docs/feign[Feign],
+https://resilience4j.readme.io/docs/retrofit[Retrofit],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Rate Limiter**
-| limits executions/period
-| Limit the rate of incoming requests.
+|limits executions/period
+|Limit the rate of incoming requests.
 |<<bulkhead,overview>>,
 https://resilience4j.readme.io/docs/ratelimiter[documentation],
-link:resilience4j-feign/README.adoc[Feign],
-link:resilience4j-retrofit/README.adoc[Retrofit]
+https://resilience4j.readme.io/docs/feign[Feign],
+https://resilience4j.readme.io/docs/retrofit[Retrofit],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Time Limiter**
 |limits duration of execution
 |Beyond a certain wait interval, a successful result is unlikely.
-|
+|https://resilience4j.readme.io/docs/timeout[documentation],
+https://resilience4j.readme.io/docs/retrofit[Retrofit],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Bulkhead**
 |limits concurrent executions
-| Resources are isolated into pools so that if one fails, the others will continue working.
-| <<bulkhead,overview>>,
-https://resilience4j.readme.io/docs/bulkhead[documentation]
+|Resources are isolated into pools so that if one fails, the others will continue working.
+|<<bulkhead,overview>>,
+https://resilience4j.readme.io/docs/bulkhead[documentation],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Cache**
 |memorizes a successful result
-| Some proportion of requests may be similar.
-|
+|Some proportion of requests may be similar.
+|https://resilience4j.readme.io/docs/cache[documentation]
 
 |**Fallback**
 |provides an alternative result for failures
 |Things will still fail - plan what you will do when that happens.
 |<<circuitbreaker-retry-fallback,Try::recover>>,
 https://resilience4j.readme.io/docs/getting-started-3#section-annotations[Spring],
-link:resilience4j-feign/README.adoc[Feign]
+https://resilience4j.readme.io/docs/feign[Feign]
 
 |===
 
@@ -363,6 +369,11 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 
 [cols="4*"]
 |===
+
+|0:34
+|https://www.youtube.com/watch?v=kR2sm1zelI4[Battle of the Circuit Breakers: Resilience4J vs Istio]
+|Nicolas Frankel
+|GOTO Berlin
 
 |0:33
 |https://www.youtube.com/watch?v=AwcjOhD91Q0[Battle of the Circuit Breakers: Istio vs. Hystrix/Resilience4J]
