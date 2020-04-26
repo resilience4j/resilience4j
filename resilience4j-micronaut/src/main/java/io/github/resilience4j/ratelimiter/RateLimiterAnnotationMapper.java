@@ -3,6 +3,7 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.NamedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
 
@@ -11,6 +12,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
+@Internal
 public class RateLimiterAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
     @Override

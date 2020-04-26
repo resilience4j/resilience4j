@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.util.Toggleable;
 
@@ -27,7 +28,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @ConfigurationProperties("resilience4j.ratelimiter")
-public class RateLimiterProperties extends io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties implements Toggleable {
+public class RateLimiterProperties extends RateLimiterConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public void setConfigs(Map<String, InstanceProperties> configs){

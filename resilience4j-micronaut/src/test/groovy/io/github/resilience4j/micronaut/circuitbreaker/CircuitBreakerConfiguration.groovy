@@ -1,4 +1,6 @@
 package io.github.resilience4j.micronaut.circuitbreaker
 
-class CircuitBreakerConfiguration {
+import spock.lang.Specification
+
+class CircuitBreakerConfiguration extends Specification {
 }

@@ -20,7 +20,6 @@ class MicronautBootCommonTest extends Specification {
         !applicationContext.containsBean(CircuitBreakerRegistry)
         !applicationContext.containsBean(BulkheadRegistry)
 
-
         cleanup:
         applicationContext.close()
     }

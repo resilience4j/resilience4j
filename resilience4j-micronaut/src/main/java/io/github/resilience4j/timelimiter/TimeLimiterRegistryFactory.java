@@ -52,8 +52,8 @@ public class TimeLimiterRegistryFactory {
 
     @Bean
     @Primary
-    public RegistryEventConsumer<TimeLimiterEvent> timeLimiterRegistryEventConsumer(
-        Optional<List<RegistryEventConsumer<TimeLimiterEvent>>> optionalRegistryEventConsumers
+    public RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer(
+        Optional<List<RegistryEventConsumer<TimeLimiter>>> optionalRegistryEventConsumers
     ) {
         return new CompositeRegistryEventConsumer<>(
             optionalRegistryEventConsumers.orElseGet(ArrayList::new)
