@@ -1,28 +1,69 @@
 package io.github.resilience4j.micronaut.ratelimiter
 
-
+import io.github.resilience4j.micronaut.circuitbreaker.CircuitBreakerSpec
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.micronaut.context.ApplicationContext
-import io.micronaut.context.DefaultApplicationContext
-import io.micronaut.context.env.MapPropertySource
+import io.micronaut.context.annotation.Property
+import io.micronaut.http.annotation.Controller
+import io.micronaut.http.client.DefaultHttpClientConfiguration
+import io.micronaut.http.client.HttpClient
+import io.micronaut.http.client.RxHttpClient
+import io.micronaut.http.client.annotation.Client
+import io.micronaut.runtime.server.EmbeddedServer
+import io.micronaut.test.annotation.MicronautTest
+import spock.lang.AutoCleanup
+import spock.lang.Shared
 import spock.lang.Specification
 
+import javax.inject.Inject
+import java.time.Duration
+
+@MicronautTest
+@Property(name = "resilience4j.ratelimiter.enabled", value = "true")
 class RateLimitSpec extends Specification {
-    void "test basic configuration functionality"() {
+    @Inject ApplicationContext applicationContext
+
+    void "default configuration"() {
         given:
-        ApplicationContext applicationContext = new DefaultApplicationContext("test")
-        applicationContext.environment.addPropertySource(MapPropertySource.of(
-            "test",
-            ["resilience4j.ratelimiter.configs.default.limitForPeriod": 100,
-            "resilience4j.ratelimiter.enabled" : true]
-        ))
-        applicationContext.start()
+        def registry = applicationContext.getBean(RateLimiterRegistry)
 
         expect:
-        def registry = applicationContext.getBean(RateLimiterRegistry)
-        registry.rateLimiter("default").rateLimiterConfig.limitForPeriod == 100
+        def ratelimiter = registry.rateLimiter("default")
+        ratelimiter != null
 
-        cleanup:
-        applicationContext.stop()
+        ratelimiter.rateLimiterConfig.limitForPeriod == 10
+        ratelimiter.rateLimiterConfig.limitRefreshPeriod.seconds == 1
+        ratelimiter.rateLimiterConfig.timeoutDuration.seconds == 0
+        ratelimiter.getName() == "default"
+    }
+
+    void "backend-a configuration"() {
+        given:
+        def registry = applicationContext.getBean(RateLimiterRegistry)
+
+        expect:
+        def ratelimiter = registry.rateLimiter("backend-a")
+        ratelimiter != null
+
+        ratelimiter.rateLimiterConfig.limitForPeriod == 10
+        ratelimiter.rateLimiterConfig.limitRefreshPeriod.seconds == 1
+        ratelimiter.rateLimiterConfig.timeoutDuration.seconds == 0
+
+        ratelimiter.getName() == "backend-a"
+    }
+
+    void "backend-b configuration"() {
+        given:
+        def registry = applicationContext.getBean(RateLimiterRegistry)
+
+        expect:
+        def ratelimiter = registry.rateLimiter("backend-b")
+        ratelimiter != null
+
+        ratelimiter.rateLimiterConfig.limitForPeriod == 100
+        ratelimiter.rateLimiterConfig.limitRefreshPeriod == Duration.ofMillis(500)
+        ratelimiter.rateLimiterConfig.timeoutDuration.seconds == 3
+
+        ratelimiter.getName() == "backend-b"
     }
 }
