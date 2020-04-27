@@ -31,8 +31,9 @@ inline fun ThreadPoolBulkheadRegistry(
  * ```kotlin
  * val bulkheadRegistry = ThreadPoolBulkheadRegistry {
  *     withThreadPoolBulkheadConfig {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         maxThreadPoolSize(8)
+ *         queueCapacity(10)
+ *         keepAliveDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
@@ -51,8 +52,9 @@ inline fun ThreadPoolBulkheadRegistry.Builder.withThreadPoolBulkheadConfig(
  * ```kotlin
  * val bulkheadRegistry = ThreadPoolBulkheadRegistry {
  *     withThreadPoolBulkheadConfig(baseThreadPoolBulkheadConfig) {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         maxThreadPoolSize(8)
+ *         queueCapacity(10)
+ *         keepAliveDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
@@ -73,8 +75,9 @@ inline fun ThreadPoolBulkheadRegistry.Builder.withThreadPoolBulkheadConfig(
  * ```kotlin
  * val bulkheadRegistry = ThreadPoolBulkheadRegistry {
  *     addThreadPoolBulkheadConfig("sharedConfig1") {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         maxThreadPoolSize(8)
+ *         queueCapacity(10)
+ *         keepAliveDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
@@ -95,8 +98,9 @@ inline fun ThreadPoolBulkheadRegistry.Builder.addThreadPoolBulkheadConfig(
  * ```kotlin
  * val bulkheadRegistry = ThreadPoolBulkheadRegistry {
  *     addThreadPoolBulkheadConfig("sharedConfig1", baseThreadPoolBulkheadConfig) {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         maxThreadPoolSize(8)
+ *         queueCapacity(10)
+ *         keepAliveDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```

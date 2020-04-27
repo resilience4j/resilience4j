@@ -31,8 +31,8 @@ inline fun CircuitBreakerRegistry(
  * ```kotlin
  * val circuitBreakerRegistry = CircuitBreakerRegistry {
  *     withCircuitBreakerConfig {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         failureRateThreshold(50)
+ *         waitDurationInOpenState(Duration.ofSeconds(30))
  *     }
  * }
  * ```
@@ -51,8 +51,8 @@ inline fun CircuitBreakerRegistry.Builder.withCircuitBreakerConfig(
  * ```kotlin
  * val circuitBreakerRegistry = CircuitBreakerRegistry {
  *     withCircuitBreakerConfig(baseCircuitBreakerConfig) {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         failureRateThreshold(50)
+ *         waitDurationInOpenState(Duration.ofSeconds(30))
  *     }
  * }
  * ```
@@ -73,8 +73,8 @@ inline fun CircuitBreakerRegistry.Builder.withCircuitBreakerConfig(
  * ```kotlin
  * val circuitBreakerRegistry = CircuitBreakerRegistry {
  *     addCircuitBreakerConfig("sharedConfig1") {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         failureRateThreshold(50)
+ *         waitDurationInOpenState(Duration.ofSeconds(30))
  *     }
  * }
  * ```
@@ -95,8 +95,8 @@ inline fun CircuitBreakerRegistry.Builder.addCircuitBreakerConfig(
  * ```kotlin
  * val circuitBreakerRegistry = CircuitBreakerRegistry {
  *     addCircuitBreakerConfig("sharedConfig1", baseCircuitBreakerConfig) {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         failureRateThreshold(50)
+ *         waitDurationInOpenState(Duration.ofSeconds(30))
  *     }
  * }
  * ```

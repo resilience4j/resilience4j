@@ -31,8 +31,9 @@ inline fun RateLimiterRegistry(
  * ```kotlin
  * val rateLimiterRegistry = RateLimiterRegistry {
  *     withRateLimiterConfig {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         limitRefreshPeriod(Duration.ofSeconds(10))
+ *         limitForPeriod(10)
+ *         timeoutDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
@@ -51,8 +52,9 @@ inline fun RateLimiterRegistry.Builder.withRateLimiterConfig(
  * ```kotlin
  * val rateLimiterRegistry = RateLimiterRegistry {
  *     withRateLimiterConfig(baseRateLimiterConfig) {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         limitRefreshPeriod(Duration.ofSeconds(10))
+ *         limitForPeriod(10)
+ *         timeoutDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
@@ -73,8 +75,9 @@ inline fun RateLimiterRegistry.Builder.withRateLimiterConfig(
  * ```kotlin
  * val rateLimiterRegistry = RateLimiterRegistry {
  *     addRateLimiterConfig("sharedConfig1") {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         limitRefreshPeriod(Duration.ofSeconds(10))
+ *         limitForPeriod(10)
+ *         timeoutDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
@@ -95,8 +98,9 @@ inline fun RateLimiterRegistry.Builder.addRateLimiterConfig(
  * ```kotlin
  * val rateLimiterRegistry = RateLimiterRegistry {
  *     addRateLimiterConfig("sharedConfig1", baseRateLimiterConfig) {
- *         maxConcurrentCalls(2)
- *         maxWaitDuration(Duration.ZERO)
+ *         limitRefreshPeriod(Duration.ofSeconds(10))
+ *         limitForPeriod(10)
+ *         timeoutDuration(Duration.ofSeconds(1))
  *     }
  * }
  * ```
