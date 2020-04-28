@@ -35,10 +35,10 @@ dependencies {
     testImplementation "io.micronaut:micronaut-http-server-netty"
 
     testCompile(libraries.micronaut_inject)
-    testCompile(libraries.micronaut_spock){
+    testCompile(libraries.micronaut_spock)
+    testCompile(libraries.spock){
         exclude module:'groovy-all'
     }
-    testCompile(libraries.spock)
     testCompile(libraries.groovy)
 }
 ext.moduleName = 'io.github.resilience4j.micronaut'
