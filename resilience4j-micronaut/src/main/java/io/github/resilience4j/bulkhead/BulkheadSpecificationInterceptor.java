@@ -56,7 +56,7 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
 
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.bulkhead.annotation.Bulkhead.class, "fallbackMethod").orElse("");
+        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.Bulkhead.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
         return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
@@ -64,12 +64,12 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
 
-        Optional<AnnotationValue<io.github.resilience4j.bulkhead.annotation.Bulkhead>> opt = context.findAnnotation(io.github.resilience4j.bulkhead.annotation.Bulkhead.class);
+        Optional<AnnotationValue<io.github.resilience4j.annotation.Bulkhead>> opt = context.findAnnotation(io.github.resilience4j.annotation.Bulkhead.class);
         if (!opt.isPresent()) {
             return context.proceed();
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.bulkhead.annotation.Bulkhead.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.Bulkhead.class).orElse("default");
 
         Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
         ReturnType<Object> rt = context.getReturnType();

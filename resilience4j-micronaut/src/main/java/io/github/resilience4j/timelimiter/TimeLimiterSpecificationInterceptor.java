@@ -58,20 +58,20 @@ public class TimeLimiterSpecificationInterceptor implements MethodInterceptor<Ob
 
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.timelimiter.annotation.TimeLimiter.class, "fallbackMethod").orElse("");
+        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.TimeLimiter.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
         return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
-        Optional<AnnotationValue<io.github.resilience4j.timelimiter.annotation.TimeLimiter>> opt = context.findAnnotation(io.github.resilience4j.timelimiter.annotation.TimeLimiter.class);
+        Optional<AnnotationValue<io.github.resilience4j.annotation.TimeLimiter>> opt = context.findAnnotation(io.github.resilience4j.annotation.TimeLimiter.class);
         if (!opt.isPresent()) {
             return context.proceed();
         }
 
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.timelimiter.annotation.TimeLimiter.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.TimeLimiter.class).orElse("default");
         TimeLimiter timeLimiter = this.timeLimiterRegistry.timeLimiter(name);
 
         ReturnType<Object> rt = context.getReturnType();

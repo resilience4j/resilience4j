@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.retry;
 
-import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.annotation.Retry;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -32,7 +32,7 @@ public class RetryAnnotationMapper  implements NamedAnnotationMapper {
     @Nonnull
     @Override
     public String getName() {
-        return "io.github.resilience4j.retry.annotation.Retry";
+        return "io.github.resilience4j.annotation.Retry";
     }
 
     @Override

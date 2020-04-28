@@ -59,20 +59,20 @@ public class RetrySpecificationInterceptor implements MethodInterceptor<Object,O
 
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.retry.annotation.Retry.class, "fallbackMethod").orElse("");
+        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.Retry.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
         return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override
     public Object intercept(MethodInvocationContext context) {
-        Optional<AnnotationValue<io.github.resilience4j.retry.annotation.Retry>> opt = context.findAnnotation(io.github.resilience4j.retry.annotation.Retry.class);
+        Optional<AnnotationValue<io.github.resilience4j.annotation.Retry>> opt = context.findAnnotation(io.github.resilience4j.annotation.Retry.class);
         if (!opt.isPresent()) {
             return context.proceed();
         }
 
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.retry.annotation.Retry.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.Retry.class).orElse("default");
         Retry retry = retryRegistry.retry(name);
 
         ReturnType<Object> rt = context.getReturnType();

@@ -1,4 +1,8 @@
 package io.github.resilience4j.micronaut.circuitbreaker
 
-class CircuitbreakerService {
+import io.github.resilience4j.micronaut.TestDummyService
+import io.micronaut.http.annotation.Controller
+
+@Controller("/circuitbreaker")
+class CircuitbreakerService extends TestDummyService {
 }

@@ -15,12 +15,12 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.annotation.NamedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
+import io.github.resilience4j.annotation.Bulkhead;
 
 import javax.annotation.Nonnull;
 import java.lang.annotation.Annotation;
@@ -32,7 +32,7 @@ public class BulkheadAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
     @Override
     public String getName() {
-        return "io.github.resilience4j.bulkhead.annotation.Bulkhead";
+        return "io.github.resilience4j.annotation.Bulkhead";
     }
 
     @Override

@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import io.github.resilience4j.annotation.TimeLimiter;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -32,7 +32,7 @@ public class TimeLimiterAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
     @Override
     public String getName() {
-        return "io.github.resilience4j.timelimiter.annotation.TimeLimiter";
+        return "io.github.resilience4j.annotation.TimeLimiter";
     }
 
     @Override

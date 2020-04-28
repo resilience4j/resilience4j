@@ -19,7 +19,6 @@ dependencies {
     compileOnly project(':resilience4j-retry')
     compileOnly project(':resilience4j-rxjava2')
     compileOnly project(':resilience4j-bulkhead')
-    compileOnly project(':resilience4j-annotations')
     compileOnly project(':resilience4j-consumer')
     compile project(':resilience4j-framework-common')
 
@@ -28,8 +27,8 @@ dependencies {
     testCompile project(':resilience4j-timelimiter')
     testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-retry')
-    testCompile project(':resilience4j-annotations')
     testCompile project(':resilience4j-consumer')
+    testCompile "io.micronaut:micronaut-aop"
 
     testImplementation "io.micronaut:micronaut-http-client"
     testImplementation "io.micronaut:micronaut-http-server-netty"
@@ -40,5 +39,7 @@ dependencies {
         exclude module:'groovy-all'
     }
     testCompile(libraries.groovy)
+    testImplementation "io.micronaut:micronaut-http-client"
+    testImplementation "io.micronaut:micronaut-http-server-netty"
 }
 ext.moduleName = 'io.github.resilience4j.micronaut'

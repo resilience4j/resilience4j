@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.annotation.RateLimiter;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -32,7 +32,7 @@ public class RateLimiterAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
     @Override
     public String getName() {
-        return "io.github.resilience4j.ratelimiter.annotation.RateLimiter";
+        return "io.github.resilience4j.annotation.RateLimiter";
     }
 
     @Override

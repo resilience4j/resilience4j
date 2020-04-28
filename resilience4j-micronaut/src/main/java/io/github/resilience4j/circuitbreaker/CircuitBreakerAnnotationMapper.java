@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.annotation.CircuitBreaker;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
 import io.micronaut.core.annotation.Internal;
@@ -32,7 +32,7 @@ public class CircuitBreakerAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
     @Override
     public String getName() {
-        return "io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker";
+        return "io.github.resilience4j.annotation.CircuitBreaker";
     }
 
     @Override
