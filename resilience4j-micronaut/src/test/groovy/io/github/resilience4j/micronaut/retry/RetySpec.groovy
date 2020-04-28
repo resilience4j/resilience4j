@@ -1,6 +1,9 @@
 package io.github.resilience4j.micronaut.retry
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties
+import io.github.resilience4j.micronaut.circuitbreaker.RecordFailurePredicate
+import io.github.resilience4j.retry.RetryRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.annotation.Controller
@@ -16,16 +19,14 @@ class RetySpec extends Specification{
 
     void "default configuration"() {
         given:
-        def config = applicationContext.getBean(RetryConfigurationProperties)
+        def registry = applicationContext.getBean(RetryRegistry)
+        def retry = registry.retry("default")
 
         expect:
-        def defaultConfig = config.configs['default']
-//        defaultConfig.ignoreExceptions.contains()
-    }
+        retry != null
 
-
-    @Controller("/retry")
-    static class RetryController {
+        retry.retryConfig.maxAttempts == 3
 
     }
+
 }

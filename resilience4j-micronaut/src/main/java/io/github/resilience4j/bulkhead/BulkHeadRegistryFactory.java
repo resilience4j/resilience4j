@@ -1,18 +1,37 @@
+/*
+ * Copyright 2019 Michael Pollind
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +56,7 @@ public class BulkHeadRegistryFactory {
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
-        @Named("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
+        @Named("compositeBulkHeadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
             bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
@@ -49,6 +68,22 @@ public class BulkHeadRegistryFactory {
                         name)));
         return bulkheadRegistry;
     }
+
+    @Bean
+    @Primary
+    public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(
+        Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers
+    ) {
+        return new CompositeRegistryEventConsumer<>(
+            optionalRegistryEventConsumers.orElseGet(ArrayList::new)
+        );
+    }
+
+    @Bean
+    public EventConsumerRegistry<BulkheadEvent> bulkheadEventsConsumerRegistry() {
+        return new DefaultEventConsumerRegistry<>();
+    }
+
 
     /**
      * Registers the post creation consumer function that registers the consumer events to the

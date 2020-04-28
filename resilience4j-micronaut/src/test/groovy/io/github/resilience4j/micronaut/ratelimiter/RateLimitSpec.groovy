@@ -26,9 +26,9 @@ class RateLimitSpec extends Specification {
     void "default configuration"() {
         given:
         def registry = applicationContext.getBean(RateLimiterRegistry)
+        def ratelimiter = registry.rateLimiter("default")
 
         expect:
-        def ratelimiter = registry.rateLimiter("default")
         ratelimiter != null
 
         ratelimiter.rateLimiterConfig.limitForPeriod == 10
@@ -40,9 +40,9 @@ class RateLimitSpec extends Specification {
     void "backend-a configuration"() {
         given:
         def registry = applicationContext.getBean(RateLimiterRegistry)
+        def ratelimiter = registry.rateLimiter("backend-a")
 
         expect:
-        def ratelimiter = registry.rateLimiter("backend-a")
         ratelimiter != null
 
         ratelimiter.rateLimiterConfig.limitForPeriod == 10
@@ -55,9 +55,9 @@ class RateLimitSpec extends Specification {
     void "backend-b configuration"() {
         given:
         def registry = applicationContext.getBean(RateLimiterRegistry)
+        def ratelimiter = registry.rateLimiter("backend-b")
 
         expect:
-        def ratelimiter = registry.rateLimiter("backend-b")
         ratelimiter != null
 
         ratelimiter.rateLimiterConfig.limitForPeriod == 100
