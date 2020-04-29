@@ -20,7 +20,6 @@ package io.github.resilience4j.kotlin.ratelimiter
 
 import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.ratelimiter.RateLimiter
-import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
@@ -29,12 +28,11 @@ import java.time.Duration
 
 class CoroutineRateLimiterTest {
 
-    private fun noWaitConfig() = RateLimiterConfig
-        .custom()
-        .limitRefreshPeriod(Duration.ofSeconds(10))
-        .limitForPeriod(10)
-        .timeoutDuration(Duration.ZERO)
-        .build()
+    private fun noWaitConfig() = RateLimiterConfig {
+        limitRefreshPeriod(Duration.ofSeconds(10))
+        limitForPeriod(10)
+        timeoutDuration(Duration.ZERO)
+    }
 
     @Test
     fun `should execute successful function`() {

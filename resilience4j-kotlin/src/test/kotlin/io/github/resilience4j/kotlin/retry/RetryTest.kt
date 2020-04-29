@@ -20,7 +20,6 @@ package io.github.resilience4j.kotlin.retry
 
 import io.github.resilience4j.kotlin.HelloWorldService
 import io.github.resilience4j.retry.Retry
-import io.github.resilience4j.retry.RetryConfig
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
@@ -51,7 +50,7 @@ class RetryTest {
     @Test
     fun `should execute function with retries`() {
         val retry = Retry.of("testName") {
-            RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
+            RetryConfig { waitDuration(Duration.ofMillis(10)) }
         }
         val metrics = retry.metrics
         val helloWorldService = HelloWorldService()
@@ -78,10 +77,10 @@ class RetryTest {
     fun `should execute function with retry of result`() {
         val helloWorldService = HelloWorldService()
         val retry = Retry.of("testName") {
-            RetryConfig.custom<Any?>()
-                .waitDuration(Duration.ofMillis(10))
-                .retryOnResult { helloWorldService.invocationCounter < 2 }
-                .build()
+            RetryConfig {
+                waitDuration(Duration.ofMillis(10))
+                retryOnResult { helloWorldService.invocationCounter < 2 }
+            }
         }
         val metrics = retry.metrics
 
@@ -103,7 +102,7 @@ class RetryTest {
     @Test
     fun `should execute function with repeated failures`() {
         val retry = Retry.of("testName") {
-            RetryConfig.custom<Any?>().waitDuration(Duration.ofMillis(10)).build()
+            RetryConfig { waitDuration(Duration.ofMillis(10)) }
         }
         val metrics = retry.metrics
         val helloWorldService = HelloWorldService()
