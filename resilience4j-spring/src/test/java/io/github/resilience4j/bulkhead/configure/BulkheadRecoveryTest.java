@@ -91,9 +91,4 @@ public class BulkheadRecoveryTest {
     public void testFlowableRecovery() {
         assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
     }
-
-    @Test
-    public void testSpelRecovery() {
-        assertThat(testDummyService.spelSync()).isEqualTo("recovered");
-    }
 }

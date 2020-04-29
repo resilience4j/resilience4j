@@ -78,8 +78,8 @@ public class RetryDummyService implements TestDummyService {
     }
 
     @Override
-    @Retry(name = BACKEND, fallbackMethod = "#{'recovery'}")
-    public String spelSync() {
+    @Retry(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String spelSync(String backend) {
         return syncError();
     }
 }

@@ -3,6 +3,7 @@ package io.github.resilience4j.timelimiter.configure;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class TimeLimiterConfigurationSpringTest {
 
 
     @Configuration
-    @ComponentScan({"io.github.resilience4j.timelimiter","io.github.resilience4j.fallback"})
+    @ComponentScan({"io.github.resilience4j.timelimiter","io.github.resilience4j.fallback", "io.github.resilience4j.spelresolver"})
     public static class ConfigWithOverrides {
 
         private TimeLimiterRegistry timeLimiterRegistry;
@@ -58,10 +59,13 @@ public class TimeLimiterConfigurationSpringTest {
         }
 
         @Bean
-        public TimeLimiterAspect timeLimiterAspect(TimeLimiterRegistry timeLimiterRegistry,
-                                                   @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
-                                                   FallbackDecorators recoveryDecorators) {
-            timeLimiterAspect = new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties(), timeLimiterAspectExtList, recoveryDecorators);
+        public TimeLimiterAspect timeLimiterAspect(
+            TimeLimiterRegistry timeLimiterRegistry,
+            @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
+            timeLimiterAspect = new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties(), timeLimiterAspectExtList, fallbackDecorators, spelResolver);
             return timeLimiterAspect;
         }
 

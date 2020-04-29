@@ -38,10 +38,13 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.autoconfigure.AbstractTimeLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
 import org.junit.Test;
+import org.springframework.core.StandardReflectionParameterNameDiscoverer;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -75,7 +78,8 @@ public class SpringBootCommonTest {
             .bulkheadAspect(new BulkheadConfigurationProperties(),
                 ThreadPoolBulkheadRegistry.ofDefaults(), BulkheadRegistry.ofDefaults(),
                 Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
+            new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
         assertThat(
             bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty())).isNotNull();
     }
@@ -91,7 +95,8 @@ public class SpringBootCommonTest {
             new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer())))).isNotNull();
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
+            new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -107,7 +112,8 @@ public class SpringBootCommonTest {
         assertThat(retryConfigurationOnMissingBean
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
+                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -124,7 +130,8 @@ public class SpringBootCommonTest {
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
+                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }
@@ -144,7 +151,8 @@ public class SpringBootCommonTest {
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterAspect(new TimeLimiterConfigurationProperties(),
                 TimeLimiterRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())))).isNotNull();
+                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
+                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }

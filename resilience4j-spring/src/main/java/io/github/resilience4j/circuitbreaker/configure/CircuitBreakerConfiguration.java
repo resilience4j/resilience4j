@@ -26,6 +26,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -88,11 +89,14 @@ public class CircuitBreakerConfiguration {
 
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
+    public CircuitBreakerAspect circuitBreakerAspect(
+        CircuitBreakerRegistry circuitBreakerRegistry,
         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return new CircuitBreakerAspect(circuitBreakerProperties, circuitBreakerRegistry,
-            circuitBreakerAspectExtList, fallbackDecorators);
+            circuitBreakerAspectExtList, fallbackDecorators, spelResolver);
     }
 
 

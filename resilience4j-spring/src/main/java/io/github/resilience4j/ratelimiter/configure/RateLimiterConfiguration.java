@@ -27,6 +27,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -142,9 +143,11 @@ public class RateLimiterConfiguration {
         RateLimiterConfigurationProperties rateLimiterProperties,
         RateLimiterRegistry rateLimiterRegistry,
         @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return new RateLimiterAspect(rateLimiterRegistry, rateLimiterProperties,
-            rateLimiterAspectExtList, fallbackDecorators);
+            rateLimiterAspectExtList, fallbackDecorators, spelResolver);
     }
 
     @Bean
