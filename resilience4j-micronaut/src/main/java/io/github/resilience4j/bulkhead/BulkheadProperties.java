@@ -21,6 +21,9 @@ import io.micronaut.core.util.Toggleable;
 
 import java.util.Map;
 
+/**
+ * Configuration for the bulkhead registry
+ */
 @ConfigurationProperties("resilience4j.bulkhead")
 public class BulkheadProperties extends BulkheadConfigurationProperties implements Toggleable {
     private boolean enabled;

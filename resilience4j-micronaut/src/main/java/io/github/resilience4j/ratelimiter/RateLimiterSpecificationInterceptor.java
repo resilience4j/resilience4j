@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
@@ -28,7 +29,7 @@ import io.micronaut.core.type.ReturnType;
 import io.micronaut.discovery.exceptions.NoAvailableServiceException;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import io.micronaut.retry.exception.FallbackException;
+import io.micronaut.retry.intercept.RecoveryInterceptor;
 import io.reactivex.Flowable;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -48,11 +49,27 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
     private final RateLimiterRegistry rateLimiterRegistry;
     private final BeanContext beanContext;
 
+    /**
+     * Positioned before the {@link io.github.resilience4j.annotation.CircuitBreaker} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
+     */
+    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
+
     public RateLimiterSpecificationInterceptor(BeanContext beanContext, RateLimiterRegistry rateLimiterRegistry) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.beanContext = beanContext;
     }
 
+    @Override
+    public int getOrder() {
+        return POSITION;
+    }
+
+    /**
+     * Finds a fallback method for the given context.
+     *
+     * @param context The context
+     * @return The fallback method if it is present
+     */
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.RateLimiter.class, "fallbackMethod").orElse("");
@@ -84,11 +101,17 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
         } catch (RuntimeException exception) {
             return resolveFallback(context, exception);
         } catch (Throwable throwable) {
-            throw new FallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
+            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 
-
+    /**
+     * Resolves a fallback for the given execution context and exception.
+     *
+     * @param context   The context
+     * @param exception The exception
+     * @return Returns the fallback value or throws the original exception
+     */
     Object resolveFallback(MethodInvocationContext<Object, Object> context, RuntimeException exception) {
         if (exception instanceof NoAvailableServiceException) {
             NoAvailableServiceException ex = (NoAvailableServiceException) exception;
@@ -110,7 +133,7 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
                 }
                 return fallbackMethod.invoke(context.getParameterValues());
             } catch (Exception e) {
-                throw new FallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + e.getMessage(), e);
+                throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + e.getMessage(), e);
             }
         } else {
             throw exception;
@@ -124,7 +147,7 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
         }
         Flowable<Object> flowable = ConversionService.SHARED
             .convert(result, Flowable.class)
-            .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + result));
+            .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
         flowable = flowable.compose(RateLimiterOperator.of(rateLimiter)).onErrorResumeNext(throwable -> {
             Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
             if (fallbackMethod.isPresent()) {
@@ -139,17 +162,17 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
                     return Flowable.error(throwable);
                 }
                 if (fallbackResult == null) {
-                    return Flowable.error(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                    return Flowable.error(new UnhandledFallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
                 } else {
                     return ConversionService.SHARED.convert(fallbackResult, Publisher.class)
-                        .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + fallbackResult));
+                        .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + fallbackResult));
                 }
             }
             return Flowable.error(throwable);
         });
         return ConversionService.SHARED
             .convert(flowable, context.getReturnType().asArgument())
-            .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + result));
+            .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
     }
 
     private Object handleFuture(MethodInvocationContext<Object, Object> context, RateLimiter rateLimiter) {
@@ -171,7 +194,7 @@ public class RateLimiterSpecificationInterceptor implements MethodInterceptor<Ob
                     try {
                         CompletableFuture<Object> resultingFuture = (CompletableFuture<Object>) fallbackHandle.invoke(context.getParameterValues());
                         if (resultingFuture == null) {
-                            newFuture.completeExceptionally(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                            newFuture.completeExceptionally(new UnhandledFallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
                         } else {
                             resultingFuture.whenComplete((o1, throwable1) -> {
                                 if (throwable1 == null) {

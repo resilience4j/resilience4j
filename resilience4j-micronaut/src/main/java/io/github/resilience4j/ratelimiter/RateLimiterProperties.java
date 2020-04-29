@@ -22,7 +22,7 @@ import io.micronaut.core.util.Toggleable;
 import java.util.Map;
 
 /**
- * Configuration for generic rate limiting options.
+ * Configuration for generic rate limiting registry.
  *
  * @since 1.0.0
  */

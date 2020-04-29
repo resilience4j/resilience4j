@@ -19,4 +19,9 @@ public abstract class TestDummyService {
     CompletableFuture<String> completionStageRecovery() {
         return CompletableFuture.supplyAsync({ -> 'recovered' });
     }
+
+    @Executable
+    String syncRecovery() {
+        return "recovered"
+    }
 }

@@ -21,6 +21,9 @@ import io.micronaut.core.util.Toggleable;
 
 import java.util.Map;
 
+/**
+ * Configuration for the circuit breaker registry
+ */
 @ConfigurationProperties("resilience4j.circuitbreaker")
 public class CircuitBreakerProperties extends CircuitBreakerConfigurationProperties implements Toggleable {
     private boolean enabled;

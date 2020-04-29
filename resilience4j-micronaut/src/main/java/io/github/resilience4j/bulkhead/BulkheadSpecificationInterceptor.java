@@ -17,6 +17,8 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
+import io.github.resilience4j.fallback.UnhandledFallbackException;
+import io.micronaut.aop.InterceptPhase;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -29,7 +31,7 @@ import io.micronaut.core.type.ReturnType;
 import io.micronaut.discovery.exceptions.NoAvailableServiceException;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import io.micronaut.retry.exception.FallbackException;
+import io.micronaut.retry.intercept.RecoveryInterceptor;
 import io.reactivex.Flowable;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -40,20 +42,45 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+/**
+ * A {@link MethodInterceptor} that intercepts all method calls which are annotated with a {@link io.github.resilience4j.annotation.Bulkhead}
+ * annotation.
+ **/
 @Singleton
-@Internal
 @Requires(classes = BulkheadRegistry.class)
 public class BulkheadSpecificationInterceptor implements MethodInterceptor<Object,Object> {
     private static final Logger LOG = LoggerFactory.getLogger(BulkheadSpecificationInterceptor.class);
 
+
+    /**
+     * Positioned before the {@link io.github.resilience4j.annotation.Bulkhead} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
+     */
+    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
+
     private final BulkheadRegistry bulkheadRegistry;
     private final BeanContext beanContext;
 
+    /**
+     *
+     * @param beanContext The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
+     * @param bulkheadRegistry bulkhead registry used to retrieve {@link Bulkhead} by name
+     */
     public BulkheadSpecificationInterceptor(BeanContext beanContext, BulkheadRegistry bulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.beanContext = beanContext;
     }
 
+    @Override
+    public int getOrder() {
+        return POSITION;
+    }
+
+    /**
+     * Finds a fallback method for the given context.
+     *
+     * @param context The context
+     * @return The fallback method if it is present
+     */
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.Bulkhead.class, "fallbackMethod").orElse("");
@@ -68,6 +95,7 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
         if (!opt.isPresent()) {
             return context.proceed();
         }
+
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.annotation.Bulkhead.class).orElse("default");
 
@@ -84,11 +112,18 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
         } catch (RuntimeException exception) {
             return resolveFallback(context, exception);
         } catch (Throwable throwable) {
-            throw new FallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
+            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 
 
+    /**
+     * Resolves a fallback for the given execution context and exception.
+     *
+     * @param context   The context
+     * @param exception The exception
+     * @return Returns the fallback value or throws the original exception
+     */
     Object resolveFallback(MethodInvocationContext<Object, Object> context, RuntimeException exception) {
         if (exception instanceof NoAvailableServiceException) {
             NoAvailableServiceException ex = (NoAvailableServiceException) exception;
@@ -110,7 +145,7 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
                 }
                 return fallbackMethod.invoke(context.getParameterValues());
             } catch (Exception e) {
-                throw new FallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + e.getMessage(), e);
+                throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + e.getMessage(), e);
             }
         } else {
             throw exception;
@@ -125,7 +160,7 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
         }
         Flowable<Object> flowable = ConversionService.SHARED
             .convert(result, Flowable.class)
-            .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + result));
+            .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
         flowable = flowable.compose(BulkheadOperator.of(bulkhead)).onErrorResumeNext(throwable -> {
             Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
             if (fallbackMethod.isPresent()) {
@@ -140,17 +175,17 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
                     return Flowable.error(throwable);
                 }
                 if (fallbackResult == null) {
-                    return Flowable.error(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                    return Flowable.error(new UnhandledFallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
                 } else {
                     return ConversionService.SHARED.convert(fallbackResult, Publisher.class)
-                        .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + fallbackResult));
+                        .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + fallbackResult));
                 }
             }
             return Flowable.error(throwable);
         });
         return ConversionService.SHARED
             .convert(flowable, context.getReturnType().asArgument())
-            .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + result));
+            .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
     }
 
     private Object handleFuture(MethodInvocationContext<Object, Object> context, Bulkhead bulkhead) {
@@ -172,7 +207,7 @@ public class BulkheadSpecificationInterceptor implements MethodInterceptor<Objec
                     try {
                         CompletableFuture<Object> resultingFuture = (CompletableFuture<Object>) fallbackHandle.invoke(context.getParameterValues());
                         if (resultingFuture == null) {
-                            newFuture.completeExceptionally(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                            newFuture.completeExceptionally(new UnhandledFallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
                         } else {
                             resultingFuture.whenComplete((o1, throwable1) -> {
                                 if (throwable1 == null) {

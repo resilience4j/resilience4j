@@ -23,6 +23,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Configuration for time limiter registry.
+ *
+ */
 @ConfigurationProperties("resilience4j.timelimiter")
 public class TimeLimiterProperties extends TimeLimiterConfigurationProperties implements Toggleable {
     private boolean enabled;

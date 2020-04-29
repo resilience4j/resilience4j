@@ -23,6 +23,10 @@ import io.micronaut.core.util.Toggleable;
 
 import java.util.Map;
 
+/**
+ * Configuration for generic retry registry.
+ *
+ */
 @ConfigurationProperties("resilience4j.retry")
 public class RetryProperties extends RetryConfigurationProperties implements Toggleable {
     private boolean enabled;
