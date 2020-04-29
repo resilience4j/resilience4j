@@ -29,6 +29,8 @@ import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -46,7 +48,7 @@ import java.util.stream.Collectors;
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class})
+@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class, SpelResolverConfiguration.class})
 public class BulkheadConfiguration {
 
     @Bean
@@ -139,9 +141,11 @@ public class BulkheadConfiguration {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
         BulkheadRegistry bulkheadRegistry,
         @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return new BulkheadAspect(bulkheadConfigurationProperties, threadPoolBulkheadRegistry,
-            bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
+            bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators, spelResolver);
     }
 
     @Bean

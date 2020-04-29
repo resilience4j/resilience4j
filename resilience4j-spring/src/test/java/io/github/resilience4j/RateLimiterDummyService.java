@@ -78,8 +78,8 @@ public class RateLimiterDummyService implements TestDummyService {
     }
 
     @Override
-    @RateLimiter(name = BACKEND, fallbackMethod = "#{'recovery'}")
-    public String spelSync() {
+    @RateLimiter(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String spelSync(String backend) {
         return syncError();
     }
 }

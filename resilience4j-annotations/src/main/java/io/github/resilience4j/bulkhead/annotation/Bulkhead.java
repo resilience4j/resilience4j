@@ -5,7 +5,7 @@ import java.lang.annotation.*;
 /**
  * This annotation can be applied to a class or a specific method. Applying it on a class is
  * equivalent to applying it on all its public methods. If using Spring,
- * {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
+ * {@code name} and {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
@@ -14,6 +14,9 @@ public @interface Bulkhead {
 
     /**
      * Name of the bulkhead.
+     * It can be SpEL expression. If you want to use first parameter of the method as name, you can
+     * express it {@code #root.args[0]}, {@code #p0} or {@code #a0}. And method name can be accessed via
+     * {@code #root.methodName}
      *
      * @return the name of the bulkhead
      */

@@ -22,7 +22,7 @@ import java.lang.annotation.*;
  * equivalent to applying it on all its public methods. The annotation enables throttling for all
  * methods where it is applied. Throttling monitoring is performed via a rate limiter. See {@link
  * io.github.resilience4j.ratelimiter.RateLimiter} for details. If using Spring,
- * {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
+ * {@code name} and {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
@@ -31,6 +31,9 @@ public @interface RateLimiter {
 
     /**
      * Name of the rate limiter
+     * It can be SpEL expression. If you want to use first parameter of the method as name, you can
+     * express it {@code #root.args[0]}, {@code #p0} or {@code #a0}. And method name can be accessed via
+     * {@code #root.methodName}
      *
      * @return the name of the limiter
      */

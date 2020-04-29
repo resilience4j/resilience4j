@@ -21,6 +21,8 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +57,7 @@ public class RetryConfigurationSpringTest {
     }
 
     @Configuration
-    @Import(FallbackConfiguration.class)
+    @Import({FallbackConfiguration.class, SpelResolverConfiguration.class})
     public static class ConfigWithOverrides {
 
         private RetryRegistry retryRegistry;
@@ -73,11 +75,14 @@ public class RetryConfigurationSpringTest {
         }
 
         @Bean
-        public RetryAspect retryAspect(RetryRegistry retryRegistry,
+        public RetryAspect retryAspect(
+            RetryRegistry retryRegistry,
             @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
-            FallbackDecorators fallbackDecorators) {
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
             retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry,
-                retryAspectExts, fallbackDecorators);
+                retryAspectExts, fallbackDecorators, spelResolver);
             return retryAspect;
         }
 

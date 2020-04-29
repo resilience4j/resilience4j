@@ -78,8 +78,8 @@ public class TimeLimiterDummyService implements TestDummyService {
     }
 
     @Override
-    @TimeLimiter(name = BACKEND, fallbackMethod = "#{'recovery'}")
-    public String spelSync() {
-        return syncError();
+    @TimeLimiter(name = "#root.args[0]", fallbackMethod = "${missing.property:monoRecovery}")
+    public Mono<String> spelMono(String backend) {
+        return monoError(backend);
     }
 }

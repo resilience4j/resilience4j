@@ -49,7 +49,13 @@ public interface TestDummyService {
 
     Flowable<String> flowable();
 
-    String spelSync();
+    default String spelSync(String backend) {
+        return syncError();
+    }
+
+    default Mono<String> spelMono(String backend) {
+        return monoError(backend);
+    }
 
     default String syncError() {
         throw new RuntimeException("Test");

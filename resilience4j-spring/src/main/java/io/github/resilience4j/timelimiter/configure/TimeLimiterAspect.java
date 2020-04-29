@@ -19,11 +19,11 @@ package io.github.resilience4j.timelimiter.configure;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.ValueResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,10 +31,8 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
-import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -42,7 +40,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @Aspect
-public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered, AutoCloseable {
+public class TimeLimiterAspect implements Ordered, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(TimeLimiterAspect.class);
 
     private final TimeLimiterRegistry timeLimiterRegistry;
@@ -52,16 +50,18 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered, A
     @Nullable
     private final List<TimeLimiterAspectExt> timeLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
-    private StringValueResolver embeddedValueResolver;
+    private final SpelResolver spelResolver;
 
     public TimeLimiterAspect(TimeLimiterRegistry timeLimiterRegistry,
-        TimeLimiterConfigurationProperties properties,
-        @Nullable List<TimeLimiterAspectExt> timeLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+                             TimeLimiterConfigurationProperties properties,
+                             @Nullable List<TimeLimiterAspectExt> timeLimiterAspectExtList,
+                             FallbackDecorators fallbackDecorators,
+                             SpelResolver spelResolver) {
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.properties = properties;
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
+        this.spelResolver = spelResolver;
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
@@ -80,13 +80,12 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered, A
         if(timeLimiterAnnotation == null) {
             return proceedingJoinPoint.proceed();
         }
-        String name = timeLimiterAnnotation.name();
+        String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), timeLimiterAnnotation.name());
         io.github.resilience4j.timelimiter.TimeLimiter timeLimiter =
             getOrCreateTimeLimiter(methodName, name);
         Class<?> returnType = method.getReturnType();
 
-        String fallbackMethodValue = ValueResolver.resolve(
-            this.embeddedValueResolver, timeLimiterAnnotation.fallbackMethod());
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), timeLimiterAnnotation.fallbackMethod());
         if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, timeLimiter, returnType);
         }
@@ -154,11 +153,6 @@ public class TimeLimiterAspect implements EmbeddedValueResolverAware, Ordered, A
     @Override
     public int getOrder() {
         return properties.getTimeLimiterAspectOrder();
-    }
-
-    @Override
-    public void setEmbeddedValueResolver(StringValueResolver resolver) {
-        this.embeddedValueResolver = resolver;
     }
 
     @Override

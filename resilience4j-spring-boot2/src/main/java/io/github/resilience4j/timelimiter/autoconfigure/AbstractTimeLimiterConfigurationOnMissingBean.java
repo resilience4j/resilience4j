@@ -22,6 +22,8 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.configure.*;
@@ -38,7 +40,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Configuration
-@Import(FallbackConfigurationOnMissingBean.class)
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
 public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
     protected final TimeLimiterConfiguration timeLimiterConfiguration;
 
@@ -69,19 +71,22 @@ public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
     @Bean
     @Primary
     public RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer(
-            Optional<List<RegistryEventConsumer<TimeLimiter>>> optionalRegistryEventConsumers) {
+        Optional<List<RegistryEventConsumer<TimeLimiter>>> optionalRegistryEventConsumers) {
         return timeLimiterConfiguration.timeLimiterRegistryEventConsumer(optionalRegistryEventConsumers);
     }
 
     @Bean
     @Conditional(AspectJOnClasspathCondition.class)
     @ConditionalOnMissingBean
-    public TimeLimiterAspect timeLimiterAspect(TimeLimiterConfigurationProperties timeLimiterProperties,
-                                               TimeLimiterRegistry timeLimiterRegistry,
-                                               @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
-                                               FallbackDecorators fallbackDecorators) {
+    public TimeLimiterAspect timeLimiterAspect(
+        TimeLimiterConfigurationProperties timeLimiterProperties,
+        TimeLimiterRegistry timeLimiterRegistry,
+        @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return timeLimiterConfiguration.timeLimiterAspect(
-                timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackDecorators);
+            timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackDecorators, spelResolver);
     }
 
     @Bean

@@ -78,8 +78,8 @@ public class CircuitBreakerDummyService implements TestDummyService {
     }
 
     @Override
-    @CircuitBreaker(name = BACKEND, fallbackMethod = "#{'recovery'}")
-    public String spelSync() {
+    @CircuitBreaker(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String spelSync(String backend) {
         return syncError();
     }
 }
