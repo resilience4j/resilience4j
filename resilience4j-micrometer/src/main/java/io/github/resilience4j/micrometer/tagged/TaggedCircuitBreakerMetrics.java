@@ -31,8 +31,8 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-    private TaggedCircuitBreakerMetrics(MetricNames names,
-        CircuitBreakerRegistry circuitBreakerRegistry) {
+    private TaggedCircuitBreakerMetrics(CircuitBreakerMetricNames names,
+                                        CircuitBreakerRegistry circuitBreakerRegistry) {
         super(names);
         this.circuitBreakerRegistry = requireNonNull(circuitBreakerRegistry);
     }
@@ -45,19 +45,34 @@ public class TaggedCircuitBreakerMetrics extends AbstractCircuitBreakerMetrics i
      */
     public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(
         CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new TaggedCircuitBreakerMetrics(MetricNames.ofDefaults(), circuitBreakerRegistry);
+        return new TaggedCircuitBreakerMetrics(CircuitBreakerMetricNames.ofDefaults(), circuitBreakerRegistry);
     }
 
     /**
      * Creates a new binder that uses given {@code registry} as source of circuit breakers.
      *
-     * @param metricNames            custom metric names
+     * @param circuitBreakerMetricNames            custom metric names
      * @param circuitBreakerRegistry the source of circuit breakers
      * @return The {@link TaggedCircuitBreakerMetrics} instance.
      */
-    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames metricNames,
-        CircuitBreakerRegistry circuitBreakerRegistry) {
-        return new TaggedCircuitBreakerMetrics(metricNames, circuitBreakerRegistry);
+    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(CircuitBreakerMetricNames circuitBreakerMetricNames,
+                                                                       CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new TaggedCircuitBreakerMetrics(circuitBreakerMetricNames, circuitBreakerRegistry);
+    }
+
+    /**
+     * Creates a new binder that uses given {@code registry} as source of circuit breakers.
+     *
+     * @deprecated Use {@link TaggedCircuitBreakerMetrics#ofCircuitBreakerRegistry(CircuitBreakerMetricNames, CircuitBreakerRegistry)} instead
+     *
+     * @param circuitBreakerMetricNames            custom metric names
+     * @param circuitBreakerRegistry the source of circuit breakers
+     * @return The {@link TaggedCircuitBreakerMetrics} instance.
+     */
+    @Deprecated
+    public static TaggedCircuitBreakerMetrics ofCircuitBreakerRegistry(MetricNames circuitBreakerMetricNames,
+                                                                       CircuitBreakerRegistry circuitBreakerRegistry) {
+        return new TaggedCircuitBreakerMetrics(circuitBreakerMetricNames, circuitBreakerRegistry);
     }
 
     @Override

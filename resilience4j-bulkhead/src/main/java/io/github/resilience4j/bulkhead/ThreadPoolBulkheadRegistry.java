@@ -36,7 +36,7 @@ import java.util.function.Supplier;
  * stores all bulkhead instances in a registry.
  */
 public interface ThreadPoolBulkheadRegistry extends
-    Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> {
+    Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig>, AutoCloseable {
 
     /**
      * Creates a BulkheadRegistry with a custom Bulkhead configuration.

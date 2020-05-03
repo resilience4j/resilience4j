@@ -60,10 +60,4 @@ public class TimeLimiterRecoveryTest {
     public void testFlowableRecovery() {
         assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
     }
-
-    @Test(expected = IllegalReturnTypeException.class)
-    public void testSpelRecovery() {
-        testDummyService.spelSync();
-    }
-
 }

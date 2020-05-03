@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractCircuitBreakerMetrics.MetricNames.*;
+import static io.github.resilience4j.micrometer.tagged.CircuitBreakerMetricNames.*;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -208,7 +208,7 @@ public class TaggedCircuitBreakerMetricsTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         circuitBreakerRegistry.circuitBreaker("backendA");
         TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(
-            TaggedCircuitBreakerMetrics.MetricNames.custom()
+            CircuitBreakerMetricNames.custom()
                 .callsMetricName("custom_calls")
                 .stateMetricName("custom_state")
                 .bufferedCallsMetricName("custom_buffered_calls")

@@ -19,9 +19,8 @@
 package io.github.resilience4j.kotlin.bulkhead
 
 import io.github.resilience4j.bulkhead.Bulkhead
-import io.github.resilience4j.bulkhead.BulkheadConfig
 import io.github.resilience4j.bulkhead.BulkheadFullException
-import io.github.resilience4j.kotlin.HelloWorldService
+import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
@@ -79,10 +78,10 @@ class FlowBulkheadTest {
     fun `should not execute function when full`() {
         runBlocking {
             val bulkhead = Bulkhead.of("testName") {
-                BulkheadConfig.custom()
-                    .maxConcurrentCalls(1)
-                    .maxWaitDuration(Duration.ZERO)
-                    .build()
+                BulkheadConfig {
+                    maxConcurrentCalls(1)
+                    maxWaitDuration(Duration.ZERO)
+                }
             }.registerEventListener()
 
             val resultList = mutableListOf<Int>()
@@ -109,7 +108,7 @@ class FlowBulkheadTest {
             assertThat(resultList.size).isEqualTo(1)
             assertThat(resultList[0]).isEqualTo(1)
 
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             try {
@@ -180,10 +179,10 @@ class FlowBulkheadTest {
             val phaser = Phaser(1)
             var flowCompleted = false
             val bulkhead = Bulkhead.of("testName") {
-                BulkheadConfig.custom()
-                    .maxConcurrentCalls(1)
-                    .maxWaitDuration(Duration.ZERO)
-                    .build()
+                BulkheadConfig {
+                    maxConcurrentCalls(1)
+                    maxWaitDuration(Duration.ZERO)
+                }
             }.registerEventListener()
 
             //When
@@ -219,10 +218,10 @@ class FlowBulkheadTest {
             val parentJob = Job()
             var flowCompleted = false
             val bulkhead = Bulkhead.of("testName") {
-                BulkheadConfig.custom()
-                    .maxConcurrentCalls(1)
-                    .maxWaitDuration(Duration.ZERO)
-                    .build()
+                BulkheadConfig {
+                    maxConcurrentCalls(1)
+                    maxWaitDuration(Duration.ZERO)
+                }
             }.registerEventListener()
 
             //When

@@ -53,7 +53,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.just(helloWorldService.returnHelloWorld())
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectNext("Hello World")
             .verifyComplete();
 
@@ -70,7 +70,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectNext("Hello World")
             .verifyComplete();
 
@@ -87,7 +87,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
                 .repeat(2))
             .expectNext("Hello World")
             .expectNext("Hello World")
@@ -106,7 +106,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.empty()
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .verifyComplete();
 
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
@@ -120,7 +120,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(IOException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -135,7 +135,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -150,7 +150,7 @@ public class MonoCircuitBreakerTest {
 
         StepVerifier.create(
             Mono.just("Event")
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(CallNotPermittedException.class)
             .verify(Duration.ofSeconds(1));
 
@@ -166,7 +166,7 @@ public class MonoCircuitBreakerTest {
         StepVerifier.create(
             Mono.just("Event")
                 .delayElement(Duration.ofDays(1))
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectSubscription()
             .thenCancel()
             .verify();
@@ -185,7 +185,7 @@ public class MonoCircuitBreakerTest {
         StepVerifier.create(
             Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
                 .flatMap(Mono::just)
-                .compose(CircuitBreakerOperator.of(circuitBreaker)))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .expectError(CallNotPermittedException.class)
             .verify();
 
@@ -201,7 +201,7 @@ public class MonoCircuitBreakerTest {
 
         try {
             Mono.just("Event")
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
                 .toFuture()
                 .get();
 

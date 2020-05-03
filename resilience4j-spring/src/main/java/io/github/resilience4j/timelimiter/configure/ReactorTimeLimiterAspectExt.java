@@ -49,10 +49,10 @@ public class ReactorTimeLimiterAspectExt implements TimeLimiterAspectExt{
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.compose(TimeLimiterOperator.of(timeLimiter));
+            return fluxReturnValue.transformDeferred(TimeLimiterOperator.of(timeLimiter));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
-            return monoReturnValue.compose(TimeLimiterOperator.of(timeLimiter));
+            return monoReturnValue.transformDeferred(TimeLimiterOperator.of(timeLimiter));
         } else {
             throw new IllegalReturnTypeException(returnValue.getClass(), methodName,
                 "Reactor expects Mono/Flux.");

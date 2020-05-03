@@ -47,7 +47,7 @@ public class TimeLimiterOperatorTest {
             .willReturn("Hello world");
 
         Mono<?> mono = Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(mono)
             .expectNextCount(1)
@@ -62,7 +62,7 @@ public class TimeLimiterOperatorTest {
             .willReturn(toConfig(Duration.ofMillis(1)));
 
         Mono<?> mono = Mono.delay(Duration.ofMinutes(1))
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(mono)
             .expectError(TimeoutException.class)
@@ -77,7 +77,7 @@ public class TimeLimiterOperatorTest {
             .willReturn(toConfig(Duration.ofMillis(1)));
 
         Mono<?> flux = Mono.never()
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(flux)
             .expectError(TimeoutException.class)
@@ -94,7 +94,7 @@ public class TimeLimiterOperatorTest {
             .willThrow(new Error("BAM!"));
 
         Mono<?> mono = Mono.fromCallable(helloWorldService::returnHelloWorld)
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(mono)
             .expectError(Error.class)
@@ -110,7 +110,7 @@ public class TimeLimiterOperatorTest {
 
         Flux<?> flux = Flux.interval(Duration.ofMillis(1))
             .take(2)
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(flux)
             .expectNextCount(2)
@@ -125,7 +125,7 @@ public class TimeLimiterOperatorTest {
             .willReturn(toConfig(Duration.ofMillis(1)));
 
         Flux<?> flux = Flux.interval(Duration.ofSeconds(1))
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(flux)
             .expectError(TimeoutException.class)
@@ -140,7 +140,7 @@ public class TimeLimiterOperatorTest {
             .willReturn(toConfig(Duration.ofMillis(1)));
 
         Flux<?> flux = Flux.never()
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(flux)
             .expectError(TimeoutException.class)
@@ -155,7 +155,7 @@ public class TimeLimiterOperatorTest {
             .willReturn(toConfig(Duration.ofMinutes(1)));
 
         Flux<?> flux = Flux.error(new Error("BAM!"))
-            .compose(TimeLimiterOperator.of(timeLimiter));
+            .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 
         StepVerifier.create(flux)
             .expectError(Error.class)

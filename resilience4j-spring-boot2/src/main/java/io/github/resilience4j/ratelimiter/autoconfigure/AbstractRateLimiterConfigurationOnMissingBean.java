@@ -25,6 +25,8 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.*;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -37,7 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Configuration
-@Import(FallbackConfigurationOnMissingBean.class)
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
 public abstract class AbstractRateLimiterConfigurationOnMissingBean {
 
     protected final RateLimiterConfiguration rateLimiterConfiguration;
@@ -81,10 +83,12 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
         RateLimiterConfigurationProperties rateLimiterProperties,
         RateLimiterRegistry rateLimiterRegistry,
         @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return rateLimiterConfiguration
             .rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry, rateLimiterAspectExtList,
-                fallbackDecorators);
+                fallbackDecorators, spelResolver);
     }
 
     @Bean

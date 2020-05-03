@@ -21,8 +21,8 @@ import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.ValueResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,10 +31,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
-import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -67,7 +65,7 @@ import java.util.concurrent.CompletionStage;
  */
 
 @Aspect
-public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
+public class RateLimiterAspect implements Ordered {
 
     private static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
@@ -76,16 +74,18 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
     private final @Nullable
     List<RateLimiterAspectExt> rateLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
-    private StringValueResolver embeddedValueResolver;
+    private final SpelResolver spelResolver;
 
     public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-        RateLimiterConfigurationProperties properties,
-        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+                             RateLimiterConfigurationProperties properties,
+                             @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+                             FallbackDecorators fallbackDecorators,
+                             SpelResolver spelResolver) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.properties = properties;
         this.rateLimiterAspectExtList = rateLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
+        this.spelResolver = spelResolver;
     }
 
     /**
@@ -109,12 +109,12 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
         if (rateLimiterAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
-        String name = rateLimiterAnnotation.name();
+        String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.name());
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
             methodName, name);
         Class<?> returnType = method.getReturnType();
 
-        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, rateLimiterAnnotation.fallbackMethod());
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.fallbackMethod());
         if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         }
@@ -201,10 +201,5 @@ public class RateLimiterAspect implements EmbeddedValueResolverAware, Ordered {
     @Override
     public int getOrder() {
         return properties.getRateLimiterAspectOrder();
-    }
-
-    @Override
-    public void setEmbeddedValueResolver(StringValueResolver resolver) {
-        this.embeddedValueResolver = resolver;
     }
 }

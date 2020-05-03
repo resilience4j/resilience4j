@@ -223,4 +223,11 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
         return computeIfAbsent(name, () -> ThreadPoolBulkhead.of(name, getConfiguration(configName)
             .orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
     }
+
+    @Override
+    public void close() throws Exception {
+        for (ThreadPoolBulkhead bulkhead : getAllBulkheads()) {
+            bulkhead.close();
+        }
+    }
 }

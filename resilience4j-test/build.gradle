@@ -1,2 +1,4 @@
 artifactoryPublish.skip = true
 sonarqube.skipProject = true
+
+ext.moduleName = 'io.github.resilience4j.test'

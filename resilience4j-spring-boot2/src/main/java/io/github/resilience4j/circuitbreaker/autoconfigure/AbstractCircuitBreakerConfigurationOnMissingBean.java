@@ -25,6 +25,8 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -37,7 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Configuration
-@Import(FallbackConfigurationOnMissingBean.class)
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
 public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
 
     protected final CircuitBreakerConfiguration circuitBreakerConfiguration;
@@ -80,12 +82,15 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public CircuitBreakerAspect circuitBreakerAspect(CircuitBreakerRegistry circuitBreakerRegistry,
+    public CircuitBreakerAspect circuitBreakerAspect(
+        CircuitBreakerRegistry circuitBreakerRegistry,
         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return circuitBreakerConfiguration
             .circuitBreakerAspect(circuitBreakerRegistry, circuitBreakerAspectExtList,
-                fallbackDecorators);
+                fallbackDecorators, spelResolver);
     }
 
     @Bean

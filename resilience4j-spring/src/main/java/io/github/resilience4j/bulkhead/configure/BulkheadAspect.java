@@ -23,8 +23,8 @@ import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.github.resilience4j.utils.ValueResolver;
 import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -34,10 +34,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.Ordered;
 import org.springframework.util.StringUtils;
-import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -70,7 +68,7 @@ import java.util.concurrent.ExecutionException;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
+public class BulkheadAspect implements Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(BulkheadAspect.class);
 
@@ -80,17 +78,19 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
     private final @Nullable
     List<BulkheadAspectExt> bulkheadAspectExts;
     private final FallbackDecorators fallbackDecorators;
-    private StringValueResolver embeddedValueResolver;
+    private final SpelResolver spelResolver;
 
     public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry,
-        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, BulkheadRegistry bulkheadRegistry,
-        @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-        FallbackDecorators fallbackDecorators) {
+                          ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, BulkheadRegistry bulkheadRegistry,
+                          @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+                          FallbackDecorators fallbackDecorators,
+                          SpelResolver spelResolver) {
         this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
         this.bulkheadRegistry = bulkheadRegistry;
         this.bulkheadAspectExts = bulkheadAspectExts;
         this.fallbackDecorators = fallbackDecorators;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
+        this.spelResolver = spelResolver;
     }
 
     @Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
@@ -109,8 +109,8 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
             return proceedingJoinPoint.proceed();
         }
         Class<?> returnType = method.getReturnType();
-        String backend = bulkheadAnnotation.name();
-        String fallbackMethodValue = ValueResolver.resolve(this.embeddedValueResolver, bulkheadAnnotation.fallbackMethod());
+        String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), bulkheadAnnotation.name());
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), bulkheadAnnotation.fallbackMethod());
         if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
             if (StringUtils.isEmpty(fallbackMethodValue)) {
                 return proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
@@ -276,10 +276,5 @@ public class BulkheadAspect implements EmbeddedValueResolverAware, Ordered {
     @Override
     public int getOrder() {
         return bulkheadConfigurationProperties.getBulkheadAspectOrder();
-    }
-
-    @Override
-    public void setEmbeddedValueResolver(StringValueResolver resolver) {
-        this.embeddedValueResolver = resolver;
     }
 }

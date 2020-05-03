@@ -25,6 +25,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,13 +91,16 @@ public class BulkheadConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry,
+        public BulkheadAspect bulkheadAspect(
+            BulkheadRegistry bulkheadRegistry,
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
             @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-            FallbackDecorators fallbackDecorators) {
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
             bulkheadAspect = new BulkheadAspect(new BulkheadProperties(),
                 threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
-                fallbackDecorators);
+                fallbackDecorators, spelResolver);
             return bulkheadAspect;
         }
 

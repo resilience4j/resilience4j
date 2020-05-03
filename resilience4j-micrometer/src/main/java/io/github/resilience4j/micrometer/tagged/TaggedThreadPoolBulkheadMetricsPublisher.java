@@ -28,12 +28,19 @@ public class TaggedThreadPoolBulkheadMetricsPublisher
     private final MeterRegistry meterRegistry;
 
     public TaggedThreadPoolBulkheadMetricsPublisher(MeterRegistry meterRegistry) {
-        super(MetricNames.ofDefaults());
+        super(ThreadPoolBulkheadMetricNames.ofDefaults());
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
+    public TaggedThreadPoolBulkheadMetricsPublisher(ThreadPoolBulkheadMetricNames names,
+                                                    MeterRegistry meterRegistry) {
+        super(names);
+        this.meterRegistry = requireNonNull(meterRegistry);
+    }
+
+    @Deprecated
     public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names,
-        MeterRegistry meterRegistry) {
+                                                    MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);
     }

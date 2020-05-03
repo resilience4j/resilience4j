@@ -29,8 +29,8 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.AbstractBulkheadMetrics.MetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_AVAILABLE_CONCURRENT_CALLS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.BulkheadMetricNames.DEFAULT_BULKHEAD_MAX_ALLOWED_CONCURRENT_CALLS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -154,7 +154,7 @@ public class TaggedBulkheadMetricsTest {
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.ofDefaults();
         bulkhead = bulkheadRegistry.bulkhead("backendA");
         TaggedBulkheadMetrics.ofBulkheadRegistry(
-            TaggedBulkheadMetrics.MetricNames.custom()
+            BulkheadMetricNames.custom()
                 .availableConcurrentCallsMetricName("custom_available_calls")
                 .maxAllowedConcurrentCallsMetricName("custom_max_allowed_calls")
                 .build(),
