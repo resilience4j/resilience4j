@@ -1,0 +1,11 @@
+dependencies {
+    compileOnly project(':resilience4j-circuitbreaker')
+    compileOnly project(':resilience4j-bulkhead')
+    implementation(libraries.commons_configuration2)
+    testImplementation('commons-beanutils:commons-beanutils:1.9.4')
+    testCompile project(':resilience4j-circuitbreaker')
+    testCompile project(':resilience4j-bulkhead')
+    testCompile(libraries.assertj)
+    testCompile(libraries.mockito)
+}
+ext.moduleName = 'io.github.resilience4j.commons.configuration'

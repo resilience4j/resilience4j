@@ -128,7 +128,10 @@ ext {
             // Spring cloud addon
             spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
             spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
-            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}"
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springBootOpenFeignVersion}",
+
+            // Commons Configuration addon
+            commons_configuration2: "org.apache.commons:commons-configuration2:2.7"
     ]
 
 }
