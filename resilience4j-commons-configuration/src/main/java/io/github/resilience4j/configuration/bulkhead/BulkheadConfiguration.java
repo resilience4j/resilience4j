@@ -5,7 +5,7 @@ import org.apache.commons.configuration2.Configuration;
 
 import javax.annotation.concurrent.Immutable;
 
-import static io.github.resilience4j.configuration.utils.DurationConfigurationUtil.getDuration;
+import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getDuration;
 
 /**
  * {@link BulkheadConfiguration} is used to create {@link BulkheadConfig} from a {@link Configuration}.
