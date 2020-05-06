@@ -121,12 +121,6 @@ public class RetryConfigurationProperties extends CommonProperties {
             return builder.build();
         }
 
-        if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
-            && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
-            throw new IllegalStateException(
-                "you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
-        }
-
         configureRetryIntervalFunction(properties, builder);
 
         if (properties.getMaxRetryAttempts() != null && properties.getMaxRetryAttempts() != 0) {
@@ -134,13 +128,9 @@ public class RetryConfigurationProperties extends CommonProperties {
         }
 
         if (properties.getRetryExceptionPredicate() != null) {
-            if (properties.getRetryExceptionPredicate() != null) {
-                Predicate<Throwable> predicate = ClassUtils
-                    .instantiatePredicateClass(properties.getRetryExceptionPredicate());
-                if (predicate != null) {
-                    builder.retryOnException(predicate);
-                }
-            }
+            Predicate<Throwable> predicate = ClassUtils
+                .instantiatePredicateClass(properties.getRetryExceptionPredicate());
+            builder.retryOnException(predicate);
         }
 
         if (properties.getIgnoreExceptions() != null) {
@@ -152,13 +142,9 @@ public class RetryConfigurationProperties extends CommonProperties {
         }
 
         if (properties.getResultPredicate() != null) {
-            if (properties.getResultPredicate() != null) {
-                Predicate<Object> predicate = ClassUtils
-                    .instantiatePredicateClass(properties.getResultPredicate());
-                if (predicate != null) {
-                    builder.retryOnResult(predicate);
-                }
-            }
+            Predicate<Object> predicate = ClassUtils
+                .instantiatePredicateClass(properties.getResultPredicate());
+            builder.retryOnResult(predicate);
         }
 
         compositeRetryCustomizer.getCustomizer(backend)
@@ -178,8 +164,26 @@ public class RetryConfigurationProperties extends CommonProperties {
         // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
             Duration waitDuration = properties.getWaitDuration();
-            if (properties.getEnableExponentialBackoff() != null && properties
-                .getEnableExponentialBackoff()) {
+
+            if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
+                Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
+
+                if ((properties.getRandomizedWaitFactor() != null) &&
+                    (properties.getExponentialBackoffMultiplier() != null)) {
+                    builder.intervalFunction(IntervalFunction
+                        .ofExponentialRandomBackoff(waitDuration.toMillis(),
+                            properties.getExponentialBackoffMultiplier(),
+                            properties.getRandomizedWaitFactor()));
+                } else if (properties.getExponentialBackoffMultiplier() != null) {
+                    builder.intervalFunction(IntervalFunction
+                        .ofExponentialRandomBackoff(waitDuration.toMillis(),
+                            properties.getExponentialBackoffMultiplier()));
+                } else {
+                    builder.intervalFunction(IntervalFunction
+                        .ofExponentialRandomBackoff(waitDuration.toMillis()));
+                }
+
+            } else if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff())) {
                 if (properties.getExponentialBackoffMultiplier() != null) {
                     builder.intervalFunction(IntervalFunction
                         .ofExponentialBackoff(waitDuration.toMillis(),
@@ -188,8 +192,8 @@ public class RetryConfigurationProperties extends CommonProperties {
                     builder.intervalFunction(IntervalFunction
                         .ofExponentialBackoff(properties.getWaitDuration().toMillis()));
                 }
-            } else if (properties.getEnableRandomizedWait() != null && properties
-                .getEnableRandomizedWait()) {
+
+            } else if (Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 if (properties.getRandomizedWaitFactor() != null) {
                     builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(),
                         properties.getRandomizedWaitFactor()));
