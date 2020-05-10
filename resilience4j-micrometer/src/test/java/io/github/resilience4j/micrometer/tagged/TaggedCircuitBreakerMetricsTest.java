@@ -210,6 +210,7 @@ public class TaggedCircuitBreakerMetricsTest {
         TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(
             CircuitBreakerMetricNames.custom()
                 .callsMetricName("custom_calls")
+                .notPermittedCallsMetricName("custom_not_permitted_calls")
                 .stateMetricName("custom_state")
                 .bufferedCallsMetricName("custom_buffered_calls")
                 .slowCallsMetricName("custom_slow_calls")
@@ -227,6 +228,7 @@ public class TaggedCircuitBreakerMetricsTest {
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
             "custom_calls",
+            "custom_not_permitted_calls",
             "custom_state",
             "custom_buffered_calls",
             "custom_slow_calls",

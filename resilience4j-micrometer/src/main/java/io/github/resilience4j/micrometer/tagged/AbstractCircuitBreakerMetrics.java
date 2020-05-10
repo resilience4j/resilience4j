@@ -130,7 +130,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
             .tags(customTags)
             .register(meterRegistry);
 
-        Counter notPermittedCalls = Counter.builder(names.getCallsMetricName())
+        Counter notPermittedCalls = Counter.builder(names.getNotPermittedCallsMetricName())
             .description("Total number of not permitted calls")
             .tag(TagNames.NAME, circuitBreaker.getName())
             .tag(TagNames.KIND, KIND_NOT_PERMITTED)
