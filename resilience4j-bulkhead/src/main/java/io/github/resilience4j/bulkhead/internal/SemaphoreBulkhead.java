@@ -81,7 +81,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
         this.tags = requireNonNull(tags, TAGS_MUST_NOTE_BE_NULL);
         // init semaphore
-        this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
+        this.semaphore = new Semaphore(config.getMaxConcurrentCalls(), config.isFairCallHandlingEnabled());
 
         this.metrics = new BulkheadMetrics();
         this.eventProcessor = new BulkheadEventProcessor();
