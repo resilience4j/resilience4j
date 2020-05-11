@@ -80,6 +80,29 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
+    public void testExponentialRandomBackoffConfig() {
+        //Given
+        RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
+        instanceProperties1.setMaxRetryAttempts(3);
+        instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
+        instanceProperties1.setEnableExponentialBackoff(true);
+        instanceProperties1.setEnableRandomizedWait(true);
+        instanceProperties1.setRandomizedWaitFactor(0.5D);
+        instanceProperties1.setExponentialBackoffMultiplier(2.0D);
+
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+
+        //Then
+        final RetryConfig retry1 = retryConfigurationProperties
+            .createRetryConfig("backend1", compositeRetryCustomizer());
+        assertThat(retry1).isNotNull();
+        assertThat(retry1.getIntervalFunction().apply(1)).isBetween(500L, 1500L);
+        assertThat(retry1.getIntervalFunction().apply(2)).isBetween(1000L, 3000L);
+
+    }
+
+    @Test
     public void testCreateRetryPropertiesWithSharedConfigs() {
         //Given
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
