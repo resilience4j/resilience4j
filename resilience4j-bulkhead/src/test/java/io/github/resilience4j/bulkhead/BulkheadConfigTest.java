@@ -56,6 +56,17 @@ public class BulkheadConfigTest {
     }
 
     @Test
+    public void testBuildCustomWithFairStrategyDisabled() {
+
+        BulkheadConfig config = BulkheadConfig.custom()
+            .fairCallHandlingStrategyEnabled(false)
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.isFairCallHandlingEnabled()).isFalse();
+    }
+
+    @Test
     public void testBuildCustom() {
         int maxConcurrent = 66;
         long maxWait = 555;
@@ -68,6 +79,7 @@ public class BulkheadConfigTest {
         assertThat(config).isNotNull();
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
         assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
+        assertThat(config.isFairCallHandlingEnabled()).isTrue();
     }
 
     @Test
