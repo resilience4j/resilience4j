@@ -15,8 +15,7 @@
  */
 package io.github.resilience4j.annotation;
 
-import io.github.resilience4j.ratelimiter.RateLimiterSpecificationInterceptor;
-import io.github.resilience4j.retry.RetrySpecificationInterceptor;
+import io.github.resilience4j.ratelimiter.RateLimiterInterceptor;
 import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Type;
 
@@ -32,7 +31,7 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Around
-@Type(RateLimiterSpecificationInterceptor.class)
+@Type(RateLimiterInterceptor.class)
 @Documented
 public @interface RateLimiter {
 

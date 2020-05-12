@@ -16,7 +16,6 @@
 package io.github.resilience4j.annotation;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerInterceptor;
-import io.github.resilience4j.retry.RetrySpecificationInterceptor;
 import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Type;
 

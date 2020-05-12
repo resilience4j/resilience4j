@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.circuitbreaker;
+
+package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.BaseInterceptor;
-import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.ReturnType;
@@ -40,21 +43,32 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+/**
+ * A {@link MethodInterceptor} that intercepts all method calls which are annotated with a {@link io.github.resilience4j.annotation.Bulkhead}
+ * annotation.
+ **/
 @Singleton
-@Requires(classes = CircuitBreakerRegistry.class)
-public class CircuitBreakerInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerInterceptor.class);
+@Requires(classes = BulkheadRegistry.class)
+public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object>{
+    private static final Logger LOG = LoggerFactory.getLogger(BulkheadInterceptor.class);
 
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-    private final BeanContext beanContext;
 
     /**
-     * Positioned before the {@link io.github.resilience4j.annotation.CircuitBreaker} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
+     * Positioned before the {@link io.github.resilience4j.annotation.Bulkhead} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
      */
     public static final int POSITION = RecoveryInterceptor.POSITION + 20;
 
-    public CircuitBreakerInterceptor(BeanContext beanContext, CircuitBreakerRegistry circuitBreakerRegistry) {
-        this.circuitBreakerRegistry = circuitBreakerRegistry;
+    private final BulkheadRegistry bulkheadRegistry;
+    private final BeanContext beanContext;
+
+    /**
+     *
+     * @param beanContext The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
+     * @param bulkheadRegistry bulkhead registry used to retrieve {@link Bulkhead} by name
+     */
+    public BulkheadInterceptor(BeanContext beanContext,
+                               BulkheadRegistry bulkheadRegistry) {
+        this.bulkheadRegistry = bulkheadRegistry;
         this.beanContext = beanContext;
     }
 
@@ -72,22 +86,25 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
     @Override
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.CircuitBreaker.class, "fallbackMethod").orElse("");
+        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.annotation.Bulkhead.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
         return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
-        Optional<AnnotationValue<io.github.resilience4j.annotation.CircuitBreaker>> opt = context.findAnnotation(io.github.resilience4j.annotation.CircuitBreaker.class);
+
+        Optional<AnnotationValue<io.github.resilience4j.annotation.Bulkhead>> opt = context.findAnnotation(io.github.resilience4j.annotation.Bulkhead.class);
         if (!opt.isPresent()) {
             return context.proceed();
         }
+        final io.github.resilience4j.annotation.Bulkhead.Type type = opt.get().enumValue("type", io.github.resilience4j.annotation.Bulkhead.Type.class).orElse(io.github.resilience4j.annotation.Bulkhead.Type.SEMAPHORE);
+        if(type != io.github.resilience4j.annotation.Bulkhead.Type.SEMAPHORE) {
+            return context.proceed();
+        }
 
-        ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.CircuitBreaker.class).orElse("default");
-        CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
-
+        final String name = opt.get().stringValue().orElse("default");
+        Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
@@ -95,7 +112,7 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
             if (result == null) {
                 return result;
             }
-            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> ((CompletableFuture<?>) result)),context);
+            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> ((CompletableFuture<?>) result)),context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -104,17 +121,19 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
             Flowable<Object> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(CircuitBreakerOperator.of(circuitBreaker)),context);
+
+            flowable = this.fallbackFlowable(flowable.compose(BulkheadOperator.of(bulkhead)),context);
             return ConversionService.SHARED
                 .convert(flowable, context.getReturnType().asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
         }
         try {
-            return circuitBreaker.executeCheckedSupplier(context::proceed);
+            return bulkhead.executeSupplier(context::proceed);
         } catch (RuntimeException exception) {
-            return fallback(context, exception);
+            return this.fallback(context, exception);
         } catch (Throwable throwable) {
             throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
+
 }

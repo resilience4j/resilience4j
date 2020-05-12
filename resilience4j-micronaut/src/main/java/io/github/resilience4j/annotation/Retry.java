@@ -15,8 +15,7 @@
  */
 package io.github.resilience4j.annotation;
 
-import io.github.resilience4j.retry.RetrySpecificationInterceptor;
-import io.github.resilience4j.timelimiter.TimeLimiterSpecificationInterceptor;
+import io.github.resilience4j.retry.RetryInterceptor;
 import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Type;
 
@@ -31,7 +30,7 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Around
-@Type(RetrySpecificationInterceptor.class)
+@Type(RetryInterceptor.class)
 @Documented
 public @interface Retry {
 

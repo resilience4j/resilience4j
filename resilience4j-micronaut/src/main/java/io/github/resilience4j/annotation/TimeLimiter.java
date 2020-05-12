@@ -16,7 +16,7 @@
 
 package io.github.resilience4j.annotation;
 
-import io.github.resilience4j.timelimiter.TimeLimiterSpecificationInterceptor;
+import io.github.resilience4j.timelimiter.TimeLimiterInterceptor;
 import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Type;
 
@@ -25,7 +25,7 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Around
-@Type(TimeLimiterSpecificationInterceptor.class)
+@Type(TimeLimiterInterceptor.class)
 @Documented
 public @interface TimeLimiter {
 
