@@ -24,7 +24,6 @@ import java.util.Map;
 /**
  * Configuration for generic rate limiting registry.
  *
- * @since 1.0.0
  */
 @ConfigurationProperties("resilience4j.ratelimiter")
 public class RateLimiterProperties extends RateLimiterConfigurationProperties implements Toggleable {

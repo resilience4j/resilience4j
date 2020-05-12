@@ -19,8 +19,6 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.util.Toggleable;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**

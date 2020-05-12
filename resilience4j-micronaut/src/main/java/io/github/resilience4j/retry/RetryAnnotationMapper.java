@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.retry;
 
-import io.github.resilience4j.annotation.Bulkhead;
 import io.github.resilience4j.annotation.Retry;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;

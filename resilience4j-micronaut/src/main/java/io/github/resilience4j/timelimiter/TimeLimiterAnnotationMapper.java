@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import io.github.resilience4j.annotation.Bulkhead;
 import io.github.resilience4j.annotation.TimeLimiter;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;

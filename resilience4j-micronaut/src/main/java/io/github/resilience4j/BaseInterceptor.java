@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public abstract class BaseInterceptor {
-     Logger LOG = LoggerFactory.getLogger(BaseInterceptor.class);
+    Logger LOG = LoggerFactory.getLogger(BaseInterceptor.class);
 
     public abstract Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context);
 
@@ -118,7 +118,4 @@ public abstract class BaseInterceptor {
         });
         return flowable;
     }
-
-
-
 }
