@@ -1,5 +1,8 @@
 apply plugin: 'groovy'
-
+repositories {
+    maven { url "https://repo.grails.org/grails/core" }
+    maven { url "https://oss.jfrog.org/oss-snapshot-local" }
+}
 dependencies {
     annotationProcessor(platform(libraries.micronaut))
     testAnnotationProcessor(platform(libraries.micronaut))
