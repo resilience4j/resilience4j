@@ -41,7 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
-@Requires(classes = CircuitBreakerRegistry.class)
+@Requires(beans = CircuitBreakerRegistry.class)
 public class CircuitBreakerInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerInterceptor.class);
 

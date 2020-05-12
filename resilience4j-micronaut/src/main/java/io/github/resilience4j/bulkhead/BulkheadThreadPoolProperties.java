@@ -7,7 +7,6 @@ import io.micronaut.core.util.Toggleable;
 
 import java.util.Map;
 
-@Factory
 @ConfigurationProperties("resilience4j.thread-pool-bulkhead")
 public class BulkheadThreadPoolProperties extends ThreadPoolBulkheadConfigurationProperties implements Toggleable {
     private boolean enabled;

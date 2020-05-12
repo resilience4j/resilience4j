@@ -1,7 +1,6 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.BaseInterceptor;
-import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
@@ -9,12 +8,10 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.async.publisher.Publishers;
-import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.ReturnType;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.micronaut.retry.intercept.RecoveryInterceptor;
-import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
@@ -26,9 +23,8 @@ import java.util.concurrent.CompletionStage;
  * annotation.
  **/
 @Singleton
-@Requires(classes = ThreadPoolBulkheadRegistry.class)
+@Requires(beans = ThreadPoolBulkheadRegistry.class)
 public class BulkheadTreadPoolInterceptor  extends BaseInterceptor implements MethodInterceptor<Object,Object> {
-
 
     /**
      * Positioned before the {@link io.github.resilience4j.annotation.Bulkhead} interceptor after {@link io.micronaut.retry.annotation.Fallback}.

@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Singleton
-@Requires(classes = RetryRegistry.class)
+@Requires(beans = RetryRegistry.class)
 public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(RetryInterceptor.class);

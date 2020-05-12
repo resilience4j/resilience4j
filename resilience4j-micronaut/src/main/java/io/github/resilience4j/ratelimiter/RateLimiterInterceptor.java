@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
-@Requires(classes = RateLimiterRegistry.class)
+@Requires(beans = RateLimiterRegistry.class)
 public class RateLimiterInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
     private static final Logger LOG = LoggerFactory.getLogger(RateLimiterInterceptor.class);
 

@@ -48,7 +48,7 @@ import java.util.concurrent.CompletionStage;
  * annotation.
  **/
 @Singleton
-@Requires(classes = BulkheadRegistry.class)
+@Requires(beans = BulkheadRegistry.class)
 public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object>{
     private static final Logger LOG = LoggerFactory.getLogger(BulkheadInterceptor.class);
 

@@ -44,7 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Singleton
-@Requires(classes = TimeLimiterRegistry.class)
+@Requires(beans = TimeLimiterRegistry.class)
 public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
     private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterInterceptor.class);
 
