@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.timelimiter;
 
+import io.github.resilience4j.annotation.Bulkhead;
 import io.github.resilience4j.annotation.TimeLimiter;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -27,6 +28,9 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * An annotation mapper that maps {@link TimeLimiter}.
+ */
 @Internal
 public class TimeLimiterAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull

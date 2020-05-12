@@ -27,6 +27,9 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * An annotation mapper that maps {@link Bulkhead}.
+ */
 @Internal
 public class BulkheadAnnotationMapper implements NamedAnnotationMapper {
     @Nonnull
