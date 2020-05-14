@@ -59,7 +59,7 @@ public class CircuitBreakerMetricNames {
 
     /**
      * Returns the metric name for circuit breaker not permitted calls, defaults to {@value
-     * DEFAULT_CIRCUIT_BREAKER_CALLS}.
+     * DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS}.
      *
      * @return The circuit breaker not permitted calls metric name.
      */
@@ -136,7 +136,7 @@ public class CircuitBreakerMetricNames {
         }
 
         /**
-         * Overrides the default metric name {@value CircuitBreakerMetricNames#DEFAULT_CIRCUIT_BREAKER_CALLS}
+         * Overrides the default metric name {@value CircuitBreakerMetricNames#DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS}
          * with a given one.
          *
          * @param notPermittedCallsMetricName The not permitted calls metric name.
