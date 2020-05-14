@@ -7,6 +7,7 @@ public class CircuitBreakerMetricNames {
     private static final String DEFAULT_PREFIX = "resilience4j.circuitbreaker";
 
     public static final String DEFAULT_CIRCUIT_BREAKER_CALLS = DEFAULT_PREFIX + ".calls";
+    public static final String DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS = DEFAULT_PREFIX + "not.permitted.calls";
     public static final String DEFAULT_CIRCUIT_BREAKER_STATE = DEFAULT_PREFIX + ".state";
     public static final String DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS =
         DEFAULT_PREFIX + ".buffered.calls";
@@ -17,6 +18,7 @@ public class CircuitBreakerMetricNames {
     public static final String DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE =
         DEFAULT_PREFIX + ".slow.call.rate";
     private String callsMetricName = DEFAULT_CIRCUIT_BREAKER_CALLS;
+    private String notPermittedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS;
     private String stateMetricName = DEFAULT_CIRCUIT_BREAKER_STATE;
     private String bufferedCallsMetricName = DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS;
     private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
@@ -53,6 +55,16 @@ public class CircuitBreakerMetricNames {
      */
     public String getCallsMetricName() {
         return callsMetricName;
+    }
+
+    /**
+     * Returns the metric name for circuit breaker not permitted calls, defaults to {@value
+     * DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS}.
+     *
+     * @return The circuit breaker not permitted calls metric name.
+     */
+    public String getNotPermittedCallsMetricName() {
+        return notPermittedCallsMetricName;
     }
 
     /**
@@ -120,6 +132,18 @@ public class CircuitBreakerMetricNames {
          */
         public Builder callsMetricName(String callsMetricName) {
             metricNames.callsMetricName = requireNonNull(callsMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the default metric name {@value CircuitBreakerMetricNames#DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS}
+         * with a given one.
+         *
+         * @param notPermittedCallsMetricName The not permitted calls metric name.
+         * @return The builder.
+         */
+        public Builder notPermittedCallsMetricName(String notPermittedCallsMetricName) {
+            metricNames.notPermittedCallsMetricName = requireNonNull(notPermittedCallsMetricName);
             return this;
         }
 
