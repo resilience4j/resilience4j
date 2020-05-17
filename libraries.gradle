@@ -23,7 +23,7 @@ ext {
     spockVersion = '1.3-groovy-2.5'
     retrofitVersion = '2.5.0'
     feignVersion = '10.2.0'
-    prometheusSimpleClientVersion = '0.8.1'
+    prometheusSimpleClientVersion = '0.9.0'
     reactiveStreamsVersion = '1.0.2'
     micrometerVersion = '1.5.1'
     hibernateValidatorVersion = '6.0.18.Final'
