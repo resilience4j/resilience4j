@@ -30,7 +30,7 @@ ext {
     wiremockVersion = '2.26.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.3.2'
-    springBootOpenFeignVersion = '2.1.2.RELEASE'
+    springBootOpenFeignVersion = '2.2.2.RELEASE'
     blockhoundVersion = '1.0.1.RELEASE'
 
     libraries = [
