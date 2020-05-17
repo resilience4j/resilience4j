@@ -23,7 +23,7 @@ import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEndpoint;
 import io.github.resilience4j.bulkhead.monitoring.endpoint.BulkheadEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -46,14 +46,14 @@ public class BulkheadAutoConfiguration {
     static class BulkheadEndpointAutoConfiguration {
 
         @Bean
-        @ConditionalOnEnabledEndpoint
+        @ConditionalOnAvailableEndpoint
         public BulkheadEndpoint bulkheadEndpoint(BulkheadRegistry bulkheadRegistry,
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
             return new BulkheadEndpoint(bulkheadRegistry, threadPoolBulkheadRegistry);
         }
 
         @Bean
-        @ConditionalOnEnabledEndpoint
+        @ConditionalOnAvailableEndpoint
         public BulkheadEventsEndpoint bulkheadEventsEndpoint(
             EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
             return new BulkheadEventsEndpoint(eventConsumerRegistry);
