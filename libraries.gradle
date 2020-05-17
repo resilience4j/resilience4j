@@ -6,7 +6,7 @@ ext {
     rxJava3Version = '3.0.0'
     reactorVersion = '3.3.0.RELEASE'
     junitVersion = '4.12'
-    slf4jVersion = '1.7.26'
+    slf4jVersion = '1.7.30'
     assertjVersion = '3.12.2'
     logbackVersion = '1.2.3'
     mockitoVersion = '2.25.1'
