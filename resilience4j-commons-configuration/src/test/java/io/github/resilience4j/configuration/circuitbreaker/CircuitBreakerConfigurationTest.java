@@ -7,10 +7,12 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.EOFException;
+import java.io.IOException;
 import java.time.Duration;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.spy;
@@ -44,6 +46,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -66,6 +72,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new IOException())).isTrue();
     }
 
     @Test
@@ -88,6 +98,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -110,6 +124,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -132,6 +150,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -154,6 +176,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -176,6 +202,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -198,6 +228,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -220,6 +254,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(9.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -242,6 +280,10 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(10).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -264,6 +306,63 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
+    }
+
+    @Test
+    public void testGetIgnoreExceptionsWithDefaultFromConfiguration() {
+        given(aConfiguration.getFloat(anyString(), anyFloat())).willCallRealMethod();
+        given(aConfiguration.getBoolean(anyString(), anyBoolean())).willCallRealMethod();
+        given(aConfiguration.getInt(anyString(), anyInt())).willCallRealMethod();
+        given(aConfiguration.getString(anyString(), anyString())).willCallRealMethod();
+
+        CircuitBreakerConfiguration configuration = new CircuitBreakerConfiguration(aConfiguration);
+        CircuitBreakerConfig config = configuration.get("ignore");
+
+        assertThat(config.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+        assertThat(config.getFailureRateThreshold()).isEqualTo(1.0f);
+        assertThat(config.getMinimumNumberOfCalls()).isEqualTo(1);
+        assertThat(config.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(1);
+        assertThat(config.getSlidingWindowSize()).isEqualTo(1);
+        assertThat(config.getSlidingWindowType()).isEqualByComparingTo(TIME_BASED);
+        assertThat(config.getSlowCallDurationThreshold()).isEqualByComparingTo(Duration.ofSeconds(1));
+        assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
+        assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
+        assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isFalse();
+    }
+
+    @Test
+    public void testGetRecordExceptionsWithDefaultFromConfiguration() {
+        given(aConfiguration.getFloat(anyString(), anyFloat())).willCallRealMethod();
+        given(aConfiguration.getBoolean(anyString(), anyBoolean())).willCallRealMethod();
+        given(aConfiguration.getInt(anyString(), anyInt())).willCallRealMethod();
+        given(aConfiguration.getString(anyString(), anyString())).willCallRealMethod();
+
+        CircuitBreakerConfiguration configuration = new CircuitBreakerConfiguration(aConfiguration);
+        CircuitBreakerConfig config = configuration.get("record");
+
+        assertThat(config.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+        assertThat(config.getFailureRateThreshold()).isEqualTo(1.0f);
+        assertThat(config.getMinimumNumberOfCalls()).isEqualTo(1);
+        assertThat(config.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(1);
+        assertThat(config.getSlidingWindowSize()).isEqualTo(1);
+        assertThat(config.getSlidingWindowType()).isEqualByComparingTo(TIME_BASED);
+        assertThat(config.getSlowCallDurationThreshold()).isEqualByComparingTo(Duration.ofSeconds(1));
+        assertThat(config.getSlowCallRateThreshold()).isEqualTo(1.0f);
+        assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(1).toMillis()); // the duration in milliseconds
+        assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new EOFException())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new RuntimeException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new EOFException())).isTrue();
     }
 
     @Test
@@ -286,6 +385,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -308,6 +409,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -330,6 +433,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -352,6 +457,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -374,6 +481,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -396,6 +505,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -418,6 +529,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -440,6 +553,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -462,6 +577,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -484,6 +601,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(19);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -506,6 +625,8 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(Duration.ofSeconds(20).toMillis()); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 
     @Test
@@ -528,5 +649,59 @@ public class CircuitBreakerConfigurationTest {
         assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
         assertThat(config.isWritableStackTraceEnabled()).isTrue();
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
+    }
+
+    @Test
+    public void testGetIgnoreExceptionstWithNoDefaultFromConfiguration() {
+        given(aConfiguration.getFloat(anyString(), anyFloat())).willCallRealMethod();
+        given(aConfiguration.getBoolean(anyString(), anyBoolean())).willCallRealMethod();
+        given(aConfiguration.getInt(anyString(), anyInt())).willCallRealMethod();
+        given(aConfiguration.getString(anyString(), anyString())).willCallRealMethod();
+
+        CircuitBreakerConfiguration configuration = new CircuitBreakerConfiguration(aConfiguration, "custom.noDefault.circuitbreaker");
+        CircuitBreakerConfig config = configuration.get("ignore");
+
+        assertThat(config.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isEqualTo(DEFAULT_CONFIG.isAutomaticTransitionFromOpenToHalfOpenEnabled());
+        assertThat(config.getFailureRateThreshold()).isEqualTo(DEFAULT_CONFIG.getFailureRateThreshold());
+        assertThat(config.getMinimumNumberOfCalls()).isEqualTo(DEFAULT_CONFIG.getMinimumNumberOfCalls());
+        assertThat(config.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(DEFAULT_CONFIG.getPermittedNumberOfCallsInHalfOpenState());
+        assertThat(config.getSlidingWindowSize()).isEqualTo(DEFAULT_CONFIG.getSlidingWindowSize());
+        assertThat(config.getSlidingWindowType()).isEqualByComparingTo(DEFAULT_CONFIG.getSlidingWindowType());
+        assertThat(config.getSlowCallDurationThreshold()).isEqualByComparingTo(DEFAULT_CONFIG.getSlowCallDurationThreshold());
+        assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
+        assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
+        assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Exception())).isFalse();
+        assertThat(config.getIgnoreExceptionPredicate().test(new RuntimeException())).isTrue();
+    }
+
+    @Test
+    public void testGetRecordExceptionsWithNoDefaultFromConfiguration() {
+        given(aConfiguration.getFloat(anyString(), anyFloat())).willCallRealMethod();
+        given(aConfiguration.getBoolean(anyString(), anyBoolean())).willCallRealMethod();
+        given(aConfiguration.getInt(anyString(), anyInt())).willCallRealMethod();
+        given(aConfiguration.getString(anyString(), anyString())).willCallRealMethod();
+
+        CircuitBreakerConfiguration configuration = new CircuitBreakerConfiguration(aConfiguration, "custom.noDefault.circuitbreaker");
+        CircuitBreakerConfig config = configuration.get("record");
+
+        assertThat(config.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isEqualTo(DEFAULT_CONFIG.isAutomaticTransitionFromOpenToHalfOpenEnabled());
+        assertThat(config.getFailureRateThreshold()).isEqualTo(DEFAULT_CONFIG.getFailureRateThreshold());
+        assertThat(config.getMinimumNumberOfCalls()).isEqualTo(DEFAULT_CONFIG.getMinimumNumberOfCalls());
+        assertThat(config.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(DEFAULT_CONFIG.getPermittedNumberOfCallsInHalfOpenState());
+        assertThat(config.getSlidingWindowSize()).isEqualTo(DEFAULT_CONFIG.getSlidingWindowSize());
+        assertThat(config.getSlidingWindowType()).isEqualByComparingTo(DEFAULT_CONFIG.getSlidingWindowType());
+        assertThat(config.getSlowCallDurationThreshold()).isEqualByComparingTo(DEFAULT_CONFIG.getSlowCallDurationThreshold());
+        assertThat(config.getSlowCallRateThreshold()).isEqualTo(DEFAULT_CONFIG.getSlowCallRateThreshold());
+        assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(DEFAULT_CONFIG.getWaitIntervalFunctionInOpenState().apply(1)); // the duration in milliseconds
+        assertThat(config.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
+        assertThat(config.getRecordExceptionPredicate().test(new Throwable())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new Exception())).isFalse();
+        assertThat(config.getRecordExceptionPredicate().test(new RuntimeException())).isTrue();
+        assertThat(config.getIgnoreExceptionPredicate().test(new Throwable())).isFalse();
     }
 }

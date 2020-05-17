@@ -14,6 +14,8 @@
                         <slowCallRateThreshold>1</slowCallRateThreshold>
                         <waitDurationInOpenState>PT1S</waitDurationInOpenState>
                         <writableStackTraceEnabled>true</writableStackTraceEnabled>
+                        <ignoreExceptions>java.io.IOException</ignoreExceptions>
+                        <recordExceptions>java.lang.Exception</recordExceptions>
                     </default>
                     <autoTransitionFalse>
                         <automaticTransitionFromOpenToHalfOpenEnabled>false</automaticTransitionFromOpenToHalfOpenEnabled>
@@ -45,6 +47,12 @@
                     <writableStack>
                         <writableStackTraceEnabled>false</writableStackTraceEnabled>
                     </writableStack>
+                    <ignore>
+                        <ignoreExceptions>java.lang.RuntimeException</ignoreExceptions>
+                    </ignore>
+                    <record>
+                        <recordExceptions>java.lang.RuntimeException</recordExceptions>
+                    </record>
                 </circuitbreaker>
             </resilience4j>
         </github>
@@ -82,6 +90,12 @@
                 <writableStack>
                     <writableStackTraceEnabled>true</writableStackTraceEnabled>
                 </writableStack>
+                <ignore>
+                    <ignoreExceptions>java.lang.RuntimeException</ignoreExceptions>
+                </ignore>
+                <record>
+                    <recordExceptions>java.lang.RuntimeException</recordExceptions>
+                </record>
             </circuitbreaker>
         </noDefault>
     </custom>
