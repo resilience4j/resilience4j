@@ -6,10 +6,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.vavr.collection.Array;
 import org.junit.Test;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthAggregator;
-import org.springframework.boot.actuate.health.OrderedHealthAggregator;
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.health.*;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
@@ -37,10 +34,8 @@ public class CircuitBreakersHealthIndicatorTest {
             mock(CircuitBreakerConfigurationProperties.InstanceProperties.class);
         CircuitBreakerConfigurationProperties circuitBreakerProperties = mock(
             CircuitBreakerConfigurationProperties.class);
-        HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties,
-                healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, new SimpleStatusAggregator());
 
         //when
         when(config.getFailureRateThreshold()).thenReturn(30f);
@@ -106,10 +101,8 @@ public class CircuitBreakersHealthIndicatorTest {
         expectedStateToCircuitBreaker.forEach(
             (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
 
-        HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties,
-                healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, new SimpleStatusAggregator());
 
         // then
         Health health = healthIndicator.health();
@@ -148,9 +141,8 @@ public class CircuitBreakersHealthIndicatorTest {
         expectedStateToCircuitBreaker.forEach(
             (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
 
-        HealthAggregator healthAggregator = new OrderedHealthAggregator();
         CircuitBreakersHealthIndicator healthIndicator =
-            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, healthAggregator);
+            new CircuitBreakersHealthIndicator(registry, circuitBreakerProperties, new SimpleStatusAggregator());
 
 
         // then
