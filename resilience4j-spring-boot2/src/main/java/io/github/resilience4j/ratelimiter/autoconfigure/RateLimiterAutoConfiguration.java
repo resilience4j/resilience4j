@@ -22,7 +22,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEndpoint;
 import io.github.resilience4j.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpoint;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -45,13 +45,13 @@ public class RateLimiterAutoConfiguration {
     static class RateLimiterEndpointAutoConfiguration {
 
         @Bean
-        @ConditionalOnEnabledEndpoint
+        @ConditionalOnAvailableEndpoint
         public RateLimiterEndpoint rateLimiterEndpoint(RateLimiterRegistry rateLimiterRegistry) {
             return new RateLimiterEndpoint(rateLimiterRegistry);
         }
 
         @Bean
-        @ConditionalOnEnabledEndpoint
+        @ConditionalOnAvailableEndpoint
         public RateLimiterEventsEndpoint rateLimiterEventsEndpoint(
             EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
             return new RateLimiterEventsEndpoint(eventConsumerRegistry);

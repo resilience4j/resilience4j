@@ -20,9 +20,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthAggregator;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.*;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,14 +46,14 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
-    private final HealthAggregator healthAggregator;
+    private final StatusAggregator statusAggregator;
 
     public CircuitBreakersHealthIndicator(CircuitBreakerRegistry circuitBreakerRegistry,
                                           CircuitBreakerConfigurationProperties circuitBreakerProperties,
-                                          HealthAggregator healthAggregator) {
+                                          StatusAggregator statusAggregator) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerProperties = circuitBreakerProperties;
-        this.healthAggregator = healthAggregator;
+        this.statusAggregator = statusAggregator;
     }
 
     private static Health.Builder addDetails(Health.Builder builder,
@@ -109,6 +107,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
             .collect(Collectors.toMap(CircuitBreaker::getName,
                 this::mapBackendMonitorState));
 
-        return healthAggregator.aggregate(healths);
+        Status status = this.statusAggregator.getAggregateStatus(healths.values().stream().map(Health::getStatus).collect(Collectors.toSet()));
+        return Health.status(status).withDetails(healths).build();
     }
 }
