@@ -99,4 +99,44 @@
             </circuitbreaker>
         </noDefault>
     </custom>
+    <inherited>
+        <default>
+            <automaticTransitionFromOpenToHalfOpenEnabled>true</automaticTransitionFromOpenToHalfOpenEnabled>
+            <failureRateThreshold>20.0</failureRateThreshold>
+            <minimumNumberOfCalls>21</minimumNumberOfCalls>
+            <permittedNumberOfCallsInHalfOpenState>22</permittedNumberOfCallsInHalfOpenState>
+            <slidingWindowSize>23</slidingWindowSize>
+            <slidingWindowType>TIME_BASED</slidingWindowType>
+            <slowCallDurationThreshold>PT24S</slowCallDurationThreshold>
+            <slowCallRateThreshold>25</slowCallRateThreshold>
+            <waitDurationInOpenState>PT26S</waitDurationInOpenState>
+            <writableStackTraceEnabled>true</writableStackTraceEnabled>
+            <ignoreExceptions>java.io.IOException</ignoreExceptions>
+            <recordExceptions>java.lang.Exception</recordExceptions>
+        </default>
+        <base>
+            <!-- Inherits from default -->
+            <minimumNumberOfCalls>27</minimumNumberOfCalls>
+            <permittedNumberOfCallsInHalfOpenState>28</permittedNumberOfCallsInHalfOpenState>
+            <slidingWindowSize>29</slidingWindowSize>
+            <slidingWindowType>COUNT_BASED</slidingWindowType>
+        </base>
+        <duration>
+            <!-- Inherits from base -->
+            <baseConfig>base</baseConfig>
+            <slowCallDurationThreshold>PT30S</slowCallDurationThreshold>
+            <slowCallRateThreshold>31</slowCallRateThreshold>
+            <waitDurationInOpenState>PT32S</waitDurationInOpenState>
+        </duration>
+        <ignore>
+            <!-- Inherits from base -->
+            <baseConfig>base</baseConfig>
+            <ignoreExceptions>java.lang.RuntimeException</ignoreExceptions>
+        </ignore>
+        <record>
+            <!-- Inherits from ignore -->
+            <baseConfig>ignore</baseConfig>
+            <recordExceptions>java.io.IOException</recordExceptions>
+        </record>
+    </inherited>
 </resilience4j-test>

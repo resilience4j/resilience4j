@@ -5,6 +5,7 @@ import org.apache.commons.configuration2.Configuration;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Optional;
 
 import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getDuration;
 import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getThrowableClassesByName;
@@ -28,19 +29,24 @@ public class CircuitBreakerConfiguration {
     public CircuitBreakerConfig get(String name, final CircuitBreakerConfig defaultConfig) {
         final Configuration namedConfig = config.subset(name);
 
+        CircuitBreakerConfig baseConfig =
+            Optional.ofNullable(namedConfig.getString("baseConfig")).map(b -> {
+                return this.get(b, defaultConfig);
+            }).orElse(defaultConfig);
+
         CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom()
-            .automaticTransitionFromOpenToHalfOpenEnabled(namedConfig.getBoolean("automaticTransitionFromOpenToHalfOpenEnabled", defaultConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()))
-            .failureRateThreshold(namedConfig.getFloat("failureRateThreshold", defaultConfig.getFailureRateThreshold()))
-            .minimumNumberOfCalls(namedConfig.getInt("minimumNumberOfCalls", defaultConfig.getMinimumNumberOfCalls()))
-            .permittedNumberOfCallsInHalfOpenState(namedConfig.getInt("permittedNumberOfCallsInHalfOpenState", defaultConfig.getPermittedNumberOfCallsInHalfOpenState()))
-            .slidingWindowSize(namedConfig.getInt("slidingWindowSize", defaultConfig.getSlidingWindowSize()))
-            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.valueOf(namedConfig.getString("slidingWindowType", defaultConfig.getSlidingWindowType().name())))
-            .slowCallDurationThreshold(getDuration(namedConfig, "slowCallDurationThreshold", defaultConfig.getSlowCallDurationThreshold()))
-            .slowCallRateThreshold(namedConfig.getFloat("slowCallRateThreshold", defaultConfig.getSlowCallRateThreshold()))
-            .waitDurationInOpenState(getDuration(namedConfig, "waitDurationInOpenState", Duration.ofMillis(defaultConfig.getWaitIntervalFunctionInOpenState().apply(1))))
-            .writableStackTraceEnabled(namedConfig.getBoolean("writableStackTraceEnabled", defaultConfig.isWritableStackTraceEnabled()));
-        builder = setOrDefaultIgnoreExceptions(builder, namedConfig, defaultConfig);
-        builder = setOrDefaultRecordExceptions(builder, namedConfig, defaultConfig);
+            .automaticTransitionFromOpenToHalfOpenEnabled(namedConfig.getBoolean("automaticTransitionFromOpenToHalfOpenEnabled", baseConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()))
+            .failureRateThreshold(namedConfig.getFloat("failureRateThreshold", baseConfig.getFailureRateThreshold()))
+            .minimumNumberOfCalls(namedConfig.getInt("minimumNumberOfCalls", baseConfig.getMinimumNumberOfCalls()))
+            .permittedNumberOfCallsInHalfOpenState(namedConfig.getInt("permittedNumberOfCallsInHalfOpenState", baseConfig.getPermittedNumberOfCallsInHalfOpenState()))
+            .slidingWindowSize(namedConfig.getInt("slidingWindowSize", baseConfig.getSlidingWindowSize()))
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.valueOf(namedConfig.getString("slidingWindowType", baseConfig.getSlidingWindowType().name())))
+            .slowCallDurationThreshold(getDuration(namedConfig, "slowCallDurationThreshold", baseConfig.getSlowCallDurationThreshold()))
+            .slowCallRateThreshold(namedConfig.getFloat("slowCallRateThreshold", baseConfig.getSlowCallRateThreshold()))
+            .waitDurationInOpenState(getDuration(namedConfig, "waitDurationInOpenState", Duration.ofMillis(baseConfig.getWaitIntervalFunctionInOpenState().apply(1))))
+            .writableStackTraceEnabled(namedConfig.getBoolean("writableStackTraceEnabled", baseConfig.isWritableStackTraceEnabled()));
+        builder = setOrDefaultIgnoreExceptions(builder, namedConfig, baseConfig);
+        builder = setOrDefaultRecordExceptions(builder, namedConfig, baseConfig);
 
         return builder.build();
     }
@@ -59,7 +65,7 @@ public class CircuitBreakerConfiguration {
             return configBuilder.ignoreException(defaultConfig.getIgnoreExceptionPredicate());
         }
 
-        return configBuilder.ignoreExceptions((Class<? extends Throwable>[])configuredValues.toArray(new Class<?>[0]));
+        return configBuilder.ignoreExceptions((Class<? extends Throwable>[]) configuredValues.toArray(new Class<?>[0]));
     }
 
     private CircuitBreakerConfig.Builder setOrDefaultRecordExceptions(final CircuitBreakerConfig.Builder configBuilder, Configuration config, CircuitBreakerConfig defaults) {
@@ -68,6 +74,6 @@ public class CircuitBreakerConfiguration {
             return configBuilder.recordException(defaults.getRecordExceptionPredicate());
         }
 
-        return configBuilder.recordExceptions((Class<? extends Throwable>[])configuredValues.toArray(new Class<?>[0]));
+        return configBuilder.recordExceptions((Class<? extends Throwable>[]) configuredValues.toArray(new Class<?>[0]));
     }
 }
