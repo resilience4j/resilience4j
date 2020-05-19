@@ -24,7 +24,7 @@ import java.util.concurrent.CompletionStage;
  **/
 @Singleton
 @Requires(beans = ThreadPoolBulkheadRegistry.class)
-public class BulkheadTreadPoolInterceptor  extends BaseInterceptor implements MethodInterceptor<Object,Object> {
+public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
 
     /**
      * Positioned before the {@link io.github.resilience4j.annotation.Bulkhead} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
@@ -39,8 +39,8 @@ public class BulkheadTreadPoolInterceptor  extends BaseInterceptor implements Me
      * @param beanContext The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
      * @param bulkheadRegistry bulkhead registry used to retrieve {@link Bulkhead} by name
      */
-    public BulkheadTreadPoolInterceptor(BeanContext beanContext,
-                                        ThreadPoolBulkheadRegistry bulkheadRegistry) {
+    public ThreadPoolBulkheadInterceptor(BeanContext beanContext,
+                                         ThreadPoolBulkheadRegistry bulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.beanContext = beanContext;
     }

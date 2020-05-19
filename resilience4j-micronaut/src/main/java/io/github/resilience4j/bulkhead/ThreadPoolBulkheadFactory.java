@@ -24,7 +24,7 @@ import static java.util.Optional.ofNullable;
 
 @Factory
 @Requires(property = "resilience4j.thread-pool-bulkhead.enabled")
-public class BulkHeadThreadPoolFactory {
+public class ThreadPoolBulkheadFactory {
     @Bean
     @Named("compositeBulkHeadCustomizer")
     public CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer(

@@ -1,6 +1,7 @@
 package io.github.resilience4j.micronaut
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry
@@ -19,6 +20,7 @@ class MicronautBootCommonTest extends Specification {
         !applicationContext.containsBean(TimeLimiterRegistry)
         !applicationContext.containsBean(CircuitBreakerRegistry)
         !applicationContext.containsBean(BulkheadRegistry)
+        !applicationContext.containsBean(ThreadPoolBulkheadRegistry)
 
         cleanup:
         applicationContext.close()
