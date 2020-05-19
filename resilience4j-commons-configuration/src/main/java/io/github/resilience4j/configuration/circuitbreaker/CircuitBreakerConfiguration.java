@@ -1,62 +1,77 @@
 package io.github.resilience4j.configuration.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.configuration.InheritedConfiguration;
 import org.apache.commons.configuration2.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Optional;
-
-import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getDuration;
-import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getThrowableClassesByName;
 
 /**
  * {@link CircuitBreakerConfiguration} is used to create {@link CircuitBreakerConfig} from a {@link Configuration}.
+ * <p>
+ * Each instance of CircuitBreakerConfiguration is used to access properties for a specific named {@link Configuration#subset(String) subset} from a specific
+ * contextual subset of the Configuration. The {@code default contextual subset} is accessed by the prefix
+ * {@code io.github.resilience4j.circuitbreaker}, and the {@code default named subset} prefix is {@code default}.
+ * </p>
+ * <p>
+ * A CircuitBreakerConfiguration may access properties for one or more named subsets within the contextual subset.
+ * </p>
  */
-public class CircuitBreakerConfiguration {
-    private static final String DEFAULT_NAME = "default";
+public class CircuitBreakerConfiguration extends InheritedConfiguration<CircuitBreakerConfig> {
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerConfiguration.class);
     private static final String DEFAULT_CONTEXT = "io.github.resilience4j.circuitbreaker";
-    private final Configuration config;
 
+    /**
+     * Initializes a {@link CircuitBreakerConfiguration} using the provided {@code config} and the
+     * {@code default contextual subset}.
+     *
+     * @param config the Configuration.
+     * @see #CircuitBreakerConfiguration(Configuration, String)
+     */
     public CircuitBreakerConfiguration(final Configuration config) {
         this(config, DEFAULT_CONTEXT);
     }
 
-    public CircuitBreakerConfiguration(final Configuration config, final String circuitBreakerPrefix) {
-        this.config = config.subset(circuitBreakerPrefix);
+    /**
+     * Initializes a {@link CircuitBreakerConfiguration} using the provided {@code config} and {@code context}
+     * {@link Configuration#subset(String) subset}.
+     *
+     * @param config  the Configuration.
+     * @param context the contextual prefix from which named circuit breaker configuration will be accessed.
+     */
+    public CircuitBreakerConfiguration(final Configuration config, final String context) {
+        super(config, context);
     }
 
-    public CircuitBreakerConfig get(String name, final CircuitBreakerConfig defaultConfig) {
-        final Configuration namedConfig = config.subset(name);
-
-        CircuitBreakerConfig baseConfig =
-            Optional.ofNullable(namedConfig.getString("baseConfig")).map(b -> {
-                return this.get(b, defaultConfig);
-            }).orElse(defaultConfig);
-
+    @Override
+    protected CircuitBreakerConfig map(Configuration config, CircuitBreakerConfig defaults) {
         CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom()
-            .automaticTransitionFromOpenToHalfOpenEnabled(namedConfig.getBoolean("automaticTransitionFromOpenToHalfOpenEnabled", baseConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()))
-            .failureRateThreshold(namedConfig.getFloat("failureRateThreshold", baseConfig.getFailureRateThreshold()))
-            .minimumNumberOfCalls(namedConfig.getInt("minimumNumberOfCalls", baseConfig.getMinimumNumberOfCalls()))
-            .permittedNumberOfCallsInHalfOpenState(namedConfig.getInt("permittedNumberOfCallsInHalfOpenState", baseConfig.getPermittedNumberOfCallsInHalfOpenState()))
-            .slidingWindowSize(namedConfig.getInt("slidingWindowSize", baseConfig.getSlidingWindowSize()))
-            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.valueOf(namedConfig.getString("slidingWindowType", baseConfig.getSlidingWindowType().name())))
-            .slowCallDurationThreshold(getDuration(namedConfig, "slowCallDurationThreshold", baseConfig.getSlowCallDurationThreshold()))
-            .slowCallRateThreshold(namedConfig.getFloat("slowCallRateThreshold", baseConfig.getSlowCallRateThreshold()))
-            .waitDurationInOpenState(getDuration(namedConfig, "waitDurationInOpenState", Duration.ofMillis(baseConfig.getWaitIntervalFunctionInOpenState().apply(1))))
-            .writableStackTraceEnabled(namedConfig.getBoolean("writableStackTraceEnabled", baseConfig.isWritableStackTraceEnabled()));
-        builder = setOrDefaultIgnoreExceptions(builder, namedConfig, baseConfig);
-        builder = setOrDefaultRecordExceptions(builder, namedConfig, baseConfig);
+            .automaticTransitionFromOpenToHalfOpenEnabled(config.getBoolean("automaticTransitionFromOpenToHalfOpenEnabled", defaults.isAutomaticTransitionFromOpenToHalfOpenEnabled()))
+            .failureRateThreshold(config.getFloat("failureRateThreshold", defaults.getFailureRateThreshold()))
+            .minimumNumberOfCalls(config.getInt("minimumNumberOfCalls", defaults.getMinimumNumberOfCalls()))
+            .permittedNumberOfCallsInHalfOpenState(config.getInt("permittedNumberOfCallsInHalfOpenState", defaults.getPermittedNumberOfCallsInHalfOpenState()))
+            .slidingWindowSize(config.getInt("slidingWindowSize", defaults.getSlidingWindowSize()))
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.valueOf(config.getString("slidingWindowType", defaults.getSlidingWindowType().name())))
+            .slowCallDurationThreshold(getDuration(config, "slowCallDurationThreshold", defaults.getSlowCallDurationThreshold()))
+            .slowCallRateThreshold(config.getFloat("slowCallRateThreshold", defaults.getSlowCallRateThreshold()))
+            .waitDurationInOpenState(getDuration(config, "waitDurationInOpenState", Duration.ofMillis(defaults.getWaitIntervalFunctionInOpenState().apply(1))))
+            .writableStackTraceEnabled(config.getBoolean("writableStackTraceEnabled", defaults.isWritableStackTraceEnabled()));
+        builder = setOrDefaultIgnoreExceptions(builder, config, defaults);
+        builder = setOrDefaultRecordExceptions(builder, config, defaults);
 
         return builder.build();
     }
 
-    public CircuitBreakerConfig get(String name) {
-        return get(name, getDefault());
+    @Override
+    protected CircuitBreakerConfig getDefaultConfigObject() {
+        return CircuitBreakerConfig.ofDefaults();
     }
 
-    public CircuitBreakerConfig getDefault() {
-        return get(DEFAULT_NAME, CircuitBreakerConfig.ofDefaults());
+    protected Logger getLogger() {
+        return LOG;
     }
 
     private CircuitBreakerConfig.Builder setOrDefaultIgnoreExceptions(final CircuitBreakerConfig.Builder configBuilder, Configuration config, CircuitBreakerConfig defaultConfig) {

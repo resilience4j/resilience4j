@@ -1,11 +1,12 @@
 package io.github.resilience4j.configuration.bulkhead;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
+import io.github.resilience4j.configuration.InheritedConfiguration;
 import org.apache.commons.configuration2.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
-
-import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getDuration;
 
 /**
  * {@link BulkheadConfiguration} is used to create {@link BulkheadConfig} from a {@link Configuration}.
@@ -19,21 +20,9 @@ import static io.github.resilience4j.configuration.utils.ConfigurationUtil.getDu
  * </p>
  */
 @Immutable
-public class BulkheadConfiguration {
-    private static final String DEFAULT_NAME = "default";
+public class BulkheadConfiguration extends InheritedConfiguration<BulkheadConfig> {
+    private static final Logger LOG = LoggerFactory.getLogger(BulkheadConfiguration.class);
     private static final String DEFAULT_CONTEXT = "io.github.resilience4j.bulkhead";
-    private final Configuration config;
-
-    /**
-     * Initializes a {@link BulkheadConfiguration} using the provided {@code config} and {@code context}
-     * {@link Configuration#subset(String) subset}.
-     *
-     * @param config  the Configuration.
-     * @param context the contextual prefix from which named bulkhead configuration will be accessed.
-     */
-    public BulkheadConfiguration(final Configuration config, final String context) {
-        this.config = config.subset(context);
-    }
 
     /**
      * Initializes a {@link BulkheadConfiguration} using the provided {@code config} and the
@@ -47,51 +36,31 @@ public class BulkheadConfiguration {
     }
 
     /**
-     * Creates a {@link BulkheadConfig} with the properties accessed at the {@link Configuration#subset(String) subset}
-     * with the provided {@code name}. If a property is not accessible in the Configuration, the value will be
-     * replicated from the provided {@code defaultConfig}.
+     * Initializes a {@link BulkheadConfiguration} using the provided {@code config} and {@code context}
+     * {@link Configuration#subset(String) subset}.
      *
-     * @param name          the subset prefix of the contextual Configuration subset from which to create the
-     *                      BulkheadConfig.
-     * @param defaultConfig the BulkheadConfig used to provide values for unconfigured properties.
-     * @return a BulkheadConfig.
+     * @param config  the Configuration.
+     * @param context the contextual prefix from which named bulkhead configuration will be accessed.
      */
-    public BulkheadConfig get(final String name, final BulkheadConfig defaultConfig) {
-        final Configuration namedConfig = config.subset(name);
+    public BulkheadConfiguration(final Configuration config, final String context) {
+        super(config, context);
+    }
 
+    @Override
+    protected BulkheadConfig map(Configuration config, BulkheadConfig defaults) {
         return BulkheadConfig.custom()
-            .maxConcurrentCalls(
-                namedConfig.getInt("maxConcurrentCalls", defaultConfig.getMaxConcurrentCalls()))
-            .maxWaitDuration(getDuration(namedConfig, "maxWaitTime", defaultConfig.getMaxWaitDuration()))
-            .writableStackTraceEnabled(
-                namedConfig.getBoolean("writableStackTraceEnabled", defaultConfig.isWritableStackTraceEnabled()))
-            .build();
+            .maxConcurrentCalls(config.getInt("maxConcurrentCalls", defaults.getMaxConcurrentCalls()))
+            .maxWaitDuration(getDuration(config, "maxWaitTime", defaults.getMaxWaitDuration()))
+            .writableStackTraceEnabled(config.getBoolean("writableStackTraceEnabled", defaults.isWritableStackTraceEnabled())).build();
     }
 
-    /**
-     * Creates a {@link BulkheadConfig} with the properties accessed at the {@code default named subset}. If a
-     * property is not accessible in the Configuration, the value will be replicated from the
-     * {@link BulkheadConfig#ofDefaults() default BulkheadConfig}.
-     *
-     * @return the default bulkhead configuration
-     * @see #get(String, BulkheadConfig)
-     * @see BulkheadConfig#ofDefaults()
-     */
-    public BulkheadConfig getDefault() {
-        return get(DEFAULT_NAME, BulkheadConfig.ofDefaults());
+    @Override
+    protected BulkheadConfig getDefaultConfigObject() {
+        return BulkheadConfig.ofDefaults();
     }
 
-    /**
-     * Creates a {@link BulkheadConfig} with the properties accessed at the {@link Configuration#subset(String) subset}
-     * with the provided {@code name}. If a property is not accessible in the Configuration, the value will be
-     * replicated from the {@link #getDefault() configured default}.
-     *
-     * @param name the subset prefix of the Configuration from which to create the BulkheadConfig.
-     * @return a BulkheadConfig
-     * @see BulkheadConfiguration#get(String, BulkheadConfig)
-     * @see BulkheadConfiguration#getDefault()
-     */
-    public BulkheadConfig get(final String name) {
-        return get(name, getDefault());
+    @Override
+    protected Logger getLogger() {
+        return LOG;
     }
 }
