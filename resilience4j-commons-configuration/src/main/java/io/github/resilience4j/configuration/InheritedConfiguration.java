@@ -41,7 +41,7 @@ public abstract class InheritedConfiguration<T> {
      * {@link #getDefaultConfigObject() default config}.
      *
      * @return the default configured config of type T
-     * @see #get(String, T)
+     * @see #get(String, Object)
      */
     public T getDefault() {
         return get(DEFAULT_NAME, getDefaultConfigObject());
@@ -54,7 +54,7 @@ public abstract class InheritedConfiguration<T> {
      *
      * @param name the subset prefix of the Configuration from which to create the config.
      * @return a config of type T
-     * @see #get(String, T)
+     * @see #get(String, Object)
      * @see #getDefaultConfigObject()
      */
     public T get(String name) {
@@ -83,7 +83,7 @@ public abstract class InheritedConfiguration<T> {
     }
 
     /**
-     * Convenience method for reading a {@Link Duration} from {@link Configuration}.
+     * Convenience method for reading a {@link Duration} from {@link Configuration}.
      *
      * @param configuration   the Configuration object from which the Duration will be read.
      * @param key             the Configuration key containing the Duration.
