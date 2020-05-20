@@ -179,4 +179,17 @@ public class BulkheadConfigurationTest {
         assertThat(bulkheadConfig.getMaxWaitDuration()).isEqualByComparingTo(DEFAULT_CONFIG.getMaxWaitDuration());
         assertThat(bulkheadConfig.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
     }
+
+    @Test
+    public void testGetInheritedConfiguration() {
+        given(aConfiguration.getInt(anyString(), anyInt())).willCallRealMethod();
+        given(aConfiguration.getLong(anyString(), anyLong())).willCallRealMethod();
+        given(aConfiguration.getBoolean(anyString(), anyBoolean())).willCallRealMethod();
+
+        BulkheadConfig bulkheadConfig = new BulkheadConfiguration(aConfiguration, "custom.bulkhead").get("inherits");
+
+        assertThat(bulkheadConfig.getMaxConcurrentCalls()).isEqualTo(9);
+        assertThat(bulkheadConfig.getMaxWaitDuration()).isEqualByComparingTo(Duration.ofSeconds(10));
+        assertThat(bulkheadConfig.isWritableStackTraceEnabled()).isTrue();
+    }
 }
