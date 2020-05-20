@@ -54,7 +54,7 @@ public class BulkHeadRegistryFactory {
     @Requires(beans = BulkheadProperties.class)
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
-        EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        @Named("bulkheadEventConsumer") EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
         @Named("compositeBulkHeadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
@@ -80,6 +80,7 @@ public class BulkHeadRegistryFactory {
     }
 
     @Bean
+    @Named("bulkheadEventConsumer")
     public EventConsumerRegistry<BulkheadEvent> bulkheadEventsConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }

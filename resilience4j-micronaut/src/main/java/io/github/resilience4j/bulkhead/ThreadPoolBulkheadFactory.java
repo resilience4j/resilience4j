@@ -4,6 +4,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
@@ -36,9 +37,9 @@ public class ThreadPoolBulkheadFactory {
     @Requires(beans = ThreadPoolBulkheadConfigurationProperties.class)
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-        EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        @Named("threadPoolBulkheadEventConsumer") EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-       CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
+        @Named("compositeBulkHeadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
 
         ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(
             bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer,
@@ -59,11 +60,17 @@ public class ThreadPoolBulkheadFactory {
             optionalRegistryEventConsumers.orElseGet(ArrayList::new));
     }
 
+    @Bean
+    @Named("threadPoolBulkheadEventConsumer")
+    public EventConsumerRegistry<BulkheadEvent> threadPoolBulkheadEventsConsumerRegistry() {
+        return new DefaultEventConsumerRegistry<>();
+    }
+
     /**
      * Initializes a bulkhead registry.
      *
      * @param threadPoolBulkheadConfigurationProperties The bulkhead configuration properties.
-     * @param compositeThreadPoolBulkheadCustomizer the delegate of customizers
+     * @param compositeThreadPoolBulkheadCustomizer     the delegate of customizers
      * @return a ThreadPoolBulkheadRegistry
      */
     private ThreadPoolBulkheadRegistry createBulkheadRegistry(
