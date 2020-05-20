@@ -88,7 +88,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         }
 
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.Retry.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.Retry.class,"name").orElse("default");
         Retry retry = retryRegistry.retry(name);
 
         ReturnType<Object> rt = context.getReturnType();

@@ -43,6 +43,7 @@ public class CircuitBreakerAnnotationMapper implements NamedAnnotationMapper {
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         final AnnotationValueBuilder<CircuitBreaker> builder = AnnotationValue.builder(CircuitBreaker.class);
         annotation.stringValue("fallbackMethod").ifPresent(c -> builder.member("fallbackMethod", c));
+        annotation.stringValue("name").ifPresent(c -> builder.member("name", c));
         AnnotationValue<CircuitBreaker> ann = builder.build();
         return Collections.singletonList(ann);
     }

@@ -99,7 +99,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
             return context.proceed();
         }
 
-        final String name = opt.get().stringValue().orElse("default");
+        final String name = opt.get().stringValue("name").orElse("default");
         Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();

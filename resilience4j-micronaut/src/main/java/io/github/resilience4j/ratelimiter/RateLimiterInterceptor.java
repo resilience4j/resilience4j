@@ -82,7 +82,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
             return context.proceed();
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.RateLimiter.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.RateLimiter.class, "name").orElse("default");
         RateLimiter rateLimiter = this.rateLimiterRegistry.rateLimiter(name);
 
         ReturnType<Object> rt = context.getReturnType();

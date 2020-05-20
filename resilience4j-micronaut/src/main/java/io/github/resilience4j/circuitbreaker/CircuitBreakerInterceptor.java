@@ -83,7 +83,7 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         }
 
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.CircuitBreaker.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.annotation.CircuitBreaker.class,"name").orElse("default");
         CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
 
         ReturnType<Object> rt = context.getReturnType();

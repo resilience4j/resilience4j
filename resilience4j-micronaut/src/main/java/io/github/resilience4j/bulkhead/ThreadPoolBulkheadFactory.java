@@ -27,7 +27,7 @@ import static java.util.Optional.ofNullable;
 @Requires(property = "resilience4j.thread-pool-bulkhead.enabled")
 public class ThreadPoolBulkheadFactory {
     @Bean
-    @Named("compositeBulkHeadCustomizer")
+    @Named("compositeThreadPoolBulkHeadCustomizer")
     public CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer(
         List<ThreadPoolBulkheadConfigCustomizer> customizers) {
         return new CompositeCustomizer<>(customizers);
@@ -37,9 +37,9 @@ public class ThreadPoolBulkheadFactory {
     @Requires(beans = ThreadPoolBulkheadConfigurationProperties.class)
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
-        @Named("threadPoolBulkheadEventConsumer") EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        @Named("compositeBulkHeadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
+        @Named("threadPoolBulkheadEventConsumerRegistry") EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        @Named("threadPoolBulkheadEventConsumer") RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
+        @Named("compositeThreadPoolBulkHeadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
 
         ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(
             bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer,
@@ -54,6 +54,7 @@ public class ThreadPoolBulkheadFactory {
 
     @Bean
     @Primary
+    @Named("threadPoolBulkheadEventConsumer")
     public RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer(
         Optional<List<RegistryEventConsumer<ThreadPoolBulkhead>>> optionalRegistryEventConsumers) {
         return new CompositeRegistryEventConsumer<>(
@@ -61,7 +62,7 @@ public class ThreadPoolBulkheadFactory {
     }
 
     @Bean
-    @Named("threadPoolBulkheadEventConsumer")
+    @Named("threadPoolBulkheadEventConsumerRegistry")
     public EventConsumerRegistry<BulkheadEvent> threadPoolBulkheadEventsConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }

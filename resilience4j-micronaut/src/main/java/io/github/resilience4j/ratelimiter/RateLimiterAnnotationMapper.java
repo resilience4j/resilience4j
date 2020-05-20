@@ -42,6 +42,7 @@ public class RateLimiterAnnotationMapper implements NamedAnnotationMapper {
     @Override
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         final AnnotationValueBuilder<RateLimiter> builder = AnnotationValue.builder(RateLimiter.class);
+        annotation.stringValue("name").ifPresent(c -> builder.member("name", c));
         annotation.stringValue("fallbackMethod").ifPresent(c -> builder.member("fallbackMethod", c));
         AnnotationValue<RateLimiter> ann = builder.build();
         return Collections.singletonList(ann);

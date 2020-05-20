@@ -45,6 +45,7 @@ public class BulkheadAnnotationMapper implements NamedAnnotationMapper {
             builder.member("type", c)
         );
         annotation.stringValue("fallbackMethod").ifPresent(s -> builder.member("fallbackMethod", s));
+        annotation.stringValue("name").ifPresent(c -> builder.member("name", c));
         AnnotationValue<Bulkhead> ann = builder.build();
         return Collections.singletonList(ann);
     }

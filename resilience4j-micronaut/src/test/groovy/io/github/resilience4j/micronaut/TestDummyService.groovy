@@ -21,7 +21,17 @@ public abstract class TestDummyService {
     }
 
     @Executable
+    CompletableFuture<String> completionStageRecoveryParam(String parameter) {
+        return CompletableFuture.supplyAsync({ -> parameter });
+    }
+
+    @Executable
     String syncRecovery() {
         return "recovered"
+    }
+
+    @Executable
+    String syncRecoveryParam(String parameter) {
+        return parameter
     }
 }

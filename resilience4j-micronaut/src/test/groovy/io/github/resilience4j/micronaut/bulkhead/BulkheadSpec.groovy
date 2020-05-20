@@ -25,52 +25,25 @@ class BulkheadSpec extends Specification {
     @Inject
     ApplicationContext applicationContext
 
-    @Inject
-    @Client("/bulkhead")
-    HttpClient client;
-
     void "default configuration"() {
         given:
         def registry = applicationContext.getBean(BulkheadRegistry)
         def defaultBulkhead = registry.bulkhead("default")
-        def backendABulkhead = registry.bulkhead("backend-a")
 
         expect:
         defaultBulkhead  != null
         defaultBulkhead.bulkheadConfig.maxWaitDuration.seconds == 10
         defaultBulkhead.bulkheadConfig.maxConcurrentCalls == 2
+    }
+
+    void "backend-a configuration"() {
+        given:
+        def registry = applicationContext.getBean(BulkheadRegistry)
+        def backendABulkhead = registry.bulkhead("backend-a")
+
 
         backendABulkhead != null
         backendABulkhead.bulkheadConfig.maxWaitDuration.seconds == 10
         backendABulkhead.bulkheadConfig.maxConcurrentCalls == 2
-    }
-
-    void "test recovery bulkhead"() {
-        when:
-        HttpResponse<String> response = client.toBlocking().exchange("/async-recoverable", String.class);
-
-        then:
-        response.body() == "recovered"
-
-        when:
-        response = client.toBlocking().exchange("/sync-recoverable", String.class);
-
-        then:
-        response.body() == "recovered"
-    }
-
-    @Controller("/bulkhead")
-    static class BulkheadService extends TestDummyService {
-        @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        @Get("/async-recoverable")
-        public CompletableFuture<String> asynRecovertable() {
-            return asyncError();
-        }
-
-        @Bulkhead(name = "backend-a", fallbackMethod = 'syncRecovery')
-        @Get("/sync-recoverable")
-        public String syncRecovertable() {
-            return syncError();
-        }
     }
 }

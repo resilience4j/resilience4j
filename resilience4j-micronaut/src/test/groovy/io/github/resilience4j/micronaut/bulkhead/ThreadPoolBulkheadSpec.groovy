@@ -27,10 +27,6 @@ class ThreadPoolBulkheadSpec extends Specification {
     @Inject
     ApplicationContext applicationContext;
 
-    @Inject
-    @Client("/thread-pool-bulkhead")
-    HttpClient client;
-
     void "default configuration"() {
         given:
         def registry = applicationContext.getBean(ThreadPoolBulkheadRegistry)
@@ -38,7 +34,7 @@ class ThreadPoolBulkheadSpec extends Specification {
         def backendABulkhead = registry.bulkhead("backend-a")
 
         expect:
-        defaultBulkhead  != null
+        defaultBulkhead != null
         defaultBulkhead.bulkheadConfig.getMaxThreadPoolSize() == 10
         defaultBulkhead.bulkheadConfig.getCoreThreadPoolSize() == 5
         defaultBulkhead.bulkheadConfig.getQueueCapacity() == 4
@@ -49,36 +45,6 @@ class ThreadPoolBulkheadSpec extends Specification {
         backendABulkhead.bulkheadConfig.getCoreThreadPoolSize() == 5
         backendABulkhead.bulkheadConfig.getQueueCapacity() == 4
         backendABulkhead.bulkheadConfig.keepAliveDuration.seconds == 10
-    }
-
-    void "test recovery bulkhead"() {
-        when:
-        HttpResponse<String> response = client.toBlocking().exchange("/async-recoverable", String.class);
-
-        then:
-        response.body() == "recovered"
-
-        when:
-        response = client.toBlocking().exchange("/sync-recoverable", String.class);
-
-        then:
-        response.body() == "recovered"
-    }
-
-
-    @Controller("/thread-pool-bulkhead")
-    static class ThreadpoolBulkheadService extends TestDummyService {
-        @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecovery', type = Bulkhead.Type.THREADPOOL)
-        @Get("/async-recoverable")
-        public CompletableFuture<String> asynRecovertable() {
-            return asyncError();
-        }
-
-        @Bulkhead(name = "backend-a", fallbackMethod = 'syncRecovery', type = Bulkhead.Type.THREADPOOL)
-        @Get("/sync-recoverable")
-        public String syncRecovertable() {
-            return syncError();
-        }
     }
 
 }

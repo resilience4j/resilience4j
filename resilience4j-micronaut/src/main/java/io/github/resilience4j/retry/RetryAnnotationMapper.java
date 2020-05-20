@@ -42,6 +42,7 @@ public class RetryAnnotationMapper  implements NamedAnnotationMapper {
     public List<AnnotationValue<?>> map(AnnotationValue<Annotation> annotation, VisitorContext visitorContext) {
         final AnnotationValueBuilder<Retry> builder = AnnotationValue.builder(Retry.class);
         annotation.stringValue("fallbackMethod").ifPresent(s -> builder.member("fallbackMethod", s));
+        annotation.stringValue("name").ifPresent(c -> builder.member("name", c));
         AnnotationValue<Retry> ann = builder.build();
         return Collections.singletonList(ann);
     }
