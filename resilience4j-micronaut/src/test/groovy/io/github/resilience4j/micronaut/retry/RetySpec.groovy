@@ -4,6 +4,7 @@ package io.github.resilience4j.micronaut.retry
 import io.github.resilience4j.retry.RetryRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
+import io.micronaut.retry.exception.FallbackException
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
@@ -24,10 +25,13 @@ class RetySpec extends Specification {
         given:
         def registry = applicationContext.getBean(RetryRegistry)
         def defaultRetry = registry.retry("default")
+
         expect:
         defaultRetry != null
         defaultRetry.retryConfig.maxAttempts == 3
         defaultRetry.retryConfig.intervalFunction.apply(0) == 1000
+        defaultRetry.retryConfig.getExceptionPredicate().test(new IOException())
+        !defaultRetry.retryConfig.getExceptionPredicate().test(new IgnoredException())
 
     }
 
@@ -40,6 +44,8 @@ class RetySpec extends Specification {
         backendA != null
         backendA.retryConfig.maxAttempts == 1
         backendA.retryConfig.intervalFunction.apply(0) == 1000
+        backendA.retryConfig.getExceptionPredicate().test(new IOException())
+        !backendA.retryConfig.getExceptionPredicate().test(new IgnoredException())
     }
 
 }

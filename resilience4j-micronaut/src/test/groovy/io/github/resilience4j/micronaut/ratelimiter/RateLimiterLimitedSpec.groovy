@@ -17,7 +17,6 @@ import javax.inject.Inject
 
 @MicronautTest
 @Property(name = "resilience4j.ratelimiter.enabled", value = "true")
-@Property(name = "resilience4j.ratelimiter.instances.low.slidingWindowType", value = "COUNT_BASED")
 @Property(name = "resilience4j.ratelimiter.instances.low.limitForPeriod", value = "1")
 @Property(name = "resilience4j.ratelimiter.instances.low.limitRefreshPeriod", value = "PT10s")
 class RateLimiterLimitedSpec extends Specification{
@@ -25,7 +24,7 @@ class RateLimiterLimitedSpec extends Specification{
 
     @Inject @Client("/ratelimiter-limited") HttpClient client
 
-    void "test basic rate limit functionality"() {
+    void "test ratelimit"() {
         when:
         HttpResponse<String> response = client.toBlocking().exchange("/limited", String.class)
 
@@ -40,7 +39,29 @@ class RateLimiterLimitedSpec extends Specification{
         def ex = thrown(HttpClientResponseException)
         ex.response.code() == HttpStatus.INTERNAL_SERVER_ERROR.code
         ex.message == "Internal Server Error: RateLimiter 'low' does not permit further calls"
+    }
 
+    void "test unlimited"() {
+        when:
+        HttpResponse<String> response = client.toBlocking().exchange("/unlimited", String.class)
+
+        then:
+        noExceptionThrown()
+        response.body() == "ok"
+
+        when:
+        response = client.toBlocking().exchange("/unlimited", String.class)
+
+        then:
+        noExceptionThrown()
+        response.body() == "ok"
+
+        when:
+        response = client.toBlocking().exchange("/unlimited", String.class)
+
+        then:
+        noExceptionThrown()
+        response.body() == "ok"
     }
 
     @Controller("/ratelimiter-limited")
@@ -48,6 +69,11 @@ class RateLimiterLimitedSpec extends Specification{
         @RateLimiter(name = "low")
         @Get("/limited")
         String limited() {
+            return "ok"
+        }
+
+        @Get("/unlimited")
+        String unLimited() {
             return "ok"
         }
     }

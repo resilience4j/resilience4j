@@ -45,4 +45,19 @@ class CircuitBreakerSpec extends Specification {
 
     }
 
+    void "backend-a configuration"() {
+        given:
+        def registry = applicationContext.getBean(CircuitBreakerRegistry)
+        def backendA = registry.circuitBreaker("backend-a")
+
+        expect:
+        backendA != null
+
+        backendA.circuitBreakerConfig.slidingWindowSize == 100
+        backendA.circuitBreakerConfig.slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
+        backendA.circuitBreakerConfig.permittedNumberOfCallsInHalfOpenState == 10
+        backendA.circuitBreakerConfig.failureRateThreshold == 60
+
+    }
+
 }
