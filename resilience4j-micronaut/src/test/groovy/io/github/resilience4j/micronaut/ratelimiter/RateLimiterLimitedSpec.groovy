@@ -39,6 +39,22 @@ class RateLimiterLimitedSpec extends Specification{
         def ex = thrown(HttpClientResponseException)
         ex.response.code() == HttpStatus.INTERNAL_SERVER_ERROR.code
         ex.message == "Internal Server Error: RateLimiter 'low' does not permit further calls"
+
+        // test rate limit on another function
+        when:
+        client.toBlocking().exchange("/limited2", String.class)
+
+        then:
+        noExceptionThrown()
+        response.body() == "ok"
+
+        when:
+        client.toBlocking().exchange("/limited2", String.class)
+
+        then:
+        ex = thrown(HttpClientResponseException)
+        ex.response.code() == HttpStatus.INTERNAL_SERVER_ERROR.code
+        ex.message == "Internal Server Error: RateLimiter 'low' does not permit further calls"
     }
 
     void "test unlimited"() {
@@ -69,6 +85,12 @@ class RateLimiterLimitedSpec extends Specification{
         @RateLimiter(name = "low")
         @Get("/limited")
         String limited() {
+            return "ok"
+        }
+
+        @RateLimiter(name = "low")
+        @Get("/limited2")
+        String limited2() {
             return "ok"
         }
 
