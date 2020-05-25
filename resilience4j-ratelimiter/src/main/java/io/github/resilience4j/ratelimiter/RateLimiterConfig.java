@@ -32,13 +32,15 @@ public class RateLimiterConfig {
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
     private final int limitForPeriod;
+    private final int burstForPeriod;
     private final boolean writableStackTraceEnabled;
 
     private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
-        int limitForPeriod, boolean writableStackTraceEnabled) {
+        int limitForPeriod, int burstForPeriod, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
+        this.burstForPeriod = burstForPeriod;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
     }
 
@@ -103,6 +105,10 @@ public class RateLimiterConfig {
         return limitForPeriod;
     }
 
+    public int getBurstForPeriod() {
+        return burstForPeriod;
+    }
+
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
     }
@@ -122,6 +128,7 @@ public class RateLimiterConfig {
         private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
+        private int burstForPeriod = 0;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
@@ -131,6 +138,7 @@ public class RateLimiterConfig {
             this.timeoutDuration = prototype.timeoutDuration;
             this.limitRefreshPeriod = prototype.limitRefreshPeriod;
             this.limitForPeriod = prototype.limitForPeriod;
+            this.burstForPeriod = prototype.burstForPeriod;
             this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
         }
 
@@ -140,7 +148,10 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod,
+            if( burstForPeriod< limitForPeriod) {
+                burstForPeriod = limitForPeriod;
+            }
+            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod, burstForPeriod,
                 writableStackTraceEnabled);
         }
 
@@ -192,6 +203,20 @@ public class RateLimiterConfig {
          */
         public Builder limitForPeriod(final int limitForPeriod) {
             this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+            return this;
+        }
+
+        /**
+         * Configures the permissions limit for burst capacity. Count of max permissions available
+         * during one rate limiter period specified by {@link RateLimiterConfig#limitRefreshPeriod}
+         * value. If no value specified the default value is the one
+         * specified for @{@link RateLimiterConfig#limitForPeriod}.
+         *
+         * @param burstForPeriod the max permissions limit for the refresh period
+         * @return the RateLimiterConfig.Builder
+         */
+        public Builder burstForPeriod(final int burstForPeriod) {
+            this.burstForPeriod = burstForPeriod;
             return this;
         }
 
