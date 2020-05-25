@@ -49,6 +49,7 @@ public class SmoothRateLimiterConfigTest {
         then(config.getLimitForPeriod()).isEqualTo(LIMIT);
         then(config.getLimitRefillPeriod()).isEqualTo(REFILL_PERIOD);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
+        then(config.getBurstCapacity()).isEqualTo(LIMIT);
     }
 
     @Test

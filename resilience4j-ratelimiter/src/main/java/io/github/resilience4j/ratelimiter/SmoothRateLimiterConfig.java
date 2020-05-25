@@ -149,6 +149,9 @@ public class SmoothRateLimiterConfig {
          * @return the SmoothRateLimiterConfig
         */
         public SmoothRateLimiterConfig build() {
+            if(burstCapacity < limitForPeriod) {
+                burstCapacity = limitForPeriod;
+            }
             return new SmoothRateLimiterConfig(timeoutDuration, limitRefillPeriod, limitForPeriod, burstCapacity,
                 writableStackTraceEnabled);
         }
