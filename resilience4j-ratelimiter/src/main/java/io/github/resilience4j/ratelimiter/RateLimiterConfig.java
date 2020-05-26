@@ -119,6 +119,7 @@ public class RateLimiterConfig {
             "timeoutDuration=" + timeoutDuration +
             ", limitRefreshPeriod=" + limitRefreshPeriod +
             ", limitForPeriod=" + limitForPeriod +
+            ", burstForPeriod=" + burstForPeriod +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
             '}';
     }
