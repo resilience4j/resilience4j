@@ -765,32 +765,6 @@ public class CircuitBreakerStateMachineTest {
         verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
     }
 
-    @Test
-    public void shouldNotAutoTransit() throws Exception {
-        CircuitBreaker circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
-            .failureRateThreshold(50)
-            .permittedNumberOfCallsInHalfOpenState(4)
-            .slowCallDurationThreshold(Duration.ofSeconds(4))
-            .slowCallRateThreshold(50)
-            .enableAutomaticTransitionFromOpenToHalfOpen()
-            .slidingWindow(5, 5, SlidingWindowType.TIME_BASED)
-            .waitDurationInOpenState(Duration.ofSeconds(1))
-            .ignoreExceptions(NumberFormatException.class)
-            .build(), mockClock);
-
-        // Auto transition scheduled
-        circuitBreaker.transitionToOpenState();
-
-        // Auto transition should be canceled
-        circuitBreaker.transitionToForcedOpenState();
-
-        // Wait duration in open state
-        Thread.sleep(2000);
-
-        // Check still forced open state.
-        assertThat(circuitBreaker.getState()).isEqualTo(FORCED_OPEN);
-    }
-
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate,
         Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedFailedCalls,
         Long expectedNotPermittedCalls) {
