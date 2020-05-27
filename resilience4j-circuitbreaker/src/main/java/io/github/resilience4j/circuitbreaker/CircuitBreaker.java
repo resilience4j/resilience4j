@@ -220,7 +220,6 @@ public interface CircuitBreaker {
         Supplier<Either<? extends Exception, T>> supplier) {
         return () -> {
             if (circuitBreaker.tryAcquirePermission()) {
-                circuitBreaker.acquirePermission();
                 long start = System.nanoTime();
                 Either<? extends Exception, T> result = supplier.get();
                 long durationInNanos = System.nanoTime() - start;
