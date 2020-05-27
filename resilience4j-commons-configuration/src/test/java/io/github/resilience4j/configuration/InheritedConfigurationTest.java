@@ -50,7 +50,7 @@ public class InheritedConfigurationTest {
 
         @Test
         public void testInvalidISO8601Duration() {
-            given(aConfiguration.getString(key, defaultDuration.toString())).willReturn("30 SECONDS");
+            given(aConfiguration.getString(key, defaultDuration.toString())).willReturn("PT3D"); // Invalid
             given(anInheritedConfiguration.getDuration(aConfiguration, key, defaultDuration)).willCallRealMethod();
 
             assertThatThrownBy(() -> {
@@ -66,6 +66,26 @@ public class InheritedConfigurationTest {
             Duration duration = anInheritedConfiguration.getDuration(aConfiguration, key, defaultDuration);
 
             assertThat(duration).isEqualByComparingTo(defaultDuration);
+        }
+
+        @Test
+        public void testDurationAsMillis() {
+            given(aConfiguration.getString(key, defaultDuration.toString())).willReturn("3000");
+            given(anInheritedConfiguration.getDuration(aConfiguration, key, defaultDuration)).willCallRealMethod();
+
+            Duration duration = anInheritedConfiguration.getDuration(aConfiguration, key, defaultDuration);
+
+            assertThat(duration).isEqualByComparingTo(Duration.ofMillis(3000));
+        }
+
+        @Test
+        public void testDurationInvalid() {
+            given(aConfiguration.getString(key, defaultDuration.toString())).willReturn("30 SECONDS"); // Invalid
+            given(anInheritedConfiguration.getDuration(aConfiguration, key, defaultDuration)).willCallRealMethod();
+
+            assertThatThrownBy(() -> {
+                anInheritedConfiguration.getDuration(aConfiguration, key, defaultDuration);
+            }).isInstanceOf(NumberFormatException.class);
         }
 
         @Test
