@@ -50,7 +50,7 @@ public class BulkheadConfiguration extends InheritedConfiguration<BulkheadConfig
     protected BulkheadConfig map(Configuration config, BulkheadConfig defaults) {
         return BulkheadConfig.custom()
             .maxConcurrentCalls(config.getInt("maxConcurrentCalls", defaults.getMaxConcurrentCalls()))
-            .maxWaitDuration(getDuration(config, "maxWaitTime", defaults.getMaxWaitDuration()))
+            .maxWaitDuration(getDuration(config, "maxWaitDuration", defaults.getMaxWaitDuration()))
             .writableStackTraceEnabled(config.getBoolean("writableStackTraceEnabled", defaults.isWritableStackTraceEnabled())).build();
     }
 

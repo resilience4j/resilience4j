@@ -137,7 +137,7 @@ public class BulkheadConfigurationTest {
         BulkheadConfig bulkheadConfig = new BulkheadConfiguration(aConfiguration, "custom.nodefault.bulkhead").get("wait");
 
         assertThat(bulkheadConfig.getMaxConcurrentCalls()).isEqualTo(DEFAULT_CONFIG.getMaxConcurrentCalls());
-        assertThat(bulkheadConfig.getMaxWaitDuration()).isEqualByComparingTo(Duration.ofSeconds(8));
+        assertThat(bulkheadConfig.getMaxWaitDuration()).isEqualByComparingTo(Duration.ofMillis(8));
         assertThat(bulkheadConfig.isWritableStackTraceEnabled()).isEqualTo(DEFAULT_CONFIG.isWritableStackTraceEnabled());
     }
 

@@ -26,7 +26,7 @@ public abstract class InheritedConfiguration<T> {
 
     /**
      * Initializes an {@link InheritedConfiguration} using the provided {@code config} and {@code context}
-     * {@link Configuration#subset(String) subset},
+     * {@link Configuration#subset(String) subset}.
      *
      * @param config  the Configuration.
      * @param context the contextual prefix from which named circuit breaker configuration will be accessed.
@@ -93,6 +93,9 @@ public abstract class InheritedConfiguration<T> {
      */
     protected Duration getDuration(final Configuration configuration, final String key, final Duration defaultDuration) {
         String durationString = configuration.getString(key, defaultDuration.toString());
+        if(!durationString.contains("P")) {
+            return Duration.ofMillis(Long.parseLong(durationString));
+        }
         return Duration.parse(durationString);
     }
 
