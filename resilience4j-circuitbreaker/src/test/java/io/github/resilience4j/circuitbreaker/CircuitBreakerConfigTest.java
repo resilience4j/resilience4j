@@ -397,6 +397,24 @@ public class CircuitBreakerConfigTest {
         then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
     }
 
+    @Test
+    public void testToString() {
+        CircuitBreakerConfig config = custom()
+                .slidingWindowSize(5)
+                .recordExceptions(RuntimeException.class)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                .slidingWindowType(SlidingWindowType.TIME_BASED).build();
+
+        String result = config.toString();
+
+        assertThat(result).startsWith("CircuitBreakerConfig {");
+        assertThat(result).contains("slidingWindowSize=5");
+        assertThat(result).contains("recordExceptions=[class java.lang.RuntimeException]");
+        assertThat(result).contains("automaticTransitionFromOpenToHalfOpenEnabled=true");
+        assertThat(result).contains("slidingWindowType=TIME_BASED");
+        assertThat(result).endsWith("}");
+    }
+
     private static class ExtendsException extends Exception {
 
         ExtendsException() {
