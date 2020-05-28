@@ -97,4 +97,25 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         // Verify scheduled future is canceled
         then(mockFuture).should(times(1)).cancel(true);
     }
+
+    @Test
+    public void notCancelAutoTransitionFutureIfAlreadyDone() {
+
+        ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
+        doReturn(mockFuture)
+            .when(schedulerMock).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Already done
+        when(mockFuture.isDone()).thenReturn(true);
+
+        // Auto transition scheduled
+        circuitBreaker.transitionToOpenState();
+        then(schedulerMock).should(times(1)).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition should be canceled
+        circuitBreaker.transitionToForcedOpenState();
+
+        // Not called again because future is already done.
+        then(mockFuture).should(times(0)).cancel(true);
+    }
 }
