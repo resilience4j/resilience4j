@@ -291,9 +291,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         UnaryOperator<CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
             StateTransition.transitionBetween(getName(), currentState.getState(), newState);
-            if (currentState instanceof OpenState) {
-                ((OpenState) currentState).cancelAutomaticTransitionToHalfOpen();
-            }
+            currentState.preTransitionHook();
             return newStateGenerator.apply(currentState);
         });
         publishStateTransitionEvent(
@@ -445,6 +443,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         default boolean shouldPublishEvents(CircuitBreakerEvent event) {
             return event.getEventType().forcePublish || getState().allowPublish;
+        }
+
+        /**
+         * This method is invoked before transit to other CircuitBreakerState.
+         */
+        default void preTransitionHook() {
+            // noOp
         }
     }
 
@@ -699,6 +704,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
+        }
+
+        @Override
+        public void preTransitionHook() {
+            cancelAutomaticTransitionToHalfOpen();
         }
 
         private void toHalfOpenState() {
