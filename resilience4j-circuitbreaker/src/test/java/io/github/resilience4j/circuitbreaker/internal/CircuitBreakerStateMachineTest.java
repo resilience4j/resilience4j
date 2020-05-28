@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -518,7 +519,7 @@ public class CircuitBreakerStateMachineTest {
             .transitionToForcedOpenState(); // Should create a CircuitBreakerOnStateTransitionEvent
 
         assertThat(circuitBreaker.getState()).isEqualTo(
-            CircuitBreaker.State.FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent
+            FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(false);
 
@@ -529,7 +530,7 @@ public class CircuitBreakerStateMachineTest {
         // The CircuitBreaker should not transition to half open, even if the wait duration of 5 seconds is elapsed.
 
         assertThat(circuitBreaker.getState()).isEqualTo(
-            CircuitBreaker.State.FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent
+            FORCED_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent
         assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 2L);
     }
 
