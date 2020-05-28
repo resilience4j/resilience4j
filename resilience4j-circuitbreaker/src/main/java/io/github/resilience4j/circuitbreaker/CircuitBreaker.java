@@ -45,14 +45,14 @@ import java.util.stream.Collectors;
  * CircuitBreaker#onError} events. Before communicating with the backend, the permission to do so
  * must be obtained via the method {@link CircuitBreaker#tryAcquirePermission()}.
  * <p>
- * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is above a
- * (configurable) threshold. Then, all access to the backend is rejected for a (configurable) time
+ * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is greater than or
+ * equal to a (configurable) threshold. Then, all access to the backend is rejected for a (configurable) time
  * duration. No further calls are permitted.
  * <p>
  * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and
  * allows a number of calls to see if the backend is still unavailable or has become available
- * again. If the failure rate is above the configured threshold, the state changes back to OPEN. If
- * the failure rate is below or equal to the threshold, the state changes back to CLOSED.
+ * again. If the failure rate is greater than or equal to the configured threshold, the state changes back to OPEN.
+ * If the failure rate is below or equal to the threshold, the state changes back to CLOSED.
  */
 public interface CircuitBreaker {
 
