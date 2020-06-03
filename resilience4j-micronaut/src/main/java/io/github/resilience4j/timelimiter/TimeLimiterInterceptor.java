@@ -16,6 +16,7 @@
 package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.BaseInterceptor;
+import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.github.resilience4j.timelimiter.transformer.TimeLimiterTransformer;
 import io.micronaut.aop.MethodInterceptor;
@@ -49,11 +50,6 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
     private final BeanContext beanContext;
     private static final ScheduledExecutorService timeLimiterExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
-    /**
-     * Positioned before the {@link io.github.resilience4j.annotation.CircuitBreaker} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
-     */
-    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
-
     public TimeLimiterInterceptor(BeanContext beanContext, TimeLimiterRegistry timeLimiterRegistry) {
         this.beanContext = beanContext;
         this.timeLimiterRegistry = timeLimiterRegistry;
@@ -61,7 +57,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
 
     @Override
     public int getOrder() {
-        return POSITION;
+        return ResilienceInterceptPhase.TIME_LIMITER.getPosition();
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.BaseInterceptor;
+import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
@@ -31,11 +32,6 @@ import java.util.concurrent.ExecutionException;
 public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
     Logger LOG = LoggerFactory.getLogger(ThreadPoolBulkheadInterceptor.class);
 
-    /**
-     * Positioned before the {@link io.github.resilience4j.annotation.Bulkhead} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
-     */
-    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
-
     private final ThreadPoolBulkheadRegistry bulkheadRegistry;
     private final BeanContext beanContext;
 
@@ -51,7 +47,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
 
     @Override
     public int getOrder() {
-        return POSITION;
+        return ResilienceInterceptPhase.BULKHEAD.getPosition();
     }
 
     /**

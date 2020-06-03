@@ -16,8 +16,10 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.BaseInterceptor;
+import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.github.resilience4j.retry.transformer.RetryTransformer;
+import io.micronaut.aop.InterceptPhase;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -28,7 +30,6 @@ import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.ReturnType;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import io.micronaut.retry.intercept.RecoveryInterceptor;
 import io.reactivex.Flowable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,10 +51,6 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
     private final BeanContext beanContext;
     private static final ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 
-    /**
-     * Positioned before the {@link io.github.resilience4j.annotation.Retry} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
-     */
-    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
 
     public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry) {
         this.retryRegistry = retryRegistry;
@@ -63,7 +60,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
 
     @Override
     public int getOrder() {
-        return POSITION;
+        return ResilienceInterceptPhase.RETRY.getPosition();
     }
 
     /**

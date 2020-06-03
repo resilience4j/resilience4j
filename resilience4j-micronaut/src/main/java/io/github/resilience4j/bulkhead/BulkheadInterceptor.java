@@ -17,6 +17,7 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.BaseInterceptor;
+import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInterceptor;
@@ -49,11 +50,6 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
     private static final Logger LOG = LoggerFactory.getLogger(BulkheadInterceptor.class);
 
 
-    /**
-     * Positioned before the {@link io.github.resilience4j.annotation.Bulkhead} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
-     */
-    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
-
     private final BulkheadRegistry bulkheadRegistry;
     private final BeanContext beanContext;
 
@@ -70,7 +66,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
 
     @Override
     public int getOrder() {
-        return POSITION;
+        return ResilienceInterceptPhase.BULKHEAD.getPosition();
     }
 
     /**

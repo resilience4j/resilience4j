@@ -16,6 +16,7 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.BaseInterceptor;
+import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
 import io.micronaut.aop.MethodInterceptor;
@@ -46,10 +47,6 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
     private final RateLimiterRegistry rateLimiterRegistry;
     private final BeanContext beanContext;
 
-    /**
-     * Positioned before the {@link io.github.resilience4j.annotation.CircuitBreaker} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
-     */
-    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
 
     public RateLimiterInterceptor(BeanContext beanContext, RateLimiterRegistry rateLimiterRegistry) {
         this.rateLimiterRegistry = rateLimiterRegistry;
@@ -58,7 +55,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
 
     @Override
     public int getOrder() {
-        return POSITION;
+        return ResilienceInterceptPhase.RATE_LIMITER.getPosition();
     }
 
     /**

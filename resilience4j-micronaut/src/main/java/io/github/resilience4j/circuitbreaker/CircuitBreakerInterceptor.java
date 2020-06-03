@@ -16,8 +16,10 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.BaseInterceptor;
+import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
+import io.micronaut.aop.InterceptPhase;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -46,10 +48,6 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final BeanContext beanContext;
 
-    /**
-     * Positioned before the {@link io.github.resilience4j.annotation.CircuitBreaker} interceptor after {@link io.micronaut.retry.annotation.Fallback}.
-     */
-    public static final int POSITION = RecoveryInterceptor.POSITION + 20;
 
     public CircuitBreakerInterceptor(BeanContext beanContext, CircuitBreakerRegistry circuitBreakerRegistry) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
@@ -58,7 +56,7 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
 
     @Override
     public int getOrder() {
-        return POSITION;
+        return ResilienceInterceptPhase.CIRCUIT_BREAKER.getPosition();
     }
 
     /**
