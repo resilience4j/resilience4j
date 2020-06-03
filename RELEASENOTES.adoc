@@ -316,6 +316,8 @@ NOTE: Breaking changes:
 * PR #943: Removed deprecated documentation
 
 == Version 1.5.0
+* Issue #855: Updated resilience4j-spring-boot2 to 2.3.0.RELEASE
+* Issue #855: Updated resilience4j-spring-cloud2 to 2.2.2.RELEASE
 * Issue #942: Introduced new CB metric "notPermittedCalls"
 * Issue #964: Added Kotlin DSL for building *Config and *Registry classes
 * Issue #979: Added fairCallHandlingEnabled flag to BulkheadConfig which controls whether FairSync or NonfairSync should be used in the Semaphore.
