@@ -82,7 +82,8 @@ public class CircuitBreakerMetricsPublisher extends AbstractMetricsPublisher<Cir
             (Gauge<Float>) () -> circuitBreaker.getMetrics().getSlowCallRate());
 
         List<String> metricNames = Arrays
-            .asList(state, successful, failed, notPermitted, numberOfBufferedCalls, failureRate);
+            .asList(state, successful, failed, notPermitted, numberOfBufferedCalls, failureRate,
+                slow, slowSuccess, slowFailed, slowCallRate);
         metricsNameMap.put(name, new HashSet<>(metricNames));
     }
 
