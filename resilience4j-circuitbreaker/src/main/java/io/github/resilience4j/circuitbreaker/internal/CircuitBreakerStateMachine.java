@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
@@ -34,6 +35,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -223,9 +225,21 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
-    public void onSuccess(long duration, TimeUnit durationUnit) {
-        publishSuccessEvent(duration, durationUnit);
-        stateReference.get().onSuccess(duration, durationUnit);
+    public void onSuccess(long duration, TimeUnit durationUnit, Optional<?> result) {
+        handleResult(duration, durationUnit, result);
+    }
+
+    private void handleResult(long duration, TimeUnit durationUnit, Optional<?> result) {
+        if (result.isPresent() && circuitBreakerConfig.getRecordResultPredicate().test(result.get())) {
+            LOG.debug("CircuitBreaker '{}' recorded a result type '{}' as failure:", name, result.get().getClass());
+            ResultRecordedAsFailureException failure = new ResultRecordedAsFailureException(name, result.get());
+            publishCircuitErrorEvent(name, duration, durationUnit, failure);
+            stateReference.get().onError(duration, durationUnit, failure);
+        } else {
+            LOG.debug("CircuitBreaker '{}' succeeded:", name);
+            publishSuccessEvent(duration, durationUnit);
+            stateReference.get().onSuccess(duration, durationUnit);
+        }
     }
 
     /**

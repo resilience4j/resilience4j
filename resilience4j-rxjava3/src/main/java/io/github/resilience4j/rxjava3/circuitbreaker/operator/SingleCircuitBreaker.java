@@ -21,6 +21,7 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
@@ -61,7 +62,7 @@ class SingleCircuitBreaker<T> extends Single<T> {
 
         @Override
         protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
         }
 
         @Override

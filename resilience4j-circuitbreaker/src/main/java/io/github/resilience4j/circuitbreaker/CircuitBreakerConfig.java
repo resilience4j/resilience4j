@@ -43,10 +43,13 @@ public class CircuitBreakerConfig {
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
+    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = Object -> false;
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
     private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
+
+    private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
@@ -128,6 +131,10 @@ public class CircuitBreakerConfig {
         return recordExceptionPredicate;
     }
 
+    public Predicate<Object> getRecordResultPredicate() {
+        return recordResultPredicate;
+    }
+
     public Predicate<Throwable> getIgnoreExceptionPredicate() {
         return ignoreExceptionPredicate;
     }
@@ -202,6 +209,8 @@ public class CircuitBreakerConfig {
 	public static class Builder {
 
         @Nullable
+        private Predicate<Object> recordResultPredicate;
+        @Nullable
         private Predicate<Throwable> recordExceptionPredicate;
         @Nullable
         private Predicate<Throwable> ignoreExceptionPredicate;
@@ -242,6 +251,7 @@ public class CircuitBreakerConfig {
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
+            this.recordResultPredicate = baseConfig.recordResultPredicate;
         }
 
         public Builder() {
@@ -547,6 +557,21 @@ public class CircuitBreakerConfig {
          */
         public Builder recordException(Predicate<Throwable> predicate) {
             this.recordExceptionPredicate = predicate;
+            return this;
+        }
+
+        /**
+         * Configures a Predicate which evaluates if the result of the protected function call
+         * should be recorded as a failure and thus increase the failure rate.
+         * The Predicate must return true if the result should count as a failure.
+         * The Predicate must return false, if the result should count
+         * as a success.
+         *
+         * @param predicate the Predicate which evaluates if a result should count as a failure
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder recordResult(Predicate<Object> predicate) {
+            this.recordResultPredicate = predicate;
             return this;
         }
 

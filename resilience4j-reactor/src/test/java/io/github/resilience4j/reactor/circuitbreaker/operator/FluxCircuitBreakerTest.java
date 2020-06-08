@@ -25,6 +25,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
@@ -50,7 +51,7 @@ public class FluxCircuitBreakerTest {
             .expectNext("Event 2")
             .verifyComplete();
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Event 1"));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -67,7 +68,7 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, times(1))
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), any());
     }
 
     @Test
@@ -82,7 +83,7 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, times(1))
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), any());
     }
 
     @Test
@@ -96,7 +97,7 @@ public class FluxCircuitBreakerTest {
             .expectNext("Bla Event 2")
             .verifyComplete();
 
-        verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -113,7 +114,7 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -128,7 +129,7 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -143,7 +144,7 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -161,7 +162,7 @@ public class FluxCircuitBreakerTest {
         verify(circuitBreaker, times(1)).releasePermission();
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -179,6 +180,6 @@ public class FluxCircuitBreakerTest {
         verify(circuitBreaker, never()).releasePermission();
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 }

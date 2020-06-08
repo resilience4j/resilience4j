@@ -21,6 +21,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
@@ -61,13 +62,13 @@ class ObserverCircuitBreaker<T> extends Observable<T> {
 
         @Override
         protected void hookOnComplete() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
         }
 
         @Override
         protected void hookOnCancel() {
             if (eventWasEmitted.get()) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
             } else {
                 circuitBreaker.releasePermission();
             }

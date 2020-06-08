@@ -25,6 +25,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +59,7 @@ public class MonoCircuitBreakerTest {
             .verifyComplete();
 
         then(helloWorldService).should().returnHelloWorld();
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -75,7 +76,7 @@ public class MonoCircuitBreakerTest {
             .verifyComplete();
 
         then(helloWorldService).should().returnHelloWorld();
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -95,7 +96,7 @@ public class MonoCircuitBreakerTest {
             .verifyComplete();
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
-        verify(circuitBreaker, times(3)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(3)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -109,7 +110,7 @@ public class MonoCircuitBreakerTest {
                 .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
             .verifyComplete();
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -126,7 +127,7 @@ public class MonoCircuitBreakerTest {
 
         verify(circuitBreaker, times(1))
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
     }
 
     @Test
@@ -141,7 +142,7 @@ public class MonoCircuitBreakerTest {
 
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
     }
 
     @Test
@@ -156,7 +157,7 @@ public class MonoCircuitBreakerTest {
 
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
     }
 
     @Test
@@ -174,7 +175,7 @@ public class MonoCircuitBreakerTest {
         verify(circuitBreaker, times(1)).releasePermission();
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
     }
 
     @Test
@@ -190,7 +191,7 @@ public class MonoCircuitBreakerTest {
             .verify();
 
         then(helloWorldService).should(never()).returnHelloWorld();
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Hello World"));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }

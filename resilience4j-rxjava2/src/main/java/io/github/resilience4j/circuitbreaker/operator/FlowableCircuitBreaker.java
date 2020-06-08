@@ -23,6 +23,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
@@ -64,13 +65,13 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
         @Override
         public void hookOnComplete() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
         }
 
         @Override
         public void hookOnCancel() {
             if (eventWasEmitted.get()) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
             } else {
                 circuitBreaker.releasePermission();
             }

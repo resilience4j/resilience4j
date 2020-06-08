@@ -21,6 +21,7 @@ import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
@@ -56,7 +57,7 @@ class CompletableCircuitBreaker extends Completable {
 
         @Override
         protected void hookOnComplete() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
         }
 
         @Override

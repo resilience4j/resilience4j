@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Observable;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +28,7 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult("Event 1", "Event 2");
 
-        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -44,7 +45,7 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
 
         then(circuitBreaker).should()
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -57,7 +58,7 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -75,6 +76,6 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should().releasePermission();
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 }

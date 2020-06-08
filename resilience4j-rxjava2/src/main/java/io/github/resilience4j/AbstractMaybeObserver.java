@@ -41,11 +41,11 @@ public abstract class AbstractMaybeObserver<T> extends AbstractDisposable implem
     @Override
     public void onSuccess(T value) {
         whenNotCompleted(() -> {
-            hookOnSuccess();
+            hookOnSuccess(value);
             downstreamObserver.onSuccess(value);
         });
     }
 
-    protected abstract void hookOnSuccess();
+    protected abstract void hookOnSuccess(T value);
 
 }

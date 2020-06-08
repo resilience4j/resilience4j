@@ -21,6 +21,7 @@ import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
@@ -56,7 +57,7 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
 
         @Override
         protected void hookOnComplete() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
         }
 
         @Override
@@ -65,8 +66,8 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+        protected void hookOnSuccess(T value) {
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.of(value));
         }
 
         @Override

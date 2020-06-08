@@ -24,6 +24,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
@@ -62,7 +63,7 @@ public class CircularEventConsumerTest {
         circuitBreaker.getEventPublisher().onEvent(ringBuffer);
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
 
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IOException("Bla"));
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));

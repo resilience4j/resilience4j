@@ -20,6 +20,7 @@ import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,7 +54,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
             if (singleProducer && successSignaled.compareAndSet(false, true)) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.of(value));
             }
             eventWasEmitted.set(true);
 
@@ -64,7 +65,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     protected void hookOnComplete() {
         if (successSignaled.compareAndSet(false, true)) {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
         }
 
         downstreamSubscriber.onComplete();
@@ -74,7 +75,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     public void hookOnCancel() {
         if (!successSignaled.get()) {
             if (eventWasEmitted.get()) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.empty());
             } else {
                 circuitBreaker.releasePermission();
             }

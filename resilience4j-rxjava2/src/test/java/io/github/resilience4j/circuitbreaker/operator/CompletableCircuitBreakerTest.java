@@ -5,6 +5,7 @@ import io.reactivex.Completable;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -28,7 +29,7 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertSubscribed()
             .assertComplete();
 
-        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -46,7 +47,7 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
 
         then(circuitBreaker).should()
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -60,7 +61,7 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }

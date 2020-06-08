@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -12,6 +13,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 /**
  * Unit test for {@link FlowableCircuitBreaker}.
@@ -27,7 +29,8 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult("Event 1", "Event 2");
 
-        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Event 1"));
+        then(circuitBreaker).should(times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Event 2"));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -44,7 +47,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
 
         then(circuitBreaker).should()
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -57,7 +60,8 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Event 1"));
+        then(circuitBreaker).should(times(1)).onSuccess(anyLong(), any(TimeUnit.class), Optional.of("Event 2"));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -75,7 +79,7 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should().releasePermission();
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 
     @Test
@@ -90,6 +94,6 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should(never()).releasePermission();
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class), any(Optional.class));
     }
 }
