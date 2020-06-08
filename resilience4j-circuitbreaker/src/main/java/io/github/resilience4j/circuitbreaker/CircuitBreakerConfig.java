@@ -209,8 +209,6 @@ public class CircuitBreakerConfig {
 	public static class Builder {
 
         @Nullable
-        private Predicate<Object> recordResultPredicate;
-        @Nullable
         private Predicate<Throwable> recordExceptionPredicate;
         @Nullable
         private Predicate<Throwable> ignoreExceptionPredicate;
@@ -225,6 +223,7 @@ public class CircuitBreakerConfig {
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
+        private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
         private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
             .of(Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD));
@@ -687,6 +686,7 @@ public class CircuitBreakerConfig {
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            config.recordResultPredicate = recordResultPredicate;
             return config;
         }
 

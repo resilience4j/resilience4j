@@ -30,6 +30,9 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class CircuitBreakerConfigTest {
 
+
+//    TODO: add tests here for record Result
+
     @Test(expected = IllegalArgumentException.class)
     public void zeroMaxFailuresShouldFail() {
         custom().failureRateThreshold(0).build();

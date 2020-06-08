@@ -55,6 +55,8 @@ public class CircuitBreakerStateMachineTest {
     private EventConsumer<CircuitBreakerOnFailureRateExceededEvent> mockOnFailureRateExceededEventConsumer;
     private EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> mockOnSlowCallRateExceededEventConsumer;
 
+//    TODO: add tests here for record Result
+
     @Before
     public void setUp() {
         mockOnSuccessEventConsumer = (EventConsumer<CircuitBreakerOnSuccessEvent>) mock(EventConsumer.class);
