@@ -111,6 +111,10 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
         }
 
+        if (properties.getWaitDurationInHalfOpenState() != null) {
+            builder.waitDurationInHalfOpenState(properties.getWaitDurationInHalfOpenState());
+        }
+
         if (properties.getRingBufferSizeInClosedState() != null) {
             builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
         }
@@ -243,6 +247,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Duration slowCallDurationThreshold;
+
+        @Nullable
+        private Duration waitDurationInHalfOpenState;
 
         @Nullable
         private Float failureRateThreshold;
@@ -646,6 +653,11 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return slowCallDurationThreshold;
         }
 
+        @Nullable
+        public Duration getWaitDurationInHalfOpenState() {
+            return waitDurationInHalfOpenState;
+        }
+
         public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
             Objects.requireNonNull(slowCallDurationThreshold);
             if (slowCallDurationThreshold.toNanos() < 1) {
@@ -654,6 +666,16 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.slowCallDurationThreshold = slowCallDurationThreshold;
+        }
+
+        public void setWaitDurationInHalfOpenState(Duration waitDurationInHalfOpenState) {
+            Objects.requireNonNull(waitDurationInHalfOpenState);
+            if (waitDurationInHalfOpenState.toMillis() < 1000) {
+                throw new IllegalArgumentException(
+                    "waitDurationInHalfOpenState must be greater than or equal to 1 second.");
+            }
+
+            this.waitDurationInHalfOpenState = waitDurationInHalfOpenState;
         }
 
         @Nullable
