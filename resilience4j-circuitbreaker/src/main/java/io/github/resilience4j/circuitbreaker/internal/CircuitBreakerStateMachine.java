@@ -964,6 +964,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
+
+            final long waitDurationInHalfOpenState = circuitBreakerConfig.getWaitDurationInHalfOpenState().toMillis();
+            if (waitDurationInHalfOpenState >= 1000) {
+                ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
+                scheduledExecutorService
+                    .schedule(this::toOpenState, waitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
+            }
         }
 
         /**
@@ -989,6 +996,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             if (!tryAcquirePermission()) {
                 throw CallNotPermittedException
                     .createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            }
+        }
+
+        private void toOpenState() {
+            if (isHalfOpen.compareAndSet(true, false)) {
+                transitionToOpenState();
             }
         }
 
