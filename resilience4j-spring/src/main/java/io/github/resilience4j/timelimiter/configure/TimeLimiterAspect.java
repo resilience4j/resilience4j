@@ -86,18 +86,19 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         Class<?> returnType = method.getReturnType();
 
         String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), timeLimiterAnnotation.fallbackMethod());
+        boolean blocking = timeLimiterAnnotation.blocking();
         if (StringUtils.isEmpty(fallbackMethodValue)) {
-            return proceed(proceedingJoinPoint, methodName, timeLimiter, returnType);
+            return proceed(proceedingJoinPoint, methodName, timeLimiter, returnType, blocking);
         }
         FallbackMethod fallbackMethod = FallbackMethod
             .create(fallbackMethodValue, method,
                 proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType)).apply();
+            () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType, blocking)).apply();
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter, Class<?> returnType)
+        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter, Class<?> returnType, boolean blocking)
         throws Throwable {
         if (timeLimiterAspectExtList != null && !timeLimiterAspectExtList.isEmpty()) {
             for (TimeLimiterAspectExt timeLimiterAspectExt : timeLimiterAspectExtList) {
@@ -107,12 +108,12 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
             }
         }
 
-        if (!CompletionStage.class.isAssignableFrom(returnType)) {
+        if (!CompletionStage.class.isAssignableFrom(returnType) && !blocking) {
             throw new IllegalReturnTypeException(returnType, methodName,
                 "CompletionStage expected.");
         }
 
-        return handleJoinPointCompletableFuture(proceedingJoinPoint, timeLimiter);
+        return handleJoinPointFuture(proceedingJoinPoint, timeLimiter, blocking);
     }
 
     private io.github.resilience4j.timelimiter.TimeLimiter getOrCreateTimeLimiter(String methodName, String name) {
@@ -139,8 +140,19 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         }
     }
 
-    private static Object handleJoinPointCompletableFuture(
-            ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) throws Throwable {
+    private static Object handleJoinPointFuture(
+            ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.timelimiter.TimeLimiter timeLimiter, boolean blocking) throws Throwable {
+        if(blocking) {
+            return timeLimiter.executeFutureSupplier(() ->
+                    CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return proceedingJoinPoint.proceed();
+                        } catch (Throwable throwable) {
+                                throw new CompletionException(throwable);
+                        }
+                    })
+            );
+        }
         return timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();

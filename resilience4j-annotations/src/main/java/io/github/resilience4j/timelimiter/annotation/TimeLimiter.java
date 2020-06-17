@@ -46,4 +46,13 @@ public @interface TimeLimiter {
      */
     String fallbackMethod() default "";
 
+    /**
+     * In case blocking is true the annotated method is supposed to return the desired type
+     * instead of a concurrent type like CompletionStage.
+     * This is mainly useful for a servlet stack, where every request has a distinct thread
+     * and operations are usually blocking.
+     *
+     * @return true in case the operation should be blocking and false otherwise
+     */
+    boolean blocking() default false;
 }
