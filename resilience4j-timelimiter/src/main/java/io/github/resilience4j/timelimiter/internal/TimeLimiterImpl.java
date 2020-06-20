@@ -49,6 +49,7 @@ public class TimeLimiterImpl implements TimeLimiter {
                 return result;
             } catch (TimeoutException e) {
                 TimeoutException timeoutException = createdTimeoutExceptionWithName(name);
+                timeoutException.setStackTrace(e.getStackTrace());
                 onError(timeoutException);
                 if (getTimeLimiterConfig().shouldCancelRunningFuture()) {
                     future.cancel(true);
