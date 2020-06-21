@@ -118,7 +118,7 @@ public class TaggedCircuitBreakerMetricsTest {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(16);
 
-        Collection<Counter> counters = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_CALLS).counters();
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS).counters();
 
         Optional<Counter> notPermitted = findMeterByKindAndNameTags(counters, "not_permitted",
             circuitBreaker.getName());
@@ -210,6 +210,7 @@ public class TaggedCircuitBreakerMetricsTest {
         TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(
             CircuitBreakerMetricNames.custom()
                 .callsMetricName("custom_calls")
+                .notPermittedCallsMetricName("custom_not_permitted_calls")
                 .stateMetricName("custom_state")
                 .bufferedCallsMetricName("custom_buffered_calls")
                 .slowCallsMetricName("custom_slow_calls")
@@ -227,6 +228,7 @@ public class TaggedCircuitBreakerMetricsTest {
 
         assertThat(metricNames).hasSameElementsAs(Arrays.asList(
             "custom_calls",
+            "custom_not_permitted_calls",
             "custom_state",
             "custom_buffered_calls",
             "custom_slow_calls",

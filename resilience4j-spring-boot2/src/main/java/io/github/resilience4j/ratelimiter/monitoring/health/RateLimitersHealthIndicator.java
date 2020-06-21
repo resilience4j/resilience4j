@@ -19,10 +19,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthAggregator;
-import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.health.*;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,14 +30,14 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
 
     private final RateLimiterRegistry rateLimiterRegistry;
     private final RateLimiterConfigurationProperties rateLimiterProperties;
-    private final HealthAggregator healthAggregator;
+    private final StatusAggregator statusAggregator;
 
     public RateLimitersHealthIndicator(RateLimiterRegistry rateLimiterRegistry,
         RateLimiterConfigurationProperties rateLimiterProperties,
-        HealthAggregator healthAggregator) {
+        StatusAggregator statusAggregator) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.rateLimiterProperties = rateLimiterProperties;
-        this.healthAggregator = healthAggregator;
+        this.statusAggregator = statusAggregator;
     }
 
     private static Health rateLimiterHealth(Status status, int availablePermissions,
@@ -57,7 +54,8 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
             .filter(this::isRegisterHealthIndicator)
             .collect(Collectors.toMap(RateLimiter::getName, this::mapRateLimiterHealth));
 
-        return healthAggregator.aggregate(healths);
+        Status status = statusAggregator.getAggregateStatus(healths.values().stream().map(Health::getStatus).collect(Collectors.toSet()));
+        return Health.status(status).withDetails(healths).build();
     }
 
     private boolean isRegisterHealthIndicator(RateLimiter rateLimiter) {

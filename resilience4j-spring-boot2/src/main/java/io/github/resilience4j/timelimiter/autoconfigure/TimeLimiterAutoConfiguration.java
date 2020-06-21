@@ -23,7 +23,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.timelimiter.monitoring.endpoint.TimeLimiterEndpoint;
 import io.github.resilience4j.timelimiter.monitoring.endpoint.TimeLimiterEventsEndpoint;
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -42,13 +42,13 @@ public class TimeLimiterAutoConfiguration {
     static class TimeLimiterAutoEndpointConfiguration {
 
         @Bean
-        @ConditionalOnEnabledEndpoint
+        @ConditionalOnAvailableEndpoint
         public TimeLimiterEndpoint timeLimiterEndpoint(TimeLimiterRegistry timeLimiterRegistry) {
             return new TimeLimiterEndpoint(timeLimiterRegistry);
         }
 
         @Bean
-        @ConditionalOnEnabledEndpoint
+        @ConditionalOnAvailableEndpoint
         public TimeLimiterEventsEndpoint timeLimiterEventsEndpoint(EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry) {
             return new TimeLimiterEventsEndpoint(eventConsumerRegistry);
         }

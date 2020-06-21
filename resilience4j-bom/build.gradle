@@ -5,16 +5,43 @@ plugins {
     id 'com.jfrog.artifactory'
 }
 
+def projectArtifactId = 'resilience4j'
+def url = "https://resilience4j.readme.io"
+
 publishing {
     publications {
         resilience4j(MavenPublication) {
            from components.javaPlatform
+            pom.withXml {
+                def devs = ['RobWin': 'Robert Winkler',
+                            'storozhukBM': 'Bogdan Storozhuk',
+                            'Romeh': 'Mahmoud Romeh',
+                            'dlsrb6342': 'Ingyu Hwhang',
+                            'Hexmind': 'Tomasz Skowroński',
+                            'drmaas': 'Dan Maas']
+                def root = asNode()
+
+                root.appendNode('name', "${projectArtifactId}")
+                root.appendNode('url', "${url}")
+                root.appendNode('description', project.description)
+
+                def license = root.appendNode('licenses').appendNode('license')
+                license.appendNode('name', 'Apache-2.0')
+                license.appendNode('url', 'https://github.com/resilience4j/resilience4j/blob/master/LICENSE.txt')
+                license.appendNode('distribution', 'repo')
+
+                root.appendNode('scm').appendNode('url', 'https://github.com/resilience4j/resilience4j.git')
+
+                def developers = root.appendNode('developers')
+                devs.each {
+                    def d = developers.appendNode('developer')
+                    d.appendNode('id', it.key)
+                    d.appendNode('name', it.value)
+                }
+            }
         }
     }
 }
-
-def projectArtifactId = 'resilience4j'
-def url = "https://resilience4j.readme.io"
 
 bintray {
     user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''

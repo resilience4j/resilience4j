@@ -23,6 +23,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 
@@ -163,7 +164,42 @@ public class CircuitBreakerConfig {
         TIME_BASED, COUNT_BASED
     }
 
-    public static class Builder {
+    @Override
+    public String toString() {
+        StringBuilder circuitBreakerConfig = new StringBuilder("CircuitBreakerConfig {");
+        circuitBreakerConfig.append("recordExceptionPredicate=");
+        circuitBreakerConfig.append(recordExceptionPredicate);
+        circuitBreakerConfig.append(", ignoreExceptionPredicate=");
+        circuitBreakerConfig.append(ignoreExceptionPredicate);
+        circuitBreakerConfig.append(", recordExceptions=");
+        circuitBreakerConfig.append(Arrays.toString(recordExceptions));
+        circuitBreakerConfig.append(", ignoreExceptions=");
+        circuitBreakerConfig.append(Arrays.toString(ignoreExceptions));
+        circuitBreakerConfig.append(", failureRateThreshold=");
+        circuitBreakerConfig.append(failureRateThreshold);
+        circuitBreakerConfig.append(", permittedNumberOfCallsInHalfOpenState=");
+        circuitBreakerConfig.append(permittedNumberOfCallsInHalfOpenState);
+        circuitBreakerConfig.append(", slidingWindowSize=");
+        circuitBreakerConfig.append(slidingWindowSize);
+        circuitBreakerConfig.append(", slidingWindowType=");
+        circuitBreakerConfig.append(slidingWindowType);
+        circuitBreakerConfig.append(", minimumNumberOfCalls=");
+        circuitBreakerConfig.append(minimumNumberOfCalls);
+        circuitBreakerConfig.append(", writableStackTraceEnabled=");
+        circuitBreakerConfig.append(writableStackTraceEnabled);
+        circuitBreakerConfig.append(", automaticTransitionFromOpenToHalfOpenEnabled=");
+        circuitBreakerConfig.append(automaticTransitionFromOpenToHalfOpenEnabled);
+        circuitBreakerConfig.append(", waitIntervalFunctionInOpenState=");
+        circuitBreakerConfig.append(waitIntervalFunctionInOpenState);
+        circuitBreakerConfig.append(", slowCallRateThreshold=");
+        circuitBreakerConfig.append(slowCallRateThreshold);
+        circuitBreakerConfig.append(", slowCallDurationThreshold=");
+        circuitBreakerConfig.append(slowCallDurationThreshold);
+        circuitBreakerConfig.append("}");
+        return circuitBreakerConfig.toString();
+    }
+
+	public static class Builder {
 
         @Nullable
         private Predicate<Throwable> recordExceptionPredicate;

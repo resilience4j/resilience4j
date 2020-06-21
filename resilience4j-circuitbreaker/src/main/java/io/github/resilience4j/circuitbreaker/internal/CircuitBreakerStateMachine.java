@@ -24,6 +24,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.lang.Nullable;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 import org.slf4j.Logger;
@@ -33,10 +34,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -293,6 +291,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         UnaryOperator<CircuitBreakerState> newStateGenerator) {
         CircuitBreakerState previousState = stateReference.getAndUpdate(currentState -> {
             StateTransition.transitionBetween(getName(), currentState.getState(), newState);
+            currentState.preTransitionHook();
             return newStateGenerator.apply(currentState);
         });
         publishStateTransitionEvent(
@@ -444,6 +443,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         default boolean shouldPublishEvents(CircuitBreakerEvent event) {
             return event.getEventType().forcePublish || getState().allowPublish;
+        }
+
+        /**
+         * This method is invoked before transit to other CircuitBreakerState.
+         */
+        default void preTransitionHook() {
+            // noOp
         }
     }
 
@@ -609,6 +615,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         private final AtomicBoolean isOpen;
 
+        @Nullable
+        private final ScheduledFuture<?> transitionToHalfOpenFuture;
+
         OpenState(final int attempts, CircuitBreakerMetrics circuitBreakerMetrics) {
             this.attempts = attempts;
             final long waitDurationInMillis = circuitBreakerConfig
@@ -618,8 +627,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
             if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                scheduledExecutorService
+                transitionToHalfOpenFuture = scheduledExecutorService
                     .schedule(this::toHalfOpenState, waitDurationInMillis, TimeUnit.MILLISECONDS);
+            } else {
+                transitionToHalfOpenFuture = null;
             }
             isOpen = new AtomicBoolean(true);
         }
@@ -695,9 +706,20 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             return circuitBreakerMetrics;
         }
 
+        @Override
+        public void preTransitionHook() {
+            cancelAutomaticTransitionToHalfOpen();
+        }
+
         private void toHalfOpenState() {
             if (isOpen.compareAndSet(true, false)) {
                 transitionToHalfOpenState();
+            }
+        }
+
+        private void cancelAutomaticTransitionToHalfOpen() {
+            if (transitionToHalfOpenFuture != null && !transitionToHalfOpenFuture.isDone()) {
+                transitionToHalfOpenFuture.cancel(true);
             }
         }
 
