@@ -189,7 +189,7 @@ public class TimeLimiterImpl implements TimeLimiter {
         }
     }
 
-    private static TimeoutException createdTimeoutExceptionWithName(String name) {
+    static TimeoutException createdTimeoutExceptionWithName(String name) {
         return new TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception." , name));
     }
 }
