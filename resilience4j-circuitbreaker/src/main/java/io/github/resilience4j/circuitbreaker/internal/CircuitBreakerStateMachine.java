@@ -955,6 +955,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isHalfOpen;
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        @Nullable
+        private final ScheduledFuture<?>  transitionToOpenFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
@@ -968,8 +970,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             final long waitDurationInHalfOpenState = circuitBreakerConfig.getWaitDurationInHalfOpenState().toMillis();
             if (waitDurationInHalfOpenState >= 1000) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                scheduledExecutorService
+                transitionToOpenFuture = scheduledExecutorService
                     .schedule(this::toOpenState, waitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
+            } else {
+                transitionToOpenFuture = null;
             }
         }
 
@@ -996,6 +1000,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             if (!tryAcquirePermission()) {
                 throw CallNotPermittedException
                     .createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            }
+        }
+
+        @Override
+        public void preTransitionHook() {
+            cancelAutomaticTransitionToOpen();
+        }
+
+        private void cancelAutomaticTransitionToOpen() {
+            if (transitionToOpenFuture != null && !transitionToOpenFuture.isDone()) {
+                transitionToOpenFuture.cancel(true);
             }
         }
 

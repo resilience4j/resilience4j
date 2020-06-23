@@ -102,6 +102,11 @@ public class CircuitBreakerConfigTest {
         custom().slowCallRateThreshold(101).build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void waitDurationInHalfOpenStateLessThanSecondShouldFail() {
+        custom().waitDurationInHalfOpenState(Duration.ofMillis(100)).build();
+    }
+
     @Test
     public void shouldSetDefaultSettings() {
         CircuitBreakerConfig circuitBreakerConfig = ofDefaults();
@@ -128,6 +133,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetFailureRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(25).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
+    }
+
+    @Test
+    public void shouldSetWaitDurationInHalfOpenState() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().waitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
+        then(circuitBreakerConfig.getWaitDurationInHalfOpenState().toMillis()).isEqualTo(1000);
     }
 
     @Test
