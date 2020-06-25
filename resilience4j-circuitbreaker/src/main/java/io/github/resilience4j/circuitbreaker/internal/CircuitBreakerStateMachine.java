@@ -968,7 +968,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.attempts = attempts;
 
             final long waitDurationInHalfOpenState = circuitBreakerConfig.getWaitDurationInHalfOpenState().toMillis();
-            if (waitDurationInHalfOpenState >= 1000) {
+            if (waitDurationInHalfOpenState >= 1) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
                 transitionToOpenFuture = scheduledExecutorService
                     .schedule(this::toOpenState, waitDurationInHalfOpenState, TimeUnit.MILLISECONDS);

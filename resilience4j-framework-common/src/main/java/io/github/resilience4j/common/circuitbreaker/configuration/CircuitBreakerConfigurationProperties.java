@@ -670,9 +670,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         public void setWaitDurationInHalfOpenState(Duration waitDurationInHalfOpenState) {
             Objects.requireNonNull(waitDurationInHalfOpenState);
-            if (waitDurationInHalfOpenState.toMillis() < 1000) {
+            if (waitDurationInHalfOpenState.toMillis() < 1) {
                 throw new IllegalArgumentException(
-                    "waitDurationInHalfOpenState must be greater than or equal to 1 second.");
+                    "waitDurationInHalfOpenState must be greater than or equal to 1 ms.");
             }
 
             this.waitDurationInHalfOpenState = waitDurationInHalfOpenState;

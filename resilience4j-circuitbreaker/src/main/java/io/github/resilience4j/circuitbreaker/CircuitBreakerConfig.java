@@ -376,9 +376,9 @@ public class CircuitBreakerConfig {
         /**
          * Configures CircuitBreaker with a fixed wait duration which controls how long the
          * CircuitBreaker should stay in Half Open state, before it switches to open. This is an
-         * Optional parameter.
+         * optional parameter.
          *
-         * By default circuitBreaker will stay in Half Open state until
+         * By default CircuitBreaker will stay in Half Open state until
          * {@code minimumNumberOfCalls} is completed with either success or failure.
          *
          * @param waitDurationInHalfOpenState the wait duration which specifies how long the
@@ -387,9 +387,9 @@ public class CircuitBreakerConfig {
          * @throws IllegalArgumentException if {@code waitDurationInOpenState.toMillis() < 1000}
          */
         public Builder waitDurationInHalfOpenState(Duration waitDurationInHalfOpenState) {
-            if (waitDurationInHalfOpenState.toMillis() < 1000) {
+            if (waitDurationInHalfOpenState.toMillis() < 1) {
                 throw new IllegalArgumentException(
-                    "waitDurationInHalfOpenState must be at least 1[second]");
+                    "waitDurationInHalfOpenState must be at least 1[ms]");
             }
             this.waitDurationInHalfOpenState = waitDurationInHalfOpenState;
             return this;
