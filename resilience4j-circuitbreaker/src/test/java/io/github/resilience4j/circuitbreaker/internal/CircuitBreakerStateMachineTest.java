@@ -67,7 +67,7 @@ public class CircuitBreakerStateMachineTest {
             .permittedNumberOfCallsInHalfOpenState(4)
             .slowCallDurationThreshold(Duration.ofSeconds(4))
             .slowCallRateThreshold(50)
-            .waitDurationInHalfOpenState(Duration.ofSeconds(1))
+            .maxWaitDurationInHalfOpenState(Duration.ofSeconds(1))
             .slidingWindow(5, 5, SlidingWindowType.TIME_BASED)
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .ignoreExceptions(NumberFormatException.class)
@@ -772,7 +772,7 @@ public class CircuitBreakerStateMachineTest {
         // Initially the CircuitBreaker is in Half Open State
         circuitBreaker.transitionToHalfOpenState();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
-        // sleeping for WaitDurationInHalfOpenState to expire (WaitDurationInHalfOpenState = 1Sec)
+        // sleeping for maxWaitDurationInHalfOpenState to expire (maxWaitDurationInHalfOpenState = 1Sec)
         Thread.sleep(2000l);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
     }

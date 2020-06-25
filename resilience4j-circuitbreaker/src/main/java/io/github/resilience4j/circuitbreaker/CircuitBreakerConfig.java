@@ -66,7 +66,7 @@ public class CircuitBreakerConfig {
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
-    private Duration waitDurationInHalfOpenState = Duration
+    private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
 
 
@@ -163,8 +163,8 @@ public class CircuitBreakerConfig {
         return slowCallDurationThreshold;
     }
 
-    public Duration getWaitDurationInHalfOpenState() {
-        return waitDurationInHalfOpenState;
+    public Duration getMaxWaitDurationInHalfOpenState() {
+        return maxWaitDurationInHalfOpenState;
     }
 
     public enum SlidingWindowType {
@@ -232,7 +232,7 @@ public class CircuitBreakerConfig {
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
-        private Duration waitDurationInHalfOpenState = Duration
+        private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
 
 
@@ -250,7 +250,7 @@ public class CircuitBreakerConfig {
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
-            this.waitDurationInHalfOpenState = baseConfig.waitDurationInHalfOpenState;
+            this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
         }
 
@@ -381,17 +381,17 @@ public class CircuitBreakerConfig {
          * By default CircuitBreaker will stay in Half Open state until
          * {@code minimumNumberOfCalls} is completed with either success or failure.
          *
-         * @param waitDurationInHalfOpenState the wait duration which specifies how long the
+         * @param maxWaitDurationInHalfOpenState the wait duration which specifies how long the
          *                                CircuitBreaker should stay in Half Open
          * @return the CircuitBreakerConfig.Builder
          * @throws IllegalArgumentException if {@code waitDurationInOpenState.toMillis() < 1000}
          */
-        public Builder waitDurationInHalfOpenState(Duration waitDurationInHalfOpenState) {
-            if (waitDurationInHalfOpenState.toMillis() < 1) {
+        public Builder maxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
                 throw new IllegalArgumentException(
-                    "waitDurationInHalfOpenState must be at least 1[ms]");
+                    "maxWaitDurationInHalfOpenState must be at least 1[ms]");
             }
-            this.waitDurationInHalfOpenState = waitDurationInHalfOpenState;
+            this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             return this;
         }
 
@@ -683,7 +683,7 @@ public class CircuitBreakerConfig {
             config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
-            config.waitDurationInHalfOpenState = waitDurationInHalfOpenState;
+            config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             config.slowCallRateThreshold = slowCallRateThreshold;
             config.failureRateThreshold = failureRateThreshold;
             config.slidingWindowSize = slidingWindowSize;

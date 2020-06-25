@@ -48,7 +48,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
         instanceProperties1.setFailureRateThreshold(50f);
         instanceProperties1.setSlowCallDurationThreshold(Duration.ofSeconds(5));
-        instanceProperties1.setWaitDurationInHalfOpenState(Duration.ofSeconds(5));
+        instanceProperties1.setMaxWaitDurationInHalfOpenState(Duration.ofSeconds(5));
         instanceProperties1.setSlowCallRateThreshold(50f);
         instanceProperties1.setPermittedNumberOfCallsInHalfOpenState(100);
         instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(true);
@@ -82,7 +82,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         assertThat(circuitBreaker1.getFailureRateThreshold()).isEqualTo(50f);
         assertThat(circuitBreaker1.getSlowCallDurationThreshold().getSeconds()).isEqualTo(5);
-        assertThat(circuitBreaker1.getWaitDurationInHalfOpenState().getSeconds()).isEqualTo(5);
+        assertThat(circuitBreaker1.getMaxWaitDurationInHalfOpenState().getSeconds()).isEqualTo(5);
         assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
         assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
         assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
@@ -292,7 +292,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnWaitDurationInHalfOpenState() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDurationInHalfOpenState(Duration.ZERO);
+        defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ZERO);
     }
 
     private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer() {

@@ -111,8 +111,8 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
         }
 
-        if (properties.getWaitDurationInHalfOpenState() != null) {
-            builder.waitDurationInHalfOpenState(properties.getWaitDurationInHalfOpenState());
+        if (properties.getMaxWaitDurationInHalfOpenState() != null) {
+            builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
         }
 
         if (properties.getRingBufferSizeInClosedState() != null) {
@@ -249,7 +249,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         private Duration slowCallDurationThreshold;
 
         @Nullable
-        private Duration waitDurationInHalfOpenState;
+        private Duration maxWaitDurationInHalfOpenState;
 
         @Nullable
         private Float failureRateThreshold;
@@ -654,8 +654,8 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         }
 
         @Nullable
-        public Duration getWaitDurationInHalfOpenState() {
-            return waitDurationInHalfOpenState;
+        public Duration getMaxWaitDurationInHalfOpenState() {
+            return maxWaitDurationInHalfOpenState;
         }
 
         public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
@@ -668,14 +668,14 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             this.slowCallDurationThreshold = slowCallDurationThreshold;
         }
 
-        public void setWaitDurationInHalfOpenState(Duration waitDurationInHalfOpenState) {
-            Objects.requireNonNull(waitDurationInHalfOpenState);
-            if (waitDurationInHalfOpenState.toMillis() < 1) {
+        public void setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+            Objects.requireNonNull(maxWaitDurationInHalfOpenState);
+            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
                 throw new IllegalArgumentException(
-                    "waitDurationInHalfOpenState must be greater than or equal to 1 ms.");
+                    "maxWaitDurationInHalfOpenState must be greater than or equal to 1 ms.");
             }
 
-            this.waitDurationInHalfOpenState = waitDurationInHalfOpenState;
+            this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
         }
 
         @Nullable

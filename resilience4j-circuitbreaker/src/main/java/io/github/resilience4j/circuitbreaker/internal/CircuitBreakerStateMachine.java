@@ -967,11 +967,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
 
-            final long waitDurationInHalfOpenState = circuitBreakerConfig.getWaitDurationInHalfOpenState().toMillis();
-            if (waitDurationInHalfOpenState >= 1) {
+            final long maxWaitDurationInHalfOpenState = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis();
+            if (maxWaitDurationInHalfOpenState >= 1) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
                 transitionToOpenFuture = scheduledExecutorService
-                    .schedule(this::toOpenState, waitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
+                    .schedule(this::toOpenState, maxWaitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
             } else {
                 transitionToOpenFuture = null;
             }

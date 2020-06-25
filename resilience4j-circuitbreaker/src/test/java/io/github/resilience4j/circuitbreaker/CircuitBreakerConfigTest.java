@@ -103,8 +103,8 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void waitDurationInHalfOpenStateLessThanSecondShouldFail() {
-        custom().waitDurationInHalfOpenState(Duration.ZERO).build();
+    public void maxWaitDurationInHalfOpenStateLessThanSecondShouldFail() {
+        custom().maxWaitDurationInHalfOpenState(Duration.ZERO).build();
     }
 
     @Test
@@ -137,8 +137,8 @@ public class CircuitBreakerConfigTest {
 
     @Test
     public void shouldSetWaitDurationInHalfOpenState() {
-        CircuitBreakerConfig circuitBreakerConfig = custom().waitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
-        then(circuitBreakerConfig.getWaitDurationInHalfOpenState().toMillis()).isEqualTo(1000);
+        CircuitBreakerConfig circuitBreakerConfig = custom().maxWaitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
+        then(circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis()).isEqualTo(1000);
     }
 
     @Test
