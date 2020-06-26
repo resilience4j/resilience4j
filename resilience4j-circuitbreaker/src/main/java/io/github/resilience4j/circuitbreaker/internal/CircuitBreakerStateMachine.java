@@ -955,6 +955,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isHalfOpen;
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        @Nullable
+        private final ScheduledFuture<?>  transitionToOpenFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
@@ -964,6 +966,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
+
+            final long maxWaitDurationInHalfOpenState = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis();
+            if (maxWaitDurationInHalfOpenState >= 1) {
+                ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
+                transitionToOpenFuture = scheduledExecutorService
+                    .schedule(this::toOpenState, maxWaitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
+            } else {
+                transitionToOpenFuture = null;
+            }
         }
 
         /**
@@ -989,6 +1000,23 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             if (!tryAcquirePermission()) {
                 throw CallNotPermittedException
                     .createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            }
+        }
+
+        @Override
+        public void preTransitionHook() {
+            cancelAutomaticTransitionToOpen();
+        }
+
+        private void cancelAutomaticTransitionToOpen() {
+            if (transitionToOpenFuture != null && !transitionToOpenFuture.isDone()) {
+                transitionToOpenFuture.cancel(true);
+            }
+        }
+
+        private void toOpenState() {
+            if (isHalfOpen.compareAndSet(true, false)) {
+                transitionToOpenState();
             }
         }
 

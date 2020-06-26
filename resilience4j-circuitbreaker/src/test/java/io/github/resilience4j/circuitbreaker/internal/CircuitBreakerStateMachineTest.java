@@ -67,6 +67,7 @@ public class CircuitBreakerStateMachineTest {
             .permittedNumberOfCallsInHalfOpenState(4)
             .slowCallDurationThreshold(Duration.ofSeconds(4))
             .slowCallRateThreshold(50)
+            .maxWaitDurationInHalfOpenState(Duration.ofSeconds(1))
             .slidingWindow(5, 5, SlidingWindowType.TIME_BASED)
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .ignoreExceptions(NumberFormatException.class)
@@ -763,6 +764,17 @@ public class CircuitBreakerStateMachineTest {
         verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
         circuitBreaker.transitionToClosedState();
         verify(mockOnStateTransitionEventConsumer, times(expectedNumberOfStateTransitions)).consumeEvent(any(CircuitBreakerOnStateTransitionEvent.class));
+    }
+
+    @Test
+    public void circuitBreakerTransitionsToOpenAfterWaitDurationInHalfOpenState() throws InterruptedException {
+        circuitBreaker.transitionToOpenState();
+        // Initially the CircuitBreaker is in Half Open State
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        // sleeping for maxWaitDurationInHalfOpenState to expire (maxWaitDurationInHalfOpenState = 1Sec)
+        Thread.sleep(2000l);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
     }
 
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate,
