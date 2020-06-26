@@ -39,6 +39,7 @@ public class CircuitBreakerConfig {
     public static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 100;
     public static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
     public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
+    public static final int DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE = 0; // Seconds. It is an optional parameter
     public static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
@@ -65,6 +66,8 @@ public class CircuitBreakerConfig {
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+    private Duration maxWaitDurationInHalfOpenState = Duration
+        .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
 
 
     private CircuitBreakerConfig() {
@@ -160,6 +163,10 @@ public class CircuitBreakerConfig {
         return slowCallDurationThreshold;
     }
 
+    public Duration getMaxWaitDurationInHalfOpenState() {
+        return maxWaitDurationInHalfOpenState;
+    }
+
     public enum SlidingWindowType {
         TIME_BASED, COUNT_BASED
     }
@@ -225,6 +232,8 @@ public class CircuitBreakerConfig {
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+        private Duration maxWaitDurationInHalfOpenState = Duration
+            .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -241,6 +250,7 @@ public class CircuitBreakerConfig {
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
+            this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
         }
 
@@ -360,6 +370,28 @@ public class CircuitBreakerConfig {
                     "slowCallDurationThreshold must be at least 1[ns]");
             }
             this.slowCallDurationThreshold = slowCallDurationThreshold;
+            return this;
+        }
+
+        /**
+         * Configures CircuitBreaker with a fixed wait duration which controls how long the
+         * CircuitBreaker should stay in Half Open state, before it switches to open. This is an
+         * optional parameter.
+         *
+         * By default CircuitBreaker will stay in Half Open state until
+         * {@code minimumNumberOfCalls} is completed with either success or failure.
+         *
+         * @param maxWaitDurationInHalfOpenState the wait duration which specifies how long the
+         *                                CircuitBreaker should stay in Half Open
+         * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code waitDurationInOpenState.toMillis() < 1000}
+         */
+        public Builder maxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
+                throw new IllegalArgumentException(
+                    "maxWaitDurationInHalfOpenState must be at least 1[ms]");
+            }
+            this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             return this;
         }
 
@@ -651,6 +683,7 @@ public class CircuitBreakerConfig {
             config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
+            config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             config.slowCallRateThreshold = slowCallRateThreshold;
             config.failureRateThreshold = failureRateThreshold;
             config.slidingWindowSize = slidingWindowSize;

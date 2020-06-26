@@ -111,6 +111,10 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
         }
 
+        if (properties.getMaxWaitDurationInHalfOpenState() != null) {
+            builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
+        }
+
         if (properties.getRingBufferSizeInClosedState() != null) {
             builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
         }
@@ -243,6 +247,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Duration slowCallDurationThreshold;
+
+        @Nullable
+        private Duration maxWaitDurationInHalfOpenState;
 
         @Nullable
         private Float failureRateThreshold;
@@ -646,6 +653,11 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return slowCallDurationThreshold;
         }
 
+        @Nullable
+        public Duration getMaxWaitDurationInHalfOpenState() {
+            return maxWaitDurationInHalfOpenState;
+        }
+
         public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
             Objects.requireNonNull(slowCallDurationThreshold);
             if (slowCallDurationThreshold.toNanos() < 1) {
@@ -654,6 +666,16 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.slowCallDurationThreshold = slowCallDurationThreshold;
+        }
+
+        public void setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+            Objects.requireNonNull(maxWaitDurationInHalfOpenState);
+            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
+                throw new IllegalArgumentException(
+                    "maxWaitDurationInHalfOpenState must be greater than or equal to 1 ms.");
+            }
+
+            this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
         }
 
         @Nullable
