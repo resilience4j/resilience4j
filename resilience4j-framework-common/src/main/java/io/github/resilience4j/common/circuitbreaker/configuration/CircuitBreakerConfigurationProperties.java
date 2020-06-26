@@ -673,7 +673,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return this;
         }
 
-        public void setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+        public InstanceProperties setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
             Objects.requireNonNull(maxWaitDurationInHalfOpenState);
             if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
                 throw new IllegalArgumentException(
@@ -681,6 +681,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
+            return this;
         }
 
         @Nullable
