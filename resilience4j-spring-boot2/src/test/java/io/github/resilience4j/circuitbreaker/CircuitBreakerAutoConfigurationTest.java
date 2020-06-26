@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerPropert
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerUpdateStateResponse;
 import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
@@ -32,7 +33,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -65,6 +66,7 @@ public class CircuitBreakerAutoConfigurationTest {
     @Autowired
     private DummyFeignClient dummyFeignClient;
 
+
     /**
      * This test verifies that the combination of @FeignClient and @CircuitBreaker annotation works
      * as same as @CircuitBreaker alone works with any normal service class
@@ -96,6 +98,48 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(
             circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
             .isEqualTo(6);
+    }
+
+    @Test
+    public void testCircuitBreakerActuatorEndpoint() {
+
+        //when
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> foceOpenRequest = new HttpEntity<>("{\"updateState\":\"FORCE_OPEN\"}", headers);
+        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAState = restTemplate
+            .postForEntity("/actuator/circuitbreakers/backendA", foceOpenRequest, CircuitBreakerUpdateStateResponse.class);
+
+        // then
+        assertThat(backendAState.getBody()).isNotNull();
+        assertThat(backendAState.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN.toString());
+        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN);
+
+        // when sending non valid statte change
+        HttpEntity<String> nonValid = new HttpEntity<>("{\"updateState\":\"BLA_BLA\"}", headers);
+        final ResponseEntity<CircuitBreakerUpdateStateResponse> nonValidResponse = restTemplate
+            .postForEntity("/actuator/circuitbreakers/backendA", nonValid, CircuitBreakerUpdateStateResponse.class);
+        // then
+        assertThat(nonValidResponse.getBody()).isNotNull();
+        assertThat(nonValidResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        //when
+        HttpEntity<String> disableRequest = new HttpEntity<>("{\"updateState\":\"DISABLE\"}", headers);
+        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAStateDisabled = restTemplate
+            .postForEntity("/actuator/circuitbreakers/backendA", disableRequest, CircuitBreakerUpdateStateResponse.class);
+        // then
+        assertThat(backendAStateDisabled.getBody()).isNotNull();
+        assertThat(backendAStateDisabled.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.DISABLED.toString());
+        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.DISABLED);
+
+        //when
+        HttpEntity<String> closeRequest = new HttpEntity<>("{\"updateState\":\"CLOSE\"}", headers);
+        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAStateClosed = restTemplate
+            .postForEntity("/actuator/circuitbreakers/backendA", closeRequest, CircuitBreakerUpdateStateResponse.class);
+        // then
+        assertThat(backendAStateClosed.getBody()).isNotNull();
+        assertThat(backendAStateClosed.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.CLOSED.toString());
+        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
     /**
