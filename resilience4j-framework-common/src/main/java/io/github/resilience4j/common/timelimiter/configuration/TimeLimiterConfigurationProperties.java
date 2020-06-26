@@ -160,8 +160,9 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
             return baseConfig;
         }
 
-        public void setBaseConfig(@Nullable String baseConfig) {
+        public InstanceProperties setBaseConfig(@Nullable String baseConfig) {
             this.baseConfig = baseConfig;
+            return this;
         }
     }
 }
