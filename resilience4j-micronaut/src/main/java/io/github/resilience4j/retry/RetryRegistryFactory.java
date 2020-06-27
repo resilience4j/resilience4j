@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class RetryRegistryFactory {
 
     @Bean
-    @Named("compositeRetryCustomizer")
+    @RetryQualifier
     public CompositeCustomizer<RetryConfigCustomizer> compositeTimeLimiterCustomizer(@Nullable List<RetryConfigCustomizer> configCustomizers) {
         return new CompositeCustomizer<>(configCustomizers);
     }
@@ -51,9 +51,9 @@ public class RetryRegistryFactory {
     @Requires(beans = RetryConfigurationProperties.class)
     public RetryRegistry createRetryRegistry(
         RetryConfigurationProperties retryConfigurationProperties,
-        EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-        RegistryEventConsumer<Retry> retryRegistryEventConsumer,
-        @Named("compositeRetryCustomizer") CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
+        @RetryQualifier EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
+        @RetryQualifier RegistryEventConsumer<Retry> retryRegistryEventConsumer,
+        @RetryQualifier CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties,
             retryRegistryEventConsumer, compositeRetryCustomizer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry,
@@ -67,13 +67,15 @@ public class RetryRegistryFactory {
 
 
     @Bean
-    public EventConsumerRegistry<RetryEvent> rateLimiterEventEventConsumerRegistry() {
+    @RetryQualifier
+    public EventConsumerRegistry<RetryEvent> retryEventEventConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }
 
     @Bean
     @Primary
-    public RegistryEventConsumer<Retry> rateLimiterRegistryEventConsumer(
+    @RetryQualifier
+    public RegistryEventConsumer<Retry> retryRegistryEventConsumer(
         Optional<List<RegistryEventConsumer<Retry>>> optionalRegistryEventConsumers
     ) {
         return new CompositeRegistryEventConsumer<>(

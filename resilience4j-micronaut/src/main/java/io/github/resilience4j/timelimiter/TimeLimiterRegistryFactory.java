@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 public class TimeLimiterRegistryFactory {
 
     @Bean
-    @Named("compositeTimeLimiterCustomizer")
+    @TimeLimiterQualifier
     public CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer(@Nullable List<TimeLimiterConfigCustomizer> configCustomizers) {
         return new CompositeCustomizer<>(configCustomizers);
     }
@@ -52,9 +52,9 @@ public class TimeLimiterRegistryFactory {
     @Requires(beans = TimeLimiterConfigurationProperties.class)
     public TimeLimiterRegistry timeLimiterRegistry(
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
-        EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventConsumerRegistry,
-        RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer,
-        @Named("compositeTimeLimiterCustomizer") CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
+        @TimeLimiterQualifier EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventConsumerRegistry,
+        @TimeLimiterQualifier RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer,
+        @TimeLimiterQualifier CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
         TimeLimiterRegistry timeLimiterRegistry =
             createTimeLimiterRegistry(timeLimiterConfigurationProperties, timeLimiterRegistryEventConsumer,
                 compositeTimeLimiterCustomizer);
@@ -67,6 +67,7 @@ public class TimeLimiterRegistryFactory {
 
     @Bean
     @Primary
+    @TimeLimiterQualifier
     public RegistryEventConsumer<TimeLimiter> timeLimiterRegistryEventConsumer(
         Optional<List<RegistryEventConsumer<TimeLimiter>>> optionalRegistryEventConsumers
     ) {
@@ -76,6 +77,7 @@ public class TimeLimiterRegistryFactory {
     }
 
     @Bean
+    @TimeLimiterQualifier
     public EventConsumerRegistry<TimeLimiterEvent> timeLimiterEventsConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }
