@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class RateLimiterRegistryFactory {
 
     @Bean
-    @Named("compositeRateLimiterCustomizer")
+    @RateLimiterQualifier
     public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer(
         @Nullable List<RateLimiterConfigCustomizer> configCustomizers) {
         return new CompositeCustomizer<>(configCustomizers);
@@ -50,9 +50,9 @@ public class RateLimiterRegistryFactory {
 
     @Singleton
     public RateLimiterRegistry rateLimiterRegistry(RateLimiterProperties rateLimiterProperties,
-                                                   EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
-                                                   RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
-                                                   @Named("compositeRateLimiterCustomizer") CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
+                                                   @RateLimiterQualifier EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry,
+                                                   @RateLimiterQualifier RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
+                                                   @RateLimiterQualifier CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
         RateLimiterRegistry rateLimiterRegistry = createRateLimiterRegistry(rateLimiterProperties, rateLimiterRegistryEventConsumer, compositeRateLimiterCustomizer);
         registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry,
             rateLimiterProperties);
@@ -66,12 +66,14 @@ public class RateLimiterRegistryFactory {
     }
 
     @Bean
+    @RateLimiterQualifier
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventEventConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }
 
     @Bean
     @Primary
+    @RateLimiterQualifier
     public RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer(
         Optional<List<RegistryEventConsumer<RateLimiter>>> optionalRegistryEventConsumers
     ) {

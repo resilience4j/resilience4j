@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class BulkHeadRegistryFactory {
 
     @Bean
-    @Named("compositeBulkHeadCustomizer")
+    @BulkheadQualifier
     public CompositeCustomizer<BulkheadConfigCustomizer> composeBulkheadCustomizer(
         @Nullable List<BulkheadConfigCustomizer> configCustomizers
     ) {
@@ -54,9 +54,9 @@ public class BulkHeadRegistryFactory {
     @Requires(beans = BulkheadProperties.class)
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
-        @Named("bulkheadEventConsumerRegistry") EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        @Named("bulkheadEventConsumer") RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
-        @Named("compositeBulkHeadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
+        @BulkheadQualifier EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
+        @BulkheadQualifier RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        @BulkheadQualifier CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
             bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
@@ -71,7 +71,7 @@ public class BulkHeadRegistryFactory {
 
     @Bean
     @Primary
-    @Named("bulkheadEventConsumer")
+    @BulkheadQualifier
     public RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer(
         Optional<List<RegistryEventConsumer<Bulkhead>>> optionalRegistryEventConsumers
     ) {
@@ -81,7 +81,7 @@ public class BulkHeadRegistryFactory {
     }
 
     @Bean
-    @Named("bulkheadEventConsumerRegistry")
+    @BulkheadQualifier
     public EventConsumerRegistry<BulkheadEvent> bulkheadEventsConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }

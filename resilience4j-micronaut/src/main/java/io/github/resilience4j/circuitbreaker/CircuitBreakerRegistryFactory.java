@@ -29,7 +29,6 @@ import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 
 import javax.annotation.Nullable;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +40,7 @@ import java.util.stream.Collectors;
 @Requires(property = "resilience4j.circuitbreaker.enabled")
 public class CircuitBreakerRegistryFactory {
     @Bean
-    @Named("compositeCircuitBreakerCustomizer")
+    @CircuitBreakerQualifier
     public CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer(
         @Nullable List<CircuitBreakerConfigCustomizer> configCustomizer ) {
         return new CompositeCustomizer<>(configCustomizer);
@@ -51,9 +50,9 @@ public class CircuitBreakerRegistryFactory {
     @Requires(beans = CircuitBreakerProperties.class)
     public CircuitBreakerRegistry circuitBreakerRegistry(
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties,
-        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
-        RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        @Named("compositeCircuitBreakerCustomizer") CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
+        @CircuitBreakerQualifier EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
+        @CircuitBreakerQualifier RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
+        @CircuitBreakerQualifier CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
             circuitBreakerConfigurationProperties, circuitBreakerRegistryEventConsumer,
             compositeCircuitBreakerCustomizer);
@@ -65,7 +64,8 @@ public class CircuitBreakerRegistryFactory {
 
     @Bean
     @Primary
-    public RegistryEventConsumer<CircuitBreaker> timeLimiterRegistryEventConsumer(
+    @CircuitBreakerQualifier
+    public RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer(
         Optional<List<RegistryEventConsumer<CircuitBreaker>>> optionalRegistryEventConsumers
     ) {
         return new CompositeRegistryEventConsumer<>(
@@ -74,7 +74,8 @@ public class CircuitBreakerRegistryFactory {
     }
 
     @Bean
-    public EventConsumerRegistry<CircuitBreakerEvent> timeLimiterEventsConsumerRegistry() {
+    @CircuitBreakerQualifier
+    public EventConsumerRegistry<CircuitBreakerEvent> circuitBreakerEventsConsumerRegistry() {
         return new DefaultEventConsumerRegistry<>();
     }
 
@@ -85,7 +86,7 @@ public class CircuitBreakerRegistryFactory {
      * @param circuitBreakerRegistry The circuit breaker registry.
      * @param customizerMap
      */
-    void initCircuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties,
+    private void initCircuitBreakerRegistry(CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties,
                                     CircuitBreakerRegistry circuitBreakerRegistry,
                                     CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
         circuitBreakerConfigurationProperties.getInstances().forEach(
