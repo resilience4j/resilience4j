@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 public class IntervalFunctionTest {
 
@@ -15,9 +15,11 @@ public class IntervalFunctionTest {
         final Duration negativeDuration = Duration.ofMillis(0);
         final Duration zeroDuration = Duration.ofMillis(0);
         final Duration smallDuration = Duration.ofMillis(9);
+        final Duration positiveDuration = Duration.ofMillis(100);
         final long negativeInterval = -1;
         final long zeroInterval = 0;
         final long smallInterval = 9;
+        final long positiveInterval = 100;
 
         List<Try> tries = List.of(
             Try.of(() -> IntervalFunction.of(negativeDuration)),
@@ -26,7 +28,23 @@ public class IntervalFunctionTest {
 
             Try.of(() -> IntervalFunction.of(negativeInterval)),
             Try.of(() -> IntervalFunction.of(zeroInterval)),
-            Try.of(() -> IntervalFunction.of(smallInterval))
+            Try.of(() -> IntervalFunction.of(smallInterval)),
+
+            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, negativeDuration)),
+            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, zeroDuration)),
+            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, smallDuration)),
+
+            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, negativeInterval)),
+            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, zeroInterval)),
+            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, smallInterval)),
+
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, negativeDuration)),
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, zeroDuration)),
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, smallDuration)),
+
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, negativeInterval)),
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, zeroInterval)),
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, smallInterval))
         );
 
         assertThat(tries.forAll(Try::isFailure)).isTrue();
@@ -47,6 +65,10 @@ public class IntervalFunctionTest {
         positiveIntervals.forEach(IntervalFunction::ofExponentialBackoff);
         positiveDurations.forEach(IntervalFunction::ofExponentialRandomBackoff);
         positiveIntervals.forEach(IntervalFunction::ofExponentialRandomBackoff);
+        positiveDurations.forEach(d -> IntervalFunction.ofExponentialBackoff(d, 1, d));
+        positiveIntervals.forEach(i -> IntervalFunction.ofExponentialBackoff(i, 1, i));
+        positiveDurations.forEach(d -> IntervalFunction.ofExponentialRandomBackoff(d, 1, d));
+        positiveIntervals.forEach(i -> IntervalFunction.ofExponentialRandomBackoff(i, 1, i));
 
         assertThat(true).isTrue();
     }
@@ -165,6 +187,22 @@ public class IntervalFunctionTest {
     }
 
     @Test
+    public void generatesCappedExponentialIntervals() {
+        final IntervalFunction f = IntervalFunction.ofExponentialBackoff(100, 2, 100_000);
+        long prevV = f.apply(1);
+
+        for (int i = 2; i < 12; i++) {
+            final long v = f.apply(i);
+
+            assertThat(v).isGreaterThan(prevV);
+            prevV = v;
+        }
+
+        assertThat(f.apply(12)).isEqualTo(100_000);
+        assertThat(f.apply(13)).isEqualTo(100_000);
+    }
+
+    @Test
     public void generatesExponentialRandomIntervals() {
         final IntervalFunction f = IntervalFunction.ofExponentialRandomBackoff(100, 1.5, 0.5);
         long expectedV = 100;
@@ -175,6 +213,29 @@ public class IntervalFunctionTest {
             assertThat(v)
                 .isGreaterThanOrEqualTo((long) (expectedV * 0.5) - 1)
                 .isLessThanOrEqualTo((long) (expectedV * 1.5) + 1);
+            expectedV = (long) (expectedV * 1.5);
+        }
+    }
+
+    @Test
+    public void generatesCappedExponentialRandomIntervals() {
+        final IntervalFunction f = IntervalFunction.ofExponentialRandomBackoff(100, 1.5, 0.5,100_000);
+        long expectedV = 100;
+
+        for (int i = 1; i < 50; i++) {
+            final long v = f.apply(i);
+
+            long finalExpectedV = expectedV;
+
+            assertThat(v).satisfiesAnyOf(
+                x -> assertThat(x).isGreaterThanOrEqualTo((long) (finalExpectedV * 0.5) - 1),
+                x -> assertThat(x).isEqualTo(100_000)
+            );
+
+            assertThat(v).satisfiesAnyOf(
+                x -> assertThat(x).isLessThanOrEqualTo((long) (finalExpectedV * 1.5) + 1),
+                x -> assertThat(x).isEqualTo(100_000)
+            );
             expectedV = (long) (expectedV * 1.5);
         }
     }
