@@ -1,7 +1,7 @@
 plugins {
     id "org.sonarqube" version "3.0"
     id "com.jfrog.bintray" version "1.8.5"
-    id "me.champeau.gradle.jmh" version "0.4.8"
+    id "me.champeau.gradle.jmh" version "0.5.0"
     id 'org.asciidoctor.convert' version '1.6.0'
     id "com.jfrog.artifactory" version "4.16.1"
     id 'idea'
