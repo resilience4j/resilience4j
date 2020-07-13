@@ -38,6 +38,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -60,6 +61,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final CircuitBreakerEventProcessor eventProcessor;
     private final Clock clock;
     private final SchedulerFactory schedulerFactory;
+    private final Function<Clock, Long> currentTimeFunction;
+    private final TimeUnit currentTimeUnit;
 
     /**
      * Creates a circuitBreaker.
@@ -80,6 +83,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
+        this.currentTimeFunction = circuitBreakerConfig.getCurrentTimeFunction();
+        this.currentTimeUnit = circuitBreakerConfig.getCurrentTimeUnit();
     }
 
     /**
@@ -168,6 +173,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         Supplier<CircuitBreakerConfig> circuitBreakerConfig,
         io.vavr.collection.Map<String, String> tags) {
         this(name, circuitBreakerConfig.get(), tags);
+    }
+
+    @Override
+    public long getCurrentTime() {
+        return this.currentTimeFunction.apply(clock);
+    }
+
+    @Override
+    public TimeUnit getCurrentTimeUnit() {
+        return currentTimeUnit;
     }
 
     @Override
