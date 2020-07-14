@@ -72,7 +72,7 @@ public class CircuitBreakerStateMachineTest {
             .slidingWindow(20, 5, SlidingWindowType.TIME_BASED)
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .ignoreExceptions(NumberFormatException.class)
-            .currentTimeFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
+            .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
             .build(), mockClock);
     }
 

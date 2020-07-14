@@ -356,9 +356,9 @@ public class CircuitBreakerConfigTest {
         Instant instant = Instant.now();
         Clock fixedClock = Clock.fixed(instant, ZoneId.systemDefault());
         CircuitBreakerConfig circuitBreakerConfig = custom()
-            .currentTimeFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
+            .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
             .build();
-        final Function<Clock, Long> currentTimeFunction = circuitBreakerConfig.getCurrentTimeFunction();
+        final Function<Clock, Long> currentTimeFunction = circuitBreakerConfig.getCurrentTimestampFunction();
         then(currentTimeFunction).isNotNull();
         then(currentTimeFunction.apply(fixedClock)).isEqualTo(instant.toEpochMilli());
     }

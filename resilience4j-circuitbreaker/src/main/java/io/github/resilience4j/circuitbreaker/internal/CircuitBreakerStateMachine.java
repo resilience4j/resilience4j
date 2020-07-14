@@ -61,8 +61,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final CircuitBreakerEventProcessor eventProcessor;
     private final Clock clock;
     private final SchedulerFactory schedulerFactory;
-    private final Function<Clock, Long> currentTimeFunction;
-    private final TimeUnit currentTimeUnit;
+    private final Function<Clock, Long> currentTimestampFunction;
+    private final TimeUnit timestampUnit;
 
     /**
      * Creates a circuitBreaker.
@@ -83,8 +83,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
-        this.currentTimeFunction = circuitBreakerConfig.getCurrentTimeFunction();
-        this.currentTimeUnit = circuitBreakerConfig.getCurrentTimeUnit();
+        this.currentTimestampFunction = circuitBreakerConfig.getCurrentTimestampFunction();
+        this.timestampUnit = circuitBreakerConfig.getTimestampUnit();
     }
 
     /**
@@ -176,13 +176,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     @Override
-    public long getCurrentTime() {
-        return this.currentTimeFunction.apply(clock);
+    public long getCurrentTimestamp() {
+        return this.currentTimestampFunction.apply(clock);
     }
 
     @Override
-    public TimeUnit getCurrentTimeUnit() {
-        return currentTimeUnit;
+    public TimeUnit getTimestampUnit() {
+        return timestampUnit;
     }
 
     @Override
