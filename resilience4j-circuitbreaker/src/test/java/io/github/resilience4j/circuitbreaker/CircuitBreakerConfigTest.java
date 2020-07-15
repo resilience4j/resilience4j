@@ -21,7 +21,12 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Test;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
@@ -344,6 +349,18 @@ public class CircuitBreakerConfigTest {
         for (int i = 0; i < 10; i++) {
             then(intervalFunction.apply(i)).isEqualTo(i);
         }
+    }
+
+    @Test
+    public void shouldCreateCurrentTimeFunction() {
+        Instant instant = Instant.now();
+        Clock fixedClock = Clock.fixed(instant, ZoneId.systemDefault());
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
+            .build();
+        final Function<Clock, Long> currentTimeFunction = circuitBreakerConfig.getCurrentTimestampFunction();
+        then(currentTimeFunction).isNotNull();
+        then(currentTimeFunction.apply(fixedClock)).isEqualTo(instant.toEpochMilli());
     }
 
     @Test
