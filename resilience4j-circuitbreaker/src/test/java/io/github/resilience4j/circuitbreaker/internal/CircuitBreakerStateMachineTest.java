@@ -32,6 +32,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
@@ -68,9 +69,10 @@ public class CircuitBreakerStateMachineTest {
             .slowCallDurationThreshold(Duration.ofSeconds(4))
             .slowCallRateThreshold(50)
             .maxWaitDurationInHalfOpenState(Duration.ofSeconds(1))
-            .slidingWindow(5, 5, SlidingWindowType.TIME_BASED)
+            .slidingWindow(20, 5, SlidingWindowType.TIME_BASED)
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .ignoreExceptions(NumberFormatException.class)
+            .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
             .build(), mockClock);
     }
 
@@ -273,6 +275,47 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isEqualTo(3);
         assertThat(circuitBreaker.getMetrics().getSlowCallRate()).isEqualTo(60.0f);
 
+    }
+
+    @Test
+    public void shouldOpenAfterSlowCallRateThresholdExceededUsingMockClock() {
+        // A ring buffer with size 5 is used in closed state
+        // Initially the CircuitBreaker is closed
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThatMetricsAreReset();
+        Consumer<Integer> consumer = circuitBreaker.decorateConsumer(mockClock::advanceBySeconds);
+        // Call 1 is slow
+        consumer.accept(5);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // Call 2 is slow
+        consumer.accept(5);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // Call 3 is fast
+        consumer.accept(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // Call 4 is fast
+        consumer.accept(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(4);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // Call 5 is slow
+        consumer.accept(5);
+        // The ring buffer is filled and the slow call rate is above 50%
+        assertThat(circuitBreaker.getState()).isEqualTo(
+            CircuitBreaker.State.OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (6)
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(5);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isEqualTo(3);
+        assertThat(circuitBreaker.getMetrics().getSlowCallRate()).isEqualTo(60.0f);
     }
 
     @Test

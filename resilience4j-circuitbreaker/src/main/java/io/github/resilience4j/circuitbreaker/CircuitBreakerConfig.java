@@ -22,8 +22,11 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 
@@ -44,10 +47,15 @@ public class CircuitBreakerConfig {
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
+    // The default Function to return current time
+    private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
+    private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
     private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
+    private Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
+    private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
@@ -135,6 +143,10 @@ public class CircuitBreakerConfig {
         return ignoreExceptionPredicate;
     }
 
+    public Function<Clock, Long> getCurrentTimestampFunction() { return currentTimestampFunction; }
+
+    public TimeUnit getTimestampUnit() { return timestampUnit; }
+
     public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
         return automaticTransitionFromOpenToHalfOpenEnabled;
     }
@@ -212,6 +224,8 @@ public class CircuitBreakerConfig {
         private Predicate<Throwable> recordExceptionPredicate;
         @Nullable
         private Predicate<Throwable> ignoreExceptionPredicate;
+        private Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
+        private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
@@ -247,6 +261,8 @@ public class CircuitBreakerConfig {
             this.recordExceptions = baseConfig.recordExceptions;
             this.recordExceptionPredicate = baseConfig.recordExceptionPredicate;
             this.ignoreExceptionPredicate = baseConfig.ignoreExceptionPredicate;
+            this.currentTimestampFunction = baseConfig.currentTimestampFunction;
+            this.timestampUnit = baseConfig.timestampUnit;
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
@@ -581,6 +597,21 @@ public class CircuitBreakerConfig {
             this.recordExceptionPredicate = predicate;
             return this;
         }
+        /**
+         * Configures a function that returns current timestamp for CircuitBreaker.
+         * Default implementation uses System.nanoTime() to compute current timestamp.
+         * Configure currentTimestampFunction to provide different implementation to compute current timestamp.
+         * <p>
+         *
+         * @param currentTimestampFunction function that computes current timestamp.
+         * @param timeUnit TimeUnit of timestamp returned by the function.
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder currentTimestampFunction(Function<Clock, Long> currentTimestampFunction, TimeUnit timeUnit) {
+            this.timestampUnit = timeUnit;
+            this.currentTimestampFunction = currentTimestampFunction;
+            return this;
+        }
 
         /**
          * Configures a Predicate which evaluates if an exception should be ignored and neither
@@ -695,6 +726,8 @@ public class CircuitBreakerConfig {
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            config.currentTimestampFunction = currentTimestampFunction;
+            config.timestampUnit = timestampUnit;
             return config;
         }
 
