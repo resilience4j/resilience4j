@@ -29,7 +29,7 @@ public class AspectJOnClasspathCondition implements Condition {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger
-            .info("Aspects are not activated because AspectJ is not on the classpath."));
+            .debug("Aspects are not activated because AspectJ is not on the classpath."));
     }
 
 }
