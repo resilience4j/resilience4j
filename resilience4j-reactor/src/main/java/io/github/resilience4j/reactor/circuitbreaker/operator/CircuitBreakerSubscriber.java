@@ -46,14 +46,14 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
         super(downstreamSubscriber);
         this.circuitBreaker = requireNonNull(circuitBreaker);
         this.singleProducer = singleProducer;
-        this.start = System.nanoTime();
+        this.start = circuitBreaker.getCurrentTimestamp();
     }
 
     @Override
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
             if (singleProducer && successSignaled.compareAndSet(false, true)) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
             }
             eventWasEmitted.set(true);
 
@@ -64,7 +64,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     protected void hookOnComplete() {
         if (successSignaled.compareAndSet(false, true)) {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
         }
 
         downstreamSubscriber.onComplete();
@@ -74,7 +74,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     public void hookOnCancel() {
         if (!successSignaled.get()) {
             if (eventWasEmitted.get()) {
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
             } else {
                 circuitBreaker.releasePermission();
             }
@@ -83,7 +83,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     protected void hookOnError(Throwable e) {
-        circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
+        circuitBreaker.onError(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), e);
         downstreamSubscriber.onError(e);
     }
 }
