@@ -42,6 +42,8 @@ public class FluxCircuitBreakerTest {
     @Test
     public void shouldSubscribeToFluxJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
@@ -58,6 +60,8 @@ public class FluxCircuitBreakerTest {
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
@@ -73,6 +77,8 @@ public class FluxCircuitBreakerTest {
     @Test
     public void shouldPropagateErrorWhenErrorNotOnSubscribe() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)
@@ -88,6 +94,8 @@ public class FluxCircuitBreakerTest {
     @Test
     public void shouldSubscribeToMonoJustTwice() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(Flux.just("Event 1", "Event 2")
             .flatMap(value -> Mono.just("Bla " + value)
@@ -167,6 +175,8 @@ public class FluxCircuitBreakerTest {
     @Test
     public void shouldInvokeOnSuccessOnCancelWhenEventWasEmitted() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Flux.just("Event1", "Event2", "Event3")
