@@ -50,6 +50,8 @@ public class MonoCircuitBreakerTest {
     public void shouldSubscribeToMonoJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Mono.just(helloWorldService.returnHelloWorld())
@@ -67,6 +69,8 @@ public class MonoCircuitBreakerTest {
     public void shouldSubscribeToMonoFromCallable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
@@ -84,6 +88,8 @@ public class MonoCircuitBreakerTest {
     public void shouldSubscribeToMonoFromCallableMultipleTimes() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
@@ -103,6 +109,8 @@ public class MonoCircuitBreakerTest {
     @Test
     public void emptyMonoShouldBeSuccessful() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Mono.empty()
@@ -117,6 +125,8 @@ public class MonoCircuitBreakerTest {
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
