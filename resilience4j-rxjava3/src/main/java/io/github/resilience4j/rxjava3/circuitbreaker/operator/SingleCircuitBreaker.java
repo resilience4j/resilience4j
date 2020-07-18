@@ -15,13 +15,11 @@
  */
 package io.github.resilience4j.rxjava3.circuitbreaker.operator;
 
-import io.github.resilience4j.rxjava3.AbstractSingleObserver;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.rxjava3.AbstractSingleObserver;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
-
-import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
@@ -51,17 +49,17 @@ class SingleCircuitBreaker<T> extends Single<T> {
 
         CircuitBreakerSingleObserver(SingleObserver<? super T> downstreamObserver) {
             super(downstreamObserver);
-            this.start = System.nanoTime();
+            this.start = circuitBreaker.getCurrentTimestamp();
         }
 
         @Override
         protected void hookOnError(Throwable e) {
-            circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e);
+            circuitBreaker.onError(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), e);
         }
 
         @Override
         protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
         }
 
         @Override
