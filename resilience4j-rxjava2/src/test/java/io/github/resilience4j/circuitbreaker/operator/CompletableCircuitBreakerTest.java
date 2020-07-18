@@ -21,6 +21,8 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToCompletable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Completable.complete()
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -36,6 +38,8 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldPropagateAndMarkError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Completable.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))
