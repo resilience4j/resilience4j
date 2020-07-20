@@ -97,7 +97,7 @@ public class RetryAutoConfigurationTest {
         assertThat(retry).isNotNull();
 
         // expect retry is configured as defined in application.yml
-        assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
+        assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(4);
         assertThat(retry.getName()).isEqualTo(RETRY_DUMMY_FEIGN_CLIENT_NAME);
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
@@ -116,11 +116,11 @@ public class RetryAutoConfigurationTest {
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_DUMMY_FEIGN_CLIENT_NAME);
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventsEndpointFeignListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventsEndpointFeignListBefore.getRetryEvents().size() + 4);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
@@ -153,7 +153,7 @@ public class RetryAutoConfigurationTest {
         assertThat(retry).isNotNull();
 
         // expect retry is configured as defined in application.yml
-        assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(3);
+        assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(4);
         assertThat(retry.getName()).isEqualTo(RETRY_BACKEND_A);
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
@@ -172,11 +172,11 @@ public class RetryAutoConfigurationTest {
         // expect retry-event actuator endpoint recorded both events
         RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
 
         retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_A);
         assertThat(retryEventList.getRetryEvents())
-            .hasSize(retryEventsAListBefore.getRetryEvents().size() + 3);
+            .hasSize(retryEventsAListBefore.getRetryEvents().size() + 4);
 
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))

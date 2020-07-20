@@ -5,7 +5,7 @@ resilience4j.retry:
     tag2: tag2Value
   configs:
     default:
-      maxRetryAttempts: 3
+      maxAttempts: 4
       waitDuration: 100ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
