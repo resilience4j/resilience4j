@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.events
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 
 
@@ -27,13 +28,18 @@ public class CircuitBreakerStreamEventsDTO {
     private CircuitBreakerEvent circuitBreakerRecentEvent;
     private CircuitBreaker.Metrics metrics;
     private CircuitBreaker.State currentState;
+    private float failureRateThreshold;
+    private float slowCallRateThreshold;
 
     public CircuitBreakerStreamEventsDTO(CircuitBreakerEvent circuitBreakerEvent,
                                          CircuitBreaker.State state,
-                                         CircuitBreaker.Metrics metrics) {
+                                         CircuitBreaker.Metrics metrics,
+                                         CircuitBreakerConfig circuitBreakerConfig) {
         this.circuitBreakerRecentEvent = circuitBreakerEvent;
         this.metrics = metrics;
         this.currentState = state;
+        this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
+        this.slowCallRateThreshold = circuitBreakerConfig.getSlowCallRateThreshold();
     }
 
     public CircuitBreakerEvent getCircuitBreakerRecentEvent() {
@@ -58,5 +64,22 @@ public class CircuitBreakerStreamEventsDTO {
 
     public void setCurrentState(CircuitBreaker.State currentState) {
         this.currentState = currentState;
+    }
+
+
+    public float getFailureRateThreshold() {
+        return failureRateThreshold;
+    }
+
+    public void setFailureRateThreshold(float failureRateThreshold) {
+        this.failureRateThreshold = failureRateThreshold;
+    }
+
+    public float getSlowCallRateThreshold() {
+        return slowCallRateThreshold;
+    }
+
+    public void setSlowCallRateThreshold(float slowCallRateThreshold) {
+        this.slowCallRateThreshold = slowCallRateThreshold;
     }
 }

@@ -120,7 +120,11 @@ public class CircuitBreakerChain implements Action<Chain> {
                     .writeValueAsString(
                         circuitBreakerRegistry.getAllCircuitBreakers()
                             .filter(cb -> cb.getName().equals(c.getCircuitBreakerName()))
-                            .map(cb -> new CircuitBreakerStreamEventsDTO(c, cb.getState(), cb.getMetrics()))
+                            .map(cb -> new CircuitBreakerStreamEventsDTO(c,
+                                cb.getState(),
+                                cb.getMetrics(),
+                                cb.getCircuitBreakerConfig()
+                            ))
                     );
                 ServerSentEvents events = ServerSentEvents
                     .serverSentEvents(Flux.merge(eventStreams),
@@ -164,7 +168,11 @@ public class CircuitBreakerChain implements Action<Chain> {
                         .format("circuit breaker with name %s not found", circuitBreakerName)));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(
-                        new CircuitBreakerStreamEventsDTO(c, circuitBreaker.getState(), circuitBreaker.getMetrics())
+                        new CircuitBreakerStreamEventsDTO(c,
+                            circuitBreaker.getState(),
+                            circuitBreaker.getMetrics(),
+                            circuitBreaker.getCircuitBreakerConfig()
+                        )
                     );
                 ServerSentEvents events = ServerSentEvents
                     .serverSentEvents(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()),
@@ -220,7 +228,10 @@ public class CircuitBreakerChain implements Action<Chain> {
                         .valueOf(eventType.toUpperCase()));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(
-                        new CircuitBreakerStreamEventsDTO(c, circuitBreaker.getState(), circuitBreaker.getMetrics())
+                        new CircuitBreakerStreamEventsDTO(c,
+                            circuitBreaker.getState(),
+                            circuitBreaker.getMetrics(),
+                            circuitBreaker.getCircuitBreakerConfig())
                     );
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream,
                     e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
