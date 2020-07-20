@@ -24,6 +24,7 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
+import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.events.CircuitBreakerStreamEventsDTO;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.metrics.CircuitBreakerMetricsDTO;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStateDTO;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStatesEndpointResponse;
@@ -111,6 +112,22 @@ public class CircuitBreakerChain implements Action<Chain> {
                             .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
             });
+            chain1.get("hystrixStream/events", ctx -> {
+                Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry
+                    .getAllCircuitBreakers().map(circuitBreaker -> ReactorAdapter
+                        .toFlux(circuitBreaker.getEventPublisher()));
+                Function<CircuitBreakerEvent, String> data = c -> Jackson
+                    .getObjectWriter(chain1.getRegistry()).writeValueAsString(
+                        circuitBreakerRegistry.getAllCircuitBreakers()
+                            .filter(cb -> cb.getName() == c.getCircuitBreakerName())
+                            .map(cb -> new CircuitBreakerStreamEventsDTO(c, cb.getState(), cb.getMetrics()))
+                    );
+                ServerSentEvents events = ServerSentEvents
+                    .serverSentEvents(Flux.merge(eventStreams),
+                        e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
+                            .event(c -> c.getEventType().name()).data(data));
+                ctx.render(events);
+            });
             chain1.get("events/:name", ctx -> {
                     String circuitBreakerName = ctx.getPathTokens().get("name");
                     Promise.<CircuitBreakerEventsEndpointResponse>async(d -> {
@@ -133,6 +150,22 @@ public class CircuitBreakerChain implements Action<Chain> {
                 Function<CircuitBreakerEvent, String> data = c -> Jackson
                     .getObjectWriter(chain1.getRegistry()).writeValueAsString(
                         CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
+                ServerSentEvents events = ServerSentEvents
+                    .serverSentEvents(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()),
+                        e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
+                            .event(c -> c.getEventType().name()).data(data));
+                ctx.render(events);
+            });
+            chain1.get("hystrixStream/events/:name", ctx -> {
+                String circuitBreakerName = ctx.getPathTokens().get("name");
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
+                    .find(cb -> cb.getName().equals(circuitBreakerName))
+                    .getOrElseThrow(() -> new IllegalArgumentException(String
+                        .format("circuit breaker with name %s not found", circuitBreakerName)));
+                Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
+                    .writeValueAsString(
+                        new CircuitBreakerStreamEventsDTO(c, circuitBreaker.getState(), circuitBreaker.getMetrics())
+                    );
                 ServerSentEvents events = ServerSentEvents
                     .serverSentEvents(ReactorAdapter.toFlux(circuitBreaker.getEventPublisher()),
                         e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
@@ -169,6 +202,26 @@ public class CircuitBreakerChain implements Action<Chain> {
                 Function<CircuitBreakerEvent, String> data = c -> Jackson
                     .getObjectWriter(chain1.getRegistry()).writeValueAsString(
                         CircuitBreakerEventDTOFactory.createCircuitBreakerEventDTO(c));
+                ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream,
+                    e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
+                        .event(c -> c.getEventType().name()).data(data));
+                ctx.render(events);
+            });
+            chain1.get("hystrixStream/events/:name/:type", ctx -> {
+                String circuitBreakerName = ctx.getPathTokens().get("name");
+                String eventType = ctx.getPathTokens().get("type");
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
+                    .find(cb -> cb.getName().equals(circuitBreakerName))
+                    .getOrElseThrow(() -> new IllegalArgumentException(String
+                        .format("circuit breaker with name %s not found", circuitBreakerName)));
+                Flux<CircuitBreakerEvent> eventStream = ReactorAdapter
+                    .toFlux(circuitBreaker.getEventPublisher())
+                    .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
+                        .valueOf(eventType.toUpperCase()));
+                Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
+                    .writeValueAsString(
+                        new CircuitBreakerStreamEventsDTO(c, circuitBreaker.getState(), circuitBreaker.getMetrics())
+                    );
                 ServerSentEvents events = ServerSentEvents.serverSentEvents(eventStream,
                     e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
                         .event(c -> c.getEventType().name()).data(data));
