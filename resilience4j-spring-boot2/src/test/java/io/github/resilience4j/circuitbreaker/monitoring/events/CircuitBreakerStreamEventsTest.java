@@ -51,13 +51,14 @@ public class CircuitBreakerStreamEventsTest {
         } catch (IOException ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
         }
+        Thread.sleep(1000); // to record the event
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
 
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
         assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
         assert circuitBreakerEventsAfter.getCircuitBreakerEvents().size() == 2;
-        Thread.sleep(1000);
+        Thread.sleep(1000); // for webClient to complete the subscribe operation
         assert (events.size() == 2);
     }
 
@@ -67,14 +68,14 @@ public class CircuitBreakerStreamEventsTest {
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
-        Thread.sleep(1000);
+        Thread.sleep(1000); // to record the event
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
         }
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        Thread.sleep(1000);
+        Thread.sleep(1000); // for webClient to complete the subscribe operation
         assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
         assert (events.size() == 2);
     }
@@ -85,14 +86,14 @@ public class CircuitBreakerStreamEventsTest {
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
-        Thread.sleep(1000);
+        Thread.sleep(1000); // to record the event
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
         }
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        Thread.sleep(1000);
+        Thread.sleep(1000); // for webClient to complete the subscribe operation
         assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
         assert (events.size() == 1);
     }
@@ -131,3 +132,4 @@ public class CircuitBreakerStreamEventsTest {
         return eventStream;
     }
 }
+

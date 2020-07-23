@@ -112,5 +112,4 @@ public class CircuitBreakerServerSideEvent {
         }
         return circuitBreaker;
     }
-
 }

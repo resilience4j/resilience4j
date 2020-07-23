@@ -51,6 +51,7 @@ public class CircuitBreakerHystrixStreamEventsTest {
         } catch (IOException ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
         }
+        Thread.sleep(1000); // to record the event
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
 
@@ -131,3 +132,4 @@ public class CircuitBreakerHystrixStreamEventsTest {
         return eventStream;
     }
 }
+

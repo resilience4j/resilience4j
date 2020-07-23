@@ -124,5 +124,5 @@ public class CircuitBreakerHystrixServerSideEvent {
         }
         return circuitBreaker;
     }
-
 }
+
