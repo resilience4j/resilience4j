@@ -21,10 +21,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTOFactory;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerHystrixStreamEventsDTO;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
-import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.events.CircuitBreakerStreamEventsDTO;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.metrics.CircuitBreakerMetricsDTO;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStateDTO;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.states.CircuitBreakerStatesEndpointResponse;
@@ -120,7 +120,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                     .writeValueAsString(
                         circuitBreakerRegistry.getAllCircuitBreakers()
                             .filter(cb -> cb.getName().equals(c.getCircuitBreakerName()))
-                            .map(cb -> new CircuitBreakerStreamEventsDTO(c,
+                            .map(cb -> new CircuitBreakerHystrixStreamEventsDTO(c,
                                 cb.getState(),
                                 cb.getMetrics(),
                                 cb.getCircuitBreakerConfig()
@@ -168,7 +168,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                         .format("circuit breaker with name %s not found", circuitBreakerName)));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(
-                        new CircuitBreakerStreamEventsDTO(c,
+                        new CircuitBreakerHystrixStreamEventsDTO(c,
                             circuitBreaker.getState(),
                             circuitBreaker.getMetrics(),
                             circuitBreaker.getCircuitBreakerConfig()
@@ -228,7 +228,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                         .valueOf(eventType.toUpperCase()));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(
-                        new CircuitBreakerStreamEventsDTO(c,
+                        new CircuitBreakerHystrixStreamEventsDTO(c,
                             circuitBreaker.getState(),
                             circuitBreaker.getMetrics(),
                             circuitBreaker.getCircuitBreakerConfig())
