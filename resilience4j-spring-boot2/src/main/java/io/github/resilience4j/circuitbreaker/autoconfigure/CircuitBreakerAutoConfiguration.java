@@ -20,6 +20,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerHystrixServerSideEvent;
+import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerServerSideEvent;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
@@ -57,6 +59,20 @@ public class CircuitBreakerAutoConfiguration {
         public CircuitBreakerEventsEndpoint circuitBreakerEventsEndpoint(
             EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
             return new CircuitBreakerEventsEndpoint(eventConsumerRegistry);
+        }
+
+        @Bean
+        @ConditionalOnAvailableEndpoint
+        public CircuitBreakerServerSideEvent circuitBreakerServerSideEventEndpoint(
+            CircuitBreakerRegistry circuitBreakerRegistry) {
+            return new CircuitBreakerServerSideEvent(circuitBreakerRegistry);
+        }
+
+        @Bean
+        @ConditionalOnAvailableEndpoint
+        public CircuitBreakerHystrixServerSideEvent circuitBreakerHystrixServerSideEventEndpoint(
+            CircuitBreakerRegistry circuitBreakerRegistry) {
+            return new CircuitBreakerHystrixServerSideEvent(circuitBreakerRegistry);
         }
     }
 }
