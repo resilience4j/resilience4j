@@ -57,7 +57,6 @@ public class CircuitBreakerHystrixStreamEventsTest {
 
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
         assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assert circuitBreakerEventsAfter.getCircuitBreakerEvents().size() == 2;
         Thread.sleep(1000); // for webClient to complete the subscribe operation
         assert (events.size() == 2);
     }
