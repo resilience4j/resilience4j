@@ -3,7 +3,7 @@ language: java
 os: linux
 jobs:
   include:
-    - jdk: oraclejdk8
+    - jdk: openjdk11
       env: PUBLISH=true
     #- jdk: openjdk11
 before_install:
