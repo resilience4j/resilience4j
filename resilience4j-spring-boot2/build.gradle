@@ -3,7 +3,6 @@ dependencies {
     compile project(':resilience4j-micrometer')
     compile project(':resilience4j-reactor')
     compile(libraries.spring_boot2_webflux)
-    compileOnly(libraries.rxjava2)
 
     compileOnly(libraries.spring_boot2_aop)
     compileOnly(libraries.spring_boot2_actuator)
