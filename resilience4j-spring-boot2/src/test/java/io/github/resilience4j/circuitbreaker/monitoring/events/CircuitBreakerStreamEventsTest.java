@@ -68,7 +68,7 @@ public class CircuitBreakerStreamEventsTest {
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         // The invocation is recorded by the CircuitBreaker as a success.
         dummyService.doSomething(false);
-        Thread.sleep(1000); // to record the event
+        Thread.sleep(1000); // pause 1 sec to record the event
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
