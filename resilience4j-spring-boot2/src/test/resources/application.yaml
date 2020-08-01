@@ -1,3 +1,4 @@
+logging.level.root: DEBUG
 resilience4j.retry:
   retryAspectOrder: 399
   tags:
@@ -183,3 +184,7 @@ management.endpoint.health.show-details: always
 management.health.circuitbreakers.enabled: true
 management.health.ratelimiters.enabled: true
 
+resilience4j:
+  circuitBreaker:
+    sse:
+      enabled: true
