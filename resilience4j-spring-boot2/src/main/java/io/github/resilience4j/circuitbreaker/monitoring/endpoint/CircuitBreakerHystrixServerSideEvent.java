@@ -11,6 +11,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.function.BiFunction;
@@ -41,6 +42,7 @@ import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
 public class CircuitBreakerHystrixServerSideEvent {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     public CircuitBreakerHystrixServerSideEvent(
         CircuitBreakerRegistry circuitBreakerRegistry) {
@@ -99,7 +101,6 @@ public class CircuitBreakerHystrixServerSideEvent {
     }
 
     private BiFunction<CircuitBreakerEvent, CircuitBreaker, String> getCircuitBreakerEventStringFunction() {
-        ObjectMapper jsonMapper = new ObjectMapper();
         return (cbEvent, cb) -> {
             try {
                 return jsonMapper.writeValueAsString(
@@ -118,7 +119,7 @@ public class CircuitBreakerHystrixServerSideEvent {
 
     private CircuitBreaker getCircuitBreaker(String circuitBreakerName) {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(circuitBreakerName);
-        if (circuitBreaker == null && !circuitBreaker.getName().equalsIgnoreCase(circuitBreakerName)) {
+        if (!circuitBreaker.getName().equalsIgnoreCase(circuitBreakerName)) {
             new IllegalArgumentException(String
                 .format("circuit breaker with name %s not found", circuitBreakerName));
         }

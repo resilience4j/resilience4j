@@ -83,6 +83,12 @@
       "type": "java.lang.Boolean",
       "description": "Whether to enable the legacy-timelimiter-metrics.",
       "defaultValue": "false"
+    },
+    {
+      "name": "resilience4j.circuitbreaker.sse.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the server sent events.",
+      "defaultValue": "false"
     }
   ]
 }
