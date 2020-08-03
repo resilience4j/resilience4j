@@ -1,4 +1,3 @@
-logging.level.root: DEBUG
 resilience4j.retry:
   retryAspectOrder: 399
   tags:
@@ -88,6 +87,7 @@ resilience4j.circuitbreaker:
       baseConfig: default
       slidingWindowSize: 18
       permittedNumberOfCallsInHalfOpenState: 6
+
 
 resilience4j.ratelimiter:
   tags:
@@ -182,3 +182,4 @@ management.endpoint.health.show-details: always
 
 management.health.circuitbreakers.enabled: true
 management.health.ratelimiters.enabled: true
+
