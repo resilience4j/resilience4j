@@ -47,6 +47,7 @@ import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
  * This is created as a bridge to support the legacy hystrix eco system of monitoring tools especially for
  * those that are migrating from hystrix to resilence4j to continue to use hystrix eco tools.
  */
+
 @Endpoint(id = "hystrix-stream-circuitbreaker-events")
 public class CircuitBreakerHystrixServerSideEvent {
 

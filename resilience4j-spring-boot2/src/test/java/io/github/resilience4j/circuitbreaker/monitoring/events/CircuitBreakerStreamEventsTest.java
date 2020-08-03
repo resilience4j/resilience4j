@@ -41,8 +41,11 @@ import java.util.List;
  * @author vijayram
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = TestApplication.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,classes = TestApplication.class,
+    properties = {
+    "resilience4j.circuitBreaker.stream.event.enabled: true"
+    }
+)
 public class CircuitBreakerStreamEventsTest {
 
     public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/stream-circuitbreaker-events";
@@ -72,7 +75,7 @@ public class CircuitBreakerStreamEventsTest {
 
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
         assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assert circuitBreakerEventsAfter.getCircuitBreakerEvents().size() == 2;
+        assert circuitBreakerEventsAfter.getCircuitBreakerEvents().size() > 0;
         Thread.sleep(1000); // for webClient to complete the subscribe operation
         assert (events.size() == 2);
     }

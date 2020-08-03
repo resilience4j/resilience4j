@@ -85,7 +85,7 @@
       "defaultValue": "false"
     },
     {
-      "name": "resilience4j.circuitbreaker.sse.enabled",
+      "name": "resilience4j.circuitBreaker.stream.event.enabled",
       "type": "java.lang.Boolean",
       "description": "Whether to enable the server sent events.",
       "defaultValue": "false"
