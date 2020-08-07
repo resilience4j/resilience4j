@@ -41,11 +41,7 @@ import java.util.List;
  * @author vijayram
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class,
-    properties = {
-        "resilience4j.circuitBreaker.stream.event.enabled: true"
-    }
-    )
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 public class CircuitBreakerHystrixStreamEventsTest {
 
     public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/hystrix-stream-circuitbreaker-events";

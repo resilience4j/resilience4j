@@ -128,12 +128,7 @@ public class CircuitBreakerHystrixServerSideEvent {
     }
 
     private CircuitBreaker getCircuitBreaker(String circuitBreakerName) {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(circuitBreakerName);
-        if (!circuitBreaker.getName().equalsIgnoreCase(circuitBreakerName)) {
-            new IllegalArgumentException(String
-                .format("circuit breaker with name %s not found", circuitBreakerName));
-        }
-        return circuitBreaker;
+        return circuitBreakerRegistry.circuitBreaker(circuitBreakerName);
     }
 }
 

@@ -33,7 +33,6 @@ import reactor.core.publisher.Flux;
 @Configuration
 @ConditionalOnClass({CircuitBreaker.class, Endpoint.class})
 @AutoConfigureAfter(CircuitBreakerAutoConfiguration.class)
-@ConditionalOnProperty(value = "resilience4j.circuitBreaker.stream.event.enabled")
 public class CircuitBreakerStreamEventsAutoConfiguration {
 
     @Bean
