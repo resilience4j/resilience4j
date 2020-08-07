@@ -42,7 +42,23 @@ import javax.inject.Inject;
 import java.util.Comparator;
 
 /**
- * Provides event and stream event endpoints for circuitbreaker events.
+ *<p>
+ *  In General, Provides event and stream event endpoints for circuitbreaker events.
+ *</p>
+ * <p>
+ *  The following endpoints are automatically generated and Circuit breake states can be obtained as
+ *  curl -v http://localhost:5050/circuitbreaker/states
+ *  curl -v http://localhost:5050/circuitbreaker/states/{circuitbreakername}
+ * </p>
+ * <p>
+ *  The following endpoints are automatically generated and events are produced as Server Sent Event(SSE)
+ *  curl -vv http://localhost:5050/circuitbreaker/stream/events
+ *  curl -vv http://localhost:5050/circuitbreaker/stream/events/{circuitbreakername}
+ *  curl -vv http://localhost:5050/circuitbreaker/stream/events/{circuitbreakername}/{errorType}
+ *  curl -vv http://localhost:5050/circuitbreaker/hystrixStream/events
+ *  curl -vv http://localhost:8090/circuitbreaker/hystrixStream/events/{circuitbreakername}
+ *  curl -vv http://localhost:8090/circuitbreaker/hystrixStream/events/{circuitbreakername}/{errorType}
+ * <p>
  */
 public class CircuitBreakerChain implements Action<Chain> {
 
