@@ -243,6 +243,57 @@ class CircuitBreakerChainSpec extends Specification {
 
         then: "it works"
         "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker hystrix events by name and success"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/hystrixStream/events/test1/success")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker hystrix events by name"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/hystrixStream/events/test1")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+
+        when: "we get all circuit breaker hystrix events"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/hystrixStream/events/test1")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker hystrix events by name and error"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/hystrixStream/events/test1/error")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
+
+        when: "we get circuit breaker hystrix events by name and success"
+        actual = ExecHarness.yieldSingle {
+            streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/circuitbreaker/hystrixStream/events/test1/success")) {
+                it.get()
+            }
+        }
+
+        then: "it works"
+        "text/event-stream;charset=UTF-8" == actual.value.headers["Content-Type"]
     }
 
     def "test disabled"() {

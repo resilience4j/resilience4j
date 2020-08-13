@@ -39,7 +39,7 @@ The following example shows how to decorate a feign interface with a RateLimiter
 ```
 
 Calling any method of the `MyService` instance will invoke a CircuitBreaker and then a RateLimiter.
-If one of these mechanisms take affect, then the corresponding RuntimeException will be thrown, for example, `CircuitBreakerOpenException` or `RequestNotPermitted` (Hint: These do not extend the `FeignException` class).
+If one of these mechanisms take affect, then the corresponding RuntimeException will be thrown, for example, `CallNotPermittedException` or `RequestNotPermitted` (Hint: These do not extend the `FeignException` class).
 
 The following diagram illustrates how the decorators are stacked:
 image::feign-decorators.png[]
@@ -80,12 +80,12 @@ Fallbacks can be defined that are called when Exceptions are thrown. Exceptions 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendName");
         FeignDecorators decorators = FeignDecorators.builder()
                                          .withFallback(requestFailedFallback, FeignException.class)
-                                         .withFallback(circuitBreakerFallback, CircuitBreakerOpenException.class)
+                                         .withFallback(circuitBreakerFallback, CallNotPermittedException.class)
                                          .build();
         MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/", fallback);
 ```
 In this example, the `requestFailedFallback` is called when a `FeignException` is thrown (usually when the HTTP request fails), whereas
- the `circuitBreakerFallback` is only called in the case of a `CircuitBreakerOpenException`. 
+ the `circuitBreakerFallback` is only called in the case of a `CallNotPermittedException`.
  Check the `FeignDecorators` class for more ways to filter fallbacks.
 
 All fallbacks must implement the same interface that is declared in the "target" (Resilience4jFeign.Builder#target) method, otherwise an IllegalArgumentException will be thrown.

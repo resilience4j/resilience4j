@@ -25,7 +25,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 
 /**
  * This class is used to emit available data as SSE so that resilence4j SSE can be bridged
- * to suppose legacy hystrix eco tools such as hystrix dashboard , turbine and vizceral.
+ * to suppose legacy hystrix ecosystem of tools such as hystrix dashboard , turbine and vizceral.
  */
 
 public class CircuitBreakerHystrixStreamEventsDTO {
