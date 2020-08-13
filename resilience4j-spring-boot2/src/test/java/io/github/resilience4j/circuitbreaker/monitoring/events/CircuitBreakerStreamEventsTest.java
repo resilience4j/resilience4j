@@ -71,10 +71,10 @@ public class CircuitBreakerStreamEventsTest {
         dummyService.doSomething(false);
 
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
-        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat (circuitBreakerEventsAfter.getCircuitBreakerEvents().size() > 0);
+        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat (circuitBreakerEventsAfter.getCircuitBreakerEvents().size()).isGreaterThan(0);
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat (events.size() == 2);
+        assertThat (events.size() ).isEqualTo(2);
     }
 
     @Test
@@ -91,8 +91,8 @@ public class CircuitBreakerStreamEventsTest {
         }
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat (events.size() == 2);
+        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat (events.size() ).isEqualTo(2);
     }
 
     @Test
@@ -109,8 +109,8 @@ public class CircuitBreakerStreamEventsTest {
         }
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat (events.size() == 1);
+        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat (events.size()).isEqualTo(1);
     }
 
     private List<ServerSentEvent<String>> getServerSentEvents(String s) {
