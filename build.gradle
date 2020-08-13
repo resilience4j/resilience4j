@@ -3,7 +3,7 @@ plugins {
     id "com.jfrog.bintray" version "1.8.5"
     id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
-    id "com.jfrog.artifactory" version "4.16.1"
+    id "com.jfrog.artifactory" version "4.17.0"
     id 'idea'
 }
 
