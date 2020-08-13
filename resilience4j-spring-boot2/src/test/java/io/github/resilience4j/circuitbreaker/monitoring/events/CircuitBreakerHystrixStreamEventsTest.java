@@ -31,7 +31,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,9 +70,9 @@ public class CircuitBreakerHystrixStreamEventsTest {
         dummyService.doSomething(false);
 
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
-        assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assert (events.size() == 2);
+        assertThat (events.size() == 2);
     }
 
     @Test
@@ -89,8 +89,8 @@ public class CircuitBreakerHystrixStreamEventsTest {
         }
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         Thread.sleep(1000); //  webClient to complete the subscribe operation
-        assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assert (events.size() == 2);
+        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat (events.size() == 2);
     }
 
     @Test
@@ -107,8 +107,8 @@ public class CircuitBreakerHystrixStreamEventsTest {
         }
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assert (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assert (events.size() == 1);
+        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size() < circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat (events.size() == 1);
     }
 
     private List<ServerSentEvent<String>> getServerSentEvents(String s) {
