@@ -20,8 +20,6 @@ package io.github.resilience4j.kotlin.ratelimiter
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
-import io.vavr.Tuple2 as VavrTuple2
-import io.vavr.collection.HashMap as VavrHashMap
 
 /**
  * Creates new custom [RateLimiterRegistry].
@@ -141,7 +139,7 @@ inline fun RateLimiterRegistry.Builder.addRateLimiterConfig(
  * @param tags default tags to add to the registry.
  */
 fun RateLimiterRegistry.Builder.withTags(tags: Map<String, String>) {
-    withTags(VavrHashMap.ofAll(tags))
+    withTags(tags)
 }
 
 /**
@@ -152,5 +150,5 @@ fun RateLimiterRegistry.Builder.withTags(tags: Map<String, String>) {
  * @param tags default tags to add to the registry.
  */
 fun RateLimiterRegistry.Builder.withTags(vararg tags: Pair<String, String>) {
-    withTags(VavrHashMap.ofEntries(tags.map { VavrTuple2(it.first, it.second) }))
+    withTags(HashMap(tags.toMap()))
 }

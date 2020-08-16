@@ -4,7 +4,6 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import io.vavr.collection.Array;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.SimpleStatusAggregator;
@@ -13,6 +12,7 @@ import org.springframework.boot.actuate.health.Status;
 import java.time.Duration;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.mock;
@@ -46,7 +46,7 @@ public class RateLimitersHealthIndicatorTest {
         when(instanceProperties.getAllowHealthIndicatorToFail()).thenReturn(true);
         when(rateLimiter.getMetrics()).thenReturn(metrics);
         when(rateLimiter.getDetailedMetrics()).thenReturn(metrics);
-        when(rateLimiterRegistry.getAllRateLimiters()).thenReturn(Array.of(rateLimiter));
+        when(rateLimiterRegistry.getAllRateLimiters()).thenReturn(Set.of(rateLimiter));
 
         when(config.getTimeoutDuration()).thenReturn(Duration.ofNanos(30L));
 
@@ -99,7 +99,7 @@ public class RateLimitersHealthIndicatorTest {
         when(instanceProperties.getAllowHealthIndicatorToFail()).thenReturn(allowHealthIndicatorToFail);
         when(rateLimiter.getMetrics()).thenReturn(metrics);
         when(rateLimiter.getDetailedMetrics()).thenReturn(metrics);
-        when(rateLimiterRegistry.getAllRateLimiters()).thenReturn(Array.of(rateLimiter));
+        when(rateLimiterRegistry.getAllRateLimiters()).thenReturn(Set.of(rateLimiter));
 
         when(config.getTimeoutDuration()).thenReturn(Duration.ofNanos(30L));
 

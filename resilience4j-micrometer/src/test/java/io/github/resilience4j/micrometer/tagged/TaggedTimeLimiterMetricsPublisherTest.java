@@ -27,10 +27,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -76,7 +73,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
 
     @Test
     public void shouldAddCustomTags() {
-        TimeLimiter timeLimiterF = timeLimiterRegistry.timeLimiter("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        TimeLimiter timeLimiterF = timeLimiterRegistry.timeLimiter("backendF", Map.of("key1", "value1"));
         timeLimiterF.onSuccess();
         assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendF")).hasSize(3);

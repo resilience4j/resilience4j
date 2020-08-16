@@ -142,8 +142,7 @@ public class CircuitBreakerConfiguration {
                     .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
                         customizerMap)));
 
-        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer,
-            io.vavr.collection.HashMap.ofAll(circuitBreakerProperties.getTags()));
+        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer, circuitBreakerProperties.getTags());
     }
 
     /**

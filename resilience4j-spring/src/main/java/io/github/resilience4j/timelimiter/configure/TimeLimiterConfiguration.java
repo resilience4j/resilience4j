@@ -131,8 +131,7 @@ public class TimeLimiterConfiguration {
                         entry -> timeLimiterConfigurationProperties.createTimeLimiterConfig(
                             entry.getKey(), entry.getValue(), compositeTimeLimiterCustomizer)));
 
-        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer,
-            HashMap.ofAll(timeLimiterConfigurationProperties.getTags()));
+        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer, timeLimiterConfigurationProperties.getTags());
     }
 
     /**

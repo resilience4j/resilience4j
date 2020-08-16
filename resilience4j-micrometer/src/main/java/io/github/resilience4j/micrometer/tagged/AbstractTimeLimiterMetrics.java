@@ -46,7 +46,7 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, TimeLimiter timeLimiter) {
-        List<Tag> customTags = mapToTagsList(timeLimiter.getTags().toJavaMap());
+        List<Tag> customTags = mapToTagsList(timeLimiter.getTags());
         registerMetrics(meterRegistry, timeLimiter, customTags);
     }
 

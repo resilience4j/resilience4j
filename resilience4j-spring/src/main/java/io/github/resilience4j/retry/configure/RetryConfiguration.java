@@ -103,8 +103,7 @@ public class RetryConfiguration {
                     .createRetryConfig(entry.getValue(), compositeRetryCustomizer,
                         entry.getKey())));
 
-        return RetryRegistry.of(configs, retryRegistryEventConsumer,
-            io.vavr.collection.HashMap.ofAll(retryConfigurationProperties.getTags()));
+        return RetryRegistry.of(configs, retryRegistryEventConsumer, retryConfigurationProperties.getTags());
     }
 
     /**
