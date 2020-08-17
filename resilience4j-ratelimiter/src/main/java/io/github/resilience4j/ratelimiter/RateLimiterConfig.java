@@ -32,15 +32,17 @@ public class RateLimiterConfig {
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
     private final int limitForPeriod;
-    private final int burstForPeriod;
+    private final int burstLimit;
+    private final int initialPermits;
     private final boolean writableStackTraceEnabled;
 
     private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
-        int limitForPeriod, int burstForPeriod, boolean writableStackTraceEnabled) {
+                              int limitForPeriod, int burstLimit, int initialPermits, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
-        this.burstForPeriod = burstForPeriod;
+        this.burstLimit = burstLimit;
+        this.initialPermits = initialPermits;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
     }
 
@@ -105,8 +107,12 @@ public class RateLimiterConfig {
         return limitForPeriod;
     }
 
-    public int getBurstForPeriod() {
-        return burstForPeriod;
+    public int getBurstLimit() {
+        return burstLimit;
+    }
+
+    public int getInitialPermits() {
+        return initialPermits;
     }
 
     public boolean isWritableStackTraceEnabled() {
@@ -119,7 +125,7 @@ public class RateLimiterConfig {
             "timeoutDuration=" + timeoutDuration +
             ", limitRefreshPeriod=" + limitRefreshPeriod +
             ", limitForPeriod=" + limitForPeriod +
-            ", burstForPeriod=" + burstForPeriod +
+            ", burstForPeriod=" + burstLimit +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
             '}';
     }
@@ -130,6 +136,7 @@ public class RateLimiterConfig {
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
         private int burstForPeriod = 0;
+        private int initialPermits = 0;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
@@ -139,7 +146,7 @@ public class RateLimiterConfig {
             this.timeoutDuration = prototype.timeoutDuration;
             this.limitRefreshPeriod = prototype.limitRefreshPeriod;
             this.limitForPeriod = prototype.limitForPeriod;
-            this.burstForPeriod = prototype.burstForPeriod;
+            this.burstForPeriod = prototype.burstLimit;
             this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
         }
 
@@ -149,11 +156,16 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            if( burstForPeriod< limitForPeriod) {
+            if(burstForPeriod < limitForPeriod) {
                 burstForPeriod = limitForPeriod;
             }
+
+            if(initialPermits <limitForPeriod) {
+                initialPermits = limitForPeriod;
+            }
+
             return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod, burstForPeriod,
-                writableStackTraceEnabled);
+                initialPermits ,writableStackTraceEnabled);
         }
 
         /**
@@ -221,5 +233,17 @@ public class RateLimiterConfig {
             return this;
         }
 
+        /**
+         * Configures the initial permits available.
+         * If no value specified the default value is the one
+         * specified for @{@link RateLimiterConfig#initialPermits}.
+         *
+         * @param initialPermits the initial permits
+         * @return the RateLimiterConfig.Builder
+         */
+        public Builder initialPermits(final int initialPermits) {
+            this.initialPermits = initialPermits;
+            return this;
+        }
     }
 }
