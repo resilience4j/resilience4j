@@ -52,7 +52,7 @@ public class RateLimiterConfigTest {
         then(config.getLimitForPeriod()).isEqualTo(LIMIT);
         then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(config.getBurstForPeriod()).isEqualTo(BURST_LIMIT);
+        then(config.getBurstLimit()).isEqualTo(BURST_LIMIT);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class RateLimiterConfigTest {
         then(config.getLimitForPeriod()).isEqualTo(LIMIT);
         then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
-        then(config.getBurstForPeriod()).isEqualTo(LIMIT);
+        then(config.getBurstLimit()).isEqualTo(LIMIT);
     }
 
     @Test
