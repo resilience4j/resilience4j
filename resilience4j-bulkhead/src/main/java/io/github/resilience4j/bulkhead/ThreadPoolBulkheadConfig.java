@@ -104,7 +104,7 @@ public class ThreadPoolBulkheadConfig {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("ThreadPoolBulkheadConfig{");
+        final StringBuilder sb = new StringBuilder("ThreadPoolBulkheadConfig{");
         sb.append("maxThreadPoolSize=").append(maxThreadPoolSize);
         sb.append(", coreThreadPoolSize=").append(coreThreadPoolSize);
         sb.append(", queueCapacity=").append(queueCapacity);

@@ -90,7 +90,7 @@ public class BulkheadConfig {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("BulkheadConfig{");
+        final StringBuilder sb = new StringBuilder("BulkheadConfig{");
         sb.append("maxConcurrentCalls=").append(maxConcurrentCalls);
         sb.append(", maxWaitDuration=").append(maxWaitDuration);
         sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
