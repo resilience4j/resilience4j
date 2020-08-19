@@ -88,6 +88,17 @@ public class BulkheadConfig {
         return fairCallHandlingEnabled;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BulkheadConfig{");
+        sb.append("maxConcurrentCalls=").append(maxConcurrentCalls);
+        sb.append(", maxWaitDuration=").append(maxWaitDuration);
+        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
+        sb.append(", fairCallHandlingEnabled=").append(fairCallHandlingEnabled);
+        sb.append('}');
+        return sb.toString();
+    }
+
     public static class Builder {
 
         private int maxConcurrentCalls;
