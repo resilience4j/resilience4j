@@ -22,6 +22,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -105,6 +108,50 @@ public class EventProcessorTest {
         boolean consumed = eventProcessor.processEvent(1);
 
         assertThat(consumed).isEqualTo(false);
+    }
+
+
+    @Test
+    public void testOnEventParallel() throws ExecutionException {
+        EventProcessor<Number> eventProcessor = new EventProcessor<>();
+        EventConsumer<Integer> eventConsumer1 = event -> {
+            // Artificial delay in a listener's code
+            System.out.println("1" + "start" + event.toString());
+            try {
+                Thread.sleep(10 * 1000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("1" + "end" + event.toString());
+        };
+
+        EventConsumer<Integer> eventConsumer2 = event -> System.out.println("2" + event.toString());
+
+        // 1st consumer is added
+        eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer1);
+
+        // process first event in a separate thread to create a race condition
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            eventProcessor.processEvent(1); // sleeps 10 sec inside listener's code
+        });
+
+        try {
+            Thread.sleep(1 * 1000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 2nd consumer is added
+        eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer2);
+
+        try {
+            future.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
 }
