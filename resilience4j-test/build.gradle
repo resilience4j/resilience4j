@@ -2,5 +2,6 @@
 sonarqube.skipProject = true
 dependencies {
     implementation project(':resilience4j-core')
+    implementation 'libraries.vavr'
 }
 ext.moduleName = 'io.github.resilience4j.test'

@@ -45,8 +45,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker) {
-        List<Tag> customTags = mapToTagsList(circuitBreaker.getTags()
-            .toJavaMap());
+        List<Tag> customTags = mapToTagsList(circuitBreaker.getTags());
         registerMetrics(meterRegistry, circuitBreaker, customTags);
     }
 

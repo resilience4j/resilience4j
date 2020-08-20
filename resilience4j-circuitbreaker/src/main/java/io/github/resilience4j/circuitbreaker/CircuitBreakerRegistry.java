@@ -23,13 +23,14 @@ import io.github.resilience4j.circuitbreaker.internal.InMemoryCircuitBreakerRegi
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Seq;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * The {@link CircuitBreakerRegistry} is a factory to create CircuitBreaker instances which stores
@@ -82,7 +83,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
      */
     static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs) {
-        return of(configs, HashMap.empty());
+        return of(configs, emptyMap());
     }
 
     /**
@@ -94,8 +95,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * @param tags    default tags to add to the registry
      * @return a CircuitBreakerRegistry with a Map of shared CircuitBreaker configurations.
      */
-    static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+    static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs, Map<String, String> tags) {
         return new InMemoryCircuitBreakerRegistry(configs, tags);
     }
 
@@ -124,8 +124,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * CircuitBreaker registry event consumer.
      */
     static CircuitBreakerRegistry of(Map<String, CircuitBreakerConfig> configs,
-        RegistryEventConsumer<CircuitBreaker> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        RegistryEventConsumer<CircuitBreaker> registryEventConsumer, Map<String, String> tags) {
         return new InMemoryCircuitBreakerRegistry(configs, registryEventConsumer, tags);
     }
 
@@ -158,7 +157,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      *
      * @return all managed {@link CircuitBreaker} instances.
      */
-    Seq<CircuitBreaker> getAllCircuitBreakers();
+    Set<CircuitBreaker> getAllCircuitBreakers();
 
     /**
      * Returns a managed {@link CircuitBreaker} or creates a new one with the default CircuitBreaker
@@ -181,7 +180,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * @param tags tags added to the CircuitBreaker
      * @return The {@link CircuitBreaker}
      */
-    CircuitBreaker circuitBreaker(String name, io.vavr.collection.Map<String, String> tags);
+    CircuitBreaker circuitBreaker(String name, Map<String, String> tags);
 
     /**
      * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker
@@ -206,8 +205,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * @param tags   tags added to the CircuitBreaker
      * @return The {@link CircuitBreaker}
      */
-    CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config,
-        io.vavr.collection.Map<String, String> tags);
+    CircuitBreaker circuitBreaker(String name, CircuitBreakerConfig config, Map<String, String> tags);
 
     /**
      * Returns a managed {@link CircuitBreaker} or creates a new one.
@@ -232,8 +230,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * @param tags       tags added to the CircuitBreaker
      * @return The {@link CircuitBreaker}
      */
-    CircuitBreaker circuitBreaker(String name, String configName,
-        io.vavr.collection.Map<String, String> tags);
+    CircuitBreaker circuitBreaker(String name, String configName, Map<String, String> tags);
 
     /**
      * Returns a managed {@link CircuitBreaker} or creates a new one with a custom CircuitBreaker
@@ -260,8 +257,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
      * @return The {@link CircuitBreaker}
      */
     CircuitBreaker circuitBreaker(String name,
-        Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier,
-        io.vavr.collection.Map<String, String> tags);
+        Supplier<CircuitBreakerConfig> circuitBreakerConfigSupplier, Map<String, String> tags);
 
     /**
      * Returns a builder to create a custom CircuitBreakerRegistry.
@@ -278,7 +274,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
         private RegistryStore<CircuitBreaker> registryStore;
         private Map<String, CircuitBreakerConfig> circuitBreakerConfigsMap;
         private List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers;
-        private io.vavr.collection.Map<String, String> tags;
+        private Map<String, String> tags;
 
         public Builder() {
             this.circuitBreakerConfigsMap = new java.util.HashMap<>();
@@ -337,7 +333,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
          * @param tags default tags to add to the registry.
          * @return a {@link CircuitBreakerRegistry.Builder}
          */
-        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+        public Builder withTags(Map<String, String> tags) {
             this.tags = tags;
             return this;
         }

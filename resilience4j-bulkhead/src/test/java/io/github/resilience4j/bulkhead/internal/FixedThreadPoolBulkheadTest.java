@@ -124,7 +124,7 @@ public class FixedThreadPoolBulkheadTest {
         configs.put("default", defaultConfig);
         final InMemoryThreadPoolBulkheadRegistry inMemoryThreadPoolBulkheadRegistry =
             new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumers,
-                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
+                Map.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry).isNotNull();
         AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getDefaultConfig()).isEqualTo(defaultConfig);

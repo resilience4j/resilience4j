@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2020: KrnSaurabh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,11 +16,10 @@
  *
  *
  */
-package io.github.resilience4j.retry.internal;
+package io.github.resilience4j.retry;
 
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.retry.internal.RetryImpl;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.subscribers.TestSubscriber;
@@ -46,7 +45,7 @@ public class EventPublisherTest {
     @Before
     public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
-        RetryImpl.sleepFunction = sleep -> sleptTime += sleep;
+        RetryImpl.setSleepFunction(sleep -> sleptTime += sleep);
     }
 
     @Test
@@ -56,7 +55,7 @@ public class EventPublisherTest {
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
             .map(RetryEvent::getEventType)
             .test();
-        CheckedRunnable retryableRunnable = Retry
+        CheckedRunnable retryableRunnable = VavrRetry
             .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
@@ -77,7 +76,7 @@ public class EventPublisherTest {
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
             .map(RetryEvent::getEventType)
             .test();
-        CheckedRunnable retryableRunnable = Retry
+        CheckedRunnable retryableRunnable = VavrRetry
             .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);
@@ -100,7 +99,7 @@ public class EventPublisherTest {
         TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
             .map(RetryEvent::getEventType)
             .test();
-        CheckedRunnable retryableRunnable = Retry
+        CheckedRunnable retryableRunnable = VavrRetry
             .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
 
         Try<Void> result = Try.run(retryableRunnable);

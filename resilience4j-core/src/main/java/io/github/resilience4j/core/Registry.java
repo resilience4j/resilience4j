@@ -22,8 +22,8 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEvent;
-import io.vavr.collection.Map;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**

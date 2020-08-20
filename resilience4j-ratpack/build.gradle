@@ -6,6 +6,7 @@ dependencies {
     implementation project(':resilience4j-framework-common')
     implementation project(':resilience4j-consumer')
     implementation project(':resilience4j-reactor')
+    implementation project(':resilience4j-vavr')
     implementation(libraries.reactor)
     compileOnly(libraries.ratpack_metrics)
     compileOnly project(':resilience4j-prometheus')

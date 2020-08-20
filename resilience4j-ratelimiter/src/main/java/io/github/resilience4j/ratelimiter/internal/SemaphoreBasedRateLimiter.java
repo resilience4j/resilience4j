@@ -24,17 +24,17 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 import io.vavr.control.Option;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
@@ -62,7 +62,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param rateLimiterConfig The RateLimiter configuration.
      */
     public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig) {
-        this(name, rateLimiterConfig, HashMap.empty());
+        this(name, rateLimiterConfig, emptyMap());
     }
 
     /**
@@ -72,8 +72,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param rateLimiterConfig The RateLimiter configuration.
      * @param tags              tags to assign to the RateLimiter
      */
-    public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig,
-        Map<String, String> tags) {
+    public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig, Map<String, String> tags) {
         this(name, rateLimiterConfig, null, tags);
     }
 
@@ -86,7 +85,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
         @Nullable ScheduledExecutorService scheduler) {
-        this(name, rateLimiterConfig, scheduler, HashMap.empty());
+        this(name, rateLimiterConfig, scheduler, emptyMap());
     }
 
     /**

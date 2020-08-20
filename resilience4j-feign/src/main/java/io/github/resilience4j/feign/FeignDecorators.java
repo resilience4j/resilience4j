@@ -20,8 +20,10 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.VavrRetry;
 import io.vavr.CheckedFunction1;
 
 import java.lang.reflect.Method;
@@ -89,7 +91,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withRetry(Retry retry) {
-            addFeignDecorator(fn -> Retry.decorateCheckedFunction(retry, fn));
+            addFeignDecorator(fn -> VavrRetry.decorateCheckedFunction(retry, fn));
             return this;
         }
 
@@ -100,7 +102,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            addFeignDecorator(fn -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
+            addFeignDecorator(fn -> VavrCircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
             return this;
         }
 

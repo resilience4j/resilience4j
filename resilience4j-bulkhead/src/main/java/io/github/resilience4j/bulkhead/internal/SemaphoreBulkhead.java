@@ -30,13 +30,13 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.lang.Nullable;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -65,7 +65,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param bulkheadConfig custom bulkhead configuration
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
-        this(name, bulkheadConfig, HashMap.empty());
+        this(name, bulkheadConfig, emptyMap());
     }
 
     /**
@@ -93,7 +93,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name the name of this bulkhead
      */
     public SemaphoreBulkhead(String name) {
-        this(name, BulkheadConfig.ofDefaults(), HashMap.empty());
+        this(name, BulkheadConfig.ofDefaults(), emptyMap());
     }
 
     /**
@@ -103,7 +103,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param configSupplier BulkheadConfig supplier
      */
     public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
-        this(name, configSupplier.get(), HashMap.empty());
+        this(name, configSupplier.get(), emptyMap());
     }
 
     /**

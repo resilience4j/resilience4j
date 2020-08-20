@@ -1,0 +1,10 @@
+dependencies {
+    compile project(':resilience4j-retry')
+    compile project(':resilience4j-circuitbreaker')
+    compile ( libraries.vavr )
+    testCompile project(':resilience4j-test')
+    testCompile project(':resilience4j-rxjava2')
+    testCompile(libraries.rxjava2)
+}
+
+ext.moduleName = 'io.github.resilience4j.vavr'

@@ -30,12 +30,12 @@ import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.Nullable;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -63,7 +63,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
      * @param bulkheadConfig custom bulkhead configuration
      */
     public FixedThreadPoolBulkhead(String name, @Nullable ThreadPoolBulkheadConfig bulkheadConfig) {
-        this(name, bulkheadConfig, HashMap.empty());
+        this(name, bulkheadConfig, emptyMap());
     }
 
     /**
@@ -96,7 +96,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
      * @param name the name of this bulkhead
      */
     public FixedThreadPoolBulkhead(String name) {
-        this(name, ThreadPoolBulkheadConfig.ofDefaults(), HashMap.empty());
+        this(name, ThreadPoolBulkheadConfig.ofDefaults(), emptyMap());
     }
 
     /**
@@ -115,7 +115,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
      * @param configSupplier BulkheadConfig supplier
      */
     public FixedThreadPoolBulkhead(String name, Supplier<ThreadPoolBulkheadConfig> configSupplier) {
-        this(name, configSupplier.get(), HashMap.empty());
+        this(name, configSupplier.get(), emptyMap());
     }
 
     /**

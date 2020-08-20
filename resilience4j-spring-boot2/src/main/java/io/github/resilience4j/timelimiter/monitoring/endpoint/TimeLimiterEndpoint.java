@@ -23,6 +23,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Endpoint(id = "timelimiters")
 public class TimeLimiterEndpoint {
@@ -34,8 +35,8 @@ public class TimeLimiterEndpoint {
 
     @ReadOperation
     public TimeLimiterEndpointResponse getAllTimeLimiters() {
-        List<String> timeLimiters = timeLimiterRegistry.getAllTimeLimiters()
-                .map(TimeLimiter::getName).sorted().toJavaList();
+        List<String> timeLimiters = timeLimiterRegistry.getAllTimeLimiters().stream()
+                .map(TimeLimiter::getName).sorted().collect(Collectors.toList());
         return new TimeLimiterEndpointResponse(timeLimiters);
     }
 

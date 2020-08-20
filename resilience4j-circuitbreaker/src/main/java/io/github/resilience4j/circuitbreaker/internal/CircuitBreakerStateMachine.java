@@ -26,14 +26,13 @@ import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.Nullable;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,6 +46,7 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result.BELOW_THRESHOLDS;
 import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.util.Collections.emptyMap;
 
 /**
  * A CircuitBreaker finite state machine.
@@ -74,8 +74,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param schedulerFactory     A SchedulerFactory which can be mocked in tests.
      */
     private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock, SchedulerFactory schedulerFactory,
-        io.vavr.collection.Map<String, String> tags) {
+        Clock clock, SchedulerFactory schedulerFactory, Map<String, String> tags) {
         this.name = name;
         this.circuitBreakerConfig = Objects
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
@@ -97,7 +96,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         SchedulerFactory schedulerFactory) {
-        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory, HashMap.empty());
+        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory, emptyMap());
     }
 
     /**
@@ -108,7 +107,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         Clock clock) {
-        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), HashMap.empty());
+        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), emptyMap());
     }
 
     /**
@@ -118,7 +117,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock, io.vavr.collection.Map<String, String> tags) {
+        Clock clock, Map<String, String> tags) {
         this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), tags);
     }
 
@@ -140,7 +139,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param tags                 Tags to add to the CircuitBreaker.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
-        io.vavr.collection.Map<String, String> tags) {
+        Map<String, String> tags) {
         this(name, circuitBreakerConfig, Clock.systemUTC(), tags);
     }
 
@@ -172,7 +171,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name,
         Supplier<CircuitBreakerConfig> circuitBreakerConfig,
-        io.vavr.collection.Map<String, String> tags) {
+        Map<String, String> tags) {
         this(name, circuitBreakerConfig.get(), tags);
     }
 

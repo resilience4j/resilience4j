@@ -28,9 +28,9 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
 import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRateLimiterMetricsTest {
@@ -73,7 +73,7 @@ public class TaggedRateLimiterMetricsTest {
 
     @Test
     public void shouldAddCustomTags() {
-        RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendF", Map.of("key1", "value1"));
         assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendA")).hasSize(2);
         assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendF")).hasSize(2);
