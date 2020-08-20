@@ -20,8 +20,6 @@ package io.github.resilience4j.kotlin.retry
 
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
-import io.vavr.Tuple2 as VavrTuple2
-import io.vavr.collection.HashMap as VavrHashMap
 
 /**
  * Creates new custom [RetryRegistry].
@@ -226,7 +224,7 @@ inline fun RetryRegistry.Builder.addRetryConfig(
  * @param tags default tags to add to the registry.
  */
 fun RetryRegistry.Builder.withTags(tags: Map<String, String>) {
-    withTags(VavrHashMap.ofAll(tags))
+    withTags(tags)
 }
 
 /**
@@ -237,5 +235,5 @@ fun RetryRegistry.Builder.withTags(tags: Map<String, String>) {
  * @param tags default tags to add to the registry.
  */
 fun RetryRegistry.Builder.withTags(vararg tags: Pair<String, String>) {
-    withTags(VavrHashMap.ofEntries(tags.map { VavrTuple2(it.first, it.second) }))
+    withTags(HashMap(tags.toMap()))
 }

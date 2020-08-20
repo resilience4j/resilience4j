@@ -105,7 +105,7 @@ public class RateLimiterConfiguration {
                         entry.getKey())));
 
         return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
-            io.vavr.collection.HashMap.ofAll(rateLimiterConfigurationProperties.getTags()));
+            Map.copyOf(rateLimiterConfigurationProperties.getTags()));
     }
 
     /**

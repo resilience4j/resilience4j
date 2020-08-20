@@ -1,12 +1,11 @@
 package io.github.resilience4j.retry;
 
-import io.vavr.collection.Stream;
-
 import java.time.Duration;
 import java.util.function.Function;
 
 import static io.github.resilience4j.retry.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
+
 
 /**
  * Use io.github.resilience4j.core.IntervalFunction instead, this class kept for backwards
@@ -30,7 +29,15 @@ public interface IntervalFunction extends io.github.resilience4j.core.IntervalFu
 
         return (attempt) -> {
             checkAttempt(attempt);
-            return Stream.iterate(intervalMillis, backoffFunction).get(attempt - 1);
+            if (attempt == 1) {
+                return intervalMillis;
+            } else {
+                long currentIntervalMillis = intervalMillis;
+                for(int i = 1; i < attempt; i++) {
+                    currentIntervalMillis = backoffFunction.apply(currentIntervalMillis);
+                }
+                return currentIntervalMillis;
+            }
         };
     }
 

@@ -9,6 +9,11 @@ import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
@@ -70,8 +75,7 @@ public interface TimeLimiter {
      * @param tags                 tags added to the Retry
      * @return a TimeLimiter with a custom TimeLimiter configuration.
      */
-    static TimeLimiter of(String name, TimeLimiterConfig timeLimiterConfig,
-        io.vavr.collection.Map<String, String> tags) {
+    static TimeLimiter of(String name, TimeLimiterConfig timeLimiterConfig, Map<String, String> tags) {
         return new TimeLimiterImpl(name, timeLimiterConfig, tags);
     }
 
@@ -124,7 +128,7 @@ public interface TimeLimiter {
      *
      * @return the tags assigned to this TimeLimiter in an unmodifiable map
      */
-    io.vavr.collection.Map<String, String> getTags();
+    Map<String, String> getTags();
 
     /**
      * Get the TimeLimiterConfig of this TimeLimiter decorator.

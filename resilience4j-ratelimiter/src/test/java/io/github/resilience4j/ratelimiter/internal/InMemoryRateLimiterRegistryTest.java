@@ -142,10 +142,10 @@ public class InMemoryRateLimiterRegistryTest {
     @Test
     public void rateLimiterGetAllRateLimiters() {
         RateLimiterRegistry registry = new InMemoryRateLimiterRegistry(config);
-        registry.rateLimiter("foo");
+        final RateLimiter rateLimiter = registry.rateLimiter("foo");
 
         assertThat(registry.getAllRateLimiters().size()).isEqualTo(1);
-        assertThat(registry.getAllRateLimiters().get(0).getName()).isEqualTo("foo");
+        assertThat(registry.getAllRateLimiters()).contains(rateLimiter);
     }
 
     @Test
@@ -158,7 +158,7 @@ public class InMemoryRateLimiterRegistryTest {
         configs.put("default", defaultConfig);
         final InMemoryRateLimiterRegistry inMemoryRateLimiterRegistry =
             new InMemoryRateLimiterRegistry(configs, registryEventConsumers,
-                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
+                Map.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry).isNotNull();
         AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry.getDefaultConfig()).isEqualTo(defaultConfig);

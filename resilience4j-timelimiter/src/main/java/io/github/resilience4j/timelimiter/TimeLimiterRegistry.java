@@ -21,10 +21,10 @@ package io.github.resilience4j.timelimiter;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.timelimiter.internal.InMemoryTimeLimiterRegistry;
-import io.vavr.collection.Seq;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -99,8 +99,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @param tags    default tags to add to the registry
      * @return a TimeLimiterRegistry with a Map of shared TimeLimiter configurations.
      */
-    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+    static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs, Map<String, String> tags) {
         return new InMemoryTimeLimiterRegistry(configs, tags);
     }
 
@@ -129,8 +128,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * TimeLimiter registry event consumer.
      */
     static TimeLimiterRegistry of(Map<String, TimeLimiterConfig> configs,
-        RegistryEventConsumer<TimeLimiter> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        RegistryEventConsumer<TimeLimiter> registryEventConsumer, Map<String, String> tags) {
         return new InMemoryTimeLimiterRegistry(configs, registryEventConsumer, tags);
     }
 
@@ -153,7 +151,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      *
      * @return all managed {@link TimeLimiter} instances.
      */
-    Seq<TimeLimiter> getAllTimeLimiters();
+    Set<TimeLimiter> getAllTimeLimiters();
 
     /**
      * Returns a managed {@link TimeLimiter} or creates a new one with the default TimeLimiter
@@ -176,7 +174,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @param tags tags added to the TimeLimiter
      * @return The {@link TimeLimiter}
      */
-    TimeLimiter timeLimiter(String name, io.vavr.collection.Map<String, String> tags);
+    TimeLimiter timeLimiter(String name, Map<String, String> tags);
 
     /**
      * Returns a managed {@link TimeLimiter} or creates a new one with a custom TimeLimiter
@@ -201,8 +199,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @param tags              tags added to the TimeLimiter
      * @return The {@link TimeLimiter}
      */
-    TimeLimiter timeLimiter(String name, TimeLimiterConfig timeLimiterConfig,
-        io.vavr.collection.Map<String, String> tags);
+    TimeLimiter timeLimiter(String name, TimeLimiterConfig timeLimiterConfig, Map<String, String> tags);
 
     /**
      * Returns a managed {@link TimeLimiterConfig} or creates a new one with a custom
@@ -228,8 +225,7 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @return The {@link TimeLimiter}
      */
     TimeLimiter timeLimiter(String name,
-        Supplier<TimeLimiterConfig> timeLimiterConfigSupplier,
-        io.vavr.collection.Map<String, String> tags);
+        Supplier<TimeLimiterConfig> timeLimiterConfigSupplier, Map<String, String> tags);
 
     /**
      * Returns a managed {@link TimeLimiter} or creates a new one.
@@ -254,7 +250,6 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      * @param tags       tags added to the TimeLimiter
      * @return The {@link TimeLimiter}
      */
-    TimeLimiter timeLimiter(String name, String configName,
-        io.vavr.collection.Map<String, String> tags);
+    TimeLimiter timeLimiter(String name, String configName, Map<String, String> tags);
 
 }

@@ -23,11 +23,11 @@ import io.github.resilience4j.bulkhead.internal.InMemoryBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.vavr.collection.Seq;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -55,8 +55,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param tags           default tags to add to the registry
      * @return a BulkheadRegistry instance backed by a custom Bulkhead configuration
      */
-    static BulkheadRegistry of(BulkheadConfig bulkheadConfig,
-        io.vavr.collection.Map<String, String> tags) {
+    static BulkheadRegistry of(BulkheadConfig bulkheadConfig, Map<String, String> tags) {
         return new InMemoryBulkheadRegistry(bulkheadConfig, tags);
     }
 
@@ -107,8 +106,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param tags    default tags to add to the registry
      * @return a RetryRegistry with a Map of shared Bulkhead configurations.
      */
-    static BulkheadRegistry of(Map<String, BulkheadConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+    static BulkheadRegistry of(Map<String, BulkheadConfig> configs, Map<String, String> tags) {
         return new InMemoryBulkheadRegistry(configs, tags);
     }
 
@@ -137,8 +135,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * registry event consumer.
      */
     static BulkheadRegistry of(Map<String, BulkheadConfig> configs,
-        RegistryEventConsumer<Bulkhead> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        RegistryEventConsumer<Bulkhead> registryEventConsumer, Map<String, String> tags) {
         return new InMemoryBulkheadRegistry(configs, registryEventConsumer, tags);
     }
 
@@ -170,7 +167,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      *
      * @return all managed {@link Bulkhead} instances.
      */
-    Seq<Bulkhead> getAllBulkheads();
+    Set<Bulkhead> getAllBulkheads();
 
     /**
      * Returns a managed {@link Bulkhead} or creates a new one with default configuration.
@@ -191,7 +188,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param tags tags to add to the bulkhead
      * @return The {@link Bulkhead}
      */
-    Bulkhead bulkhead(String name, io.vavr.collection.Map<String, String> tags);
+    Bulkhead bulkhead(String name, Map<String, String> tags);
 
     /**
      * Returns a managed {@link Bulkhead} or creates a new one with a custom BulkheadConfig
@@ -216,8 +213,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param tags   tags added to the bulkhead
      * @return The {@link Bulkhead}
      */
-    Bulkhead bulkhead(String name, BulkheadConfig config,
-        io.vavr.collection.Map<String, String> tags);
+    Bulkhead bulkhead(String name, BulkheadConfig config, Map<String, String> tags);
 
     /**
      * Returns a managed {@link Bulkhead} or creates a new one with a custom Bulkhead
@@ -242,8 +238,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param tags                   tags to add to the Bulkhead
      * @return The {@link Bulkhead}
      */
-    Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier,
-        io.vavr.collection.Map<String, String> tags);
+    Bulkhead bulkhead(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier, Map<String, String> tags);
 
     /**
      * Returns a managed {@link Bulkhead} or creates a new one.
@@ -268,7 +263,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
      * @param tags       tags to add to the Bulkhead
      * @return The {@link Bulkhead}
      */
-    Bulkhead bulkhead(String name, String configName, io.vavr.collection.Map<String, String> tags);
+    Bulkhead bulkhead(String name, String configName, Map<String, String> tags);
 
     /**
      * Returns a builder to create a custom BulkheadRegistry.
@@ -285,7 +280,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
         private RegistryStore<Bulkhead> registryStore;
         private Map<String, BulkheadConfig> bulkheadConfigsMap;
         private List<RegistryEventConsumer<Bulkhead>> registryEventConsumers;
-        private io.vavr.collection.Map<String, String> tags;
+        private Map<String, String> tags;
 
         public Builder() {
             this.bulkheadConfigsMap = new java.util.HashMap<>();
@@ -344,7 +339,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
          * @param tags default tags to add to the registry.
          * @return a {@link BulkheadRegistry.Builder}
          */
-        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+        public Builder withTags(Map<String, String> tags) {
             this.tags = tags;
             return this;
         }

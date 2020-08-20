@@ -20,8 +20,6 @@ package io.github.resilience4j.kotlin.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import io.vavr.Tuple2 as VavrTuple2
-import io.vavr.collection.HashMap as VavrHashMap
 
 /**
  * Creates new custom [CircuitBreakerRegistry].
@@ -137,7 +135,7 @@ inline fun CircuitBreakerRegistry.Builder.addCircuitBreakerConfig(
  * @param tags default tags to add to the registry.
  */
 fun CircuitBreakerRegistry.Builder.withTags(tags: Map<String, String>) {
-    withTags(VavrHashMap.ofAll(tags))
+    withTags(tags)
 }
 
 /**
@@ -148,5 +146,5 @@ fun CircuitBreakerRegistry.Builder.withTags(tags: Map<String, String>) {
  * @param tags default tags to add to the registry.
  */
 fun CircuitBreakerRegistry.Builder.withTags(vararg tags: Pair<String, String>) {
-    withTags(VavrHashMap.ofEntries(tags.map { VavrTuple2(it.first, it.second) }))
+    withTags(HashMap(tags.toMap()))
 }

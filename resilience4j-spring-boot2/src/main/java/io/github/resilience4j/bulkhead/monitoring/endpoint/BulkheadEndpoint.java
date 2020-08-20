@@ -24,6 +24,8 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -43,11 +45,12 @@ public class BulkheadEndpoint {
 
     @ReadOperation
     public BulkheadEndpointResponse getAllBulkheads() {
-        List<String> bulkheads = bulkheadRegistry.getAllBulkheads()
-            .map(Bulkhead::getName)
-            .appendAll(threadPoolBulkheadRegistry
-                .getAllBulkheads()
-                .map(ThreadPoolBulkhead::getName)).sorted().toJavaList();
+        List<String> bulkheads = Stream.concat(bulkheadRegistry.getAllBulkheads().stream()
+            .map(Bulkhead::getName),
+            threadPoolBulkheadRegistry
+                .getAllBulkheads().stream()
+                .map(ThreadPoolBulkhead::getName))
+            .sorted().collect(Collectors.toList());
         return new BulkheadEndpointResponse(bulkheads);
     }
 }

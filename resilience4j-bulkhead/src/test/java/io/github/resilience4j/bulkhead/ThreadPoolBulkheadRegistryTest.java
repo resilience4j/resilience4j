@@ -91,7 +91,7 @@ public class ThreadPoolBulkheadRegistryTest {
 //	public void tagsOfRegistryAddedToInstance() {
 //		ThreadPoolBulkhead retryConfig = ThreadPoolBulkhead.ofDefaults();
 //		Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
-//		io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+//		Map<String, String> retryTags = Map.of("key1","value1", "key2", "value2");
 //		RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, retryTags);
 //		Retry retry = retryRegistry.retry("testName");
 //
@@ -106,25 +106,22 @@ public class ThreadPoolBulkheadRegistryTest {
 
     @Test
     public void tagsAddedToInstance() {
-        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> bulkheadTags = Map.of("key1", "value1", "key2", "value2");
         ThreadPoolBulkhead bulkhead = registry.bulkhead("testName", bulkheadTags);
 
-        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+        assertThat(bulkhead.getTags()).containsAllEntriesOf(bulkheadTags);
     }
 
     @Test
     public void tagsOfRetriesShouldNotBeMixed() {
         ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.ofDefaults();
-        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> bulkheadTags = Map.of("key1", "value1", "key2", "value2");
         ThreadPoolBulkhead bulkhead = registry.bulkhead("testName", config, bulkheadTags);
-        io.vavr.collection.Map<String, String> bulkheadTags2 = io.vavr.collection.HashMap
-            .of("key3", "value3", "key4", "value4");
+        Map<String, String> bulkheadTags2 = Map.of("key3", "value3", "key4", "value4");
         ThreadPoolBulkhead bulkhead2 = registry.bulkhead("otherTestName", config, bulkheadTags2);
 
-        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
-        assertThat(bulkhead2.getTags()).containsOnlyElementsOf(bulkheadTags2);
+        assertThat(bulkhead.getTags()).containsAllEntriesOf(bulkheadTags);
+        assertThat(bulkhead2.getTags()).containsAllEntriesOf(bulkheadTags2);
     }
 
     @Test
@@ -132,18 +129,15 @@ public class ThreadPoolBulkheadRegistryTest {
         ThreadPoolBulkheadConfig bulkheadConfig = ThreadPoolBulkheadConfig.ofDefaults();
         Map<String, ThreadPoolBulkheadConfig> bulkheadConfigs = Collections
             .singletonMap("default", bulkheadConfig);
-        io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
-        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key4", "value4");
+        Map<String, String> registryTags = Map.of("key1", "value1", "key2", "value2");
+        Map<String, String> instanceTags = Map.of("key1", "value3", "key4", "value4");
         ThreadPoolBulkheadRegistry bulkheadRegistry = ThreadPoolBulkheadRegistry
             .of(bulkheadConfigs, registryTags);
         ThreadPoolBulkhead bulkhead = bulkheadRegistry
             .bulkhead("testName", bulkheadConfig, instanceTags);
 
-        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key2", "value2", "key4", "value4");
-        assertThat(bulkhead.getTags()).containsOnlyElementsOf(expectedTags);
+        Map<String, String> expectedTags = Map.of("key1", "value3", "key2", "value2", "key4", "value4");
+        assertThat(bulkhead.getTags()).containsAllEntriesOf(expectedTags);
     }
 
     @Test
@@ -352,15 +346,14 @@ public class ThreadPoolBulkheadRegistryTest {
 
     @Test
     public void testCreateUsingBuilderWithRegistryTags() {
-        io.vavr.collection.Map<String, String> threadPoolBulkheadTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> threadPoolBulkheadTags = Map.of("key1", "value1", "key2", "value2");
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.custom()
             .withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.ofDefaults())
             .withTags(threadPoolBulkheadTags)
             .build();
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead("testName");
 
-        assertThat(threadPoolBulkhead.getTags()).containsOnlyElementsOf(threadPoolBulkheadTags);
+        assertThat(threadPoolBulkhead.getTags()).containsAllEntriesOf(threadPoolBulkheadTags);
     }
 
     @Test

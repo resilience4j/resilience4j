@@ -1,6 +1,7 @@
 artifactoryPublish.skip = true
 sonarqube.skipProject = true
 dependencies {
+    compile ( libraries.vavr )
     compile project(':resilience4j-core')
 }
 ext.moduleName = 'io.github.resilience4j.test'
