@@ -19,7 +19,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.Metrics;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics;
+import org.w3c.dom.stylesheets.LinkStyle;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -86,7 +88,7 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
         List<MetricFamilySamples> samples = Collections
             .list(collectorRegistry.metricFamilySamples());
         samples
-            .addAll(collectGaugeSamples(circuitBreakerRegistry.getAllCircuitBreakers().asJava()));
+            .addAll(collectGaugeSamples(new ArrayList<>(circuitBreakerRegistry.getAllCircuitBreakers())));
         return samples;
     }
 

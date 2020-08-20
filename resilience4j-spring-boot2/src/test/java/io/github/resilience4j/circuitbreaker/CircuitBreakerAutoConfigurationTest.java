@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -322,12 +323,12 @@ public class CircuitBreakerAutoConfigurationTest {
     @Test
     public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
         //when
-        final CircuitBreaker backendC = circuitBreakerRegistry.getAllCircuitBreakers()
+        final Optional<CircuitBreaker> backendC = circuitBreakerRegistry.getAllCircuitBreakers().stream()
             .filter(circuitBreaker -> circuitBreaker.getName().equalsIgnoreCase("backendC"))
-            .get();
+            .findAny();
         //then
-        assertThat(backendC).isNotNull();
-        CircuitBreakerConfig backendConfig = backendC.getCircuitBreakerConfig();
+        assertThat(backendC.isPresent()).isTrue();
+        CircuitBreakerConfig backendConfig = backendC.get().getCircuitBreakerConfig();
 
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);

@@ -23,6 +23,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -39,8 +40,8 @@ public class RetryEndpoint {
 
     @ReadOperation
     public RetryEndpointResponse getAllRetries() {
-        List<String> retries = retryRegistry.getAllRetries()
-            .map(Retry::getName).sorted().toJavaList();
+        List<String> retries = retryRegistry.getAllRetries().stream()
+            .map(Retry::getName).sorted().collect(Collectors.toList());
         return new RetryEndpointResponse(retries);
     }
 }

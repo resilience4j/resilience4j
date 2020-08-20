@@ -5,12 +5,14 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
 import io.github.resilience4j.core.CallableUtils;
 import io.github.resilience4j.core.CheckFunctionUtils;
 import io.github.resilience4j.core.CompletionStageUtils;
 import io.github.resilience4j.core.SupplierUtils;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.VavrRetry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
@@ -366,12 +368,12 @@ public interface Decorators {
 
 
         public DecorateCheckedSupplier<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            supplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
+            supplier = VavrCircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withRetry(Retry retryContext) {
-            supplier = Retry.decorateCheckedSupplier(retryContext, supplier);
+            supplier = VavrRetry.decorateCheckedSupplier(retryContext, supplier);
             return this;
         }
 
@@ -436,12 +438,12 @@ public interface Decorators {
         }
 
         public DecorateCheckedFunction<T, R> withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, function);
+            function = VavrCircuitBreaker.decorateCheckedFunction(circuitBreaker, function);
             return this;
         }
 
         public DecorateCheckedFunction<T, R> withRetry(Retry retryContext) {
-            function = Retry.decorateCheckedFunction(retryContext, function);
+            function = VavrRetry.decorateCheckedFunction(retryContext, function);
             return this;
         }
 
@@ -484,12 +486,12 @@ public interface Decorators {
         }
 
         public DecorateCheckedRunnable withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            runnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, runnable);
+            runnable = VavrCircuitBreaker.decorateCheckedRunnable(circuitBreaker, runnable);
             return this;
         }
 
         public DecorateCheckedRunnable withRetry(Retry retryContext) {
-            runnable = Retry.decorateCheckedRunnable(retryContext, runnable);
+            runnable = VavrRetry.decorateCheckedRunnable(retryContext, runnable);
             return this;
         }
 

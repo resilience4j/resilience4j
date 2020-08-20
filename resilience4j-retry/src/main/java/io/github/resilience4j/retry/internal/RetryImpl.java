@@ -20,17 +20,16 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.MaxRetriesExceeded;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.*;
-import io.vavr.CheckedConsumer;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
-import io.vavr.control.Option;
-import io.vavr.control.Try;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,7 +42,7 @@ import java.util.function.Supplier;
 public class RetryImpl<T> implements Retry {
 
 
-    /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
+    /*package*/ static CheckedConsumer<Long, Exception> sleepFunction = Thread::sleep;
     private final Metrics metrics;
     private final RetryEventProcessor eventProcessor;
     @Nullable
@@ -61,7 +60,7 @@ public class RetryImpl<T> implements Retry {
     private final LongAdder failedWithoutRetryCounter;
 
     public RetryImpl(String name, RetryConfig config) {
-        this(name, config, HashMap.empty());
+        this(name, config, Collections.emptyMap());
     }
 
     public RetryImpl(String name, RetryConfig config, Map<String, String> tags) {
@@ -78,6 +77,10 @@ public class RetryImpl<T> implements Retry {
         failedAfterRetryCounter = new LongAdder();
         succeededWithoutRetryCounter = new LongAdder();
         failedWithoutRetryCounter = new LongAdder();
+    }
+
+    public static void setSleepFunction(CheckedConsumer<Long, Exception> sleepFunction) {
+        RetryImpl.sleepFunction = sleepFunction;
     }
 
     /**
@@ -151,15 +154,15 @@ public class RetryImpl<T> implements Retry {
             int currentNumOfAttempts = numOfAttempts.get();
             if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
                 succeededAfterRetryCounter.increment();
-                Throwable throwable = Option.of(lastException.get())
-                    .getOrElse(lastRuntimeException.get());
+                Throwable throwable = Optional.ofNullable(lastException.get())
+                    .orElse(lastRuntimeException.get());
                 publishRetryEvent(
                     () -> new RetryOnSuccessEvent(getName(), currentNumOfAttempts, throwable));
             } else {
                 if (currentNumOfAttempts >= maxAttempts) {
                     failedAfterRetryCounter.increment();
-                    Throwable throwable = Option.of(lastException.get())
-                        .getOrElse(lastRuntimeException.get());
+                    Throwable throwable = Optional.ofNullable(lastException.get())
+                        .orElse(lastRuntimeException.get());
                     publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts,
                         throwable != null ? throwable : new MaxRetriesExceeded(
                             "max retries is reached out for the result predicate check")));
@@ -239,8 +242,11 @@ public class RetryImpl<T> implements Retry {
             long interval = intervalFunction.apply(numOfAttempts.get());
             publishRetryEvent(
                 () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));
-            Try.run(() -> sleepFunction.accept(interval))
-                .getOrElseThrow(ex -> lastRuntimeException.get());
+            try {
+                sleepFunction.accept(interval);
+            } catch (Exception ex) {
+                throw lastRuntimeException.get();
+            }
         }
 
     }
