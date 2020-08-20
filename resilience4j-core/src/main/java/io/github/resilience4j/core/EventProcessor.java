@@ -20,7 +20,6 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
