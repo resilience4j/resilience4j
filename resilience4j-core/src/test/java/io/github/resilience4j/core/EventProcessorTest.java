@@ -22,7 +22,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -105,6 +111,45 @@ public class EventProcessorTest {
         boolean consumed = eventProcessor.processEvent(1);
 
         assertThat(consumed).isEqualTo(false);
+    }
+
+
+    @Test
+    public void testOnEventParallel() throws ExecutionException, InterruptedException {
+        CountDownLatch eventConsumed = new CountDownLatch(1);
+        CountDownLatch waitForConsumerRegistration = new CountDownLatch(1);
+
+        EventProcessor<Number> eventProcessor = new EventProcessor<>();
+        EventConsumer<Integer> eventConsumer1 = event -> {
+            try {
+                eventConsumed.countDown();
+                waitForConsumerRegistration.await(5, TimeUnit.SECONDS);
+                logger.info(event.toString());
+            } catch (InterruptedException e) {
+                fail("Must not happen");
+            }
+        };
+
+        EventConsumer<Integer> eventConsumer2 = event -> logger.info(event.toString());
+
+        // 1st consumer is added
+        eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer1);
+
+        // process first event in a separate thread to create a race condition
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            eventProcessor.processEvent(1); // blocks because of the count down latch
+        });
+
+        eventConsumed.await(1, TimeUnit.SECONDS);
+
+        // 2nd consumer is added
+        eventProcessor.registerConsumer(Integer.class.getSimpleName(), eventConsumer2);
+
+        future.get();
+
+        waitForConsumerRegistration.countDown();
+
+        then(logger).should(times(1)).info("1");
     }
 
 }
