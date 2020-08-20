@@ -19,8 +19,8 @@ package io.github.resilience4j.ratpack.retry.monitoring.endpoint
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse
 import io.github.resilience4j.ratpack.Resilience4jModule
-import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryRegistry
+import io.github.resilience4j.retry.VavrRetry
 import io.github.resilience4j.retry.event.RetryEvent
 import io.vavr.CheckedFunction0
 import io.vavr.control.Try
@@ -88,7 +88,7 @@ class RetryChainSpec extends Specification {
         when: "we get all retry events"
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, {
+            Try.of(VavrRetry.decorateCheckedSupplier(r, {
                 throw new Exception('derek olk'); 'unreachable'
             } as CheckedFunction0<String>)).recover { "recovered" }.get()
         }
@@ -158,7 +158,7 @@ class RetryChainSpec extends Specification {
         def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, {
+            Try.of(VavrRetry.decorateCheckedSupplier(r, {
                 throw new Exception('derek olk'); 'unreachable'
             } as CheckedFunction0<String>)).recover { "recovered" }.get()
         }
@@ -229,7 +229,7 @@ class RetryChainSpec extends Specification {
         def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, {
+            Try.of(VavrRetry.decorateCheckedSupplier(r, {
                 throw new Exception('derek olk'); 'unreachable'
             } as CheckedFunction0<String>)).recover { "recovered" }.get()
         }

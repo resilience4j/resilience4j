@@ -26,15 +26,11 @@ import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.vavr.collection.Array;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Seq;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * Backend RateLimiter manager. Constructs backend RateLimiters according to configuration values.
@@ -49,28 +45,22 @@ public class InMemoryRateLimiterRegistry extends
         this(RateLimiterConfig.ofDefaults());
     }
 
-    public InMemoryRateLimiterRegistry(io.vavr.collection.Map<String, String> tags) {
-        this(RateLimiterConfig.ofDefaults(), tags);
-    }
-
     public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs) {
-        this(configs, HashMap.empty());
+        this(configs, emptyMap());
     }
 
-    public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+    public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs, Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), tags);
         this.configurations.putAll(configs);
     }
 
     public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
         RegistryEventConsumer<RateLimiter> registryEventConsumer) {
-        this(configs, registryEventConsumer, HashMap.empty());
+        this(configs, registryEventConsumer, emptyMap());
     }
 
     public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
-        RegistryEventConsumer<RateLimiter> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        RegistryEventConsumer<RateLimiter> registryEventConsumer, Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()),
             registryEventConsumer, tags);
         this.configurations.putAll(configs);
@@ -78,12 +68,11 @@ public class InMemoryRateLimiterRegistry extends
 
     public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
-        this(configs, registryEventConsumers, HashMap.empty());
+        this(configs, registryEventConsumers, emptyMap());
     }
 
     public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
-        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-        io.vavr.collection.Map<String, String> tags) {
+        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers, Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()),
             registryEventConsumers, tags);
         this.configurations.putAll(configs);
@@ -98,8 +87,7 @@ public class InMemoryRateLimiterRegistry extends
         super(defaultConfig);
     }
 
-    public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig,
-        io.vavr.collection.Map<String, String> tags) {
+    public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig, Map<String, String> tags) {
         super(defaultConfig, tags);
     }
 
@@ -109,8 +97,7 @@ public class InMemoryRateLimiterRegistry extends
     }
 
     public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig,
-        RegistryEventConsumer<RateLimiter> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        RegistryEventConsumer<RateLimiter> registryEventConsumer, Map<String, String> tags) {
         super(defaultConfig, registryEventConsumer, tags);
     }
 
@@ -120,16 +107,15 @@ public class InMemoryRateLimiterRegistry extends
     }
 
     public InMemoryRateLimiterRegistry(RateLimiterConfig defaultConfig,
-        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-        io.vavr.collection.Map<String, String> tags) {
+        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers, Map<String, String> tags) {
         super(defaultConfig, registryEventConsumers, tags);
     }
 
     public InMemoryRateLimiterRegistry(Map<String, RateLimiterConfig> configs,
                                           List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                                          io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
+                                          Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
         super(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()),
-            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
+            registryEventConsumers, Optional.ofNullable(tags).orElse(emptyMap()),
             Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
         this.configurations.putAll(configs);
     }
@@ -138,8 +124,8 @@ public class InMemoryRateLimiterRegistry extends
      * {@inheritDoc}
      */
     @Override
-    public Seq<RateLimiter> getAllRateLimiters() {
-        return Array.ofAll(entryMap.values());
+    public Set<RateLimiter> getAllRateLimiters() {
+        return new HashSet<>(entryMap.values());
     }
 
     /**
@@ -154,7 +140,7 @@ public class InMemoryRateLimiterRegistry extends
      * {@inheritDoc}
      */
     @Override
-    public RateLimiter rateLimiter(String name, io.vavr.collection.Map<String, String> tags) {
+    public RateLimiter rateLimiter(String name, Map<String, String> tags) {
         return rateLimiter(name, getDefaultConfig(), tags);
     }
 
@@ -163,15 +149,14 @@ public class InMemoryRateLimiterRegistry extends
      */
     @Override
     public RateLimiter rateLimiter(final String name, final RateLimiterConfig config) {
-        return rateLimiter(name, config, HashMap.empty());
+        return rateLimiter(name, config, emptyMap());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RateLimiter rateLimiter(String name, RateLimiterConfig config,
-        io.vavr.collection.Map<String, String> tags) {
+    public RateLimiter rateLimiter(String name, RateLimiterConfig config, Map<String, String> tags) {
         return computeIfAbsent(name, () -> new AtomicRateLimiter(name,
             Objects.requireNonNull(config, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
     }
@@ -182,7 +167,7 @@ public class InMemoryRateLimiterRegistry extends
     @Override
     public RateLimiter rateLimiter(final String name,
         final Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
-        return rateLimiter(name, rateLimiterConfigSupplier, HashMap.empty());
+        return rateLimiter(name, rateLimiterConfigSupplier, emptyMap());
     }
 
     /**
@@ -190,8 +175,7 @@ public class InMemoryRateLimiterRegistry extends
      */
     @Override
     public RateLimiter rateLimiter(String name,
-        Supplier<RateLimiterConfig> rateLimiterConfigSupplier,
-        io.vavr.collection.Map<String, String> tags) {
+        Supplier<RateLimiterConfig> rateLimiterConfigSupplier, Map<String, String> tags) {
         return computeIfAbsent(name, () -> new AtomicRateLimiter(name, Objects.requireNonNull(
             Objects.requireNonNull(rateLimiterConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
             CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
@@ -202,15 +186,14 @@ public class InMemoryRateLimiterRegistry extends
      */
     @Override
     public RateLimiter rateLimiter(String name, String configName) {
-        return rateLimiter(name, configName, HashMap.empty());
+        return rateLimiter(name, configName, emptyMap());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RateLimiter rateLimiter(String name, String configName,
-        io.vavr.collection.Map<String, String> tags) {
+    public RateLimiter rateLimiter(String name, String configName, Map<String, String> tags) {
         return computeIfAbsent(name, () -> RateLimiter.of(name, getConfiguration(configName)
             .orElseThrow(() -> new ConfigurationNotFoundException(configName)), getAllTags(tags)));
     }

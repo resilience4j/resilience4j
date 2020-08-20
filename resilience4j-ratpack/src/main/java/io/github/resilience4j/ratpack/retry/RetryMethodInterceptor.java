@@ -21,6 +21,7 @@ import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
 import io.github.resilience4j.ratpack.recovery.RecoveryFunction;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.github.resilience4j.retry.VavrRetry;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -155,7 +156,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.retry.Retry retry, RecoveryFunction<?> recoveryFunction)
         throws Throwable {
         try {
-            return io.github.resilience4j.retry.Retry
+            return VavrRetry
                 .decorateCheckedSupplier(retry, invocation::proceed).apply();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);

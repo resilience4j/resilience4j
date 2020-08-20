@@ -132,10 +132,10 @@ public class InMemoryTimeLimiterRegistryTest {
     public void timeLimiterGetAllTimeLimiters() {
         TimeLimiterRegistry registry = new InMemoryTimeLimiterRegistry(config);
 
-        registry.timeLimiter("foo");
+        final TimeLimiter timeLimiter = registry.timeLimiter("foo");
 
         then(registry.getAllTimeLimiters().size()).isEqualTo(1);
-        then(registry.getAllTimeLimiters().get(0).getName()).isEqualTo("foo");
+        then(registry.getAllTimeLimiters()).contains(timeLimiter);
     }
 
 }

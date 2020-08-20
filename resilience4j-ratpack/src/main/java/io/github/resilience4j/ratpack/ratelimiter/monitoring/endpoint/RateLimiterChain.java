@@ -25,7 +25,6 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.reactor.adapter.ReactorAdapter;
-import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
 import ratpack.func.Function;
@@ -69,13 +68,13 @@ public class RateLimiterChain implements Action<Chain> {
                 }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flux<RateLimiterEvent>> eventStreams = rateLimiterRegistry.getAllRateLimiters()
-                    .map(rateLimiter -> ReactorAdapter.toFlux(rateLimiter.getEventPublisher()));
+                Flux<RateLimiterEvent> eventStreams = Flux.fromIterable(rateLimiterRegistry.getAllRateLimiters())
+                    .flatMap(rateLimiter -> ReactorAdapter.toFlux(rateLimiter.getEventPublisher()));
                 Function<RateLimiterEvent, String> data = r -> Jackson
                     .getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(RateLimiterEventDTO.createRateLimiterEventDTO(r));
                 ServerSentEvents events = ServerSentEvents
-                    .serverSentEvents(Flux.merge(eventStreams),
+                    .serverSentEvents(eventStreams,
                         e -> e.id(RateLimiterEvent::getRateLimiterName)
                             .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
@@ -94,9 +93,10 @@ public class RateLimiterChain implements Action<Chain> {
             );
             chain1.get("stream/events/:name", ctx -> {
                 String rateLimiterName = ctx.getPathTokens().get("name");
-                RateLimiter rateLimiter = rateLimiterRegistry.getAllRateLimiters()
-                    .find(rL -> rL.getName().equals(rateLimiterName))
-                    .getOrElseThrow(() ->
+                RateLimiter rateLimiter = rateLimiterRegistry.getAllRateLimiters().stream()
+                    .filter(rL -> rL.getName().equals(rateLimiterName))
+                    .findAny()
+                    .orElseThrow(() ->
                         new IllegalArgumentException(
                             String.format("rate limiter with name %s not found", rateLimiterName)));
                 Function<RateLimiterEvent, String> data = r -> Jackson
@@ -126,9 +126,10 @@ public class RateLimiterChain implements Action<Chain> {
             chain1.get("stream/events/:name/:type", ctx -> {
                 String rateLimiterName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
-                RateLimiter rateLimiter = rateLimiterRegistry.getAllRateLimiters()
-                    .find(rL -> rL.getName().equals(rateLimiterName))
-                    .getOrElseThrow(() ->
+                RateLimiter rateLimiter = rateLimiterRegistry.getAllRateLimiters().stream()
+                    .filter(rL -> rL.getName().equals(rateLimiterName))
+                    .findAny()
+                    .orElseThrow(() ->
                         new IllegalArgumentException(
                             String.format("rate limiter with name %s not found", rateLimiterName)));
                 Flux<RateLimiterEvent> eventStream = ReactorAdapter

@@ -11,6 +11,7 @@ dependencies {
     compile project(':resilience4j-consumer')
     compile project(':resilience4j-reactor')
     compile project(':resilience4j-timelimiter')
+    compile project(':resilience4j-vavr')
     compile(libraries.reactor)
     compileOnly(libraries.ratpack_metrics)
     compileOnly project(':resilience4j-prometheus')

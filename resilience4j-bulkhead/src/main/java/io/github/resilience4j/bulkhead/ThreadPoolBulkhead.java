@@ -24,8 +24,8 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.FixedThreadPoolBulkhead;
 import io.github.resilience4j.core.EventConsumer;
-import io.vavr.collection.Map;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
@@ -111,8 +111,7 @@ public interface ThreadPoolBulkhead extends AutoCloseable {
      * @param config a custom BulkheadConfig configuration
      * @return a Bulkhead instance
      */
-    static ThreadPoolBulkhead of(String name, ThreadPoolBulkheadConfig config,
-        io.vavr.collection.Map<String, String> tags) {
+    static ThreadPoolBulkhead of(String name, ThreadPoolBulkheadConfig config, Map<String, String> tags) {
         return new FixedThreadPoolBulkhead(name, config, tags);
     }
 

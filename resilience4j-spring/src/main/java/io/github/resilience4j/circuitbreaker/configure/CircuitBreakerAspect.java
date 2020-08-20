@@ -16,6 +16,7 @@
 package io.github.resilience4j.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -185,7 +186,7 @@ public class CircuitBreakerAspect implements Ordered {
      */
     private Object defaultHandling(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker) throws Throwable {
-        return circuitBreaker.executeCheckedSupplier(proceedingJoinPoint::proceed);
+        return VavrCircuitBreaker.executeCheckedSupplier(circuitBreaker, proceedingJoinPoint::proceed);
     }
 
     @Override

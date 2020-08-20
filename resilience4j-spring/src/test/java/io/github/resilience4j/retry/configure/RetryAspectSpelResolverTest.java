@@ -39,8 +39,8 @@ public class RetryAspectSpelResolverTest {
 
     @Test
     public void testSpel() {
-        assertThat(registry.getAllRetries().exists(it -> it.getName().equals("SPEL_BACKEND"))).isFalse();
+        assertThat(registry.getAllRetries().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isFalse();
         assertThat(testDummyService.spelSync("SPEL_BACKEND")).isEqualTo("recovered");
-        assertThat(registry.getAllRetries().exists(it -> it.getName().equals("SPEL_BACKEND"))).isTrue();
+        assertThat(registry.getAllRetries().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isTrue();
     }
 }

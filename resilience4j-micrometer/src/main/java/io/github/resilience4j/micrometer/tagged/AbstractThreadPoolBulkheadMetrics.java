@@ -42,7 +42,7 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead) {
-        List<Tag> customTags = mapToTagsList(bulkhead.getTags().toJavaMap());
+        List<Tag> customTags = mapToTagsList(bulkhead.getTags());
         registerMetrics(meterRegistry, bulkhead, customTags);
     }
 
