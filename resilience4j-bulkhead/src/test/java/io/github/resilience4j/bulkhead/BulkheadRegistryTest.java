@@ -21,7 +21,6 @@ package io.github.resilience4j.bulkhead;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.*;
-import io.vavr.Tuple;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,9 +54,9 @@ public class BulkheadRegistryTest {
 
     @Test
     public void shouldInitRegistryTags() {
-        BulkheadRegistry registry = BulkheadRegistry.of(config,io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        BulkheadRegistry registry = BulkheadRegistry.of(config,Map.of("Tag1Key","Tag1Value"));
         assertThat(registry.getTags()).isNotEmpty();
-        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).containsOnly(Map.entry("Tag1Key","Tag1Value"));
     }
 
     @Test
@@ -108,35 +107,31 @@ public class BulkheadRegistryTest {
         BulkheadConfig bulkheadConfig = BulkheadConfig.ofDefaults();
         Map<String, BulkheadConfig> bulkheadConfigs = Collections
             .singletonMap("default", bulkheadConfig);
-        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> bulkheadTags = Map.of("key1", "value1", "key2", "value2");
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(bulkheadConfigs, bulkheadTags);
         Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
 
-        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+        assertThat(bulkhead.getTags()).containsAllEntriesOf(bulkheadTags);
     }
 
     @Test
     public void tagsAddedToInstance() {
-        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> bulkheadTags = Map.of("key1", "value1", "key2", "value2");
         Bulkhead bulkhead = registry.bulkhead("testName", bulkheadTags);
 
-        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+        assertThat(bulkhead.getTags()).containsAllEntriesOf(bulkheadTags);
     }
 
     @Test
     public void tagsOfRetriesShouldNotBeMixed() {
         BulkheadConfig config = BulkheadConfig.ofDefaults();
-        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> bulkheadTags = Map.of("key1", "value1", "key2", "value2");
         Bulkhead bulkhead = registry.bulkhead("testName", config, bulkheadTags);
-        io.vavr.collection.Map<String, String> bulkheadTags2 = io.vavr.collection.HashMap
-            .of("key3", "value3", "key4", "value4");
+        Map<String, String> bulkheadTags2 = Map.of("key3", "value3", "key4", "value4");
         Bulkhead bulkhead2 = registry.bulkhead("otherTestName", config, bulkheadTags2);
 
-        Assertions.assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
-        Assertions.assertThat(bulkhead2.getTags()).containsOnlyElementsOf(bulkheadTags2);
+        Assertions.assertThat(bulkhead.getTags()).containsAllEntriesOf(bulkheadTags);
+        Assertions.assertThat(bulkhead2.getTags()).containsAllEntriesOf(bulkheadTags2);
     }
 
     @Test
@@ -144,16 +139,13 @@ public class BulkheadRegistryTest {
         BulkheadConfig bulkheadConfig = BulkheadConfig.ofDefaults();
         Map<String, BulkheadConfig> bulkheadConfigs = Collections
             .singletonMap("default", bulkheadConfig);
-        io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
-        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key4", "value4");
+        Map<String, String> registryTags = Map.of("key1", "value1", "key2", "value2");
+        Map<String, String> instanceTags = Map.of("key1", "value3", "key4", "value4");
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.of(bulkheadConfigs, registryTags);
         Bulkhead retry = bulkheadRegistry.bulkhead("testName", bulkheadConfig, instanceTags);
 
-        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key2", "value2", "key4", "value4");
-        Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
+        Map<String, String> expectedTags = Map.of("key1", "value3", "key2", "value2", "key4", "value4");
+        Assertions.assertThat(retry.getTags()).containsAllEntriesOf(expectedTags);
     }
 
     @Test
@@ -345,7 +337,7 @@ public class BulkheadRegistryTest {
 
     @Test
     public void testCreateUsingBuilderWithRegistryTags() {
-        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
+        Map<String, String> bulkheadTags = Map
             .of("key1", "value1", "key2", "value2");
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.custom()
             .withBulkheadConfig(BulkheadConfig.ofDefaults())
@@ -353,7 +345,7 @@ public class BulkheadRegistryTest {
             .build();
         Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
 
-        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+        assertThat(bulkhead.getTags()).containsAllEntriesOf(bulkheadTags);
     }
 
     @Test

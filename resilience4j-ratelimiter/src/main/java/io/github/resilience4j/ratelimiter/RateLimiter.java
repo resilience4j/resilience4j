@@ -27,12 +27,11 @@ import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -40,6 +39,8 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * A RateLimiter instance is thread-safe can be used to decorate multiple requests.
@@ -58,7 +59,7 @@ public interface RateLimiter {
      * @return The {@link RateLimiter}
      */
     static RateLimiter of(String name, RateLimiterConfig rateLimiterConfig) {
-        return of(name, rateLimiterConfig, HashMap.empty());
+        return of(name, rateLimiterConfig, emptyMap());
     }
 
     /**
@@ -82,7 +83,7 @@ public interface RateLimiter {
      * @return The {@link RateLimiter}
      */
     static RateLimiter of(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier) {
-        return of(name, rateLimiterConfigSupplier.get(), HashMap.empty());
+        return of(name, rateLimiterConfigSupplier.get(), emptyMap());
     }
 
     /**

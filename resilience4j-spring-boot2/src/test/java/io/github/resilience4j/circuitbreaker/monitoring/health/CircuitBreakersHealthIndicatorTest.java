@@ -4,14 +4,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.vavr.collection.Array;
 import org.junit.Test;
-import org.springframework.boot.actuate.health.*;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.SimpleStatusAggregator;
+import org.springframework.boot.actuate.health.Status;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -47,7 +46,7 @@ public class CircuitBreakersHealthIndicatorTest {
         when(metrics.getNumberOfSlowCalls()).thenReturn(20);
         when(metrics.getNumberOfNotPermittedCalls()).thenReturn(0L);
 
-        when(registry.getAllCircuitBreakers()).thenReturn(Array.of(circuitBreaker));
+        when(registry.getAllCircuitBreakers()).thenReturn(Set.of(circuitBreaker));
         when(circuitBreaker.getName()).thenReturn("test");
         when(circuitBreakerProperties.findCircuitBreakerProperties("test"))
             .thenReturn(Optional.of(instanceProperties));
@@ -96,7 +95,7 @@ public class CircuitBreakersHealthIndicatorTest {
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
 
         // when
-        when(registry.getAllCircuitBreakers()).thenReturn(Array.ofAll(expectedStateToCircuitBreaker.values()));
+        when(registry.getAllCircuitBreakers()).thenReturn(new HashSet<>(expectedStateToCircuitBreaker.values()));
         boolean allowHealthIndicatorToFail = true;
         expectedStateToCircuitBreaker.forEach(
             (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));
@@ -136,7 +135,7 @@ public class CircuitBreakersHealthIndicatorTest {
         CircuitBreaker.Metrics metrics = mock(CircuitBreaker.Metrics.class);
 
         // when
-        when(registry.getAllCircuitBreakers()).thenReturn(Array.ofAll(expectedStateToCircuitBreaker.values()));
+        when(registry.getAllCircuitBreakers()).thenReturn(new HashSet<>(expectedStateToCircuitBreaker.values()));
         boolean allowHealthIndicatorToFail = false;  // do not allow health indicator to fail
         expectedStateToCircuitBreaker.forEach(
             (state, circuitBreaker) -> setCircuitBreakerWhen(state, circuitBreaker, config, metrics, instanceProperties, circuitBreakerProperties, allowHealthIndicatorToFail));

@@ -39,8 +39,8 @@ public class BulkheadAspectSpelResolverTest {
 
     @Test
     public void testSpel() {
-        assertThat(registry.getAllBulkheads().exists(it -> it.getName().equals("SPEL_BACKEND"))).isFalse();
+        assertThat(registry.getAllBulkheads().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isFalse();
         assertThat(testDummyService.spelSync("SPEL_BACKEND")).isEqualTo("recovered");
-        assertThat(registry.getAllBulkheads().exists(it -> it.getName().equals("SPEL_BACKEND"))).isTrue();
+        assertThat(registry.getAllBulkheads().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isTrue();
     }
 }

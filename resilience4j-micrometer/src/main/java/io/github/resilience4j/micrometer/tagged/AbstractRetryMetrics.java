@@ -42,8 +42,7 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, Retry retry) {
-        List<Tag> customTags = mapToTagsList(retry.getTags()
-            .toJavaMap());
+        List<Tag> customTags = mapToTagsList(retry.getTags());
         registerMetrics(meterRegistry, retry, customTags);
     }
 

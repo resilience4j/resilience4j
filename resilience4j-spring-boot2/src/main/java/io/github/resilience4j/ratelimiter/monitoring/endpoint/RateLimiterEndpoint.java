@@ -22,6 +22,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Endpoint(id = "ratelimiters")
 public class RateLimiterEndpoint {
@@ -34,8 +35,8 @@ public class RateLimiterEndpoint {
 
     @ReadOperation
     public RateLimiterEndpointResponse getAllRateLimiters() {
-        List<String> names = rateLimiterRegistry.getAllRateLimiters()
-            .map(RateLimiter::getName).sorted().toJavaList();
+        List<String> names = rateLimiterRegistry.getAllRateLimiters().stream()
+            .map(RateLimiter::getName).sorted().collect(Collectors.toList());
         return new RateLimiterEndpointResponse(names);
     }
 }

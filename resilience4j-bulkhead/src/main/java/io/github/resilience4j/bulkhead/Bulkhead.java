@@ -30,15 +30,17 @@ import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
-import io.vavr.collection.HashMap;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
@@ -362,7 +364,7 @@ public interface Bulkhead {
      * @return a Bulkhead instance
      */
     static Bulkhead of(String name, BulkheadConfig config) {
-        return of(name, config, HashMap.empty());
+        return of(name, config, emptyMap());
     }
 
     /**
@@ -373,8 +375,7 @@ public interface Bulkhead {
      * @param tags   tags added to the Bulkhead
      * @return a Bulkhead instance
      */
-    static Bulkhead of(String name, BulkheadConfig config,
-        io.vavr.collection.Map<String, String> tags) {
+    static Bulkhead of(String name, BulkheadConfig config, Map<String, String> tags) {
         return new SemaphoreBulkhead(name, config, tags);
     }
 
@@ -386,7 +387,7 @@ public interface Bulkhead {
      * @return a Bulkhead instance
      */
     static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier) {
-        return of(name, bulkheadConfigSupplier, HashMap.empty());
+        return of(name, bulkheadConfigSupplier, emptyMap());
     }
 
     /**
@@ -397,8 +398,7 @@ public interface Bulkhead {
      * @param tags                   tags added to the Bulkhead
      * @return a Bulkhead instance
      */
-    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier,
-        io.vavr.collection.Map<String, String> tags) {
+    static Bulkhead of(String name, Supplier<BulkheadConfig> bulkheadConfigSupplier, Map<String, String> tags) {
         return new SemaphoreBulkhead(name, bulkheadConfigSupplier, tags);
     }
 
@@ -469,7 +469,7 @@ public interface Bulkhead {
      *
      * @return the tags assigned to this Retry in an unmodifiable map
      */
-    io.vavr.collection.Map<String, String> getTags();
+    Map<String, String> getTags();
 
     /**
      * Returns an EventPublisher which subscribes to the reactive stream of BulkheadEvent and can be
