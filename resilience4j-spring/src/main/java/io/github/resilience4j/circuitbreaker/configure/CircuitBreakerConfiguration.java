@@ -142,7 +142,7 @@ public class CircuitBreakerConfiguration {
                     .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
                         customizerMap)));
 
-        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer, circuitBreakerProperties.getTags());
+        return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer, Map.copyOf(circuitBreakerProperties.getTags()));
     }
 
     /**

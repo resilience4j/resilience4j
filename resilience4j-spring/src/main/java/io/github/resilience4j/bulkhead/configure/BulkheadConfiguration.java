@@ -104,7 +104,7 @@ public class BulkheadConfiguration {
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue(),
                     compositeBulkheadCustomizer, entry.getKey())));
-        return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer, bulkheadConfigurationProperties.getTags());
+        return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer, Map.copyOf(bulkheadConfigurationProperties.getTags()));
     }
 
     /**

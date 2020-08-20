@@ -104,7 +104,7 @@ public class RateLimiterConfiguration {
                         entry.getKey())));
 
         return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
-            rateLimiterConfigurationProperties.getTags());
+            Map.copyOf(rateLimiterConfigurationProperties.getTags()));
     }
 
     /**

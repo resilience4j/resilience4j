@@ -103,7 +103,7 @@ public class RetryConfiguration {
                     .createRetryConfig(entry.getValue(), compositeRetryCustomizer,
                         entry.getKey())));
 
-        return RetryRegistry.of(configs, retryRegistryEventConsumer, retryConfigurationProperties.getTags());
+        return RetryRegistry.of(configs, retryRegistryEventConsumer, Map.copyOf(retryConfigurationProperties.getTags()));
     }
 
     /**
