@@ -19,6 +19,7 @@ package io.github.resilience4j.circuitbreaker.monitoring.events;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,75 +43,60 @@ import java.util.List;
  * @author vijayram
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,classes = TestApplication.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 public class CircuitBreakerStreamEventsTest {
 
     public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/stream-circuitbreaker-events";
     public static final String ACTUATOR_CIRCUITBREAKEREVENTS = "/actuator/circuitbreakerevents";
-
+    @LocalServerPort
+    int randomServerPort;
+    @Autowired
+    DummyService dummyService;
     @Autowired
     private WebTestClient webTestClient;
 
-    @LocalServerPort
-    int randomServerPort;
+    private WebClient webStreamClient;
 
-    @Autowired
-    DummyService dummyService;
+    @Before
+    public void setup(){
+        webStreamClient = WebClient.create("http://localhost:" + randomServerPort);
+    }
+
+    private final ParameterizedTypeReference<ServerSentEvent<String>> type
+        = new ParameterizedTypeReference<ServerSentEvent<String>>() {
+    };
 
     @Test
     public void streamAllEvents() throws IOException, InterruptedException {
         List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
-        try {
-            dummyService.doSomething(true);
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
-        }
-        Thread.sleep(1000); // to record the event
-        // The invocation is recorded by the CircuitBreaker as a success.
-        dummyService.doSomething(false);
-
+        publishEvents();
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
-        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat (circuitBreakerEventsAfter.getCircuitBreakerEvents().size()).isGreaterThan(0);
+        assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat(circuitBreakerEventsAfter.getCircuitBreakerEvents().size()).isGreaterThan(0);
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat (events.size() ).isEqualTo(2);
+        assertThat(events.size()).isEqualTo(2);
     }
 
     @Test
     public void streamEventsbyName() throws IOException, InterruptedException {
         List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        // The invocation is recorded by the CircuitBreaker as a success.
-        dummyService.doSomething(false);
-        Thread.sleep(1000); // pause 1 sec to record the event
-        try {
-            dummyService.doSomething(true);
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
-        }
+        publishEvents();
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat (events.size() ).isEqualTo(2);
+        assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
     }
 
     @Test
     public void streamEventsbyNameAndType() throws IOException, InterruptedException {
-        List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS+ "/backendA/ERROR");
+        List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA/ERROR");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        // The invocation is recorded by the CircuitBreaker as a success.
-        dummyService.doSomething(false);
-        Thread.sleep(1000); // to record the event
-        try {
-            dummyService.doSomething(true);
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
-        }
+        publishEvents();
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat (circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat (events.size()).isEqualTo(1);
+        assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        assertThat(events.size()).isEqualTo(1);
     }
 
     private List<ServerSentEvent<String>> getServerSentEvents(String s) {
@@ -133,18 +119,23 @@ public class CircuitBreakerStreamEventsTest {
     }
 
     private Flux<ServerSentEvent<String>> circuitBreakerStreamEvents(String s) {
-        WebClient client = WebClient.create("http://localhost:" + randomServerPort);
-        ParameterizedTypeReference<ServerSentEvent<String>> type
-            = new ParameterizedTypeReference<ServerSentEvent<String>>() {
-        };
-
-        Flux<ServerSentEvent<String>> eventStream = client.get()
+        Flux<ServerSentEvent<String>> eventStream = webStreamClient.get()
             .uri(s)
             .accept(MediaType.TEXT_EVENT_STREAM)
             .retrieve()
             .bodyToFlux(type)
             .take(2);
         return eventStream;
+    }
+
+    private void publishEvents() throws IOException {
+        try {
+            dummyService.doSomething(true);
+        } catch (IOException ex) {
+            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+        }
+        // The invocation is recorded by the CircuitBreaker as a success.
+        dummyService.doSomething(false);
     }
 }
 
