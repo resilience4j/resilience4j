@@ -137,6 +137,7 @@ public class RateLimiterConfig {
         private int limitForPeriod = 50;
         private int burstForPeriod = 0;
         private int initialPermits = 0;
+        private boolean initialPermitsSet;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
@@ -160,7 +161,7 @@ public class RateLimiterConfig {
                 burstForPeriod = limitForPeriod;
             }
 
-            if(initialPermits <limitForPeriod) {
+            if(!initialPermitsSet) {
                 initialPermits = limitForPeriod;
             }
 
@@ -243,6 +244,7 @@ public class RateLimiterConfig {
          */
         public Builder initialPermits(final int initialPermits) {
             this.initialPermits = initialPermits;
+            this.initialPermitsSet = true;
             return this;
         }
     }
