@@ -32,24 +32,23 @@ import java.util.function.UnaryOperator;
 
 import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
-import static java.lang.System.setOut;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
- * {@link RefillBasedRateLimiter} has a max capacity of permits refilled periodically.
+ * {@link RefillRateLimiter} has a max capacity of permits refilled periodically.
  * <p>Each period has duration of {@link RateLimiterConfig#limitRefreshPeriod} in nanoseconds.
- * <p>By contract the initial {@link RefillBasedRateLimiter.State#activePermissions} are set
+ * <p>By contract the initial {@link RefillRateLimiter.State#activePermissions} are set
  * to be the same with{@link RateLimiterConfig#burstLimit}
  * <p>A ratio of permit per nanoseconds is calculated using
  * {@link RateLimiterConfig#limitRefreshPeriod} and {@link RateLimiterConfig#limitForPeriod}.
  * On a permit request the permits that should have been replenished are calculated based on the nanos passed and the ration of nanos per permit.
- * For the {@link RefillBasedRateLimiter} callers it is looks like a token bucket supporting bursts and a gradual refill,
- * under the hood there is some optimisations that will skip this refresh if {@link RefillBasedRateLimiter} is not used actively.
- * <p>All {@link RefillBasedRateLimiter} updates are atomic and state is encapsulated in {@link
- * AtomicReference} to {@link RefillBasedRateLimiter.State}
+ * For the {@link RefillRateLimiter} callers it is looks like a token bucket supporting bursts and a gradual refill,
+ * under the hood there is some optimisations that will skip this refresh if {@link RefillRateLimiter} is not used actively.
+ * <p>All {@link RefillRateLimiter} updates are atomic and state is encapsulated in {@link
+ * AtomicReference} to {@link RefillRateLimiter.State}
  */
-public class RefillBasedRateLimiter implements RateLimiter {
+public class RefillRateLimiter implements RateLimiter {
 
     private static final long nanoTimeStart = nanoTime();
 
@@ -59,11 +58,11 @@ public class RefillBasedRateLimiter implements RateLimiter {
     private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
 
-    public RefillBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
+    public RefillRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
         this(name, rateLimiterConfig, HashMap.empty());
     }
 
-    public RefillBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
+    public RefillRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
                              Map<String, String> tags) {
         this.name = name;
         this.tags = tags;
@@ -147,13 +146,13 @@ public class RefillBasedRateLimiter implements RateLimiter {
     }
 
     /**
-     * Atomically updates the current {@link RefillBasedRateLimiter.State} with the results of applying the {@link
-     * RefillBasedRateLimiter#calculateNextState}, returning the updated {@link RefillBasedRateLimiter.State}. It differs from
+     * Atomically updates the current {@link RefillRateLimiter.State} with the results of applying the {@link
+     * RefillRateLimiter#calculateNextState}, returning the updated {@link RefillRateLimiter.State}. It differs from
      * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
      * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
      * while before try one more time. This technique was originally described in this
      * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
-     * and showed great results with {@link RefillBasedRateLimiter} in benchmark tests.
+     * and showed great results with {@link RefillRateLimiter} in benchmark tests.
      *
      * @param timeoutInNanos a side-effect-free function
      * @return the updated value
@@ -198,7 +197,7 @@ public class RefillBasedRateLimiter implements RateLimiter {
      *
      * @param permits        number of permits
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param activeState    current state of {@link RefillBasedRateLimiter}
+     * @param activeState    current state of {@link RefillRateLimiter}
      * @return next {@link State}
      */
     private State calculateNextState(final int permits, final long timeoutInNanos,
@@ -354,7 +353,7 @@ public class RefillBasedRateLimiter implements RateLimiter {
      */
     @Override
     public Metrics getMetrics() {
-        return new RefillBasedRateLimiterMetrics();
+        return new RefillRateLimiterMetrics();
     }
 
     @Override
@@ -375,8 +374,8 @@ public class RefillBasedRateLimiter implements RateLimiter {
      *
      * @return the detailed metrics
      */
-    public RefillBasedRateLimiterMetrics getDetailedMetrics() {
-        return new RefillBasedRateLimiterMetrics();
+    public RefillRateLimiterMetrics getDetailedMetrics() {
+        return new RefillRateLimiterMetrics();
     }
 
     private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
@@ -391,15 +390,15 @@ public class RefillBasedRateLimiter implements RateLimiter {
     }
 
     /**
-     * <p>{@link RefillBasedRateLimiter.State} represents immutable state of {@link RefillBasedRateLimiter}
+     * <p>{@link RefillRateLimiter.State} represents immutable state of {@link RefillRateLimiter}
      * where:
      * <ul>
      * <li>activePermissions - count of available permissions after
-     * the last {@link RefillBasedRateLimiter#acquirePermission()} call.
+     * the last {@link RefillRateLimiter#acquirePermission()} call.
      * Can be negative if some permissions where reserved.</li>
      * <p>
      * <li>nanosToWait - count of nanoseconds to wait for permission for
-     * the last {@link RefillBasedRateLimiter#acquirePermission()} call.</li>
+     * the last {@link RefillRateLimiter#acquirePermission()} call.</li>
      * <p>
      * <li>updatedAt - the last time the state was updated.</li>
      * </ul>
@@ -424,9 +423,9 @@ public class RefillBasedRateLimiter implements RateLimiter {
     /**
      * Enhanced {@link Metrics} with some implementation specific details
      */
-    public class RefillBasedRateLimiterMetrics implements Metrics {
+    public class RefillRateLimiterMetrics implements Metrics {
 
-        private RefillBasedRateLimiterMetrics() {
+        private RefillRateLimiterMetrics() {
         }
 
         /**
