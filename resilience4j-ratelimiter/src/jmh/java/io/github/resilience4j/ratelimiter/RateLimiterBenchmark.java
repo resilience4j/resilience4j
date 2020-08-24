@@ -19,6 +19,7 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
+import io.github.resilience4j.ratelimiter.internal.RefillBasedRateLimiter;
 import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -44,9 +45,11 @@ public class RateLimiterBenchmark {
 
     private RateLimiter semaphoreBasedRateLimiter;
     private AtomicRateLimiter atomicRateLimiter;
+    private RefillBasedRateLimiter refillBasedRateLimiter;
 
     private Supplier<String> semaphoreGuardedSupplier;
     private Supplier<String> atomicGuardedSupplier;
+    private Supplier<String> refillGuardedSupplier;
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
@@ -65,6 +68,7 @@ public class RateLimiterBenchmark {
         semaphoreBasedRateLimiter = new SemaphoreBasedRateLimiter("semaphoreBased",
             rateLimiterConfig);
         atomicRateLimiter = new AtomicRateLimiter("atomicBased", rateLimiterConfig);
+        refillBasedRateLimiter = new RefillBasedRateLimiter("refillBased", rateLimiterConfig);
 
         Supplier<String> stringSupplier = () -> {
             Blackhole.consumeCPU(1);
@@ -73,6 +77,7 @@ public class RateLimiterBenchmark {
         semaphoreGuardedSupplier = RateLimiter
             .decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
         atomicGuardedSupplier = RateLimiter.decorateSupplier(atomicRateLimiter, stringSupplier);
+        refillGuardedSupplier = RateLimiter.decorateSupplier(refillBasedRateLimiter, stringSupplier);
     }
 
     @Benchmark
@@ -92,4 +97,15 @@ public class RateLimiterBenchmark {
     public String atomicPermission() {
         return atomicGuardedSupplier.get();
     }
+
+
+    @Benchmark
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Fork(value = FORK_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String refillPermission() {
+        return refillGuardedSupplier.get();
+    }
+
 }
