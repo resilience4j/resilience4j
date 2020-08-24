@@ -22,6 +22,8 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -50,12 +52,54 @@ public class BulkheadOperator<T> implements UnaryOperator<Publisher<T>> {
         return new BulkheadOperator<>(bulkhead);
     }
 
+    private static <T> Function<Mono<T>, Mono<T>> monoTransform(Bulkhead bulkhead) {
+        final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+
+        return source ->
+            Mono.using(
+                bulkhead::tryAcquirePermission,
+                success -> success
+                    ? source
+                        .doOnNext(__ -> eventWasEmitted.set(true))
+                        .doOnCancel(() -> cancelled.set(true))
+                    : Mono.error(BulkheadFullException.createBulkheadFullException(bulkhead)),
+                success -> releaseBulkhead(bulkhead, success, eventWasEmitted.get(), cancelled.get())
+            );
+    }
+
+    private static <T> Function<Flux<T>, Flux<T>> fluxTransform(Bulkhead bulkhead) {
+        final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+
+        return source ->
+            Flux.using(
+                bulkhead::tryAcquirePermission,
+                success -> success
+                    ? source
+                        .doOnNext(__ -> eventWasEmitted.set(true))
+                        .doOnCancel(() -> cancelled.set(true))
+                    : Flux.error(BulkheadFullException.createBulkheadFullException(bulkhead)),
+                success -> releaseBulkhead(bulkhead, success, eventWasEmitted.get(), cancelled.get())
+            );
+    }
+
+    private static void releaseBulkhead(Bulkhead bulkhead, boolean success, boolean eventEmitted, boolean cancelled) {
+        if (success) {
+            if (!eventEmitted && cancelled) {
+                bulkhead.releasePermission();
+            } else {
+                bulkhead.onComplete();
+            }
+        }
+    }
+
     @Override
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
-            return new MonoBulkhead<>((Mono<? extends T>) publisher, bulkhead);
+            return ((Mono<T>) publisher).transform(monoTransform(bulkhead));
         } else if (publisher instanceof Flux) {
-            return new FluxBulkhead<>((Flux<? extends T>) publisher, bulkhead);
+            return ((Flux<T>) publisher).transform(fluxTransform(bulkhead));
         } else {
             throw new IllegalPublisherException(publisher);
         }
