@@ -19,7 +19,7 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import io.github.resilience4j.ratelimiter.internal.RefillBasedRateLimiter;
+import io.github.resilience4j.ratelimiter.internal.RefillRateLimiter;
 import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -45,7 +45,7 @@ public class RateLimiterBenchmark {
 
     private RateLimiter semaphoreBasedRateLimiter;
     private AtomicRateLimiter atomicRateLimiter;
-    private RefillBasedRateLimiter refillBasedRateLimiter;
+    private RefillRateLimiter refillRateLimiter;
 
     private Supplier<String> semaphoreGuardedSupplier;
     private Supplier<String> atomicGuardedSupplier;
@@ -68,7 +68,7 @@ public class RateLimiterBenchmark {
         semaphoreBasedRateLimiter = new SemaphoreBasedRateLimiter("semaphoreBased",
             rateLimiterConfig);
         atomicRateLimiter = new AtomicRateLimiter("atomicBased", rateLimiterConfig);
-        refillBasedRateLimiter = new RefillBasedRateLimiter("refillBased", rateLimiterConfig);
+        refillRateLimiter = new RefillRateLimiter("refillBased", rateLimiterConfig);
 
         Supplier<String> stringSupplier = () -> {
             Blackhole.consumeCPU(1);
@@ -77,7 +77,7 @@ public class RateLimiterBenchmark {
         semaphoreGuardedSupplier = RateLimiter
             .decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
         atomicGuardedSupplier = RateLimiter.decorateSupplier(atomicRateLimiter, stringSupplier);
-        refillGuardedSupplier = RateLimiter.decorateSupplier(refillBasedRateLimiter, stringSupplier);
+        refillGuardedSupplier = RateLimiter.decorateSupplier(refillRateLimiter, stringSupplier);
     }
 
     @Benchmark
