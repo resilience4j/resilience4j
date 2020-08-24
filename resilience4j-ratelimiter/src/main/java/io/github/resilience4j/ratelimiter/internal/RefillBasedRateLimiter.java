@@ -32,6 +32,7 @@ import java.util.function.UnaryOperator;
 
 import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
+import static java.lang.System.setOut;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
@@ -219,12 +220,10 @@ public class RefillBasedRateLimiter implements RateLimiter {
         int currentPermissions = activeState.activePermissions;
 
         long permissionsBatches = (permissionsInPeriod * nanosSinceLastUpdate / permissionsPeriodInNanos);
-        long nanosLeft = (nanosSinceLastUpdate%permissionsPeriodInNanos);
-        long extraPermissions = nanosLeft/nanosPerOnePermission;
 
-        long extraNewPermissions = permissionsBatches + extraPermissions + currentPermissions;
+        long accumulatedPermissions = permissionsBatches + currentPermissions;
 
-        int nexPermissions = (int) min(activeState.config.getBurstLimit(), extraNewPermissions);
+        int nexPermissions = (int) min(activeState.config.getBurstLimit(), accumulatedPermissions);
 
         long nextNanosToWait = nanosToWaitForPermission(
             permits, nanosPerOnePermission, nexPermissions);

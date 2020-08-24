@@ -85,6 +85,7 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
         rateLimiter = PowerMockito.spy(testLimiter);
         metrics = rateLimiter.getDetailedMetrics();
     }
+
     /**
      * Added more nanos in order to handle the refills
      */
@@ -128,7 +129,7 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
         RefillBasedRateLimiter.RefillBasedRateLimiterMetrics rateLimiterMetrics = rateLimiter
             .getDetailedMetrics();
 
-        waitForMaxPermissions(rateLimiterMetrics,'.');
+        waitForMaxPermissions(rateLimiterMetrics, '.');
 
         boolean firstPermission = rateLimiter.acquirePermission();
         then(firstPermission).isTrue();
@@ -140,11 +141,15 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
         boolean firstNoPermission = rateLimiter.acquirePermission();
         then(firstNoPermission).isFalse();
 
-        rateLimiter.changeLimitForPeriod(PERMISSIONS_IN_PERIOD* 2);
+        rateLimiter.changeLimitForPeriod(PERMISSIONS_IN_PERIOD * 2);
         waitForPermissionRenewal(rateLimiterMetrics, '^');
         boolean thirdPermission = rateLimiter.acquirePermission();
         then(thirdPermission).isTrue();
 
+        /**
+         * Permission renewal happens per nanos thus the cycle splitting is not taking effect
+         */
+        waitNanos(PERIOD_IN_NANOS/2l,'&');
         boolean fourthPermission = rateLimiter.acquirePermission();
         then(fourthPermission).isTrue();
 
@@ -164,18 +169,20 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
         RefillBasedRateLimiter.RefillBasedRateLimiterMetrics rateLimiterMetrics = rateLimiter
             .getDetailedMetrics();
 
-
-        waitForMaxPermissions(rateLimiterMetrics,'.');
+        waitForMaxPermissions(rateLimiterMetrics, '.');
 
         long firstPermission = rateLimiter.reservePermission();
-        waitForPermissionRenewal(rateLimiterMetrics,'*');
+        waitForPermissionRenewal(rateLimiterMetrics, '*');
 
         long secondPermission = rateLimiter.reservePermission();
         long firstNoPermission = rateLimiter.reservePermission();
 
         rateLimiter.changeLimitForPeriod(PERMISSIONS_IN_PERIOD * 2);
-        waitForPermissionRenewal(rateLimiterMetrics, '^');
 
+        /**
+         * Permission renewal happens per nanos thus the cycle splitting is not taking effect
+         */
+        waitNanos(PERIOD_IN_NANOS, '^');
         long thirdPermission = rateLimiter.reservePermission();
         long fourthPermission = rateLimiter.reservePermission();
         long secondNoPermission = rateLimiter.reservePermission();
@@ -202,6 +209,7 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
 
     /**
      * TODO Zero permissions at startup
+     *
      * @throws Exception
      */
 
@@ -252,7 +260,7 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
             .atMost(5, SECONDS)
             .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
-        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS+ PERIOD_IN_NANOS);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS + PERIOD_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
 
         setTimeOnNanos(PERIOD_IN_NANOS * 2 + 10);
@@ -277,11 +285,12 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
             .build();
 
         RefillBasedRateLimiter refillBasedRateLimiter = new RefillBasedRateLimiter("refill", rateLimiterConfig);
+        RefillBasedRateLimiter.RefillBasedRateLimiterMetrics refillBasedRateLimiterMetrics = refillBasedRateLimiter.getDetailedMetrics();
         Assert.assertTrue(refillBasedRateLimiter.acquirePermission(10));
-        Thread.sleep(100);
+        Thread.sleep(100);// - codeExecutionTime(startMillis));
         Assert.assertTrue(refillBasedRateLimiter.acquirePermission(1));
         Assume.assumeFalse(refillBasedRateLimiter.acquirePermission(4));
-        Thread.sleep(400);
+        Thread.sleep(410);
         Assume.assumeTrue(refillBasedRateLimiter.acquirePermission(4));
         Assume.assumeFalse(refillBasedRateLimiter.acquirePermission(1));
     }
@@ -298,8 +307,8 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
         RefillBasedRateLimiter refillBasedRateLimiter = new RefillBasedRateLimiter("refill", rateLimiterConfig);
         Assert.assertTrue(refillBasedRateLimiter.acquirePermission(10));
 
-        for(int i=1; i<=20 ;i++) {
-            Thread.sleep(100* i);
+        for (int i = 1; i <= 20; i++) {
+            Thread.sleep(100 * i);
             Assert.assertTrue(refillBasedRateLimiter.acquirePermission(i));
         }
     }
@@ -315,8 +324,8 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
 
         RefillBasedRateLimiter refillBasedRateLimiter = new RefillBasedRateLimiter("refill", rateLimiterConfig);
 
-        for(int i=1; i<=10 ;i++) {
-            Thread.sleep(100* i);
+        for (int i = 1; i <= 10; i++) {
+            Thread.sleep(100 * i);
             Assert.assertTrue(refillBasedRateLimiter.acquirePermission(i));
         }
 
@@ -336,6 +345,14 @@ public class RefillBasedRateLimiterTest extends RateLimitersImplementationTest {
     private void waitForPermissionRenewal(
         RefillBasedRateLimiter.RefillBasedRateLimiterMetrics rawDetailedMetrics, char printedWhileWaiting) {
         long nanosToWait = rawDetailedMetrics.getNanosToWait();
+        long startTime = System.nanoTime();
+        while (System.nanoTime() - startTime < nanosToWait) {
+            System.out.print(printedWhileWaiting);
+        }
+        System.out.println();
+    }
+
+    private void waitNanos(long nanosToWait,char printedWhileWaiting) {
         long startTime = System.nanoTime();
         while (System.nanoTime() - startTime < nanosToWait) {
             System.out.print(printedWhileWaiting);
