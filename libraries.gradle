@@ -79,6 +79,9 @@ ext {
             // Spring Cloud
             spring_cloud_context2: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
 
+            //Spring webflux
+            spring_boot2_webflux: "org.springframework.boot:spring-boot-starter-webflux:${springBoot2Version}",
+
             // Hibernate validator addon
             hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
 
