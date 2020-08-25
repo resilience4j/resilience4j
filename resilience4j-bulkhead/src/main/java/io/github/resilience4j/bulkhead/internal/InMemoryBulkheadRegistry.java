@@ -26,7 +26,6 @@ import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.vavr.collection.HashMap;
 
 import java.util.*;
 import java.util.function.Supplier;

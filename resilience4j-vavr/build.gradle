@@ -1,6 +1,8 @@
 dependencies {
     compile project(':resilience4j-retry')
     compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-bulkhead')
+    compile project(':resilience4j-ratelimiter')
     compile ( libraries.vavr )
     testCompile project(':resilience4j-test')
     testCompile project(':resilience4j-rxjava2')
