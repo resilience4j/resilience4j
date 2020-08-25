@@ -42,7 +42,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * to be the same with{@link RateLimiterConfig#burstLimit}
  * <p>A ratio of permit per nanoseconds is calculated using
  * {@link RateLimiterConfig#limitRefreshPeriod} and {@link RateLimiterConfig#limitForPeriod}.
- * On a permit request the permits that should have been replenished are calculated based on the nanos passed and the ration of nanos per permit.
+ * On a permit request the permits that should have been replenished are calculated based on the nanos passed and the ratio of nanos per permit.
  * For the {@link RefillRateLimiter} callers it is looks like a token bucket supporting bursts and a gradual refill,
  * under the hood there is some optimisations that will skip this refresh if {@link RefillRateLimiter} is not used actively.
  * <p>All {@link RefillRateLimiter} updates are atomic and state is encapsulated in {@link
