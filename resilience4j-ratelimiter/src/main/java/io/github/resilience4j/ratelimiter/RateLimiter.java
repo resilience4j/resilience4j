@@ -24,11 +24,6 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Either;
-import io.vavr.control.Try;
 
 import java.time.Duration;
 import java.util.Map;
@@ -198,117 +193,6 @@ public interface RateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter,
-        CheckedFunction0<T> supplier) {
-        return decorateCheckedSupplier(rateLimiter, 1, supplier);
-    }
-
-    /**
-     * Creates a supplier which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param permits     number of permits that this call requires
-     * @param supplier    the original supplier
-     * @param <T>         the type of results supplied supplier
-     * @return a supplier which is restricted by a RateLimiter.
-     */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter, int permits,
-        CheckedFunction0<T> supplier) {
-        return () -> {
-            waitForPermission(rateLimiter, permits);
-            return supplier.apply();
-        };
-    }
-
-    /**
-     * Creates a runnable which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param runnable    the original runnable
-     * @return a runnable which is restricted by a RateLimiter.
-     */
-    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter,
-        CheckedRunnable runnable) {
-
-        return decorateCheckedRunnable(rateLimiter, 1, runnable);
-    }
-
-    /**
-     * Creates a runnable which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param permits     number of permits that this call requires
-     * @param runnable    the original runnable
-     * @return a runnable which is restricted by a RateLimiter.
-     */
-    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, int permits,
-        CheckedRunnable runnable) {
-
-        return () -> {
-            waitForPermission(rateLimiter, permits);
-            runnable.run();
-        };
-    }
-
-    /**
-     * Creates a function which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param function    the original function
-     * @param <T>         the type of function argument
-     * @param <R>         the type of function results
-     * @return a function which is restricted by a RateLimiter.
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
-        CheckedFunction1<T, R> function) {
-        return decorateCheckedFunction(rateLimiter, 1, function);
-    }
-
-    /**
-     * Creates a function which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param permits     number of permits that this call requires
-     * @param function    the original function
-     * @param <T>         the type of function argument
-     * @param <R>         the type of function results
-     * @return a function which is restricted by a RateLimiter.
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
-        int permits, CheckedFunction1<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permits);
-            return function.apply(t);
-        };
-    }
-
-    /**
-     * Creates a function which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter       the RateLimiter
-     * @param permitsCalculator calculates the number of permits required by this call based on the
-     *                          functions argument
-     * @param function          the original function
-     * @param <T>               the type of function argument
-     * @param <R>               the type of function results
-     * @return a function which is restricted by a RateLimiter.
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
-        Function<T, Integer> permitsCalculator, CheckedFunction1<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            return function.apply(t);
-        };
-    }
-
-    /**
-     * Creates a supplier which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param supplier    the original supplier
-     * @param <T>         the type of results supplied supplier
-     * @return a supplier which is restricted by a RateLimiter.
-     */
     static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, Supplier<T> supplier) {
         return decorateSupplier(rateLimiter, 1, supplier);
     }
@@ -327,74 +211,6 @@ public interface RateLimiter {
         return () -> {
             waitForPermission(rateLimiter, permits);
             return supplier.get();
-        };
-    }
-
-    /**
-     * Creates a supplier which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param supplier    the original supplier
-     * @param <T>         the type of results supplied supplier
-     * @return a supplier which is restricted by a RateLimiter.
-     */
-    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter,
-        Supplier<Try<T>> supplier) {
-        return decorateTrySupplier(rateLimiter, 1, supplier);
-    }
-
-    /**
-     * Creates a supplier which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param permits     number of permits that this call requires
-     * @param supplier    the original supplier
-     * @param <T>         the type of results supplied supplier
-     * @return a supplier which is restricted by a RateLimiter.
-     */
-    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, int permits,
-        Supplier<Try<T>> supplier) {
-        return () -> {
-            try {
-                waitForPermission(rateLimiter, permits);
-                return supplier.get();
-            } catch (RequestNotPermitted requestNotPermitted) {
-                return Try.failure(requestNotPermitted);
-            }
-        };
-    }
-
-    /**
-     * Creates a supplier which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param supplier    the original supplier
-     * @param <T>         the type of results supplied supplier
-     * @return a supplier which is restricted by a RateLimiter.
-     */
-    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter,
-        Supplier<Either<? extends Exception, T>> supplier) {
-        return decorateEitherSupplier(rateLimiter, 1, supplier);
-    }
-
-    /**
-     * Creates a supplier which is restricted by a RateLimiter.
-     *
-     * @param rateLimiter the RateLimiter
-     * @param permits     number of permits that this call requires
-     * @param supplier    the original supplier
-     * @param <T>         the type of results supplied supplier
-     * @return a supplier which is restricted by a RateLimiter.
-     */
-    static <T> Supplier<Either<Exception, T>> decorateEitherSupplier(RateLimiter rateLimiter,
-        int permits, Supplier<Either<? extends Exception, T>> supplier) {
-        return () -> {
-            try {
-                waitForPermission(rateLimiter, permits);
-                return Either.narrow(supplier.get());
-            } catch (RequestNotPermitted requestNotPermitted) {
-                return Either.left(requestNotPermitted);
-            }
         };
     }
 
@@ -722,53 +538,7 @@ public interface RateLimiter {
         return decorateSupplier(this, permits, supplier).get();
     }
 
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
-        return executeTrySupplier(1, supplier);
-    }
 
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param permits  number of permits that this call requires
-     * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> Try<T> executeTrySupplier(int permits, Supplier<Try<T>> supplier) {
-        return decorateTrySupplier(this, permits, supplier).get();
-    }
-
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> Either<Exception, T> executeEitherSupplier(
-        Supplier<Either<? extends Exception, T>> supplier) {
-        return executeEitherSupplier(1, supplier);
-    }
-
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param permits  number of permits that this call requires
-     * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> Either<Exception, T> executeEitherSupplier(int permits,
-        Supplier<Either<? extends Exception, T>> supplier) {
-        return decorateEitherSupplier(this, permits, supplier).get();
-    }
 
     /**
      * Decorates and executes the decorated Callable.
@@ -813,33 +583,6 @@ public interface RateLimiter {
     default void executeRunnable(int permits, Runnable runnable) {
         decorateRunnable(this, permits, runnable).run();
     }
-
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param checkedSupplier the original Supplier
-     * @param <T>             the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     * @throws Throwable if something goes wrong applying this function to the given arguments
-     */
-    default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
-        return executeCheckedSupplier(1, checkedSupplier);
-    }
-
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param permits         number of permits that this call requires
-     * @param checkedSupplier the original Supplier
-     * @param <T>             the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     * @throws Throwable if something goes wrong applying this function to the given arguments
-     */
-    default <T> T executeCheckedSupplier(int permits, CheckedFunction0<T> checkedSupplier)
-        throws Throwable {
-        return decorateCheckedSupplier(this, permits, checkedSupplier).apply();
-    }
-
 
     interface Metrics {
 
