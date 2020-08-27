@@ -24,10 +24,10 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-import io.vavr.control.Option;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
@@ -102,7 +102,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         this.rateLimiterConfig = new AtomicReference<>(
             requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
 
-        this.scheduler = Option.of(scheduler).getOrElse(this::configureScheduler);
+        this.scheduler = Optional.ofNullable(scheduler).orElseGet(this::configureScheduler);
         this.tags = tags;
         this.semaphore = new Semaphore(this.rateLimiterConfig.get().getLimitForPeriod(), true);
         this.metrics = this.new SemaphoreBasedRateLimiterMetrics();

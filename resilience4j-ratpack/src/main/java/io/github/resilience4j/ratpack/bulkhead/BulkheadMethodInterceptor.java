@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.bulkhead;
 import com.google.inject.Inject;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.VavrBulkhead;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
@@ -137,8 +138,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.bulkhead.Bulkhead bulkhead, RecoveryFunction<?> recoveryFunction)
         throws Throwable {
         try {
-            return io.github.resilience4j.bulkhead.Bulkhead
-                .decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
+            return VavrBulkhead.decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }
