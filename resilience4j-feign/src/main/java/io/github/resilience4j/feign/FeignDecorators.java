@@ -19,9 +19,11 @@ package io.github.resilience4j.feign;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.VavrBulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.VavrRetry;
 import io.vavr.CheckedFunction1;
@@ -114,7 +116,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withRateLimiter(RateLimiter rateLimiter) {
-            decorators.add((fn, m, mh, t) -> RateLimiter.decorateCheckedFunction(rateLimiter, fn));
+            decorators.add((fn, m, mh, t) -> VavrRateLimiter.decorateCheckedFunction(rateLimiter, fn));
             return this;
         }
 
@@ -216,7 +218,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withBulkhead(Bulkhead bulkhead) {
-            decorators.add((fn, m, mh, t) -> Bulkhead.decorateCheckedFunction(bulkhead, fn));
+            decorators.add((fn, m, mh, t) -> VavrBulkhead.decorateCheckedFunction(bulkhead, fn));
             return this;
         }
 

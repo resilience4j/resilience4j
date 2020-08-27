@@ -20,6 +20,7 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
@@ -176,7 +177,7 @@ public class RateLimiterAspect implements Ordered {
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
         throws Throwable {
-        return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
+        return VavrRateLimiter.executeCheckedSupplier(rateLimiter, proceedingJoinPoint::proceed);
     }
 
     /**

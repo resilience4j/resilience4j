@@ -15,10 +15,7 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -208,7 +205,7 @@ public class BulkheadAspect implements Ordered {
      */
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
-        return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
+        return VavrBulkhead.executeCheckedSupplier(bulkhead, proceedingJoinPoint::proceed);
     }
 
     /**
