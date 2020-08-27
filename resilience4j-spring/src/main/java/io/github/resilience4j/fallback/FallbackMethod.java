@@ -16,15 +16,14 @@
 package io.github.resilience4j.fallback;
 
 import io.github.resilience4j.core.lang.Nullable;
+import org.slf4j.MDC;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Reflection utility for invoking a fallback method. Fallback method should have same return type
@@ -49,9 +48,11 @@ public class FallbackMethod {
     private final Object[] args;
     private final Object target;
     private final Class<?> returnType;
+    private Map<String, String> mdcContextMap;
 
     /**
      * create a fallbackMethod method.
+     * stores the current MDC context to be used when invoking the fallback method.
      *
      * @param fallbackMethods          configured and found fallback methods for this invocation
      * @param originalMethodReturnType the return type of the original source method
@@ -66,6 +67,7 @@ public class FallbackMethod {
         this.args = args;
         this.target = target;
         this.returnType = originalMethodReturnType;
+        this.mdcContextMap = Optional.ofNullable(MDC.getCopyOfContextMap()).orElse(Collections.emptyMap());
     }
 
     /**
@@ -93,6 +95,15 @@ public class FallbackMethod {
                 methodMeta.returnType, methodMeta.targetClass, methodMeta.fallbackMethodName,
                 StringUtils.arrayToDelimitedString(methodMeta.params, ","), Throwable.class));
         }
+    }
+
+    /**
+     * @param mdcContextMap the mdc context map to be used when invoking the fallback method
+     * @return FallbackMethod itself
+     */
+    public FallbackMethod withMdcContextMap(Map<String, String> mdcContextMap) {
+        this.mdcContextMap = mdcContextMap;
+        return this;
     }
 
     /**
@@ -198,6 +209,8 @@ public class FallbackMethod {
     private Object invoke(Method fallback, Throwable throwable) throws Throwable {
         boolean accessible = fallback.isAccessible();
         try {
+            MDC.setContextMap(mdcContextMap);
+
             if (!accessible) {
                 ReflectionUtils.makeAccessible(fallback);
             }
@@ -218,6 +231,8 @@ public class FallbackMethod {
             // We want the original fallback-method exception to propagate instead:
             throw e.getCause();
         } finally {
+            MDC.clear();
+
             if (!accessible) {
                 fallback.setAccessible(false);
             }

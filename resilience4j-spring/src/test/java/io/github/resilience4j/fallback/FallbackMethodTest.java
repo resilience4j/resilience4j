@@ -15,9 +15,17 @@
  */
 package io.github.resilience4j.fallback;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +33,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SuppressWarnings("unused")
 public class FallbackMethodTest {
+    private final Logger log = (Logger) LoggerFactory.getLogger(FallbackMethodTest.class);
+    private ListAppender<ILoggingEvent> listAppender;
+
+    @Before
+    public void before() {
+        log.detachAndStopAllAppenders();
+        listAppender = new ListAppender<>();
+        listAppender.start();
+        log.addAppender(listAppender);
+    }
 
     @Test
     public void fallbackRuntimeExceptionTest() throws Throwable {
@@ -141,12 +159,67 @@ public class FallbackMethodTest {
         assertThatThrownBy(() -> fallbackMethod.fallback(exception)).isSameAs(exception);
     }
 
+    @Test
+    public void mdcContextMapShouldBeReusedWhenInvoking() throws Throwable {
+        try {
+            MDC.put("key", "value");
+            MDC.put("key2", "value2");
+
+            FallbackMethodTest target = new FallbackMethodTest();
+            Method testMethod = target.getClass().getMethod("testMethod", String.class);
+            FallbackMethod fallbackMethod = FallbackMethod
+                .create("loggingFallbackMethod", testMethod, new Object[]{"test"}, target);
+            assertThat(fallbackMethod.fallback(new RuntimeException("err")))
+                .isEqualTo("recovered-RuntimeException");
+            Map<String, String> mdcPropertyMap = listAppender.list.get(0).getMDCPropertyMap();
+            assertThat(mdcPropertyMap).hasSize(2);
+            assertThat(mdcPropertyMap.entrySet().stream()
+                .anyMatch(entry -> entry.getKey().equals("key") && entry.getValue().equals("value")))
+                .isTrue();
+            assertThat(mdcPropertyMap.entrySet().stream()
+                .anyMatch(entry -> entry.getKey().equals("key2") && entry.getValue().equals("value2")))
+                .isTrue();
+        } finally {
+            MDC.clear();
+        }
+    }
+
+    @Test
+    public void mdcContextMapShouldBeAbleToBeOverridden() throws Throwable {
+        try {
+            MDC.put("key", "value");
+            MDC.put("key2", "value2");
+
+            FallbackMethodTest target = new FallbackMethodTest();
+            Method testMethod = target.getClass().getMethod("testMethod", String.class);
+            FallbackMethod fallbackMethod = FallbackMethod
+                .create("loggingFallbackMethod", testMethod, new Object[]{"test"}, target)
+                .withMdcContextMap(new HashMap<String, String>() {{
+                    put("customKey", "customValue");
+                }});
+            assertThat(fallbackMethod.fallback(new RuntimeException("err")))
+                .isEqualTo("recovered-RuntimeException");
+            Map<String, String> mdcPropertyMap = listAppender.list.get(0).getMDCPropertyMap();
+            assertThat(mdcPropertyMap).hasSize(1);
+            assertThat(mdcPropertyMap.entrySet().stream()
+                .anyMatch(entry -> entry.getKey().equals("customKey") && entry.getValue().equals("customValue")))
+                .isTrue();
+        } finally {
+            MDC.clear();
+        }
+    }
+
     public String testMethod(String parameter) {
         return "test";
     }
 
     public CompletableFuture<String> testFutureMethod(String parameter) {
         return CompletableFuture.completedFuture("test");
+    }
+
+    public String loggingFallbackMethod(String parameter, RuntimeException exception) {
+        log.info(parameter);
+        return "recovered-RuntimeException";
     }
 
     public String fallbackMethod(String parameter, RuntimeException exception) {
