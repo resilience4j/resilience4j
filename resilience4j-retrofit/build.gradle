@@ -3,6 +3,7 @@ dependencies {
     implementation project(':resilience4j-circuitbreaker')
     implementation project(':resilience4j-ratelimiter')
     implementation project(':resilience4j-retry')
+    implementation project(':resilience4j-vavr')
     testImplementation(libraries.retrofit_test)
     testImplementation(libraries.retrofit_wiremock)
     testImplementation(libraries.retrofit)

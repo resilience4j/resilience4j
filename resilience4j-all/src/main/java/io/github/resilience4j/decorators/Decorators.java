@@ -3,6 +3,7 @@ package io.github.resilience4j.decorators;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.VavrBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
@@ -11,6 +12,7 @@ import io.github.resilience4j.core.CheckFunctionUtils;
 import io.github.resilience4j.core.CompletionStageUtils;
 import io.github.resilience4j.core.SupplierUtils;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.VavrRetry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
@@ -382,7 +384,7 @@ public interface Decorators {
         }
 
         public DecorateCheckedSupplier<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
-            supplier = RateLimiter.decorateCheckedSupplier(rateLimiter, permits, supplier);
+            supplier = VavrRateLimiter.decorateCheckedSupplier(rateLimiter, permits, supplier);
             return this;
         }
 
@@ -391,7 +393,7 @@ public interface Decorators {
         }
 
         public DecorateCheckedSupplier<T> withBulkhead(Bulkhead bulkhead) {
-            supplier = Bulkhead.decorateCheckedSupplier(bulkhead, supplier);
+            supplier = VavrBulkhead.decorateCheckedSupplier(bulkhead, supplier);
             return this;
         }
 
@@ -452,19 +454,19 @@ public interface Decorators {
         }
 
         public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter, int permits) {
-            function = RateLimiter.decorateCheckedFunction(rateLimiter, permits, function);
+            function = VavrRateLimiter.decorateCheckedFunction(rateLimiter, permits, function);
             return this;
         }
 
         public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter,
             Function<T, Integer> permitsCalculator) {
-            function = RateLimiter
+            function = VavrRateLimiter
                 .decorateCheckedFunction(rateLimiter, permitsCalculator, function);
             return this;
         }
 
         public DecorateCheckedFunction<T, R> withBulkhead(Bulkhead bulkhead) {
-            function = Bulkhead.decorateCheckedFunction(bulkhead, function);
+            function = VavrBulkhead.decorateCheckedFunction(bulkhead, function);
             return this;
         }
 
@@ -496,17 +498,17 @@ public interface Decorators {
         }
 
         public DecorateCheckedRunnable withRateLimiter(RateLimiter rateLimiter) {
-            runnable = RateLimiter.decorateCheckedRunnable(rateLimiter, runnable);
+            runnable = VavrRateLimiter.decorateCheckedRunnable(rateLimiter, runnable);
             return this;
         }
 
         public DecorateCheckedRunnable withRateLimiter(RateLimiter rateLimiter, int permits) {
-            runnable = RateLimiter.decorateCheckedRunnable(rateLimiter, permits, runnable);
+            runnable = VavrRateLimiter.decorateCheckedRunnable(rateLimiter, permits, runnable);
             return this;
         }
 
         public DecorateCheckedRunnable withBulkhead(Bulkhead bulkhead) {
-            runnable = Bulkhead.decorateCheckedRunnable(bulkhead, runnable);
+            runnable = VavrBulkhead.decorateCheckedRunnable(bulkhead, runnable);
             return this;
         }
 
