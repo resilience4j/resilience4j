@@ -130,12 +130,13 @@ public class CircuitBreakerChain implements Action<Chain> {
                 ctx.render(events);
             });
             chain1.get("hystrixStream/events", ctx -> {
-                Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry
-                    .getAllCircuitBreakers().map(circuitBreaker -> ReactorAdapter
+                Flux<CircuitBreakerEvent> eventStreams = Flux.fromIterable(circuitBreakerRegistry
+                    .getAllCircuitBreakers())
+                    .flatMap(circuitBreaker -> ReactorAdapter
                         .toFlux(circuitBreaker.getEventPublisher()));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(
-                        circuitBreakerRegistry.getAllCircuitBreakers()
+                        circuitBreakerRegistry.getAllCircuitBreakers().stream()
                             .filter(cb -> cb.getName().equals(c.getCircuitBreakerName()))
                             .map(cb -> new CircuitBreakerHystrixStreamEventsDTO(c,
                                 cb.getState(),
@@ -144,7 +145,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                             ))
                     );
                 ServerSentEvents events = ServerSentEvents
-                    .serverSentEvents(Flux.merge(eventStreams),
+                    .serverSentEvents(eventStreams,
                         e -> e.id(CircuitBreakerEvent::getCircuitBreakerName)
                             .event(c -> c.getEventType().name()).data(data));
                 ctx.render(events);
@@ -180,9 +181,10 @@ public class CircuitBreakerChain implements Action<Chain> {
             });
             chain1.get("hystrixStream/events/:name", ctx -> {
                 String circuitBreakerName = ctx.getPathTokens().get("name");
-                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
-                    .find(cb -> cb.getName().equals(circuitBreakerName))
-                    .getOrElseThrow(() -> new IllegalArgumentException(String
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().stream()
+                    .filter(cb -> cb.getName().equals(circuitBreakerName))
+                    .findAny()
+                    .orElseThrow(() -> new IllegalArgumentException(String
                         .format("circuit breaker with name %s not found", circuitBreakerName)));
                 Function<CircuitBreakerEvent, String> data = c -> Jackson.getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(
@@ -237,9 +239,10 @@ public class CircuitBreakerChain implements Action<Chain> {
             chain1.get("hystrixStream/events/:name/:type", ctx -> {
                 String circuitBreakerName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
-                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers()
-                    .find(cb -> cb.getName().equals(circuitBreakerName))
-                    .getOrElseThrow(() -> new IllegalArgumentException(String
+                CircuitBreaker circuitBreaker = circuitBreakerRegistry.getAllCircuitBreakers().stream()
+                    .filter(cb -> cb.getName().equals(circuitBreakerName))
+                    .findAny()
+                    .orElseThrow(() -> new IllegalArgumentException(String
                         .format("circuit breaker with name %s not found", circuitBreakerName)));
                 Flux<CircuitBreakerEvent> eventStream = ReactorAdapter
                     .toFlux(circuitBreaker.getEventPublisher())
