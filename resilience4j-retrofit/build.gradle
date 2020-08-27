@@ -2,6 +2,7 @@ dependencies {
     compileOnly(libraries.retrofit)
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
+    compile project(':resilience4j-vavr')
     testCompile(libraries.retrofit_test)
     testCompile(libraries.retrofit_wiremock)
     testCompile(libraries.retrofit)
