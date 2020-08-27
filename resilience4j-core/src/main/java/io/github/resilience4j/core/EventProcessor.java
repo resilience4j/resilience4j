@@ -20,7 +20,6 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,8 +27,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
-    List<EventConsumer<T>> onEventConsumers = new CopyOnWriteArrayList<>();
-    ConcurrentMap<String, List<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
+    final List<EventConsumer<T>> onEventConsumers = new CopyOnWriteArrayList<>();
+    final ConcurrentMap<String, List<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
     private boolean consumerRegistered;
 
     public boolean hasConsumers() {
@@ -39,10 +38,9 @@ public class EventProcessor<T> implements EventPublisher<T> {
     @SuppressWarnings("unchecked")
     public synchronized void registerConsumer(String className,
         EventConsumer<? extends T> eventConsumer) {
-        this.consumerRegistered = true;
         this.eventConsumerMap.compute(className, (k, consumers) -> {
             if (consumers == null) {
-                consumers = new ArrayList<>();
+                consumers = new CopyOnWriteArrayList<>();
                 consumers.add((EventConsumer<T>) eventConsumer);
                 return consumers;
             } else {
@@ -50,6 +48,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
                 return consumers;
             }
         });
+        this.consumerRegistered = true;
     }
 
     public <E extends T> boolean processEvent(E event) {
@@ -71,7 +70,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
 
     @Override
     public synchronized void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
-        this.consumerRegistered = true;
         this.onEventConsumers.add(onEventConsumer);
+        this.consumerRegistered = true;
     }
 }

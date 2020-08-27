@@ -198,6 +198,33 @@ public class ThreadPoolBulkheadConfigTest {
 
     }
 
+    @Test
+    public void testToString() {
+        int maxThreadPoolSize = 20;
+        int coreThreadPoolSize = 2;
+        long maxWait = 555;
+        int queueCapacity = 50;
+
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(maxThreadPoolSize)
+            .coreThreadPoolSize(coreThreadPoolSize)
+            .queueCapacity(queueCapacity)
+            .keepAliveDuration(Duration.ofMillis(maxWait))
+            .writableStackTraceEnabled(false)
+            .contextPropagator(TestCtxPropagator2.class)
+            .build();
+
+        String result = config.toString();
+        assertThat(result).startsWith("ThreadPoolBulkheadConfig{");
+        assertThat(result).contains("maxThreadPoolSize=20");
+        assertThat(result).contains("coreThreadPoolSize=2");
+        assertThat(result).contains("queueCapacity=50");
+        assertThat(result).contains("keepAliveDuration=PT0.555S");
+        assertThat(result).contains("writableStackTraceEnabled=false");
+        assertThat(result).contains("contextPropagators=[io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfigTest$TestCtxPropagator2");
+        assertThat(result).endsWith("}");
+    }
+
     public static class TestCtxPropagator implements ContextPropagator<Object> {
 
         @Override
