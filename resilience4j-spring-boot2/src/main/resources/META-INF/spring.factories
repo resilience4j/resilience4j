@@ -5,6 +5,7 @@ io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadMetricsAutoConfi
 io.github.resilience4j.retry.autoconfigure.RetryAutoConfiguration,\
 io.github.resilience4j.retry.autoconfigure.RetryMetricsAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration,\
+io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerStreamEventsAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerMetricsAutoConfiguration,\
 io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakersHealthIndicatorAutoConfiguration,\
 io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterAutoConfiguration,\

@@ -1,7 +1,9 @@
 dependencies {
     compile project(':resilience4j-spring')
     compile project(':resilience4j-micrometer')
+    compileOnly project(':resilience4j-reactor')
 
+    compileOnly(libraries.spring_boot2_webflux)
     compileOnly(libraries.spring_boot2_aop)
     compileOnly(libraries.spring_boot2_actuator)
     compileOnly(libraries.hibernate_validator)
@@ -24,6 +26,7 @@ dependencies {
     testCompile(libraries.spring_cloud_starter_openfeign)
     testCompile(libraries.spring_cloud_context)
     testCompile(libraries.feign_wiremock)
+    testCompile(libraries.spring_boot2_webflux)
 }
 
 compileJava.dependsOn(processResources)

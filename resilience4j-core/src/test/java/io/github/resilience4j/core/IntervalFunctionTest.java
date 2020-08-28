@@ -14,37 +14,29 @@ public class IntervalFunctionTest {
     public void shouldRejectNonPositiveDuration() {
         final Duration negativeDuration = Duration.ofMillis(0);
         final Duration zeroDuration = Duration.ofMillis(0);
-        final Duration smallDuration = Duration.ofMillis(9);
         final Duration positiveDuration = Duration.ofMillis(100);
         final long negativeInterval = -1;
         final long zeroInterval = 0;
-        final long smallInterval = 9;
         final long positiveInterval = 100;
 
         List<Try> tries = List.of(
             Try.of(() -> IntervalFunction.of(negativeDuration)),
             Try.of(() -> IntervalFunction.of(zeroDuration)),
-            Try.of(() -> IntervalFunction.of(smallDuration)),
 
             Try.of(() -> IntervalFunction.of(negativeInterval)),
             Try.of(() -> IntervalFunction.of(zeroInterval)),
-            Try.of(() -> IntervalFunction.of(smallInterval)),
 
             Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, negativeDuration)),
             Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, zeroDuration)),
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, smallDuration)),
 
             Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, negativeInterval)),
             Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, zeroInterval)),
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, smallInterval)),
 
             Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, negativeDuration)),
             Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, zeroDuration)),
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, smallDuration)),
 
             Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, negativeInterval)),
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, zeroInterval)),
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, smallInterval))
+            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, zeroInterval))
         );
 
         assertThat(tries.forAll(Try::isFailure)).isTrue();
