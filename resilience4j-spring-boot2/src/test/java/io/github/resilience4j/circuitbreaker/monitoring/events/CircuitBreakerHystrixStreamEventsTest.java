@@ -126,7 +126,7 @@ public class CircuitBreakerHystrixStreamEventsTest {
             .accept(MediaType.TEXT_EVENT_STREAM)
             .retrieve()
             .bodyToFlux(type)
-            .take(4);
+            .take(3);
         return eventStream;
     }
 
