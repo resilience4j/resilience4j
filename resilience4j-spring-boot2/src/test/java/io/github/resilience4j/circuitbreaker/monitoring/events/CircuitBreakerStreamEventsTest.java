@@ -69,36 +69,38 @@ public class CircuitBreakerStreamEventsTest {
     };
 
     @Test
-    public void streamAllEvents() throws IOException {
+    public void streamAllEvents() throws IOException, InterruptedException {
         int noOfEvents =2;
         List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
         publishEvents(noOfEvents);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
         assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat(circuitBreakerEventsAfter.getCircuitBreakerEvents()).hasSize(noOfEvents);
+        Thread.sleep(1000);
         assertThat(noOfEventsFromStream).hasSize(noOfEvents);
     }
 
     @Test
-    public void streamEventsbyName() throws IOException {
+    public void streamEventsbyName() throws IOException, InterruptedException {
         int noOfEvents =2;
         List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         publishEvents(noOfEvents);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        Thread.sleep(1000);
         assertThat(noOfEventsFromStream).hasSize(noOfEvents);
     }
 
     @Test
-    public void streamEventsbyNameAndType() throws IOException {
+    public void streamEventsbyNameAndType() throws IOException, InterruptedException {
         int noOfSuccessfulEvents =1;
         List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA/SUCCESS");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         publishEventsWithSuccessAndError();
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
         assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        Thread.sleep(1000);
         assertThat(noOfEventsFromStream).hasSize(noOfSuccessfulEvents);
     }
 
