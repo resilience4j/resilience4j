@@ -90,8 +90,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
      * Added more nanos in order to handle the refills
      */
     @Test
-    @Override
-    public void acquireBigNumberOfPermitsAtStartOfCycleTest() {
+    public void acquireBigNumberOfPermitsAtStartTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .initialPermits(0)
@@ -284,14 +283,14 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
             .timeoutDuration(Duration.ZERO)
             .build();
 
-        RefillRateLimiter refillRateLimiter = new RefillRateLimiter("refill", rateLimiterConfig);
-        Assert.assertTrue(refillRateLimiter.acquirePermission(10));
+        RateLimiter limiter = new RefillRateLimiter("refill", rateLimiterConfig);
+        Assert.assertTrue(limiter.acquirePermission(10));
         Thread.sleep(100);
-        Assert.assertTrue(refillRateLimiter.acquirePermission(1));
-        Assume.assumeFalse(refillRateLimiter.acquirePermission(4));
+        Assert.assertTrue(limiter.acquirePermission(1));
+        Assume.assumeFalse(limiter.acquirePermission(4));
         Thread.sleep(410);
-        Assume.assumeTrue(refillRateLimiter.acquirePermission(4));
-        Assume.assumeFalse(refillRateLimiter.acquirePermission(1));
+        Assume.assumeTrue(limiter.acquirePermission(4));
+        Assume.assumeFalse(limiter.acquirePermission(1));
     }
 
     @Test
