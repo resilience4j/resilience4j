@@ -247,9 +247,9 @@ final class IntervalFunctionCompanion {
     }
 
     static void checkInterval(long interval) {
-        if (interval < 10) {
+        if (interval < 1) {
             throw new IllegalArgumentException(
-                "Illegal argument interval: " + interval + " millis");
+                "Illegal argument interval: " + interval + " millis is less than 1");
         }
     }
 

@@ -18,9 +18,11 @@
  */
 package io.github.resilience4j.kotlin.timelimiter
 
+import io.github.resilience4j.kotlin.isCancellation
 import io.github.resilience4j.timelimiter.TimeLimiter
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import kotlin.coroutines.coroutineContext
 
 /**
  * Decorates and executes the given suspend function [block].
@@ -37,9 +39,19 @@ import kotlinx.coroutines.withTimeout
  *    even if the `cancelRunningFuture` is set to `false`.
  */
 suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
-    withTimeout(timeLimiterConfig.timeoutDuration.toMillis()) {
-        block()
+    try {
+        withTimeout(timeLimiterConfig.timeoutDuration.toMillis()) {
+            block().also { onSuccess() }
+        }
+    } catch (t: Throwable) {
+        if (isCancellation(coroutineContext, t)) {
+            onError(t)
+        } else {
+            onSuccess()
+        }
+        throw t
     }
+
 
 /**
  * Decorates the given suspend function [block] and returns it.
