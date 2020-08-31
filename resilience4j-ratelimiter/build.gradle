@@ -1,4 +1,5 @@
 dependencies {
     compile project(':resilience4j-core')
+    compile(libraries.guava)
 }
 ext.moduleName = 'io.github.resilience4j.ratelimiter'
