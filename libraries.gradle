@@ -24,6 +24,8 @@ ext {
     retrofitVersion = '2.5.0'
     feignVersion = '10.2.0'
     prometheusSimpleClientVersion = '0.9.0'
+    guavaVersion = '29.0-jre'
+    prometheusSimpleClientVersion = '0.8.1'
     reactiveStreamsVersion = '1.0.2'
     micrometerVersion = '1.5.1'
     hibernateValidatorVersion = '6.0.18.Final'
@@ -100,6 +102,9 @@ ext {
             // Feign addon
             feign: "io.github.openfeign:feign-core:${feignVersion}",
             feign_wiremock: "com.github.tomakehurst:wiremock-jre8:${wiremockVersion}",
+
+            // Guava addon
+            guava: "com.google.guava:guava:${guavaVersion}",
 
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
