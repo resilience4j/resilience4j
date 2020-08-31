@@ -221,13 +221,8 @@ public class RefillRateLimiter implements RateLimiter {
      */
     private State calculateNextState(final int permits, final long timeoutInNanos,
                                      final State activeState) {
-        long currentNanos = currentNanoTime();
-        long nanosSinceLastUpdate = currentNanos - activeState.updatedAt;
-
-        int currentPermissions = activeState.activePermissions;
-        long permissionsBatches = calculateBatches(activeState.nanosPerPermission, nanosSinceLastUpdate);
-        long accumulatedPermissions = permissionsBatches + currentPermissions;
-        int nexPermissions = (int) min(activeState.config.getBurstLimit(), accumulatedPermissions);
+        long nanosSinceLastUpdate = nanosSinceLastUpdate(activeState);
+        int nexPermissions = calculateNextPermissions(activeState, nanosSinceLastUpdate);
 
         long nextNanosToWait = nanosToWaitForPermission(
             permits, activeState.nanosPerPermission, nexPermissions);
@@ -237,6 +232,27 @@ public class RefillRateLimiter implements RateLimiter {
         return nextState;
     }
 
+    private int calculateNextPermissions(State activeState, long nanosSinceLastUpdate) {
+        long accumulatedPermissions = accumulatedPermissions(activeState, nanosSinceLastUpdate);
+        return (int) min(activeState.config.getBurstLimit(), accumulatedPermissions);
+    }
+
+    private long accumulatedPermissions(State activeState, long nanosSinceLastUpdate) {
+        int currentPermissions = activeState.activePermissions;
+        long permissionsBatches = calculateBatches(activeState.nanosPerPermission, nanosSinceLastUpdate);
+        return permissionsBatches + currentPermissions;
+    }
+
+    private long nanosSinceLastUpdate(State activeState) {
+        return currentNanoTime() - activeState.updatedAt;
+    }
+
+    /**
+     * Calculate the batches, should be inlined
+     * @param nanosPerPermission
+     * @param nanosSinceLastUpdate
+     * @return
+     */
     private long calculateBatches(long nanosPerPermission, long nanosSinceLastUpdate) {
         if(nanosPerPermission==0) {
             return Long.MAX_VALUE;

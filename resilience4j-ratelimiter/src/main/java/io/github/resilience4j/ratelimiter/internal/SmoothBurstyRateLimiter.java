@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.util.Objects.requireNonNull;
 
 /**
- * The SmoothBursty Rate Limiter is an implementation utilizing Guava's {@link com.google.common.util.concurrent.SmoothRateLimiter.SmoothBursty}
+ * The SmoothBursty Rate Limiter is an implementation utilizing Guava's SmoothRateLimiter through {@link com.google.common.util.concurrent.SmoothBurstyDecorator}
  */
 public class SmoothBurstyRateLimiter implements RateLimiter {
 
@@ -96,8 +96,8 @@ public class SmoothBurstyRateLimiter implements RateLimiter {
     }
 
     /**
-     * Due to the indirect usage of {@link com.google.common.util.concurrent.RateLimiter.SleepingStopwatch.class#sleepMicrosUninterruptibly}
-     * there is not going to be an interrupt
+     * Interrupts are handled by {@link com.google.common.util.concurrent.SmoothBurstyDecorator#tryAcquire}
+     * thus there is no need for handling
      *
      * @param permits number of permits - use for systems where 1 call != 1 permit
      * @return

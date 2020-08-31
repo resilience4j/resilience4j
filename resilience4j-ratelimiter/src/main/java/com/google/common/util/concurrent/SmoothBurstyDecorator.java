@@ -20,7 +20,6 @@ package com.google.common.util.concurrent;
 
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.internal.RefillRateLimiter;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -139,6 +138,13 @@ public class SmoothBurstyDecorator extends RateLimiter {
         return smoothBursty.tryAcquire();
     }
 
+    /**
+     * Due to the indirect usage of {@link com.google.common.util.concurrent.RateLimiter.SleepingStopwatch#sleepMicrosUninterruptibly}
+     * there is not going to be an interrupt
+     *
+     * @param permits number of permits - use for systems where 1 call != 1 permit
+     * @return
+     */
     @Override
     public boolean tryAcquire(int permits, Duration timeout) {
         return smoothBursty.tryAcquire(permits, timeout);
