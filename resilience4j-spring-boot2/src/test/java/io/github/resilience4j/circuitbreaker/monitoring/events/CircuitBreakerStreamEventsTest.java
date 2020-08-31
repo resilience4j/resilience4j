@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
@@ -44,6 +45,7 @@ import java.util.List;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
+@AutoConfigureWebTestClient(timeout="36000")
 public class CircuitBreakerStreamEventsTest {
 
     public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/stream-circuitbreaker-events";
@@ -68,35 +70,38 @@ public class CircuitBreakerStreamEventsTest {
 
     @Test
     public void streamAllEvents() throws IOException, InterruptedException {
-        List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS);
+        int noOfEvents =2;
+        List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
-        publishEvents();
+        publishEvents(noOfEvents);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS);
         assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat(circuitBreakerEventsAfter.getCircuitBreakerEvents().size()).isGreaterThan(0);
-        Thread.sleep(1000); // for webClient to complete the subscribe operation
-        assertThat(events.size()).isEqualTo(2);
+        Thread.sleep(1000);
+        assertThat(noOfEventsFromStream).hasSize(noOfEvents);
     }
 
     @Test
     public void streamEventsbyName() throws IOException, InterruptedException {
-        List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA");
+        int noOfEvents =2;
+        List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        publishEvents();
+        publishEvents(noOfEvents);
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        Thread.sleep(1000); // for webClient to complete the subscribe operation
         assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
+        Thread.sleep(1000);
+        assertThat(noOfEventsFromStream).hasSize(noOfEvents);
     }
 
     @Test
     public void streamEventsbyNameAndType() throws IOException, InterruptedException {
-        List<ServerSentEvent<String>> events = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA/ERROR");
+        int noOfSuccessfulEvents =1;
+        List<ServerSentEvent<String>> noOfEventsFromStream = getServerSentEvents(ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS + "/backendA/SUCCESS");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsBefore = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        publishEvents();
+        publishEventsWithSuccessAndError();
         CircuitBreakerEventsEndpointResponse circuitBreakerEventsAfter = circuitBreakerEvents(ACTUATOR_CIRCUITBREAKEREVENTS + "/backendA");
-        Thread.sleep(1000); // for webClient to complete the subscribe operation
         assertThat(circuitBreakerEventsBefore.getCircuitBreakerEvents().size()).isLessThan(circuitBreakerEventsAfter.getCircuitBreakerEvents().size());
-        assertThat(events.size()).isEqualTo(1);
+        Thread.sleep(1000);
+        assertThat(noOfEventsFromStream).hasSize(noOfSuccessfulEvents);
     }
 
     private List<ServerSentEvent<String>> getServerSentEvents(String s) {
@@ -124,11 +129,20 @@ public class CircuitBreakerStreamEventsTest {
             .accept(MediaType.TEXT_EVENT_STREAM)
             .retrieve()
             .bodyToFlux(type)
-            .take(2);
+            .take(3);
         return eventStream;
     }
 
-    private void publishEvents() throws IOException {
+    private void publishEvents(int noOfEvents) throws IOException {
+        int i =0;
+        while( i < noOfEvents){
+            dummyService.doSomething(false);
+            // The invocation is recorded by the CircuitBreaker as a success.
+            i++;
+        }
+    }
+
+    private void publishEventsWithSuccessAndError() throws IOException {
         try {
             dummyService.doSomething(true);
         } catch (IOException ex) {
@@ -138,4 +152,3 @@ public class CircuitBreakerStreamEventsTest {
         dummyService.doSomething(false);
     }
 }
-
