@@ -72,11 +72,14 @@ public class CircuitBreakerServerSideEvent {
     @ReadOperation(produces = "text/event-stream")
     public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerName(
         @Selector String name) {
-
-        CircuitBreaker circuitBreaker = getCircuitBreaker(name);
-        Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher());
+        CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
+        Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
+            .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
+            .map(
+                circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
+            );
         Function<CircuitBreakerEvent, String> data = getCircuitBreakerEventStringFunction();
-        return eventStream.map(
+        return Flux.merge(eventStreams).map(
             cbEvent -> ServerSentEvent.<String>builder()
                 .id(cbEvent.getCircuitBreakerName())
                 .event(cbEvent.getEventType().name())
@@ -88,14 +91,16 @@ public class CircuitBreakerServerSideEvent {
     @ReadOperation(produces = "text/event-stream")
     public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerNameAndEventType(
         @Selector String name, @Selector String eventType) {
-
-        CircuitBreaker circuitBreaker = getCircuitBreaker(name);
-        Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher())
-            .filter(
-                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
+        CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
+        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
+            .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
+            .map(
+                circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
         Function<CircuitBreakerEvent, String> data = getCircuitBreakerEventStringFunction();
-        return eventStream.map(cbEvent -> ServerSentEvent.<String>builder()
+        return Flux.merge(eventStream)
+            .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
+            .map(cbEvent -> ServerSentEvent.<String>builder()
             .id(cbEvent.getCircuitBreakerName())
             .event(cbEvent.getEventType().name())
             .data(data.apply(cbEvent))
