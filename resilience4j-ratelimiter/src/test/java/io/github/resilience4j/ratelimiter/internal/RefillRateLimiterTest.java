@@ -196,7 +196,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
         then(secondNoPermission).isNegative();
     }
 
-    //TODO @Test
+    @Test
     public void defaultPermissionsAtStartup() throws Exception {
         setup(Duration.ZERO);
 
@@ -212,7 +212,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
      * @throws Exception
      */
 
-    //TODO @Test
+    @Test
     public void acquireAndRefreshWithEventPublishing() throws Exception {
         setup(Duration.ZERO);
 
@@ -240,7 +240,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
         then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
     }
 
-    //TODO @Test
+    @Test
     public void reserveAndRefresh() throws Exception {
         setup(Duration.ofNanos(PERIOD_IN_NANOS));
 

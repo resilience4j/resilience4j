@@ -27,7 +27,6 @@ import io.vavr.collection.Map;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
@@ -56,7 +55,6 @@ public class RefillRateLimiter implements RateLimiter {
     private final String name;
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;
-    private final AtomicLong nanosPerPermission;
     private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
 
@@ -73,8 +71,6 @@ public class RefillRateLimiter implements RateLimiter {
         this.state = new AtomicReference<>(new State(
             rateLimiterConfig, calculateNanosPerPermission(rateLimiterConfig),  rateLimiterConfig.getInitialPermits(), 0, currentNanoTime()
         ));
-
-        this.nanosPerPermission = new AtomicLong();
 
         /**
          * Calculate this one before hand
@@ -103,7 +99,7 @@ public class RefillRateLimiter implements RateLimiter {
             .build();
         state.updateAndGet(currentState -> new State(
             newConfig, currentState.nanosPerPermission, currentState.activePermissions,
-            currentState.nanosToWait, currentNanoTime()
+            currentState.nanosToWait, currentState.updatedAt
         ));
     }
 
@@ -117,7 +113,7 @@ public class RefillRateLimiter implements RateLimiter {
             .build();
         state.updateAndGet(currentState -> new State(
             newConfig, calculateNanosPerPermission(newConfig), currentState.activePermissions,
-            currentState.nanosToWait, currentNanoTime()
+            currentState.nanosToWait, currentState.updatedAt
         ));
     }
 
@@ -256,6 +252,8 @@ public class RefillRateLimiter implements RateLimiter {
     private long calculateBatches(long nanosPerPermission, long nanosSinceLastUpdate) {
         if(nanosPerPermission==0) {
             return Long.MAX_VALUE;
+        } else if(nanosSinceLastUpdate<0l) {
+            return 0l;
         }
 
         return nanosSinceLastUpdate / nanosPerPermission;
@@ -303,6 +301,7 @@ public class RefillRateLimiter implements RateLimiter {
 
         return new State(state.config, state.nanosPerPermission, permissionsWithReservation, nanosToWait, currentNanoTime());
     }
+
 
     /**
      * If nanosToWait is bigger than 0 it tries to park {@link Thread} for nanosToWait but not
