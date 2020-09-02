@@ -29,19 +29,18 @@ class CircuitBreakerSpec extends Specification {
     @Client("/circuitbreaker")
     HttpClient client;
 
-
     void "default configuration"() {
         given:
         def registry = applicationContext.getBean(CircuitBreakerRegistry)
-        def circuitbreaker = registry.circuitBreaker("default")
+        def circuitBreaker = registry.circuitBreaker("default")
 
         expect:
-        circuitbreaker != null
+        circuitBreaker != null
 
-        circuitbreaker.circuitBreakerConfig.slidingWindowSize == 100
-        circuitbreaker.circuitBreakerConfig.slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
-        circuitbreaker.circuitBreakerConfig.permittedNumberOfCallsInHalfOpenState == 10
-        circuitbreaker.circuitBreakerConfig.failureRateThreshold == 60
+        circuitBreaker.circuitBreakerConfig.slidingWindowSize == 100
+        circuitBreaker.circuitBreakerConfig.slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
+        circuitBreaker.circuitBreakerConfig.permittedNumberOfCallsInHalfOpenState == 10
+        circuitBreaker.circuitBreakerConfig.failureRateThreshold == 60
 
     }
 

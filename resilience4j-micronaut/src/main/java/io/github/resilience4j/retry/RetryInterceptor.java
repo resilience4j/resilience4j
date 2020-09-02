@@ -19,7 +19,6 @@ import io.github.resilience4j.BaseInterceptor;
 import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
 import io.github.resilience4j.retry.transformer.RetryTransformer;
-import io.micronaut.aop.InterceptPhase;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -31,8 +30,6 @@ import io.micronaut.core.type.ReturnType;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.reactivex.Flowable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.util.Optional;
@@ -44,9 +41,6 @@ import java.util.concurrent.ScheduledExecutorService;
 @Singleton
 @Requires(beans = RetryRegistry.class)
 public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RetryInterceptor.class);
-
     private final RetryRegistry retryRegistry;
     private final BeanContext beanContext;
     private static final ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());

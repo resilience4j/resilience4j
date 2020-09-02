@@ -25,7 +25,7 @@ class CircuitBreakerRecoverySpec extends Specification {
     @Client("/circuitbreaker")
     HttpClient client;
 
-    void "test asyc recovery circuitbreaker"() {
+    void "test async recovery circuitbreaker"() {
         when:
         HttpResponse<String> response = client.toBlocking().exchange("/async-recoverable", String.class);
 
@@ -48,13 +48,13 @@ class CircuitBreakerRecoverySpec extends Specification {
     static class CircuitbreakerService extends TestDummyService {
         @CircuitBreaker(name = "backend-a", fallbackMethod = 'completionStageRecovery')
         @Get("/async-recoverable")
-        public CompletableFuture<String> asynRecovertable() {
+        CompletableFuture<String> asynRecovertable() {
             return asyncError();
         }
 
         @CircuitBreaker(name = "backend-a", fallbackMethod = 'syncRecovery')
         @Get("/sync-recoverable")
-        public String syncRecovertable() {
+        String syncRecovertable() {
             return syncError();
         }
     }

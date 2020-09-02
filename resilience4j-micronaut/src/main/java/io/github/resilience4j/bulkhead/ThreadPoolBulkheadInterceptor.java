@@ -12,7 +12,6 @@ import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.type.ReturnType;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import io.micronaut.retry.intercept.RecoveryInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 @Singleton
 @Requires(beans = ThreadPoolBulkheadRegistry.class)
 public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
-    Logger LOG = LoggerFactory.getLogger(ThreadPoolBulkheadInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(ThreadPoolBulkheadInterceptor.class);
 
     private final ThreadPoolBulkheadRegistry bulkheadRegistry;
     private final BeanContext beanContext;
@@ -106,15 +105,15 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
                 Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
                 if (fallbackMethod.isPresent()) {
                     MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
                     }
                     try {
                         Object result = fallbackHandle.invoke(context.getParameterValues());
                         newFuture.complete(result);
                     } catch (Exception e) {
-                        if (LOG.isErrorEnabled()) {
-                            LOG.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
+                        if (logger.isErrorEnabled()) {
+                            logger.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
                         }
                         newFuture.completeExceptionally(throwable);
                     }

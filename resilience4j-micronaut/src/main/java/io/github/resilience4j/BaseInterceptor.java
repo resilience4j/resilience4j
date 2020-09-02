@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public abstract class BaseInterceptor {
-    Logger LOG = LoggerFactory.getLogger(BaseInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(BaseInterceptor.class);
 
     public abstract Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context);
 
@@ -29,21 +29,21 @@ public abstract class BaseInterceptor {
     public Object fallback(MethodInvocationContext<Object, Object> context, RuntimeException exception) {
         if (exception instanceof NoAvailableServiceException) {
             NoAvailableServiceException ex = (NoAvailableServiceException) exception;
-            if (LOG.isErrorEnabled()) {
-                LOG.debug(ex.getMessage(), ex);
-                LOG.error("Type [{}] attempting to resolve fallback for unavailable service [{}]", context.getTarget().getClass().getName(), ex.getServiceID());
+            if (logger.isErrorEnabled()) {
+                logger.debug(ex.getMessage(), ex);
+                logger.error("Type [{}] attempting to resolve fallback for unavailable service [{}]", context.getTarget().getClass().getName(), ex.getServiceID());
             }
         } else {
-            if (LOG.isErrorEnabled()) {
-                LOG.error("Type [" + context.getTarget().getClass().getName() + "] executed with error: " + exception.getMessage(), exception);
+            if (logger.isErrorEnabled()) {
+                logger.error("Type [" + context.getTarget().getClass().getName() + "] executed with error: " + exception.getMessage(), exception);
             }
         }
         Optional<? extends MethodExecutionHandle<?, Object>> fallback = findFallbackMethod(context);
         if (fallback.isPresent()) {
             MethodExecutionHandle<?, Object> fallbackMethod = fallback.get();
             try {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass().getName(), fallbackMethod);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass().getName(), fallbackMethod);
                 }
                 return fallbackMethod.invoke(context.getParameterValues());
             } catch (Exception e) {
@@ -63,8 +63,8 @@ public abstract class BaseInterceptor {
                 Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
                 if (fallbackMethod.isPresent()) {
                     MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
                     }
                     try {
                         CompletableFuture<Object> resultingFuture = (CompletableFuture<Object>) fallbackHandle.invoke(context.getParameterValues());
@@ -80,8 +80,8 @@ public abstract class BaseInterceptor {
                             });
                         }
                     } catch (Exception e) {
-                        if (LOG.isErrorEnabled()) {
-                            LOG.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
+                        if (logger.isErrorEnabled()) {
+                            logger.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
                         }
                         newFuture.completeExceptionally(throwable);
                     }
@@ -98,8 +98,8 @@ public abstract class BaseInterceptor {
             Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
             if (fallbackMethod.isPresent()) {
                 MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
                 }
                 Object fallbackResult;
                 try {

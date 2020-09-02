@@ -43,8 +43,6 @@ import java.util.concurrent.CompletionStage;
 @Singleton
 @Requires(beans = CircuitBreakerRegistry.class)
 public class CircuitBreakerInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
-    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerInterceptor.class);
-
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final BeanContext beanContext;
 
