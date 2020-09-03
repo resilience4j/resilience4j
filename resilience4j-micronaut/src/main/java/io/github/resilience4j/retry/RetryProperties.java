@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.retry;
 
-
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.util.Toggleable;

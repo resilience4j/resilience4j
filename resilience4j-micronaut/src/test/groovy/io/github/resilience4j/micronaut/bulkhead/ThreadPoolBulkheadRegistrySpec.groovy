@@ -1,20 +1,13 @@
 package io.github.resilience4j.micronaut.bulkhead
 
-import io.github.resilience4j.annotation.Bulkhead
+
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
-import io.github.resilience4j.micronaut.TestDummyService
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
-import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.client.HttpClient
-import io.micronaut.http.client.annotation.Client
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
 import javax.inject.Inject
-import java.util.concurrent.CompletableFuture
 
 @MicronautTest
 @Property(name = "resilience4j.thread-pool-bulkhead.enabled", value = "true")
@@ -23,7 +16,7 @@ import java.util.concurrent.CompletableFuture
 @Property(name = "resilience4j.thread-pool-bulkhead.configs.default.queueCapacity", value = "4")
 @Property(name = "resilience4j.thread-pool-bulkhead.configs.default.keepAliveDuration", value = "PT10S")
 @Property(name = "resilience4j.thread-pool-bulkhead.instances.backendA.baseConfig", value = "default")
-class ThreadPoolBulkheadSpec extends Specification {
+class ThreadPoolBulkheadRegistrySpec extends Specification {
     @Inject
     ApplicationContext applicationContext;
 
@@ -31,7 +24,6 @@ class ThreadPoolBulkheadSpec extends Specification {
         given:
         def registry = applicationContext.getBean(ThreadPoolBulkheadRegistry)
         def defaultBulkhead = registry.bulkhead("default")
-        def backendABulkhead = registry.bulkhead("backend-a")
 
         expect:
         defaultBulkhead != null
@@ -40,11 +32,18 @@ class ThreadPoolBulkheadSpec extends Specification {
         defaultBulkhead.bulkheadConfig.getQueueCapacity() == 4
         defaultBulkhead.bulkheadConfig.keepAliveDuration.seconds == 10
 
+    }
+
+    void "instance configuration"() {
+        given:
+        def registry = applicationContext.getBean(ThreadPoolBulkheadRegistry)
+        def backendABulkhead = registry.bulkhead("backend-a")
+
+        expect:
         backendABulkhead != null
         backendABulkhead.bulkheadConfig.getMaxThreadPoolSize() == 10
         backendABulkhead.bulkheadConfig.getCoreThreadPoolSize() == 5
         backendABulkhead.bulkheadConfig.getQueueCapacity() == 4
         backendABulkhead.bulkheadConfig.keepAliveDuration.seconds == 10
     }
-
 }

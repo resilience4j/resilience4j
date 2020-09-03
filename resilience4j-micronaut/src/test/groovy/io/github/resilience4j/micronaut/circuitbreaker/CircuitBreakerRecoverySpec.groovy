@@ -13,6 +13,7 @@ import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
 import javax.inject.Inject
+import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 
 @MicronautTest
@@ -22,39 +23,34 @@ class CircuitBreakerRecoverySpec extends Specification {
     ApplicationContext applicationContext
 
     @Inject
-    @Client("/circuitbreaker")
-    HttpClient client;
+    CircuitBreakerService service;
 
-    void "test async recovery circuitbreaker"() {
+    void "test async recovery circuit breaker"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("/async-recoverable", String.class);
+        CompletableFuture<String> response = service.asynRecoverable();
 
         then:
-        response.getStatus().code == 200
-        response.body() == "recovered"
+        response.get() == "recovered"
     }
 
 
-    void "test sync recovery circuitbreaker"() {
+    void "test sync recovery circuit breaker"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("/sync-recoverable", String.class);
+        String response = service.syncRecoverable()
 
         then:
-        response.getStatus().code == 200
-        response.body() == "recovered"
+        response == "recovered"
     }
 
-    @Controller("/circuitbreaker")
-    static class CircuitbreakerService extends TestDummyService {
+    @Singleton
+    static class CircuitBreakerService extends TestDummyService {
         @CircuitBreaker(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        @Get("/async-recoverable")
-        CompletableFuture<String> asynRecovertable() {
+        CompletableFuture<String> asynRecoverable() {
             return asyncError();
         }
 
         @CircuitBreaker(name = "backend-a", fallbackMethod = 'syncRecovery')
-        @Get("/sync-recoverable")
-        String syncRecovertable() {
+        String syncRecoverable() {
             return syncError();
         }
     }

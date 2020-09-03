@@ -86,9 +86,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
             return this.fallbackCompletable(bulkhead.executeSupplier(() -> {
                 try {
                     return ((CompletableFuture<?>) result).get();
-                } catch (InterruptedException e) {
-                    throw new CompletionException(e.getCause());
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     throw new CompletionException(e);
                 }
             }),context);

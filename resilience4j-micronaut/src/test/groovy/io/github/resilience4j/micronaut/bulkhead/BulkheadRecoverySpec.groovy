@@ -4,13 +4,11 @@ import io.github.resilience4j.annotation.Bulkhead
 import io.github.resilience4j.micronaut.TestDummyService
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
-import io.micronaut.http.client.HttpClient
-import io.micronaut.http.client.annotation.Client
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
+import javax.inject.Singleton
 import javax.inject.Inject
 import java.util.concurrent.CompletableFuture
 
@@ -20,82 +18,76 @@ import java.util.concurrent.CompletableFuture
 class BulkheadRecoverySpec extends Specification{
 
     @Inject
-    @Client("/thread-pool-bulkhead")
-    HttpClient client;
+    ThreadpoolBulkheadService service;
 
 
     void "test async recovery bulkhead"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("semaphore/async-recoverable", String.class);
+        CompletableFuture<String> result = service.asynRecoverableSemaphore()
 
         then:
-        response.body() == "recovered"
+        result.get() == "recovered"
     }
 
     void "test async recovery bulkhead parameter"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("semaphore/async-recoverable/test", String.class);
+        CompletableFuture<String> result = service.asynRecoverableSemaphoreProperty("test")
 
         then:
-        response.body() == "test"
+        result.get() == "test"
     }
 
 
     void "test sync recovery bulkhead"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("semaphore/sync-recoverable", String.class);
+        String result = service.syncRecoverableSemaphore()
 
         then:
-        response.body() == "recovered"
+        result == "recovered"
     }
 
 
     void "test async recovery threadPoolBulkhead"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("threadpool/async-recoverable", String.class);
-
+        CompletableFuture<String> result = service.asyncRecoverablePool()
         then:
-        response.body() == "recovered"
+        result.get() == "recovered"
     }
 
     void "test sync recovery threadPoolBulkhead"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("threadpool/sync-recoverable", String.class);
+        String result = service.syncRecoverablePool()
 
         then:
-        response.body() == "recovered"
+        result == "recovered"
     }
 
 
-    @Controller("/thread-pool-bulkhead")
+    @Singleton
     static class ThreadpoolBulkheadService extends TestDummyService {
         @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecovery')
         @Get("semaphore/async-recoverable")
-        public CompletableFuture<String> asynRecovertableSemaphore() {
+        CompletableFuture<String> asynRecoverableSemaphore() {
             return asyncError();
         }
 
         @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecoveryParam')
-        @Get("semaphore/async-recoverable/{parameter}")
-        public CompletableFuture<String> asynRecovertableSemaphoreProperty(String parameter) {
+        CompletableFuture<String> asynRecoverableSemaphoreProperty(String parameter) {
             return asyncError();
         }
 
         @Bulkhead(name = "backend-a", fallbackMethod = 'syncRecovery')
-        @Get("semaphore/sync-recoverable")
-        public String syncRecovertableSemaphore() {
+        String syncRecoverableSemaphore() {
             return syncError();
         }
 
         @Bulkhead(name = "default", fallbackMethod = 'completionStageRecovery', type = Bulkhead.Type.THREADPOOL)
-        @Get("threadpool/async-recoverable")
-        public CompletableFuture<String> asynRecovertablePool() {
+        CompletableFuture<String> asyncRecoverablePool() {
             return asyncError();
         }
 
         @Bulkhead(name = "default", fallbackMethod = 'syncRecovery', type = Bulkhead.Type.THREADPOOL)
-        @Get("threadpool/sync-recoverable")
-        public String syncRecovertablePool() {
+        String syncRecoverablePool() {
             return syncError();
         }
     }

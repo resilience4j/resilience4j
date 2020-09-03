@@ -21,7 +21,7 @@ import javax.inject.Inject
 @Property(name = "resilience4j.circuitbreaker.configs.default.eventConsumerBufferSize", value = "10")
 @Property(name = "resilience4j.circuitbreaker.configs.default.registerHealthIndicator", value = "true")
 @Property(name = "resilience4j.circuitbreaker.instances.backendA.baseConfig", value = "default")
-class CircuitBreakerSpec extends Specification {
+class CircuitBreakerRegistrySpec extends Specification {
     @Inject
     ApplicationContext applicationContext
 

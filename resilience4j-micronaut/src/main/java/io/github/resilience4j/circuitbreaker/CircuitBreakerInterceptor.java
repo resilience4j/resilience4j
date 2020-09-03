@@ -19,7 +19,6 @@ import io.github.resilience4j.BaseInterceptor;
 import io.github.resilience4j.ResilienceInterceptPhase;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.fallback.UnhandledFallbackException;
-import io.micronaut.aop.InterceptPhase;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -30,10 +29,7 @@ import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.ReturnType;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import io.micronaut.retry.intercept.RecoveryInterceptor;
 import io.reactivex.Flowable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.util.Optional;

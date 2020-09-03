@@ -17,7 +17,7 @@ import javax.inject.Inject
 @Property(name = "resilience4j.ratelimiter.instances.backendA.baseConfig", value = "default")
 @Property(name = "resilience4j.ratelimiter.instances.backendB.baseConfig", value = "default")
 @Property(name = "resilience4j.ratelimiter.instances.backendB.timeoutDuration", value = "PT5s")
-class RateLimitSpec extends Specification {
+class RateLimitRegistrySpec extends Specification {
     @Inject ApplicationContext applicationContext
 
 

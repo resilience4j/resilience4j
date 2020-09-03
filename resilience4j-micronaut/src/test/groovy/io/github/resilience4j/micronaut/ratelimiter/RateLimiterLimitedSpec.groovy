@@ -5,15 +5,14 @@ import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
-import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
-import io.micronaut.http.client.HttpClient
-import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @MicronautTest
 @Property(name = "resilience4j.ratelimiter.enabled", value = "true")
@@ -22,79 +21,75 @@ import javax.inject.Inject
 class RateLimiterLimitedSpec extends Specification{
     @Inject ApplicationContext applicationContext
 
-    @Inject @Client("/ratelimiter-limited") HttpClient client
+    @Inject
+    RateLimitedService service
 
-    void "test ratelimit"() {
+    def "test service with rate limited service cap"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("/limited", String.class)
+        String result = service.limited()
 
         then:
         noExceptionThrown()
-        response.body() == "ok"
+        result == "ok"
 
         when:
-        client.toBlocking().exchange("/limited", String.class)
+        service.limited()
 
         then:
-        def ex = thrown(HttpClientResponseException)
-        ex.response.code() == HttpStatus.INTERNAL_SERVER_ERROR.code
-        ex.message == "Internal Server Error: RateLimiter 'low' does not permit further calls"
+        def ex = thrown(RequestNotPermitted)
+        ex.message == "RateLimiter 'low' does not permit further calls"
 
         // test rate limit on another function
         when:
-        client.toBlocking().exchange("/limited2", String.class)
+        String result2 = service.limited()
 
         then:
         noExceptionThrown()
-        response.body() == "ok"
+        result2 == "ok"
 
         when:
-        client.toBlocking().exchange("/limited2", String.class)
+        service.limited()
 
         then:
-        ex = thrown(HttpClientResponseException)
-        ex.response.code() == HttpStatus.INTERNAL_SERVER_ERROR.code
-        ex.message == "Internal Server Error: RateLimiter 'low' does not permit further calls"
+        ex = thrown(RequestNotPermitted)
+        ex.message == "RateLimiter 'low' does not permit further calls"
     }
 
-    void "test unlimited"() {
+    def "test service with unlimited service cap"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("/unlimited", String.class)
+        String result1 = service.unLimited()
 
         then:
         noExceptionThrown()
-        response.body() == "ok"
+        result1 == "ok"
 
         when:
-        response = client.toBlocking().exchange("/unlimited", String.class)
+        String result2 = service.unLimited()
 
         then:
         noExceptionThrown()
-        response.body() == "ok"
+        result2 == "ok"
 
         when:
-        response = client.toBlocking().exchange("/unlimited", String.class)
+        String result3 = service.unLimited()
 
         then:
         noExceptionThrown()
-        response.body() == "ok"
+        result3 == "ok"
     }
 
-    @Controller("/ratelimiter-limited")
-    static class RateLimitedController {
+    @Singleton
+    static class RateLimitedService {
         @RateLimiter(name = "low")
-        @Get("/limited")
         String limited() {
             return "ok"
         }
 
         @RateLimiter(name = "low")
-        @Get("/limited2")
         String limited2() {
             return "ok"
         }
 
-        @Get("/unlimited")
         String unLimited() {
             return "ok"
         }
