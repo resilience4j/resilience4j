@@ -38,6 +38,7 @@ public class RateLimiterConfigTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
+
     @Test
     public void builderPositive() throws Exception {
         RateLimiterConfig config = RateLimiterConfig.custom()
