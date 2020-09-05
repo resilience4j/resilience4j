@@ -34,8 +34,7 @@ public class RateLimiterConfig {
     private final int limitForPeriod;
     private final boolean writableStackTraceEnabled;
 
-    protected RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
-                              int limitForPeriod, boolean writableStackTraceEnabled) {
+    protected RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod, int limitForPeriod, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
