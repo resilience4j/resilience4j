@@ -32,17 +32,13 @@ public class RateLimiterConfig {
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
     private final int limitForPeriod;
-    private final int burstLimit;
-    private final int initialPermits;
     private final boolean writableStackTraceEnabled;
 
-    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
-                              int limitForPeriod, int burstLimit, int initialPermits, boolean writableStackTraceEnabled) {
+    protected RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
+                              int limitForPeriod, boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
-        this.burstLimit = burstLimit;
-        this.initialPermits = initialPermits;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
     }
 
@@ -107,14 +103,6 @@ public class RateLimiterConfig {
         return limitForPeriod;
     }
 
-    public int getBurstLimit() {
-        return burstLimit;
-    }
-
-    public int getInitialPermits() {
-        return initialPermits;
-    }
-
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
     }
@@ -125,7 +113,6 @@ public class RateLimiterConfig {
             "timeoutDuration=" + timeoutDuration +
             ", limitRefreshPeriod=" + limitRefreshPeriod +
             ", limitForPeriod=" + limitForPeriod +
-            ", burstForPeriod=" + burstLimit +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
             '}';
     }
@@ -135,9 +122,6 @@ public class RateLimiterConfig {
         private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
-        private int burstForPeriod = 0;
-        private int initialPermits = 0;
-        private boolean initialPermitsSet;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
@@ -147,7 +131,6 @@ public class RateLimiterConfig {
             this.timeoutDuration = prototype.timeoutDuration;
             this.limitRefreshPeriod = prototype.limitRefreshPeriod;
             this.limitForPeriod = prototype.limitForPeriod;
-            this.burstForPeriod = prototype.burstLimit;
             this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
         }
 
@@ -157,16 +140,8 @@ public class RateLimiterConfig {
          * @return the RateLimiterConfig
          */
         public RateLimiterConfig build() {
-            if(burstForPeriod < limitForPeriod) {
-                burstForPeriod = limitForPeriod;
-            }
-
-            if(!initialPermitsSet) {
-                initialPermits = limitForPeriod;
-            }
-
-            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod, burstForPeriod,
-                initialPermits ,writableStackTraceEnabled);
+            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod,
+                writableStackTraceEnabled);
         }
 
         /**
@@ -220,32 +195,5 @@ public class RateLimiterConfig {
             return this;
         }
 
-        /**
-         * Configures the permissions limit for burst capacity. Count of max permissions available
-         * during one rate limiter period specified by {@link RateLimiterConfig#limitRefreshPeriod}
-         * value. If no value specified the default value is the one
-         * specified for @{@link RateLimiterConfig#limitForPeriod}.
-         *
-         * @param burstForPeriod the max permissions limit for the refresh period
-         * @return the RateLimiterConfig.Builder
-         */
-        public Builder burstForPeriod(final int burstForPeriod) {
-            this.burstForPeriod = burstForPeriod;
-            return this;
-        }
-
-        /**
-         * Configures the initial permits available.
-         * If no value specified the default value is the one
-         * specified for @{@link RateLimiterConfig#initialPermits}.
-         *
-         * @param initialPermits the initial permits
-         * @return the RateLimiterConfig.Builder
-         */
-        public Builder initialPermits(final int initialPermits) {
-            this.initialPermits = initialPermits;
-            this.initialPermitsSet = true;
-            return this;
-        }
     }
 }
