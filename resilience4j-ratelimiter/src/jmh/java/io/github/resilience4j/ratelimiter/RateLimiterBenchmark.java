@@ -105,7 +105,6 @@ public class RateLimiterBenchmark {
         return atomicGuardedSupplier.get();
     }
 
-
     @Benchmark
     @Threads(value = THREAD_COUNT)
     @Warmup(iterations = WARMUP_COUNT)
