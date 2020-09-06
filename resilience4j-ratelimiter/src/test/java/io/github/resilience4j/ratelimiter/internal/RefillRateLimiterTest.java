@@ -20,7 +20,6 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -43,7 +42,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(RefillRateLimiter.class)
-public class RefillRateLimiterTest { //extends RateLimitersImplementationTest {
+public class RefillRateLimiterTest {
 
     private static final String LIMITER_NAME = "test";
     private static final long PERIOD_IN_NANOS = 250_000_000L;
@@ -58,13 +57,12 @@ public class RefillRateLimiterTest { //extends RateLimitersImplementationTest {
             .pollInterval(POLL_INTERVAL_IN_NANOS, TimeUnit.NANOSECONDS);
     }
 
-    //@Override
     protected RateLimiter buildRateLimiter(RefillRateLimiterConfig config) {
-        RefillRateLimiterConfig burstBased = RefillRateLimiterConfig.from(config)
+        RefillRateLimiterConfig refillConfig = RefillRateLimiterConfig.from(config)
             .permitCapacity(10)
             .initialPermits(0)
             .build();
-        return new RefillRateLimiter("refill", burstBased);
+        return new RefillRateLimiter("refill", refillConfig);
     }
 
     private void setTimeOnNanos(long nanoTime) throws Exception {
@@ -359,12 +357,12 @@ public class RefillRateLimiterTest { //extends RateLimitersImplementationTest {
         System.out.println();
     }
 
-    protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,
+    protected void waitForRefresh(RateLimiter.Metrics metrics, RefillRateLimiterConfig config,
                                   char printedWhileWaiting) {
         Instant start = Instant.now();
         while (Instant.now().isBefore(start.plus(config.getLimitRefreshPeriod()))) {
             try {
-                if (metrics.getAvailablePermissions() >= config.getLimitForPeriod()) {
+                if (metrics.getAvailablePermissions() >= config.getPermitCapacity()) {
                     break;
                 }
                 System.out.print(printedWhileWaiting);

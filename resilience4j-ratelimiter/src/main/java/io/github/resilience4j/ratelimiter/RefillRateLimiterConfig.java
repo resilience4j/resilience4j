@@ -37,7 +37,6 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
     private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
-    private final Duration timeoutDuration;
     private final int permitCapacity;
     private final int initialPermits;
     private final long nanosPerPermission;
@@ -45,8 +44,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
 
     private RefillRateLimiterConfig(Duration timeoutDuration, int permitCapacity, long nanosPerPermission,
                                     int initialPermits, boolean writableStackTraceEnabled) {
-        super(timeoutDuration, Duration.ofNanos(nanosPerPermission), 1, writableStackTraceEnabled);
-        this.timeoutDuration = timeoutDuration;
+        super(timeoutDuration, Duration.ofNanos(nanosPerPermission*permitCapacity), permitCapacity, writableStackTraceEnabled);
         this.permitCapacity = permitCapacity;
         this.initialPermits = initialPermits;
         this.nanosPerPermission = nanosPerPermission;
@@ -102,10 +100,6 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         return limitForPeriod;
     }
 
-    public Duration getTimeoutDuration() {
-        return timeoutDuration;
-    }
-
     public int getPermitCapacity() {
         return permitCapacity;
     }
@@ -121,7 +115,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
     @Override
     public String toString() {
         return "RefillRateLimiterConfig{" +
-            "timeoutDuration=" + timeoutDuration +
+            "timeoutDuration=" + getTimeoutDuration() +
             ", permitCapacity=" + permitCapacity +
             ", nanosPerPermission="+ nanosPerPermission +
             ", writableStackTraceEnabled=" + writableStackTraceEnabled +
@@ -142,7 +136,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         public Builder(RefillRateLimiterConfig prototype) {
-            this.timeoutDuration = prototype.timeoutDuration;
+            this.timeoutDuration = prototype.getTimeoutDuration();
             this.limitRefreshPeriod = Duration.ofNanos(prototype.nanosPerPermission);
             this.limitForPeriod = 1;
             this.permitCapacity = prototype.permitCapacity;

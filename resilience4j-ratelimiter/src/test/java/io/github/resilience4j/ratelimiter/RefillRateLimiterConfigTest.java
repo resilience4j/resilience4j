@@ -44,11 +44,27 @@ public class RefillRateLimiterConfigTest {
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)
+            .build();
+
+        then(config.getLimitForPeriod()).isEqualTo(LIMIT);
+        then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
+        then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
+        then(config.getPermitCapacity()).isEqualTo(LIMIT);
+    }
+
+    @Test
+    public void builderLimitCapacityAdjusted() throws Exception {
+        RefillRateLimiterConfig config = RefillRateLimiterConfig.custom()
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(REFRESH_PERIOD)
+            .limitForPeriod(LIMIT)
             .permitCapacity(PERMIT_CAPACITY)
             .build();
 
-        then(config.getLimitForPeriod()).isEqualTo(1);
-        then(config.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(10));
+        Duration adjustedPeriod = REFRESH_PERIOD.dividedBy(LIMIT).multipliedBy(PERMIT_CAPACITY);
+
+        then(config.getLimitForPeriod()).isEqualTo(PERMIT_CAPACITY);
+        then(config.getLimitRefreshPeriod()).isEqualTo(adjustedPeriod);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
         then(config.getPermitCapacity()).isEqualTo(PERMIT_CAPACITY);
     }
@@ -61,8 +77,8 @@ public class RefillRateLimiterConfigTest {
             .limitForPeriod(LIMIT)
             .build();
 
-        then(config.getLimitForPeriod()).isEqualTo(1);
-        then(config.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(10));
+        then(config.getLimitForPeriod()).isEqualTo(LIMIT);
+        then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
         then(config.getPermitCapacity()).isEqualTo(LIMIT);
     }
@@ -75,8 +91,8 @@ public class RefillRateLimiterConfigTest {
             .limitForPeriod(LIMIT)
             .build();
 
-        then(config.getLimitForPeriod()).isEqualTo(1);
-        then(config.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(10));
+        then(config.getLimitForPeriod()).isEqualTo(LIMIT);
+        then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
         then(config.getInitialPermits()).isEqualTo(LIMIT);
     }
