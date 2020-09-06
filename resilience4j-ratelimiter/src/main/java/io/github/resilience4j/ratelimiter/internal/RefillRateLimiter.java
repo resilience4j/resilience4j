@@ -19,7 +19,7 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
@@ -37,11 +37,11 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * {@link RefillRateLimiter} has a max capacity of permits refilled periodically.
- * <p>Each period has duration of {@link RateLimiterConfig#limitRefreshPeriod} in nanoseconds.
+ * <p>Each period has duration of {@link RefillRateLimiterConfig#limitRefreshPeriod} in nanoseconds.
  * <p>By contract the initial {@link RefillRateLimiter.State#activePermissions} are set
- * to be the same with{@link RateLimiterConfig#burstLimit}
+ * to be the same with{@link RefillRateLimiterConfig#burstLimit}
  * <p>A ratio of permit per nanoseconds is calculated using
- * {@link RateLimiterConfig#limitRefreshPeriod} and {@link RateLimiterConfig#limitForPeriod}.
+ * {@link RefillRateLimiterConfig#limitRefreshPeriod} and {@link RefillRateLimiterConfig#limitForPeriod}.
  * On a permit request the permits that should have been replenished are calculated based on the nanos passed and the ratio of nanos per permit.
  * For the {@link RefillRateLimiter} callers it is looks like a token bucket supporting bursts and a gradual refill,
  * under the hood there is some optimisations that will skip this refresh if {@link RefillRateLimiter} is not used actively.
@@ -58,11 +58,11 @@ public class RefillRateLimiter implements RateLimiter {
     private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
 
-    public RefillRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
+    public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig) {
         this(name, rateLimiterConfig, HashMap.empty());
     }
 
-    public RefillRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
+    public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig,
                              Map<String, String> tags) {
         this.name = name;
         this.tags = tags;
@@ -82,7 +82,7 @@ public class RefillRateLimiter implements RateLimiter {
      * Calculate the nanos needed for one permission
      * @param rateLimiterConfig
      */
-    private long calculateNanosPerPermission(RateLimiterConfig rateLimiterConfig) {
+    private long calculateNanosPerPermission(RefillRateLimiterConfig rateLimiterConfig) {
         long permissionsPeriodInNanos = rateLimiterConfig.getLimitRefreshPeriod().toNanos();
         int permissionsInPeriod = rateLimiterConfig.getLimitForPeriod();
 
@@ -94,7 +94,7 @@ public class RefillRateLimiter implements RateLimiter {
      */
     @Override
     public void changeTimeoutDuration(final Duration timeoutDuration) {
-        RateLimiterConfig newConfig = RateLimiterConfig.from(state.get().config)
+        RefillRateLimiterConfig newConfig = RefillRateLimiterConfig.from(state.get().config)
             .timeoutDuration(timeoutDuration)
             .build();
         state.updateAndGet(currentState -> new State(
@@ -108,7 +108,7 @@ public class RefillRateLimiter implements RateLimiter {
      */
     @Override
     public void changeLimitForPeriod(final int limitForPeriod) {
-        RateLimiterConfig newConfig = RateLimiterConfig.from(state.get().config)
+        RefillRateLimiterConfig newConfig = RefillRateLimiterConfig.from(state.get().config)
             .limitForPeriod(limitForPeriod)
             .build();
         state.updateAndGet(currentState -> new State(
@@ -230,7 +230,7 @@ public class RefillRateLimiter implements RateLimiter {
 
     private int calculateNextPermissions(State activeState, long nanosSinceLastUpdate) {
         long accumulatedPermissions = accumulatedPermissions(activeState, nanosSinceLastUpdate);
-        return (int) min(activeState.config.getBurstLimit(), accumulatedPermissions);
+        return (int) min(activeState.config.getPermitCapacity(), accumulatedPermissions);
     }
 
     private long accumulatedPermissions(State activeState, long nanosSinceLastUpdate) {
@@ -364,7 +364,7 @@ public class RefillRateLimiter implements RateLimiter {
      * {@inheritDoc}
      */
     @Override
-    public RateLimiterConfig getRateLimiterConfig() {
+    public RefillRateLimiterConfig getRateLimiterConfig() {
         return state.get().config;
     }
 
@@ -433,14 +433,14 @@ public class RefillRateLimiter implements RateLimiter {
      */
     private static class State {
 
-        private final RateLimiterConfig config;
+        private final RefillRateLimiterConfig config;
 
         private final int activePermissions;
         private final long nanosToWait;
         private final long updatedAt;
         private final long nanosPerPermission;
 
-        public State(RateLimiterConfig config, long nanosPerPermission, int activePermissions, long nanosToWait, long updatedAt) {
+        public State(RefillRateLimiterConfig config, long nanosPerPermission, int activePermissions, long nanosToWait, long updatedAt) {
             this.config = config;
             this.nanosPerPermission = nanosPerPermission;
             this.activePermissions = activePermissions;

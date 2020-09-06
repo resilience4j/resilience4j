@@ -21,6 +21,7 @@ package io.github.resilience4j.ratelimiter.internal;
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -42,7 +43,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(RefillRateLimiter.class)
-public class RefillRateLimiterTest extends RateLimitersImplementationTest {
+public class RefillRateLimiterTest { //extends RateLimitersImplementationTest {
 
     private static final String LIMITER_NAME = "test";
     private static final long PERIOD_IN_NANOS = 250_000_000L;
@@ -57,10 +58,10 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
             .pollInterval(POLL_INTERVAL_IN_NANOS, TimeUnit.NANOSECONDS);
     }
 
-    @Override
-    protected RateLimiter buildRateLimiter(RateLimiterConfig config) {
-        RateLimiterConfig burstBased = RateLimiterConfig.from(config)
-            .burstForPeriod(10)
+    //@Override
+    protected RateLimiter buildRateLimiter(RefillRateLimiterConfig config) {
+        RefillRateLimiterConfig burstBased = RefillRateLimiterConfig.from(config)
+            .permitCapacity(10)
             .initialPermits(0)
             .build();
         return new RefillRateLimiter("refill", burstBased);
@@ -76,7 +77,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
     }
 
     public void setup(Duration periodDuration, Duration timeoutDuration, int permissionPerCycle) {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(permissionPerCycle)
             .limitRefreshPeriod(periodDuration)
             .timeoutDuration(timeoutDuration)
@@ -91,7 +92,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
      */
     @Test
     public void acquireBigNumberOfPermitsAtStartTest() {
-        RateLimiterConfig config = RateLimiterConfig.custom()
+        RefillRateLimiterConfig config = RefillRateLimiterConfig.custom()
             .limitForPeriod(10)
             .initialPermits(0)
             .limitRefreshPeriod(Duration.ofNanos(600_000_000L))
@@ -118,7 +119,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
 
     @Test
     public void notSpyRawTest() {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(PERMISSIONS_IN_PERIOD)
             .limitRefreshPeriod(Duration.ofNanos(PERIOD_IN_NANOS))
             .timeoutDuration(Duration.ZERO)
@@ -158,7 +159,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
 
     @Test
     public void notSpyRawNonBlockingTest() {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(PERMISSIONS_IN_PERIOD)
             .limitRefreshPeriod(Duration.ofNanos(PERIOD_IN_NANOS))
             .timeoutDuration(Duration.ZERO)
@@ -277,7 +278,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
 
     @Test
     public void refillTest() throws InterruptedException {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofMillis(1000))
             .timeoutDuration(Duration.ZERO)
@@ -295,9 +296,9 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
 
     @Test
     public void testMaxCapacity() throws InterruptedException {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(10)
-            .burstForPeriod(20)
+            .permitCapacity(20)
             .limitRefreshPeriod(Duration.ofMillis(1000))
             .timeoutDuration(Duration.ZERO)
             .build();
@@ -313,7 +314,7 @@ public class RefillRateLimiterTest extends RateLimitersImplementationTest {
 
     @Test
     public void testZeroInitialPermits() throws InterruptedException {
-        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .initialPermits(0)
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofMillis(1000))
