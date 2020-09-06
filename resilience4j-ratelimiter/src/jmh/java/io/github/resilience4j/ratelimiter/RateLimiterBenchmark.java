@@ -21,7 +21,6 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.github.resilience4j.ratelimiter.internal.RefillRateLimiter;
 import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
-import io.github.resilience4j.ratelimiter.internal.SmoothBurstyRateLimiter;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.profile.GCProfiler;
@@ -47,12 +46,10 @@ public class RateLimiterBenchmark {
     private RateLimiter semaphoreBasedRateLimiter;
     private AtomicRateLimiter atomicRateLimiter;
     private RefillRateLimiter refillRateLimiter;
-    private SmoothBurstyRateLimiter smoothBurstyRateLimiter;
 
     private Supplier<String> semaphoreGuardedSupplier;
     private Supplier<String> atomicGuardedSupplier;
     private Supplier<String> refillGuardedSupplier;
-    private Supplier<String> smoothBurstyGuardedSupplier;
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
@@ -68,12 +65,17 @@ public class RateLimiterBenchmark {
             .limitRefreshPeriod(Duration.ofNanos(10))
             .timeoutDuration(Duration.ofSeconds(5))
             .build();
+
+        RefillRateLimiterConfig refillRateLimiterConfig = RefillRateLimiterConfig.custom()
+            .limitForPeriod(Integer.MAX_VALUE)
+            .limitRefreshPeriod(Duration.ofNanos(10))
+            .timeoutDuration(Duration.ofSeconds(5))
+            .build();
+
         semaphoreBasedRateLimiter = new SemaphoreBasedRateLimiter("semaphoreBased",
             rateLimiterConfig);
         atomicRateLimiter = new AtomicRateLimiter("atomicBased", rateLimiterConfig);
-        refillRateLimiter = new RefillRateLimiter("refillBased", rateLimiterConfig);
-        smoothBurstyRateLimiter = new SmoothBurstyRateLimiter("smoothBurstyBased",
-            rateLimiterConfig);
+        refillRateLimiter = new RefillRateLimiter("refillBased", refillRateLimiterConfig);
 
         Supplier<String> stringSupplier = () -> {
             Blackhole.consumeCPU(1);
@@ -83,7 +85,6 @@ public class RateLimiterBenchmark {
             .decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
         atomicGuardedSupplier = RateLimiter.decorateSupplier(atomicRateLimiter, stringSupplier);
         refillGuardedSupplier = RateLimiter.decorateSupplier(refillRateLimiter, stringSupplier);
-        smoothBurstyGuardedSupplier = RateLimiter.decorateSupplier(smoothBurstyRateLimiter, stringSupplier);
     }
 
     @Benchmark
@@ -112,15 +113,6 @@ public class RateLimiterBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String refillPermission() {
         return refillGuardedSupplier.get();
-    }
-
-    @Benchmark
-    @Threads(value = THREAD_COUNT)
-    @Warmup(iterations = WARMUP_COUNT)
-    @Fork(value = FORK_COUNT)
-    @Measurement(iterations = ITERATION_COUNT)
-    public String smoothBurstyPermission() {
-        return smoothBurstyGuardedSupplier.get();
     }
 
 }
