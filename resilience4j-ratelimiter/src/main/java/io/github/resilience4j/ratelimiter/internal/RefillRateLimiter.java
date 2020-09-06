@@ -39,7 +39,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * {@link RefillRateLimiter} has a max capacity of permits refilled periodically.
  * <p>Each period has duration of {@link RefillRateLimiterConfig#limitRefreshPeriod} in nanoseconds.
  * <p>By contract the initial {@link RefillRateLimiter.State#activePermissions} are set
- * to be the same with{@link RefillRateLimiterConfig#burstLimit}
+ * to be the same with{@link RefillRateLimiterConfig#permitCapacity}
  * <p>A ratio of permit per nanoseconds is calculated using
  * {@link RefillRateLimiterConfig#limitRefreshPeriod} and {@link RefillRateLimiterConfig#limitForPeriod}.
  * On a permit request the permits that should have been replenished are calculated based on the nanos passed and the ratio of nanos per permit.
