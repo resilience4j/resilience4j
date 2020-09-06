@@ -22,8 +22,6 @@ import io.github.resilience4j.ratelimiter.internal.RefillRateLimiter;
 
 import java.time.Duration;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * {@link RefillRateLimiter} is a permission rate based Rate Limiter.
  * Instead of resetting permits based on a permission period the permission release is based on a rate.
@@ -32,15 +30,11 @@ import static java.util.Objects.requireNonNull;
  */
 public class RefillRateLimiterConfig extends RateLimiterConfig {
 
-    private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
-    private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
-    private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
     private final int permitCapacity;
     private final int initialPermits;
     private final long nanosPerPermission;
-    private final boolean writableStackTraceEnabled;
 
     private RefillRateLimiterConfig(Duration timeoutDuration, int permitCapacity, long nanosPerPermission,
                                     int initialPermits, boolean writableStackTraceEnabled) {
@@ -48,7 +42,6 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         this.permitCapacity = permitCapacity;
         this.initialPermits = initialPermits;
         this.nanosPerPermission = nanosPerPermission;
-        this.writableStackTraceEnabled = writableStackTraceEnabled;
     }
 
     /**
@@ -79,20 +72,6 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         return new RefillRateLimiterConfig.Builder().build();
     }
 
-    private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
-        return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
-    }
-
-    private static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
-        requireNonNull(limitRefreshPeriod, LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL);
-        boolean refreshPeriodIsTooShort =
-            limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
-        if (refreshPeriodIsTooShort) {
-            throw new IllegalArgumentException("LimitRefreshPeriod is too short");
-        }
-        return limitRefreshPeriod;
-    }
-
     private static int checkLimitForPeriod(final int limitForPeriod) {
         if (limitForPeriod < 1) {
             throw new IllegalArgumentException("LimitForPeriod should be greater than 0");
@@ -108,17 +87,13 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         return initialPermits;
     }
 
-    public boolean isWritableStackTraceEnabled() {
-        return writableStackTraceEnabled;
-    }
-
     @Override
     public String toString() {
         return "RefillRateLimiterConfig{" +
             "timeoutDuration=" + getTimeoutDuration() +
             ", permitCapacity=" + permitCapacity +
             ", nanosPerPermission="+ nanosPerPermission +
-            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            ", writableStackTraceEnabled=" + isWritableStackTraceEnabled() +
             '}';
     }
 
@@ -140,7 +115,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
             this.limitRefreshPeriod = Duration.ofNanos(prototype.nanosPerPermission);
             this.limitForPeriod = 1;
             this.permitCapacity = prototype.permitCapacity;
-            this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
+            this.writableStackTraceEnabled = prototype.isWritableStackTraceEnabled();
         }
 
         /**

@@ -70,11 +70,11 @@ public class RateLimiterConfig {
         return new Builder().build();
     }
 
-    private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
+    protected static Duration checkTimeoutDuration(final Duration timeoutDuration) {
         return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
     }
 
-    private static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
+    protected static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
         requireNonNull(limitRefreshPeriod, LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL);
         boolean refreshPeriodIsTooShort =
             limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
