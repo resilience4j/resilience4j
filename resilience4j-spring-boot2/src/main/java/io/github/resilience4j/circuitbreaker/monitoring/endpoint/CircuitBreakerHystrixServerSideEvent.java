@@ -21,12 +21,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerHystrixStreamEventsDTO;
-import io.vavr.collection.Seq;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.function.BiFunction;
@@ -61,13 +59,12 @@ public class CircuitBreakerHystrixServerSideEvent {
 
     @ReadOperation(produces = "text/event-stream")
     public Flux<ServerSentEvent<String>> getAllCircuitBreakerHystrixStreamEvents() {
-        Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
-            .map(
+        Flux<CircuitBreakerEvent> eventStreams = Flux.fromIterable(circuitBreakerRegistry.getAllCircuitBreakers())
+            .flatMap(
                 circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
-        Flux<CircuitBreakerEvent> eventStream = Flux.merge(eventStreams);
         BiFunction<CircuitBreakerEvent, CircuitBreaker, String> data = getCircuitBreakerEventStringFunction();
-        return eventStream.map(
+        return eventStreams.map(
             cbEvent -> ServerSentEvent.<String>builder()
                 .id(cbEvent.getCircuitBreakerName())
                 .event(cbEvent.getEventType().name())
@@ -80,14 +77,14 @@ public class CircuitBreakerHystrixServerSideEvent {
     public Flux<ServerSentEvent<String>> getHystrixStreamEventsFilteredByCircuitBreakerName(
         @Selector String name) {
         CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
-        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
+        Flux<CircuitBreakerEvent> eventStream = Flux.fromIterable(circuitBreakerRegistry.getAllCircuitBreakers())
             .filter(
                 circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName())
-            ).map(
+            ).flatMap(
                 circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
         BiFunction<CircuitBreakerEvent, CircuitBreaker, String> data = getCircuitBreakerEventStringFunction();
-        return Flux.merge(eventStream).map(
+        return eventStream.map(
             cbEvent -> ServerSentEvent.<String>builder()
                 .id(cbEvent.getCircuitBreakerName())
                 .event(cbEvent.getEventType().name())
@@ -101,13 +98,13 @@ public class CircuitBreakerHystrixServerSideEvent {
         @Selector String name, @Selector String eventType) {
 
         CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
-        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
+        Flux<CircuitBreakerEvent> eventStream = Flux.fromIterable(circuitBreakerRegistry.getAllCircuitBreakers())
             .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
-            .map(
+            .flatMap(
                 circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
         BiFunction<CircuitBreakerEvent, CircuitBreaker, String> data = getCircuitBreakerEventStringFunction();
-        return Flux.merge(eventStream)
+        return eventStream
             .filter(event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase()))
             .map(cbEvent -> ServerSentEvent.<String>builder()
                 .id(cbEvent.getCircuitBreakerName())

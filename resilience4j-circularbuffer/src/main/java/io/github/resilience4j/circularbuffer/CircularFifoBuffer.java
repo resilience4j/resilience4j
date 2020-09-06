@@ -18,8 +18,8 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import io.vavr.collection.List;
-import io.vavr.control.Option;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A {@link CircularFifoBuffer} is a first in first out buffer with a fixed size that replaces its
@@ -66,10 +66,10 @@ public interface CircularFifoBuffer<T> {
     void add(T element);
 
     /**
-     * Retrieves and removes the head of this queue, or returns {@link Option.None} if this queue is
+     * Retrieves and removes the head of this queue, or returns {@link Optional#empty()} if this queue is
      * empty.
      *
-     * @return the head of this queue, or {@link Option.None} if this queue is empty
+     * @return the head of this queue, or {@link Optional#empty()} empty} if this queue is empty
      */
-    Option<T> take();
+    Optional<T> take();
 }

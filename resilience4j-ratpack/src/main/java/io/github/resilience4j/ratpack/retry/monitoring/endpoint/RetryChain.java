@@ -19,7 +19,6 @@ package io.github.resilience4j.ratpack.retry.monitoring.endpoint;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTO;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTOFactory;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.reactor.adapter.ReactorAdapter;
@@ -37,6 +36,7 @@ import reactor.core.publisher.Flux;
 import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Provides event and stream event endpoints for circuitbreaker events.
@@ -60,10 +60,13 @@ public class RetryChain implements Action<Chain> {
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                 Promise.<RetryEventsEndpointResponse>async(d -> {
-                    List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
+                    List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
+                        .flatMap(retryEventCircularEventConsumer -> retryEventCircularEventConsumer
+                            .getBufferedEvents()
+                            .stream())
                         .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-                        .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList();
+                        .map(RetryEventDTOFactory::createRetryEventDTO)
+                        .collect(Collectors.toList());
                     d.success(new RetryEventsEndpointResponse(eventsList));
                 }).then(r -> ctx.render(Jackson.json(r)))
             );
@@ -85,8 +88,10 @@ public class RetryChain implements Action<Chain> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(retryName)
                             .getBufferedEvents()
+                            .stream()
                             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-                            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList();
+                            .map(RetryEventDTOFactory::createRetryEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new RetryEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }
@@ -115,10 +120,12 @@ public class RetryChain implements Action<Chain> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(retryName)
                             .getBufferedEvents()
+                            .stream()
                             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
                             .filter(event -> event.getEventType() == RetryEvent.Type
                                 .valueOf(eventType.toUpperCase()))
-                            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList();
+                            .map(RetryEventDTOFactory::createRetryEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new RetryEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }

@@ -21,7 +21,8 @@ package io.github.resilience4j.consumer;
 import io.github.resilience4j.circularbuffer.CircularFifoBuffer;
 import io.github.resilience4j.circularbuffer.ConcurrentCircularFifoBuffer;
 import io.github.resilience4j.core.EventConsumer;
-import io.vavr.collection.List;
+
+import java.util.List;
 
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
