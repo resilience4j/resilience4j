@@ -72,13 +72,6 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         return new RefillRateLimiterConfig.Builder().build();
     }
 
-    private static int checkLimitForPeriod(final int limitForPeriod) {
-        if (limitForPeriod < 1) {
-            throw new IllegalArgumentException("LimitForPeriod should be greater than 0");
-        }
-        return limitForPeriod;
-    }
-
     public int getPermitCapacity() {
         return permitCapacity;
     }

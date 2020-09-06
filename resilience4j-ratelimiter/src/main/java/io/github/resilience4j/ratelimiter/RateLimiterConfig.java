@@ -84,7 +84,7 @@ public class RateLimiterConfig {
         return limitRefreshPeriod;
     }
 
-    private static int checkLimitForPeriod(final int limitForPeriod) {
+    protected static int checkLimitForPeriod(final int limitForPeriod) {
         if (limitForPeriod < 1) {
             throw new IllegalArgumentException("LimitForPeriod should be greater than 0");
         }
