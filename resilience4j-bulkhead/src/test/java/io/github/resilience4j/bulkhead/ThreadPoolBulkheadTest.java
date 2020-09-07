@@ -19,7 +19,6 @@
 package io.github.resilience4j.bulkhead;
 
 import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
 import org.junit.Before;
@@ -27,7 +26,6 @@ import org.junit.Test;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -55,47 +53,48 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void shouldExecuteSupplierAndFailWithBulkHeadFull() {
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("testSupplier", config);
+    public void shouldExecuteRunnableAndFailWithBulkHeadFull() throws InterruptedException {
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
-        final Exception exception = new Exception();
+        final AtomicReference<Exception> exception = new AtomicReference<>();
 
-        new Thread(() -> {
+        Thread first = new Thread(() -> {
             try {
-                final AtomicInteger counter = new AtomicInteger(0);
-                bulkhead.executeRunnable(() -> {
-                    Awaitility.waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS)
-                        .until(() -> counter.incrementAndGet() > 1);
-                });
+                bulkhead.executeRunnable(() -> Try.run(() -> Thread.sleep(200)));
             } catch (Exception e) {
-                exception.initCause(e);
+                exception.set(e);
             }
-        }).start();
-        new Thread(() -> {
-            try {
-                bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
-            } catch (Exception e) {
-                exception.initCause(e);
-            }
-        }).start();
-        new Thread(() -> {
-            try {
-                bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
-            } catch (Exception e) {
-                exception.initCause(e);
-            }
-        }).start();
 
-        final AtomicInteger counter = new AtomicInteger(0);
-        Awaitility.waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(() -> counter.incrementAndGet() >= 2);
-        assertThat(exception.getCause().getMessage())
-            .contains("Bulkhead 'testSupplier' is full and does not permit further calls");
+        });
+        first.start();
+
+        Thread second = new Thread(() -> {
+            try {
+                bulkhead.executeRunnable(helloWorldService::returnHelloWorld);
+            } catch (Exception e) {
+                exception.set(e);
+            }
+        });
+        second.start();
+
+        Thread third = new Thread(() -> {
+            try {
+                bulkhead.executeRunnable(helloWorldService::returnHelloWorld);
+            } catch (Exception e) {
+                exception.set(e);
+            }
+        });
+        third.start();
+
+        first.join(100);
+        second.join(100);
+        third.join(100);
+
+        assertThat(exception.get()).isInstanceOf(BulkheadFullException.class);
     }
 
-
     @Test
-    public void shouldExecuteCallableAndFailWithBulkHeadFull() throws InterruptedException {
+    public void shouldExecuteSupplierAndFailWithBulkHeadFull() throws InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
@@ -108,7 +107,47 @@ public class ThreadPoolBulkheadTest {
             }
 
         });
-        first.setDaemon(true);
+        first.start();
+
+        Thread second = new Thread(() -> {
+            try {
+                bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
+            } catch (Exception e) {
+                exception.set(e);
+            }
+        });
+        second.start();
+
+        Thread third = new Thread(() -> {
+            try {
+                bulkhead.executeSupplier(helloWorldService::returnHelloWorld);
+            } catch (Exception e) {
+                exception.set(e);
+            }
+        });
+        third.start();
+
+        first.join(100);
+        second.join(100);
+        third.join(100);
+
+        assertThat(exception.get()).isInstanceOf(BulkheadFullException.class);
+    }
+
+    @Test
+    public void shouldExecuteCallableAndFailWithBulkHeadFull() throws InterruptedException {
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        final AtomicReference<Exception> exception = new AtomicReference<>();
+
+        Thread first = new Thread(() -> {
+            try {
+                bulkhead.executeCallable(() -> Try.run(() -> Thread.sleep(200)));
+            } catch (Exception e) {
+                exception.set(e);
+            }
+
+        });
         first.start();
 
         Thread second = new Thread(() -> {
@@ -118,7 +157,6 @@ public class ThreadPoolBulkheadTest {
                 exception.set(e);
             }
         });
-        second.setDaemon(true);
         second.start();
 
         Thread third = new Thread(() -> {
@@ -128,7 +166,6 @@ public class ThreadPoolBulkheadTest {
                 exception.set(e);
             }
         });
-        third.setDaemon(true);
         third.start();
 
         first.join(100);

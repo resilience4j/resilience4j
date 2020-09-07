@@ -109,8 +109,9 @@ public class RateLimiterAutoConfigurationTest {
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
             .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
 
-        assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(3)
-            .containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
+        assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(4)
+            .containsExactly("backendA", "backendB", "backendCustomizer",
+                "rateLimiterDummyFeignClient");
 
         try {
             for (int i = 0; i < 11; i++) {
@@ -173,8 +174,9 @@ public class RateLimiterAutoConfigurationTest {
         ResponseEntity<RateLimiterEndpointResponse> rateLimiterList = restTemplate
             .getForEntity("/actuator/ratelimiters", RateLimiterEndpointResponse.class);
 
-        assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(3)
-            .containsExactly("backendA", "backendB", "rateLimiterDummyFeignClient");
+        assertThat(rateLimiterList.getBody().getRateLimiters()).hasSize(4)
+            .containsExactly("backendA", "backendB", "backendCustomizer",
+                "rateLimiterDummyFeignClient");
 
         try {
             for (int i = 0; i < 11; i++) {
@@ -198,5 +200,10 @@ public class RateLimiterAutoConfigurationTest {
             .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
 
         assertThat(rateLimiterAspect.getOrder()).isEqualTo(401);
+
+        // test the customizer impact for specific instance
+        RateLimiter backendCustomizer = rateLimiterRegistry.rateLimiter("backendCustomizer");
+        assertThat(backendCustomizer.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(200);
+
     }
 }

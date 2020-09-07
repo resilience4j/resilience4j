@@ -76,4 +76,10 @@ public class RetryDummyService implements TestDummyService {
     public Flowable<String> flowable() {
         return flowableError();
     }
+
+    @Override
+    @Retry(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String spelSync(String backend) {
+        return syncError();
+    }
 }

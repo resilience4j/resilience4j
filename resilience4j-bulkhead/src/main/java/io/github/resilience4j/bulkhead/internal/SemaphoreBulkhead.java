@@ -73,7 +73,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      *
      * @param name           the name of this bulkhead
      * @param bulkheadConfig custom bulkhead configuration
-     * @param tags           the tags to add to the Bulkdhead
+     * @param tags           the tags to add to the Bulkhead
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig,
         Map<String, String> tags) {
@@ -81,7 +81,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
         this.tags = requireNonNull(tags, TAGS_MUST_NOTE_BE_NULL);
         // init semaphore
-        this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
+        this.semaphore = new Semaphore(config.getMaxConcurrentCalls(), config.isFairCallHandlingEnabled());
 
         this.metrics = new BulkheadMetrics();
         this.eventProcessor = new BulkheadEventProcessor();
@@ -230,21 +230,14 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @return true if caller was able to wait for permission without {@link Thread#interrupt}
      */
     boolean tryEnterBulkhead() {
-
-        boolean callPermitted;
         long timeout = config.getMaxWaitDuration().toMillis();
 
-        if (timeout == 0) {
-            callPermitted = semaphore.tryAcquire();
-        } else {
-            try {
-                callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                callPermitted = false;
-            }
+        try {
+            return semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
         }
-        return callPermitted;
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {

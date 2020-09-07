@@ -22,14 +22,23 @@ public class RetryOnRetryEvent extends AbstractRetryEvent {
         return Type.RETRY;
     }
 
+    /**
+     * Returns the interval used to wait before next retry.
+     *
+     * @return the wait interval
+     */
+    public Duration getWaitInterval() {
+        return waitInterval;
+    }
+
     @Override
     public String toString() {
         return String.format(
-            "%s: Retry '%s', waiting %s until attempt #%d. Last attempt failed with exception %s",
+            "%s: Retry '%s', waiting %s until attempt '%d'. Last attempt failed with exception '%s'.",
             getCreationTime(),
             getName(),
-            waitInterval,
+            getWaitInterval(),
             getNumberOfRetryAttempts(),
-            getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            getLastThrowable());
     }
 }

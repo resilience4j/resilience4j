@@ -6,9 +6,12 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
@@ -17,14 +20,23 @@ public class TimeLimiterImpl implements TimeLimiter {
     private static final Logger LOG = LoggerFactory.getLogger(TimeLimiterImpl.class);
 
     private final String name;
+    private final Map<String, String> tags;
     private final TimeLimiterConfig timeLimiterConfig;
     private final TimeLimiterEventProcessor eventProcessor;
 
     public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig) {
+        this(name, timeLimiterConfig, HashMap.empty());
+
+    }
+
+    public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig,
+        io.vavr.collection.Map<String, String> tags) {
         this.name = name;
+        this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.timeLimiterConfig = timeLimiterConfig;
         this.eventProcessor = new TimeLimiterEventProcessor();
     }
+
 
     @Override
     public <T, F extends Future<T>> Callable<T> decorateFutureSupplier(Supplier<F> futureSupplier) {
@@ -36,11 +48,13 @@ public class TimeLimiterImpl implements TimeLimiter {
                 onSuccess();
                 return result;
             } catch (TimeoutException e) {
-                onError(e);
+                TimeoutException timeoutException = createdTimeoutExceptionWithName(name);
+                timeoutException.setStackTrace(e.getStackTrace());
+                onError(timeoutException);
                 if (getTimeLimiterConfig().shouldCancelRunningFuture()) {
                     future.cancel(true);
                 }
-                throw e;
+                throw timeoutException;
             } catch (ExecutionException e) {
                 Throwable t = e.getCause();
                 if (t == null) {
@@ -64,7 +78,7 @@ public class TimeLimiterImpl implements TimeLimiter {
             CompletableFuture<T> future = supplier.get().toCompletableFuture();
             ScheduledFuture<?> timeoutFuture =
                 Timeout
-                    .of(future, scheduler, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
+                    .of(future, scheduler, name, getTimeLimiterConfig().getTimeoutDuration().toMillis(),
                         TimeUnit.MILLISECONDS);
 
             return future.whenComplete((result, throwable) -> {
@@ -99,6 +113,11 @@ public class TimeLimiterImpl implements TimeLimiter {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     @Override
@@ -160,14 +179,17 @@ public class TimeLimiterImpl implements TimeLimiter {
         }
 
         static ScheduledFuture<?> of(
-            CompletableFuture<?> future, ScheduledExecutorService scheduler, long delay,
+            CompletableFuture<?> future, ScheduledExecutorService scheduler, String name, long delay,
             TimeUnit unit) {
             return scheduler.schedule(() -> {
                 if (future != null && !future.isDone()) {
-                    future.completeExceptionally(new TimeoutException());
+                    future.completeExceptionally(createdTimeoutExceptionWithName(name));
                 }
             }, delay, unit);
         }
     }
 
+    static TimeoutException createdTimeoutExceptionWithName(String name) {
+        return new TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception." , name));
+    }
 }

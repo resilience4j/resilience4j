@@ -9,6 +9,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,11 +65,11 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
     @Configuration
     public static class ConfigWithOverrides {
 
-        public CircuitBreakerRegistry circuitBreakerRegistry;
+        CircuitBreakerRegistry circuitBreakerRegistry;
 
-        public CircuitBreakerAspect circuitBreakerAspect;
+        CircuitBreakerAspect circuitBreakerAspect;
 
-        public EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
+        EventConsumerRegistry<CircuitBreakerEvent> circuitEventConsumerBreakerRegistry;
 
         @Bean
         public CircuitBreakerRegistry circuitBreakerRegistry() {
@@ -80,9 +81,10 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
         public CircuitBreakerAspect circuitBreakerAspect(
             CircuitBreakerRegistry circuitBreakerRegistry,
             @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-            FallbackDecorators recoveryDecorators) {
+            FallbackDecorators recoveryDecorators,
+            SpelResolver spelResolver) {
             circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(),
-                circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators);
+                circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators, spelResolver);
             return circuitBreakerAspect;
         }
 

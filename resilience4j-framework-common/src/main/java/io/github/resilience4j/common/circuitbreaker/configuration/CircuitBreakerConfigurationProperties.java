@@ -19,6 +19,8 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
+import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -36,7 +38,7 @@ import java.util.function.Predicate;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
 
-public class CircuitBreakerConfigurationProperties {
+public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -49,26 +51,38 @@ public class CircuitBreakerConfigurationProperties {
         return Optional.ofNullable(instanceProperties);
     }
 
-    public CircuitBreakerConfig createCircuitBreakerConfig(InstanceProperties instanceProperties) {
+    public CircuitBreakerConfig createCircuitBreakerConfig(String backendName,
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(instanceProperties, baseProperties);
+            return buildConfigFromBaseConfig(instanceProperties, baseProperties,
+                compositeCircuitBreakerCustomizer,
+                backendName);
         }
-        return buildConfig(custom(), instanceProperties);
+        return buildConfig(custom(), instanceProperties, compositeCircuitBreakerCustomizer,
+            backendName);
     }
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
-        InstanceProperties baseProperties) {
+        InstanceProperties baseProperties,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
+        String backendName) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties);
-        return buildConfig(from(baseConfig), instanceProperties);
+        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties,
+            compositeCircuitBreakerCustomizer,
+            backendName);
+        return buildConfig(from(baseConfig), instanceProperties, compositeCircuitBreakerCustomizer,
+            backendName);
     }
 
     @SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
-    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties) {
+    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
+        String backendName) {
         if (properties == null) {
             return builder.build();
         }
@@ -95,6 +109,10 @@ public class CircuitBreakerConfigurationProperties {
 
         if (properties.getSlowCallDurationThreshold() != null) {
             builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
+        }
+
+        if (properties.getMaxWaitDurationInHalfOpenState() != null) {
+            builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
         }
 
         if (properties.getRingBufferSizeInClosedState() != null) {
@@ -138,7 +156,8 @@ public class CircuitBreakerConfigurationProperties {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
                 properties.automaticTransitionFromOpenToHalfOpenEnabled);
         }
-
+        compositeCircuitBreakerCustomizer.getCustomizer(backendName).ifPresent(
+            circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
         return builder.build();
     }
 
@@ -156,32 +175,36 @@ public class CircuitBreakerConfigurationProperties {
         if (properties.getWaitDurationInOpenState() != null
             && properties.getWaitDurationInOpenState().toMillis() > 0) {
             Duration waitDuration = properties.getWaitDurationInOpenState();
-            if (properties.getEnableExponentialBackoff() != null && properties
-                .getEnableExponentialBackoff()) {
-                if (properties.getExponentialBackoffMultiplier() != null) {
-                    builder.waitIntervalFunctionInOpenState(IntervalFunction
-                        .ofExponentialBackoff(waitDuration.toMillis(),
-                            properties.getExponentialBackoffMultiplier()));
-                } else {
-                    builder.waitIntervalFunctionInOpenState(IntervalFunction
-                        .ofExponentialBackoff(properties.getWaitDurationInOpenState().toMillis()));
-                }
-            } else if (properties.getEnableRandomizedWait() != null && properties
-                .getEnableRandomizedWait()) {
-                if (properties.getRandomizedWaitFactor() != null) {
-                    builder.waitIntervalFunctionInOpenState(IntervalFunction
-                        .ofRandomized(waitDuration.toMillis(),
-                            properties.getRandomizedWaitFactor()));
-                } else {
-                    builder.waitIntervalFunctionInOpenState(
-                        IntervalFunction.ofRandomized(waitDuration));
-                }
+            if (properties.getEnableExponentialBackoff() != null
+                && properties.getEnableExponentialBackoff()) {
+                configureEnableExponentialBackoff(properties, builder, waitDuration);
+            } else if (properties.getEnableRandomizedWait() != null
+                && properties.getEnableRandomizedWait()) {
+                configureEnableRandomizedWait(properties, builder, waitDuration);
             } else {
                 builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
             }
         }
     }
 
+    private void configureEnableExponentialBackoff(InstanceProperties properties, Builder builder, Duration waitDuration) {
+        if (properties.getExponentialBackoffMultiplier() != null) {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
+        } else {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofExponentialBackoff(properties.getWaitDurationInOpenState().toMillis()));
+        }
+    }
+
+    private void configureEnableRandomizedWait(InstanceProperties properties, Builder builder, Duration waitDuration) {
+        if (properties.getRandomizedWaitFactor() != null) {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
+        } else {
+            builder.waitIntervalFunctionInOpenState(IntervalFunction.ofRandomized(waitDuration));
+        }
+    }
 
     private void buildRecordFailurePredicate(InstanceProperties properties, Builder builder) {
         if (properties.getRecordFailurePredicate() != null) {
@@ -226,6 +249,9 @@ public class CircuitBreakerConfigurationProperties {
         private Duration slowCallDurationThreshold;
 
         @Nullable
+        private Duration maxWaitDurationInHalfOpenState;
+
+        @Nullable
         private Float failureRateThreshold;
 
         @Nullable
@@ -258,6 +284,9 @@ public class CircuitBreakerConfigurationProperties {
 
         @Nullable
         private Boolean writableStackTraceEnabled;
+
+        @Nullable
+        private Boolean allowHealthIndicatorToFail;
 
         @Nullable
         private Integer eventConsumerBufferSize;
@@ -296,7 +325,6 @@ public class CircuitBreakerConfigurationProperties {
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
-
 
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.
@@ -470,6 +498,30 @@ public class CircuitBreakerConfigurationProperties {
             return this;
         }
 
+        /**
+         * @return the flag that controls if health indicators are allowed to go into a failed
+         * (DOWN) status.
+         * @see #setAllowHealthIndicatorToFail(Boolean)
+         */
+        @Nullable
+        public Boolean getAllowHealthIndicatorToFail() {
+            return allowHealthIndicatorToFail;
+        }
+
+        /**
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status. By
+         * default, health indicators for circuit breakers will never go into an unhealthy state.
+         *
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to
+         *                                   fail
+         * @return the InstanceProperties
+         */
+        public InstanceProperties setAllowHealthIndicatorToFail(
+            Boolean allowHealthIndicatorToFail) {
+            this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
+            return this;
+        }
+
         @Nullable
         public Boolean getRegisterHealthIndicator() {
             return registerHealthIndicator;
@@ -540,7 +592,7 @@ public class CircuitBreakerConfigurationProperties {
             return permittedNumberOfCallsInHalfOpenState;
         }
 
-        public void setPermittedNumberOfCallsInHalfOpenState(
+        public InstanceProperties setPermittedNumberOfCallsInHalfOpenState(
             Integer permittedNumberOfCallsInHalfOpenState) {
             Objects.requireNonNull(permittedNumberOfCallsInHalfOpenState);
             if (permittedNumberOfCallsInHalfOpenState < 1) {
@@ -549,6 +601,7 @@ public class CircuitBreakerConfigurationProperties {
             }
 
             this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
+            return this;
         }
 
         @Nullable
@@ -556,7 +609,7 @@ public class CircuitBreakerConfigurationProperties {
             return minimumNumberOfCalls;
         }
 
-        public void setMinimumNumberOfCalls(Integer minimumNumberOfCalls) {
+        public InstanceProperties setMinimumNumberOfCalls(Integer minimumNumberOfCalls) {
             Objects.requireNonNull(minimumNumberOfCalls);
             if (minimumNumberOfCalls < 1) {
                 throw new IllegalArgumentException(
@@ -564,6 +617,7 @@ public class CircuitBreakerConfigurationProperties {
             }
 
             this.minimumNumberOfCalls = minimumNumberOfCalls;
+            return this;
         }
 
         @Nullable
@@ -571,7 +625,7 @@ public class CircuitBreakerConfigurationProperties {
             return slidingWindowSize;
         }
 
-        public void setSlidingWindowSize(Integer slidingWindowSize) {
+        public InstanceProperties setSlidingWindowSize(Integer slidingWindowSize) {
             Objects.requireNonNull(slidingWindowSize);
             if (slidingWindowSize < 1) {
                 throw new IllegalArgumentException(
@@ -579,6 +633,7 @@ public class CircuitBreakerConfigurationProperties {
             }
 
             this.slidingWindowSize = slidingWindowSize;
+            return this;
         }
 
         @Nullable
@@ -586,7 +641,7 @@ public class CircuitBreakerConfigurationProperties {
             return slowCallRateThreshold;
         }
 
-        public void setSlowCallRateThreshold(Float slowCallRateThreshold) {
+        public InstanceProperties setSlowCallRateThreshold(Float slowCallRateThreshold) {
             Objects.requireNonNull(slowCallRateThreshold);
             if (slowCallRateThreshold < 1 || slowCallRateThreshold > 100) {
                 throw new IllegalArgumentException(
@@ -594,6 +649,7 @@ public class CircuitBreakerConfigurationProperties {
             }
 
             this.slowCallRateThreshold = slowCallRateThreshold;
+            return this;
         }
 
         @Nullable
@@ -601,7 +657,12 @@ public class CircuitBreakerConfigurationProperties {
             return slowCallDurationThreshold;
         }
 
-        public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
+        @Nullable
+        public Duration getMaxWaitDurationInHalfOpenState() {
+            return maxWaitDurationInHalfOpenState;
+        }
+
+        public InstanceProperties setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
             Objects.requireNonNull(slowCallDurationThreshold);
             if (slowCallDurationThreshold.toNanos() < 1) {
                 throw new IllegalArgumentException(
@@ -609,6 +670,18 @@ public class CircuitBreakerConfigurationProperties {
             }
 
             this.slowCallDurationThreshold = slowCallDurationThreshold;
+            return this;
+        }
+
+        public InstanceProperties setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+            Objects.requireNonNull(maxWaitDurationInHalfOpenState);
+            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
+                throw new IllegalArgumentException(
+                    "maxWaitDurationInHalfOpenState must be greater than or equal to 1 ms.");
+            }
+
+            this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
+            return this;
         }
 
         @Nullable
@@ -616,8 +689,9 @@ public class CircuitBreakerConfigurationProperties {
             return slidingWindowType;
         }
 
-        public void setSlidingWindowType(SlidingWindowType slidingWindowType) {
+        public InstanceProperties setSlidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
+            return this;
         }
 
 

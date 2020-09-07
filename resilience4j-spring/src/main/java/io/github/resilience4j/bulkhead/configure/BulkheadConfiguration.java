@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 lespinsideg
+ * Copyright 2019 lespinsideg, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,21 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
 
 import java.util.ArrayList;
@@ -43,8 +48,15 @@ import java.util.stream.Collectors;
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class})
+@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class, SpelResolverConfiguration.class})
 public class BulkheadConfiguration {
+
+    @Bean
+    @Qualifier("compositeBulkheadCustomizer")
+    public CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer(
+        @Autowired(required = false) List<BulkheadConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
 
     /**
      * @param bulkheadConfigurationProperties bulk head spring configuration properties
@@ -55,14 +67,17 @@ public class BulkheadConfiguration {
     public BulkheadRegistry bulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
-        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        @Qualifier("compositeBulkheadCustomizer") CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         BulkheadRegistry bulkheadRegistry = createBulkheadRegistry(bulkheadConfigurationProperties,
-            bulkheadRegistryEventConsumer);
+            bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
-        bulkheadConfigurationProperties.getInstances().forEach(
-            (name, properties) -> bulkheadRegistry
-                .bulkhead(name, bulkheadConfigurationProperties.createBulkheadConfig(properties)));
+        bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
+            bulkheadRegistry
+                .bulkhead(name, bulkheadConfigurationProperties
+                    .createBulkheadConfig(properties, compositeBulkheadCustomizer,
+                        name)));
         return bulkheadRegistry;
     }
 
@@ -78,16 +93,19 @@ public class BulkheadConfiguration {
      * Initializes a bulkhead registry.
      *
      * @param bulkheadConfigurationProperties The bulkhead configuration properties.
+     * @param compositeBulkheadCustomizer
      * @return a BulkheadRegistry
      */
     private BulkheadRegistry createBulkheadRegistry(
         BulkheadConfigurationProperties bulkheadConfigurationProperties,
-        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer) {
+        RegistryEventConsumer<Bulkhead> bulkheadRegistryEventConsumer,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer) {
         Map<String, BulkheadConfig> configs = bulkheadConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue())));
-
-        return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer);
+                entry -> bulkheadConfigurationProperties.createBulkheadConfig(entry.getValue(),
+                    compositeBulkheadCustomizer, entry.getKey())));
+        return BulkheadRegistry.of(configs, bulkheadRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(bulkheadConfigurationProperties.getTags()));
     }
 
     /**
@@ -123,9 +141,11 @@ public class BulkheadConfiguration {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
         BulkheadRegistry bulkheadRegistry,
         @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return new BulkheadAspect(bulkheadConfigurationProperties, threadPoolBulkheadRegistry,
-            bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators);
+            bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators, spelResolver);
     }
 
     @Bean

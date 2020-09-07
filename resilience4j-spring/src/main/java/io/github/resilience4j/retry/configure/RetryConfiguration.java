@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -24,10 +26,12 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +49,14 @@ import java.util.stream.Collectors;
 @Configuration
 public class RetryConfiguration {
 
+
+    @Bean
+    @Qualifier("compositeRetryCustomizer")
+    public CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer(
+        @Autowired(required = false) List<RetryConfigCustomizer> configCustomizers) {
+        return new CompositeCustomizer<>(configCustomizers);
+    }
+
     /**
      * @param retryConfigurationProperties retryConfigurationProperties retry configuration spring
      *                                     properties
@@ -54,13 +66,16 @@ public class RetryConfiguration {
     @Bean
     public RetryRegistry retryRegistry(RetryConfigurationProperties retryConfigurationProperties,
         EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
-        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer,
+        @Qualifier("compositeRetryCustomizer") CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         RetryRegistry retryRegistry = createRetryRegistry(retryConfigurationProperties,
-            retryRegistryEventConsumer);
+            retryRegistryEventConsumer, compositeRetryCustomizer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry,
             retryConfigurationProperties);
-        retryConfigurationProperties.getInstances().forEach((name, properties) -> retryRegistry
-            .retry(name, retryConfigurationProperties.createRetryConfig(name)));
+        retryConfigurationProperties.getInstances()
+            .forEach((name, properties) ->
+                retryRegistry.retry(name, retryConfigurationProperties
+                    .createRetryConfig(name, compositeRetryCustomizer)));
         return retryRegistry;
     }
 
@@ -80,12 +95,16 @@ public class RetryConfiguration {
      */
     private RetryRegistry createRetryRegistry(
         RetryConfigurationProperties retryConfigurationProperties,
-        RegistryEventConsumer<Retry> retryRegistryEventConsumer) {
+        RegistryEventConsumer<Retry> retryRegistryEventConsumer,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
         Map<String, RetryConfig> configs = retryConfigurationProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> retryConfigurationProperties.createRetryConfig(entry.getValue())));
+                entry -> retryConfigurationProperties
+                    .createRetryConfig(entry.getValue(), compositeRetryCustomizer,
+                        entry.getKey())));
 
-        return RetryRegistry.of(configs, retryRegistryEventConsumer);
+        return RetryRegistry.of(configs, retryRegistryEventConsumer,
+            io.vavr.collection.HashMap.ofAll(retryConfigurationProperties.getTags()));
     }
 
     /**
@@ -121,12 +140,15 @@ public class RetryConfiguration {
      */
     @Bean
     @Conditional(value = {AspectJOnClasspathCondition.class})
-    public RetryAspect retryAspect(RetryConfigurationProperties retryConfigurationProperties,
+    public RetryAspect retryAspect(
+        RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+        FallbackDecorators fallbackDecorators,
+        SpelResolver spelResolver
+    ) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-            fallbackDecorators);
+            fallbackDecorators, spelResolver);
     }
 
     @Bean

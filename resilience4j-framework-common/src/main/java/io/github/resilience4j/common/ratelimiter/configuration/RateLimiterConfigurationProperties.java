@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
@@ -27,7 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class RateLimiterConfigurationProperties {
+public class RateLimiterConfigurationProperties extends CommonProperties {
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -41,7 +43,9 @@ public class RateLimiterConfigurationProperties {
     }
 
     public RateLimiterConfig createRateLimiterConfig(
-        @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        String instanceName) {
         if (instanceProperties == null) {
             return RateLimiterConfig.ofDefaults();
         }
@@ -50,21 +54,28 @@ public class RateLimiterConfigurationProperties {
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeRateLimiterCustomizer, instanceName);
         }
-        return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties);
+        return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties,
+            compositeRateLimiterCustomizer, instanceName);
     }
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        String instanceName) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
-            baseProperties);
-        return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties);
+            baseProperties, compositeRateLimiterCustomizer, instanceName);
+        return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties,
+            compositeRateLimiterCustomizer, instanceName);
     }
 
     private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
-        @Nullable InstanceProperties instanceProperties) {
+        @Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        String instanceName) {
         if (instanceProperties == null) {
             return builder.build();
         }
@@ -84,7 +95,8 @@ public class RateLimiterConfigurationProperties {
         if (instanceProperties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
         }
-
+        compositeRateLimiterCustomizer.getCustomizer(instanceName).ifPresent(
+            rateLimiterConfigCustomizer -> rateLimiterConfigCustomizer.customize(builder));
         return builder.build();
     }
 
@@ -92,8 +104,10 @@ public class RateLimiterConfigurationProperties {
         return instances.get(limiter);
     }
 
-    public RateLimiterConfig createRateLimiterConfig(String limiter) {
-        return createRateLimiterConfig(getLimiterProperties(limiter));
+    public RateLimiterConfig createRateLimiterConfig(String limiter,
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
+        return createRateLimiterConfig(getLimiterProperties(limiter),
+            compositeRateLimiterCustomizer, limiter);
     }
 
     @Nullable
@@ -126,6 +140,8 @@ public class RateLimiterConfigurationProperties {
         private Duration timeoutDuration;
         @Nullable
         private Boolean subscribeForEvents;
+        @Nullable
+        private Boolean allowHealthIndicatorToFail;
         @Nullable
         private Boolean registerHealthIndicator;
         @Nullable
@@ -243,6 +259,30 @@ public class RateLimiterConfigurationProperties {
             }
 
             this.eventConsumerBufferSize = eventConsumerBufferSize;
+            return this;
+        }
+
+        /**
+         * @return the flag that controls if health indicators are allowed to go into a failed
+         * (DOWN) status.
+         * @see #setAllowHealthIndicatorToFail(Boolean)
+         */
+        @Nullable
+        public Boolean getAllowHealthIndicatorToFail() {
+            return allowHealthIndicatorToFail;
+        }
+
+        /**
+         * When set to true, it allows the health indicator to go to a failed (DOWN) status. By
+         * default, health indicators for rate limiters will never go into an unhealthy state.
+         *
+         * @param allowHealthIndicatorToFail flag to control if the health indicator is allowed to
+         *                                   fail
+         * @return the InstanceProperties
+         */
+        public InstanceProperties setAllowHealthIndicatorToFail(
+            Boolean allowHealthIndicatorToFail) {
+            this.allowHealthIndicatorToFail = allowHealthIndicatorToFail;
             return this;
         }
 

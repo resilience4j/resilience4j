@@ -21,10 +21,12 @@ package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.bulkhead.internal.InMemoryThreadPoolBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -34,7 +36,7 @@ import java.util.function.Supplier;
  * stores all bulkhead instances in a registry.
  */
 public interface ThreadPoolBulkheadRegistry extends
-    Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig> {
+    Registry<ThreadPoolBulkhead, ThreadPoolBulkheadConfig>, AutoCloseable {
 
     /**
      * Creates a BulkheadRegistry with a custom Bulkhead configuration.
@@ -267,28 +269,118 @@ public interface ThreadPoolBulkheadRegistry extends
         io.vavr.collection.Map<String, String> tags);
 
     /**
-     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
-     * ThreadPoolBulkhead configuration.
+     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      *
      * @param name       the name of the ThreadPoolBulkhead
-     * @param configName a custom ThreadPoolBulkhead configuration name
+     * @param configName the name of the shared configuration
      * @return The {@link ThreadPoolBulkhead}
      */
     ThreadPoolBulkhead bulkhead(String name, String configName);
 
     /**
-     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one with a custom
-     * ThreadPoolBulkhead configuration.
+     * Returns a managed {@link ThreadPoolBulkhead} or creates a new one.
+     * The configuration must have been added upfront via {@link #addConfiguration(String, Object)}.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
      * @param name       the name of the ThreadPoolBulkhead
-     * @param configName a custom ThreadPoolBulkhead configuration name
+     * @param configName the name of the shared configuration
      * @param tags       tags to add to the ThreadPoolBulkhead
      * @return The {@link ThreadPoolBulkhead}
      */
     ThreadPoolBulkhead bulkhead(String name, String configName,
         io.vavr.collection.Map<String, String> tags);
+
+    /**
+     * Returns a builder to create a custom ThreadPoolBulkheadRegistry.
+     *
+     * @return a {@link ThreadPoolBulkheadRegistry.Builder}
+     */
+    static Builder custom() {
+        return new Builder();
+    }
+
+    class Builder {
+
+        private static final String DEFAULT_CONFIG = "default";
+        private RegistryStore registryStore;
+        private Map<String, ThreadPoolBulkheadConfig> threadPoolBulkheadConfigsMap;
+        private List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers;
+        private io.vavr.collection.Map<String, String> tags;
+
+        public Builder() {
+            this.threadPoolBulkheadConfigsMap = new java.util.HashMap<>();
+            this.registryEventConsumers = new ArrayList<>();
+        }
+
+        public Builder withRegistryStore(RegistryStore registryStore) {
+            this.registryStore = registryStore;
+            return this;
+        }
+
+        /**
+         * Configures a ThreadPoolBulkheadRegistry with a custom default ThreadPoolBulkhead configuration.
+         *
+         * @param threadPoolBulkheadConfig a custom default ThreadPoolBulkhead configuration
+         * @return a {@link ThreadPoolBulkheadRegistry.Builder}
+         */
+        public Builder withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig threadPoolBulkheadConfig) {
+            threadPoolBulkheadConfigsMap.put(DEFAULT_CONFIG, threadPoolBulkheadConfig);
+            return this;
+        }
+
+        /**
+         * Configures a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration.
+         *
+         * @param configName configName for a custom shared ThreadPoolBulkhead configuration
+         * @param configuration a custom shared ThreadPoolBulkhead configuration
+         * @return a {@link ThreadPoolBulkheadRegistry.Builder}
+         * @throws IllegalArgumentException if {@code configName.equals("default")}
+         */
+        public Builder addThreadPoolBulkheadConfig(String configName, ThreadPoolBulkheadConfig configuration) {
+            if (configName.equals(DEFAULT_CONFIG)) {
+                throw new IllegalArgumentException(
+                    "You cannot add another configuration with name 'default' as it is preserved for default configuration");
+            }
+            threadPoolBulkheadConfigsMap.put(configName, configuration);
+            return this;
+        }
+
+        /**
+         * Configures a ThreadPoolBulkheadRegistry with a ThreadPoolBulkhead registry event consumer.
+         *
+         * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
+         * @return a {@link ThreadPoolBulkheadRegistry.Builder}
+         */
+        public Builder addRegistryEventConsumer(RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer) {
+            this.registryEventConsumers.add(registryEventConsumer);
+            return this;
+        }
+
+        /**
+         * Configures a ThreadPoolBulkheadRegistry with Tags.
+         * <p>
+         * Tags added to the registry will be added to every instance created by this registry.
+         *
+         * @param tags default tags to add to the registry.
+         * @return a {@link ThreadPoolBulkheadRegistry.Builder}
+         */
+        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        /**
+         * Builds a ThreadPoolBulkheadRegistry
+         *
+         * @return the ThreadPoolBulkheadRegistry
+         */
+        public ThreadPoolBulkheadRegistry build() {
+            return new InMemoryThreadPoolBulkheadRegistry(threadPoolBulkheadConfigsMap, registryEventConsumers, tags,
+                registryStore);
+        }
+    }
 }

@@ -45,7 +45,7 @@ public class RetryEventsEndpoint {
      * @return all retry generated events
      */
     @ReadOperation
-    public RetryEventsEndpointResponse getAllRetryEvenets() {
+    public RetryEventsEndpointResponse getAllRetryEvents() {
         return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
             .flatMap(CircularEventConsumer::getBufferedEvents)
             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
@@ -57,7 +57,7 @@ public class RetryEventsEndpoint {
      * @return the retry events generated for this backend
      */
     @ReadOperation
-    public RetryEventsEndpointResponse getEventsFilteredByRetryrName(@Selector String name) {
+    public RetryEventsEndpointResponse getEventsFilteredByRetryName(@Selector String name) {
         return new RetryEventsEndpointResponse(getRetryEvents(name)
             .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
     }

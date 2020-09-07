@@ -12,7 +12,6 @@ ifdef::env-github[]
 endif::[]
 
 image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"]
-image:https://dev.azure.com/resilience4j/resilience4j/_apis/build/status/resilience4j.resilience4j?branchName=master["Build Status", link="https://dev.azure.com/resilience4j/resilience4j/_build/latest?definitionId=1&branchName=master"]
 image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"]
 image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
@@ -40,20 +39,52 @@ The advantage is that you have the choice to select the decorators you need and 
 
 [source,java]
 ----
-Supplier<String> supplier = () -> backendService.doSomething(param1, param2);
+// Create a CircuitBreaker with default configuration
+CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("backendService");
 
-// In order to run this code, you will need resilience4j-all (See below)
+// Create a Retry with default configuration
+// 3 retry attempts and a fixed time interval between retries of 500ms
+Retry retry = Retry.ofDefaults("backendService");
+
+// Create a Bulkhead with default configuration
+Bulkhead bulkhead = Bulkhead.ofDefaults("backendService");
+
+Supplier<String> supplier = () -> backendService
+  .doSomething(param1, param2);
+
+// Decorate your call to backendService.doSomething()
+// with a Bulkhead, CircuitBreaker and Retry
+// **note: you will need the resilience4j-all dependency for this
 Supplier<String> decoratedSupplier = Decorators.ofSupplier(supplier)
-  .withRetry(Retry.ofDefaults("name"))
-  .withCircuitBreaker(CircuitBreaker.ofDefaults("name"))
-  .withBulkhead(Bulkhead.ofDefaults("name"));
+  .withCircuitBreaker(circuitBreaker)
+  .withBulkhead(bulkhead)
+  .withRetry(retry)
+  .decorate();
 
+// Execute the decorated supplier and recover from any exception
 String result = Try.ofSupplier(decoratedSupplier)
   .recover(throwable -> "Hello from Recovery").get();
 
 // When you don't want to decorate your lambda expression,
 // but just execute it and protect the call by a CircuitBreaker.
-String result = circuitBreaker.executeSupplier(supplier);
+String result = circuitBreaker
+  .executeSupplier(backendService::doSomething);
+
+// You can also run the supplier asynchronously in a ThreadPoolBulkhead
+ ThreadPoolBulkhead threadPoolBulkhead = ThreadPoolBulkhead
+  .ofDefaults("backendService");
+
+// The Scheduler is needed to schedule a timeout on a non-blocking CompletableFuture
+ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
+TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
+
+CompletableFuture<String> future = Decorators.ofSupplier(supplier)
+    .withThreadPoolBulkhead(threadPoolBulkhead)
+    .withTimeLimiter(timeLimiter, scheduledExecutorService)
+    .withCircuitBreaker(circuitBreaker)
+    .withFallback(asList(TimeoutException.class, CallNotPermittedException.class, BulkheadFullException.class),
+      throwable -> "Hello from Recovery")
+    .get().toCompletableFuture();
 ----
 
 NOTE: With Resilience4j you don’t have to go all-in, you can
@@ -63,15 +94,11 @@ https://mvnrepository.com/artifact/io.github.resilience4j[*pick what you need*].
 
 Setup and usage is described in our *https://resilience4j.readme.io/docs[User Guide]*.
 
+- https://github.com/resilience4j-docs-ja/resilience4j-docs-ja[有志による日本語訳(非公式) Japanese translation by volunteers(Unofficial)]
+
 == Overview
 
-Resilience4j provides several core modules and add-on modules:
-
-=== All-inclusive package
-
-* resilience4j-all
-
-=== Core modules
+Resilience4j provides several core modules:
 
 * resilience4j-circuitbreaker: Circuit breaking
 * resilience4j-ratelimiter: Rate limiting
@@ -80,96 +107,68 @@ Resilience4j provides several core modules and add-on modules:
 * resilience4j-timelimiter: Timeout handling
 * resilience4j-cache: Result caching
 
-=== Add-on modules
+There are also add-on modules for metrics, Retrofit, Feign, Kotlin, Spring, Ratpack, Vertx, RxJava2 and more.
 
-* resilience4j-retrofit: Retrofit adapter
-* resilience4j-feign: Feign adapter
-* resilience4j-consumer: Circular Buffer Event consumer
-* resilience4j-kotlin: Kotlin coroutines support
+NOTE: Find out full list of modules in our *https://resilience4j.readme.io/docs#section-modularization[User Guide]*.
 
-==== Frameworks modules
-
-* resilience4j-spring-boot: Spring Boot Starter
-* resilience4j-spring-boot2: Spring Boot 2 Starter
-* resilience4j-spring-boot-cloud: Spring Cloud Config Server
-* resilience4j-spring-boot-cloud2: Spring Cloud 2 Config Server
-* resilience4j-ratpack: Ratpack Starter
-* resilience4j-vertx: Vertx Future decorator
-
-==== Reactive modules
-
-* resilience4j-rxjava2: Custom RxJava2 operators
-* resilience4j-reactor: Custom Spring Reactor operators
-
-==== Metrics modules
-
-* resilience4j-micrometer: Micrometer Metrics exporter
-* resilience4j-metrics: Dropwizard Metrics exporter
-* resilience4j-prometheus: Prometheus Metrics exporter
+TIP: For core modules package or `Decorators` builder see *https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-all[resilience4j-all]*.
 
 == Resilience patterns
 
 [cols="<.<*", options="header"]
 |===
-|name |how does it work? | description |slogans |links
+|name |how does it work? |description |links
 
 |*Retry*
 |repeats failed executions
 |Many faults are transient and may self-correct after a short delay.
-|"Insert coin to try again",
-"Maybe it’s just a blip"
 |<<circuitbreaker-retry-fallback,overview>>,
-https://resilience4j.readme.io/docs/retry[documentation]
+https://resilience4j.readme.io/docs/retry[documentation],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Circuit Breaker**
 |temporary blocks possible failures
 |When a system is seriously struggling, failing fast is better than making clients wait.
-|"Stop doing it if it hurts",
-"Give that system a break",
-"Baby, don't hurt me, no more"
 |<<circuitbreaker-retry-fallback,overview>>,
 https://resilience4j.readme.io/docs/circuitbreaker[documentation],
-link:resilience4j-feign/README.adoc[Feign],
-link:resilience4j-retrofit/README.adoc[Retrofit]
+https://resilience4j.readme.io/docs/feign[Feign],
+https://resilience4j.readme.io/docs/retrofit[Retrofit],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Rate Limiter**
-| limits executions/period
-| Prepare for a scale and establish reliability and HA of your service.
-|"That's enough for this minute!",
-"Well, it'll work next time"
-|<<bulkhead,overview>>,
+|limits executions/period
+|Limit the rate of incoming requests.
+|<<ratelimiter,overview>>,
 https://resilience4j.readme.io/docs/ratelimiter[documentation],
-link:resilience4j-feign/README.adoc[Feign],
-link:resilience4j-retrofit/README.adoc[Retrofit]
+https://resilience4j.readme.io/docs/feign[Feign],
+https://resilience4j.readme.io/docs/retrofit[Retrofit],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Time Limiter**
 |limits duration of execution
-|Beyond a certain wait, a success result is unlikely.
-|"Don’t wait forever"
-|
+|Beyond a certain wait interval, a successful result is unlikely.
+|https://resilience4j.readme.io/docs/timeout[documentation],
+https://resilience4j.readme.io/docs/retrofit[Retrofit],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Bulkhead**
 |limits concurrent executions
-| Resources are isolated into pools so that if one fails, the others will continue.
-|"One fault shouldn’t sink the whole ship",
-"Please, please, not all at once."
-| <<bulkhead,overview>>,
-https://resilience4j.readme.io/docs/bulkhead[documentation]
+|Resources are isolated into pools so that if one fails, the others will continue working.
+|<<bulkhead,overview>>,
+https://resilience4j.readme.io/docs/bulkhead[documentation],
+https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Cache**
 |memorizes a successful result
-| Some proportion of requests may be similar.
-|"You’ve asked that one before"
-|
+|Some proportion of requests may be similar.
+|https://resilience4j.readme.io/docs/cache[documentation]
 
 |**Fallback**
 |provides an alternative result for failures
 |Things will still fail - plan what you will do when that happens.
-|"Degrade gracefully",
-"A bird in the hand is worth two in the bush"
 |<<circuitbreaker-retry-fallback,Try::recover>>,
 https://resilience4j.readme.io/docs/getting-started-3#section-annotations[Spring],
-link:resilience4j-feign/README.adoc[Feign]
+https://resilience4j.readme.io/docs/feign[Feign]
 
 |===
 
@@ -243,7 +242,7 @@ The following example shows how to decorate a Mono by using the custom Reactor o
 ----
 CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 Mono.fromCallable(backendService::doSomething)
-    .compose(CircuitBreakerOperator.of(circuitBreaker))
+    .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
 ----
 
 NOTE: Resilience4j also provides Reactor operators for `RateLimiter`, `Bulkhead`, `TimeLimiter` and `Retry`.
@@ -370,10 +369,15 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 [cols="4*"]
 |===
 
-|slides
-|https://www.slideshare.net/nfrankel/goto-berlin-battle-of-the-circuit-breakers-resilience4j-vs-istio[Battle of the Circuit Breakers: Resilience4J vs Istio]
+|0:34
+|https://www.youtube.com/watch?v=kR2sm1zelI4[Battle of the Circuit Breakers: Resilience4J vs Istio]
 |Nicolas Frankel
 |GOTO Berlin
+
+|0:33
+|https://www.youtube.com/watch?v=AwcjOhD91Q0[Battle of the Circuit Breakers: Istio vs. Hystrix/Resilience4J]
+|Nicolas Frankel
+|JFuture
 
 |0:42
 |https://www.youtube.com/watch?v=KosSsZEqS-k&t=157[Resilience patterns in the post-Hystrix world]
@@ -404,7 +408,7 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 
 == License
 
-Copyright 2019 Robert Winkler, Bohdan Storozhuk, Mahmoud Romeh and Dan Maas
+Copyright 2020 Robert Winkler, Bohdan Storozhuk, Mahmoud Romeh, Dan Maas and others
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

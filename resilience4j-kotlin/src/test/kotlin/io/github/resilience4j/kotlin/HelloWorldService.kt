@@ -19,36 +19,19 @@
 package io.github.resilience4j.kotlin
 
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
+import java.lang.Thread.sleep
 
 class HelloWorldService {
     var invocationCounter = 0
         private set
 
-    private val sync = Channel<Unit>(Channel.UNLIMITED)
-
-    suspend fun returnHelloWorld(): String {
-        delay(0) // so tests are fast, but compiler agrees suspend modifier is required
+    fun returnHelloWorld(): String {
         invocationCounter++
         return "Hello world"
     }
 
-    suspend fun throwException() {
-        delay(0) // so tests are fast, but compiler agrees suspend modifier is required
+    fun throwException() {
         invocationCounter++
         error("test exception")
     }
-
-    /**
-     * Suspend until a matching [proceed] call.
-     */
-    suspend fun wait() {
-        invocationCounter++
-        sync.receive()
-    }
-
-    /**
-     * Allow a call into [wait] to proceed.
-     */
-    fun proceed() = sync.offer(Unit)
 }

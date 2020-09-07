@@ -30,4 +30,5 @@ public class RateLimiterConfigurationOnMissingBean extends
     public EventConsumerRegistry<RateLimiterEvent> rateLimiterEventsConsumerRegistry() {
         return rateLimiterConfiguration.rateLimiterEventsConsumerRegistry();
     }
+
 }

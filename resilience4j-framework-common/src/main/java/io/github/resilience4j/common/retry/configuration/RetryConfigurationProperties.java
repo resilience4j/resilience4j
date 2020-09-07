@@ -1,6 +1,5 @@
-package io.github.resilience4j.common.retry.configuration;
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +13,10 @@ package io.github.resilience4j.common.retry.configuration;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.github.resilience4j.common.retry.configuration;
 
+import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
@@ -32,7 +34,7 @@ import java.util.function.Predicate;
 /**
  * Main spring properties for retry configuration
  */
-public class RetryConfigurationProperties {
+public class RetryConfigurationProperties extends CommonProperties {
 
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -41,8 +43,9 @@ public class RetryConfigurationProperties {
      * @param backend backend name
      * @return the retry configuration
      */
-    public RetryConfig createRetryConfig(String backend) {
-        return createRetryConfig(getBackendProperties(backend));
+    public RetryConfig createRetryConfig(String backend,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
+        return createRetryConfig(getBackendProperties(backend), compositeRetryCustomizer, backend);
     }
 
     /**
@@ -79,23 +82,30 @@ public class RetryConfigurationProperties {
      * @param instanceProperties the retry backend spring properties
      * @return the retry configuration
      */
-    public RetryConfig createRetryConfig(InstanceProperties instanceProperties) {
+    public RetryConfig createRetryConfig(InstanceProperties instanceProperties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer, String backend) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeRetryCustomizer, backend);
         }
-        return buildRetryConfig(RetryConfig.custom(), instanceProperties);
+        return buildRetryConfig(RetryConfig.custom(), instanceProperties, compositeRetryCustomizer,
+            backend);
     }
 
     private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties) {
-        RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties);
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
+        String backend) {
+        RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties,
+            compositeRetryCustomizer, backend);
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties);
+        return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties,
+            compositeRetryCustomizer, backend);
     }
 
     /**
@@ -104,15 +114,11 @@ public class RetryConfigurationProperties {
      */
     @SuppressWarnings("unchecked")
     private RetryConfig buildRetryConfig(RetryConfig.Builder builder,
-        InstanceProperties properties) {
+        InstanceProperties properties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
+        String backend) {
         if (properties == null) {
             return builder.build();
-        }
-
-        if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
-            && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
-            throw new IllegalStateException(
-                "you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
         }
 
         configureRetryIntervalFunction(properties, builder);
@@ -121,14 +127,14 @@ public class RetryConfigurationProperties {
             builder.maxAttempts(properties.getMaxRetryAttempts());
         }
 
+        if (properties.getMaxAttempts() != null && properties.getMaxAttempts() != 0) {
+            builder.maxAttempts(properties.getMaxAttempts());
+        }
+
         if (properties.getRetryExceptionPredicate() != null) {
-            if (properties.getRetryExceptionPredicate() != null) {
-                Predicate<Throwable> predicate = ClassUtils
-                    .instantiatePredicateClass(properties.getRetryExceptionPredicate());
-                if (predicate != null) {
-                    builder.retryOnException(predicate);
-                }
-            }
+            Predicate<Throwable> predicate = ClassUtils
+                .instantiatePredicateClass(properties.getRetryExceptionPredicate());
+            builder.retryOnException(predicate);
         }
 
         if (properties.getIgnoreExceptions() != null) {
@@ -140,14 +146,13 @@ public class RetryConfigurationProperties {
         }
 
         if (properties.getResultPredicate() != null) {
-            if (properties.getResultPredicate() != null) {
-                Predicate<Object> predicate = ClassUtils
-                    .instantiatePredicateClass(properties.getResultPredicate());
-                if (predicate != null) {
-                    builder.retryOnResult(predicate);
-                }
-            }
+            Predicate<Object> predicate = ClassUtils
+                .instantiatePredicateClass(properties.getResultPredicate());
+            builder.retryOnResult(predicate);
         }
+
+        compositeRetryCustomizer.getCustomizer(backend)
+            .ifPresent(customizer -> customizer.customize(builder));
 
         return builder.build();
     }
@@ -163,8 +168,26 @@ public class RetryConfigurationProperties {
         // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
             Duration waitDuration = properties.getWaitDuration();
-            if (properties.getEnableExponentialBackoff() != null && properties
-                .getEnableExponentialBackoff()) {
+
+            if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
+                Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
+
+                if ((properties.getRandomizedWaitFactor() != null) &&
+                    (properties.getExponentialBackoffMultiplier() != null)) {
+                    builder.intervalFunction(IntervalFunction
+                        .ofExponentialRandomBackoff(waitDuration.toMillis(),
+                            properties.getExponentialBackoffMultiplier(),
+                            properties.getRandomizedWaitFactor()));
+                } else if (properties.getExponentialBackoffMultiplier() != null) {
+                    builder.intervalFunction(IntervalFunction
+                        .ofExponentialRandomBackoff(waitDuration.toMillis(),
+                            properties.getExponentialBackoffMultiplier()));
+                } else {
+                    builder.intervalFunction(IntervalFunction
+                        .ofExponentialRandomBackoff(waitDuration.toMillis()));
+                }
+
+            } else if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff())) {
                 if (properties.getExponentialBackoffMultiplier() != null) {
                     builder.intervalFunction(IntervalFunction
                         .ofExponentialBackoff(waitDuration.toMillis(),
@@ -173,8 +196,8 @@ public class RetryConfigurationProperties {
                     builder.intervalFunction(IntervalFunction
                         .ofExponentialBackoff(properties.getWaitDuration().toMillis()));
                 }
-            } else if (properties.getEnableRandomizedWait() != null && properties
-                .getEnableRandomizedWait()) {
+
+            } else if (Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 if (properties.getRandomizedWaitFactor() != null) {
                     builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(),
                         properties.getRandomizedWaitFactor()));
@@ -203,7 +226,11 @@ public class RetryConfigurationProperties {
          * max retry attempts value
          */
         @Nullable
+        @Deprecated
         private Integer maxRetryAttempts;
+
+        @Nullable
+        private Integer maxAttempts;
         /*
          * retry exception predicate class to be used to evaluate the exception to retry or not
          */
@@ -261,9 +288,9 @@ public class RetryConfigurationProperties {
 
         public InstanceProperties setWaitDuration(Duration waitDuration) {
             Objects.requireNonNull(waitDuration);
-            if (waitDuration.toMillis() < 100) {
+            if (waitDuration.toMillis() < 0) {
                 throw new IllegalArgumentException(
-                    "waitDurationInOpenStateMillis must be greater than or equal to 100 millis.");
+                    "waitDuration must be a positive value");
             }
 
             this.waitDuration = waitDuration;
@@ -271,10 +298,17 @@ public class RetryConfigurationProperties {
         }
 
         @Nullable
+        @Deprecated
         public Integer getMaxRetryAttempts() {
             return maxRetryAttempts;
         }
 
+        @Nullable
+        public Integer getMaxAttempts() {
+            return maxAttempts;
+        }
+
+        @Deprecated
         public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
             Objects.requireNonNull(maxRetryAttempts);
             if (maxRetryAttempts < 1) {
@@ -283,6 +317,17 @@ public class RetryConfigurationProperties {
             }
 
             this.maxRetryAttempts = maxRetryAttempts;
+            return this;
+        }
+
+        public InstanceProperties setMaxAttempts(Integer maxAttempts) {
+            Objects.requireNonNull(maxAttempts);
+            if (maxAttempts < 1) {
+                throw new IllegalArgumentException(
+                    "maxAttempts must be greater than or equal to 1.");
+            }
+
+            this.maxAttempts = maxAttempts;
             return this;
         }
 

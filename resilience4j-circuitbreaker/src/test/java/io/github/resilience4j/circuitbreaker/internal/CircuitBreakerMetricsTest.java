@@ -18,9 +18,11 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
+import com.statemachinesystems.mockclock.MockClock;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.Test;
 
+import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
@@ -35,7 +37,7 @@ public class CircuitBreakerMetricsTest {
             .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
-            .forCosed(circuitBreakerConfig);
+            .forClosed(circuitBreakerConfig, MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC")));
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
@@ -53,7 +55,7 @@ public class CircuitBreakerMetricsTest {
         // The failure rate must be -1, because the number of measured calls is below the buffer size of 10
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(-1);
         assertThat(result)
-            .isEqualTo(Result.BELOW_MINIMUM_CALLS_THRESHOLD);
+            .isEqualTo(CircuitBreakerMetrics.Result.BELOW_MINIMUM_CALLS_THRESHOLD);
 
         circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onError(0, TimeUnit.NANOSECONDS);
@@ -70,12 +72,12 @@ public class CircuitBreakerMetricsTest {
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
         assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
-        assertThat(result).isEqualTo(Result.ABOVE_THRESHOLDS);
+        assertThat(Result.hasExceededThresholds(result)).isEqualTo(true);
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         result = circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
-        assertThat(result).isEqualTo(Result.BELOW_THRESHOLDS);
+        assertThat(result).isEqualTo(CircuitBreakerMetrics.Result.BELOW_THRESHOLDS);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(30);
 
 

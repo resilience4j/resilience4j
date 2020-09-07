@@ -75,10 +75,11 @@ public class CircularEventConsumerTest {
         assertThat(resetMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
         assertThat(resetMetrics.getNumberOfFailedCalls()).isEqualTo(0);
         //Because circuit emits 2 error events and one state transition event
-        assertThat(ringBuffer.getBufferedEvents()).hasSize(7);
+        assertThat(ringBuffer.getBufferedEvents()).hasSize(8);
         assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
             .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR,
-                Type.STATE_TRANSITION, Type.STATE_TRANSITION, Type.RESET);
+                Type.FAILURE_RATE_EXCEEDED, Type.STATE_TRANSITION, Type.STATE_TRANSITION,
+                Type.RESET);
     }
 
     @Test

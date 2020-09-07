@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.github.resilience4j.timelimiter.configure.IllegalReturnTypeException;
 import io.vavr.CheckedFunction0;
 
 /**
@@ -33,6 +34,8 @@ public class DefaultFallbackDecorator implements FallbackDecorator {
         return () -> {
             try {
                 return supplier.apply();
+            } catch (IllegalReturnTypeException e) {
+                throw e;
             } catch (Throwable throwable) {
                 return fallbackMethod.fallback(throwable);
             }

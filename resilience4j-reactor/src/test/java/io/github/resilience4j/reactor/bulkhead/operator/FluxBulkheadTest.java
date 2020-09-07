@@ -44,7 +44,7 @@ public class FluxBulkheadTest {
 
         StepVerifier.create(
             Flux.just("Event 1", "Event 2")
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectNext("Event 1")
             .expectNext("Event 2")
             .verifyComplete();
@@ -58,7 +58,7 @@ public class FluxBulkheadTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(IOException.class)
             .verify(Duration.ofSeconds(1));
@@ -73,7 +73,7 @@ public class FluxBulkheadTest {
 
         StepVerifier.create(
             Flux.just("Event")
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(BulkheadFullException.class)
             .verify(Duration.ofSeconds(1));
@@ -87,7 +87,7 @@ public class FluxBulkheadTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(BulkheadFullException.class)
             .verify(Duration.ofSeconds(1));
@@ -101,7 +101,7 @@ public class FluxBulkheadTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"), true)
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .expectError(BulkheadFullException.class)
             .verify(Duration.ofSeconds(1));
@@ -116,7 +116,7 @@ public class FluxBulkheadTest {
         StepVerifier.create(
             Flux.just("Event")
                 .delayElements(Duration.ofHours(1))
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .thenCancel()
             .verify();
@@ -130,7 +130,7 @@ public class FluxBulkheadTest {
 
         StepVerifier.create(
             Flux.just("Event1", "Event2", "Event3")
-                .compose(BulkheadOperator.of(bulkhead)))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
             .expectSubscription()
             .thenRequest(1)
             .thenCancel()

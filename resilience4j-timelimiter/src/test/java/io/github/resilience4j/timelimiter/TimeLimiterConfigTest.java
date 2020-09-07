@@ -50,4 +50,20 @@ public class TimeLimiterConfigTest {
     public void configToString() {
         then(TimeLimiterConfig.ofDefaults().toString()).isEqualTo(TIMEOUT_TO_STRING);
     }
+
+    @Test
+    public void shouldUseBaseConfigAndOverwriteProperties() {
+        TimeLimiterConfig baseConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(Duration.ofSeconds(5))
+                .cancelRunningFuture(false)
+                .build();
+
+        TimeLimiterConfig extendedConfig = TimeLimiterConfig.from(baseConfig)
+                .timeoutDuration(Duration.ofSeconds(20))
+                .build();
+
+        then(extendedConfig.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(20));
+        then(extendedConfig.shouldCancelRunningFuture()).isEqualTo(false);
+    }
+
 }

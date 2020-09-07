@@ -28,10 +28,16 @@ public class TaggedTimeLimiterMetricsPublisher
     private final MeterRegistry meterRegistry;
 
     public TaggedTimeLimiterMetricsPublisher(MeterRegistry meterRegistry) {
-        super(MetricNames.ofDefaults());
+        super(TimeLimiterMetricNames.ofDefaults());
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
+    public TaggedTimeLimiterMetricsPublisher(TimeLimiterMetricNames names, MeterRegistry meterRegistry) {
+        super(names);
+        this.meterRegistry = requireNonNull(meterRegistry);
+    }
+
+    @Deprecated
     public TaggedTimeLimiterMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);

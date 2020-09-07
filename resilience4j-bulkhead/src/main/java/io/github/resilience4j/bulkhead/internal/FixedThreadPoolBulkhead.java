@@ -20,6 +20,7 @@ package io.github.resilience4j.bulkhead.internal;
 
 
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -84,7 +85,6 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
             new ArrayBlockingQueue<>(config.getQueueCapacity()),
             new NamingThreadFactory(name));
         // adding prover jvm executor shutdown
-        cleanup();
         this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
         this.eventProcessor = new FixedThreadPoolBulkhead.BulkheadEventProcessor();
     }
@@ -129,22 +129,22 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     }
 
     /**
-     * @param callable the callable to execute through bulk head thread pool
-     * @param <T>      the result type
-     * @return the callable returned result
+     * {@inheritDoc}
      */
     @Override
     public <T> CompletableFuture<T> submit(Callable<T> callable) {
         final CompletableFuture<T> promise = new CompletableFuture<>();
         try {
-            CompletableFuture.supplyAsync(() -> {
+            CompletableFuture.supplyAsync(ContextPropagator.decorateSupplier(config.getContextPropagator(),() -> {
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
                     return callable.call();
-                } catch (Exception e) {
+                } catch (CompletionException e) {
+                    throw e;
+                } catch (Exception e){
                     throw new CompletionException(e);
                 }
-            }, executorService).whenComplete((result, throwable) -> {
+            }), executorService).whenComplete((result, throwable) -> {
                 publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
                 if (throwable != null) {
                     promise.completeExceptionally(throwable);
@@ -160,24 +160,32 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
     }
 
     /**
-     * @param runnable the runnable to execute through bulk head thread pool
+     * {@inheritDoc}
      */
     @Override
-    public void submit(Runnable runnable) {
+    public CompletableFuture<Void> submit(Runnable runnable) {
+        final CompletableFuture<Void> promise = new CompletableFuture<>();
         try {
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(ContextPropagator.decorateRunnable(config.getContextPropagator(),() -> {
                 try {
                     publishBulkheadEvent(() -> new BulkheadOnCallPermittedEvent(name));
                     runnable.run();
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
-            }, executorService).whenComplete((voidResult, throwable) -> publishBulkheadEvent(
-                () -> new BulkheadOnCallFinishedEvent(name)));
+            }), executorService).whenComplete((result, throwable) -> {
+                publishBulkheadEvent(() -> new BulkheadOnCallFinishedEvent(name));
+                if (throwable != null) {
+                    promise.completeExceptionally(throwable);
+                } else {
+                    promise.complete(result);
+                }
+            });
         } catch (RejectedExecutionException rejected) {
             publishBulkheadEvent(() -> new BulkheadOnCallRejectedEvent(name));
             throw BulkheadFullException.createBulkheadFullException(this);
         }
+        return promise;
     }
 
     /**
@@ -231,20 +239,19 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         return String.format("FixedThreadPoolBulkhead '%s'", this.name);
     }
 
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    executorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!executorService.isTerminated()) {
-                    executorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
+    @Override
+    public void close() {
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
             }
-        }));
+        } catch (InterruptedException e) {
+            if (!executorService.isTerminated()) {
+                executorService.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
+        }
     }
 
     private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements

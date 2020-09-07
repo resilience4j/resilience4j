@@ -18,9 +18,8 @@
  */
 package io.github.resilience4j.kotlin.ratelimiter
 
-import io.github.resilience4j.kotlin.HelloWorldService
+import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.ratelimiter.RateLimiter
-import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.single
@@ -31,19 +30,18 @@ import java.time.Duration
 
 class FlowRateLimiterTest {
 
-    private fun noWaitConfig() = RateLimiterConfig
-        .custom()
-        .limitRefreshPeriod(Duration.ofSeconds(10))
-        .limitForPeriod(10)
-        .timeoutDuration(Duration.ZERO)
-        .build()
+    private fun noWaitConfig() = RateLimiterConfig {
+        limitRefreshPeriod(Duration.ofSeconds(10))
+        limitForPeriod(10)
+        timeoutDuration(Duration.ZERO)
+    }
 
     @Test
     fun `should execute successful function`() {
         runBlocking {
             val rateLimiter = RateLimiter.of("testName", noWaitConfig())
             val metrics = rateLimiter.metrics
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             val testFlow = flow {
@@ -64,7 +62,7 @@ class FlowRateLimiterTest {
         runBlocking {
             val rateLimiter = RateLimiter.of("testName", noWaitConfig())
             val metrics = rateLimiter.metrics
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             //When
             try {
@@ -90,7 +88,7 @@ class FlowRateLimiterTest {
         runBlocking {
             val rateLimiter = RateLimiter.of("testName", noWaitConfig())
             val metrics = rateLimiter.metrics
-            val helloWorldService = HelloWorldService()
+            val helloWorldService = CoroutineHelloWorldService()
 
             for (i in 0 until 10) {
                 flow { emit(helloWorldService.returnHelloWorld()) }

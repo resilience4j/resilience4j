@@ -7,6 +7,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.vavr.Tuple;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -38,6 +39,84 @@ public class TimeLimiterRegistryTest {
 
         TimeLimiterConfig timeLimiterConfig = timeLimiterRegistry.getDefaultConfig();
         assertThat(timeLimiterConfig).isSameAs(config);
+    }
+
+    @Test
+    public void shouldInitRegistryTags() {
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.ofDefaults();
+        Map<String, TimeLimiterConfig> timeLimiterConfigs = Collections
+            .singletonMap("default", timeLimiterConfig);
+        TimeLimiterRegistry registry = TimeLimiterRegistry.of(timeLimiterConfigs, new NoOpTimeLimiterEventConsumer(),io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).isNotEmpty();
+        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
+    }
+
+    @Test
+    public void noTagsByDefault() {
+        TimeLimiter TimeLimiter = TimeLimiterRegistry.ofDefaults()
+            .timeLimiter("testName");
+        assertThat(TimeLimiter.getTags()).hasSize(0);
+    }
+
+    @Test
+    public void tagsOfRegistryAddedToInstance() {
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.ofDefaults();
+        Map<String, TimeLimiterConfig> timeLimiterConfigs = Collections
+            .singletonMap("default", timeLimiterConfig);
+        io.vavr.collection.Map<String, String> timeLimiterTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+            .of(timeLimiterConfigs, timeLimiterTags);
+        TimeLimiter TimeLimiter = timeLimiterRegistry.timeLimiter("testName");
+
+        assertThat(TimeLimiter.getTags()).containsOnlyElementsOf(timeLimiterTags);
+    }
+
+    @Test
+    public void tagsAddedToInstance() {
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
+        io.vavr.collection.Map<String, String> timeLimiterTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        TimeLimiter TimeLimiter = timeLimiterRegistry
+            .timeLimiter("testName", timeLimiterTags);
+
+        assertThat(TimeLimiter.getTags()).containsOnlyElementsOf(timeLimiterTags);
+    }
+
+    @Test
+    public void tagsOfTimeLimitersShouldNotBeMixed() {
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.ofDefaults();
+        io.vavr.collection.Map<String, String> timeLimiterTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        TimeLimiter TimeLimiter = timeLimiterRegistry
+            .timeLimiter("testName", timeLimiterConfig, timeLimiterTags);
+        io.vavr.collection.Map<String, String> timeLimiterTags2 = io.vavr.collection.HashMap
+            .of("key3", "value3", "key4", "value4");
+        TimeLimiter TimeLimiter2 = timeLimiterRegistry
+            .timeLimiter("otherTestName", timeLimiterConfig, timeLimiterTags2);
+
+        assertThat(TimeLimiter.getTags()).containsOnlyElementsOf(timeLimiterTags);
+        assertThat(TimeLimiter2.getTags()).containsOnlyElementsOf(timeLimiterTags2);
+    }
+
+    @Test
+    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.ofDefaults();
+        Map<String, TimeLimiterConfig> timeLimiterConfigs = Collections
+            .singletonMap("default", timeLimiterConfig);
+        io.vavr.collection.Map<String, String> timeLimiterTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
+            .of("key1", "value3", "key4", "value4");
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
+            .of(timeLimiterConfigs, timeLimiterTags);
+        TimeLimiter timeLimiter = timeLimiterRegistry
+            .timeLimiter("testName", timeLimiterConfig, instanceTags);
+
+        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
+            .of("key1", "value3", "key2", "value2", "key4", "value4");
+        assertThat(timeLimiter.getTags()).containsOnlyElementsOf(expectedTags);
     }
 
     @Test

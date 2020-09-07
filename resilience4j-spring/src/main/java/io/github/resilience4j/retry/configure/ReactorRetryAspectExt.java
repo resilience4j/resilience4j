@@ -34,7 +34,6 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
      * @param returnType the AOP method return type class
      * @return boolean if the method has Reactor return type
      */
-    @SuppressWarnings("unchecked")
     @Override
     public boolean canHandleReturnType(Class returnType) {
         return (Flux.class.isAssignableFrom(returnType)) || (Mono.class
@@ -51,17 +50,16 @@ public class ReactorRetryAspectExt implements RetryAspectExt {
      * @return the result object
      * @throws Throwable exception in case of faulty flow
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.retry.Retry retry, String methodName) throws Throwable {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.compose(RetryOperator.of(retry));
+            return fluxReturnValue.transformDeferred(RetryOperator.of(retry));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
-            return monoReturnValue.compose(RetryOperator.of(retry));
+            return monoReturnValue.transformDeferred(RetryOperator.of(retry));
         } else {
             logger.error("Unsupported type for Reactor retry {}",
                 returnValue.getClass().getTypeName());

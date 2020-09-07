@@ -1322,7 +1322,7 @@
         "definition": "label_values(resilience4j_bulkhead_available_concurrent_calls, name)",
         "hide": 0,
         "includeAll": true,
-        "label": "Bulkead Name",
+        "label": "Bulkhead Name",
         "multi": true,
         "name": "bulkhead_name",
         "options": [],

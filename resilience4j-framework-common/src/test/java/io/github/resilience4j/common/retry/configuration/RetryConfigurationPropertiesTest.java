@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.retry.configuration;
 
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
@@ -23,6 +24,9 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,6 +39,7 @@ public class RetryConfigurationPropertiesTest {
         //Given
         RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
         instanceProperties1.setMaxRetryAttempts(3);
+        instanceProperties1.setMaxAttempts(3);
         instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
         instanceProperties1.setEnableExponentialBackoff(false);
         instanceProperties1.setEnableRandomizedWait(false);
@@ -45,6 +50,7 @@ public class RetryConfigurationPropertiesTest {
 
         RetryConfigurationProperties.InstanceProperties instanceProperties2 = new RetryConfigurationProperties.InstanceProperties();
         instanceProperties2.setMaxRetryAttempts(2);
+        instanceProperties2.setMaxAttempts(2);
         instanceProperties2.setEnableExponentialBackoff(true);
         instanceProperties2.setExponentialBackoffMultiplier(1.0);
         instanceProperties2.setWaitDuration(Duration.ofMillis(100L));
@@ -52,12 +58,17 @@ public class RetryConfigurationPropertiesTest {
         RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
         retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         retryConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String,String> globalTagsForRetries=new HashMap<>();
+        globalTagsForRetries.put("testKey1","testKet2");
+        retryConfigurationProperties.setTags(globalTagsForRetries);
         //Then
+        assertThat(retryConfigurationProperties.getTags().size()).isEqualTo(1);
         assertThat(retryConfigurationProperties.getInstances().size()).isEqualTo(2);
         assertThat(retryConfigurationProperties.getBackends().size()).isEqualTo(2);
-        final RetryConfig retry1 = retryConfigurationProperties.createRetryConfig("backend1");
-        final RetryConfig retry2 = retryConfigurationProperties.createRetryConfig("backend2");
+        final RetryConfig retry1 = retryConfigurationProperties
+            .createRetryConfig("backend1", compositeRetryCustomizer());
+        final RetryConfig retry2 = retryConfigurationProperties
+            .createRetryConfig("backend2", compositeRetryCustomizer());
         RetryConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = retryConfigurationProperties
             .getInstances().get("backend1");
         assertThat(instancePropertiesForRetry1.getWaitDuration().toMillis()).isEqualTo(1000);
@@ -71,14 +82,40 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
+    public void testExponentialRandomBackoffConfig() {
+        //Given
+        RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
+        instanceProperties1.setMaxRetryAttempts(3);
+        instanceProperties1.setMaxAttempts(3);
+        instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
+        instanceProperties1.setEnableExponentialBackoff(true);
+        instanceProperties1.setEnableRandomizedWait(true);
+        instanceProperties1.setRandomizedWaitFactor(0.5D);
+        instanceProperties1.setExponentialBackoffMultiplier(2.0D);
+
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
+
+        //Then
+        final RetryConfig retry1 = retryConfigurationProperties
+            .createRetryConfig("backend1", compositeRetryCustomizer());
+        assertThat(retry1).isNotNull();
+        assertThat(retry1.getIntervalFunction().apply(1)).isBetween(500L, 1500L);
+        assertThat(retry1.getIntervalFunction().apply(2)).isBetween(1000L, 3000L);
+
+    }
+
+    @Test
     public void testCreateRetryPropertiesWithSharedConfigs() {
         //Given
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxRetryAttempts(3);
+        defaultProperties.setMaxAttempts(3);
         defaultProperties.setWaitDuration(Duration.ofMillis(100L));
 
         RetryConfigurationProperties.InstanceProperties sharedProperties = new RetryConfigurationProperties.InstanceProperties();
         sharedProperties.setMaxRetryAttempts(2);
+        sharedProperties.setMaxAttempts(2);
         sharedProperties.setWaitDuration(Duration.ofMillis(100L));
 
         RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RetryConfigurationProperties.InstanceProperties();
@@ -101,20 +138,21 @@ public class RetryConfigurationPropertiesTest {
         //Then
         // Should get default config and overwrite max attempt and wait time
         RetryConfig retry1 = retryConfigurationProperties
-            .createRetryConfig("backendWithDefaultConfig");
+            .createRetryConfig("backendWithDefaultConfig", compositeRetryCustomizer());
         assertThat(retry1).isNotNull();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
         assertThat(retry1.getIntervalFunction().apply(1)).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         RetryConfig retry2 = retryConfigurationProperties
-            .createRetryConfig("backendWithSharedConfig");
+            .createRetryConfig("backendWithSharedConfig", compositeRetryCustomizer());
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
         assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(300L);
 
         // Unknown backend should get default config of Registry
-        RetryConfig retry3 = retryConfigurationProperties.createRetryConfig("unknownBackend");
+        RetryConfig retry3 = retryConfigurationProperties
+            .createRetryConfig("unknownBackend", compositeRetryCustomizer());
         assertThat(retry3).isNotNull();
         assertThat(retry3.getMaxAttempts()).isEqualTo(3);
 
@@ -129,7 +167,8 @@ public class RetryConfigurationPropertiesTest {
         retryConfigurationProperties.getInstances().put("backend", instanceProperties);
 
         //then
-        assertThatThrownBy(() -> retryConfigurationProperties.createRetryConfig("backend"))
+        assertThatThrownBy(() -> retryConfigurationProperties
+            .createRetryConfig("backend", compositeRetryCustomizer()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
@@ -143,12 +182,22 @@ public class RetryConfigurationPropertiesTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnWaitDuration() {
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDuration(Duration.ofMillis(50));
+        defaultProperties.setWaitDuration(Duration.ofMillis(-1));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnMaxRetryAttempts() {
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxRetryAttempts(0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnMaxAttempts() {
+        RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
+        defaultProperties.setMaxAttempts(0);
+    }
+
+    private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 }

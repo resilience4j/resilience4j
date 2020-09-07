@@ -51,3 +51,17 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
 fun <T> CircuitBreaker.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
 }
+
+/**
+ * Decorates and executes the given function [block].
+ */
+fun <T> CircuitBreaker.executeFunction(block: () -> T): T {
+    return this.decorateCallable(block).call()
+}
+
+/**
+ * Decorates the given function [block] and returns it.
+ */
+fun <T> CircuitBreaker.decorateFunction(block: () -> T): () -> T = {
+    executeFunction(block)
+}

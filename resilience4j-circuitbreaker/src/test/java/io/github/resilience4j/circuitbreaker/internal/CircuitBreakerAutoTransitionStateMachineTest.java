@@ -26,10 +26,12 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 public class CircuitBreakerAutoTransitionStateMachineTest {
@@ -76,5 +78,44 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         runnableArgumentCaptor.getValue().run();
 
         assertThat(circuitBreaker.getState()).isEqualTo(HALF_OPEN);
+    }
+
+    @Test
+    public void shouldCancelAutoTransition() {
+
+        ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
+        doReturn(mockFuture)
+            .when(schedulerMock).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition scheduled
+        circuitBreaker.transitionToOpenState();
+        then(schedulerMock).should(times(1)).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition should be canceled
+        circuitBreaker.transitionToForcedOpenState();
+
+        // Verify scheduled future is canceled
+        then(mockFuture).should(times(1)).cancel(true);
+    }
+
+    @Test
+    public void notCancelAutoTransitionFutureIfAlreadyDone() {
+
+        ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
+        doReturn(mockFuture)
+            .when(schedulerMock).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Already done
+        when(mockFuture.isDone()).thenReturn(true);
+
+        // Auto transition scheduled
+        circuitBreaker.transitionToOpenState();
+        then(schedulerMock).should(times(1)).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition should be canceled
+        circuitBreaker.transitionToForcedOpenState();
+
+        // Not called again because future is already done.
+        then(mockFuture).should(times(0)).cancel(true);
     }
 }

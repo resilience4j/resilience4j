@@ -29,9 +29,9 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
+import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRateLimiterMetricsPublisherTest {
@@ -66,7 +66,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
             .gauges();
 
-        Optional<Gauge> successful = findGaugeByNamesTag(gauges, newRateLimiter.getName());
+        Optional<Gauge> successful = findMeterByNamesTag(gauges, newRateLimiter.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
             .isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
@@ -137,7 +137,7 @@ public class TaggedRateLimiterMetricsPublisherTest {
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher = new TaggedRateLimiterMetricsPublisher(
-            TaggedRateLimiterMetricsPublisher.MetricNames.custom()
+            RateLimiterMetricNames.custom()
                 .availablePermissionsMetricName("custom_available_permissions")
                 .waitingThreadsMetricName("custom_waiting_threads")
                 .build(), meterRegistry);
@@ -156,5 +156,39 @@ public class TaggedRateLimiterMetricsPublisherTest {
             "custom_available_permissions",
             "custom_waiting_threads"
         ));
+    }
+
+    @Test
+    public void testReplaceNewMeter() {
+        RateLimiter oldOne = RateLimiter.of("backendC", RateLimiterConfig.ofDefaults());
+        // add meters of old
+        taggedRateLimiterMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one permission class
+        oldOne.acquirePermission();
+
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
+            .gauges();
+        Optional<Gauge> available = findMeterByNamesTag(gauges, oldOne.getName());
+        assertThat(available).isPresent();
+        assertThat(available.get().value())
+            .isEqualTo(oldOne.getMetrics().getAvailablePermissions());
+
+        RateLimiter newOne = RateLimiter.of("backendC", RateLimiterConfig.ofDefaults());
+
+        // add meters of old
+        taggedRateLimiterMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three permission call
+        newOne.acquirePermission(3);
+
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRateLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(2);
+        gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
+            .gauges();
+        available = findMeterByNamesTag(gauges, newOne.getName());
+        assertThat(available).isPresent();
+        assertThat(available.get().value())
+            .isEqualTo(newOne.getMetrics().getAvailablePermissions());
     }
 }
