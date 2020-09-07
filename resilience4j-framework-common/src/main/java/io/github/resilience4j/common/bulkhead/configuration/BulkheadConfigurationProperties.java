@@ -57,6 +57,9 @@ public class BulkheadConfigurationProperties {
         if (instanceProperties.getMaxWaitDuration() != null) {
             builder.maxWaitDuration(instanceProperties.getMaxWaitDuration());
         }
+        if (instanceProperties.isWritableStackTraceEnabled() != null) {
+            builder.writableStackTraceEnabled(instanceProperties.isWritableStackTraceEnabled());
+        }
         return builder.build();
     }
 
@@ -88,6 +91,7 @@ public class BulkheadConfigurationProperties {
 
         private Integer maxConcurrentCalls;
         private Duration maxWaitDuration;
+        private boolean writableStackTraceEnabled;
         @Nullable
         private String baseConfig;
         @Nullable
@@ -105,6 +109,17 @@ public class BulkheadConfigurationProperties {
             }
 
             this.maxConcurrentCalls = maxConcurrentCalls;
+            return this;
+        }
+
+        public Boolean isWritableStackTraceEnabled() {
+            return writableStackTraceEnabled;
+        }
+
+        public InstanceProperties setWritableStackTraceEnabled(Boolean writableStackTraceEnabled) {
+            Objects.requireNonNull(writableStackTraceEnabled);
+
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
             return this;
         }
 
