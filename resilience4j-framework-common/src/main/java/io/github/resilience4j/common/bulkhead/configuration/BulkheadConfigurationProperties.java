@@ -91,7 +91,7 @@ public class BulkheadConfigurationProperties {
 
         private Integer maxConcurrentCalls;
         private Duration maxWaitDuration;
-        private boolean writableStackTraceEnabled;
+        private Boolean writableStackTraceEnabled;
         @Nullable
         private String baseConfig;
         @Nullable
