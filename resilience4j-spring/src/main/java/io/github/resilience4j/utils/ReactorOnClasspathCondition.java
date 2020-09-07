@@ -33,9 +33,9 @@ public class ReactorOnClasspathCondition implements Condition {
 
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.info(
+        return AspectUtil.checkClassIfFound(context, CLASS_TO_CHECK, (e) -> logger.debug(
             "Reactor related Aspect extensions are not activated because Reactor is not on the classpath."))
-            && AspectUtil.checkClassIfFound(context, R4J_REACTOR, (e) -> logger.info(
+            && AspectUtil.checkClassIfFound(context, R4J_REACTOR, (e) -> logger.debug(
             "Reactor related Aspect extensions are not activated because Resilience4j Reactor module is not on the classpath."));
     }
 

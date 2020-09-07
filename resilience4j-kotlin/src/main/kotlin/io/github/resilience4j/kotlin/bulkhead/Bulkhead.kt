@@ -46,6 +46,26 @@ suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
 }
 
 /**
+ * Decorates the given function [block] and returns it.
+ *
+ * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
+ * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+ */
+fun <T> Bulkhead.decorateFunction(block: () -> T): () -> T = {
+    executeFunction(block)
+}
+
+/**
+ * Decorates and executes the given function [block].
+ *
+ * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
+ * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
+ */
+fun <T> Bulkhead.executeFunction(block: () -> T): T {
+    return this.executeCallable(block)
+}
+
+/**
  * Decorates the given suspend function [block] and returns it.
  *
  * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.

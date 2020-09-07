@@ -25,125 +25,50 @@ import io.micrometer.core.instrument.Tag;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
 abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
 
-    protected final MetricNames names;
+    protected final RateLimiterMetricNames names;
 
+    protected AbstractRateLimiterMetrics(RateLimiterMetricNames names) {
+        this.names = requireNonNull(names);
+    }
+
+    @Deprecated
     protected AbstractRateLimiterMetrics(MetricNames names) {
         this.names = requireNonNull(names);
     }
 
     protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter) {
-        Set<Meter.Id> idSet = new HashSet<>();
-        List<Tag> customTags = rateLimiter.getTags()
-                .toJavaMap()
-                .entrySet()
-                .stream().map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
-                .collect(Collectors.toList());
-        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter, rl -> rl.getMetrics().getAvailablePermissions())
-                .description("The number of available permissions")
-                .tag(TagNames.NAME, rateLimiter.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
-        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter, rl -> rl.getMetrics().getNumberOfWaitingThreads())
-                .description("The number of waiting threads")
-                .tag(TagNames.NAME, rateLimiter.getName())
-                .tags(customTags)
-                .register(meterRegistry).getId());
+        List<Tag> customTags = mapToTagsList(rateLimiter.getTags()
+            .toJavaMap());
+        registerMetrics(meterRegistry, rateLimiter, customTags);
+    }
 
+    private void registerMetrics(
+        MeterRegistry meterRegistry, RateLimiter rateLimiter, List<Tag> customTags) {
+        // Remove previous meters before register
+        removeMetrics(meterRegistry, rateLimiter.getName());
+
+        Set<Meter.Id> idSet = new HashSet<>();
+        idSet.add(Gauge.builder(names.getAvailablePermissionsMetricName(), rateLimiter,
+            rl -> rl.getMetrics().getAvailablePermissions())
+            .description("The number of available permissions")
+            .tag(TagNames.NAME, rateLimiter.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+        idSet.add(Gauge.builder(names.getWaitingThreadsMetricName(), rateLimiter,
+            rl -> rl.getMetrics().getNumberOfWaitingThreads())
+            .description("The number of waiting threads")
+            .tag(TagNames.NAME, rateLimiter.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
         meterIdMap.put(rateLimiter.getName(), idSet);
     }
 
-    public static class MetricNames {
-
-        private static final String DEFAULT_PREFIX = "resilience4j.ratelimiter";
-
-        public static final String DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME =
-            DEFAULT_PREFIX + ".available.permissions";
-        public static final String DEFAULT_WAITING_THREADS_METRIC_NAME =
-            DEFAULT_PREFIX + ".waiting_threads";
-        private String availablePermissionsMetricName = DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-        private String waitingThreadsMetricName = DEFAULT_WAITING_THREADS_METRIC_NAME;
-
-        /**
-         * Returns a builder for creating custom metric names.
-         * Note that names have default values, so only desired metrics can be renamed.
-         *
-         * @return The builder.
-         */
-        public static Builder custom() {
-            return new Builder();
-        }
-
-        /**
-         * Returns default metric names.
-         *
-         * @return The default {@link MetricNames} instance.
-         */
-        public static MetricNames ofDefaults() {
-            return new MetricNames();
-        }
-
-        /**
-         * Returns the metric name for available permissions, defaults to {@value DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME}.
-         *
-         * @return The available permissions metric name.
-         */
-        public String getAvailablePermissionsMetricName() {
-            return availablePermissionsMetricName;
-        }
-
-        /**
-         * Returns the metric name for waiting threads, defaults to {@value DEFAULT_WAITING_THREADS_METRIC_NAME}.
-         *
-         * @return The waiting threads metric name.
-         */
-        public String getWaitingThreadsMetricName() {
-            return waitingThreadsMetricName;
-        }
-
-        /**
-         * Helps building custom instance of {@link MetricNames}.
-         */
-        public static class Builder {
-
-            private final MetricNames metricNames = new MetricNames();
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME} with a given one.
-             *
-             * @param availablePermissionsMetricName The available permissions metric name.
-             * @return The builder.
-             */
-            public Builder availablePermissionsMetricName(String availablePermissionsMetricName) {
-                metricNames.availablePermissionsMetricName = requireNonNull(
-                    availablePermissionsMetricName);
-                return this;
-            }
-
-            /**
-             * Overrides the default metric name {@value MetricNames#DEFAULT_WAITING_THREADS_METRIC_NAME} with a given one.
-             *
-             * @param waitingThreadsMetricName The waiting threads metric name.
-             * @return The builder.
-             */
-            public Builder waitingThreadsMetricName(String waitingThreadsMetricName) {
-                metricNames.waitingThreadsMetricName = requireNonNull(waitingThreadsMetricName);
-                return this;
-            }
-
-            /**
-             * Builds {@link MetricNames} instance.
-             *
-             * @return The built {@link MetricNames} instance.
-             */
-            public MetricNames build() {
-                return metricNames;
-            }
-        }
+    @Deprecated
+    public static class MetricNames extends RateLimiterMetricNames {
     }
 }

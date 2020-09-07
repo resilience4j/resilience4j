@@ -16,11 +16,15 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,12 +41,14 @@ public class CircuitBreakerConfigurationPropertiesTest {
         instanceProperties1.setWaitDurationInOpenState(Duration.ofMillis(100));
         instanceProperties1.setEventConsumerBufferSize(100);
         instanceProperties1.setRegisterHealthIndicator(true);
+        instanceProperties1.setAllowHealthIndicatorToFail(true);
         instanceProperties1.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
         instanceProperties1.setSlidingWindowSize(200);
         instanceProperties1.setMinimumNumberOfCalls(10);
         instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
         instanceProperties1.setFailureRateThreshold(50f);
         instanceProperties1.setSlowCallDurationThreshold(Duration.ofSeconds(5));
+        instanceProperties1.setMaxWaitDurationInHalfOpenState(Duration.ofSeconds(5));
         instanceProperties1.setSlowCallRateThreshold(50f);
         instanceProperties1.setPermittedNumberOfCallsInHalfOpenState(100);
         instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(true);
@@ -66,7 +72,8 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
 
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(instanceProperties1);
+            .createCircuitBreakerConfig("backend1", instanceProperties1,
+                compositeCircuitBreakerCustomizer());
         assertThat(circuitBreaker1).isNotNull();
         assertThat(circuitBreaker1.getSlidingWindowSize()).isEqualTo(200);
         assertThat(circuitBreaker1.getSlidingWindowType())
@@ -75,6 +82,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         assertThat(circuitBreaker1.getFailureRateThreshold()).isEqualTo(50f);
         assertThat(circuitBreaker1.getSlowCallDurationThreshold().getSeconds()).isEqualTo(5);
+        assertThat(circuitBreaker1.getMaxWaitDurationInHalfOpenState().getSeconds()).isEqualTo(5);
         assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
         assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
         assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
@@ -84,8 +92,15 @@ public class CircuitBreakerConfigurationPropertiesTest {
             .getBackendProperties("backend1");
         assertThat(circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1"))
             .isNotEmpty();
+        assertThat(
+            circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1").get()
+                .getRegisterHealthIndicator()).isTrue();
+        assertThat(
+            circuitBreakerConfigurationProperties.findCircuitBreakerProperties("backend1").get()
+                .getAllowHealthIndicatorToFail()).isTrue();
         CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(instanceProperties2);
+            .createCircuitBreakerConfig("backend2", instanceProperties2,
+                compositeCircuitBreakerCustomizer());
         assertThat(circuitBreaker2).isNotNull();
         assertThat(circuitBreaker2.getSlidingWindowSize()).isEqualTo(1337);
 
@@ -108,14 +123,19 @@ public class CircuitBreakerConfigurationPropertiesTest {
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
         circuitBreakerConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         circuitBreakerConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String, String> globalTagsForCircuitBreakers = new HashMap<>();
+        globalTagsForCircuitBreakers.put("testKey1", "testKet2");
+        circuitBreakerConfigurationProperties.setTags(globalTagsForCircuitBreakers);
         //Then
         assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getTags()).isNotEmpty();
         assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
         final CircuitBreakerConfig circuitBreakerConfig1 = circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(instanceProperties1);
+            .createCircuitBreakerConfig("backend1", instanceProperties1,
+                compositeCircuitBreakerCustomizer());
         final CircuitBreakerConfig circuitBreakerConfig2 = circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(instanceProperties2);
+            .createCircuitBreakerConfig("backend2", instanceProperties2,
+                compositeCircuitBreakerCustomizer());
         CircuitBreakerConfigurationProperties.InstanceProperties instancePropertiesForRetry1 = circuitBreakerConfigurationProperties
             .getInstances().get("backend1");
         assertThat(instancePropertiesForRetry1.getWaitDurationInOpenState().toMillis())
@@ -163,14 +183,16 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
         // Should get default config and overwrite setRingBufferSizeInHalfOpenState
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(backendWithDefaultConfig);
+            .createCircuitBreakerConfig("backendWithDefaultConfig", backendWithDefaultConfig,
+                compositeCircuitBreakerCustomizer());
         assertThat(circuitBreaker1).isNotNull();
         assertThat(circuitBreaker1.getSlidingWindowSize()).isEqualTo(1000);
         assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(99);
 
         // Should get shared config and overwrite setRingBufferSizeInHalfOpenState
         CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(backendWithSharedConfig);
+            .createCircuitBreakerConfig("backendWithSharedConfig", backendWithSharedConfig,
+                compositeCircuitBreakerCustomizer());
         assertThat(circuitBreaker2).isNotNull();
         assertThat(circuitBreaker2.getSlidingWindowSize()).isEqualTo(1337);
         assertThat(circuitBreaker2.getSlidingWindowType())
@@ -180,7 +202,8 @@ public class CircuitBreakerConfigurationPropertiesTest {
         // Unknown backend should get default config of Registry
         CircuitBreakerConfig circuitBreaker3 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig(
-                new CircuitBreakerConfigurationProperties.InstanceProperties());
+                "UN_KNOWN", new CircuitBreakerConfigurationProperties.InstanceProperties(),
+                compositeCircuitBreakerCustomizer());
         assertThat(circuitBreaker3).isNotNull();
         assertThat(circuitBreaker3.getSlidingWindowSize())
             .isEqualTo(CircuitBreakerConfig.DEFAULT_SLIDING_WINDOW_SIZE);
@@ -197,7 +220,8 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
         //When
         assertThatThrownBy(() -> circuitBreakerConfigurationProperties
-            .createCircuitBreakerConfig(instanceProperties))
+            .createCircuitBreakerConfig("backend", instanceProperties,
+                compositeCircuitBreakerCustomizer()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
@@ -263,5 +287,15 @@ public class CircuitBreakerConfigurationPropertiesTest {
     public void testIllegalArgumentOnSlowCallDurationThreshold() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setSlowCallDurationThreshold(Duration.ZERO);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnWaitDurationInHalfOpenState() {
+        CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ZERO);
+    }
+
+    private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 }

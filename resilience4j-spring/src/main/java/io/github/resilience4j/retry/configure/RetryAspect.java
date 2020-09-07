@@ -20,6 +20,7 @@ import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -60,7 +61,7 @@ import java.util.concurrent.*;
  * with a matching exception type as the last parameter on the annotated method
  */
 @Aspect
-public class RetryAspect implements Ordered {
+public class RetryAspect implements Ordered, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspect.class);
     private final static ScheduledExecutorService retryExecutorService = Executors
@@ -70,23 +71,25 @@ public class RetryAspect implements Ordered {
     private final @Nullable
     List<RetryAspectExt> retryAspectExtList;
     private final FallbackDecorators fallbackDecorators;
+    private final SpelResolver spelResolver;
 
     /**
      * @param retryConfigurationProperties spring retry config properties
      * @param retryRegistry                retry definition registry
      * @param retryAspectExtList           a list of retry aspect extensions
      * @param fallbackDecorators           the fallback decorators
+     * @param spelResolver                 spel expression parser
      */
     public RetryAspect(RetryConfigurationProperties retryConfigurationProperties,
-        RetryRegistry retryRegistry,
-        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+                       RetryRegistry retryRegistry,
+                       @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
+                       FallbackDecorators fallbackDecorators,
+                       SpelResolver spelResolver) {
         this.retryConfigurationProperties = retryConfigurationProperties;
         this.retryRegistry = retryRegistry;
         this.retryAspectExtList = retryAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
-        cleanup();
-
+        this.spelResolver = spelResolver;
     }
 
     @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
@@ -104,15 +107,16 @@ public class RetryAspect implements Ordered {
         if (retryAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
-        String backend = retryAnnotation.name();
+        String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), retryAnnotation.name());
         io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
         Class<?> returnType = method.getReturnType();
 
-        if (StringUtils.isEmpty(retryAnnotation.fallbackMethod())) {
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), retryAnnotation.fallbackMethod());
+        if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, retry, returnType);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-            .create(retryAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(),
+            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
                 proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
             () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
@@ -199,20 +203,18 @@ public class RetryAspect implements Ordered {
         return retryConfigurationProperties.getRetryAspectOrder();
     }
 
-    private void cleanup() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            retryExecutorService.shutdown();
-            try {
-                if (!retryExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                    retryExecutorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                if (!retryExecutorService.isTerminated()) {
-                    retryExecutorService.shutdownNow();
-                }
-                Thread.currentThread().interrupt();
+    @Override
+    public void close() throws Exception {
+        retryExecutorService.shutdown();
+        try {
+            if (!retryExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                retryExecutorService.shutdownNow();
             }
-        }));
+        } catch (InterruptedException e) {
+            if (!retryExecutorService.isTerminated()) {
+                retryExecutorService.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
+        }
     }
-
 }

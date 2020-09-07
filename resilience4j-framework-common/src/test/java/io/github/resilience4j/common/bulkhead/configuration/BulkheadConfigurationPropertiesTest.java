@@ -17,10 +17,14 @@ package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,17 +46,21 @@ public class BulkheadConfigurationPropertiesTest {
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
         bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
+        Map<String, String> tags = new HashMap<>();
+        tags.put("testKey1", "testKet2");
+        bulkheadConfigurationProperties.setTags(tags);
 
         //Then
+        assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
         assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createThreadPoolBulkheadConfig("backend1");
+            .createThreadPoolBulkheadConfig("backend1", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(1);
 
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createThreadPoolBulkheadConfig("backend2");
+            .createThreadPoolBulkheadConfig("backend2", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(2);
 
@@ -94,19 +102,22 @@ public class BulkheadConfigurationPropertiesTest {
             assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
             // Should get default config and core number
             ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backendWithDefaultConfig");
+                .createThreadPoolBulkheadConfig("backendWithDefaultConfig",
+                    compositeThreadPoolBulkheadCustomizer());
             assertThat(bulkhead1).isNotNull();
             assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
             assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
             // Should get shared config and overwrite core number
             ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("backendWithSharedConfig");
+                .createThreadPoolBulkheadConfig("backendWithSharedConfig",
+                    compositeThreadPoolBulkheadCustomizer());
             assertThat(bulkhead2).isNotNull();
             assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(4);
             assertThat(bulkhead2.getQueueCapacity()).isEqualTo(2);
             // Unknown backend should get default config of Registry
             ThreadPoolBulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig("unknownBackend");
+                .createThreadPoolBulkheadConfig("unknownBackend",
+                    compositeThreadPoolBulkheadCustomizer());
             assertThat(bulkhead3).isNotNull();
             assertThat(bulkhead3.getCoreThreadPoolSize())
                 .isEqualTo(ThreadPoolBulkheadConfig.DEFAULT_CORE_THREAD_POOL_SIZE);
@@ -132,16 +143,19 @@ public class BulkheadConfigurationPropertiesTest {
         BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         bulkheadConfigurationProperties.getInstances().put("backend2", instanceProperties2);
-
+        Map<String, String> globalTags = new HashMap<>();
+        globalTags.put("testKey1", "testKet2");
+        bulkheadConfigurationProperties.setTags(globalTags);
         //Then
         assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createBulkheadConfig(instanceProperties1);
+            .createBulkheadConfig(instanceProperties1, compositeBulkheadCustomizer(), "backend1");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
 
         BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createBulkheadConfig(instanceProperties2);
+            .createBulkheadConfig(instanceProperties2, compositeBulkheadCustomizer(), "backend2");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
 
@@ -185,21 +199,24 @@ public class BulkheadConfigurationPropertiesTest {
 
         // Should get default config and overwrite max calls and wait time
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
-            .createBulkheadConfig(backendWithDefaultConfig);
+            .createBulkheadConfig(backendWithDefaultConfig, compositeBulkheadCustomizer(),
+                "backendWithDefaultConfig");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
         assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
-            .createBulkheadConfig(backendWithSharedConfig);
+            .createBulkheadConfig(backendWithSharedConfig, compositeBulkheadCustomizer(),
+                "backendWithSharedConfig");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
         assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
 
         // Unknown backend should get default config of Registry
         BulkheadConfig bulkhead3 = bulkheadConfigurationProperties
-            .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties());
+            .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties(),
+                compositeBulkheadCustomizer(), "unknown");
         assertThat(bulkhead3).isNotNull();
         assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(0L);
 
@@ -215,7 +232,8 @@ public class BulkheadConfigurationPropertiesTest {
 
         //When
         assertThatThrownBy(
-            () -> bulkheadConfigurationProperties.createBulkheadConfig(instanceProperties))
+            () -> bulkheadConfigurationProperties.createBulkheadConfig(instanceProperties,
+                compositeBulkheadCustomizer(), "unknownConfig"))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
@@ -242,6 +260,14 @@ public class BulkheadConfigurationPropertiesTest {
     public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSize() {
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setEventConsumerBufferSize(-1);
+    }
+
+    private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
+    private CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }

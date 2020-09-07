@@ -20,6 +20,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -72,15 +73,18 @@ public class CircuitBreakerAspect implements Ordered {
     private final @Nullable
     List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
     private final FallbackDecorators fallbackDecorators;
+    private final SpelResolver spelResolver;
 
     public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
-        CircuitBreakerRegistry circuitBreakerRegistry,
-        @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+                                CircuitBreakerRegistry circuitBreakerRegistry,
+                                @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
+                                FallbackDecorators fallbackDecorators,
+                                SpelResolver spelResolver) {
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
+        this.spelResolver = spelResolver;
     }
 
     @Pointcut(value = "@within(circuitBreaker) || @annotation(circuitBreaker)", argNames = "circuitBreaker")
@@ -98,16 +102,17 @@ public class CircuitBreakerAspect implements Ordered {
         if (circuitBreakerAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
-        String backend = circuitBreakerAnnotation.name();
+        String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), circuitBreakerAnnotation.name());
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
             methodName, backend);
         Class<?> returnType = method.getReturnType();
 
-        if (StringUtils.isEmpty(circuitBreakerAnnotation.fallbackMethod())) {
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), circuitBreakerAnnotation.fallbackMethod());
+        if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-            .create(circuitBreakerAnnotation.fallbackMethod(), method,
+            .create(fallbackMethodValue, method,
                 proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
             () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();

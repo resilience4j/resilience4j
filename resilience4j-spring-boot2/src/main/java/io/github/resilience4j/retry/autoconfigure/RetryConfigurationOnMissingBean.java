@@ -40,5 +40,4 @@ public class RetryConfigurationOnMissingBean extends AbstractRetryConfigurationO
     public EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry() {
         return retryConfiguration.retryEventConsumerRegistry();
     }
-
 }

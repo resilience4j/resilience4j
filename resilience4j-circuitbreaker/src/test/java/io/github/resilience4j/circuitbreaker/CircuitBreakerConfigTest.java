@@ -21,7 +21,12 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Test;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
@@ -102,6 +107,11 @@ public class CircuitBreakerConfigTest {
         custom().slowCallRateThreshold(101).build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void maxWaitDurationInHalfOpenStateLessThanSecondShouldFail() {
+        custom().maxWaitDurationInHalfOpenState(Duration.ZERO).build();
+    }
+
     @Test
     public void shouldSetDefaultSettings() {
         CircuitBreakerConfig circuitBreakerConfig = ofDefaults();
@@ -128,6 +138,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetFailureRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(25).build();
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
+    }
+
+    @Test
+    public void shouldSetWaitDurationInHalfOpenState() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().maxWaitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
+        then(circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis()).isEqualTo(1000);
     }
 
     @Test
@@ -336,6 +352,18 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
+    public void shouldCreateCurrentTimeFunction() {
+        Instant instant = Instant.now();
+        Clock fixedClock = Clock.fixed(instant, ZoneId.systemDefault());
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
+            .build();
+        final Function<Clock, Long> currentTimeFunction = circuitBreakerConfig.getCurrentTimestampFunction();
+        then(currentTimeFunction).isNotNull();
+        then(currentTimeFunction.apply(fixedClock)).isEqualTo(instant.toEpochMilli());
+    }
+
+    @Test
     public void shouldCreateCombinedIgnoreExceptionPredicate() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
             .ignoreException(e -> "ignore".equals(e.getMessage())) //1
@@ -395,6 +423,24 @@ public class CircuitBreakerConfigTest {
         then(extendedConfig.getSlidingWindowSize()).isEqualTo(1000);
         then(extendedConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+    }
+
+    @Test
+    public void testToString() {
+        CircuitBreakerConfig config = custom()
+                .slidingWindowSize(5)
+                .recordExceptions(RuntimeException.class)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                .slidingWindowType(SlidingWindowType.TIME_BASED).build();
+
+        String result = config.toString();
+
+        assertThat(result).startsWith("CircuitBreakerConfig {");
+        assertThat(result).contains("slidingWindowSize=5");
+        assertThat(result).contains("recordExceptions=[class java.lang.RuntimeException]");
+        assertThat(result).contains("automaticTransitionFromOpenToHalfOpenEnabled=true");
+        assertThat(result).contains("slidingWindowType=TIME_BASED");
+        assertThat(result).endsWith("}");
     }
 
     private static class ExtendsException extends Exception {

@@ -19,7 +19,7 @@ package io.github.resilience4j.micrometer.tagged;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -29,8 +29,8 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractRetryMetrics.MetricNames.DEFAULT_RETRY_CALLS;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRetryMetricsPublisherTest {
@@ -63,12 +63,13 @@ public class TaggedRetryMetricsPublisherTest {
         List<Meter> meters = meterRegistry.getMeters();
         assertThat(meters).hasSize(8);
 
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
 
-        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges,
-            "successful_without_retry", newRetry.getName());
+        Optional<FunctionCounter> successfulWithoutRetry = MetricsTestHelper
+            .findMeterByKindAndNameTags(counters, "successful_without_retry", newRetry.getName());
         assertThat(successfulWithoutRetry).isPresent();
-        assertThat(successfulWithoutRetry.get().value())
+        assertThat(successfulWithoutRetry.get().count())
             .isEqualTo(newRetry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 
@@ -88,66 +89,72 @@ public class TaggedRetryMetricsPublisherTest {
 
     @Test
     public void shouldReplaceMetrics() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
-        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges,
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS).functionCounters();
+        Optional<FunctionCounter> successfulWithoutRetry = MetricsTestHelper.findMeterByKindAndNameTags(counters,
             "successful_without_retry", retry.getName());
         assertThat(successfulWithoutRetry).isPresent();
-        assertThat(successfulWithoutRetry.get().value())
+        assertThat(successfulWithoutRetry.get().count())
             .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
 
         Retry newRetry = Retry.of(retry.getName(), RetryConfig.custom().maxAttempts(1).build());
 
         retryRegistry.replace(retry.getName(), newRetry);
 
-        gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
-        successfulWithoutRetry = findGaugeByKindAndNameTags(gauges, "successful_without_retry",
+        counters = meterRegistry.get(DEFAULT_RETRY_CALLS).functionCounters();
+        successfulWithoutRetry = MetricsTestHelper
+            .findMeterByKindAndNameTags(counters, "successful_without_retry",
             newRetry.getName());
         assertThat(successfulWithoutRetry).isPresent();
-        assertThat(successfulWithoutRetry.get().value())
+        assertThat(successfulWithoutRetry.get().count())
             .isEqualTo(newRetry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 
     @Test
     public void successfulWithoutRetryCallsGaugeReportsCorrespondingValue() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
 
-        Optional<Gauge> successfulWithoutRetry = findGaugeByKindAndNameTags(gauges,
-            "successful_without_retry", retry.getName());
+        Optional<FunctionCounter> successfulWithoutRetry = findMeterByKindAndNameTags(
+            counters, "successful_without_retry", retry.getName());
         assertThat(successfulWithoutRetry).isPresent();
-        assertThat(successfulWithoutRetry.get().value())
+        assertThat(successfulWithoutRetry.get().count())
             .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 
     @Test
     public void successfulWithRetryCallsGaugeReportsCorrespondingValue() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
 
-        Optional<Gauge> successfulWithRetry = findGaugeByKindAndNameTags(gauges,
+        Optional<FunctionCounter> successfulWithRetry = MetricsTestHelper.findMeterByKindAndNameTags(counters,
             "successful_with_retry", retry.getName());
         assertThat(successfulWithRetry).isPresent();
-        assertThat(successfulWithRetry.get().value())
+        assertThat(successfulWithRetry.get().count())
             .isEqualTo(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt());
     }
 
     @Test
     public void failedWithoutRetryCallsGaugeReportsCorrespondingValue() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
 
-        Optional<Gauge> failedWithoutRetry = findGaugeByKindAndNameTags(gauges,
-            "failed_without_retry", retry.getName());
+        Optional<FunctionCounter> failedWithoutRetry = MetricsTestHelper.findMeterByKindAndNameTags(
+            counters, "failed_without_retry", retry.getName());
         assertThat(failedWithoutRetry).isPresent();
-        assertThat(failedWithoutRetry.get().value())
+        assertThat(failedWithoutRetry.get().count())
             .isEqualTo(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt());
     }
 
     @Test
     public void failedWithRetryCallsGaugeReportsCorrespondingValue() {
-        Collection<Gauge> gauges = meterRegistry.get(DEFAULT_RETRY_CALLS).gauges();
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS).
+            functionCounters();
 
-        Optional<Gauge> failedWithRetry = findGaugeByKindAndNameTags(gauges, "failed_with_retry",
+        Optional<FunctionCounter> failedWithRetry = MetricsTestHelper
+            .findMeterByKindAndNameTags(counters, "failed_with_retry",
             retry.getName());
         assertThat(failedWithRetry).isPresent();
-        assertThat(failedWithRetry.get().value())
+        assertThat(failedWithRetry.get().count())
             .isEqualTo(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt());
     }
 
@@ -155,7 +162,7 @@ public class TaggedRetryMetricsPublisherTest {
     public void metricsAreRegisteredWithCustomNames() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedRetryMetricsPublisher taggedRetryMetricsPublisher = new TaggedRetryMetricsPublisher(
-            TaggedRetryMetricsPublisher.MetricNames.custom()
+            RetryMetricNames.custom()
                 .callsMetricName("custom_calls")
                 .build(), meterRegistry);
         RetryRegistry retryRegistry = RetryRegistry
@@ -169,5 +176,43 @@ public class TaggedRetryMetricsPublisherTest {
             .collect(Collectors.toSet());
 
         assertThat(metricNames).hasSameElementsAs(Collections.singletonList("custom_calls"));
+    }
+
+    @Test
+    public void testReplaceNewMeter() {
+        Retry oldOne = Retry.of("backendC", RetryConfig.ofDefaults());
+        // add meters of old
+        taggedRetryMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.executeRunnable(() -> { });
+
+        assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendC")).hasSize(4);
+        Collection<FunctionCounter> counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
+        Optional<FunctionCounter> successfulWithoutRetry =
+            findMeterByKindAndNameTags(counters, "successful_without_retry", oldOne.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().count())
+            .isEqualTo(oldOne.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
+
+
+        Retry newOne = Retry.of("backendC", RetryConfig.ofDefaults());
+        // add meters of old
+        taggedRetryMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.executeRunnable(() -> { });
+        newOne.executeRunnable(() -> { });
+        newOne.executeRunnable(() -> { });
+
+        assertThat(taggedRetryMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedRetryMetricsPublisher.meterIdMap.get("backendC")).hasSize(4);
+        counters = meterRegistry.get(DEFAULT_RETRY_CALLS)
+            .functionCounters();
+        successfulWithoutRetry =
+            findMeterByKindAndNameTags(counters, "successful_without_retry", newOne.getName());
+        assertThat(successfulWithoutRetry).isPresent();
+        assertThat(successfulWithoutRetry.get().count())
+            .isEqualTo(newOne.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt());
     }
 }

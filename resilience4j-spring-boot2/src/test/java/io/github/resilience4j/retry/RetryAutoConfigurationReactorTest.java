@@ -17,7 +17,6 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
-import io.github.resilience4j.reactor.retry.RetryExceptionWrapper;
 import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.service.test.TestApplication;
@@ -67,18 +66,18 @@ public class RetryAutoConfigurationReactorTest {
             "/actuator/retryevents");
         RetryEventsEndpointResponse retryEventListForCBefore =
             retryEventListBody("/actuator/retryevents/" + BACKEND_C);
-        ;
 
         try {
-            retryDummyService.doSomethingFlux(true).subscribe(String::toUpperCase,
-                throwable -> System.out.println("Exception received:" + throwable.getMessage()));
-        } catch (RetryExceptionWrapper ex) {
-            assertThat(ex.getCause()).hasCauseInstanceOf(IllegalArgumentException.class);
-            // Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
+            retryDummyService.doSomethingFlux(true)
+                .doOnError(throwable -> System.out.println("Exception received:" + throwable.getMessage()))
+                .blockLast();
+        } catch (IllegalArgumentException ex) {
+            // Do nothing. The IllegalArgumentException is recorded by the retry as it is one of failure exceptions
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        retryDummyService.doSomethingFlux(false).subscribe(String::toUpperCase,
-            throwable -> System.out.println("Exception received:" + throwable.getMessage()));
+        retryDummyService.doSomethingFlux(false)
+            .doOnError(throwable -> System.out.println("Exception received:" + throwable.getMessage()))
+            .blockLast();
 
         Retry retry = retryRegistry.retry(BACKEND_C);
         assertThat(retry).isNotNull();

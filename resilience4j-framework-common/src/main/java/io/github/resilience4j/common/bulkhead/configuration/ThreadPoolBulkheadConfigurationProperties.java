@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Dan Maas
+ * Copyright 2019 Dan Maas, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@
 package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.common.CommonProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
@@ -26,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class ThreadPoolBulkheadConfigurationProperties {
+public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
@@ -52,33 +55,44 @@ public class ThreadPoolBulkheadConfigurationProperties {
     }
 
     // Thread pool bulkhead section
-    public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend) {
-        return createThreadPoolBulkheadConfig(getBackendProperties(backend));
+    public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(String backend,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
+        return createThreadPoolBulkheadConfig(getBackendProperties(backend),
+            compositeThreadPoolBulkheadCustomizer, backend);
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
-        InstanceProperties instanceProperties) {
+        InstanceProperties instanceProperties,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
+        String instanceName) {
         if (instanceProperties != null && StringUtils
             .isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties);
+            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties,
+                compositeThreadPoolBulkheadCustomizer, instanceName);
         }
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties);
+        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties,
+            compositeThreadPoolBulkheadCustomizer, instanceName);
     }
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
-        InstanceProperties baseProperties, InstanceProperties instanceProperties) {
+        InstanceProperties baseProperties, InstanceProperties instanceProperties,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
+        String instanceName) {
         ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
-            ThreadPoolBulkheadConfig.custom(), baseProperties);
+            ThreadPoolBulkheadConfig.custom(), baseProperties,
+            compositeThreadPoolBulkheadCustomizer, instanceName);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
-            instanceProperties);
+            instanceProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
     }
 
     public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
-        ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties) {
+        ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
+        String instanceName) {
         if (properties == null) {
             return ThreadPoolBulkheadConfig.custom().build();
         }
@@ -98,7 +112,12 @@ public class ThreadPoolBulkheadConfigurationProperties {
         if (properties.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
         }
-
+        if(properties.getContextPropagators() != null){
+            builder.contextPropagator(properties.getContextPropagators());
+        }
+        compositeThreadPoolBulkheadCustomizer.getCustomizer(instanceName).ifPresent(
+            threadPoolBulkheadConfigCustomizer -> threadPoolBulkheadConfigCustomizer
+                .customize(builder));
         return builder.build();
     }
 
@@ -121,6 +140,11 @@ public class ThreadPoolBulkheadConfigurationProperties {
         private int coreThreadPoolSize;
         private int queueCapacity;
         private Duration keepAliveDuration;
+
+        @Nullable
+        private Class<? extends ContextPropagator>[] contextPropagators;
+
+
 
         public int getMaxThreadPoolSize() {
             return maxThreadPoolSize;
@@ -178,8 +202,8 @@ public class ThreadPoolBulkheadConfigurationProperties {
             return writableStackTraceEnabled;
         }
 
-        public InstanceProperties setWritableStackTraceEnabled(Integer eventConsumerBufferSize) {
-            this.eventConsumerBufferSize = eventConsumerBufferSize;
+        public InstanceProperties setWritableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
             return this;
         }
 
@@ -202,6 +226,34 @@ public class ThreadPoolBulkheadConfigurationProperties {
          */
         public InstanceProperties setBaseConfig(String baseConfig) {
             this.baseConfig = baseConfig;
+            return this;
+        }
+
+        /**
+         * Getter return array of {@link ContextPropagator} class
+         * @return array of {@link ContextPropagator} classes
+         */
+        public Class<? extends ContextPropagator>[] getContextPropagators() { return contextPropagators; }
+
+        /**
+         * Set the class type of {@link ContextPropagator}
+         *
+         * @param contextPropagators subclass of {@link ContextPropagator}
+         * @return return builder instance back for fluent set up
+         */
+        @Deprecated
+        public InstanceProperties setContextPropagator(Class<? extends ContextPropagator>... contextPropagators) {
+            return setContextPropagators(contextPropagators);
+        }
+
+        /**
+         * Set the class type of {@link ContextPropagator}
+         *
+         * @param contextPropagators subclass of {@link ContextPropagator}
+         * @return return builder instance back for fluent set up
+         */
+        public InstanceProperties setContextPropagators(Class<? extends ContextPropagator>... contextPropagators) {
+            this.contextPropagators = contextPropagators;
             return this;
         }
     }

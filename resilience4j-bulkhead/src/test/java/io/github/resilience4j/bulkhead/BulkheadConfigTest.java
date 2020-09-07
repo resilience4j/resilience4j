@@ -56,6 +56,17 @@ public class BulkheadConfigTest {
     }
 
     @Test
+    public void testBuildCustomWithFairStrategyDisabled() {
+
+        BulkheadConfig config = BulkheadConfig.custom()
+            .fairCallHandlingStrategyEnabled(false)
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.isFairCallHandlingEnabled()).isFalse();
+    }
+
+    @Test
     public void testBuildCustom() {
         int maxConcurrent = 66;
         long maxWait = 555;
@@ -68,6 +79,7 @@ public class BulkheadConfigTest {
         assertThat(config).isNotNull();
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
         assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
+        assertThat(config.isFairCallHandlingEnabled()).isTrue();
     }
 
     @Test
@@ -104,4 +116,24 @@ public class BulkheadConfigTest {
             .build();
     }
 
+    @Test
+    public void testToString() {
+        int maxConcurrent = 66;
+        long maxWait = 555;
+
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrent)
+            .maxWaitDuration(Duration.ofMillis(maxWait))
+            .writableStackTraceEnabled(false)
+            .fairCallHandlingStrategyEnabled(false)
+            .build();
+
+        String result = config.toString();
+        assertThat(result).startsWith("BulkheadConfig{");
+        assertThat(result).contains("maxConcurrentCalls=66");
+        assertThat(result).contains("maxWaitDuration=PT0.555S");
+        assertThat(result).contains("writableStackTraceEnabled=false");
+        assertThat(result).contains("fairCallHandlingEnabled=false");
+        assertThat(result).endsWith("}");
+    }
 }

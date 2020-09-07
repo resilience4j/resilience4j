@@ -21,6 +21,7 @@ import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -73,15 +74,18 @@ public class RateLimiterAspect implements Ordered {
     private final @Nullable
     List<RateLimiterAspectExt> rateLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
+    private final SpelResolver spelResolver;
 
     public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
-        RateLimiterConfigurationProperties properties,
-        @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators) {
+                             RateLimiterConfigurationProperties properties,
+                             @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
+                             FallbackDecorators fallbackDecorators,
+                             SpelResolver spelResolver) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.properties = properties;
         this.rateLimiterAspectExtList = rateLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
+        this.spelResolver = spelResolver;
     }
 
     /**
@@ -105,16 +109,17 @@ public class RateLimiterAspect implements Ordered {
         if (rateLimiterAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
-        String name = rateLimiterAnnotation.name();
+        String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.name());
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
             methodName, name);
         Class<?> returnType = method.getReturnType();
 
-        if (StringUtils.isEmpty(rateLimiterAnnotation.fallbackMethod())) {
+        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.fallbackMethod());
+        if (StringUtils.isEmpty(fallbackMethodValue)) {
             return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         }
         FallbackMethod fallbackMethod = FallbackMethod
-            .create(rateLimiterAnnotation.fallbackMethod(), method, proceedingJoinPoint.getArgs(),
+            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
                 proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
             () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();

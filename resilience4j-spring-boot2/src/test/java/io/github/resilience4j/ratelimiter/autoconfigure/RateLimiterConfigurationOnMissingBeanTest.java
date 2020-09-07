@@ -11,6 +11,7 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterAspectExt;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfiguration;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,12 +80,19 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         }
 
         @Bean
-        public RateLimiterAspect rateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
+        public RateLimiterAspect rateLimiterAspect(
+            RateLimiterRegistry rateLimiterRegistry,
             @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators) {
-            rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
-                new RateLimiterConfigurationProperties(), rateLimiterAspectExtList,
-                fallbackDecorators);
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
+            rateLimiterAspect = new RateLimiterAspect(
+                rateLimiterRegistry,
+                new RateLimiterConfigurationProperties(),
+                rateLimiterAspectExtList,
+                fallbackDecorators,
+                spelResolver
+            );
             return rateLimiterAspect;
         }
 

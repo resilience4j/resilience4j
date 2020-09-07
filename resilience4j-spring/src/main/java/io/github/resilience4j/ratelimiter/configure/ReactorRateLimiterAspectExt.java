@@ -57,10 +57,10 @@ public class ReactorRateLimiterAspectExt implements RateLimiterAspectExt {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.compose(RateLimiterOperator.of(rateLimiter));
+            return fluxReturnValue.transformDeferred(RateLimiterOperator.of(rateLimiter));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
-            return monoReturnValue.compose(RateLimiterOperator.of(rateLimiter));
+            return monoReturnValue.transformDeferred(RateLimiterOperator.of(rateLimiter));
         } else {
             logger.error("Unsupported type for Reactor rateLimiter {}",
                 returnValue.getClass().getTypeName());

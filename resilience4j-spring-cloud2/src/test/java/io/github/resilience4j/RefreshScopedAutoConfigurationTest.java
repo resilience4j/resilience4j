@@ -8,6 +8,8 @@ import io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterAutoConfigura
 import io.github.resilience4j.ratelimiter.autoconfigure.RefreshScopedRateLimiterAutoConfiguration;
 import io.github.resilience4j.retry.autoconfigure.RefreshScopedRetryAutoConfiguration;
 import io.github.resilience4j.retry.autoconfigure.RetryAutoConfiguration;
+import io.github.resilience4j.timelimiter.autoconfigure.RefreshScopedTimeLimiterAutoConfiguration;
+import io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterAutoConfiguration;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -64,5 +66,13 @@ public class RefreshScopedAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(
                 RefreshScopedRetryAutoConfiguration.class, RetryAutoConfiguration.class))
             .run(context -> testRefreshScoped(context, "retryRegistry"));
+    }
+
+    @Test
+    public void refreshScopedTimeLimiterRegistry() {
+        contextRunner
+            .withConfiguration(AutoConfigurations.of(
+                RefreshScopedTimeLimiterAutoConfiguration.class, TimeLimiterAutoConfiguration.class))
+            .run(context -> testRefreshScoped(context, "timeLimiterRegistry"));
     }
 }

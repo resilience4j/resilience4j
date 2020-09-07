@@ -263,3 +263,65 @@ NOTE: Breaking changes:
 * Issue #634: Adapted resilience4j-metrics to latest changes in the CircuitBreaker
 * Issue #646: Fixed CircuitBreaker 'XX' tried an illegal state transition from OPEN to OPEN
 * Issue #607: Added a new config parameter to enable the CircuitBreaker and RateLimiter health indicator. They are disabled by default now.
+
+== Version 1.2.0
+* Issue #642: Added weight support in RateLimiter
+* Issue #659: Added support for Kotlin Flows
+* Issue #668: Added util class to determine whether Circuit Breaker permits calls
+* Issue #671: Allow configurable wait times for circuit breakers to be open as a function of # of close attempts
+* Issue #674: CircuitBreaker tried an illegal state transition from HALF_OPEN to HALF_OPEN
+* Issue #682: Retrofit call cancellations are recorded as circuit breaker failures
+* Issue #687: context.onSuccess called in case of maximum amount of retries reached
+* Issue #691: Exceptions thrown from fallback methods shouldn't be wrapped
+* Issue #699: Added CircuitBreaker waitIntervalFunction to spring boot config
+* Issue #701: Allow custom Prometheus Histogram buckets
+* Issue #756: Spring Boot module must work without a Spring actuator
+* PR #722: Health indicator overall status can be controlled with allowHealthIndicatorToFail property
+
+== Version 1.3.0
+* Issue #822: Fixed the case where resilience4j rateLimiter seems to ignore configuration
+* Issue #816: Fixed Reactor RetryOperator throws exception wrapped by RetryExceptionWrapper
+* Issue #806: Switched aggregated retry.calls metric to a counter from a gauage
+* Issue #803: Added new Circuit breaker state -> METRICS_ONLY
+* Issue #799: Fixed WritableStackTraceEnabled config setting in ThreadPool bulkhead configuration
+* Issue #775: Added Getter for RetryOnRetryEvent
+* Issue #769: Fixed Duplicated auto complete support in IDEA
+* Issue #765: Added support to use Retry with Feign client
+* Issue #751: Vavr upgrade to 0.10.2 
+* Issue #718: Fixed blocking behavior in Reactor Retry Operator 
+* Issue #711: Added support to use SpEL in resilienec4j spring annoations
+* Issue #751: Fixed Resilience4j Spring boot modules MetricsAutoConfiguration
+* Issue #565: Added ThreadLocal passing support to the Threadpool bulkhead implementation 
+* Issue #430: Added TimeLimiter spring boot starter support 
+* Issue #509: Added support to extend Micrometer tags
+* PR #831: non backward compatible API change in ThreadPoolBulkhead decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) now return Supplier<CompletionStage<Void>> instead of Runnable
+
+=== Version 1.3.1
+* Issue #596: Fixed a bug that a fallback method is not invoked when using CompletableFutures and a ThreadPoolBulkhead annotation
+
+== Version 1.4.0
+* Issue #703: Add a feature that allows to plug-in your own Registry implementation which can be based on a cache library if needed.
+* Issue #737: Updated reactor version to 3.3.0.RELEASE
+* Issue #933: Add RegistryStore and builder methods to create BulkheadRegistry and ThreadPoolBulkheadRegistry
+* Issue #924: Add RegistryStore and builder methods to create RetryRegistry
+* Issue #910: Add RegistryStore and builder methods to create RateLimiterRegistry
+* Issue #928: Fix TimeLimiter does not set a message for TimeoutException
+* Issue #916: Allow setting Retry Wait Duration Limit to value equal >= zero
+* Issue #887: Fixing Spring Boot Common and Spring Boot 2 modules share the same packages which is not allowed in the Java Module system
+* Issue #886: Add support for RxJava 3
+* Issue #913: Add proper graceful cleanup of resilience4j thread pool executors which make it properly cleaned on spring boot applications
+* Issue #939: Fix actuator shows Whitelabel error page with "Invalid Event"
+* Issue #958: Added missing method to set contextProgagators in ThreadPoolBulkheadConfigurationProperties
+* PR #914: Adding non-coroutine kotlin wrapper functions as a convenience
+* PR #943: Removed deprecated documentation
+
+== Version 1.5.0
+* Issue #855: Updated resilience4j-spring-boot2 to 2.3.0.RELEASE
+* Issue #855: Updated resilience4j-spring-cloud2 to 2.2.2.RELEASE
+* Issue #942: Introduced new CB metric "notPermittedCalls"
+* Issue #964: Added Kotlin DSL for building *Config and *Registry classes
+* Issue #979: Added fairCallHandlingEnabled flag to BulkheadConfig which controls whether FairSync or NonfairSync should be used in the Semaphore.
+* Issue #982: Added support to configure exponential random backoff via Spring config
+* Issue #991: Fixed bug that auto transition to half_open happens even if the state is forced open.
+* Issue #1000: Added toString to CircuitBreakerConfig
+* Issue #1003: Fixed bug that CircuitBreaker tries to obtain permission twice in circuitBreaker.decorateEitherSupplier()

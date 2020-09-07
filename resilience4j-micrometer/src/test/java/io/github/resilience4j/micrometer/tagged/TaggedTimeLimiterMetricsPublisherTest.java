@@ -22,6 +22,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,8 +34,8 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractTimeLimiterMetrics.MetricNames.DEFAULT_TIME_LIMITER_CALLS;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findCounterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.TimeLimiterMetricNames.DEFAULT_TIME_LIMITER_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedTimeLimiterMetricsPublisherTest {
@@ -68,9 +69,21 @@ public class TaggedTimeLimiterMetricsPublisherTest {
 
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
 
-        Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
+        Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
             newTimeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
+    }
+
+    @Test
+    public void shouldAddCustomTags() {
+        TimeLimiter timeLimiterF = timeLimiterRegistry.timeLimiter("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        timeLimiterF.onSuccess();
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendA", "backendF");
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendF")).hasSize(3);
+
+        assertThat(meterRegistry.getMeters()).hasSize(6);
+        RequiredSearch match = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).tags("key1", "value1");
+        assertThat(match).isNotNull();
     }
 
     @Test
@@ -106,7 +119,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onSuccess();
 
-        Optional<Counter> successful = findCounterByKindAndNameTags(counters, "successful",
+        Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
             timeLimiter.getName());
         assertThat(successful).map(Counter::count).contains(1d);
     }
@@ -116,7 +129,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onError(new RuntimeException());
 
-        Optional<Counter> failed = findCounterByKindAndNameTags(counters, "failed",
+        Optional<Counter> failed = findMeterByKindAndNameTags(counters, "failed",
             timeLimiter.getName());
         assertThat(failed).map(Counter::count).contains(1d);
     }
@@ -126,7 +139,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
         Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
         timeLimiter.onError(new TimeoutException());
 
-        Optional<Counter> timeout = findCounterByKindAndNameTags(counters, "timeout",
+        Optional<Counter> timeout = findMeterByKindAndNameTags(counters, "timeout",
             timeLimiter.getName());
         assertThat(timeout).map(Counter::count).contains(1d);
     }
@@ -135,7 +148,7 @@ public class TaggedTimeLimiterMetricsPublisherTest {
     public void customMetricNamesGetApplied() {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher = new TaggedTimeLimiterMetricsPublisher(
-            TaggedTimeLimiterMetricsPublisher.MetricNames.custom()
+            TimeLimiterMetricNames.custom()
                 .callsMetricName("custom_calls")
                 .build(), meterRegistry);
 
@@ -153,4 +166,37 @@ public class TaggedTimeLimiterMetricsPublisherTest {
             "custom_calls"
         ));
     }
+
+    @Test
+    public void testReplaceNewMeter(){
+        TimeLimiter oldOne = TimeLimiter.of("backendC", TimeLimiterConfig.ofDefaults());
+        // add meters of old
+        taggedTimeLimiterMetricsPublisher.addMetrics(meterRegistry, oldOne);
+        // one success call
+        oldOne.onSuccess();
+
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(3);
+        Collection<Counter> counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        Optional<Counter> successful = findMeterByKindAndNameTags(counters, "successful",
+            oldOne.getName());
+        assertThat(successful).map(Counter::count).contains(1d);
+
+        TimeLimiter newOne = TimeLimiter.of("backendC", TimeLimiterConfig.ofDefaults());
+
+        // add meters of new
+        taggedTimeLimiterMetricsPublisher.addMetrics(meterRegistry, newOne);
+        // three success call
+        newOne.onSuccess();
+        newOne.onSuccess();
+        newOne.onSuccess();
+
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap).containsKeys("backendC");
+        assertThat(taggedTimeLimiterMetricsPublisher.meterIdMap.get("backendC")).hasSize(3);
+        counters = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counters();
+        successful = findMeterByKindAndNameTags(counters, "successful",
+            newOne.getName());
+        assertThat(successful).map(Counter::count).contains(3d);
+    }
+
 }

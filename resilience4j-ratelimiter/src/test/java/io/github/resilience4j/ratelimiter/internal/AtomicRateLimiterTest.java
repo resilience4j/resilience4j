@@ -28,6 +28,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,9 +66,13 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
     }
 
     public void setup(Duration timeoutDuration) {
+        setup(Duration.ofNanos(CYCLE_IN_NANOS), timeoutDuration, PERMISSIONS_RER_CYCLE);
+    }
+
+    public void setup(Duration cycleDuration, Duration timeoutDuration, int permissionPerCycle) {
         RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
-            .limitForPeriod(PERMISSIONS_RER_CYCLE)
-            .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
+            .limitForPeriod(permissionPerCycle)
+            .limitRefreshPeriod(cycleDuration)
             .timeoutDuration(timeoutDuration)
             .build();
         AtomicRateLimiter testLimiter = new AtomicRateLimiter(LIMITER_NAME, rateLimiterConfig);
@@ -407,6 +412,30 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
         then(metrics.getAvailablePermissions()).isEqualTo(1);
         then(metrics.getNanosToWait()).isEqualTo(0);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+    }
+
+    @Test
+    public void reservePermissionsUpfront() throws Exception {
+        final int limitForPeriod = 3;
+        final int tasksNum = 9;
+        Duration limitRefreshPeriod = Duration.ofMillis(10);
+        Duration timeoutDuration = Duration.ofMillis(12);
+        long cycleInNanos = limitRefreshPeriod.toNanos();
+
+        setup(limitRefreshPeriod, timeoutDuration, limitForPeriod);
+        setTimeOnNanos(cycleInNanos);
+
+        ArrayList<Long> timesToWait = new ArrayList<>();
+        for (int i = 0; i < tasksNum; i++) {
+            setTimeOnNanos(cycleInNanos + i + 1);
+            long timeToWait = rateLimiter.reservePermission(1);
+            timesToWait.add(timeToWait);
+        }
+        then(timesToWait).containsExactly(
+            0L, 0L, 0L,
+            cycleInNanos - 4, cycleInNanos - 5, cycleInNanos - 6,
+            -1L, -1L, -1L
+        );
     }
 
     @Test

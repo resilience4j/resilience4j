@@ -28,9 +28,9 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.AbstractRateLimiterMetrics.MetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
-import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findGaugeByNamesTag;
+import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.RateLimiterMetricNames.DEFAULT_WAITING_THREADS_METRIC_NAME;
+import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRateLimiterMetricsTest {
@@ -65,7 +65,7 @@ public class TaggedRateLimiterMetricsTest {
         Collection<Gauge> gauges = meterRegistry.get(DEFAULT_AVAILABLE_PERMISSIONS_METRIC_NAME)
             .gauges();
 
-        Optional<Gauge> successful = findGaugeByNamesTag(gauges, newRateLimiter.getName());
+        Optional<Gauge> successful = findMeterByNamesTag(gauges, newRateLimiter.getName());
         assertThat(successful).isPresent();
         assertThat(successful.get().value())
             .isEqualTo(newRateLimiter.getMetrics().getAvailablePermissions());
@@ -149,7 +149,7 @@ public class TaggedRateLimiterMetricsTest {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.ofDefaults();
         rateLimiterRegistry.rateLimiter("backendA");
         TaggedRateLimiterMetrics.ofRateLimiterRegistry(
-            TaggedRateLimiterMetrics.MetricNames.custom()
+            RateLimiterMetricNames.custom()
                 .availablePermissionsMetricName("custom_available_permissions")
                 .waitingThreadsMetricName("custom_waiting_threads")
                 .build(),

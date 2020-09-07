@@ -19,7 +19,6 @@ package io.github.resilience4j.metrics;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,14 +29,8 @@ import static org.mockito.Mockito.times;
 
 public abstract class AbstractCircuitBreakerMetricsTest {
 
-    private MetricRegistry metricRegistry;
-    private HelloWorldService helloWorldService;
-
-    @Before
-    public void setUp() {
-        metricRegistry = new MetricRegistry();
-        helloWorldService = mock(HelloWorldService.class);
-    }
+    protected final MetricRegistry metricRegistry = new MetricRegistry();
+    protected final HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
     protected abstract CircuitBreaker givenMetricRegistry(String prefix,
         MetricRegistry metricRegistry);

@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.retry.event;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 /**
  * A RetryEvent which informs that an error has been ignored. It will not be retried.
  * <p>
@@ -26,7 +28,7 @@ package io.github.resilience4j.retry.event;
  */
 public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
 
-    public RetryOnIgnoredErrorEvent(String name, Throwable lastThrowable) {
+    public RetryOnIgnoredErrorEvent(String name, @Nullable Throwable lastThrowable) {
         super(name, 0, lastThrowable);
     }
 
@@ -40,6 +42,6 @@ public class RetryOnIgnoredErrorEvent extends AbstractRetryEvent {
         return String.format("%s: Retry '%s' recorded an error which has been ignored: '%s'.",
             getCreationTime(),
             getName(),
-            getLastThrowable() != null ? getLastThrowable().toString() : "null");
+            getLastThrowable());
     }
 }

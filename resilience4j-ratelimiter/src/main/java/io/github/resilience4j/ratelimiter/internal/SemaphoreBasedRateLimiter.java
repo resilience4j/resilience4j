@@ -177,7 +177,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     /**
-     * Reserving permissions is not supported in the spemaphore based implementation. Semaphores are
+     * Reserving permissions is not supported in the semaphore based implementation. Semaphores are
      * totally blocking by it's nature. So this non-blocking API isn't supported. Use {@link
      * #acquirePermission()}
      *
@@ -186,7 +186,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public long reservePermission() {
         throw new UnsupportedOperationException(
-            "Reserving permissions is not supported in the spemaphore based implementation");
+            "Reserving permissions is not supported in the semaphore based implementation");
     }
 
     /**
@@ -196,7 +196,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     @Override
     public long reservePermission(int permits) {
         throw new UnsupportedOperationException(
-            "Reserving permissions is not supported in the spemaphore based implementation");
+            "Reserving permissions is not supported in the semaphore based implementation");
     }
 
     /**

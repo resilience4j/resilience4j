@@ -22,6 +22,22 @@ public class ClassUtilsTest {
             .hasCauseInstanceOf(NoSuchMethodException.class);
     }
 
+    @Test
+    public void shouldInstantiateClassWithDefaultConstructor() {
+        assertThat(ClassUtils.instantiateClassDefConstructor(DefaultConstructor.class)).isNotNull();
+    }
+
+    @Test
+    public void shouldInstantiateClassWithDefaultConstructor2() {
+        assertThat(ClassUtils.instantiateClassDefConstructor(DefaultConstructor2.class)).isNotNull();
+    }
+
+    @Test
+    public void shouldFailToInstantiateNoDefaultConstructor() {
+        assertThatThrownBy(
+            () -> ClassUtils.instantiateClassDefConstructor(NoDefaultConstructor.class))
+            .isInstanceOf(InstantiationException.class);
+    }
 
     public static class PublicPredicate implements Predicate<String> {
 
@@ -44,5 +60,14 @@ public class ClassUtilsTest {
         public boolean test(String o) {
             return o.equals(bla);
         }
+    }
+
+    public static class NoDefaultConstructor  {
+        public NoDefaultConstructor(String a){}
+    }
+    public static class DefaultConstructor  {}
+    public static class DefaultConstructor2  {
+        public DefaultConstructor2(String a){}
+        public DefaultConstructor2(){}
     }
 }

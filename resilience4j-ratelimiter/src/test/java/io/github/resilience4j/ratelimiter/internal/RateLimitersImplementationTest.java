@@ -17,7 +17,7 @@ public abstract class RateLimitersImplementationTest {
     protected abstract RateLimiter buildRateLimiter(RateLimiterConfig config);
 
     @Test
-    public void aquireBigNumberOfPermitsAtStartOfCycleTest() {
+    public void acquireBigNumberOfPermitsAtStartOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -42,7 +42,7 @@ public abstract class RateLimitersImplementationTest {
     }
 
     @Test
-    public void tryAquiringBigNumberOfPermitsAtEndOfCycleTest() {
+    public void tryToAcquireBigNumberOfPermitsAtEndOfCycleTest() {
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -67,7 +67,7 @@ public abstract class RateLimitersImplementationTest {
     }
 
     protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,
-        char printedWhileWaiting) {
+                                  char printedWhileWaiting) {
         Instant start = Instant.now();
         while (Instant.now().isBefore(start.plus(config.getLimitRefreshPeriod()))) {
             try {

@@ -30,16 +30,19 @@ public class BulkheadConfig {
     public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
     public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+    public static final boolean DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED = true;
 
     private final int maxConcurrentCalls;
     private final Duration maxWaitDuration;
     private final boolean writableStackTraceEnabled;
+    private final boolean fairCallHandlingEnabled;
 
     private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration,
-        boolean writableStackTraceEnabled) {
+        boolean writableStackTraceEnabled, boolean fairCallHandlingEnabled) {
         this.maxConcurrentCalls = maxConcurrentCalls;
         this.maxWaitDuration = maxWaitDuration;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
+        this.fairCallHandlingEnabled = fairCallHandlingEnabled;
     }
 
     /**
@@ -81,22 +84,40 @@ public class BulkheadConfig {
         return writableStackTraceEnabled;
     }
 
+    public boolean isFairCallHandlingEnabled() {
+        return fairCallHandlingEnabled;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BulkheadConfig{");
+        sb.append("maxConcurrentCalls=").append(maxConcurrentCalls);
+        sb.append(", maxWaitDuration=").append(maxWaitDuration);
+        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
+        sb.append(", fairCallHandlingEnabled=").append(fairCallHandlingEnabled);
+        sb.append('}');
+        return sb.toString();
+    }
+
     public static class Builder {
 
         private int maxConcurrentCalls;
         private Duration maxWaitDuration;
         private boolean writableStackTraceEnabled;
+        private boolean fairCallHandlingEnabled;
 
         public Builder() {
             this.maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
             this.maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
             this.writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+            this.fairCallHandlingEnabled = DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED;
         }
 
         public Builder(BulkheadConfig bulkheadConfig) {
             this.maxConcurrentCalls = bulkheadConfig.getMaxConcurrentCalls();
             this.maxWaitDuration = bulkheadConfig.getMaxWaitDuration();
             this.writableStackTraceEnabled = bulkheadConfig.isWritableStackTraceEnabled();
+            this.fairCallHandlingEnabled = bulkheadConfig.isFairCallHandlingEnabled();
         }
 
         /**
@@ -151,13 +172,27 @@ public class BulkheadConfig {
         }
 
         /**
+         * Indicates whether FairSync or NonfairSync should be used in Semaphore.
+         * When set to true, a fair call handling strategy is used. It guarantees the order of incoming requests (FIFO)
+         * based on internal queue.
+         * When set to false, an non fair strategy will be used which does not guarantee any order of calls.
+         *
+         * @param fairCallHandlingEnabled flag to choose call handling strategy between fair and unfair
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder fairCallHandlingStrategyEnabled(boolean fairCallHandlingEnabled) {
+            this.fairCallHandlingEnabled = fairCallHandlingEnabled;
+            return this;
+        }
+
+        /**
          * Builds a BulkheadConfig
          *
          * @return the BulkheadConfig
          */
         public BulkheadConfig build() {
             return new BulkheadConfig(maxConcurrentCalls, maxWaitDuration,
-                writableStackTraceEnabled);
+                writableStackTraceEnabled, fairCallHandlingEnabled);
         }
     }
 }

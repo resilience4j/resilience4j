@@ -1,5 +1,7 @@
 package io.github.resilience4j.ratelimiter.configure;
 
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -11,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +42,8 @@ public class RateLimiterConfigurationTest {
 
         RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration
             .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeRateLimiterCustomizerTest());
 
         assertThat(rateLimiterConfigurationProperties.getRateLimiterAspectOrder()).isEqualTo(300);
         assertThat(rateLimiterRegistry.getAllRateLimiters().size()).isEqualTo(2);
@@ -90,7 +94,8 @@ public class RateLimiterConfigurationTest {
         //When
         RateLimiterRegistry rateLimiterRegistry = rateLimiterConfiguration
             .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList()));
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeRateLimiterCustomizerTest());
 
         //Then
         assertThat(rateLimiterRegistry.getAllRateLimiters().size()).isEqualTo(2);
@@ -128,9 +133,14 @@ public class RateLimiterConfigurationTest {
 
         assertThatThrownBy(() -> rateLimiterConfiguration
             .rateLimiterRegistry(rateLimiterConfigurationProperties, eventConsumerRegistry,
-                new CompositeRegistryEventConsumer<>(emptyList())))
+                new CompositeRegistryEventConsumer<>(emptyList()),
+                compositeRateLimiterCustomizerTest()))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    public CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizerTest() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 
 }

@@ -59,12 +59,12 @@ public class ReactorCircuitBreakerAspectExt implements CircuitBreakerAspectExt {
         Object returnValue = proceedingJoinPoint.proceed();
         if (Flux.class.isAssignableFrom(returnValue.getClass())) {
             Flux<?> fluxReturnValue = (Flux<?>) returnValue;
-            return fluxReturnValue.compose(
+            return fluxReturnValue.transformDeferred(
                 io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator
                     .of(circuitBreaker));
         } else if (Mono.class.isAssignableFrom(returnValue.getClass())) {
             Mono<?> monoReturnValue = (Mono<?>) returnValue;
-            return monoReturnValue.compose(CircuitBreakerOperator.of(circuitBreaker));
+            return monoReturnValue.transformDeferred(CircuitBreakerOperator.of(circuitBreaker));
         } else {
             logger.error("Unsupported type for Reactor circuit breaker {}",
                 returnValue.getClass().getTypeName());

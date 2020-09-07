@@ -18,8 +18,10 @@ package io.github.resilience4j.feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.retry.Retry;
 import io.vavr.CheckedFunction1;
 
 import java.lang.reflect.Method;
@@ -77,6 +79,19 @@ public class FeignDecorators implements FeignDecorator {
     public static final class Builder {
 
         private final List<FeignDecorator> decorators = new ArrayList<>();
+
+
+        /**
+         * Adds a {@link Retry} to the decorator chain.
+         *
+         * @param retry a fully configured {@link Retry}.
+         * @return the builder
+         */
+        public Builder withRetry(Retry retry) {
+            decorators
+                .add((fn, m, mh, t) -> Retry.decorateCheckedFunction(retry, fn));
+            return this;
+        }
 
         /**
          * Adds a {@link CircuitBreaker} to the decorator chain.
@@ -188,6 +203,18 @@ public class FeignDecorators implements FeignDecorator {
         public Builder withFallbackFactory(Function<Exception, ?> fallbackFactory,
             Predicate<Exception> filter) {
             decorators.add(new FallbackDecorator<>(new FallbackFactory<>(fallbackFactory), filter));
+            return this;
+        }
+
+
+        /**
+         * Adds a {@link Bulkhead} to the decorator chain.
+         *
+         * @param bulkhead a fully configured {@link Bulkhead}.
+         * @return the builder
+         */
+        public Builder withBulkhead(Bulkhead bulkhead) {
+            decorators.add((fn, m, mh, t) -> Bulkhead.decorateCheckedFunction(bulkhead, fn));
             return this;
         }
 

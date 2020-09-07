@@ -81,7 +81,7 @@ public interface Retry {
      * @return a Retry with a custom Retry configuration.
      */
     static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier,
-        Map<String, String> tags) {
+                    Map<String, String> tags) {
         return new RetryImpl(name, retryConfigSupplier.get(), tags);
     }
 
@@ -129,7 +129,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry,
-        CheckedFunction0<T> supplier) {
+                                                           CheckedFunction0<T> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
@@ -179,7 +179,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry,
-        CheckedFunction1<T, R> function) {
+                                                                 CheckedFunction1<T, R> function) {
         return (T t) -> {
             Retry.Context<R> context = retry.context();
             do {
@@ -232,7 +232,7 @@ public interface Retry {
      * @return a retryable function
      */
     static <E extends Exception, T> Supplier<Either<E, T>> decorateEitherSupplier(Retry retry,
-        Supplier<Either<E, T>> supplier) {
+                                                                                  Supplier<Either<E, T>> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
@@ -483,14 +483,14 @@ public interface Retry {
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(ScheduledExecutorService scheduler,
-        Supplier<CompletionStage<T>> supplier) {
+                                                          Supplier<CompletionStage<T>> supplier) {
         return decorateCompletionStage(this, scheduler, supplier).get();
     }
 
     /**
-     * Get the Metrics of this RateLimiter.
+     * Get the Metrics of this Retry instance.
      *
-     * @return the Metrics of this RateLimiter
+     * @return the Metrics of this Retry instance
      */
     Metrics getMetrics();
 
@@ -537,10 +537,10 @@ public interface Retry {
 
         /**
          * Records a successful call or retryable call with the needed generated retry events. When
-         * there is a successful retry before reaching the max retries limit , it will generate
-         * {@link RetryOnSuccessEvent} When the retry reach the max retries limit , it will generate
+         * there is a successful retry before reaching the max retries limit, it will generate
+         * {@link RetryOnSuccessEvent}. When the retry reach the max retries limit, it will generate
          * {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other
-         * exception thrown
+         * exception is thrown.
          */
         void onComplete();
 
@@ -580,10 +580,10 @@ public interface Retry {
 
         /**
          * Records a successful call or retryable call with the needed generated retry events. When
-         * there is a successful retry before reaching the max retries limit , it will generate
-         * {@link RetryOnSuccessEvent} When the retry reach the max retries limit , it will generate
+         * there is a successful retry before reaching the max retries limit, it will generate a
+         * {@link RetryOnSuccessEvent}. When the retry reaches the max retries limit, it will generate a
          * {@link RetryOnErrorEvent} with last exception or {@link MaxRetriesExceeded} if no other
-         * exception thrown
+         * exceptions is thrown.
          */
         void onComplete();
 

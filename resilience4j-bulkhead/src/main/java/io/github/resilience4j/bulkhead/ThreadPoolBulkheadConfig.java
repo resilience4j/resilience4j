@@ -18,7 +18,16 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A {@link ThreadPoolBulkheadConfig} configures a {@link Bulkhead}
@@ -39,6 +48,7 @@ public class ThreadPoolBulkheadConfig {
     private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
     private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    private List<ContextPropagator> contextPropagators = new ArrayList<>();
 
     private ThreadPoolBulkheadConfig() {
     }
@@ -82,18 +92,33 @@ public class ThreadPoolBulkheadConfig {
         return maxThreadPoolSize;
     }
 
-    public int getCoreThreadPoolSize() {
-        return coreThreadPoolSize;
-    }
+    public int getCoreThreadPoolSize() { return coreThreadPoolSize; }
 
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
     }
 
+    public List<ContextPropagator> getContextPropagator() {
+        return contextPropagators;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ThreadPoolBulkheadConfig{");
+        sb.append("maxThreadPoolSize=").append(maxThreadPoolSize);
+        sb.append(", coreThreadPoolSize=").append(coreThreadPoolSize);
+        sb.append(", queueCapacity=").append(queueCapacity);
+        sb.append(", keepAliveDuration=").append(keepAliveDuration);
+        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
+        sb.append(", contextPropagators=").append(contextPropagators);
+        sb.append('}');
+        return sb.toString();
+    }
+
     public static class Builder {
-
+        private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
+        private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
         private ThreadPoolBulkheadConfig config;
-
 
         public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
             this.config = bulkheadConfig;
@@ -130,6 +155,26 @@ public class ThreadPoolBulkheadConfig {
                     "coreThreadPoolSize must be a positive integer value >= 1");
             }
             config.coreThreadPoolSize = coreThreadPoolSize;
+            return this;
+        }
+
+        /**
+         * Configures the context propagator class.
+         *
+         * @return the BulkheadConfig.Builder
+         */
+        public final Builder contextPropagator(
+            @Nullable Class<? extends ContextPropagator>... contextPropagatorClasses) {
+            this.contextPropagatorClasses = contextPropagatorClasses != null
+                ? contextPropagatorClasses
+                : new Class[0];
+            return this;
+        }
+
+        public final Builder contextPropagator(ContextPropagator... contextPropagators) {
+            this.contextPropagators = contextPropagators != null ?
+                Arrays.stream(contextPropagators).collect(toList()) :
+                new ArrayList<>();
             return this;
         }
 
@@ -188,6 +233,16 @@ public class ThreadPoolBulkheadConfig {
                 throw new IllegalArgumentException(
                     "maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
             }
+            if (contextPropagatorClasses.length > 0) {
+                config.contextPropagators.addAll(stream(contextPropagatorClasses)
+                    .map(ClassUtils::instantiateClassDefConstructor)
+                    .collect(toList()));
+            }
+            //setting bean of type context propagator overrides the class type.
+            if (!contextPropagators.isEmpty()){
+                config.contextPropagators.addAll(this.contextPropagators);
+            }
+
             return config;
         }
     }

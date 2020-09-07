@@ -22,6 +22,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEvent;
+import io.vavr.collection.Map;
 
 import java.util.Optional;
 
@@ -74,6 +75,11 @@ public interface Registry<E, C> {
      * @return the default configuration
      */
     C getDefaultConfig();
+
+    /**
+     * @return global configured registry tags
+     */
+    Map<String, String> getTags();
 
     /**
      * Returns an EventPublisher which can be used to register event consumers.

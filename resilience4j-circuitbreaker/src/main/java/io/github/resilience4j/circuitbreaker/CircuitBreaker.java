@@ -45,14 +45,14 @@ import java.util.stream.Collectors;
  * CircuitBreaker#onError} events. Before communicating with the backend, the permission to do so
  * must be obtained via the method {@link CircuitBreaker#tryAcquirePermission()}.
  * <p>
- * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is above a
- * (configurable) threshold. Then, all access to the backend is rejected for a (configurable) time
+ * The state of the CircuitBreaker changes from CLOSED to OPEN when the failure rate is greater than or
+ * equal to a (configurable) threshold. Then, all access to the backend is rejected for a (configurable) time
  * duration. No further calls are permitted.
  * <p>
  * After the time duration has elapsed, the CircuitBreaker state changes from OPEN to HALF_OPEN and
  * allows a number of calls to see if the backend is still unavailable or has become available
- * again. If the failure rate is above the configured threshold, the state changes back to OPEN. If
- * the failure rate is below or equal to the threshold, the state changes back to CLOSED.
+ * again. If the failure rate is greater than or equal to the configured threshold, the state changes back to OPEN.
+ * If the failure rate is below or equal to the threshold, the state changes back to CLOSED.
  */
 public interface CircuitBreaker {
 
@@ -68,17 +68,16 @@ public interface CircuitBreaker {
         CheckedFunction0<T> supplier) {
         return () -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 T returnValue = supplier.apply();
-
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -105,24 +104,24 @@ public interface CircuitBreaker {
                     CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
 
             } else {
-                final long start = System.nanoTime();
+                final long start = circuitBreaker.getCurrentTimestamp();
                 try {
                     supplier.get().whenComplete((result, throwable) -> {
-                        long durationInNanos = System.nanoTime() - start;
+                        long duration = circuitBreaker.getCurrentTimestamp() - start;
                         if (throwable != null) {
                             if (throwable instanceof Exception) {
                                 circuitBreaker
-                                    .onError(durationInNanos, TimeUnit.NANOSECONDS, throwable);
+                                    .onError(duration, circuitBreaker.getTimestampUnit(), throwable);
                             }
                             promise.completeExceptionally(throwable);
                         } else {
-                            circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                            circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                             promise.complete(result);
                         }
                     });
                 } catch (Exception exception) {
-                    long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                    long duration = circuitBreaker.getCurrentTimestamp() - start;
+                    circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                     promise.completeExceptionally(exception);
                 }
             }
@@ -142,15 +141,15 @@ public interface CircuitBreaker {
         CheckedRunnable runnable) {
         return () -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 runnable.run();
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -167,16 +166,16 @@ public interface CircuitBreaker {
     static <T> Callable<T> decorateCallable(CircuitBreaker circuitBreaker, Callable<T> callable) {
         return () -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 T returnValue = callable.call();
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -193,16 +192,16 @@ public interface CircuitBreaker {
     static <T> Supplier<T> decorateSupplier(CircuitBreaker circuitBreaker, Supplier<T> supplier) {
         return () -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 T returnValue = supplier.get();
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -220,15 +219,14 @@ public interface CircuitBreaker {
         Supplier<Either<? extends Exception, T>> supplier) {
         return () -> {
             if (circuitBreaker.tryAcquirePermission()) {
-                circuitBreaker.acquirePermission();
-                long start = System.nanoTime();
+                final long start = circuitBreaker.getCurrentTimestamp();
                 Either<? extends Exception, T> result = supplier.get();
-                long durationInNanos = System.nanoTime() - start;
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
                 if (result.isRight()) {
-                    circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                    circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 } else {
                     Exception exception = result.getLeft();
-                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                    circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 }
                 return Either.narrow(result);
             } else {
@@ -250,15 +248,15 @@ public interface CircuitBreaker {
         Supplier<Try<T>> supplier) {
         return () -> {
             if (circuitBreaker.tryAcquirePermission()) {
-                long start = System.nanoTime();
+                final long start = circuitBreaker.getCurrentTimestamp();
                 Try<T> result = supplier.get();
-                long durationInNanos = System.nanoTime() - start;
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
                 if (result.isSuccess()) {
-                    circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                    circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                     return result;
                 } else {
                     circuitBreaker
-                        .onError(durationInNanos, TimeUnit.NANOSECONDS, result.getCause());
+                        .onError(duration, circuitBreaker.getTimestampUnit(), result.getCause());
                     return result;
                 }
             } else {
@@ -279,15 +277,15 @@ public interface CircuitBreaker {
     static <T> Consumer<T> decorateConsumer(CircuitBreaker circuitBreaker, Consumer<T> consumer) {
         return (t) -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 consumer.accept(t);
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -305,15 +303,15 @@ public interface CircuitBreaker {
         CheckedConsumer<T> consumer) {
         return (t) -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 consumer.accept(t);
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -329,15 +327,15 @@ public interface CircuitBreaker {
     static Runnable decorateRunnable(CircuitBreaker circuitBreaker, Runnable runnable) {
         return () -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 runnable.run();
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -356,16 +354,16 @@ public interface CircuitBreaker {
         Function<T, R> function) {
         return (T t) -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 R returnValue = function.apply(t);
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -384,16 +382,16 @@ public interface CircuitBreaker {
         CheckedFunction1<T, R> function) {
         return (T t) -> {
             circuitBreaker.acquirePermission();
-            long start = System.nanoTime();
+            final long start = circuitBreaker.getCurrentTimestamp();
             try {
                 R returnValue = function.apply(t);
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
-                long durationInNanos = System.nanoTime() - start;
-                circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
                 throw exception;
             }
         };
@@ -486,12 +484,12 @@ public interface CircuitBreaker {
                     CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
                 return promise;
             } else {
-                final long start = System.nanoTime();
+                final long start = circuitBreaker.getCurrentTimestamp();
                 try {
                     return new CircuitBreakerFuture<>(circuitBreaker, supplier.get(), start);
                 } catch (Exception e) {
-                    long durationInNanos = System.nanoTime() - start;
-                    circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, e);
+                    long duration = circuitBreaker.getCurrentTimestamp() - start;
+                    circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), e);
                     throw e;
                 }
             }
@@ -550,11 +548,11 @@ public interface CircuitBreaker {
     void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
     /**
-     * Records a successful call.
+     * Records a successful call. This method must be invoked when a call was
+     * successful.
      *
      * @param duration     The elapsed time duration of the call
-     * @param durationUnit The duration unit This method must be invoked when a call was
-     *                     successful.
+     * @param durationUnit The duration unit
      */
     void onSuccess(long duration, TimeUnit durationUnit);
 
@@ -567,7 +565,8 @@ public interface CircuitBreaker {
     void reset();
 
     /**
-     * Transitions the state machine to CLOSED state.
+     * Transitions the state machine to CLOSED state. This call is idempotent and will not have
+     * any effect if the state machine is already in CLOSED state.
      * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
@@ -575,7 +574,8 @@ public interface CircuitBreaker {
     void transitionToClosedState();
 
     /**
-     * Transitions the state machine to OPEN state.
+     * Transitions the state machine to OPEN state. This call is idempotent and will not have
+     * any effect if the state machine is already in OPEN state.
      * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
@@ -583,7 +583,8 @@ public interface CircuitBreaker {
     void transitionToOpenState();
 
     /**
-     * Transitions the state machine to HALF_OPEN state.
+     * Transitions the state machine to HALF_OPEN state. This call is idempotent and will not have
+     * any effect if the state machine is already in HALF_OPEN state.
      * <p>
      * Should only be used, when you want to force a state transition. State transition are normally
      * done internally.
@@ -592,7 +593,8 @@ public interface CircuitBreaker {
 
     /**
      * Transitions the state machine to a DISABLED state, stopping state transition, metrics and
-     * event publishing.
+     * event publishing. This call is idempotent and will not have any effect if the
+     * state machine is already in DISABLED state.
      * <p>
      * Should only be used, when you want to disable the circuit breaker allowing all calls to pass.
      * To recover from this state you must force a new state transition
@@ -600,8 +602,20 @@ public interface CircuitBreaker {
     void transitionToDisabledState();
 
     /**
+     * Transitions the state machine to METRICS_ONLY state, stopping all state transitions but
+     * continues to capture metrics and publish events. This call is idempotent and will not have
+     * any effect if the state machine is already in METRICS_ONLY state.
+     * <p>
+     * Should only be used when you want to collect metrics while keeping the circuit breaker
+     * disabled, allowing all calls to pass.
+     * To recover from this state you must force a new state transition.
+     */
+    void transitionToMetricsOnlyState();
+
+    /**
      * Transitions the state machine to a FORCED_OPEN state,  stopping state transition, metrics and
-     * event publishing.
+     * event publishing. This call is idempotent and will not have any effect if the state machine
+     * is already in FORCED_OPEN state.
      * <p>
      * Should only be used, when you want to disable the circuit breaker allowing no call to pass.
      * To recover from this state you must force a new state transition
@@ -649,6 +663,22 @@ public interface CircuitBreaker {
      * @return an EventPublisher
      */
     EventPublisher getEventPublisher();
+
+    /**
+     * Returns the current time with respect to the CircuitBreaker currentTimeFunction.
+     * Returns System.nanoTime() by default.
+     *
+     * @return current timestamp
+     */
+    long getCurrentTimestamp();
+
+    /**
+     * Returns the timeUnit of current timestamp.
+     * Default is TimeUnit.NANOSECONDS.
+     *
+     * @return the timeUnit of current timestamp
+     */
+    TimeUnit getTimestampUnit();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -870,6 +900,11 @@ public interface CircuitBreaker {
          */
         DISABLED(3, false),
         /**
+         * A METRICS_ONLY breaker is collecting metrics, publishing events and allowing all requests
+         * through but is not transitioning to other states.
+         */
+        METRICS_ONLY(5, true),
+        /**
          * A CLOSED breaker is operating normally and allowing requests through.
          */
         CLOSED(0, true),
@@ -915,25 +950,39 @@ public interface CircuitBreaker {
      * State transitions of the CircuitBreaker state machine.
      */
     enum StateTransition {
+        CLOSED_TO_CLOSED(State.CLOSED, State.CLOSED),
         CLOSED_TO_OPEN(State.CLOSED, State.OPEN),
         CLOSED_TO_DISABLED(State.CLOSED, State.DISABLED),
+        CLOSED_TO_METRICS_ONLY(State.CLOSED, State.METRICS_ONLY),
         CLOSED_TO_FORCED_OPEN(State.CLOSED, State.FORCED_OPEN),
+        HALF_OPEN_TO_HALF_OPEN(State.HALF_OPEN, State.HALF_OPEN),
         HALF_OPEN_TO_CLOSED(State.HALF_OPEN, State.CLOSED),
         HALF_OPEN_TO_OPEN(State.HALF_OPEN, State.OPEN),
         HALF_OPEN_TO_DISABLED(State.HALF_OPEN, State.DISABLED),
+        HALF_OPEN_TO_METRICS_ONLY(State.HALF_OPEN, State.METRICS_ONLY),
         HALF_OPEN_TO_FORCED_OPEN(State.HALF_OPEN, State.FORCED_OPEN),
+        OPEN_TO_OPEN(State.OPEN, State.OPEN),
         OPEN_TO_CLOSED(State.OPEN, State.CLOSED),
         OPEN_TO_HALF_OPEN(State.OPEN, State.HALF_OPEN),
         OPEN_TO_DISABLED(State.OPEN, State.DISABLED),
+        OPEN_TO_METRICS_ONLY(State.OPEN, State.METRICS_ONLY),
         OPEN_TO_FORCED_OPEN(State.OPEN, State.FORCED_OPEN),
+        FORCED_OPEN_TO_FORCED_OPEN(State.FORCED_OPEN, State.FORCED_OPEN),
         FORCED_OPEN_TO_CLOSED(State.FORCED_OPEN, State.CLOSED),
         FORCED_OPEN_TO_OPEN(State.FORCED_OPEN, State.OPEN),
         FORCED_OPEN_TO_DISABLED(State.FORCED_OPEN, State.DISABLED),
+        FORCED_OPEN_TO_METRICS_ONLY(State.FORCED_OPEN, State.METRICS_ONLY),
         FORCED_OPEN_TO_HALF_OPEN(State.FORCED_OPEN, State.HALF_OPEN),
+        DISABLED_TO_DISABLED(State.DISABLED, State.DISABLED),
         DISABLED_TO_CLOSED(State.DISABLED, State.CLOSED),
         DISABLED_TO_OPEN(State.DISABLED, State.OPEN),
         DISABLED_TO_FORCED_OPEN(State.DISABLED, State.FORCED_OPEN),
-        DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN);
+        DISABLED_TO_HALF_OPEN(State.DISABLED, State.HALF_OPEN),
+        DISABLED_TO_METRICS_ONLY(State.DISABLED, State.METRICS_ONLY),
+        METRICS_ONLY_TO_METRICS_ONLY(State.METRICS_ONLY, State.METRICS_ONLY),
+        METRICS_ONLY_TO_CLOSED(State.METRICS_ONLY, State.CLOSED),
+        METRICS_ONLY_TO_FORCED_OPEN(State.METRICS_ONLY, State.FORCED_OPEN),
+        METRICS_ONLY_TO_DISABLED(State.METRICS_ONLY, State.DISABLED);
 
         private static final Map<Tuple2<State, State>, StateTransition> STATE_TRANSITION_MAP = Arrays
             .stream(StateTransition.values())
@@ -964,6 +1013,10 @@ public interface CircuitBreaker {
             return toState;
         }
 
+        public static boolean isInternalTransition(final StateTransition transition) {
+            return transition.getToState() == transition.getFromState();
+        }
+
         @Override
         public String toString() {
             return String.format("State transition from %s to %s", fromState, toState);
@@ -990,6 +1043,12 @@ public interface CircuitBreaker {
 
         EventPublisher onCallNotPermitted(
             EventConsumer<CircuitBreakerOnCallNotPermittedEvent> eventConsumer);
+
+        EventPublisher onFailureRateExceeded(
+            EventConsumer<CircuitBreakerOnFailureRateExceededEvent> eventConsumer);
+
+        EventPublisher onSlowCallRateExceeded(
+            EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> eventConsumer);
     }
 
     interface Metrics {
@@ -1078,7 +1137,7 @@ public interface CircuitBreaker {
         final private long start;
 
         CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future) {
-            this(circuitBreaker, future, System.nanoTime());
+            this(circuitBreaker, future, circuitBreaker.getCurrentTimestamp());
         }
 
         CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future, long start) {
@@ -1108,14 +1167,14 @@ public interface CircuitBreaker {
             try {
                 T v = future.get();
                 onceToCircuitbreaker
-                    .applyOnce(cb -> cb.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                    .applyOnce(cb -> cb.onSuccess(cb.getCurrentTimestamp() - start, cb.getTimestampUnit()));
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
                 throw e;
             } catch (Exception e) {
                 onceToCircuitbreaker.applyOnce(
-                    cb -> cb.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e));
+                    cb -> cb.onError(cb.getCurrentTimestamp() - start, cb.getTimestampUnit(), e));
                 throw e;
             }
         }
@@ -1126,14 +1185,14 @@ public interface CircuitBreaker {
             try {
                 T v = future.get(timeout, unit);
                 onceToCircuitbreaker
-                    .applyOnce(cb -> cb.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                    .applyOnce(cb -> cb.onSuccess(cb.getCurrentTimestamp() - start, cb.getTimestampUnit()));
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
                 throw e;
             } catch (Exception e) {
                 onceToCircuitbreaker.applyOnce(
-                    cb -> cb.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, e));
+                    cb -> cb.onError(cb.getCurrentTimestamp() - start, cb.getTimestampUnit(), e));
                 throw e;
             }
         }

@@ -21,6 +21,8 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldInvokeOnSuccess() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Flowable.just("Event 1", "Event 2")
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -35,6 +37,8 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldInvokeOnError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Flowable.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -83,6 +87,8 @@ public class FlowableCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldInvokeOnSuccessOnCancelWhenOneEventWasEmitted() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Flowable.just(1, 2, 3)
             .compose(CircuitBreakerOperator.of(circuitBreaker))

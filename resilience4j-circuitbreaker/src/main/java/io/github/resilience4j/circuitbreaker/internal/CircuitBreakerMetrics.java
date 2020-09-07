@@ -26,6 +26,7 @@ import io.github.resilience4j.core.metrics.Metrics;
 import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
 
+import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -42,13 +43,14 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private CircuitBreakerMetrics(int slidingWindowSize,
         CircuitBreakerConfig.SlidingWindowType slidingWindowType,
-        CircuitBreakerConfig circuitBreakerConfig) {
+        CircuitBreakerConfig circuitBreakerConfig,
+        Clock clock) {
         if (slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED) {
             this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = Math
                 .min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         } else {
-            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize);
+            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize, clock);
             this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
@@ -59,29 +61,33 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     }
 
     private CircuitBreakerMetrics(int slidingWindowSize,
-        CircuitBreakerConfig circuitBreakerConfig) {
-        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig);
+        CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig, clock);
     }
 
-    static CircuitBreakerMetrics forCosed(CircuitBreakerConfig circuitBreakerConfig) {
+    static CircuitBreakerMetrics forClosed(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
         return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
-            circuitBreakerConfig);
+            circuitBreakerConfig, clock);
     }
 
     static CircuitBreakerMetrics forHalfOpen(int permittedNumberOfCallsInHalfOpenState,
-        CircuitBreakerConfig circuitBreakerConfig) {
+        CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
         return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState,
-            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
+            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig, clock);
     }
 
-    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
+    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
         return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
-            circuitBreakerConfig);
+            circuitBreakerConfig, clock);
     }
 
-    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig) {
+    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
         return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
-            circuitBreakerConfig);
+            circuitBreakerConfig, clock);
+    }
+
+    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        return forClosed(circuitBreakerConfig, clock);
     }
 
     /**
@@ -130,15 +136,21 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
      */
     private Result checkIfThresholdsExceeded(Snapshot snapshot) {
         float failureRateInPercentage = getFailureRate(snapshot);
-        if (failureRateInPercentage == -1) {
+        float slowCallsInPercentage = getSlowCallRate(snapshot);
+
+        if (failureRateInPercentage == -1 || slowCallsInPercentage == -1) {
             return Result.BELOW_MINIMUM_CALLS_THRESHOLD;
         }
-        if (failureRateInPercentage >= failureRateThreshold) {
+        if (failureRateInPercentage >= failureRateThreshold
+            && slowCallsInPercentage >= slowCallRateThreshold) {
             return Result.ABOVE_THRESHOLDS;
         }
-        float slowCallsInPercentage = getSlowCallRate(snapshot);
+        if (failureRateInPercentage >= failureRateThreshold) {
+            return Result.FAILURE_RATE_ABOVE_THRESHOLDS;
+        }
+
         if (slowCallsInPercentage >= slowCallRateThreshold) {
-            return Result.ABOVE_THRESHOLDS;
+            return Result.SLOW_CALL_RATE_ABOVE_THRESHOLDS;
         }
         return Result.BELOW_THRESHOLDS;
     }
@@ -221,7 +233,22 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     enum Result {
         BELOW_THRESHOLDS,
+        FAILURE_RATE_ABOVE_THRESHOLDS,
+        SLOW_CALL_RATE_ABOVE_THRESHOLDS,
         ABOVE_THRESHOLDS,
-        BELOW_MINIMUM_CALLS_THRESHOLD
+        BELOW_MINIMUM_CALLS_THRESHOLD;
+
+        public static boolean hasExceededThresholds(Result result) {
+            return hasFailureRateExceededThreshold(result) ||
+                hasSlowCallRateExceededThreshold(result);
+        }
+
+        public static boolean hasFailureRateExceededThreshold(Result result) {
+            return result == ABOVE_THRESHOLDS || result == FAILURE_RATE_ABOVE_THRESHOLDS;
+        }
+
+        public static boolean hasSlowCallRateExceededThreshold(Result result) {
+            return result == ABOVE_THRESHOLDS || result == SLOW_CALL_RATE_ABOVE_THRESHOLDS;
+        }
     }
 }
