@@ -25,7 +25,7 @@ import java.time.Duration;
 /**
  * {@link RefillRateLimiter} is a permission rate based Rate Limiter.
  * Instead of resetting permits based on a permission period the permission release is based on a rate.
- * Therefore {@link RefillRateLimiterConfig#nanosPerPermission} is used which is a product of the division
+ * Therefore {@link RefillRateLimiterConfig#nanosPerPermit} is used which is a product of the division
  * of {@link RateLimiterConfig#limitRefreshPeriod} to {@link RateLimiterConfig#limitForPeriod}.
  */
 public class RefillRateLimiterConfig extends RateLimiterConfig {
@@ -34,14 +34,14 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
 
     private final int permitCapacity;
     private final int initialPermits;
-    private final long nanosPerPermission;
+    private final long nanosPerPermit;
 
-    private RefillRateLimiterConfig(Duration timeoutDuration, int permitCapacity, long nanosPerPermission,
+    private RefillRateLimiterConfig(Duration timeoutDuration, int permitCapacity, long nanosPerPermit,
                                     int initialPermits, boolean writableStackTraceEnabled) {
-        super(timeoutDuration, Duration.ofNanos(nanosPerPermission*permitCapacity), permitCapacity, writableStackTraceEnabled);
+        super(timeoutDuration, Duration.ofNanos(nanosPerPermit * permitCapacity), permitCapacity, writableStackTraceEnabled);
         this.permitCapacity = permitCapacity;
         this.initialPermits = initialPermits;
-        this.nanosPerPermission = nanosPerPermission;
+        this.nanosPerPermit = nanosPerPermit;
     }
 
     /**
@@ -64,18 +64,28 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
     }
 
     /**
-     * Creates a default RateLimiter configuration.
+     * Creates a default RefillRateLimiter configuration.
      *
-     * @return a default RateLimiter configuration.
+     * @return a default RefillRateLimiter configuration.
      */
     public static RefillRateLimiterConfig ofDefaults() {
         return new RefillRateLimiterConfig.Builder().build();
     }
 
+    /**
+     * Get the permit capacity the RefillRateLimiter should have.
+     *
+     * @return
+     */
     public int getPermitCapacity() {
         return permitCapacity;
     }
 
+    /**
+     * Get the permits the RefillRateLimiter is configured to start with.
+     *
+     * @return
+     */
     public int getInitialPermits() {
         return initialPermits;
     }
@@ -85,7 +95,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         return "RefillRateLimiterConfig{" +
             "timeoutDuration=" + getTimeoutDuration() +
             ", permitCapacity=" + permitCapacity +
-            ", nanosPerPermission="+ nanosPerPermission +
+            ", nanosPerPermission=" + nanosPerPermit +
             ", writableStackTraceEnabled=" + isWritableStackTraceEnabled() +
             '}';
     }
@@ -105,7 +115,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
 
         public Builder(RefillRateLimiterConfig prototype) {
             this.timeoutDuration = prototype.getTimeoutDuration();
-            this.limitRefreshPeriod = Duration.ofNanos(prototype.nanosPerPermission);
+            this.limitRefreshPeriod = Duration.ofNanos(prototype.nanosPerPermit);
             this.limitForPeriod = 1;
             this.permitCapacity = prototype.permitCapacity;
             this.writableStackTraceEnabled = prototype.isWritableStackTraceEnabled();
@@ -118,18 +128,18 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
          */
         @Override
         public RefillRateLimiterConfig build() {
-            if(permitCapacity < limitForPeriod) {
+            if (permitCapacity < limitForPeriod) {
                 permitCapacity = limitForPeriod;
             }
 
-            if(!initialPermitsSet) {
+            if (!initialPermitsSet) {
                 initialPermits = limitForPeriod;
             }
 
-            final long nanosPerPermission = calculateNanosPerPermission(limitRefreshPeriod, limitForPeriod);
+            final long nanosPerPermission = calculateNanosPerPermit(limitRefreshPeriod, limitForPeriod);
 
             return new RefillRateLimiterConfig(timeoutDuration, permitCapacity, nanosPerPermission,
-                initialPermits ,writableStackTraceEnabled);
+                initialPermits, writableStackTraceEnabled);
         }
 
         /**
@@ -160,7 +170,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Configures the period needed for the permissions specified. After each period
+         * Configures the period needed for the permit number specified. After each period
          * permissions up to {@link RefillRateLimiterConfig.Builder#limitForPeriod} should be released.
          * Default value is 500 nanoseconds.
          *
@@ -174,7 +184,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Configures the permissions limit for refresh period. Count of permissions released
+         * Configures the permits to releas through a refresh period. Count of permissions released
          * during one rate limiter period specified by {@link RefillRateLimiterConfig.Builder#limitRefreshPeriod}
          * value. Default value is 50.
          *
@@ -201,7 +211,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Configures the initial permissions available.
+         * Configures the initial permit available.
          * If no value specified the default value is the one
          * specified for {@link RefillRateLimiterConfig.Builder#limitForPeriod}.
          *
@@ -215,14 +225,15 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Calculate the nanos needed for one permission
+         * Calculate the nanos needed for one permit
+         *
          * @param limitRefreshPeriod
          * @param limitForPeriod
          * @return
          */
-        private long calculateNanosPerPermission(Duration limitRefreshPeriod, int limitForPeriod) {
+        private long calculateNanosPerPermit(Duration limitRefreshPeriod, int limitForPeriod) {
             long permissionsPeriodInNanos = limitRefreshPeriod.toNanos();
-            return permissionsPeriodInNanos/limitForPeriod;
+            return permissionsPeriodInNanos / limitForPeriod;
         }
 
     }
