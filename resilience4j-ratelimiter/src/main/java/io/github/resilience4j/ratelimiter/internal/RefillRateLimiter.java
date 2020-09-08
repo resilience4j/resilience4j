@@ -224,7 +224,7 @@ public class RefillRateLimiter implements RateLimiter {
 
     private long accumulatedPermissions(State activeState, long nanosSinceLastUpdate) {
         int currentPermissions = activeState.activePermissions;
-        long permissionsBatches = calculateBatches(activeState.config.getPermitCapacity(), nanosSinceLastUpdate);
+        long permissionsBatches = calculateBatches(activeState.config.getNanosPerPermit(), nanosSinceLastUpdate);
         return permissionsBatches + currentPermissions;
     }
 
