@@ -88,6 +88,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Added more nanos in order to handle the refills
+     * Equivalent to {@link RateLimitersImplementationTest#acquireBigNumberOfPermitsAtStartOfCycleTest}
      */
     @Test
     public void acquireBigNumberOfPermitsAtStartTest() {
@@ -119,6 +120,10 @@ public class RefillRateLimiterTest {
         then(retryInNewCyclePermission).isTrue();
     }
 
+    /**
+     * Added more nanos in order to handle the refills
+     * Equivalent to {@link RateLimitersImplementationTest#tryToAcquireBigNumberOfPermitsAtEndOfCycleTest}
+     */
     @Test
     public void tryToAcquireBigNumberOfPermitsOnFullCapacity() {
         RefillRateLimiterConfig config = RefillRateLimiterConfig.custom()
@@ -146,6 +151,9 @@ public class RefillRateLimiterTest {
         then(retryInSecondCyclePermission).isTrue();
     }
 
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#notSpyRawTest}
+     */
     @Test
     public void notSpyRawTest() {
         RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
@@ -184,19 +192,21 @@ public class RefillRateLimiterTest {
         then(secondNoPermission).isFalse();
     }
 
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#notSpyRawNonBlockingTest}
+     */
     @Test
     public void notSpyRawNonBlockingTest() {
         RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(PERMISSIONS_IN_PERIOD)
             .limitRefreshPeriod(Duration.ofNanos(PERIOD_IN_NANOS))
             .timeoutDuration(Duration.ZERO)
+            .initialPermits(PERMISSIONS_IN_PERIOD)
             .build();
 
         RefillRateLimiter rateLimiter = new RefillRateLimiter("refillBasedLimiter", rateLimiterConfig);
         RefillRateLimiter.RefillRateLimiterMetrics rateLimiterMetrics = rateLimiter
             .getDetailedMetrics();
-
-        waitForMaxPermissions(rateLimiterMetrics, '.');
 
         long firstPermission = rateLimiter.reservePermission();
         waitForPermissionRenewal(rateLimiterMetrics, '*');
@@ -224,6 +234,10 @@ public class RefillRateLimiterTest {
         then(secondNoPermission).isNegative();
     }
 
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#permissionsInFirstCycle}
+     * @throws Exception
+     */
     @Test
     public void defaultPermissionsAtStartup() throws Exception {
         setup(Duration.ZERO);
