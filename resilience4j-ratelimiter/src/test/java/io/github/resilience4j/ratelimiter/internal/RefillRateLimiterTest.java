@@ -152,13 +152,11 @@ public class RefillRateLimiterTest {
             .limitForPeriod(PERMISSIONS_IN_PERIOD)
             .limitRefreshPeriod(Duration.ofNanos(PERIOD_IN_NANOS))
             .timeoutDuration(Duration.ZERO)
+            .initialPermits(PERMISSIONS_IN_PERIOD)
             .build();
-
         RefillRateLimiter rateLimiter = new RefillRateLimiter("refillBasedLimiter", rateLimiterConfig);
         RefillRateLimiter.RefillRateLimiterMetrics rateLimiterMetrics = rateLimiter
             .getDetailedMetrics();
-
-        waitForMaxPermissions(rateLimiterMetrics, '.');
 
         boolean firstPermission = rateLimiter.acquirePermission();
         then(firstPermission).isTrue();
