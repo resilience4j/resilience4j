@@ -35,9 +35,9 @@ import java.util.function.Supplier;
 public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillRateLimiterConfig> {
 
     /**
-     * Creates a RefillRateLimiterRegistry with a custom RateLimiter configuration.
+     * Creates a RefillRateLimiterRegistry with a custom RefillRateLimiter configuration.
      *
-     * @param defaultRateLimiterConfig a custom RateLimiter configuration
+     * @param defaultRateLimiterConfig a custom RefillRateLimiter configuration
      * @return a RefillRateLimiterRegistry instance backed by a custom RateLimiter configuration
      */
     static RefillRateLimiterRegistry of(RefillRateLimiterConfig defaultRateLimiterConfig) {
@@ -45,30 +45,30 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
     }
 
     /**
-     * Creates a RefillRateLimiterRegistry with a custom default RateLimiter configuration and a
+     * Creates a RefillRateLimiterRegistry with a custom default RefillRateLimiter configuration and a
      * RateLimiter registry event consumer.
      *
-     * @param defaultRateLimiterConfig a custom default RateLimiter configuration.
+     * @param defaultRateLimiterConfig a custom default RefillRateLimiter configuration.
      * @param registryEventConsumer    a RateLimiter registry event consumer.
      * @return a RefillRateLimiterRegistry with a custom RateLimiter configuration and a RateLimiter
      * registry event consumer.
      */
     static RefillRateLimiterRegistry of(RefillRateLimiterConfig defaultRateLimiterConfig,
-                                  RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+                                        RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         return new InMemoryRefillRateLimiterRegistry(defaultRateLimiterConfig, registryEventConsumer);
     }
 
     /**
-     * Creates a RefillRateLimiterRegistry with a custom default RateLimiter configuration and a list of
+     * Creates a RefillRateLimiterRegistry with a custom default RefillRateLimiter configuration and a list of
      * RateLimiter registry event consumers.
      *
-     * @param defaultRateLimiterConfig a custom default RateLimiter configuration.
+     * @param defaultRateLimiterConfig a custom default RefillRateLimiter configuration.
      * @param registryEventConsumers   a list of RateLimiter registry event consumers.
      * @return a RefillRateLimiterRegistry with a custom RateLimiter configuration and a list of
      * RateLimiter registry event consumers.
      */
     static RefillRateLimiterRegistry of(RefillRateLimiterConfig defaultRateLimiterConfig,
-                                  List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+                                        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         return new InMemoryRefillRateLimiterRegistry(defaultRateLimiterConfig, registryEventConsumers);
     }
 
@@ -102,51 +102,51 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
      * @return a ThreadPoolBulkheadRegistry with a Map of shared RateLimiter configurations.
      */
     static RefillRateLimiterRegistry of(Map<String, RefillRateLimiterConfig> configs,
-                                  io.vavr.collection.Map<String, String> tags) {
+                                        io.vavr.collection.Map<String, String> tags) {
         return new InMemoryRefillRateLimiterRegistry(configs, tags);
     }
 
     /**
-     * Creates a RefillRateLimiterRegistry with a Map of shared RateLimiter configurations and a
+     * Creates a RefillRateLimiterRegistry with a Map of shared RefillRateLimiter configurations and a
      * RateLimiter registry event consumer.
      *
-     * @param configs               a Map of shared RateLimiter configurations.
+     * @param configs               a Map of shared RefillRateLimiter configurations.
      * @param registryEventConsumer a RateLimiter registry event consumer.
      * @return a RefillRateLimiterRegistry with a Map of shared RateLimiter configurations and a
      * RateLimiter registry event consumer.
      */
     static RefillRateLimiterRegistry of(Map<String, RefillRateLimiterConfig> configs,
-                                  RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+                                        RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         return new InMemoryRefillRateLimiterRegistry(configs, registryEventConsumer);
     }
 
     /**
-     * Creates a RefillRateLimiterRegistry with a Map of shared RateLimiter configurations and a
+     * Creates a RefillRateLimiterRegistry with a Map of shared RefillRateLimiter configurations and a
      * RateLimiter registry event consumer.
      *
-     * @param configs               a Map of shared RateLimiter configurations.
+     * @param configs               a Map of shared RefillRateLimiter configurations.
      * @param registryEventConsumer a RateLimiter registry event consumer.
      * @param tags                  default tags to add to the registry
      * @return a RefillRateLimiterRegistry with a Map of shared RateLimiter configurations and a
      * RateLimiter registry event consumer.
      */
     static RefillRateLimiterRegistry of(Map<String, RefillRateLimiterConfig> configs,
-                                  RegistryEventConsumer<RateLimiter> registryEventConsumer,
-                                  io.vavr.collection.Map<String, String> tags) {
+                                        RegistryEventConsumer<RateLimiter> registryEventConsumer,
+                                        io.vavr.collection.Map<String, String> tags) {
         return new InMemoryRefillRateLimiterRegistry(configs, registryEventConsumer, tags);
     }
 
     /**
-     * Creates a RefillRateLimiterRegistry with a Map of shared RateLimiter configurations and a list of
+     * Creates a RefillRateLimiterRegistry with a Map of shared RefillRateLimiter configurations and a list of
      * RateLimiter registry event consumers.
      *
-     * @param configs                a Map of shared RateLimiter configurations.
+     * @param configs                a Map of shared RefillRateLimiter configurations.
      * @param registryEventConsumers a list of RateLimiter registry event consumers.
      * @return a RefillRateLimiterRegistry with a Map of shared RateLimiter configurations and a list of
      * RateLimiter registry event consumers.
      */
     static RefillRateLimiterRegistry of(Map<String, RefillRateLimiterConfig> configs,
-                                  List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+                                        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         return new InMemoryRefillRateLimiterRegistry(configs, registryEventConsumers);
     }
 
@@ -185,7 +185,7 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
      * configuration.
      *
      * @param name              the name of the RateLimiter
-     * @param rateLimiterConfig a custom RateLimiter configuration
+     * @param rateLimiterConfig a custom RefillRateLimiter configuration
      * @return The {@link RateLimiter}
      */
     RateLimiter rateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig);
@@ -199,7 +199,7 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
      * of the registry.
      *
      * @param name              the name of the RateLimiter
-     * @param rateLimiterConfig a custom RateLimiter configuration
+     * @param rateLimiterConfig a custom RefillRateLimiter configuration
      * @param tags              tags added to the RateLimiter
      * @return The {@link RateLimiter}
      */
@@ -207,25 +207,25 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
                             io.vavr.collection.Map<String, String> tags);
 
     /**
-     * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom
-     * RateLimiterConfig configuration.
+     * Returns a managed {@link RateLimiter} or creates a new one with a custom
+     * RefillRateLimiterConfig configuration.
      *
      * @param name                      the name of the RateLimiterConfig
-     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
+     * @param rateLimiterConfigSupplier a supplier of a custom RefillRateLimiterConfig configuration
      * @return The {@link RateLimiterConfig}
      */
     RateLimiter rateLimiter(String name, Supplier<RefillRateLimiterConfig> rateLimiterConfigSupplier);
 
     /**
-     * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom
-     * RateLimiterConfig configuration.
+     * Returns a managed {@link RateLimiter} or creates a new one with a custom
+     * RefillRateLimiterConfig configuration.
      * <p>
      * The {@code tags} passed will be appended to the tags already configured for the registry.
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
      * @param name                      the name of the RateLimiterConfig
-     * @param rateLimiterConfigSupplier a supplier of a custom RateLimiterConfig configuration
+     * @param rateLimiterConfigSupplier a supplier of a custom RefillRateLimiterConfig configuration
      * @param tags                      tags added to the RateLimiter
      * @return The {@link RateLimiterConfig}
      */
@@ -281,10 +281,10 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
         }
 
         /**
-         * Configures a RateLimiterRegistry with a custom default RateLimiter configuration.
+         * Configures a RefillRateLimiterRegistry with a custom default RefillRateLimiterConfig configuration.
          *
-         * @param rateLimiterConfig a custom default RateLimiter configuration
-         * @return a {@link RateLimiterRegistry.Builder}
+         * @param rateLimiterConfig a custom default RefillRateLimiter configuration
+         * @return a {@link RefillRateLimiterRegistry.Builder}
          */
         public RefillRateLimiterRegistry.Builder withRateLimiterConfig(RefillRateLimiterConfig rateLimiterConfig) {
             rateLimiterConfigsMap.put(DEFAULT_CONFIG, rateLimiterConfig);
@@ -292,11 +292,11 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
         }
 
         /**
-         * Configures a RateLimiterRegistry with a custom RateLimiter configuration.
+         * Configures a RefillRateLimiterRegistry with a custom RefillRateLimiterConfig configuration.
          *
-         * @param configName configName for a custom shared RateLimiter configuration
-         * @param configuration a custom shared RateLimiter configuration
-         * @return a {@link RateLimiterRegistry.Builder}
+         * @param configName    configName for a custom shared RateLimiter configuration
+         * @param configuration a custom shared RefillRateLimiter configuration
+         * @return a {@link RefillRateLimiterRegistry.Builder}
          * @throws IllegalArgumentException if {@code configName.equals("default")}
          */
         public RefillRateLimiterRegistry.Builder addRateLimiterConfig(String configName, RefillRateLimiterConfig configuration) {
@@ -309,10 +309,10 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
         }
 
         /**
-         * Configures a RateLimiterRegistry with a RateLimiter registry event consumer.
+         * Configures a RefillRateLimiterRegistry with a RateLimiter registry event consumer.
          *
          * @param registryEventConsumer a RateLimiter registry event consumer.
-         * @return a {@link RateLimiterRegistry.Builder}
+         * @return a {@link RefillRateLimiterRegistry.Builder}
          */
         public RefillRateLimiterRegistry.Builder addRegistryEventConsumer(RegistryEventConsumer<RateLimiter> registryEventConsumer) {
             this.registryEventConsumers.add(registryEventConsumer);
@@ -320,12 +320,12 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
         }
 
         /**
-         * Configures a RateLimiterRegistry with Tags.
+         * Configures a RefillRateLimiterRegistry with Tags.
          * <p>
          * Tags added to the registry will be added to every instance created by this registry.
          *
          * @param tags default tags to add to the registry.
-         * @return a {@link RateLimiterRegistry.Builder}
+         * @return a {@link RefillRateLimiterRegistry.Builder}
          */
         public RefillRateLimiterRegistry.Builder withTags(io.vavr.collection.Map<String, String> tags) {
             this.tags = tags;
@@ -333,9 +333,9 @@ public interface RefillRateLimiterRegistry extends Registry<RateLimiter, RefillR
         }
 
         /**
-         * Builds a RateLimiterRegistry
+         * Builds a RefillRateLimiterRegistry
          *
-         * @return the RateLimiterRegistry
+         * @return the RefillRateLimiterRegistry
          */
         public RefillRateLimiterRegistry build() {
             return new InMemoryRefillRateLimiterRegistry(rateLimiterConfigsMap, registryEventConsumers, tags,
