@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -106,6 +107,9 @@ public class RefillRateLimiterTest {
         then(firstPermission).isTrue();
         boolean secondPermission = limiter.acquirePermission(5);
         then(secondPermission).isTrue();
+        /**
+         * Due to the period being small it can be easily replenished
+         */
         boolean firstNoPermission = limiter.acquirePermission(5);
         then(firstNoPermission).isFalse();
 
@@ -113,6 +117,33 @@ public class RefillRateLimiterTest {
 
         boolean retryInNewCyclePermission = limiter.acquirePermission(1);
         then(retryInNewCyclePermission).isTrue();
+    }
+
+    @Test
+    public void tryToAcquireBigNumberOfPermitsOnFullCapacity() {
+        RefillRateLimiterConfig config = RefillRateLimiterConfig.custom()
+            .limitForPeriod(10)
+            .initialPermits(0)
+            .limitRefreshPeriod(Duration.ofNanos(600_000_000L))
+            .timeoutDuration(Duration.ZERO)
+            .build();
+
+        RateLimiter limiter = buildRateLimiter(config);
+        RateLimiter.Metrics metrics = limiter.getMetrics();
+
+        waitForRefresh(metrics, config, '.');
+
+        boolean firstPermission = limiter.acquirePermission(1);
+        then(firstPermission).isTrue();
+        boolean secondPermission = limiter.acquirePermission(5);
+        then(secondPermission).isTrue();
+        boolean firstNoPermission = limiter.acquirePermission(6);
+        then(firstNoPermission).isFalse();
+
+        waitForRefresh(metrics, config, '*');
+
+        boolean retryInSecondCyclePermission = limiter.acquirePermission(5);
+        then(retryInSecondCyclePermission).isTrue();
     }
 
     @Test
