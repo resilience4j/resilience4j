@@ -23,7 +23,9 @@ import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.ratelimiter.*;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RefillRateLimiterRegistry;
 import io.vavr.collection.Array;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Seq;
@@ -37,7 +39,7 @@ import java.util.function.Supplier;
 /**
  * Backend RateLimiter manager. Constructs backend RateLimiters according to configuration values.
  */
-public class InMemoryRefillRateLimiterRegistry  extends
+public class InMemoryRefillRateLimiterRegistry extends
     AbstractRegistry<RateLimiter, RefillRateLimiterConfig> implements RefillRateLimiterRegistry {
 
     /**
@@ -56,32 +58,32 @@ public class InMemoryRefillRateLimiterRegistry  extends
     }
 
     public InMemoryRefillRateLimiterRegistry(Map<String, RefillRateLimiterConfig> configs,
-                                       io.vavr.collection.Map<String, String> tags) {
+                                             io.vavr.collection.Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RefillRateLimiterConfig.ofDefaults()), tags);
         this.configurations.putAll(configs);
     }
 
     public InMemoryRefillRateLimiterRegistry(Map<String, RefillRateLimiterConfig> configs,
-                                       RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+                                             RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         this(configs, registryEventConsumer, HashMap.empty());
     }
 
     public InMemoryRefillRateLimiterRegistry(Map<String, RefillRateLimiterConfig> configs,
-                                       RegistryEventConsumer<RateLimiter> registryEventConsumer,
-                                       io.vavr.collection.Map<String, String> tags) {
+                                             RegistryEventConsumer<RateLimiter> registryEventConsumer,
+                                             io.vavr.collection.Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RefillRateLimiterConfig.ofDefaults()),
             registryEventConsumer, tags);
         this.configurations.putAll(configs);
     }
 
     public InMemoryRefillRateLimiterRegistry(Map<String, RefillRateLimiterConfig> configs,
-                                       List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+                                             List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         this(configs, registryEventConsumers, HashMap.empty());
     }
 
     public InMemoryRefillRateLimiterRegistry(Map<String, RefillRateLimiterConfig> configs,
-                                       List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                                       io.vavr.collection.Map<String, String> tags) {
+                                             List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
+                                             io.vavr.collection.Map<String, String> tags) {
         this(configs.getOrDefault(DEFAULT_CONFIG, RefillRateLimiterConfig.ofDefaults()),
             registryEventConsumers, tags);
         this.configurations.putAll(configs);
@@ -97,35 +99,35 @@ public class InMemoryRefillRateLimiterRegistry  extends
     }
 
     public InMemoryRefillRateLimiterRegistry(RefillRateLimiterConfig defaultConfig,
-                                       io.vavr.collection.Map<String, String> tags) {
+                                             io.vavr.collection.Map<String, String> tags) {
         super(defaultConfig, tags);
     }
 
     public InMemoryRefillRateLimiterRegistry(RefillRateLimiterConfig defaultConfig,
-                                       RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+                                             RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         super(defaultConfig, registryEventConsumer);
     }
 
     public InMemoryRefillRateLimiterRegistry(RefillRateLimiterConfig defaultConfig,
-                                       RegistryEventConsumer<RateLimiter> registryEventConsumer,
-                                       io.vavr.collection.Map<String, String> tags) {
+                                             RegistryEventConsumer<RateLimiter> registryEventConsumer,
+                                             io.vavr.collection.Map<String, String> tags) {
         super(defaultConfig, registryEventConsumer, tags);
     }
 
     public InMemoryRefillRateLimiterRegistry(RefillRateLimiterConfig defaultConfig,
-                                       List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+                                             List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         super(defaultConfig, registryEventConsumers);
     }
 
     public InMemoryRefillRateLimiterRegistry(RefillRateLimiterConfig defaultConfig,
-                                       List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                                       io.vavr.collection.Map<String, String> tags) {
+                                             List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
+                                             io.vavr.collection.Map<String, String> tags) {
         super(defaultConfig, registryEventConsumers, tags);
     }
 
     public InMemoryRefillRateLimiterRegistry(Map<String, RefillRateLimiterConfig> configs,
-                                       List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                                       io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
+                                             List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
+                                             io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
         super(configs.getOrDefault(DEFAULT_CONFIG, RefillRateLimiterConfig.ofDefaults()),
             registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
             Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
