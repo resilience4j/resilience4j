@@ -90,6 +90,15 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         return initialPermits;
     }
 
+    /**
+     * Get the nanos needed to replenish one permit.
+     *
+     * @return
+     */
+    public long getNanosPerPermit() {
+        return nanosPerPermit;
+    }
+
     @Override
     public String toString() {
         return "RefillRateLimiterConfig{" +
