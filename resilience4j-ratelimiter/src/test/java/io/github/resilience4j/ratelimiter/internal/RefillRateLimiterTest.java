@@ -32,7 +32,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.jayway.awaitility.Awaitility.await;
@@ -184,7 +186,7 @@ public class RefillRateLimiterTest {
         /**
          * Permission renewal happens per nanos thus the cycle splitting is not taking effect
          */
-        waitNanos(PERIOD_IN_NANOS/2l,'&');
+        waitNanos(PERIOD_IN_NANOS / 2l, '&');
         boolean fourthPermission = rateLimiter.acquirePermission();
         then(fourthPermission).isTrue();
 
@@ -236,6 +238,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#permissionsInFirstCycle}
+     *
      * @throws Exception
      */
     @Test
@@ -250,6 +253,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#acquireAndRefreshWithEventPublishing}
+     *
      * @throws Exception
      */
     @Test
@@ -279,6 +283,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#reserveAndRefresh}
+     *
      * @throws Exception
      */
     @Test
@@ -318,6 +323,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#reserveFewThenSkipCyclesBeforeRefreshNonBlocking}
+     *
      * @throws Exception
      */
     @Test
@@ -335,16 +341,16 @@ public class RefillRateLimiterTest {
         then(reservation).isPositive();
         then(reservation).isLessThanOrEqualTo(PERIOD_IN_NANOS);
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
-        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS* 2);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS * 2);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
 
         long additionalReservation = rateLimiter.reservePermission();
         then(additionalReservation).isEqualTo(-1);
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
-        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS* 2);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS * 2);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
 
-        setTimeOnNanos(PERIOD_IN_NANOS* 6 + 10);
+        setTimeOnNanos(PERIOD_IN_NANOS * 6 + 10);
         then(metrics.getAvailablePermissions()).isEqualTo(1);
         then(metrics.getNanosToWait()).isEqualTo(0L);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
@@ -352,6 +358,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#reserveFewThenSkipCyclesBeforeRefresh}
+     *
      * @throws Exception
      */
     @Test
@@ -403,6 +410,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#reserveManyCyclesIfWegithgreaterThenLimitPerPeriod}
+     *
      * @throws Exception
      */
     @Test
@@ -415,9 +423,10 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#rejectedByTimeoutNonBlocking}
+     *
      * @throws Exception
      */
-    //TODO @Test
+    @Test
     public void rejectedByTimeoutNonBlocking() throws Exception {
         setup(Duration.ZERO);
 
@@ -441,10 +450,150 @@ public class RefillRateLimiterTest {
     }
 
     /**
-     * Equivalent to {@link AtomicRateLimiterTest#changeLimitForPeriod}
+     * Equivalent to {@link AtomicRateLimiterTest#waitingThreadIsInterrupted}
+     *
      * @throws Exception
      */
-    //TODO @Test
+    @Test
+    public void waitingThreadIsInterrupted() throws Exception {
+        setup(Duration.ofNanos(PERIOD_IN_NANOS));
+
+        setTimeOnNanos(PERIOD_IN_NANOS);
+        boolean permission = rateLimiter.acquirePermission();
+        then(permission).isTrue();
+        then(metrics.getAvailablePermissions()).isEqualTo(0);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
+        then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+
+        AtomicReference<Boolean> reservedPermission = new AtomicReference<>(null);
+        AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+        Thread caller = new Thread(
+            () -> {
+                reservedPermission.set(rateLimiter.acquirePermission());
+                wasInterrupted.set(Thread.currentThread().isInterrupted());
+            }
+        );
+        caller.setDaemon(true);
+        caller.start();
+
+        awaitImpatiently()
+            .atMost(5, SECONDS)
+            .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
+        then(metrics.getAvailablePermissions()).isEqualTo(-1);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS * 2);
+        then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
+
+        caller.interrupt();
+        awaitImpatiently()
+            .atMost(5, SECONDS)
+            .until(reservedPermission::get, equalTo(false));
+        then(wasInterrupted.get()).isTrue();
+        then(metrics.getAvailablePermissions()).isEqualTo(-1);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS * 2);
+        then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+    }
+
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#changePermissionsLimitBetweenCycles}
+     *
+     * @throws Exception
+     */
+    @Test
+    public void changePermissionsLimitBetweenCycles() throws Exception {
+        setup(Duration.ofNanos(PERIOD_IN_NANOS));
+
+        setTimeOnNanos(PERIOD_IN_NANOS);
+        boolean permission = rateLimiter.acquirePermission();
+        then(permission).isTrue();
+        then(metrics.getAvailablePermissions()).isEqualTo(0);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
+
+        AtomicReference<Boolean> reservedPermission = new AtomicReference<>(null);
+        Thread caller = new Thread(
+            () -> reservedPermission.set(rateLimiter.acquirePermission()));
+        caller.setDaemon(true);
+        caller.start();
+        awaitImpatiently()
+            .atMost(5, SECONDS)
+            .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
+        then(metrics.getAvailablePermissions()).isEqualTo(-1);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS + PERIOD_IN_NANOS);
+        then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
+
+        rateLimiter.changeLimitForPeriod(PERMISSIONS_IN_PERIOD * 2);
+        then(rateLimiter.getRateLimiterConfig().getLimitForPeriod())
+            .isEqualTo(PERMISSIONS_IN_PERIOD * 2);
+        then(metrics.getAvailablePermissions()).isEqualTo(-1);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
+        then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
+
+        setTimeOnNanos(PERIOD_IN_NANOS * 2 + 10);
+        awaitImpatiently()
+            .atMost(5, SECONDS)
+            .until(reservedPermission::get, equalTo(true));
+
+        then(metrics.getAvailablePermissions()).isEqualTo(1);
+        then(metrics.getNanosToWait()).isEqualTo(0);
+        then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+    }
+
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#reservePermissionsUpfront}
+     *
+     * @throws Exception
+     */
+    @Test
+    public void reservePermissionsUpfront() throws Exception {
+        final int limitForPeriod = 3;
+        final int tasksNum = 9;
+        Duration limitRefreshPeriod = Duration.ofMillis(10);
+        Duration timeoutDuration = Duration.ofMillis(12);
+        long cycleInNanos = limitRefreshPeriod.toNanos();
+
+        setup(limitRefreshPeriod, timeoutDuration, limitForPeriod);
+        setTimeOnNanos(cycleInNanos);
+
+        ArrayList<Long> timesToWait = new ArrayList<>();
+        for (int i = 0; i < tasksNum; i++) {
+            setTimeOnNanos(cycleInNanos + i + 1);
+            long timeToWait = rateLimiter.reservePermission(1);
+            timesToWait.add(timeToWait);
+        }
+        then(timesToWait).containsExactly(
+            0L, 0L, 0L,
+            cycleInNanos - 4, cycleInNanos - 5, cycleInNanos - 6,
+            -1L, -1L, -1L
+        );
+    }
+
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#changeDefaultTimeoutDuration}
+     *
+     * @throws Exception
+     */
+    @Test
+    public void changeDefaultTimeoutDuration() throws Exception {
+        setup(Duration.ZERO);
+
+        RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
+        then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ZERO);
+        then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(PERMISSIONS_IN_PERIOD);
+        then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(PERIOD_IN_NANOS));
+
+        rateLimiter.changeTimeoutDuration(Duration.ofSeconds(1));
+        then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
+        rateLimiterConfig = rateLimiter.getRateLimiterConfig();
+        then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(1));
+        then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(PERMISSIONS_IN_PERIOD);
+        then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(PERIOD_IN_NANOS));
+    }
+
+    /**
+     * Equivalent to {@link AtomicRateLimiterTest#changeLimitForPeriod}
+     *
+     * @throws Exception
+     */
+    @Test
     public void changeLimitForPeriod() throws Exception {
         setup(Duration.ZERO);
 
@@ -463,6 +612,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#metricsTest}
+     *
      * @throws Exception
      */
     @Test
@@ -482,6 +632,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#namePropagation}
+     *
      * @throws Exception
      */
     @Test
@@ -492,6 +643,7 @@ public class RefillRateLimiterTest {
 
     /**
      * Equivalent to {@link AtomicRateLimiterTest#metrics()}
+     *
      * @throws Exception
      */
     @Test
@@ -575,7 +727,7 @@ public class RefillRateLimiterTest {
         System.out.println();
     }
 
-    private void waitNanos(long nanosToWait,char printedWhileWaiting) {
+    private void waitNanos(long nanosToWait, char printedWhileWaiting) {
         long startTime = System.nanoTime();
         while (System.nanoTime() - startTime < nanosToWait) {
             System.out.print(printedWhileWaiting);
