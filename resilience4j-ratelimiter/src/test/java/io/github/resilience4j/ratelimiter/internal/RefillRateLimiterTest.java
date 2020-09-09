@@ -604,11 +604,12 @@ public class RefillRateLimiterTest {
         then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(PERIOD_IN_NANOS));
 
         rateLimiter.changeLimitForPeriod(35);
+        long nanosPerPermission = PERIOD_IN_NANOS/35;
         then(rateLimiterConfig != rateLimiter.getRateLimiterConfig()).isTrue();
         rateLimiterConfig = rateLimiter.getRateLimiterConfig();
         then(rateLimiterConfig.getTimeoutDuration()).isEqualTo(Duration.ZERO);
         then(rateLimiterConfig.getLimitForPeriod()).isEqualTo(35);
-        then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(PERIOD_IN_NANOS));
+        then(rateLimiterConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofNanos(nanosPerPermission*35));
     }
 
     /**
