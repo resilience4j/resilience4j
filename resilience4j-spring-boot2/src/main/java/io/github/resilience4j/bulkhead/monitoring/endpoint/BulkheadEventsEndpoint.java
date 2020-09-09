@@ -43,9 +43,7 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getAllBulkheadEvents() {
         List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(bulkheadEventCircularEventConsumer -> bulkheadEventCircularEventConsumer
-                .getBufferedEvents()
-                .stream())
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
             .collect(Collectors.toUnmodifiableList());
@@ -55,7 +53,7 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(
         @Selector String bulkheadName) {
-        java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
+        List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
             .collect(Collectors.toList());
 
@@ -65,7 +63,7 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(
         @Selector String bulkheadName, @Selector String eventType) {
-        java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
+        List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
             .filter(event -> event.getEventType() == BulkheadEvent.Type
                 .valueOf(eventType.toUpperCase()))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
@@ -82,14 +80,14 @@ public class BulkheadEventsEndpoint {
                 .getEventConsumer(
                     String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkheadName));
             if (threadPoolEventConsumer != null) {
-                return threadPoolEventConsumer.getBufferedEvents().stream()
+                return threadPoolEventConsumer.getBufferedEventsStream()
                     .filter(event -> event.getBulkheadName().equals(bulkheadName))
                     .collect(Collectors.toList());
             } else {
                 return Collections.emptyList();
             }
         } else {
-            return eventConsumer.getBufferedEvents().stream()
+            return eventConsumer.getBufferedEventsStream()
                 .filter(event -> event.getBulkheadName().equals(bulkheadName))
                 .collect(Collectors.toList());
         }

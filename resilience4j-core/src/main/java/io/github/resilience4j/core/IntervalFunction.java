@@ -2,6 +2,7 @@ package io.github.resilience4j.core;
 
 import java.time.Duration;
 import java.util.function.Function;
+import java.util.stream.LongStream;
 
 import static io.github.resilience4j.core.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
@@ -33,15 +34,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
         return (attempt) -> {
             checkAttempt(attempt);
-            if (attempt == 1) {
-                return intervalMillis;
-            } else {
-                long currentIntervalMillis = intervalMillis;
-                for(int i = 1; i < attempt; i++) {
-                    currentIntervalMillis = backoffFunction.apply(currentIntervalMillis);
-                }
-                return currentIntervalMillis;
-            }
+            return LongStream.iterate(intervalMillis, n -> backoffFunction.apply(n)).skip(attempt - 1).findFirst().getAsLong();
         };
     }
 

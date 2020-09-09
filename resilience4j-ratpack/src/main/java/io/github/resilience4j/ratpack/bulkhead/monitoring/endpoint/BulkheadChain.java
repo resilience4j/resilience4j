@@ -45,7 +45,7 @@ public class BulkheadChain implements Action<Chain> {
         this.eventConsumerRegistry = eventConsumerRegistry;
     }
 
-    private static Flux<BulkheadEvent> apply(CircularEventConsumer<BulkheadEvent> bulkheadEventCircularEventConsumer) {
+    private static Flux<BulkheadEvent> getBufferedEvents(CircularEventConsumer<BulkheadEvent> bulkheadEventCircularEventConsumer) {
         return Flux.fromIterable(bulkheadEventCircularEventConsumer.getBufferedEvents());
     }
 
@@ -60,9 +60,7 @@ public class BulkheadChain implements Action<Chain> {
                         eventConsumerRegistry
                             .getAllEventConsumer()
                             .stream()
-                            .flatMap(bulkheadEventCircularEventConsumer -> bulkheadEventCircularEventConsumer
-                                .getBufferedEvents()
-                                .stream())
+                            .flatMap(CircularEventConsumer::getBufferedEventsStream)
                             .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
                             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                             .collect(Collectors.toList()));
@@ -71,7 +69,7 @@ public class BulkheadChain implements Action<Chain> {
             );
             chain1.get("stream/events", ctx -> {
                 Flux<BulkheadEvent> eventStreams = Flux.fromIterable(eventConsumerRegistry.getAllEventConsumer())
-                    .flatMap(BulkheadChain::apply);
+                    .flatMap(BulkheadChain::getBufferedEvents);
                 ctx.render(serverSentEvents(chain1, eventStreams));
             });
             chain1.get("events/:name", ctx -> {
@@ -80,8 +78,7 @@ public class BulkheadChain implements Action<Chain> {
                         BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
                             eventConsumerRegistry
                                 .getEventConsumer(bulkheadName)
-                                .getBufferedEvents()
-                                .stream()
+                                .getBufferedEventsStream()
                                 .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
                                 .collect(Collectors.toList()));
                         d.success(response);
@@ -91,7 +88,7 @@ public class BulkheadChain implements Action<Chain> {
             chain1.get("stream/events/:name", ctx -> {
                 String bulkheadName = ctx.getPathTokens().get("name");
                 Flux<BulkheadEvent> eventStreams = Flux.fromIterable(eventConsumerRegistry.getAllEventConsumer())
-                    .flatMap(BulkheadChain::apply)
+                    .flatMap(BulkheadChain::getBufferedEvents)
                     .filter(e -> e.getBulkheadName().equals(bulkheadName));
                 ctx.render(serverSentEvents(chain1, eventStreams));
             });
@@ -102,8 +99,7 @@ public class BulkheadChain implements Action<Chain> {
                         BulkheadEventsEndpointResponse response = new BulkheadEventsEndpointResponse(
                             eventConsumerRegistry
                                 .getEventConsumer(bulkheadName)
-                                .getBufferedEvents()
-                                .stream()
+                                .getBufferedEventsStream()
                                 .filter(event -> event.getEventType() == BulkheadEvent.Type
                                     .valueOf(eventType.toUpperCase()))
                                 .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
@@ -116,7 +112,7 @@ public class BulkheadChain implements Action<Chain> {
                 String bulkheadName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
                 Flux<BulkheadEvent> eventStreams = Flux.fromIterable(eventConsumerRegistry.getAllEventConsumer())
-                    .flatMap(BulkheadChain::apply)
+                    .flatMap(BulkheadChain::getBufferedEvents)
                     .filter(e -> e.getBulkheadName().equals(bulkheadName))
                     .filter(e -> e.getEventType().name().equals(eventType));
                 ctx.render(serverSentEvents(chain1, eventStreams));

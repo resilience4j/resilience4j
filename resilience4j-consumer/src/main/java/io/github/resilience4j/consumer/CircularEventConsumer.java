@@ -23,6 +23,7 @@ import io.github.resilience4j.circularbuffer.ConcurrentCircularFifoBuffer;
 import io.github.resilience4j.core.EventConsumer;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
@@ -53,5 +54,14 @@ public class CircularEventConsumer<T> implements EventConsumer<T> {
      */
     public List<T> getBufferedEvents() {
         return eventCircularFifoBuffer.toList();
+    }
+
+    /**
+     * Returns a stream containing all of the buffered events.
+     *
+     * @return a stream containing all of the buffered events.
+     */
+    public Stream<T> getBufferedEventsStream() {
+        return eventCircularFifoBuffer.toStream();
     }
 }

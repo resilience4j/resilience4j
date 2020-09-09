@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.ratelimiter.monitoring.endpoint;
 
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
+import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -60,9 +61,7 @@ public class RateLimiterChain implements Action<Chain> {
             chain1.get("events", ctx ->
                 Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                     List<RateLimiterEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
-                        .flatMap(rateLimiterEventCircularEventConsumer -> rateLimiterEventCircularEventConsumer
-                            .getBufferedEvents()
-                            .stream())
+                        .flatMap(CircularEventConsumer::getBufferedEventsStream)
                         .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
                         .map(RateLimiterEventDTO::createRateLimiterEventDTO)
                         .collect(Collectors.toList());
@@ -86,8 +85,7 @@ public class RateLimiterChain implements Action<Chain> {
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                         List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(rateLimiterName)
-                            .getBufferedEvents()
-                            .stream()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
                             .map(RateLimiterEventDTO::createRateLimiterEventDTO)
                             .collect(Collectors.toList());
@@ -118,8 +116,7 @@ public class RateLimiterChain implements Action<Chain> {
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                         List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(rateLimiterName)
-                            .getBufferedEvents()
-                            .stream()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
                             .filter(event -> event.getEventType() == RateLimiterEvent.Type
                                 .valueOf(eventType.toUpperCase()))

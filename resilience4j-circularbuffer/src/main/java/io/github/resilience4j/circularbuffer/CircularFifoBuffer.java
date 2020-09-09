@@ -20,6 +20,7 @@ package io.github.resilience4j.circularbuffer;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A {@link CircularFifoBuffer} is a first in first out buffer with a fixed size that replaces its
@@ -55,6 +56,13 @@ public interface CircularFifoBuffer<T> {
      * @return a list containing all of the elements in this {@link CircularFifoBuffer}
      */
     List<T> toList();
+
+    /**
+     * Returns a stream of the elements in this {@link CircularFifoBuffer}.
+     *
+     * @return a stream of the elements in this {@link CircularFifoBuffer}
+     */
+    Stream<T> toStream();
 
     /**
      * Adds element to the {@link CircularFifoBuffer} and overwrites the oldest element when {@link

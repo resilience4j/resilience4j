@@ -22,6 +22,7 @@ import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTOFactory;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerHystrixStreamEventsDTO;
+import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.ratpack.circuitbreaker.monitoring.endpoint.metrics.CircuitBreakerMetricsDTO;
@@ -108,9 +109,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                         eventConsumerRegistry
                             .getAllEventConsumer()
                             .stream()
-                            .flatMap(circuitBreakerEventCircularEventConsumer -> circuitBreakerEventCircularEventConsumer
-                                .getBufferedEvents()
-                                .stream())
+                            .flatMap(CircularEventConsumer::getBufferedEventsStream)
                             .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
                             .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
                             .collect(Collectors.toList()));
@@ -158,8 +157,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                         CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(
                             eventConsumerRegistry
                                 .getEventConsumer(circuitBreakerName)
-                                .getBufferedEvents()
-                                .stream()
+                                .getBufferedEventsStream()
                                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
                                 .collect(Collectors.toList()));
                         d.success(response);
@@ -211,8 +209,7 @@ public class CircuitBreakerChain implements Action<Chain> {
                         CircuitBreakerEventsEndpointResponse response = new CircuitBreakerEventsEndpointResponse(
                             eventConsumerRegistry
                                 .getEventConsumer(circuitBreakerName)
-                                .getBufferedEvents()
-                                .stream()
+                                .getBufferedEventsStream()
                                 .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
                                     .valueOf(eventType.toUpperCase()))
                                 .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)

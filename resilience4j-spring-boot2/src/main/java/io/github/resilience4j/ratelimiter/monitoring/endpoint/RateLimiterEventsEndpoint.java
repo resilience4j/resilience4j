@@ -42,8 +42,7 @@ public class RateLimiterEventsEndpoint {
     @ReadOperation
     public RateLimiterEventsEndpointResponse getAllRateLimiterEvents() {
         return new RateLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(rateLimiterEventCircularEventConsumer ->
-                rateLimiterEventCircularEventConsumer.getBufferedEvents().stream())
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
             .map(RateLimiterEventDTO::createRateLimiterEventDTO)
             .collect(Collectors.toList()));
@@ -53,7 +52,8 @@ public class RateLimiterEventsEndpoint {
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(
         @Selector String name) {
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name).stream()
-            .map(RateLimiterEventDTO::createRateLimiterEventDTO).collect(Collectors.toList()));
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+            .collect(Collectors.toList()));
     }
 
     @ReadOperation
@@ -63,14 +63,15 @@ public class RateLimiterEventsEndpoint {
         RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
         return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name).stream()
             .filter(event -> event.getEventType() == targetType)
-            .map(RateLimiterEventDTO::createRateLimiterEventDTO).collect(Collectors.toList()));
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+            .collect(Collectors.toList()));
     }
 
     private List<RateLimiterEvent> getRateLimiterEvents(String name) {
         CircularEventConsumer<RateLimiterEvent> eventConsumer = eventsConsumerRegistry
             .getEventConsumer(name);
         if (eventConsumer != null) {
-            return eventConsumer.getBufferedEvents().stream()
+            return eventConsumer.getBufferedEventsStream()
                 .filter(event -> event.getRateLimiterName().equals(name))
                 .collect(Collectors.toList());
         } else {

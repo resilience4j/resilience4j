@@ -44,17 +44,18 @@ public class CircuitBreakerEventsEndpoint {
     @ReadOperation
     public CircuitBreakerEventsEndpointResponse getAllCircuitBreakerEvents() {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(circuitBreakerEventCircularEventConsumer -> circuitBreakerEventCircularEventConsumer
-                .getBufferedEvents().stream())
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
-            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).collect(Collectors.toList()));
+            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
+            .collect(Collectors.toList()));
     }
 
     @ReadOperation
     public CircuitBreakerEventsEndpointResponse getEventsFilteredByCircuitBreakerName(
         @Selector String name) {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(name).stream()
-            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).collect(Collectors.toList()));
+            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
+            .collect(Collectors.toList()));
     }
 
     @ReadOperation
@@ -63,14 +64,15 @@ public class CircuitBreakerEventsEndpoint {
         return new CircuitBreakerEventsEndpointResponse(getCircuitBreakerEvents(name).stream()
             .filter(event -> event.getEventType() == CircuitBreakerEvent.Type
                 .valueOf(eventType.toUpperCase()))
-            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO).collect(Collectors.toList()));
+            .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
+            .collect(Collectors.toList()));
     }
 
     private List<CircuitBreakerEvent> getCircuitBreakerEvents(String circuitBreakerName) {
         CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry
             .getEventConsumer(circuitBreakerName);
         if (eventConsumer != null) {
-            return eventConsumer.getBufferedEvents().stream()
+            return eventConsumer.getBufferedEventsStream()
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .collect(Collectors.toList());
         } else {

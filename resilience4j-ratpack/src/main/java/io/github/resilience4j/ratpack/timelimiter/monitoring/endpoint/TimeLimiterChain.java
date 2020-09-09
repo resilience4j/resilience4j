@@ -18,6 +18,7 @@ package io.github.resilience4j.ratpack.timelimiter.monitoring.endpoint;
 
 import io.github.resilience4j.common.timelimiter.monitoring.endpoint.TimeLimiterEventDTO;
 import io.github.resilience4j.common.timelimiter.monitoring.endpoint.TimeLimiterEventsEndpointResponse;
+import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.reactor.adapter.ReactorAdapter;
@@ -60,9 +61,7 @@ public class TimeLimiterChain implements Action<Chain> {
             chain1.get("events", ctx ->
                 Promise.<TimeLimiterEventsEndpointResponse>async(d -> {
                     List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
-                        .flatMap(timeLimiterEventCircularEventConsumer -> timeLimiterEventCircularEventConsumer
-                            .getBufferedEvents()
-                            .stream())
+                        .flatMap(CircularEventConsumer::getBufferedEventsStream)
                         .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
                         .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
                         .collect(Collectors.toList());
@@ -86,8 +85,7 @@ public class TimeLimiterChain implements Action<Chain> {
                     Promise.<TimeLimiterEventsEndpointResponse>async(d -> {
                         List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(timeLimiterName)
-                            .getBufferedEvents()
-                            .stream()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
                             .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
                             .collect(Collectors.toList());
@@ -118,8 +116,7 @@ public class TimeLimiterChain implements Action<Chain> {
                     Promise.<TimeLimiterEventsEndpointResponse>async(d -> {
                         List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(timeLimiterName)
-                            .getBufferedEvents()
-                            .stream()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
                             .filter(event -> event.getEventType() == TimeLimiterEvent.Type
                                 .valueOf(eventType.toUpperCase()))

@@ -49,9 +49,10 @@ public class RetryEventsEndpoint {
     @ReadOperation
     public RetryEventsEndpointResponse getAllRetryEvents() {
         return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(retryEventCircularEventConsumer -> retryEventCircularEventConsumer.getBufferedEvents().stream())
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-            .map(RetryEventDTOFactory::createRetryEventDTO).collect(Collectors.toList()));
+            .map(RetryEventDTOFactory::createRetryEventDTO)
+            .collect(Collectors.toList()));
     }
 
     /**
@@ -61,7 +62,8 @@ public class RetryEventsEndpoint {
     @ReadOperation
     public RetryEventsEndpointResponse getEventsFilteredByRetryName(@Selector String name) {
         return new RetryEventsEndpointResponse(getRetryEvents(name).stream()
-            .map(RetryEventDTOFactory::createRetryEventDTO).collect(Collectors.toList()));
+            .map(RetryEventDTOFactory::createRetryEventDTO)
+            .collect(Collectors.toList()));
     }
 
     /**
@@ -75,14 +77,15 @@ public class RetryEventsEndpoint {
         return new RetryEventsEndpointResponse(getRetryEvents(name).stream()
             .filter(
                 event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()))
-            .map(RetryEventDTOFactory::createRetryEventDTO).collect(Collectors.toList()));
+            .map(RetryEventDTOFactory::createRetryEventDTO)
+            .collect(Collectors.toList()));
     }
 
     private List<RetryEvent> getRetryEvents(String name) {
         final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry
             .getEventConsumer(name);
         if (syncEvents != null) {
-            return syncEvents.getBufferedEvents().stream()
+            return syncEvents.getBufferedEventsStream()
                 .filter(event -> event.getName().equals(name))
                 .collect(Collectors.toList());
         } else {

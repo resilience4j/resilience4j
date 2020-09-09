@@ -39,6 +39,7 @@ public class CircularEventConsumerTest {
         circuitBreaker.getEventPublisher().onEvent(ringBuffer);
         // end::shouldBufferEvents[]
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
+        assertThat(ringBuffer.getBufferedEventsStream()).isEmpty();
 
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
@@ -49,6 +50,7 @@ public class CircularEventConsumerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
         //Because capacity is 2
         assertThat(ringBuffer.getBufferedEvents()).hasSize(2);
+        assertThat(ringBuffer.getBufferedEventsStream()).hasSize(2);
     }
 
     @Test
@@ -61,6 +63,7 @@ public class CircularEventConsumerTest {
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(10);
         circuitBreaker.getEventPublisher().onEvent(ringBuffer);
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
+        assertThat(ringBuffer.getBufferedEventsStream()).isEmpty();
 
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
@@ -76,7 +79,12 @@ public class CircularEventConsumerTest {
         assertThat(resetMetrics.getNumberOfFailedCalls()).isEqualTo(0);
         //Because circuit emits 2 error events and one state transition event
         assertThat(ringBuffer.getBufferedEvents()).hasSize(8);
+        assertThat(ringBuffer.getBufferedEventsStream()).hasSize(8);
         assertThat(ringBuffer.getBufferedEvents()).extracting("eventType")
+            .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR,
+                Type.FAILURE_RATE_EXCEEDED, Type.STATE_TRANSITION, Type.STATE_TRANSITION,
+                Type.RESET);
+        assertThat(ringBuffer.getBufferedEventsStream()).extracting("eventType")
             .containsExactly(Type.SUCCESS, Type.ERROR, Type.IGNORED_ERROR, Type.ERROR,
                 Type.FAILURE_RATE_EXCEEDED, Type.STATE_TRANSITION, Type.STATE_TRANSITION,
                 Type.RESET);
@@ -87,6 +95,7 @@ public class CircularEventConsumerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(2);
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
+        assertThat(ringBuffer.getBufferedEventsStream()).isEmpty();
 
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("Bla"));
@@ -99,5 +108,6 @@ public class CircularEventConsumerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
         //Because Subscription was too late
         assertThat(ringBuffer.getBufferedEvents()).hasSize(0);
+        assertThat(ringBuffer.getBufferedEventsStream()).hasSize(0);
     }
 }

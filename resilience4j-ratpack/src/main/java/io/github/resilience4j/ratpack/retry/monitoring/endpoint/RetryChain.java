@@ -19,6 +19,7 @@ package io.github.resilience4j.ratpack.retry.monitoring.endpoint;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTO;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventDTOFactory;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
+import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratpack.Resilience4jConfig;
 import io.github.resilience4j.reactor.adapter.ReactorAdapter;
@@ -61,9 +62,7 @@ public class RetryChain implements Action<Chain> {
             chain1.get("events", ctx ->
                 Promise.<RetryEventsEndpointResponse>async(d -> {
                     List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
-                        .flatMap(retryEventCircularEventConsumer -> retryEventCircularEventConsumer
-                            .getBufferedEvents()
-                            .stream())
+                        .flatMap(CircularEventConsumer::getBufferedEventsStream)
                         .sorted(Comparator.comparing(RetryEvent::getCreationTime))
                         .map(RetryEventDTOFactory::createRetryEventDTO)
                         .collect(Collectors.toList());
@@ -87,8 +86,7 @@ public class RetryChain implements Action<Chain> {
                     Promise.<RetryEventsEndpointResponse>async(d -> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(retryName)
-                            .getBufferedEvents()
-                            .stream()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
                             .map(RetryEventDTOFactory::createRetryEventDTO)
                             .collect(Collectors.toList());
@@ -119,8 +117,7 @@ public class RetryChain implements Action<Chain> {
                     Promise.<RetryEventsEndpointResponse>async(d -> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(retryName)
-                            .getBufferedEvents()
-                            .stream()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
                             .filter(event -> event.getEventType() == RetryEvent.Type
                                 .valueOf(eventType.toUpperCase()))
