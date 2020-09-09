@@ -547,22 +547,22 @@ public class RefillRateLimiterTest {
     public void reservePermissionsUpfront() throws Exception {
         final int limitForPeriod = 3;
         final int tasksNum = 9;
-        Duration limitRefreshPeriod = Duration.ofMillis(10);
+        Duration limitRefreshPeriod = Duration.ofMillis(12);
         Duration timeoutDuration = Duration.ofMillis(12);
-        long cycleInNanos = limitRefreshPeriod.toNanos();
+        long periodInNanos = limitRefreshPeriod.toNanos();
 
         setup(limitRefreshPeriod, timeoutDuration, limitForPeriod);
-        setTimeOnNanos(cycleInNanos);
+        setTimeOnNanos(periodInNanos);
 
         ArrayList<Long> timesToWait = new ArrayList<>();
         for (int i = 0; i < tasksNum; i++) {
-            setTimeOnNanos(cycleInNanos + i + 1);
+            setTimeOnNanos(periodInNanos + i + 1);
             long timeToWait = rateLimiter.reservePermission(1);
             timesToWait.add(timeToWait);
         }
         then(timesToWait).containsExactly(
             0L, 0L, 0L,
-            cycleInNanos - 4, cycleInNanos - 5, cycleInNanos - 6,
+            limitRefreshPeriod.toNanos()/3 , 2*limitRefreshPeriod.toNanos()/3, limitRefreshPeriod.toNanos(),
             -1L, -1L, -1L
         );
     }
