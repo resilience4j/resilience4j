@@ -443,9 +443,10 @@ public class RefillRateLimiterTest {
         then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
 
-        setTimeOnNanos(PERIOD_IN_NANOS * 2 - 1);
+        long updatedPeriod = PERIOD_IN_NANOS * 2 - 1;
+        setTimeOnNanos(updatedPeriod);
         then(metrics.getAvailablePermissions()).isEqualTo(0);
-        then(metrics.getNanosToWait()).isEqualTo(1L);
+        then(metrics.getNanosToWait()).isEqualTo((PERIOD_IN_NANOS));
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
