@@ -15,7 +15,7 @@ import javax.inject.Inject
 @Property(name = "resilience4j.retry.configs.default.retryExceptions", value = "java.io.IOException")
 @Property(name = "resilience4j.retry.instances.backendA.baseConfig", value = "default")
 @Property(name = "resilience4j.retry.instances.backendA.maxRetryAttempts", value = "1")
-class RetyRegistrySpec extends Specification {
+class RetryRegistrySpec extends Specification {
     @Inject
     ApplicationContext applicationContext
 
@@ -45,5 +45,4 @@ class RetyRegistrySpec extends Specification {
         backendA.retryConfig.getExceptionPredicate().test(new IOException())
         !backendA.retryConfig.getExceptionPredicate().test(new IgnoredException())
     }
-
 }

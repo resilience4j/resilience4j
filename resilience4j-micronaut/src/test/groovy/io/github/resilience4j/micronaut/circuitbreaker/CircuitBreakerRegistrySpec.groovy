@@ -1,11 +1,25 @@
+/*
+ * Copyright 2020 Michael Pollind
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.resilience4j.micronaut.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+import io.github.resilience4j.circuitbreaker.CircuitBreakerProperties
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
-import io.micronaut.http.client.HttpClient
-import io.micronaut.http.client.annotation.Client
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
@@ -20,13 +34,13 @@ import javax.inject.Inject
 @Property(name = "resilience4j.circuitbreaker.configs.default.eventConsumerBufferSize", value = "10")
 @Property(name = "resilience4j.circuitbreaker.configs.default.registerHealthIndicator", value = "true")
 @Property(name = "resilience4j.circuitbreaker.instances.backendA.baseConfig", value = "default")
+@Property(name = "resilience4j.circuitbreaker.instances.backendB.baseConfig", value = "default")
+@Property(name = "resilience4j.circuitbreaker.instances.backendB.recordFailurePredicate", value = "io.github.resilience4j.micronaut.circuitbreaker.RecordFailurePredicate")
+@Property(name = "resilience4j.circuitbreaker.instances.backendB.recordExceptions[0]", value = "io.github.resilience4j.micronaut.circuitbreaker.RecordedException")
+@Property(name = "resilience4j.circuitbreaker.instances.backendB.ignoreExceptions[0]", value = "io.github.resilience4j.micronaut.circuitbreaker.IgnoredException")
 class CircuitBreakerRegistrySpec extends Specification {
     @Inject
     ApplicationContext applicationContext
-
-    @Inject
-    @Client("/circuitbreaker")
-    HttpClient client;
 
     void "default configuration"() {
         given:
@@ -55,6 +69,32 @@ class CircuitBreakerRegistrySpec extends Specification {
         backendA.circuitBreakerConfig.slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
         backendA.circuitBreakerConfig.permittedNumberOfCallsInHalfOpenState == 10
         backendA.circuitBreakerConfig.failureRateThreshold == 60
+
+    }
+
+    void "backend-b configuration"() {
+        given:
+        def registry = applicationContext.getBean(CircuitBreakerRegistry)
+        def backendB = registry.circuitBreaker("backend-b")
+        def properties = applicationContext.getBean(CircuitBreakerProperties)
+        def instanceProperties = properties.instances.get('backend-b')
+
+        expect:
+        backendB != null
+
+        backendB.circuitBreakerConfig.recordExceptionPredicate.test(new IgnoredException())
+        backendB.circuitBreakerConfig.recordExceptionPredicate.test(new IOException())
+        backendB.circuitBreakerConfig.ignoreExceptionPredicate.test(new IgnoredException())
+
+        instanceProperties.recordExceptions.length == 1
+        instanceProperties.recordExceptions.first() == RecordedException.class
+
+        instanceProperties.ignoreExceptions.length == 1
+        instanceProperties.ignoreExceptions.first() == IgnoredException.class
+
+        instanceProperties.recordFailurePredicate == RecordFailurePredicate.class
+
+
 
     }
 

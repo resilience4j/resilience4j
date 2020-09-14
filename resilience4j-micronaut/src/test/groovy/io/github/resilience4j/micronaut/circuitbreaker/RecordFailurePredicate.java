@@ -1,7 +1,5 @@
 package io.github.resilience4j.micronaut.circuitbreaker;
 
-import io.github.resilience4j.micronaut.retry.IgnoredException;
-
 import java.io.IOException;
 import java.util.function.Predicate;
 

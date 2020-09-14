@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.micronaut.ratelimiter
+package io.github.resilience4j.micronaut.timelimiter
 
-import io.github.resilience4j.annotation.RateLimiter
+import io.github.resilience4j.annotation.TimeLimiter
 import io.github.resilience4j.micronaut.TestDummyService
-import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
@@ -27,39 +26,38 @@ import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 
 @MicronautTest
-@Property(name = "resilience4j.ratelimiter.enabled", value = "true")
-class RateLimiterRecoverySpec extends Specification {
-    @Inject
-    ApplicationContext applicationContext
+@Property(name = "resilience4j.timelimiter.enabled", value = "true")
+class TimeLimiterRecoverySpec extends Specification {
 
     @Inject
-    RatelimiterService service;
+    TimeLimiterService service;
 
-    void "test async recovery ratelimiter"() {
+    void "test async recovery retry"() {
         when:
-        CompletableFuture<String> body = service.recoverable();
+        CompletableFuture<String>  result = service.recoverable();
 
         then:
-        body.get() == "recovered"
+        result.get() == "recovered"
+
     }
 
-    void "test sync recovery ratelimiter"() {
+    void "test sync recovery retry"() {
         when:
-        String body = service.syncRecovertable();
+        String result = service.syncRecoverable()
 
         then:
-        body == "recovered"
+        result == "recovered"
     }
 
     @Singleton
-    static class RatelimiterService extends TestDummyService {
-        @RateLimiter(name = "default", fallbackMethod = 'completionStageRecovery')
+    static class TimeLimiterService extends TestDummyService {
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'completionStageRecovery')
         CompletableFuture<String> recoverable() {
             return asyncError();
         }
 
-        @RateLimiter(name = "default", fallbackMethod = 'syncRecovery')
-        String syncRecovertable() {
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecovery')
+        String syncRecoverable() {
             return syncError();
         }
     }
