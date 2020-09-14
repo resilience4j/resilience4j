@@ -1,6 +1,5 @@
 package io.github.resilience4j.micronaut.circuitbreaker
 
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.micronaut.context.ApplicationContext

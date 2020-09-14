@@ -12,44 +12,43 @@ import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
 import javax.inject.Inject
+import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 
 @MicronautTest
 @Property(name = "resilience4j.retry.enabled", value = "true")
 class RetryRecoverySpec extends Specification {
+
     @Inject
-    @Client("/retry")
-    HttpClient client;
+    RetryService service;
 
     void "test async recovery retry"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("/async-recoverable", String.class);
+        CompletableFuture<String>  result = service.recoverable();
 
         then:
-        response.body() == "recovered"
+        result.get() == "recovered"
 
     }
 
     void "test sync recovery retry"() {
         when:
-        HttpResponse<String> response = client.toBlocking().exchange("/sync-recoverable", String.class);
+        String result = service.syncRecoverable()
 
         then:
-        response.body() == "recovered"
+        result == "recovered"
     }
 
-    @Controller("/retry")
+    @Singleton
     static class RetryService extends TestDummyService {
 
         @Retry(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        @Get("/async-recoverable")
         CompletableFuture<String> recoverable() {
             return asyncError();
         }
 
         @Retry(name = "backend-a", fallbackMethod = 'syncRecovery')
-        @Get("/sync-recoverable")
-        String syncRecovertable() {
+        String syncRecoverable() {
             return syncError();
         }
     }

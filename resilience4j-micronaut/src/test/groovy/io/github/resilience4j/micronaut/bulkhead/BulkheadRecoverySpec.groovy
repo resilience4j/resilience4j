@@ -3,13 +3,11 @@ package io.github.resilience4j.micronaut.bulkhead
 import io.github.resilience4j.annotation.Bulkhead
 import io.github.resilience4j.micronaut.TestDummyService
 import io.micronaut.context.annotation.Property
-import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.Get
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 
-import javax.inject.Singleton
 import javax.inject.Inject
+import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 
 @MicronautTest
@@ -66,7 +64,6 @@ class BulkheadRecoverySpec extends Specification{
     @Singleton
     static class ThreadpoolBulkheadService extends TestDummyService {
         @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        @Get("semaphore/async-recoverable")
         CompletableFuture<String> asynRecoverableSemaphore() {
             return asyncError();
         }

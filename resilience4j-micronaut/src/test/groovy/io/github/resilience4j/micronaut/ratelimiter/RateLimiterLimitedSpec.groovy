@@ -1,15 +1,11 @@
 package io.github.resilience4j.micronaut.ratelimiter
 
 import io.github.resilience4j.annotation.RateLimiter
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
-import io.micronaut.http.HttpResponse
-import io.micronaut.http.HttpStatus
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
-import io.github.resilience4j.ratelimiter.RequestNotPermitted
 
 import javax.inject.Inject
 import javax.inject.Singleton

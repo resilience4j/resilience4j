@@ -1,10 +1,8 @@
 package io.github.resilience4j.micronaut.retry
 
-
 import io.github.resilience4j.retry.RetryRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
-import io.micronaut.retry.exception.FallbackException
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification
 

@@ -1,6 +1,5 @@
 package io.github.resilience4j.micronaut.bulkhead
 
-
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
@@ -14,7 +13,7 @@ import javax.inject.Inject
 @Property(name = "resilience4j.bulkhead.configs.default.maxConcurrentCalls", value = "2")
 @Property(name = "resilience4j.bulkhead.configs.default.maxWaitDuration", value = "PT10S")
 @Property(name = "resilience4j.bulkhead.instances.backendA.baseConfig", value = "default")
-class BulkheadSpec extends Specification {
+class BulkheadRegistrySpec extends Specification {
     @Inject
     ApplicationContext applicationContext
 

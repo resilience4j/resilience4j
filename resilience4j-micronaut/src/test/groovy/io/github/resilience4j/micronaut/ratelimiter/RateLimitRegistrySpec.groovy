@@ -1,6 +1,6 @@
 package io.github.resilience4j.micronaut.ratelimiter
 
-import io.github.resilience4j.ratelimiter.RateLimiterProperties
+
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property

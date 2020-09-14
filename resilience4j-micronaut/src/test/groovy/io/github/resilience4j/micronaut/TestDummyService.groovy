@@ -4,7 +4,7 @@ import io.micronaut.context.annotation.Executable
 
 import java.util.concurrent.CompletableFuture
 
-public abstract class TestDummyService {
+abstract class TestDummyService {
     CompletableFuture<String> asyncError() {
         CompletableFuture<String> future = new CompletableFuture<>();
         future.completeExceptionally(new RuntimeException("Test"));

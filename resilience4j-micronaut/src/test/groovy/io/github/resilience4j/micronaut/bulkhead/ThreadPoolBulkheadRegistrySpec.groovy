@@ -1,6 +1,5 @@
 package io.github.resilience4j.micronaut.bulkhead
 
-
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
