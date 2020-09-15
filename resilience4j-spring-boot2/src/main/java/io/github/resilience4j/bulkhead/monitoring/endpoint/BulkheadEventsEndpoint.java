@@ -46,7 +46,7 @@ public class BulkheadEventsEndpoint {
             .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-            .collect(Collectors.toUnmodifiableList());
+            .collect(Collectors.toList());
         return new BulkheadEventsEndpointResponse(response);
     }
 
