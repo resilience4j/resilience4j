@@ -21,9 +21,6 @@ package io.github.resilience4j.metrics;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import io.vavr.collection.Stream;
 import io.vavr.control.Try;
 import org.junit.Before;
@@ -58,23 +55,6 @@ public class TimerTest {
         metricRegistry = new MetricRegistry();
         timer = Timer.ofMetricRegistry(TimerTest.class.getName(), metricRegistry);
         helloWorldService = mock(HelloWorldService.class);
-    }
-
-    @Test
-    public void shouldDecorateCheckedSupplier() throws Throwable {
-        given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
-        CheckedFunction0<String> timedSupplier = Timer
-            .decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
-
-        String value = timedSupplier.apply();
-
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(metricRegistry.getCounters().size()).isEqualTo(2);
-        assertThat(metricRegistry.getTimers().size()).isEqualTo(1);
-        assertThat(value).isEqualTo("Hello world");
-        then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
@@ -180,20 +160,6 @@ public class TimerTest {
         then(helloWorldService).should().returnHelloWorld();
     }
 
-
-    @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
-        CheckedRunnable timedRunnable = Timer
-            .decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
-
-        timedRunnable.run();
-
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        then(helloWorldService).should().sayHelloWorldWithException();
-    }
-
     @Test
     public void shouldDecorateSupplierAndReturnWithException() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
@@ -258,21 +224,5 @@ public class TimerTest {
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorldWithName("Tom");
-    }
-
-    @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
-        given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
-            .willReturn("Hello world Tom");
-        CheckedFunction1<String, String> function = Timer.decorateCheckedFunction(timer,
-            helloWorldService::returnHelloWorldWithNameWithException);
-
-        String result = function.apply("Tom");
-
-        assertThat(result).isEqualTo("Hello world Tom");
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
 }

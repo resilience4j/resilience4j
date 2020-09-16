@@ -36,6 +36,7 @@ import reactor.core.publisher.Flux;
 import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Provides event and stream event endpoints for circuitbreaker events.
@@ -59,11 +60,11 @@ public class RateLimiterChain implements Action<Chain> {
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                 Promise.<RateLimiterEventsEndpointResponse>async(d -> {
-                    List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
-                        .getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
+                    List<RateLimiterEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
+                        .flatMap(CircularEventConsumer::getBufferedEventsStream)
                         .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                        .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+                        .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+                        .collect(Collectors.toList());
                     d.success(new RateLimiterEventsEndpointResponse(eventsList));
                 }).then(r -> ctx.render(Jackson.json(r)))
             );
@@ -84,9 +85,10 @@ public class RateLimiterChain implements Action<Chain> {
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                         List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(rateLimiterName)
-                            .getBufferedEvents()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-                            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+                            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new RateLimiterEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }
@@ -114,11 +116,12 @@ public class RateLimiterChain implements Action<Chain> {
                     Promise.<RateLimiterEventsEndpointResponse>async(d -> {
                         List<RateLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(rateLimiterName)
-                            .getBufferedEvents()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
                             .filter(event -> event.getEventType() == RateLimiterEvent.Type
                                 .valueOf(eventType.toUpperCase()))
-                            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList();
+                            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new RateLimiterEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }

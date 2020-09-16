@@ -21,12 +21,14 @@ import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpoi
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.vavr.collection.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -46,10 +48,11 @@ public class RetryEventsEndpoint {
      */
     @ReadOperation
     public RetryEventsEndpointResponse getAllRetryEvents() {
-        return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer()
-            .flatMap(CircularEventConsumer::getBufferedEvents)
+        return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer().stream()
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .map(RetryEventDTOFactory::createRetryEventDTO)
+            .collect(Collectors.toList()));
     }
 
     /**
@@ -58,8 +61,9 @@ public class RetryEventsEndpoint {
      */
     @ReadOperation
     public RetryEventsEndpointResponse getEventsFilteredByRetryName(@Selector String name) {
-        return new RetryEventsEndpointResponse(getRetryEvents(name)
-            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+        return new RetryEventsEndpointResponse(getRetryEvents(name).stream()
+            .map(RetryEventDTOFactory::createRetryEventDTO)
+            .collect(Collectors.toList()));
     }
 
     /**
@@ -70,20 +74,22 @@ public class RetryEventsEndpoint {
     @ReadOperation
     public RetryEventsEndpointResponse getEventsFilteredByRetryNameAndEventType(
         @Selector String name, @Selector String eventType) {
-        return new RetryEventsEndpointResponse(getRetryEvents(name)
+        return new RetryEventsEndpointResponse(getRetryEvents(name).stream()
             .filter(
                 event -> event.getEventType() == RetryEvent.Type.valueOf(eventType.toUpperCase()))
-            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList());
+            .map(RetryEventDTOFactory::createRetryEventDTO)
+            .collect(Collectors.toList()));
     }
 
     private List<RetryEvent> getRetryEvents(String name) {
         final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry
             .getEventConsumer(name);
         if (syncEvents != null) {
-            return syncEvents.getBufferedEvents()
-                .filter(event -> event.getName().equals(name));
+            return syncEvents.getBufferedEventsStream()
+                .filter(event -> event.getName().equals(name))
+                .collect(Collectors.toList());
         } else {
-            return List.empty();
+            return Collections.emptyList();
         }
     }
 }

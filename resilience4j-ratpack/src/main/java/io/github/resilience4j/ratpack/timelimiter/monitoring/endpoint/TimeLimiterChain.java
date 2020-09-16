@@ -36,6 +36,7 @@ import reactor.core.publisher.Flux;
 import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Provides event and stream event endpoints for timelimiter events.
@@ -59,11 +60,11 @@ public class TimeLimiterChain implements Action<Chain> {
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                 Promise.<TimeLimiterEventsEndpointResponse>async(d -> {
-                    List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry
-                        .getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
+                    List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
+                        .flatMap(CircularEventConsumer::getBufferedEventsStream)
                         .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
-                        .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).toJavaList();
+                        .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
+                        .collect(Collectors.toList());
                     d.success(new TimeLimiterEventsEndpointResponse(eventsList));
                 }).then(r -> ctx.render(Jackson.json(r)))
             );
@@ -84,9 +85,10 @@ public class TimeLimiterChain implements Action<Chain> {
                     Promise.<TimeLimiterEventsEndpointResponse>async(d -> {
                         List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(timeLimiterName)
-                            .getBufferedEvents()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
-                            .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).toJavaList();
+                            .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new TimeLimiterEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }
@@ -114,11 +116,12 @@ public class TimeLimiterChain implements Action<Chain> {
                     Promise.<TimeLimiterEventsEndpointResponse>async(d -> {
                         List<TimeLimiterEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(timeLimiterName)
-                            .getBufferedEvents()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
                             .filter(event -> event.getEventType() == TimeLimiterEvent.Type
                                 .valueOf(eventType.toUpperCase()))
-                            .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).toJavaList();
+                            .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new TimeLimiterEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }

@@ -16,7 +16,8 @@
 package io.github.resilience4j.consumer;
 
 import io.github.resilience4j.core.lang.Nullable;
-import io.vavr.collection.Seq;
+
+import java.util.List;
 
 
 public interface EventConsumerRegistry<T> {
@@ -44,5 +45,5 @@ public interface EventConsumerRegistry<T> {
      *
      * @return all EventConsumer instances
      */
-    Seq<CircularEventConsumer<T>> getAllEventConsumer();
+    List<CircularEventConsumer<T>> getAllEventConsumer();
 }

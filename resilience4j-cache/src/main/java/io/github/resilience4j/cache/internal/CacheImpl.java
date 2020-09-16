@@ -25,12 +25,10 @@ import io.github.resilience4j.cache.event.CacheOnHitEvent;
 import io.github.resilience4j.cache.event.CacheOnMissEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
-import io.vavr.CheckedFunction0;
-import io.vavr.control.Option;
-import io.vavr.control.Try;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
@@ -59,31 +57,30 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     @Override
-    public V computeIfAbsent(K cacheKey, CheckedFunction0<V> supplier) {
+    public V computeIfAbsent(K cacheKey, Supplier<V> supplier) {
         return getValueFromCache(cacheKey)
-            .getOrElse(() -> computeAndPut(cacheKey, supplier));
+            .orElseGet(() -> computeAndPut(cacheKey, supplier));
     }
 
-    private V computeAndPut(K cacheKey, CheckedFunction0<V> supplier) {
-        return Try.of(supplier)
-            .andThen(value -> putValueIntoCache(cacheKey, value))
-            .get();
+    private V computeAndPut(K cacheKey, Supplier<V> supplier) {
+        final V value = supplier.get();
+        putValueIntoCache(cacheKey, value);
+        return value;
     }
 
-    private Option<V> getValueFromCache(K cacheKey) {
+    private Optional<V> getValueFromCache(K cacheKey) {
         try {
-            Option<V> result = Option.of(cache.get(cacheKey));
-            if (result.isDefined()) {
+            Optional<V> result = Optional.ofNullable(cache.get(cacheKey));
+            if (result.isPresent()) {
                 onCacheHit(cacheKey);
-                return result;
             } else {
                 onCacheMiss(cacheKey);
-                return result;
             }
+            return result;
         } catch (Exception exception) {
             LOG.warn("Failed to get a value from Cache {}", getName(), exception);
             onError(exception);
-            return Option.none();
+            return Optional.empty();
         }
     }
 
