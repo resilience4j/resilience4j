@@ -21,12 +21,14 @@ import io.github.resilience4j.common.timelimiter.monitoring.endpoint.TimeLimiter
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
-import io.vavr.collection.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Endpoint(id = "timelimiterevents")
 public class TimeLimiterEventsEndpoint {
@@ -39,34 +41,36 @@ public class TimeLimiterEventsEndpoint {
 
     @ReadOperation
     public TimeLimiterEventsEndpointResponse getAllTimeLimiterEvents() {
-        return new TimeLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer()
-                .flatMap(CircularEventConsumer::getBufferedEvents)
+        return new TimeLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer().stream()
+                .flatMap(CircularEventConsumer::getBufferedEventsStream)
                 .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
-                .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).toJavaList());
+                .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
+                .collect(Collectors.toList()));
     }
 
     @ReadOperation
     public TimeLimiterEventsEndpointResponse getEventsFilteredByTimeLimiterName(@Selector String name) {
-        return new TimeLimiterEventsEndpointResponse(getTimeLimiterEvents(name)
-                .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).toJavaList());
+        return new TimeLimiterEventsEndpointResponse(getTimeLimiterEvents(name).stream()
+                .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).collect(Collectors.toList()));
     }
 
     @ReadOperation
     public TimeLimiterEventsEndpointResponse getEventsFilteredByTimeLimiterNameAndEventType(@Selector String name,
                                                                                             @Selector String eventType) {
         TimeLimiterEvent.Type targetType = TimeLimiterEvent.Type.valueOf(eventType.toUpperCase());
-        return new TimeLimiterEventsEndpointResponse(getTimeLimiterEvents(name)
+        return new TimeLimiterEventsEndpointResponse(getTimeLimiterEvents(name).stream()
                 .filter(event -> event.getEventType() == targetType)
-                .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).toJavaList());
+                .map(TimeLimiterEventDTO::createTimeLimiterEventDTO).collect(Collectors.toList()));
     }
 
     private List<TimeLimiterEvent> getTimeLimiterEvents(String name) {
         CircularEventConsumer<TimeLimiterEvent> eventConsumer = eventsConsumerRegistry.getEventConsumer(name);
         if(eventConsumer != null){
-            return eventConsumer.getBufferedEvents()
-                    .filter(event -> event.getTimeLimiterName().equals(name));
+            return eventConsumer.getBufferedEventsStream()
+                    .filter(event -> event.getTimeLimiterName().equals(name))
+                    .collect(Collectors.toList());
         }else{
-            return List.empty();
+            return Collections.emptyList();
         }
     }
 

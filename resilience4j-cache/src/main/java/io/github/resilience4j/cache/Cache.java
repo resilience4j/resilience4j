@@ -24,11 +24,8 @@ import io.github.resilience4j.cache.event.CacheOnHitEvent;
 import io.github.resilience4j.cache.event.CacheOnMissEvent;
 import io.github.resilience4j.cache.internal.CacheImpl;
 import io.github.resilience4j.core.EventConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
 
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -57,37 +54,8 @@ public interface Cache<K, V> {
      * @param <R>      the type of value
      * @return a supplier which is secured by a CircuitBreaker.
      */
-    static <K, R> CheckedFunction1<K, R> decorateCheckedSupplier(Cache<K, R> cache,
-        CheckedFunction0<R> supplier) {
-        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, supplier);
-    }
-
-    /**
-     * Creates a functions which returns a value from a cache, if it exists. Otherwise it calls the
-     * Supplier.
-     *
-     * @param cache    the Cache
-     * @param supplier the original Supplier
-     * @param <K>      the type of key
-     * @param <R>      the type of value
-     * @return a supplier which is secured by a CircuitBreaker.
-     */
     static <K, R> Function<K, R> decorateSupplier(Cache<K, R> cache, Supplier<R> supplier) {
-        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, supplier::get);
-    }
-
-    /**
-     * Creates a functions which returns a value from a cache, if it exists. Otherwise it calls the
-     * Callable.
-     *
-     * @param cache    the Cache
-     * @param callable the original Callable
-     * @param <K>      the type of key
-     * @param <R>      the type of value
-     * @return a supplier which is secured by a CircuitBreaker.
-     */
-    static <K, R> CheckedFunction1<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable) {
-        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, callable::call);
+        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, supplier);
     }
 
     /**
@@ -111,7 +79,7 @@ public interface Cache<K, V> {
      * @param supplier value to be associated with the specified key
      * @return cached value
      */
-    V computeIfAbsent(K key, CheckedFunction0<V> supplier);
+    V computeIfAbsent(K key, Supplier<V> supplier);
 
     /**
      * Returns an EventPublisher which can be used to register event consumers.

@@ -3,9 +3,6 @@ package io.github.resilience4j.prometheus;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
@@ -48,48 +45,6 @@ public interface CallMeter extends CallMeterBase {
      */
     static Builder builder() {
         return new Builder();
-    }
-
-    /**
-     * Creates a timed checked supplier.
-     *
-     * @param meter    the call meter to use
-     * @param supplier the original supplier
-     * @return a timed supplier
-     */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(CallMeterBase meter,
-        CheckedFunction0<T> supplier) {
-        return () -> {
-            final Timer timer = meter.startTimer();
-            try {
-                final T returnValue = supplier.apply();
-                timer.onSuccess();
-                return returnValue;
-            } catch (Throwable e) {
-                timer.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     * Creates a timed runnable.
-     *
-     * @param meter    the call meter to use
-     * @param runnable the original runnable
-     * @return a timed runnable
-     */
-    static CheckedRunnable decorateCheckedRunnable(CallMeterBase meter, CheckedRunnable runnable) {
-        return () -> {
-            final Timer timer = meter.startTimer();
-            try {
-                runnable.run();
-                timer.onSuccess();
-            } catch (Throwable e) {
-                timer.onError();
-                throw e;
-            }
-        };
     }
 
     /**
@@ -162,28 +117,6 @@ public interface CallMeter extends CallMeterBase {
      * @return a timed function
      */
     static <T, R> Function<T, R> decorateFunction(CallMeterBase meter, Function<T, R> function) {
-        return (T t) -> {
-            final Timer timer = meter.startTimer();
-            try {
-                R returnValue = function.apply(t);
-                timer.onSuccess();
-                return returnValue;
-            } catch (Throwable e) {
-                timer.onError();
-                throw e;
-            }
-        };
-    }
-
-    /**
-     * Creates a timed function.
-     *
-     * @param meter    the call meter to use
-     * @param function the original function
-     * @return a timed function
-     */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CallMeterBase meter,
-        CheckedFunction1<T, R> function) {
         return (T t) -> {
             final Timer timer = meter.startTimer();
             try {

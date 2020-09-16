@@ -19,8 +19,6 @@
 package io.github.resilience4j.circularbuffer;
 
 
-import io.vavr.collection.List;
-import io.vavr.control.Option;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -28,6 +26,8 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -97,7 +97,7 @@ public class CircularBufferBenchmark {
     @Group("circularBuffer")
     @GroupThreads(1)
     public void circularBufferTakeEvent(Blackhole bh) {
-        Option<Object> event = circularFifoBuffer.take();
+        Optional<Object> event = circularFifoBuffer.take();
         bh.consume(event);
     }
 }
