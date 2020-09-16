@@ -5,7 +5,6 @@ dependencies {
     compile project(':resilience4j-retry')
     compile project(':resilience4j-cache')
     compile project(':resilience4j-timelimiter')
-    compile project(':resilience4j-vavr')
     testCompile project(':resilience4j-test')
 }
 ext.moduleName = 'io.github.resilience4j.all'
