@@ -23,11 +23,12 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class RetryConfig {
+public class RetryConfig implements Serializable {
 
     public static final long DEFAULT_WAIT_DURATION = 500;
     private static final int DEFAULT_MAX_ATTEMPTS = 3;

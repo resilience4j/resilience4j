@@ -1,10 +1,11 @@
 package io.github.resilience4j.timelimiter;
 
+import java.io.Serializable;
 import java.time.Duration;
 
 import static java.util.Objects.requireNonNull;
 
-public class TimeLimiterConfig {
+public class TimeLimiterConfig implements Serializable {
 
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
 
