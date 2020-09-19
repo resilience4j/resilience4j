@@ -124,6 +124,7 @@ resilience4j.bulkhead:
     default:
       maxWaitDuration: 10
       maxConcurrentCalls: 2
+      writableStackTraceEnabled: false
   backends:
     backendA:
       maxConcurrentCalls: 1
@@ -132,11 +133,12 @@ resilience4j.bulkhead:
     backendD:
       baseConfig: default
     dummyFeignClient:
-      maxWaitDuration: 100
+      maxWaitDuration: 101
       maxConcurrentCalls: 3
     backendCustomizer:
       maxWaitDuration: 100
       maxConcurrentCalls: 10
+      writableStackTraceEnabled: true
 
 resilience4j.thread-pool-bulkhead:
   tags:
