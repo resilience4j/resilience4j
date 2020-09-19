@@ -24,7 +24,6 @@ ext {
     retrofitVersion = '2.5.0'
     feignVersion = '10.2.0'
     prometheusSimpleClientVersion = '0.9.0'
-    prometheusSimpleClientVersion = '0.8.1'
     reactiveStreamsVersion = '1.0.2'
     micrometerVersion = '1.5.1'
     hibernateValidatorVersion = '6.0.18.Final'
