@@ -304,11 +304,13 @@ public class RefillRateLimiter implements RateLimiter {
     private boolean waitForPermissionIfNecessary(final long timeoutInNanos,
                                                  final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
-        boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
 
         if (canAcquireImmediately) {
             return true;
         }
+
+        boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
+
         if (canAcquireInTime) {
             return waitForPermission(nanosToWait);
         }
