@@ -80,7 +80,7 @@ TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
 
 CompletableFuture<String> future = Decorators.ofSupplier(supplier)
     .withThreadPoolBulkhead(threadPoolBulkhead)
-    .withTimeLimiter(timeLimiter, scheduledExecutorService)
+    .withTimeLimiter(timeLimiter, scheduler)
     .withCircuitBreaker(circuitBreaker)
     .withFallback(asList(TimeoutException.class, CallNotPermittedException.class, BulkheadFullException.class),
       throwable -> "Hello from Recovery")
@@ -293,7 +293,7 @@ It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread
 // Create a custom Bulkhead configuration
 BulkheadConfig config = BulkheadConfig.custom()
     .maxConcurrentCalls(150)
-    .maxWaitTime(100)
+    .maxWaitDuration(100)
     .build();
 
 Bulkhead bulkhead = Bulkhead.of("backendName", config);
