@@ -6,8 +6,13 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.CallableUtils;
+import io.github.resilience4j.core.CheckedFunctionUtils;
 import io.github.resilience4j.core.CompletionStageUtils;
 import io.github.resilience4j.core.SupplierUtils;
+import io.github.resilience4j.core.functions.CheckedBiFunction;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
@@ -56,6 +61,18 @@ public interface Decorators {
 
     static <T> DecorateCallable<T> ofCallable(Callable<T> callable) {
         return new DecorateCallable<>(callable);
+    }
+
+    static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(CheckedSupplier<T> supplier) {
+        return new DecorateCheckedSupplier<>(supplier);
+    }
+
+    static <T, R> DecorateCheckedFunction<T, R> ofCheckedFunction(CheckedFunction<T, R> function) {
+        return new DecorateCheckedFunction<>(function);
+    }
+
+    static DecorateCheckedRunnable ofCheckedRunnable(CheckedRunnable supplier) {
+        return new DecorateCheckedRunnable(supplier);
     }
 
     static <T> DecorateCompletionStage<T> ofCompletionStage(
@@ -336,6 +353,167 @@ public interface Decorators {
 
         public T call() throws Exception {
             return callable.call();
+        }
+    }
+
+    class DecorateCheckedSupplier<T> {
+
+        private CheckedSupplier<T> supplier;
+
+        private DecorateCheckedSupplier(CheckedSupplier<T> supplier) {
+            this.supplier = supplier;
+        }
+
+
+        public DecorateCheckedSupplier<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            supplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withRetry(Retry retryContext) {
+            supplier = Retry.decorateCheckedSupplier(retryContext, supplier);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withRateLimiter(RateLimiter rateLimiter) {
+            return withRateLimiter(rateLimiter, 1);
+        }
+
+        public DecorateCheckedSupplier<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+            supplier = RateLimiter.decorateCheckedSupplier(rateLimiter, permits, supplier);
+            return this;
+        }
+
+        public <K> DecorateCheckedFunction<K, T> withCache(Cache<K, T> cache) {
+            return Decorators.ofCheckedFunction(Cache.decorateCheckedSupplier(cache, supplier));
+        }
+
+        public DecorateCheckedSupplier<T> withBulkhead(Bulkhead bulkhead) {
+            supplier = Bulkhead.decorateCheckedSupplier(bulkhead, supplier);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(CheckedBiFunction<T, Throwable, T> handler) {
+            supplier = CheckedFunctionUtils.andThen(supplier, handler);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, CheckedFunction<T, T> resultHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, resultPredicate, resultHandler);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction<Throwable, T> exceptionHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
+            return this;
+        }
+
+        public DecorateCheckedSupplier<T> withFallback(CheckedFunction<Throwable, T> exceptionHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, CheckedFunction<Throwable, T> exceptionHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
+            return this;
+        }
+
+        public CheckedSupplier<T> decorate() {
+            return supplier;
+        }
+
+        public T get() throws Throwable {
+            return supplier.get();
+        }
+    }
+
+    class DecorateCheckedFunction<T, R> {
+
+        private CheckedFunction<T, R> function;
+
+        private DecorateCheckedFunction(CheckedFunction<T, R> function) {
+            this.function = function;
+        }
+
+        public DecorateCheckedFunction<T, R> withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, function);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withRetry(Retry retryContext) {
+            function = Retry.decorateCheckedFunction(retryContext, function);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter) {
+            return withRateLimiter(rateLimiter, 1);
+        }
+
+        public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter, int permits) {
+            function = RateLimiter.decorateCheckedFunction(rateLimiter, permits, function);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter,
+                                                             Function<T, Integer> permitsCalculator) {
+            function = RateLimiter
+                .decorateCheckedFunction(rateLimiter, permitsCalculator, function);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withBulkhead(Bulkhead bulkhead) {
+            function = Bulkhead.decorateCheckedFunction(bulkhead, function);
+            return this;
+        }
+
+        public CheckedFunction<T, R> decorate() {
+            return function;
+        }
+
+        public R apply(T t) throws Throwable {
+            return function.apply(t);
+        }
+    }
+
+    class DecorateCheckedRunnable {
+
+        private CheckedRunnable runnable;
+
+        private DecorateCheckedRunnable(CheckedRunnable runnable) {
+            this.runnable = runnable;
+        }
+
+        public DecorateCheckedRunnable withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            runnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, runnable);
+            return this;
+        }
+
+        public DecorateCheckedRunnable withRetry(Retry retryContext) {
+            runnable = Retry.decorateCheckedRunnable(retryContext, runnable);
+            return this;
+        }
+
+        public DecorateCheckedRunnable withRateLimiter(RateLimiter rateLimiter) {
+            runnable = RateLimiter.decorateCheckedRunnable(rateLimiter, runnable);
+            return this;
+        }
+
+        public DecorateCheckedRunnable withRateLimiter(RateLimiter rateLimiter, int permits) {
+            runnable = RateLimiter.decorateCheckedRunnable(rateLimiter, permits, runnable);
+            return this;
+        }
+
+        public DecorateCheckedRunnable withBulkhead(Bulkhead bulkhead) {
+            runnable = Bulkhead.decorateCheckedRunnable(bulkhead, runnable);
+            return this;
+        }
+
+        public CheckedRunnable decorate() {
+            return runnable;
+        }
+
+        public void run() throws Throwable {
+            runnable.run();
         }
     }
 

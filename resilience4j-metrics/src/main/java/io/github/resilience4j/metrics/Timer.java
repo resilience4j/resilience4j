@@ -2,6 +2,9 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Snapshot;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.metrics.internal.TimerImpl;
 
 import java.util.concurrent.Callable;
@@ -30,6 +33,48 @@ public interface Timer {
      */
     static Timer of(String name) {
         return new TimerImpl(name, new MetricRegistry());
+    }
+
+    /**
+     * Creates a timed checked supplier.
+     *
+     * @param timer    the timer to use
+     * @param supplier the original supplier
+     * @return a timed supplier
+     */
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(Timer timer,
+                                                          CheckedSupplier<T> supplier) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                T returnValue = supplier.get();
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed runnable.
+     *
+     * @param timer    the timer to use
+     * @param runnable the original runnable
+     * @return a timed runnable
+     */
+    static CheckedRunnable decorateCheckedRunnable(Timer timer, CheckedRunnable runnable) {
+        return () -> {
+            final Timer.Context context = timer.context();
+            try {
+                runnable.run();
+                context.onSuccess();
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
     }
 
     /**
@@ -102,6 +147,28 @@ public interface Timer {
      * @return a timed function
      */
     static <T, R> Function<T, R> decorateFunction(Timer timer, Function<T, R> function) {
+        return (T t) -> {
+            final Timer.Context context = timer.context();
+            try {
+                R returnValue = function.apply(t);
+                context.onSuccess();
+                return returnValue;
+            } catch (Throwable e) {
+                context.onError();
+                throw e;
+            }
+        };
+    }
+
+    /**
+     * Creates a timed function.
+     *
+     * @param timer    the timer to use
+     * @param function the original function
+     * @return a timed function
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(Timer timer,
+                                                                CheckedFunction<T, R> function) {
         return (T t) -> {
             final Timer.Context context = timer.context();
             try {

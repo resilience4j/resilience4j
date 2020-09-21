@@ -42,7 +42,7 @@ import java.util.function.Supplier;
 public class RetryImpl<T> implements Retry {
 
 
-    /*package*/ static CheckedConsumer<Long, Exception> sleepFunction = Thread::sleep;
+    /*package*/ static CheckedConsumer<Long> sleepFunction = Thread::sleep;
     private final Metrics metrics;
     private final RetryEventProcessor eventProcessor;
     @Nullable
@@ -79,7 +79,7 @@ public class RetryImpl<T> implements Retry {
         failedWithoutRetryCounter = new LongAdder();
     }
 
-    public static void setSleepFunction(CheckedConsumer<Long, Exception> sleepFunction) {
+    public static void setSleepFunction(CheckedConsumer<Long> sleepFunction) {
         RetryImpl.sleepFunction = sleepFunction;
     }
 
@@ -245,6 +245,8 @@ public class RetryImpl<T> implements Retry {
             try {
                 sleepFunction.accept(interval);
             } catch (Exception ex) {
+                throw lastRuntimeException.get();
+            } catch (Throwable e) {
                 throw lastRuntimeException.get();
             }
         }

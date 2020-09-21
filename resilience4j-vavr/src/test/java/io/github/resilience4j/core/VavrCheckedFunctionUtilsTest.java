@@ -26,14 +26,14 @@ import java.io.IOException;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CheckFunctionUtilsTest {
+public class VavrCheckedFunctionUtilsTest {
 
     @Test
     public void shouldRecoverFromException() throws Throwable {
         CheckedFunction0<String> callable = () -> {
             throw new IOException("BAM!");
         };
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(callable, (ex) -> "Bla");
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(callable, (ex) -> "Bla");
 
         String result = callableWithRecovery.apply();
 
@@ -46,7 +46,7 @@ public class CheckFunctionUtilsTest {
             throw new IOException("BAM!");
         };
 
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(callable,
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(callable,
             asList(IllegalArgumentException.class, IOException.class),
             (ex) -> "Bla");
 
@@ -59,7 +59,7 @@ public class CheckFunctionUtilsTest {
     public void shouldRecoverFromResult() throws Throwable {
         CheckedFunction0<String> callable = () -> "Wrong Result";
 
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.andThen(callable, (result, ex) -> {
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.andThen(callable, (result, ex) -> {
             if(result.equals("Wrong Result")){
                 return "Bla";
             }
@@ -76,7 +76,7 @@ public class CheckFunctionUtilsTest {
         CheckedFunction0<String> callable = () -> {
             throw new IllegalArgumentException("BAM!");
         };
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.andThen(callable, (result, ex) -> {
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.andThen(callable, (result, ex) -> {
             if(ex instanceof IllegalArgumentException){
                 return "Bla";
             }
@@ -92,7 +92,7 @@ public class CheckFunctionUtilsTest {
     public void shouldRecoverFromSpecificResult() throws Throwable {
         CheckedFunction0<String> supplier = () -> "Wrong Result";
 
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
         String result = callableWithRecovery.apply();
 
         assertThat(result).isEqualTo("Bla");
@@ -104,7 +104,7 @@ public class CheckFunctionUtilsTest {
         CheckedFunction0<String> callable = () -> {
             throw new IOException("BAM!");
         };
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(callable, (ex) -> {
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(callable, (ex) -> {
             throw new RuntimeException();
         });
 
@@ -116,7 +116,7 @@ public class CheckFunctionUtilsTest {
         CheckedFunction0<String> callable = () -> {
             throw new RuntimeException("BAM!");
         };
-        CheckedFunction0<String> callableWithRecovery = CheckFunctionUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
+        CheckedFunction0<String> callableWithRecovery = VavrCheckedFunctionUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
 
         callableWithRecovery.apply();
     }

@@ -19,12 +19,10 @@
 package io.github.resilience4j.retrofit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.retrofit.internal.DecoratedCall;
-import io.vavr.CheckedFunction0;
-import io.vavr.control.Try;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -82,15 +80,18 @@ public interface RetrofitRateLimiter {
 
         @Override
         public Response<T> execute() throws IOException {
-            CheckedFunction0<Response<T>> restrictedSupplier = VavrRateLimiter
+            CheckedSupplier<Response<T>> restrictedSupplier = RateLimiter
                 .decorateCheckedSupplier(rateLimiter, call::execute);
-            final Try<Response<T>> response = Try.of(restrictedSupplier);
-            return response.isSuccess() ? response.get() : handleFailure(response);
+            try {
+                return restrictedSupplier.get();
+            } catch (Throwable throwable) {
+               return handleFailure(throwable);
+            }
         }
 
-        private Response<T> handleFailure(Try<Response<T>> response) throws IOException {
+        private Response<T> handleFailure(Throwable throwable) throws IOException {
             try {
-                throw response.getCause();
+                throw throwable;
             } catch (RequestNotPermitted | IllegalStateException e) {
                 return tooManyRequestsError();
             } catch (IOException ioe) {

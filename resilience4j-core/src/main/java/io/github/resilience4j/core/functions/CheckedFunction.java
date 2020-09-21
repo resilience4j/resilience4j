@@ -18,12 +18,12 @@
  */
 package io.github.resilience4j.core.functions;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
- * A {@link Consumer}-like interface which allows throwing Error.
+ * A {@link Function}-like interface which allows throwing Error.
  */
 @FunctionalInterface
-public interface CheckedConsumer<T> {
-    void accept(T t) throws Throwable;
-} 
+public interface CheckedFunction<T, R> {
+    R apply(T t) throws Throwable;
+}

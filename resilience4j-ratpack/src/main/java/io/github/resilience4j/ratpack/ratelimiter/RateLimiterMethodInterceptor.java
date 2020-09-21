@@ -19,7 +19,6 @@ package io.github.resilience4j.ratpack.ratelimiter;
 import com.google.inject.Inject;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
 import io.github.resilience4j.ratpack.recovery.DefaultRecoveryFunction;
@@ -130,7 +129,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
         RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            return VavrRateLimiter.decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
+            return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, invocation::proceed).get();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }

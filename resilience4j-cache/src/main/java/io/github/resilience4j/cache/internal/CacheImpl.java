@@ -25,6 +25,7 @@ import io.github.resilience4j.cache.event.CacheOnHitEvent;
 import io.github.resilience4j.cache.event.CacheOnMissEvent;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,15 +58,19 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     @Override
-    public V computeIfAbsent(K cacheKey, Supplier<V> supplier) {
+    public V computeIfAbsent(K cacheKey, CheckedSupplier<V> supplier) {
         return getValueFromCache(cacheKey)
             .orElseGet(() -> computeAndPut(cacheKey, supplier));
     }
 
-    private V computeAndPut(K cacheKey, Supplier<V> supplier) {
-        final V value = supplier.get();
-        putValueIntoCache(cacheKey, value);
-        return value;
+    private V computeAndPut(K cacheKey, CheckedSupplier<V> supplier) {
+        try {
+            V value = supplier.get();
+            putValueIntoCache(cacheKey, value);
+            return value;
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
     }
 
     private Optional<V> getValueFromCache(K cacheKey) {
