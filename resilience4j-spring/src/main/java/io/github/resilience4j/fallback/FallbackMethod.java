@@ -202,7 +202,7 @@ public class FallbackMethod {
                 ReflectionUtils.makeAccessible(fallback);
             }
             if (args.length != 0) {
-                if (args.length == 1 && Throwable.class
+                if (fallback.getParameterTypes().length == 1 && Throwable.class
                     .isAssignableFrom(fallback.getParameterTypes()[0])) {
                     return fallback.invoke(target, throwable);
                 }
