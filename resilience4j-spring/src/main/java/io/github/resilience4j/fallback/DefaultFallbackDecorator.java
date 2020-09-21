@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.timelimiter.configure.IllegalReturnTypeException;
-import io.vavr.CheckedFunction0;
 
 /**
  * default fallbackMethod decorator. it catches throwable and invoke the fallbackMethod method.
@@ -29,11 +29,11 @@ public class DefaultFallbackDecorator implements FallbackDecorator {
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-        CheckedFunction0<Object> supplier) {
+    public CheckedSupplier<Object> decorate(FallbackMethod fallbackMethod,
+                                            CheckedSupplier<Object> supplier) {
         return () -> {
             try {
-                return supplier.apply();
+                return supplier.get();
             } catch (IllegalReturnTypeException e) {
                 throw e;
             } catch (Throwable throwable) {

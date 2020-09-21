@@ -19,6 +19,9 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.retry.event.*;
 import io.github.resilience4j.retry.internal.RetryImpl;
 
@@ -112,6 +115,83 @@ public interface Retry {
             block.run();
 
             return promise;
+        };
+    }
+
+    /**
+     * Creates a retryable supplier.
+     *
+     * @param retry    the retry context
+     * @param supplier the original function
+     * @param <T>      the type of results supplied by this supplier
+     * @return a retryable function
+     */
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(Retry retry,
+                                                          CheckedSupplier<T> supplier) {
+        return () -> {
+            Retry.Context<T> context = retry.context();
+            do {
+                try {
+                    T result = supplier.get();
+                    final boolean validationOfResult = context.onResult(result);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        return result;
+                    }
+                } catch (Exception exception) {
+                    context.onError(exception);
+                }
+            } while (true);
+        };
+    }
+
+    /**
+     * Creates a retryable runnable.
+     *
+     * @param retry    the retry context
+     * @param runnable the original runnable
+     * @return a retryable runnable
+     */
+    static CheckedRunnable decorateCheckedRunnable(Retry retry, CheckedRunnable runnable) {
+        return () -> {
+            Retry.Context context = retry.context();
+            do {
+                try {
+                    runnable.run();
+                    context.onComplete();
+                    break;
+                } catch (Exception exception) {
+                    context.onError(exception);
+                }
+            } while (true);
+        };
+    }
+
+    /**
+     * Creates a retryable function.
+     *
+     * @param retry    the retry context
+     * @param function the original function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the result type of the function
+     * @return a retryable function
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(Retry retry,
+                                                                CheckedFunction<T, R> function) {
+        return (T t) -> {
+            Retry.Context<R> context = retry.context();
+            do {
+                try {
+                    R result = function.apply(t);
+                    final boolean validationOfResult = context.onResult(result);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        return result;
+                    }
+                } catch (Exception exception) {
+                    context.onError(exception);
+                }
+            } while (true);
         };
     }
 
@@ -257,6 +337,18 @@ public interface Retry {
      * @return an EventPublisher
      */
     EventPublisher getEventPublisher();
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param checkedSupplier the original Supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     * @throws Throwable if something goes wrong applying this function to the given arguments
+     */
+    default <T> T executeCheckedSupplier(CheckedSupplier<T> checkedSupplier) throws Throwable {
+        return decorateCheckedSupplier(this, checkedSupplier).get();
+    }
 
     /**
      * Decorates and executes the decorated Supplier.

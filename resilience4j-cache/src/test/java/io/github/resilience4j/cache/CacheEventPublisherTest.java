@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.cache;
 
-import io.vavr.CheckedFunction1;
+import io.github.resilience4j.core.functions.CheckedFunction;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class CacheEventPublisherTest {
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheHit(
             event -> logger.info(event.getEventType().toString()));
-        CheckedFunction1<String, String> cachedFunction = VavrCache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
@@ -71,7 +71,7 @@ public class CacheEventPublisherTest {
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheMiss(
             event -> logger.info(event.getEventType().toString()));
-        CheckedFunction1<String, String> cachedFunction = VavrCache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
@@ -86,7 +86,7 @@ public class CacheEventPublisherTest {
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onError(
             event -> logger.info(event.getEventType().toString()));
-        CheckedFunction1<String, String> cachedFunction = VavrCache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
         String value = cachedFunction.apply("testKey");
 

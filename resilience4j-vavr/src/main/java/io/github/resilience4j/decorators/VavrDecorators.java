@@ -24,7 +24,7 @@ import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.cache.VavrCache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
-import io.github.resilience4j.core.CheckFunctionUtils;
+import io.github.resilience4j.core.VavrCheckedFunctionUtils;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.retry.Retry;
@@ -89,27 +89,27 @@ public interface VavrDecorators {
         }
 
         public DecorateCheckedSupplier<T> withFallback(CheckedFunction2<T, Throwable, T> handler) {
-            supplier = CheckFunctionUtils.andThen(supplier, handler);
+            supplier = VavrCheckedFunctionUtils.andThen(supplier, handler);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, CheckedFunction1<T, T> resultHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, resultPredicate, resultHandler);
+            supplier = VavrCheckedFunctionUtils.recover(supplier, resultPredicate, resultHandler);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction1<Throwable, T> exceptionHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
+            supplier = VavrCheckedFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withFallback(CheckedFunction1<Throwable, T> exceptionHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, exceptionHandler);
+            supplier = VavrCheckedFunctionUtils.recover(supplier, exceptionHandler);
             return this;
         }
 
         public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, CheckedFunction1<Throwable, T> exceptionHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
+            supplier = VavrCheckedFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
             return this;
         }
 

@@ -17,11 +17,11 @@ package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -106,13 +106,13 @@ public class BulkheadAspect implements Ordered {
         Class<?> returnType = method.getReturnType();
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), bulkheadAnnotation.name());
         if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
-            final CheckedFunction0<Object> bulkheadExecution =
+            final CheckedSupplier<Object> bulkheadExecution =
                 () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType, backend);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         } else {
             io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName,
                 backend);
-            final CheckedFunction0<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
+            final CheckedSupplier<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         }
     }
@@ -186,7 +186,7 @@ public class BulkheadAspect implements Ordered {
      */
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
-        return VavrBulkhead.executeCheckedSupplier(bulkhead, proceedingJoinPoint::proceed);
+        return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
     /**

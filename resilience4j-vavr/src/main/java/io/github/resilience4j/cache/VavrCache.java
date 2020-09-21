@@ -37,13 +37,7 @@ public interface VavrCache {
      */
     static <K, R> CheckedFunction1<K, R> decorateCheckedSupplier(Cache<K, R> cache,
                                                                  CheckedFunction0<R> supplier) {
-        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, () -> {
-            try {
-                return supplier.apply();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
-        });
+        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, supplier::apply);
     }
 
     /**
@@ -57,13 +51,7 @@ public interface VavrCache {
      * @return a supplier which is secured by a CircuitBreaker.
      */
     static <K, R> CheckedFunction1<K, R> decorateCallable(Cache<K, R> cache, Callable<R> callable) {
-        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, () -> {
-            try {
-                return callable.call();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return (K cacheKey) -> cache.computeIfAbsent(cacheKey, callable::call);
     }
 
 }

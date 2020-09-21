@@ -54,12 +54,12 @@ configure(project.coreProjects) {
 
 
     dependencies {
-        api (libraries.vavr)
         implementation (libraries.slf4j)
 
         // JSR-305 only used for non-required meta-annotations
         compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
+        testImplementation (libraries.vavr)
         testImplementation (libraries.junit)
         testImplementation (libraries.assertj)
         testImplementation (libraries.logback)
