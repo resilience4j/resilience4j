@@ -18,12 +18,18 @@
  */
 package io.github.resilience4j.core.functions;
 
-import java.util.function.Consumer;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
- * A {@link Consumer}-like interface which allows throwing Error.
+ * A {@link Supplier}-like interface which allows throwing Error.
  */
 @FunctionalInterface
-public interface CheckedConsumer<T> {
-    void accept(T t) throws Throwable;
-} 
+public interface CheckedSupplier<T> {
+    T get() throws Throwable;
+
+    default <V> CheckedSupplier<V> andThen(CheckedFunction<? super T, ? extends V> after) {
+        Objects.requireNonNull(after, "after is null");
+        return () -> after.apply(get());
+    }
+}

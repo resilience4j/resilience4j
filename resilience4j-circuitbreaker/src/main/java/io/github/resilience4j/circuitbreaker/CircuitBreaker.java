@@ -21,7 +21,7 @@ package io.github.resilience4j.circuitbreaker;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.functions.OnceConsumer;
+import io.github.resilience4j.core.functions.*;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -52,6 +52,33 @@ import java.util.stream.Collectors;
  * If the failure rate is below or equal to the threshold, the state changes back to CLOSED.
  */
 public interface CircuitBreaker {
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param supplier       the original supplier
+     * @param <T>            the type of results supplied by this supplier
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(CircuitBreaker circuitBreaker, CheckedSupplier<T> supplier) {
+        return () -> {
+            circuitBreaker.acquirePermission();
+            final long start = circuitBreaker.getCurrentTimestamp();
+            try {
+                T returnValue = supplier.get();
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+                return returnValue;
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
+                throw exception;
+            }
+        };
+    }
+
     /**
      * Returns a supplier which is decorated by a CircuitBreaker.
      *
@@ -96,6 +123,30 @@ public interface CircuitBreaker {
             }
 
             return promise;
+        };
+    }
+
+    /**
+     * Returns a runnable which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param runnable       the original runnable
+     * @return a runnable which is decorated by a CircuitBreaker.
+     */
+    static CheckedRunnable decorateCheckedRunnable(CircuitBreaker circuitBreaker, CheckedRunnable runnable) {
+        return () -> {
+            circuitBreaker.acquirePermission();
+            final long start = circuitBreaker.getCurrentTimestamp();
+            try {
+                runnable.run();
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
+                throw exception;
+            }
         };
     }
 
@@ -177,6 +228,31 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Returns a consumer which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param consumer       the original consumer
+     * @param <T>            the type of the input to the consumer
+     * @return a consumer which is decorated by a CircuitBreaker.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(CircuitBreaker circuitBreaker, CheckedConsumer<T> consumer) {
+        return (t) -> {
+            circuitBreaker.acquirePermission();
+            final long start = circuitBreaker.getCurrentTimestamp();
+            try {
+                consumer.accept(t);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
+                throw exception;
+            }
+        };
+    }
+
+    /**
      * Returns a runnable which is decorated by a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker
@@ -218,6 +294,33 @@ public interface CircuitBreaker {
                 R returnValue = function.apply(t);
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
                 circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), returnValue);
+                return returnValue;
+            } catch (Exception exception) {
+                // Do not handle java.lang.Error
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
+                throw exception;
+            }
+        };
+    }
+
+    /**
+     * Returns a function which is decorated by a CircuitBreaker.
+     *
+     * @param circuitBreaker the CircuitBreaker
+     * @param function       the original function
+     * @param <T>            the type of the input to the function
+     * @param <R>            the type of the result of the function
+     * @return a function which is decorated by a CircuitBreaker.
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(CircuitBreaker circuitBreaker, CheckedFunction<T, R> function) {
+        return (T t) -> {
+            circuitBreaker.acquirePermission();
+            final long start = circuitBreaker.getCurrentTimestamp();
+            try {
+                R returnValue = function.apply(t);
+                long duration = circuitBreaker.getCurrentTimestamp() - start;
+                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
@@ -607,6 +710,48 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param checkedSupplier the original Supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     * @throws Throwable if something goes wrong applying this function to the given arguments
+     */
+    default <T> T executeCheckedSupplier(CheckedSupplier<T> checkedSupplier) throws Throwable {
+        return decorateCheckedSupplier(this, checkedSupplier).get();
+    }
+
+    /**
+     * Returns a supplier which is decorated by a CircuitBreaker.
+     *
+     * @param checkedSupplier the original supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return a supplier which is decorated by a CircuitBreaker.
+     */
+    default <T> CheckedSupplier<T> decorateCheckedSupplier(CheckedSupplier<T> checkedSupplier) {
+        return decorateCheckedSupplier(this, checkedSupplier);
+    }
+
+    /**
+     * Returns a runnable which is decorated by a CircuitBreaker.
+     *
+     * @param runnable the original runnable
+     * @return a runnable which is decorated by a CircuitBreaker.
+     */
+    default CheckedRunnable decorateCheckedRunnable(CheckedRunnable runnable) {
+        return decorateCheckedRunnable(this, runnable);
+    }
+
+    /**
+     * Decorates and executes the decorated Runnable.
+     *
+     * @param runnable the original runnable
+     */
+    default void executeCheckedRunnable(CheckedRunnable runnable) throws Throwable {
+        decorateCheckedRunnable(this, runnable).run();
+    }
+
+    /**
      * Returns a consumer which is decorated by a CircuitBreaker.
      *
      * @param consumer the original consumer
@@ -615,6 +760,17 @@ public interface CircuitBreaker {
      */
     default <T> Consumer<T> decorateConsumer(Consumer<T> consumer) {
         return decorateConsumer(this, consumer);
+    }
+
+    /**
+     * Returns a consumer which is decorated by a CircuitBreaker.
+     *
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a consumer which is decorated by a CircuitBreaker.
+     */
+    default <T> CheckedConsumer<T> decorateCheckedConsumer(CheckedConsumer<T> consumer) {
+        return decorateCheckedConsumer(this, consumer);
     }
 
     /**

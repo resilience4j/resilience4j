@@ -43,7 +43,7 @@ public class VavrRetryTest {
     private long sleptTime = 0L;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         RetryImpl.setSleepFunction(sleep -> sleptTime += sleep);
     }

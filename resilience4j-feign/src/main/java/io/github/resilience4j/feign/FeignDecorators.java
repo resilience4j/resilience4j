@@ -19,14 +19,10 @@ package io.github.resilience4j.feign;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.VavrBulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.VavrRateLimiter;
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.VavrRetry;
-import io.vavr.CheckedFunction1;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -72,9 +68,9 @@ public class FeignDecorators implements FeignDecorator {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> fn,
-        Method method, MethodHandler methodHandler, Target<?> target) {
-        CheckedFunction1<Object[], Object> decoratedFn = fn;
+    public CheckedFunction<Object[], Object> decorate(CheckedFunction<Object[], Object> fn,
+                                                      Method method, MethodHandler methodHandler, Target<?> target) {
+        CheckedFunction<Object[], Object> decoratedFn = fn;
         for (final FeignDecorator decorator : decorators) {
             decoratedFn = decorator.decorate(decoratedFn, method, methodHandler, target);
         }
@@ -93,7 +89,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withRetry(Retry retry) {
-            addFeignDecorator(fn -> VavrRetry.decorateCheckedFunction(retry, fn));
+            addFeignDecorator(fn -> Retry.decorateCheckedFunction(retry, fn));
             return this;
         }
 
@@ -104,7 +100,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            addFeignDecorator(fn -> VavrCircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
+            addFeignDecorator(fn -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
             return this;
         }
 
@@ -115,7 +111,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withRateLimiter(RateLimiter rateLimiter) {
-            addFeignDecorator(fn -> VavrRateLimiter.decorateCheckedFunction(rateLimiter, fn));
+            addFeignDecorator(fn -> RateLimiter.decorateCheckedFunction(rateLimiter, fn));
             return this;
         }
 
@@ -217,7 +213,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withBulkhead(Bulkhead bulkhead) {
-            addFeignDecorator(fn -> VavrBulkhead.decorateCheckedFunction(bulkhead, fn));
+            addFeignDecorator(fn -> Bulkhead.decorateCheckedFunction(bulkhead, fn));
             return this;
         }
 

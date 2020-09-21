@@ -17,7 +17,6 @@ package io.github.resilience4j.ratpack.circuitbreaker;
 
 import com.google.inject.Inject;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.VavrCircuitBreaker;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratpack.internal.AbstractMethodInterceptor;
@@ -174,7 +173,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker,
         RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            return VavrCircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).apply();
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).get();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

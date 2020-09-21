@@ -18,6 +18,9 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +66,58 @@ public class RateLimiterTest {
             .build();
         limit = mock(RateLimiter.class);
         given(limit.getRateLimiterConfig()).willReturn(config);
+    }
+
+    @Test
+    public void decorateCheckedSupplier() throws Throwable {
+        CheckedSupplier supplier = mock(CheckedSupplier.class);
+        CheckedSupplier decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        given(limit.acquirePermission(1)).willReturn(false);
+        Try decoratedSupplierResult = Try.of(() -> decorated.get());
+        assertThat(decoratedSupplierResult.isFailure()).isTrue();
+        assertThat(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+        then(supplier).should(never()).get();
+        given(limit.acquirePermission(1)).willReturn(true);
+
+        Try secondSupplierResult = Try.of(() -> decorated.get());
+
+        assertThat(secondSupplierResult.isSuccess()).isTrue();
+        then(supplier).should().get();
+    }
+
+    @Test
+    public void decorateCheckedRunnable() throws Throwable {
+        CheckedRunnable runnable = mock(CheckedRunnable.class);
+        CheckedRunnable decorated = RateLimiter.decorateCheckedRunnable(limit, runnable);
+        given(limit.acquirePermission(1)).willReturn(false);
+        Try decoratedRunnableResult = Try.run(() -> decorated.run());
+        assertThat(decoratedRunnableResult.isFailure()).isTrue();
+        assertThat(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+        then(runnable).should(never()).run();
+        given(limit.acquirePermission(1)).willReturn(true);
+
+        Try secondRunnableResult = Try.run(() -> decorated.run());
+
+        assertThat(secondRunnableResult.isSuccess()).isTrue();
+        then(runnable).should().run();
+    }
+
+    @Test
+    public void decorateCheckedFunction() throws Throwable {
+        CheckedFunction<Integer, String> function = mock(CheckedFunction.class);
+        CheckedFunction<Integer, String> decorated = RateLimiter
+            .decorateCheckedFunction(limit, function);
+        given(limit.acquirePermission(1)).willReturn(false);
+        Try<String> decoratedFunctionResult = Try.success(1).mapTry(value -> decorated.apply(value));
+        assertThat(decoratedFunctionResult.isFailure()).isTrue();
+        assertThat(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+        then(function).should(never()).apply(any());
+        given(limit.acquirePermission(1)).willReturn(true);
+
+        Try secondFunctionResult = Try.success(1).mapTry(value -> decorated.apply(value));
+
+        assertThat(secondFunctionResult.isSuccess()).isTrue();
+        then(function).should().apply(1);
     }
 
     @Test

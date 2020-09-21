@@ -20,7 +20,6 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.VavrRetry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
@@ -124,7 +123,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
             .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
                 proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+            () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).get();
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
@@ -182,7 +181,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
      */
     private Object handleDefaultJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.retry.Retry retry) throws Throwable {
-        return VavrRetry.executeCheckedSupplier(retry, proceedingJoinPoint::proceed);
+        return retry.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
     /**
