@@ -18,14 +18,20 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
+import io.vavr.Predicates;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Duration;
+
+import static io.vavr.API.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
@@ -76,5 +82,76 @@ public class RunnableRetryTest {
 
         then(helloWorldService).should().sayHelloWorld();
         assertThat(sleptTime).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldReturnAfterThreeAttempts() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        Retry retry = Retry.ofDefaults("id");
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try<Void> result = Try.run(() -> retryableRunnable.run());
+
+        then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
+    }
+
+    @Test
+    public void shouldReturnAfterOneAttempt() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        RetryConfig config = RetryConfig.custom().maxAttempts(1).build();
+        Retry retry = Retry.of("id", config);
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try<Void> result = Try.run(() -> retryableRunnable.run());
+
+        then(helloWorldService).should().sayHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
+        assertThat(sleptTime).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldReturnAfterOneAttemptAndIgnoreException() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        RetryConfig config = RetryConfig.custom()
+            .retryOnException(throwable -> Match(throwable).of(
+                Case($(Predicates.instanceOf(HelloWorldException.class)), false),
+                Case($(), true)))
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try<Void> result = Try.run(() -> retryableRunnable.run());
+
+        // because the exception should be rethrown immediately
+        then(helloWorldService).should().sayHelloWorld();
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
+        assertThat(sleptTime).isEqualTo(0);
+    }
+
+    @Test
+    public void shouldTakeIntoAccountBackoffFunction() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        RetryConfig config = RetryConfig
+            .custom()
+            .intervalFunction(IntervalFunction.of(Duration.ofMillis(500), x -> x * x))
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try.run(() -> retryableRunnable.run());
+
+        then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(sleptTime).isEqualTo(
+            RetryConfig.DEFAULT_WAIT_DURATION +
+                RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
     }
 }

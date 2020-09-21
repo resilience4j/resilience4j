@@ -20,6 +20,9 @@ package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
@@ -182,6 +185,117 @@ public interface RateLimiter {
         return () -> {
             waitForPermission(rateLimiter, permits);
             return supplier.get();
+        };
+    }
+
+    /**
+     * Creates a supplier which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param supplier    the original supplier
+     * @param <T>         the type of results supplied supplier
+     * @return a supplier which is restricted by a RateLimiter.
+     */
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(RateLimiter rateLimiter,
+                                                          CheckedSupplier<T> supplier) {
+        return decorateCheckedSupplier(rateLimiter, 1, supplier);
+    }
+
+    /**
+     * Creates a supplier which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param permits     number of permits that this call requires
+     * @param supplier    the original supplier
+     * @param <T>         the type of results supplied supplier
+     * @return a supplier which is restricted by a RateLimiter.
+     */
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(RateLimiter rateLimiter, int permits,
+                                                          CheckedSupplier<T> supplier) {
+        return () -> {
+            waitForPermission(rateLimiter, permits);
+            return supplier.get();
+        };
+    }
+
+    /**
+     * Creates a runnable which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param runnable    the original runnable
+     * @return a runnable which is restricted by a RateLimiter.
+     */
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter,
+                                                   CheckedRunnable runnable) {
+
+        return decorateCheckedRunnable(rateLimiter, 1, runnable);
+    }
+
+    /**
+     * Creates a runnable which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param permits     number of permits that this call requires
+     * @param runnable    the original runnable
+     * @return a runnable which is restricted by a RateLimiter.
+     */
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, int permits,
+                                                   CheckedRunnable runnable) {
+
+        return () -> {
+            waitForPermission(rateLimiter, permits);
+            runnable.run();
+        };
+    }
+
+    /**
+     * Creates a function which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param function    the original function
+     * @param <T>         the type of function argument
+     * @param <R>         the type of function results
+     * @return a function which is restricted by a RateLimiter.
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
+                                                                CheckedFunction<T, R> function) {
+        return decorateCheckedFunction(rateLimiter, 1, function);
+    }
+
+    /**
+     * Creates a function which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param permits     number of permits that this call requires
+     * @param function    the original function
+     * @param <T>         the type of function argument
+     * @param <R>         the type of function results
+     * @return a function which is restricted by a RateLimiter.
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
+                                                                 int permits, CheckedFunction<T, R> function) {
+        return (T t) -> {
+            waitForPermission(rateLimiter, permits);
+            return function.apply(t);
+        };
+    }
+
+    /**
+     * Creates a function which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter       the RateLimiter
+     * @param permitsCalculator calculates the number of permits required by this call based on the
+     *                          functions argument
+     * @param function          the original function
+     * @param <T>               the type of function argument
+     * @param <R>               the type of function results
+     * @return a function which is restricted by a RateLimiter.
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
+                                                                 Function<T, Integer> permitsCalculator, CheckedFunction<T, R> function) {
+        return (T t) -> {
+            waitForPermission(rateLimiter, permitsCalculator.apply(t));
+            return function.apply(t);
         };
     }
 
@@ -583,6 +697,33 @@ public interface RateLimiter {
     default void executeRunnable(int permits, Runnable runnable) {
         decorateRunnable(this, permits, runnable).run();
     }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param checkedSupplier the original Supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     * @throws Throwable if something goes wrong applying this function to the given arguments
+     */
+    default <T> T executeCheckedSupplier(CheckedSupplier<T> checkedSupplier) throws Throwable {
+        return executeCheckedSupplier(1, checkedSupplier);
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param permits         number of permits that this call requires
+     * @param checkedSupplier the original Supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     * @throws Throwable if something goes wrong applying this function to the given arguments
+     */
+    default <T> T executeCheckedSupplier(int permits, CheckedSupplier<T> checkedSupplier)
+        throws Throwable {
+        return decorateCheckedSupplier(this, permits, checkedSupplier).get();
+    }
+
 
     interface Metrics {
 

@@ -15,14 +15,17 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.*;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -129,11 +132,11 @@ public class BulkheadAspect implements Ordered {
     }
 
     private Object executeFallBack(ProceedingJoinPoint proceedingJoinPoint, String fallBackMethod,
-        Method method, CheckedFunction0<Object> bulkhead) throws Throwable {
+        Method method, CheckedSupplier<Object> bulkhead) throws Throwable {
         FallbackMethod fallbackMethod = FallbackMethod
             .create(fallBackMethod, method, proceedingJoinPoint.getArgs(),
                 proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod, bulkhead).apply();
+        return fallbackDecorators.decorate(fallbackMethod, bulkhead).get();
     }
 
     /**
@@ -205,7 +208,7 @@ public class BulkheadAspect implements Ordered {
      */
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
         io.github.resilience4j.bulkhead.Bulkhead bulkhead) throws Throwable {
-        return VavrBulkhead.executeCheckedSupplier(bulkhead, proceedingJoinPoint::proceed);
+        return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
     /**

@@ -93,7 +93,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
             .create(fallbackMethodValue, method,
                 proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
         return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType)).apply();
+            () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType)).get();
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,

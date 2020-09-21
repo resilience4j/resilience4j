@@ -1,7 +1,6 @@
 dependencies {
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-consumer')
-    compile project(':resilience4j-vavr')
     compile project(':resilience4j-framework-common')
 
     compileOnly(libraries.aspectj)

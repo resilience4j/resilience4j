@@ -25,7 +25,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
-import io.github.resilience4j.core.functions.OnceConsumer;
+import io.github.resilience4j.core.functions.*;
 
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +53,26 @@ import static java.util.Collections.emptyMap;
  * Bulkhead#onComplete()} in order to maintain integrity of internal bulkhead state.
  */
 public interface Bulkhead {
+
+    /**
+     * Returns a supplier which is decorated by a bulkhead.
+     *
+     * @param bulkhead the Bulkhead
+     * @param supplier the original supplier
+     * @param <T>      the type of results supplied by this supplier
+     * @return a supplier which is decorated by a Bulkhead.
+     */
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(Bulkhead bulkhead,
+                                                          CheckedSupplier<T> supplier) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                return supplier.get();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
 
     /**
      * Returns a supplier which is decorated by a bulkhead.
@@ -121,6 +141,24 @@ public interface Bulkhead {
     }
 
     /**
+     * Returns a runnable which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param runnable the original runnable
+     * @return a runnable which is decorated by a Bulkhead.
+     */
+    static CheckedRunnable decorateCheckedRunnable(Bulkhead bulkhead, CheckedRunnable runnable) {
+        return () -> {
+            bulkhead.acquirePermission();
+            try {
+                runnable.run();
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
      * Returns a callable which is decorated by a bulkhead.
      *
      * @param bulkhead the bulkhead
@@ -178,6 +216,26 @@ public interface Bulkhead {
     }
 
     /**
+     * Returns a consumer which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a consumer which is decorated by a Bulkhead.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(Bulkhead bulkhead,
+                                                          CheckedConsumer<T> consumer) {
+        return t -> {
+            bulkhead.acquirePermission();
+            try {
+                consumer.accept(t);
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
      * Returns a runnable which is decorated by a bulkhead.
      *
      * @param bulkhead the bulkhead
@@ -205,6 +263,27 @@ public interface Bulkhead {
      * @return a function which is decorated by a bulkhead.
      */
     static <T, R> Function<T, R> decorateFunction(Bulkhead bulkhead, Function<T, R> function) {
+        return (T t) -> {
+            bulkhead.acquirePermission();
+            try {
+                return function.apply(t);
+            } finally {
+                bulkhead.onComplete();
+            }
+        };
+    }
+
+    /**
+     * Returns a function which is decorated by a bulkhead.
+     *
+     * @param bulkhead the bulkhead
+     * @param function the original function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the type of the result of the function
+     * @return a function which is decorated by a bulkhead.
+     */
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(Bulkhead bulkhead,
+                                                                CheckedFunction<T, R> function) {
         return (T t) -> {
             bulkhead.acquirePermission();
             try {
@@ -378,6 +457,18 @@ public interface Bulkhead {
      */
     default void executeRunnable(Runnable runnable) {
         decorateRunnable(this, runnable).run();
+    }
+
+    /**
+     * Decorates and executes the decorated Supplier.
+     *
+     * @param checkedSupplier the original Supplier
+     * @param <T>             the type of results supplied by this supplier
+     * @return the result of the decorated Supplier.
+     * @throws Throwable if something goes wrong applying this function to the given arguments
+     */
+    default <T> T executeCheckedSupplier(CheckedSupplier<T> checkedSupplier) throws Throwable {
+        return decorateCheckedSupplier(this, checkedSupplier).get();
     }
 
     /**
