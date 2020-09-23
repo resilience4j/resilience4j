@@ -60,8 +60,10 @@ public class FallbackMethodTest {
     public void fallbackGlobalExceptionWithSameMethodReturnTypeAndMultipleParameters() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("multipleParameterTestMethod", String.class, String.class);
+
         FallbackMethod fallbackMethod = FallbackMethod
             .create("fallbackMethod", testMethod, new Object[]{"test", "test"}, target);
+
         assertThat(fallbackMethod.fallback(new IllegalStateException("err")))
             .isEqualTo("recovered-IllegalStateException");
     }
