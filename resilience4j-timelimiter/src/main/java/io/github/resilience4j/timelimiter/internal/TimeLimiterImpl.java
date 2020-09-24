@@ -48,11 +48,13 @@ public class TimeLimiterImpl implements TimeLimiter {
                 onSuccess();
                 return result;
             } catch (TimeoutException e) {
-                onError(e);
+                TimeoutException timeoutException = createdTimeoutExceptionWithName(name);
+                timeoutException.setStackTrace(e.getStackTrace());
+                onError(timeoutException);
                 if (getTimeLimiterConfig().shouldCancelRunningFuture()) {
                     future.cancel(true);
                 }
-                throw e;
+                throw timeoutException;
             } catch (ExecutionException e) {
                 Throwable t = e.getCause();
                 if (t == null) {
@@ -181,10 +183,13 @@ public class TimeLimiterImpl implements TimeLimiter {
             TimeUnit unit) {
             return scheduler.schedule(() -> {
                 if (future != null && !future.isDone()) {
-                    future.completeExceptionally(new TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception." , name)));
+                    future.completeExceptionally(createdTimeoutExceptionWithName(name));
                 }
             }, delay, unit);
         }
     }
 
+    static TimeoutException createdTimeoutExceptionWithName(String name) {
+        return new TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception." , name));
+    }
 }

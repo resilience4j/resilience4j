@@ -22,6 +22,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToSingleJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Single.just(1)
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -37,6 +39,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     public void shouldSubscribeToMonoFromCallableMultipleTimes() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Single.fromCallable(() -> helloWorldService.returnHelloWorld())
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -70,6 +74,8 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Single.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))

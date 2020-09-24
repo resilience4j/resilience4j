@@ -111,6 +111,10 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
         }
 
+        if (properties.getMaxWaitDurationInHalfOpenState() != null) {
+            builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
+        }
+
         if (properties.getRingBufferSizeInClosedState() != null) {
             builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
         }
@@ -243,6 +247,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Duration slowCallDurationThreshold;
+
+        @Nullable
+        private Duration maxWaitDurationInHalfOpenState;
 
         @Nullable
         private Float failureRateThreshold;
@@ -585,7 +592,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return permittedNumberOfCallsInHalfOpenState;
         }
 
-        public void setPermittedNumberOfCallsInHalfOpenState(
+        public InstanceProperties setPermittedNumberOfCallsInHalfOpenState(
             Integer permittedNumberOfCallsInHalfOpenState) {
             Objects.requireNonNull(permittedNumberOfCallsInHalfOpenState);
             if (permittedNumberOfCallsInHalfOpenState < 1) {
@@ -594,6 +601,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
+            return this;
         }
 
         @Nullable
@@ -601,7 +609,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return minimumNumberOfCalls;
         }
 
-        public void setMinimumNumberOfCalls(Integer minimumNumberOfCalls) {
+        public InstanceProperties setMinimumNumberOfCalls(Integer minimumNumberOfCalls) {
             Objects.requireNonNull(minimumNumberOfCalls);
             if (minimumNumberOfCalls < 1) {
                 throw new IllegalArgumentException(
@@ -609,6 +617,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.minimumNumberOfCalls = minimumNumberOfCalls;
+            return this;
         }
 
         @Nullable
@@ -616,7 +625,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return slidingWindowSize;
         }
 
-        public void setSlidingWindowSize(Integer slidingWindowSize) {
+        public InstanceProperties setSlidingWindowSize(Integer slidingWindowSize) {
             Objects.requireNonNull(slidingWindowSize);
             if (slidingWindowSize < 1) {
                 throw new IllegalArgumentException(
@@ -624,6 +633,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.slidingWindowSize = slidingWindowSize;
+            return this;
         }
 
         @Nullable
@@ -631,7 +641,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return slowCallRateThreshold;
         }
 
-        public void setSlowCallRateThreshold(Float slowCallRateThreshold) {
+        public InstanceProperties setSlowCallRateThreshold(Float slowCallRateThreshold) {
             Objects.requireNonNull(slowCallRateThreshold);
             if (slowCallRateThreshold < 1 || slowCallRateThreshold > 100) {
                 throw new IllegalArgumentException(
@@ -639,6 +649,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.slowCallRateThreshold = slowCallRateThreshold;
+            return this;
         }
 
         @Nullable
@@ -646,7 +657,12 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return slowCallDurationThreshold;
         }
 
-        public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
+        @Nullable
+        public Duration getMaxWaitDurationInHalfOpenState() {
+            return maxWaitDurationInHalfOpenState;
+        }
+
+        public InstanceProperties setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
             Objects.requireNonNull(slowCallDurationThreshold);
             if (slowCallDurationThreshold.toNanos() < 1) {
                 throw new IllegalArgumentException(
@@ -654,6 +670,18 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.slowCallDurationThreshold = slowCallDurationThreshold;
+            return this;
+        }
+
+        public InstanceProperties setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
+            Objects.requireNonNull(maxWaitDurationInHalfOpenState);
+            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
+                throw new IllegalArgumentException(
+                    "maxWaitDurationInHalfOpenState must be greater than or equal to 1 ms.");
+            }
+
+            this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
+            return this;
         }
 
         @Nullable
@@ -661,8 +689,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return slidingWindowType;
         }
 
-        public void setSlidingWindowType(SlidingWindowType slidingWindowType) {
+        public InstanceProperties setSlidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
+            return this;
         }
 
 

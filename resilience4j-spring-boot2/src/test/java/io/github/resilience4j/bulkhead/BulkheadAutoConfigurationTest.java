@@ -127,6 +127,7 @@ public class BulkheadAutoConfigurationTest {
         assertThat(backendCustomizer).isNotNull();
         assertThat(backendCustomizer.getBulkheadConfig()).isNotNull();
         assertThat(backendCustomizer.getBulkheadConfig().getMaxWaitDuration()).isEqualTo(Duration.ofMillis(100));
+        assertThat(backendCustomizer.getBulkheadConfig().isWritableStackTraceEnabled()).isTrue();
 
         //updated by Customizer
         assertThat(backendCustomizer.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(20);
@@ -400,6 +401,7 @@ public class BulkheadAutoConfigurationTest {
             .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(10);
+        assertThat(bulkhead.getBulkheadConfig().isWritableStackTraceEnabled()).isFalse();
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
         commonAssertions();
 
@@ -446,6 +448,7 @@ public class BulkheadAutoConfigurationTest {
 
         commonAssertions();
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(10);
+        assertThat(bulkhead.getBulkheadConfig().isWritableStackTraceEnabled()).isFalse();
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
 
         es.shutdown();
