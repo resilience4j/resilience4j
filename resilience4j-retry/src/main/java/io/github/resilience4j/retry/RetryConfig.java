@@ -30,6 +30,8 @@ import java.util.function.Predicate;
 
 public class RetryConfig implements Serializable {
 
+    private static final long serialVersionUID = 3522903275067138911L;
+
     public static final long DEFAULT_WAIT_DURATION = 500;
     private static final int DEFAULT_MAX_ATTEMPTS = 3;
     private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = numOfAttempts -> DEFAULT_WAIT_DURATION;

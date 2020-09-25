@@ -7,6 +7,8 @@ import static java.util.Objects.requireNonNull;
 
 public class TimeLimiterConfig implements Serializable {
 
+    private static final long serialVersionUID = 2203981592465761602L;
+
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
 
     private Duration timeoutDuration = Duration.ofSeconds(1);

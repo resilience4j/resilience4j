@@ -28,6 +28,8 @@ import java.time.Duration;
 @Immutable
 public class BulkheadConfig implements Serializable {
 
+    private static final long serialVersionUID = -9139631465007403460L;
+
     public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
     public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
