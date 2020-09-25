@@ -15,8 +15,8 @@
  */
 package io.github.resilience4j.micronaut.bulkhead
 
-import io.github.resilience4j.annotation.Bulkhead
 import io.github.resilience4j.micronaut.TestDummyService
+import io.github.resilience4j.mirconaut.annotation.Bulkhead
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
 import spock.lang.Specification

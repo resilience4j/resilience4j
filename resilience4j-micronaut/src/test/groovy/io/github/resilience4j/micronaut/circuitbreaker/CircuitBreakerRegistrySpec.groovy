@@ -16,8 +16,8 @@
 package io.github.resilience4j.micronaut.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
-import io.github.resilience4j.circuitbreaker.CircuitBreakerProperties
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.github.resilience4j.mirconaut.circuitbreaker.CircuitBreakerProperties
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest

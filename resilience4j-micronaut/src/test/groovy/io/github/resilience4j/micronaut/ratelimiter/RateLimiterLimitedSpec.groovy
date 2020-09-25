@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.ratelimiter
 
-import io.github.resilience4j.annotation.RateLimiter
+import io.github.resilience4j.mirconaut.annotation.RateLimiter
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
