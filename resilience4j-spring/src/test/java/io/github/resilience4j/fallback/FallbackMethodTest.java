@@ -57,6 +57,18 @@ public class FallbackMethodTest {
     }
 
     @Test
+    public void fallbackGlobalExceptionWithSameMethodReturnTypeAndMultipleParameters() throws Throwable {
+        FallbackMethodTest target = new FallbackMethodTest();
+        Method testMethod = target.getClass().getMethod("multipleParameterTestMethod", String.class, String.class);
+
+        FallbackMethod fallbackMethod = FallbackMethod
+            .create("fallbackMethod", testMethod, new Object[]{"test", "test"}, target);
+
+        assertThat(fallbackMethod.fallback(new IllegalStateException("err")))
+            .isEqualTo("recovered-IllegalStateException");
+    }
+
+    @Test
     public void fallbackClosestSuperclassExceptionTest() throws Throwable {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
@@ -143,6 +155,10 @@ public class FallbackMethodTest {
 
     public String testMethod(String parameter) {
         return "test";
+    }
+
+    public String multipleParameterTestMethod(String param1, String param2) {
+        return "multiple parameter test";
     }
 
     public CompletableFuture<String> testFutureMethod(String parameter) {

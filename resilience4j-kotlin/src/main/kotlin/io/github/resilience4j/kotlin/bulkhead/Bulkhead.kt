@@ -28,7 +28,7 @@ import kotlin.coroutines.coroutineContext
 /**
  * Decorates and executes the given suspend function [block].
  *
- * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
+ * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
 suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
@@ -48,7 +48,7 @@ suspend fun <T> Bulkhead.executeSuspendFunction(block: suspend () -> T): T {
 /**
  * Decorates the given function [block] and returns it.
  *
- * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
+ * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
 fun <T> Bulkhead.decorateFunction(block: () -> T): () -> T = {
@@ -58,7 +58,7 @@ fun <T> Bulkhead.decorateFunction(block: () -> T): () -> T = {
 /**
  * Decorates and executes the given function [block].
  *
- * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
+ * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
 fun <T> Bulkhead.executeFunction(block: () -> T): T {
@@ -68,7 +68,7 @@ fun <T> Bulkhead.executeFunction(block: () -> T): T {
 /**
  * Decorates the given suspend function [block] and returns it.
  *
- * If [BulkheadConfig.maxWaitTime] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
+ * If [BulkheadConfig.maxWaitDuration] is non-zero, *blocks* until the max wait time is reached or permission is obtained.
  * For this reason, it is not recommended to use this extension function with Bulkheads with non-zero max wait times.
  */
 fun <T> Bulkhead.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {

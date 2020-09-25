@@ -38,6 +38,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -60,6 +61,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final CircuitBreakerEventProcessor eventProcessor;
     private final Clock clock;
     private final SchedulerFactory schedulerFactory;
+    private final Function<Clock, Long> currentTimestampFunction;
+    private final TimeUnit timestampUnit;
 
     /**
      * Creates a circuitBreaker.
@@ -80,6 +83,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
+        this.currentTimestampFunction = circuitBreakerConfig.getCurrentTimestampFunction();
+        this.timestampUnit = circuitBreakerConfig.getTimestampUnit();
     }
 
     /**
@@ -168,6 +173,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         Supplier<CircuitBreakerConfig> circuitBreakerConfig,
         io.vavr.collection.Map<String, String> tags) {
         this(name, circuitBreakerConfig.get(), tags);
+    }
+
+    @Override
+    public long getCurrentTimestamp() {
+        return this.currentTimestampFunction.apply(clock);
+    }
+
+    @Override
+    public TimeUnit getTimestampUnit() {
+        return timestampUnit;
     }
 
     @Override
@@ -955,6 +970,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isHalfOpen;
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
+        @Nullable
+        private final ScheduledFuture<?>  transitionToOpenFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
@@ -964,6 +981,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
+
+            final long maxWaitDurationInHalfOpenState = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis();
+            if (maxWaitDurationInHalfOpenState >= 1) {
+                ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
+                transitionToOpenFuture = scheduledExecutorService
+                    .schedule(this::toOpenState, maxWaitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
+            } else {
+                transitionToOpenFuture = null;
+            }
         }
 
         /**
@@ -989,6 +1015,23 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             if (!tryAcquirePermission()) {
                 throw CallNotPermittedException
                     .createCallNotPermittedException(CircuitBreakerStateMachine.this);
+            }
+        }
+
+        @Override
+        public void preTransitionHook() {
+            cancelAutomaticTransitionToOpen();
+        }
+
+        private void cancelAutomaticTransitionToOpen() {
+            if (transitionToOpenFuture != null && !transitionToOpenFuture.isDone()) {
+                transitionToOpenFuture.cancel(true);
+            }
+        }
+
+        private void toOpenState() {
+            if (isHalfOpen.compareAndSet(true, false)) {
+                transitionToOpenState();
             }
         }
 

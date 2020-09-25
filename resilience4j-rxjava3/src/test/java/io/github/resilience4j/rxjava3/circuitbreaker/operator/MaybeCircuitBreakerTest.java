@@ -21,6 +21,8 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToMaybeJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Maybe.just(1)
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -35,6 +37,8 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Maybe.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))

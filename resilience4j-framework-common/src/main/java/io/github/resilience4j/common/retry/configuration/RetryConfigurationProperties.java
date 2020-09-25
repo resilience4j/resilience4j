@@ -127,6 +127,10 @@ public class RetryConfigurationProperties extends CommonProperties {
             builder.maxAttempts(properties.getMaxRetryAttempts());
         }
 
+        if (properties.getMaxAttempts() != null && properties.getMaxAttempts() != 0) {
+            builder.maxAttempts(properties.getMaxAttempts());
+        }
+
         if (properties.getRetryExceptionPredicate() != null) {
             Predicate<Throwable> predicate = ClassUtils
                 .instantiatePredicateClass(properties.getRetryExceptionPredicate());
@@ -222,7 +226,11 @@ public class RetryConfigurationProperties extends CommonProperties {
          * max retry attempts value
          */
         @Nullable
+        @Deprecated
         private Integer maxRetryAttempts;
+
+        @Nullable
+        private Integer maxAttempts;
         /*
          * retry exception predicate class to be used to evaluate the exception to retry or not
          */
@@ -290,10 +298,17 @@ public class RetryConfigurationProperties extends CommonProperties {
         }
 
         @Nullable
+        @Deprecated
         public Integer getMaxRetryAttempts() {
             return maxRetryAttempts;
         }
 
+        @Nullable
+        public Integer getMaxAttempts() {
+            return maxAttempts;
+        }
+
+        @Deprecated
         public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
             Objects.requireNonNull(maxRetryAttempts);
             if (maxRetryAttempts < 1) {
@@ -302,6 +317,17 @@ public class RetryConfigurationProperties extends CommonProperties {
             }
 
             this.maxRetryAttempts = maxRetryAttempts;
+            return this;
+        }
+
+        public InstanceProperties setMaxAttempts(Integer maxAttempts) {
+            Objects.requireNonNull(maxAttempts);
+            if (maxAttempts < 1) {
+                throw new IllegalArgumentException(
+                    "maxAttempts must be greater than or equal to 1.");
+            }
+
+            this.maxAttempts = maxAttempts;
             return this;
         }
 
