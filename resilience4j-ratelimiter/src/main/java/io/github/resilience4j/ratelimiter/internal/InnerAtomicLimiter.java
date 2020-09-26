@@ -1,0 +1,132 @@
+/*
+ *
+ *  Copyright 2020 Emmanouil Gkatziouras
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
+package io.github.resilience4j.ratelimiter.internal;
+
+import io.vavr.collection.Map;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
+
+import static java.lang.System.nanoTime;
+import static java.util.concurrent.locks.LockSupport.parkNanos;
+
+abstract class InnerAtomicLimiter<T> {
+
+    protected static final long nanoTimeStart = nanoTime();
+
+    private final String name;
+    private final AtomicInteger waitingThreads;
+    private final AtomicReference<T> state;
+    private final Map<String, String> tags;
+    private final RateLimiterEventProcessor eventProcessor;
+
+    InnerAtomicLimiter(String name, AtomicReference<T> state, Map<String, String> tags) {
+        this.name = name;
+        this.waitingThreads = new AtomicInteger(0);
+        this.state = state;
+        this.tags = tags;
+        this.eventProcessor =  new RateLimiterEventProcessor();
+    }
+
+    protected String name() {
+        return name;
+    }
+
+    protected AtomicInteger waitingThreads() {
+        return waitingThreads;
+    }
+
+    protected AtomicReference<T> state() {
+        return state;
+    }
+
+    protected Map<String,String> tags() {
+        return tags;
+    }
+
+    protected RateLimiterEventProcessor eventProcessor() {
+        return eventProcessor;
+    }
+
+    /**
+     * Calculates time elapsed from the class loading.
+     */
+    protected long currentNanoTime() {
+        return nanoTime() - nanoTimeStart;
+    }
+
+
+    /**
+     * Atomically sets the value to the given updated value if the current value {@code ==} the
+     * expected value. It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by
+     * constant back off. It means that after one try to {@link AtomicReference#compareAndSet(Object,
+     * Object)} this method will wait for a while before try one more time. This technique was
+     * originally described in this
+     * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
+     * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
+     *
+     * @param current the expected value
+     * @param next    the new value
+     * @return {@code true} if successful. False return indicates that the actual value was not
+     * equal to the expected value.
+     */
+    protected boolean compareAndSet(final T current, final T next) {
+        if (state().compareAndSet(current, next)) {
+            return true;
+        }
+        parkNanos(1); // back-off
+        return false;
+    }
+
+    /**
+     * Atomically updates the current {@link T} with the results of applying the {@link
+     * InnerAtomicLimiter#calculateNextState}, returning the updated {@link T}. It differs from
+     * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
+     * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
+     * while before try one more time. This technique was originally described in this
+     * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
+     * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
+     *
+     * @param timeoutInNanos a side-effect-free function
+     * @return the updated value
+     */
+    protected T updateStateWithBackOff(final int permits, final long timeoutInNanos) {
+        T prev;
+        T next;
+        do {
+            prev = state.get();
+            next = calculateNextState(permits, timeoutInNanos, prev);
+        } while (!compareAndSet(prev, next));
+        return next;
+    }
+
+    /**
+     * A side-effect-free function that can calculate next {@link T} from current. It determines
+     * time duration that you should wait for the given number of permits and reserves it for you,
+     * if you'll be able to wait long enough.
+     *
+     * @param permits        number of permits
+     * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
+     * @param activeState    current state of {@link InnerAtomicLimiter}
+     * @return next {@link T}
+     */
+    abstract protected T calculateNextState(final int permits, final long timeoutInNanos,
+                                                       final T activeState);
+}
