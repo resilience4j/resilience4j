@@ -27,7 +27,6 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Long.min;
-import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
@@ -57,12 +56,12 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      */
     @Override
     public void changeTimeoutDuration(final Duration timeoutDuration) {
-        RateLimiterConfig newConfig = RateLimiterConfig.from(state().get().config)
+        RateLimiterConfig newConfig = RateLimiterConfig.from(state().get().getConfig())
             .timeoutDuration(timeoutDuration)
             .build();
         state().updateAndGet(currentState -> new State(
-            newConfig, currentState.activeCycle, currentState.activePermissions,
-            currentState.nanosToWait
+            newConfig, currentState.activeCycle, currentState.getActivePermissions(),
+            currentState.getNanosToWait()
         ));
     }
 
@@ -71,12 +70,12 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      */
     @Override
     public void changeLimitForPeriod(final int limitForPeriod) {
-        RateLimiterConfig newConfig = RateLimiterConfig.from(state().get().config)
+        RateLimiterConfig newConfig = RateLimiterConfig.from(state().get().getConfig())
             .limitForPeriod(limitForPeriod)
             .build();
         state().updateAndGet(currentState -> new State(
-            newConfig, currentState.activeCycle, currentState.activePermissions,
-            currentState.nanosToWait
+            newConfig, currentState.activeCycle, currentState.getActivePermissions(),
+            currentState.getNanosToWait()
         ));
     }
 
@@ -85,9 +84,9 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      */
     @Override
     public boolean acquirePermission(final int permits) {
-        long timeoutInNanos = state().get().timeoutInNanos;
+        long timeoutInNanos = state().get().getTimeoutInNanos();
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
-        boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
+        boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.getNanosToWait());
         publishRateLimiterEvent(result, permits);
         return result;
     }
@@ -97,19 +96,19 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      */
     @Override
     public long reservePermission(final int permits) {
-        long timeoutInNanos = state().get().timeoutInNanos;
+        long timeoutInNanos = state().get().getTimeoutInNanos();
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
 
-        boolean canAcquireImmediately = modifiedState.nanosToWait <= 0;
+        boolean canAcquireImmediately = modifiedState.getNanosToWait()<= 0;
         if (canAcquireImmediately) {
             publishRateLimiterEvent(true, permits);
             return 0;
         }
 
-        boolean canAcquireInTime = timeoutInNanos >= modifiedState.nanosToWait;
+        boolean canAcquireInTime = timeoutInNanos >= modifiedState.getNanosToWait();
         if (canAcquireInTime) {
             publishRateLimiterEvent(true, permits);
-            return modifiedState.nanosToWait;
+            return modifiedState.getNanosToWait();
         }
 
         publishRateLimiterEvent(false, permits);
@@ -122,14 +121,14 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
     @Override
     protected State calculateNextState(final int permits, final long timeoutInNanos,
                                      final State activeState) {
-        long cyclePeriodInNanos = activeState.config.getLimitRefreshPeriod().toNanos();
-        int permissionsPerCycle = activeState.config.getLimitForPeriod();
+        long cyclePeriodInNanos = activeState.getConfig().getLimitRefreshPeriod().toNanos();
+        int permissionsPerCycle = activeState.getConfig().getLimitForPeriod();
 
         long currentNanos = currentNanoTime();
         long currentCycle = currentNanos / cyclePeriodInNanos;
 
         long nextCycle = activeState.activeCycle;
-        int nextPermissions = activeState.activePermissions;
+        int nextPermissions = activeState.getActivePermissions();
         if (nextCycle != currentCycle) {
             long elapsedCycles = currentCycle - nextCycle;
             long accumulatedPermissions = elapsedCycles * permissionsPerCycle;
@@ -141,7 +140,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
             permits, cyclePeriodInNanos, permissionsPerCycle, nextPermissions, currentNanos,
             currentCycle
         );
-        State nextState = reservePermissions(activeState.config, permits, timeoutInNanos, nextCycle,
+        State nextState = reservePermissions(activeState.getConfig(), permits, timeoutInNanos, nextCycle,
             nextPermissions, nextNanosToWait);
         return nextState;
     }
@@ -211,7 +210,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      */
     @Override
     public RateLimiterConfig getRateLimiterConfig() {
-        return state().get().config;
+        return state().get().getConfig();
     }
 
     /**
@@ -226,7 +225,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
     public String toString() {
         return "AtomicRateLimiter{" +
             "name='" + getName() + '\'' +
-            ", rateLimiterConfig=" + state().get().config +
+            ", rateLimiterConfig=" + state().get().getConfig()+
             '}';
     }
 
@@ -254,22 +253,14 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      * the last {@link AtomicRateLimiter#acquirePermission()} call.</li>
      * </ul>
      */
-    static class State {
-
-        private final RateLimiterConfig config;
+    static class State extends BaseState<RateLimiterConfig> {
 
         private final long activeCycle;
-        private final int activePermissions;
-        private final long timeoutInNanos;
-        private final long nanosToWait;
 
         private State(RateLimiterConfig config,
                       final long activeCycle, final int activePermissions, final long nanosToWait) {
-            this.config = config;
+            super(config, activePermissions, nanosToWait);
             this.activeCycle = activeCycle;
-            this.activePermissions = activePermissions;
-            this.nanosToWait = nanosToWait;
-            this.timeoutInNanos = config.getTimeoutDuration().toNanos();
         }
 
     }
@@ -297,7 +288,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
         public int getAvailablePermissions() {
             State currentState = state().get();
             State estimatedState = calculateNextState(1, -1, currentState);
-            return estimatedState.activePermissions;
+            return estimatedState.getActivePermissions();
         }
 
         /**
@@ -306,7 +297,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
         public long getNanosToWait() {
             State currentState = state().get();
             State estimatedState = calculateNextState(1, -1, currentState);
-            return estimatedState.nanosToWait;
+            return estimatedState.getNanosToWait();
         }
 
         /**

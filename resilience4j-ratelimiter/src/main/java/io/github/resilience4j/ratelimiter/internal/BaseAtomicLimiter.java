@@ -19,6 +19,8 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.Map;
@@ -31,7 +33,7 @@ import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
-abstract class BaseAtomicLimiter<T> implements RateLimiter {
+abstract class BaseAtomicLimiter<T > implements RateLimiter {
 
     protected static final long nanoTimeStart = nanoTime();
 
@@ -56,7 +58,6 @@ abstract class BaseAtomicLimiter<T> implements RateLimiter {
     protected AtomicReference<T> state() {
         return state;
     }
-
 
     /**
      * {@inheritDoc}
@@ -209,4 +210,5 @@ abstract class BaseAtomicLimiter<T> implements RateLimiter {
         }
         return !wasInterrupted;
     }
+
 }
