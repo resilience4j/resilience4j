@@ -20,34 +20,38 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
-class BaseState<E extends RateLimiterConfig> {
+/**
+ * Package private class used only for inheritance purposes
+ * @param <T>
+ */
+class BaseState<T extends RateLimiterConfig> {
 
-    private final E config;
+    private final T config;
 
     private final int activePermissions;
     private final long nanosToWait;
     private final long timeoutInNanos;
 
-    BaseState(E config, int activePermissions, long nanosToWait) {
+    BaseState(T config, int activePermissions, long nanosToWait) {
         this.config = config;
         this.activePermissions = activePermissions;
         this.nanosToWait = nanosToWait;
         this.timeoutInNanos = config.getTimeoutDuration().toNanos();
     }
 
-    protected E getConfig() {
+    T getConfig() {
         return config;
     }
 
-    protected int getActivePermissions() {
+    int getActivePermissions() {
         return activePermissions;
     }
 
-    protected long getNanosToWait() {
+    long getNanosToWait() {
         return nanosToWait;
     }
 
-    protected long getTimeoutInNanos() {
+    long getTimeoutInNanos() {
         return timeoutInNanos;
     }
 }

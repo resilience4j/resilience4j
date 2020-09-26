@@ -38,7 +38,7 @@ import static java.lang.Long.min;
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
  * AtomicReference} to {@link AtomicRateLimiter.State}
  */
-public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State> implements RateLimiter {
+public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, AtomicRateLimiter.State> implements RateLimiter {
 
     public AtomicRateLimiter(String name, RateLimiterConfig rateLimiterConfig) {
         this(name, rateLimiterConfig, HashMap.empty());
@@ -77,18 +77,6 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
             newConfig, currentState.activeCycle, currentState.getActivePermissions(),
             currentState.getNanosToWait()
         ));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean acquirePermission(final int permits) {
-        long timeoutInNanos = state().get().getTimeoutInNanos();
-        State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
-        boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.getNanosToWait());
-        publishRateLimiterEvent(result, permits);
-        return result;
     }
 
     /**

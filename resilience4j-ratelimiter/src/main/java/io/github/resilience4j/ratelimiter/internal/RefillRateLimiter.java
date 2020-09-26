@@ -43,7 +43,7 @@ import static java.lang.System.nanoTime;
  * <p>All {@link RefillRateLimiter} updates are atomic and state is encapsulated in {@link
  * AtomicReference} to {@link RefillRateLimiter.State}
  */
-public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State> implements RateLimiter {
+public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig, RefillRateLimiter.State> implements RateLimiter {
 
     public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig) {
         this(name, rateLimiterConfig, HashMap.empty());
@@ -82,18 +82,6 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State
             newConfig, currentState.activePermissions,
             currentState.getNanosToWait(), currentState.updatedAt
         ));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean acquirePermission(final int permits) {
-        long timeoutInNanos = state().get().getTimeoutInNanos();
-        State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
-        boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.getNanosToWait());
-        publishRateLimiterEvent(result, permits);
-        return result;
     }
 
     /**
