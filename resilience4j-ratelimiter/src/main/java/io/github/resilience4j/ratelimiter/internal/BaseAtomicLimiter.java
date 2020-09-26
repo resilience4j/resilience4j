@@ -70,6 +70,31 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         return result;
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long reservePermission(final int permits) {
+        long timeoutInNanos = state().get().getTimeoutInNanos();
+        T modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
+
+        boolean canAcquireImmediately = modifiedState.getNanosToWait()<= 0;
+        if (canAcquireImmediately) {
+            publishRateLimiterEvent(true, permits);
+            return 0;
+        }
+
+        boolean canAcquireInTime = timeoutInNanos >= modifiedState.getNanosToWait();
+        if (canAcquireInTime) {
+            publishRateLimiterEvent(true, permits);
+            return modifiedState.getNanosToWait();
+        }
+
+        publishRateLimiterEvent(false, permits);
+        return -1;
+    }
+
     /**
      * {@inheritDoc}
      */

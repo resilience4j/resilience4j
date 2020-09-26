@@ -88,30 +88,6 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
      * {@inheritDoc}
      */
     @Override
-    public long reservePermission(final int permits) {
-        long timeoutInNanos = state().get().getTimeoutInNanos();
-        State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
-
-        boolean canAcquireImmediately = modifiedState.getNanosToWait()<= 0;
-        if (canAcquireImmediately) {
-            publishRateLimiterEvent(true, permits);
-            return 0;
-        }
-
-        boolean canAcquireInTime = timeoutInNanos >= modifiedState.getNanosToWait();
-        if (canAcquireInTime) {
-            publishRateLimiterEvent(true, permits);
-            return modifiedState.getNanosToWait();
-        }
-
-        publishRateLimiterEvent(false, permits);
-        return -1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected State calculateNextState(final int permits, final long timeoutInNanos,
                                      final State activeState) {
         long nanosSinceLastUpdate = nanosSinceLastUpdate(activeState);
