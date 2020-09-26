@@ -20,19 +20,14 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.UnaryOperator;
 
 import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
-import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
@@ -48,7 +43,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * <p>All {@link RefillRateLimiter} updates are atomic and state is encapsulated in {@link
  * AtomicReference} to {@link RefillRateLimiter.State}
  */
-public class RefillRateLimiter extends InnerAtomicLimiter<RefillRateLimiter.State> implements RateLimiter {
+public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State> implements RateLimiter {
 
     public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig) {
         this(name, rateLimiterConfig, HashMap.empty());
@@ -214,33 +209,6 @@ public class RefillRateLimiter extends InnerAtomicLimiter<RefillRateLimiter.Stat
         }
 
         return new State(state.config, permissionsWithReservation, nanosToWait, currentNanoTime());
-    }
-
-
-    /**
-     * If nanosToWait is bigger than 0 it tries to park {@link Thread} for nanosToWait but not
-     * longer then timeoutInNanos.
-     *
-     * @param timeoutInNanos max time that caller can wait
-     * @param nanosToWait    nanoseconds caller need to wait
-     * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and
-     * not exceed timeout
-     */
-    private boolean waitForPermissionIfNecessary(final long timeoutInNanos,
-                                                 final long nanosToWait) {
-        boolean canAcquireImmediately = nanosToWait <= 0;
-
-        if (canAcquireImmediately) {
-            return true;
-        }
-
-        boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
-
-        if (canAcquireInTime) {
-            return waitForPermission(nanosToWait);
-        }
-        waitForPermission(timeoutInNanos);
-        return false;
     }
 
     /**

@@ -31,7 +31,7 @@ import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
-abstract class InnerAtomicLimiter<T> implements RateLimiter {
+abstract class BaseAtomicLimiter<T> implements RateLimiter {
 
     protected static final long nanoTimeStart = nanoTime();
 
@@ -41,7 +41,7 @@ abstract class InnerAtomicLimiter<T> implements RateLimiter {
     private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
 
-    InnerAtomicLimiter(String name, AtomicReference<T> state, Map<String, String> tags) {
+    BaseAtomicLimiter(String name, AtomicReference<T> state, Map<String, String> tags) {
         this.name = name;
         this.waitingThreads = new AtomicInteger(0);
         this.state = state;
@@ -101,7 +101,7 @@ abstract class InnerAtomicLimiter<T> implements RateLimiter {
 
     /**
      * Atomically updates the current {@link T} with the results of applying the {@link
-     * InnerAtomicLimiter#calculateNextState}, returning the updated {@link T}. It differs from
+     * BaseAtomicLimiter#calculateNextState}, returning the updated {@link T}. It differs from
      * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
      * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
      * while before try one more time. This technique was originally described in this
@@ -128,7 +128,7 @@ abstract class InnerAtomicLimiter<T> implements RateLimiter {
      *
      * @param permits        number of permits
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param activeState    current state of {@link InnerAtomicLimiter}
+     * @param activeState    current state of {@link BaseAtomicLimiter}
      * @return next {@link T}
      */
     abstract protected T calculateNextState(final int permits, final long timeoutInNanos,
@@ -146,6 +146,31 @@ abstract class InnerAtomicLimiter<T> implements RateLimiter {
         eventProcessor().consumeEvent(new RateLimiterOnFailureEvent(name(), permits));
     }
 
+    /**
+     * If nanosToWait is bigger than 0 it tries to park {@link Thread} for nanosToWait but not
+     * longer then timeoutInNanos.
+     *
+     * @param timeoutInNanos max time that caller can wait
+     * @param nanosToWait    nanoseconds caller need to wait
+     * @return true if caller was able to wait for nanosToWait without {@link Thread#interrupt} and
+     * not exceed timeout
+     */
+    protected boolean waitForPermissionIfNecessary(final long timeoutInNanos,
+                                                 final long nanosToWait) {
+        boolean canAcquireImmediately = nanosToWait <= 0;
+
+        if (canAcquireImmediately) {
+            return true;
+        }
+
+        boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
+
+        if (canAcquireInTime) {
+            return waitForPermission(nanosToWait);
+        }
+        waitForPermission(timeoutInNanos);
+        return false;
+    }
 
     /**
      * Parks {@link Thread} for nanosToWait.
@@ -156,7 +181,7 @@ abstract class InnerAtomicLimiter<T> implements RateLimiter {
      * @param nanosToWait nanoseconds caller need to wait
      * @return true if caller was not {@link Thread#interrupted} while waiting
      */
-    protected boolean waitForPermission(final long nanosToWait) {
+    private boolean waitForPermission(final long nanosToWait) {
         waitingThreads().incrementAndGet();
         long deadline = currentNanoTime() + nanosToWait;
         boolean wasInterrupted = false;
