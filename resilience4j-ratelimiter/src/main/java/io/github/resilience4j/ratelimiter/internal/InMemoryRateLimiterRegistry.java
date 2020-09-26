@@ -63,6 +63,7 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(Map<String, RateLimiterConfig> configs,
         io.vavr.collection.Map<String, String> tags) {
         InMemoryRegistry<RateLimiter, RateLimiterConfig> registry = new InMemoryRegistry<>(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), tags);
+        registry.putAllConfigurations(configs);
         return new InMemoryRateLimiterRegistry<>(registry, defaultConverter(), atomicFactory());
     }
 
@@ -76,6 +77,7 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
         RegistryEventConsumer<RateLimiter> registryEventConsumer,
         io.vavr.collection.Map<String, String> tags) {
         InMemoryRegistry<RateLimiter, RateLimiterConfig> registry = new InMemoryRegistry<>(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), registryEventConsumer,tags);
+        registry.putAllConfigurations(configs);
         return new InMemoryRateLimiterRegistry<>(registry, defaultConverter(), atomicFactory());
     }
 
@@ -139,18 +141,6 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
         registry.putAllConfigurations(configs);
         return new InMemoryRateLimiterRegistry<>(registry, defaultConverter(), atomicFactory());
     }
-
-    /*
-    public static <E extends RateLimiterConfig> InMemoryRateLimiterRegistry<E> create(E defaultConfig, ConfigConverter<E> configConverter,Map<String, E> configs,
-                                                                                     List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                                                                                     io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
-        InMemoryRegistry<RateLimiter, E> registry = new InMemoryRegistry<>(defaultConfig,
-            registryEventConsumers, Optional.ofNullable(tags).orElse(HashMap.empty()),
-            Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
-        registry.putAllConfigurations(configs);
-        return new InMemoryRateLimiterRegistry<>(registry, configConverter, null);
-    }
-     */
 
     /**
      * {@inheritDoc}
