@@ -152,13 +152,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
-         * returns a zero length array. This may be used to reduce log spam when the circuit breaker
-         * is open as the cause of the exceptions is already known (the circuit breaker is
-         * short-circuiting calls).
-         *
-         * @param writableStackTraceEnabled flag to control if stack trace is writable
-         * @return the BulkheadConfig.Builder
+         * {@inheritDoc}
          */
         @Override
         public RefillRateLimiterConfig.Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
@@ -167,10 +161,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Configures the default wait for permission duration. Default value is 5 seconds.
-         *
-         * @param timeoutDuration the default wait for permission duration
-         * @return the RateLimiterConfig.Builder
+         * {@inheritDoc}
          */
         @Override
         public RefillRateLimiterConfig.Builder timeoutDuration(final Duration timeoutDuration) {
@@ -193,7 +184,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
         }
 
         /**
-         * Configures the permits to releas through a refresh period. Count of permissions released
+         * Configures the permits to release through a refresh period. Count of permissions released
          * during one rate limiter period specified by {@link RefillRateLimiterConfig.Builder#limitRefreshPeriod}
          * value. Default value is 50.
          *

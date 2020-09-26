@@ -118,7 +118,7 @@ public class RefillRateLimiter implements RateLimiter {
      */
     @Override
     public boolean acquirePermission(int permits) {
-        long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
+        long timeoutInNanos = state.get().timeoutInNanos;
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
         publishRateLimiterEvent(result, permits);
@@ -130,7 +130,7 @@ public class RefillRateLimiter implements RateLimiter {
      */
     @Override
     public long reservePermission(final int permits) {
-        long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
+        long timeoutInNanos = state.get().timeoutInNanos;
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
 
         boolean canAcquireImmediately = modifiedState.nanosToWait <= 0;
@@ -428,6 +428,7 @@ public class RefillRateLimiter implements RateLimiter {
 
         private final int activePermissions;
         private final long nanosToWait;
+        private final long timeoutInNanos;
         private final long updatedAt;
 
         public State(RefillRateLimiterConfig config, int activePermissions, long nanosToWait, long updatedAt) {
@@ -435,6 +436,7 @@ public class RefillRateLimiter implements RateLimiter {
             this.activePermissions = activePermissions;
             this.nanosToWait = nanosToWait;
             this.updatedAt = updatedAt;
+            this.timeoutInNanos = config.getTimeoutDuration().toNanos();
         }
     }
 

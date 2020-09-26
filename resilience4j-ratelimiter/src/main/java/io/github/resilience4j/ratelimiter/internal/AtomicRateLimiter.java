@@ -111,7 +111,7 @@ public class AtomicRateLimiter implements RateLimiter {
      */
     @Override
     public boolean acquirePermission(final int permits) {
-        long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
+        long timeoutInNanos = state.get().timeoutInNanos;
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
         publishRateLimiterEvent(result, permits);
@@ -123,7 +123,7 @@ public class AtomicRateLimiter implements RateLimiter {
      */
     @Override
     public long reservePermission(final int permits) {
-        long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
+        long timeoutInNanos = state.get().timeoutInNanos;
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
 
         boolean canAcquireImmediately = modifiedState.nanosToWait <= 0;
@@ -416,6 +416,7 @@ public class AtomicRateLimiter implements RateLimiter {
 
         private final long activeCycle;
         private final int activePermissions;
+        private final long timeoutInNanos;
         private final long nanosToWait;
 
         private State(RateLimiterConfig config,
@@ -424,6 +425,7 @@ public class AtomicRateLimiter implements RateLimiter {
             this.activeCycle = activeCycle;
             this.activePermissions = activePermissions;
             this.nanosToWait = nanosToWait;
+            this.timeoutInNanos = config.getTimeoutDuration().toNanos();
         }
 
     }
