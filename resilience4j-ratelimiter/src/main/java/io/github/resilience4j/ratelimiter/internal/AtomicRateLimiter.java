@@ -168,15 +168,6 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
         return new State(config, cycle, permissionsWithReservation, nanosToWait);
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public RateLimiterConfig getRateLimiterConfig() {
-        return state().get().getConfig();
-    }
-
     /**
      * {@inheritDoc}
      */

@@ -99,6 +99,14 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
      * {@inheritDoc}
      */
     @Override
+    public E getRateLimiterConfig() {
+        return state.get().getConfig();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getName() {
         return name;
     }

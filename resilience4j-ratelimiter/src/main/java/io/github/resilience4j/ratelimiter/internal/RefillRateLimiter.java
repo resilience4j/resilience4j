@@ -179,14 +179,6 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
      * {@inheritDoc}
      */
     @Override
-    public RefillRateLimiterConfig getRateLimiterConfig() {
-        return state().get().getConfig();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Metrics getMetrics() {
         return new RefillRateLimiterMetrics();
     }
