@@ -93,7 +93,7 @@ public class RefillRateLimiter extends InnerAtomicLimiter<RefillRateLimiter.Stat
      * {@inheritDoc}
      */
     @Override
-    public boolean acquirePermission(int permits) {
+    public boolean acquirePermission(final int permits) {
         long timeoutInNanos = state().get().timeoutInNanos;
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
@@ -244,31 +244,6 @@ public class RefillRateLimiter extends InnerAtomicLimiter<RefillRateLimiter.Stat
     }
 
     /**
-     * Parks {@link Thread} for nanosToWait.
-     * <p>If the current thread is {@linkplain Thread#interrupted}
-     * while waiting for a permit then it won't throw {@linkplain InterruptedException}, but its
-     * interrupt status will be set.
-     *
-     * @param nanosToWait nanoseconds caller need to wait
-     * @return true if caller was not {@link Thread#interrupted} while waiting
-     */
-    private boolean waitForPermission(final long nanosToWait) {
-        waitingThreads().incrementAndGet();
-        long deadline = currentNanoTime() + nanosToWait;
-        boolean wasInterrupted = false;
-        while (currentNanoTime() < deadline && !wasInterrupted) {
-            long sleepBlockDuration = deadline - currentNanoTime();
-            parkNanos(sleepBlockDuration);
-            wasInterrupted = Thread.interrupted();
-        }
-        waitingThreads().decrementAndGet();
-        if (wasInterrupted) {
-            currentThread().interrupt();
-        }
-        return !wasInterrupted;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -320,17 +295,6 @@ public class RefillRateLimiter extends InnerAtomicLimiter<RefillRateLimiter.Stat
      */
     public RefillRateLimiterMetrics getDetailedMetrics() {
         return new RefillRateLimiterMetrics();
-    }
-
-    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
-        if (!eventProcessor().hasConsumers()) {
-            return;
-        }
-        if (permissionAcquired) {
-            eventProcessor().consumeEvent(new RateLimiterOnSuccessEvent(name(), permits));
-            return;
-        }
-        eventProcessor().consumeEvent(new RateLimiterOnFailureEvent(name(), permits));
     }
 
     /**

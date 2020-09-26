@@ -18,6 +18,9 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.Map;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,9 +28,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
 import static java.lang.System.nanoTime;
+import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
-abstract class InnerAtomicLimiter<T> {
+abstract class InnerAtomicLimiter<T> implements RateLimiter {
 
     protected static final long nanoTimeStart = nanoTime();
 
@@ -129,4 +133,42 @@ abstract class InnerAtomicLimiter<T> {
      */
     abstract protected T calculateNextState(final int permits, final long timeoutInNanos,
                                                        final T activeState);
+
+
+    protected void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+        if (!eventProcessor().hasConsumers()) {
+            return;
+        }
+        if (permissionAcquired) {
+            eventProcessor().consumeEvent(new RateLimiterOnSuccessEvent(name(), permits));
+            return;
+        }
+        eventProcessor().consumeEvent(new RateLimiterOnFailureEvent(name(), permits));
+    }
+
+
+    /**
+     * Parks {@link Thread} for nanosToWait.
+     * <p>If the current thread is {@linkplain Thread#interrupted}
+     * while waiting for a permit then it won't throw {@linkplain InterruptedException}, but its
+     * interrupt status will be set.
+     *
+     * @param nanosToWait nanoseconds caller need to wait
+     * @return true if caller was not {@link Thread#interrupted} while waiting
+     */
+    protected boolean waitForPermission(final long nanosToWait) {
+        waitingThreads().incrementAndGet();
+        long deadline = currentNanoTime() + nanosToWait;
+        boolean wasInterrupted = false;
+        while (currentNanoTime() < deadline && !wasInterrupted) {
+            long sleepBlockDuration = deadline - currentNanoTime();
+            parkNanos(sleepBlockDuration);
+            wasInterrupted = Thread.interrupted();
+        }
+        waitingThreads().decrementAndGet();
+        if (wasInterrupted) {
+            currentThread().interrupt();
+        }
+        return !wasInterrupted;
+    }
 }

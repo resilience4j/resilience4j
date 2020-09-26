@@ -236,31 +236,6 @@ public class AtomicRateLimiter extends InnerAtomicLimiter<AtomicRateLimiter.Stat
     }
 
     /**
-     * Parks {@link Thread} for nanosToWait.
-     * <p>If the current thread is {@linkplain Thread#interrupted}
-     * while waiting for a permit then it won't throw {@linkplain InterruptedException}, but its
-     * interrupt status will be set.
-     *
-     * @param nanosToWait nanoseconds caller need to wait
-     * @return true if caller was not {@link Thread#interrupted} while waiting
-     */
-    private boolean waitForPermission(final long nanosToWait) {
-        waitingThreads().incrementAndGet();
-        long deadline = currentNanoTime() + nanosToWait;
-        boolean wasInterrupted = false;
-        while (currentNanoTime() < deadline && !wasInterrupted) {
-            long sleepBlockDuration = deadline - currentNanoTime();
-            parkNanos(sleepBlockDuration);
-            wasInterrupted = Thread.interrupted();
-        }
-        waitingThreads().decrementAndGet();
-        if (wasInterrupted) {
-            currentThread().interrupt();
-        }
-        return !wasInterrupted;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -312,17 +287,6 @@ public class AtomicRateLimiter extends InnerAtomicLimiter<AtomicRateLimiter.Stat
      */
     public AtomicRateLimiterMetrics getDetailedMetrics() {
         return new AtomicRateLimiterMetrics();
-    }
-
-    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
-        if (!eventProcessor().hasConsumers()) {
-            return;
-        }
-        if (permissionAcquired) {
-            eventProcessor().consumeEvent(new RateLimiterOnSuccessEvent(name(), permits));
-            return;
-        }
-        eventProcessor().consumeEvent(new RateLimiterOnFailureEvent(name(), permits));
     }
 
     /**
