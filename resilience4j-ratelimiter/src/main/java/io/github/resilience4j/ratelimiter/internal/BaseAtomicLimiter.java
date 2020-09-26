@@ -49,10 +49,6 @@ abstract class BaseAtomicLimiter<T> implements RateLimiter {
         this.eventProcessor =  new RateLimiterEventProcessor();
     }
 
-    protected String name() {
-        return name;
-    }
-
     protected AtomicInteger waitingThreads() {
         return waitingThreads;
     }
@@ -61,12 +57,13 @@ abstract class BaseAtomicLimiter<T> implements RateLimiter {
         return state;
     }
 
-    protected Map<String,String> tags() {
-        return tags;
-    }
 
-    protected RateLimiterEventProcessor eventProcessor() {
-        return eventProcessor;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return name;
     }
 
     /**
@@ -76,6 +73,22 @@ abstract class BaseAtomicLimiter<T> implements RateLimiter {
         return nanoTime() - nanoTimeStart;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return
+     */
+    @Override
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
+    }
 
     /**
      * Atomically sets the value to the given updated value if the current value {@code ==} the
@@ -136,14 +149,14 @@ abstract class BaseAtomicLimiter<T> implements RateLimiter {
 
 
     protected void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
-        if (!eventProcessor().hasConsumers()) {
+        if (!eventProcessor.hasConsumers()) {
             return;
         }
         if (permissionAcquired) {
-            eventProcessor().consumeEvent(new RateLimiterOnSuccessEvent(name(), permits));
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
             return;
         }
-        eventProcessor().consumeEvent(new RateLimiterOnFailureEvent(name(), permits));
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 
     /**

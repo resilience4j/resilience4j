@@ -205,13 +205,6 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
         return new State(config, cycle, permissionsWithReservation, nanosToWait);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return name();
-    }
 
     /**
      * {@inheritDoc}
@@ -225,27 +218,14 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<AtomicRateLimiter.State
      * {@inheritDoc}
      */
     @Override
-    public Map<String, String> getTags() {
-        return tags();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Metrics getMetrics() {
         return new AtomicRateLimiterMetrics();
     }
 
     @Override
-    public EventPublisher getEventPublisher() {
-        return eventProcessor();
-    }
-
-    @Override
     public String toString() {
         return "AtomicRateLimiter{" +
-            "name='" + name() + '\'' +
+            "name='" + getName() + '\'' +
             ", rateLimiterConfig=" + state().get().config +
             '}';
     }

@@ -132,7 +132,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State
         long nextNanosToWait = nanosToWaitForPermission(
             permits, activeState.config.getNanosPerPermit(), nexPermissions);
 
-        State nextState = reservePermissions(activeState, permits, timeoutInNanos,
+        State nextState = reservePermissions(activeState.config, permits, timeoutInNanos,
             nexPermissions, nextNanosToWait);
         return nextState;
     }
@@ -192,14 +192,14 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State
      * corresponding {@link State}. Reserves permissions only if caller can successfully wait for
      * permission.
      *
-     * @param state
+     * @param config
      * @param permits        permits of permissions
      * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
      * @param permissions    permissions for new {@link State}
      * @param nanosToWait    nanoseconds to wait for the next permission
      * @return new {@link State} with possibly reserved permissions and time to wait
      */
-    private State reservePermissions(final State state, final int permits,
+    private State reservePermissions(final RefillRateLimiterConfig config, final int permits,
                                      final long timeoutInNanos,
                                      final int permissions, final long nanosToWait) {
         boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
@@ -208,15 +208,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State
             permissionsWithReservation -= permits;
         }
 
-        return new State(state.config, permissionsWithReservation, nanosToWait, currentNanoTime());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return name();
+        return new State(config, permissionsWithReservation, nanosToWait, currentNanoTime());
     }
 
     /**
@@ -231,27 +223,14 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiter.State
      * {@inheritDoc}
      */
     @Override
-    public Map<String, String> getTags() {
-        return tags();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Metrics getMetrics() {
         return new RefillRateLimiterMetrics();
     }
 
     @Override
-    public EventPublisher getEventPublisher() {
-        return eventProcessor();
-    }
-
-    @Override
     public String toString() {
         return "RefillRateLimiter{" +
-            "name='" + name()+ '\'' +
+            "name='" + getName()+ '\'' +
             ", rateLimiterConfig=" + state().get().config +
             '}';
     }
