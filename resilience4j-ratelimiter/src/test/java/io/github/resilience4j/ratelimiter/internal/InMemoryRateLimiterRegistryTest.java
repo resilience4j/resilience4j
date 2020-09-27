@@ -231,6 +231,16 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
+    public void refillRateLimiterGetAllRateLimiters() {
+        RateLimiterRegistry registry = InMemoryRateLimiterRegistry.create(createRefillConfig());
+        registry.rateLimiter("foo");
+
+        assertThat(registry.getAllRateLimiters().size()).isEqualTo(1);
+        assertThat(registry.getAllRateLimiters().get(0)).isInstanceOf(RefillRateLimiter.class);
+        assertThat(registry.getAllRateLimiters().get(0).getName()).isEqualTo("foo");
+    }
+
+    @Test
     public void shouldCreateRateLimiterRegistryWithRegistryStore() {
         RegistryEventConsumer<RateLimiter> registryEventConsumer = getNoOpsRegistryEventConsumer();
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers = new ArrayList<>();
