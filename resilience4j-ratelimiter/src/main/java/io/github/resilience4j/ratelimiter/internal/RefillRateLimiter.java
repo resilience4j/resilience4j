@@ -19,7 +19,6 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
