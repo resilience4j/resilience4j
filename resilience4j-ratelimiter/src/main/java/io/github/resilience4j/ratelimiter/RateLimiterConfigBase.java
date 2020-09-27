@@ -66,6 +66,20 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
     }
 
     @Override
+    public RateLimiterConfigBase withTimeoutDuration(Duration timeoutDuration) {
+        return new RateLimiterConfigBase.Builder(this)
+            .timeoutDuration(timeoutDuration)
+            .build();
+    }
+
+    @Override
+    public RateLimiterConfigBase withLimitForPeriod(int limitForPeriod) {
+        return new Builder(this)
+            .limitForPeriod(limitForPeriod)
+            .build();
+    }
+
+    @Override
     public String toString() {
         return "RateLimiterConfig{" +
             "timeoutDuration=" + timeoutDuration +
@@ -97,7 +111,7 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
          *
          * @return the RateLimiterConfig
          */
-        public RateLimiterConfig build() {
+        public RateLimiterConfigBase build() {
             return new RateLimiterConfigBase(timeoutDuration, limitRefreshPeriod, limitForPeriod,
                 writableStackTraceEnabled);
         }

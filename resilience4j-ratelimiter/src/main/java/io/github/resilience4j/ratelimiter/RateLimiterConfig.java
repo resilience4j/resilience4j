@@ -58,6 +58,10 @@ public interface RateLimiterConfig {
 
     boolean isWritableStackTraceEnabled();
 
+    <T extends RateLimiterConfig> T withTimeoutDuration(Duration timeoutDuration);
+
+    <T extends RateLimiterConfig> T withLimitForPeriod(int limitForPeriod);
+
     interface Builder {
 
         /**

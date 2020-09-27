@@ -24,7 +24,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
  * Package private class used only for inheritance purposes
  * @param <T>
  */
-class BaseState<T extends RateLimiterConfig> {
+abstract class BaseState<T extends RateLimiterConfig> {
 
     private final T config;
 
@@ -54,4 +54,6 @@ class BaseState<T extends RateLimiterConfig> {
     long getTimeoutInNanos() {
         return timeoutInNanos;
     }
+
+    abstract <K extends BaseState<T>> K withConfig(T config);
 }

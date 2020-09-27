@@ -100,6 +100,20 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
     }
 
     @Override
+    public RefillRateLimiterConfig withTimeoutDuration(Duration timeoutDuration) {
+        return new RefillRateLimiterConfig.Builder(this)
+            .timeoutDuration(timeoutDuration)
+            .build();
+    }
+
+    @Override
+    public RefillRateLimiterConfig withLimitForPeriod(int limitForPeriod) {
+        return new RefillRateLimiterConfig.Builder(this)
+            .limitForPeriod(limitForPeriod)
+            .build();
+    }
+
+    @Override
     public String toString() {
         return "RefillRateLimiterConfig{" +
             "timeoutDuration=" + getTimeoutDuration() +

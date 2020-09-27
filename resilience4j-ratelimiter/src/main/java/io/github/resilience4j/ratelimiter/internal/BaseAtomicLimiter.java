@@ -24,6 +24,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.Map;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
@@ -50,6 +51,26 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         this.eventProcessor =  new RateLimiterEventProcessor();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeTimeoutDuration(final Duration timeoutDuration) {
+        E newConfig = state.get().getConfig()
+            .withTimeoutDuration(timeoutDuration);
+        state.updateAndGet(currentState -> currentState.withConfig(newConfig));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeLimitForPeriod(final int limitForPeriod) {
+        E newConfig = state.get().getConfig()
+            .withLimitForPeriod(limitForPeriod);
+        state.updateAndGet(currentState -> currentState.withConfig(newConfig));
+    }
+
     protected AtomicInteger waitingThreads() {
         return waitingThreads;
     }
@@ -69,7 +90,6 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         publishRateLimiterEvent(result, permits);
         return result;
     }
-
 
     /**
      * {@inheritDoc}
