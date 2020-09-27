@@ -26,7 +26,7 @@ import java.time.Duration;
  * {@link RefillRateLimiter} is a permission rate based Rate Limiter.
  * Instead of resetting permits based on a permission period the permission release is based on a rate.
  * Therefore {@link RefillRateLimiterConfig#nanosPerPermit} is used which is a product of the division
- * of {@link RateLimiterConfig#limitRefreshPeriod} to {@link RateLimiterConfig#limitForPeriod}.
+ * of {@link RateLimiterConfigBase#limitRefreshPeriod} to {@link RateLimiterConfigBase#limitForPeriod}.
  */
 public class RefillRateLimiterConfig extends RateLimiterConfigBase {
 
