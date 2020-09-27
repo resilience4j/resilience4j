@@ -92,7 +92,7 @@ public interface RateLimiterConfig {
 
         /**
          * Configures the period of limit refresh. After each period rate limiter sets its
-         * permissions count to {@link RateLimiterConfigBase#limitForPeriod} value. Default value is 500
+         * permissions count to {@link RateLimiterConfig#getLimitForPeriod()} ()} value. Default value is 500
          * nanoseconds.
          *
          * @param limitRefreshPeriod the period of limit refresh
@@ -103,7 +103,7 @@ public interface RateLimiterConfig {
 
         /**
          * Configures the permissions limit for refresh period. Count of permissions available
-         * during one rate limiter period specified by {@link RateLimiterConfigBase#limitRefreshPeriod}
+         * during one rate limiter period specified by {@link RateLimiterConfig#getLimitRefreshPeriod()} ()}
          * value. Default value is 50.
          *
          * @param limitForPeriod the permissions limit for refresh period
