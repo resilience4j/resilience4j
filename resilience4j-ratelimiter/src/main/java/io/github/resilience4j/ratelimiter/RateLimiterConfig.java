@@ -32,6 +32,15 @@ public interface RateLimiterConfig {
     }
 
     /**
+     * Returns a builder to create a custom RefillRateLimiterConfig.
+     *
+     * @return a {@link RateLimiterConfig.Builder}
+     */
+    static Builder customRefill() {
+        return new RefillRateLimiterConfig.Builder();
+    }
+
+    /**
      * Returns a builder to create a custom RateLimiterConfig using specified config as prototype
      *
      * @param prototype A {@link RateLimiterConfig} prototype.
