@@ -145,9 +145,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
         }
 
         /**
-         * Builds a RefillRateLimiterConfig
-         *
-         * @return the RefillRateLimiterConfig
+         * {@inheritDoc}
          */
         @Override
         public RefillRateLimiterConfig build() {

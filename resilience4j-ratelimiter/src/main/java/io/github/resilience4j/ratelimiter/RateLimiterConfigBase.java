@@ -107,9 +107,7 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
         }
 
         /**
-         * Builds a RateLimiterConfig
-         *
-         * @return the RateLimiterConfig
+         * {@inheritDoc}
          */
         public RateLimiterConfigBase build() {
             return new RateLimiterConfigBase(timeoutDuration, limitRefreshPeriod, limitForPeriod,
@@ -117,13 +115,7 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
         }
 
         /**
-         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
-         * returns a zero length array. This may be used to reduce log spam when the circuit breaker
-         * is open as the cause of the exceptions is already known (the circuit breaker is
-         * short-circuiting calls).
-         *
-         * @param writableStackTraceEnabled flag to control if stack trace is writable
-         * @return the BulkheadConfig.Builder
+         * {@inheritDoc}
          */
         public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
             this.writableStackTraceEnabled = writableStackTraceEnabled;
@@ -131,10 +123,7 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
         }
 
         /**
-         * Configures the default wait for permission duration. Default value is 5 seconds.
-         *
-         * @param timeoutDuration the default wait for permission duration
-         * @return the RateLimiterConfig.Builder
+         * {@inheritDoc}
          */
         public Builder timeoutDuration(final Duration timeoutDuration) {
             this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
@@ -142,12 +131,7 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
         }
 
         /**
-         * Configures the period of limit refresh. After each period rate limiter sets its
-         * permissions count to {@link RateLimiterConfigBase#limitForPeriod} value. Default value is 500
-         * nanoseconds.
-         *
-         * @param limitRefreshPeriod the period of limit refresh
-         * @return the RateLimiterConfig.Builder
+         * {@inheritDoc}
          */
         public Builder limitRefreshPeriod(final Duration limitRefreshPeriod) {
             this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
@@ -155,12 +139,7 @@ public class RateLimiterConfigBase implements RateLimiterConfig {
         }
 
         /**
-         * Configures the permissions limit for refresh period. Count of permissions available
-         * during one rate limiter period specified by {@link RateLimiterConfigBase#limitRefreshPeriod}
-         * value. Default value is 50.
-         *
-         * @param limitForPeriod the permissions limit for refresh period
-         * @return the RateLimiterConfig.Builder
+         * {@inheritDoc}
          */
         public Builder limitForPeriod(final int limitForPeriod) {
             this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
