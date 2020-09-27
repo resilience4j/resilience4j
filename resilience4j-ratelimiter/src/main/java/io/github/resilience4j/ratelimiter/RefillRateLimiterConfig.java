@@ -28,7 +28,7 @@ import java.time.Duration;
  * Therefore {@link RefillRateLimiterConfig#nanosPerPermit} is used which is a product of the division
  * of {@link RateLimiterConfig#limitRefreshPeriod} to {@link RateLimiterConfig#limitForPeriod}.
  */
-public class RefillRateLimiterConfig extends RateLimiterConfig {
+public class RefillRateLimiterConfig extends RateLimiterConfigBase {
 
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
@@ -109,7 +109,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfig {
             '}';
     }
 
-    public static class Builder extends RateLimiterConfig.Builder {
+    public static class Builder extends RateLimiterConfigBase.Builder {
 
         private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
