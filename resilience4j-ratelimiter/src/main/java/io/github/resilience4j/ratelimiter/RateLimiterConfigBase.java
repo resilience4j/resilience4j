@@ -24,10 +24,10 @@ import static java.util.Objects.requireNonNull;
 
 public class RateLimiterConfigBase implements RateLimiterConfig {
 
-    static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
-    static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
-    static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
-    static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+    private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
+    private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
+    private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
+    private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
