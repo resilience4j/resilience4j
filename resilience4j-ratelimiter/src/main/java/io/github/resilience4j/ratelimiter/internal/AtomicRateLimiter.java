@@ -140,14 +140,6 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
         return new State(config, cycle, permissionsWithReservation, nanosToWait);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Metrics getMetrics() {
-        return new AtomicRateLimiterMetrics();
-    }
-
     @Override
     public String toString() {
         return "AtomicRateLimiter{" +

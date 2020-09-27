@@ -145,14 +145,6 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         return new State(config, permissionsWithReservation, nanosToWait, currentNanoTime());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Metrics getMetrics() {
-        return new RefillRateLimiterMetrics();
-    }
-
     @Override
     public String toString() {
         return "RefillRateLimiter{" +

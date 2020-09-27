@@ -71,20 +71,12 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         state.updateAndGet(currentState -> currentState.withConfig(newConfig));
     }
 
-    protected AtomicInteger waitingThreads() {
-        return waitingThreads;
-    }
-
-    protected AtomicReference<T> state() {
-        return state;
-    }
-
     /**
-     * Get the enhanced Metrics with some implementation specific details.
-     *
-     * @return the detailed metrics
+     * Calculates time elapsed from the class loading.
      */
-    public abstract <T extends Metrics> T getDetailedMetrics();
+    protected long currentNanoTime() {
+        return nanoTime() - nanoTimeStart;
+    }
 
     /**
      * {@inheritDoc}
@@ -123,43 +115,25 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
     }
 
     /**
-     * {@inheritDoc}
+     * Atomically updates the current {@link T} with the results of applying the {@link
+     * BaseAtomicLimiter#calculateNextState}, returning the updated {@link T}. It differs from
+     * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
+     * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
+     * while before try one more time. This technique was originally described in this
+     * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
+     * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
+     *
+     * @param timeoutInNanos a side-effect-free function
+     * @return the updated value
      */
-    @Override
-    public E getRateLimiterConfig() {
-        return state.get().getConfig();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Calculates time elapsed from the class loading.
-     */
-    protected long currentNanoTime() {
-        return nanoTime() - nanoTimeStart;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return
-     */
-    @Override
-    public EventPublisher getEventPublisher() {
-        return eventProcessor;
+    protected T updateStateWithBackOff(final int permits, final long timeoutInNanos) {
+        T prev;
+        T next;
+        do {
+            prev = state.get();
+            next = calculateNextState(permits, timeoutInNanos, prev);
+        } while (!compareAndSet(prev, next));
+        return next;
     }
 
     /**
@@ -185,28 +159,6 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
     }
 
     /**
-     * Atomically updates the current {@link T} with the results of applying the {@link
-     * BaseAtomicLimiter#calculateNextState}, returning the updated {@link T}. It differs from
-     * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
-     * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
-     * while before try one more time. This technique was originally described in this
-     * <a href="https://arxiv.org/abs/1305.5800"> paper</a>
-     * and showed great results with {@link AtomicRateLimiter} in benchmark tests.
-     *
-     * @param timeoutInNanos a side-effect-free function
-     * @return the updated value
-     */
-    protected T updateStateWithBackOff(final int permits, final long timeoutInNanos) {
-        T prev;
-        T next;
-        do {
-            prev = state.get();
-            next = calculateNextState(permits, timeoutInNanos, prev);
-        } while (!compareAndSet(prev, next));
-        return next;
-    }
-
-    /**
      * A side-effect-free function that can calculate next {@link T} from current. It determines
      * time duration that you should wait for the given number of permits and reserves it for you,
      * if you'll be able to wait long enough.
@@ -217,19 +169,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
      * @return next {@link T}
      */
     abstract protected T calculateNextState(final int permits, final long timeoutInNanos,
-                                                       final T activeState);
-
-
-    protected void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
-        if (!eventProcessor.hasConsumers()) {
-            return;
-        }
-        if (permissionAcquired) {
-            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
-            return;
-        }
-        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
-    }
+                                            final T activeState);
 
     /**
      * If nanosToWait is bigger than 0 it tries to park {@link Thread} for nanosToWait but not
@@ -241,7 +181,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
      * not exceed timeout
      */
     protected boolean waitForPermissionIfNecessary(final long timeoutInNanos,
-                                                 final long nanosToWait) {
+                                                   final long nanosToWait) {
         boolean canAcquireImmediately = nanosToWait <= 0;
 
         if (canAcquireImmediately) {
@@ -280,6 +220,73 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
             currentThread().interrupt();
         }
         return !wasInterrupted;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public E getRateLimiterConfig() {
+        return state.get().getConfig();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> getTags() {
+        return tags;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Metrics getMetrics() {
+        return getDetailedMetrics();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return
+     */
+    @Override
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
+    }
+
+    /**
+     * Get the enhanced Metrics with some implementation specific details.
+     *
+     * @return the detailed metrics
+     */
+    public abstract <T extends Metrics> T getDetailedMetrics();
+
+    protected void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+        if (!eventProcessor.hasConsumers()) {
+            return;
+        }
+        if (permissionAcquired) {
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
+            return;
+        }
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
+    }
+
+    protected AtomicInteger waitingThreads() {
+        return waitingThreads;
+    }
+
+    protected AtomicReference<T> state() {
+        return state;
     }
 
 }
