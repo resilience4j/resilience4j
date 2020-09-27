@@ -60,7 +60,6 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
         return create(configs, HashMap.empty());
     }
 
-
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(Map<String, RateLimiterConfig> configs,
         io.vavr.collection.Map<String, String> tags) {
         InMemoryRegistry<RateLimiter, RateLimiterConfig> registry = new InMemoryRegistry<>(configs.getOrDefault(DEFAULT_CONFIG, RateLimiterConfig.ofDefaults()), tags);
@@ -120,12 +119,6 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         InMemoryRegistry<RateLimiter, RateLimiterConfig> registry = new InMemoryRegistry<>(defaultConfig, registryEventConsumers);
         return new InMemoryRateLimiterRegistry<>(registry, defaultConverter(), atomicFactory());
-    }
-
-    public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(RateLimiterConfig defaultConfig,
-                                                                                     List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                                                                                     io.vavr.collection.Map<String, String> tags) {
-        return create(defaultConfig, registryEventConsumers, tags);
     }
 
     public static InMemoryRateLimiterRegistry<RefillRateLimiterConfig> createRefill(Map<String, RefillRateLimiterConfig> configs,

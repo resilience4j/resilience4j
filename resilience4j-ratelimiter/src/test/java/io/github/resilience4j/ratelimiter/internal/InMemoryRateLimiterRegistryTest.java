@@ -113,6 +113,26 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void refillRateLimiterPositiveWithSupplier() throws Exception {
+        RefillRateLimiterConfig refillConfig = createRefillConfig();
+        RateLimiterRegistry registry = InMemoryRateLimiterRegistry.create(refillConfig);
+        Supplier<RateLimiterConfig> rateLimiterConfigSupplier = mock(Supplier.class);
+        when(rateLimiterConfigSupplier.get())
+            .thenReturn(refillConfig);
+
+        RateLimiter firstRateLimiter = registry.rateLimiter("test", rateLimiterConfigSupplier);
+        verify(rateLimiterConfigSupplier, times(1)).get();
+        RateLimiter sameAsFirst = registry.rateLimiter("test", rateLimiterConfigSupplier);
+        verify(rateLimiterConfigSupplier, times(1)).get();
+        RateLimiter anotherLimit = registry.rateLimiter("test1", rateLimiterConfigSupplier);
+        verify(rateLimiterConfigSupplier, times(2)).get();
+
+        then(firstRateLimiter).isEqualTo(sameAsFirst);
+        then(firstRateLimiter).isNotEqualTo(anotherLimit);
+    }
+
+    @Test
     public void rateLimiterConfigIsNull() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
@@ -120,10 +140,25 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
+    public void refillRateLimiterConfigIsNull() throws Exception {
+        exception.expect(NullPointerException.class);
+        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
+        InMemoryRateLimiterRegistry.create((RefillRateLimiterConfig) null);
+    }
+
+    @Test
     public void rateLimiterNewWithNullName() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(NAME_MUST_NOT_BE_NULL);
         RateLimiterRegistry registry = InMemoryRateLimiterRegistry.create(config);
+        registry.rateLimiter(null);
+    }
+
+    @Test
+    public void refillRateLimiterNewWithNullName() throws Exception {
+        exception.expect(NullPointerException.class);
+        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+        InMemoryRateLimiterRegistry<RefillRateLimiterConfig> registry = InMemoryRateLimiterRegistry.create(createRefillConfig());
         registry.rateLimiter(null);
     }
 
@@ -137,6 +172,15 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
+    public void refillRateLimiterNewWithNullNonDefaultConfig() throws Exception {
+        exception.expect(NullPointerException.class);
+        exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
+        InMemoryRateLimiterRegistry<RefillRateLimiterConfig> registry = InMemoryRateLimiterRegistry.create(createRefillConfig());
+        RateLimiterConfig rateLimiterConfig = null;
+        registry.rateLimiter("name", rateLimiterConfig);
+    }
+
+    @Test
     public void rateLimiterNewWithNullNameAndNonDefaultConfig() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(NAME_MUST_NOT_BE_NULL);
@@ -145,10 +189,26 @@ public class InMemoryRateLimiterRegistryTest {
     }
 
     @Test
+    public void refillRateLimiterNewWithNullNameAndNonDefaultConfig() throws Exception {
+        exception.expect(NullPointerException.class);
+        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+        RateLimiterRegistry registry = InMemoryRateLimiterRegistry.create(createRefillConfig());
+        registry.rateLimiter(null, config);
+    }
+
+    @Test
     public void rateLimiterNewWithNullNameAndConfigSupplier() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(NAME_MUST_NOT_BE_NULL);
         RateLimiterRegistry registry = InMemoryRateLimiterRegistry.create(config);
+        registry.rateLimiter(null, () -> config);
+    }
+
+    @Test
+    public void refillRateLimiterNewWithNullNameAndConfigSupplier() throws Exception {
+        exception.expect(NullPointerException.class);
+        exception.expectMessage(NAME_MUST_NOT_BE_NULL);
+        RateLimiterRegistry registry = InMemoryRateLimiterRegistry.create(createRefillConfig());
         registry.rateLimiter(null, () -> config);
     }
 
