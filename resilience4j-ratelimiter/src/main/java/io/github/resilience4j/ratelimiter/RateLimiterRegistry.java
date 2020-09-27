@@ -44,6 +44,10 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         return InMemoryRateLimiterRegistry.create(defaultRateLimiterConfig);
     }
 
+    static RateLimiterRegistry of(RefillRateLimiterConfig defaultRateLimiterConfig) {
+        return InMemoryRateLimiterRegistry.create(defaultRateLimiterConfig);
+    }
+
     /**
      * Creates a RateLimiterRegistry with a custom default RateLimiter configuration and a
      * RateLimiter registry event consumer.

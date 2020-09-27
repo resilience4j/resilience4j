@@ -22,6 +22,7 @@ import io.github.resilience4j.core.registry.*;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,6 +47,7 @@ public class InMemoryRateLimiterRegistryTest {
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
     private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
     private RateLimiterConfig config;
@@ -60,6 +62,14 @@ public class InMemoryRateLimiterRegistryTest {
             .build();
     }
 
+    private RefillRateLimiterConfig createRefillConfig() {
+        return RefillRateLimiterConfig.custom()
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(REFRESH_PERIOD)
+            .limitForPeriod(LIMIT)
+            .build();
+    }
+
     @Test
     public void rateLimiterPositive() throws Exception {
         RateLimiterRegistry registry = RateLimiterRegistry.of(config);
@@ -67,6 +77,18 @@ public class InMemoryRateLimiterRegistryTest {
         RateLimiter anotherLimit = registry.rateLimiter("test1");
         RateLimiter sameAsFirst = registry.rateLimiter("test");
 
+        then(firstRateLimiter).isEqualTo(sameAsFirst);
+        then(firstRateLimiter).isNotEqualTo(anotherLimit);
+    }
+
+    @Test
+    public void refillRateLimiterPositive() throws Exception {
+        RateLimiterRegistry registry = RateLimiterRegistry.of(createRefillConfig());
+        RateLimiter firstRateLimiter = registry.rateLimiter("test");
+        RateLimiter anotherLimit = registry.rateLimiter("test1");
+        RateLimiter sameAsFirst = registry.rateLimiter("test");
+
+        then(firstRateLimiter).isInstanceOf(RefillRateLimiter.class);
         then(firstRateLimiter).isEqualTo(sameAsFirst);
         then(firstRateLimiter).isNotEqualTo(anotherLimit);
     }

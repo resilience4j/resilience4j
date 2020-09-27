@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 import static io.github.resilience4j.ratelimiter.internal.ConfigConverter.defaultConverter;
 import static io.github.resilience4j.ratelimiter.internal.ConfigConverter.refillConverter;
 import static io.github.resilience4j.ratelimiter.internal.InMemoryFactory.atomicFactory;
+import static io.github.resilience4j.ratelimiter.internal.InMemoryFactory.refillFactory;
 
 /**
  * Backend RateLimiter manager. Constructs backend RateLimiters according to configuration values.
@@ -95,13 +96,18 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
     }
 
     /**
-     * The constructor with custom default config.
+     * Factory method with custom default config.
      *
      * @param defaultConfig The default config.
      */
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(RateLimiterConfig defaultConfig) {
         InMemoryRegistry<RateLimiter, RateLimiterConfig> registry = new InMemoryRegistry<>(defaultConfig);
         return new InMemoryRateLimiterRegistry<>(registry, defaultConverter(), atomicFactory());
+    }
+
+    public static InMemoryRateLimiterRegistry<RefillRateLimiterConfig> create(RefillRateLimiterConfig defaultConfig) {
+        InMemoryRegistry<RateLimiter, RefillRateLimiterConfig> registry =new InMemoryRegistry<>(defaultConfig);
+        return new InMemoryRateLimiterRegistry<>(registry, refillConverter(), refillFactory());
     }
 
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(RateLimiterConfig defaultConfig,
