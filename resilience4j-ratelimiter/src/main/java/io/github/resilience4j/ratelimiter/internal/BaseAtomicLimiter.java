@@ -80,6 +80,13 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
     }
 
     /**
+     * Get the enhanced Metrics with some implementation specific details.
+     *
+     * @return the detailed metrics
+     */
+    public abstract <T extends Metrics> T getDetailedMetrics();
+
+    /**
      * {@inheritDoc}
      */
     @Override

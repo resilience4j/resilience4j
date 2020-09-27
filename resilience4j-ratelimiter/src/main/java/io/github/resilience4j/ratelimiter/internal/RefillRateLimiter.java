@@ -23,7 +23,6 @@ import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Long.min;
@@ -163,10 +162,9 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
     }
 
     /**
-     * Get the enhanced Metrics with some implementation specific details.
-     *
-     * @return the detailed metrics
+     * {@inheritDoc}
      */
+    @Override
     public RefillRateLimiterMetrics getDetailedMetrics() {
         return new RefillRateLimiterMetrics();
     }

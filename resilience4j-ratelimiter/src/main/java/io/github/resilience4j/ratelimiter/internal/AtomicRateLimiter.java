@@ -157,10 +157,9 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
     }
 
     /**
-     * Get the enhanced Metrics with some implementation specific details.
-     *
-     * @return the detailed metrics
+     * {@inheritDoc}
      */
+    @Override
     public AtomicRateLimiterMetrics getDetailedMetrics() {
         return new AtomicRateLimiterMetrics();
     }
