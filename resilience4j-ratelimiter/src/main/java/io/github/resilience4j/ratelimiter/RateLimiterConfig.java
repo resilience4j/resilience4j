@@ -18,11 +18,14 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import java.io.Serializable;
 import java.time.Duration;
 
 import static java.util.Objects.requireNonNull;
 
-public class RateLimiterConfig {
+public class RateLimiterConfig implements Serializable {
+
+    private static final long serialVersionUID = -1621614587284115957L;
 
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
