@@ -109,7 +109,7 @@ class BulkheadRecoverySpec extends Specification{
             return flowableError()
         }
 
-        @Bulkhead(name = "default", fallbackMethod = 'completionStageRecovery', type = Bulkhead.Type.THREADPOOL)
+        @Bulkhead(name = "default", fallbackMethod = 'completableRecovery', type = Bulkhead.Type.THREADPOOL)
         CompletableFuture<String> asyncRecoverablePool() {
             return completableFutureError();
         }
