@@ -108,10 +108,8 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
 
         try {
             return retry.executeCheckedSupplier(context::proceed);
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }

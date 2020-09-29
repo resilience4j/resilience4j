@@ -143,8 +143,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
+            return new CompletionException(throwable);
         }
-
     }
 }

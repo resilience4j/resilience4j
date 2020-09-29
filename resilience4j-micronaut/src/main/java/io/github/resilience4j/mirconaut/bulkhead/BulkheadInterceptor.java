@@ -120,10 +120,8 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         }
         try {
             return bulkhead.executeSupplier(context::proceed);
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return this.fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }

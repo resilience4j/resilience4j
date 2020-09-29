@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 public abstract class BaseInterceptor {
@@ -41,7 +42,7 @@ public abstract class BaseInterceptor {
      * @param exception The exception
      * @return Returns the fallback value or throws the original exception
      */
-    public Object fallback(MethodInvocationContext<Object, Object> context, RuntimeException exception) {
+    public Object fallback(MethodInvocationContext<Object, Object> context, Throwable exception) {
         if (exception instanceof NoAvailableServiceException) {
             NoAvailableServiceException ex = (NoAvailableServiceException) exception;
             if (logger.isErrorEnabled()) {
@@ -65,7 +66,11 @@ public abstract class BaseInterceptor {
                 throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + e.getMessage(), e);
             }
         } else {
-            throw exception;
+            if(exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new CompletionException(exception);
+            }
         }
     }
 

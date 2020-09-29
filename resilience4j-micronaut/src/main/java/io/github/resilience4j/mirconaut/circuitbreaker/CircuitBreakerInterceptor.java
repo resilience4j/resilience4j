@@ -106,10 +106,8 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         }
         try {
             return circuitBreaker.executeCheckedSupplier(context::proceed);
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }

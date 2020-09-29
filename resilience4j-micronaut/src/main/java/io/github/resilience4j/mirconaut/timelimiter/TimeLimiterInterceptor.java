@@ -106,10 +106,8 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         try {
             return timeLimiter.executeFutureSupplier(
                 () -> CompletableFuture.supplyAsync(context::proceed));
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return this.fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }

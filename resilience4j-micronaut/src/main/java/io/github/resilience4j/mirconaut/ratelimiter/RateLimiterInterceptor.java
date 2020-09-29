@@ -105,10 +105,8 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         }
         try {
             return RateLimiter.decorateCheckedSupplier(rateLimiter, context::proceed).apply();
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }
