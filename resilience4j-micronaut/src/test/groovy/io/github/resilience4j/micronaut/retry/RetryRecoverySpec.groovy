@@ -19,6 +19,7 @@ import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.mirconaut.annotation.Retry
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
+import io.reactivex.Flowable
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -32,34 +33,65 @@ class RetryRecoverySpec extends Specification {
     @Inject
     RetryService service;
 
-    void "test async recovery retry"() {
-        when:
-        CompletableFuture<String>  result = service.recoverable();
-
-        then:
-        result.get() == "recovered"
-
-    }
-
     void "test sync recovery retry"() {
         when:
-        String result = service.syncRecoverable()
+        String  result = service.sync();
 
         then:
         result == "recovered"
+
     }
+
+    void "test flowable recovery retry"() {
+        when:
+        Flowable<String> result = service.flowable()
+
+        then:
+        result.blockingFirst() == "recovered"
+    }
+
+
+    void "test completable recovery retry"() {
+        when:
+        CompletableFuture<String> result = service.completable()
+
+        then:
+        result.get() == "recovered"
+    }
+
 
     @Singleton
     static class RetryService extends TestDummyService {
 
-        @Retry(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        CompletableFuture<String> recoverable() {
-            return asyncError();
+        @Override
+        @Retry(name = "backend-a", fallbackMethod = 'syncRecovery')
+        String sync() {
+            return syncError()
         }
 
-        @Retry(name = "backend-a", fallbackMethod = 'syncRecovery')
-        String syncRecoverable() {
-            return syncError();
+        @Override
+        @Retry(name = "backend-a", fallbackMethod = 'syncRecoveryParam')
+        String syncWithParam(String param) {
+            return syncError()
         }
+
+        @Override
+        @Retry(name = "backend-a", fallbackMethod = 'completableRecovery')
+        CompletableFuture<String> completable() {
+            return completableFutureError()
+        }
+
+        @Override
+        @Retry(name = "backend-a", fallbackMethod = 'completableRecoveryParam')
+        CompletableFuture<String> completableWithParam(String param) {
+            return completableFutureError()
+        }
+
+        @Override
+        @Retry(name = "backend-a", fallbackMethod = 'flowableRecovery')
+        Flowable<String> flowable() {
+            return flowableError()
+        }
+
     }
 }

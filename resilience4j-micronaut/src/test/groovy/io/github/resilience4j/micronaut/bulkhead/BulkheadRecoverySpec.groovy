@@ -17,8 +17,10 @@ package io.github.resilience4j.micronaut.bulkhead
 
 import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.mirconaut.annotation.Bulkhead
+import io.github.resilience4j.mirconaut.annotation.RateLimiter
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
+import io.reactivex.Flowable
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -34,31 +36,30 @@ class BulkheadRecoverySpec extends Specification{
     ThreadpoolBulkheadService service;
 
 
-    void "test async recovery bulkhead"() {
-        when:
-        CompletableFuture<String> result = service.asynRecoverableSemaphore()
-
-        then:
-        result.get() == "recovered"
-    }
-
-    void "test async recovery bulkhead parameter"() {
-        when:
-        CompletableFuture<String> result = service.asynRecoverableSemaphoreProperty("test")
-
-        then:
-        result.get() == "test"
-    }
-
-
     void "test sync recovery bulkhead"() {
         when:
-        String result = service.syncRecoverableSemaphore()
+        String result = service.sync();
 
         then:
         result == "recovered"
     }
 
+    void "test flowable recovery bulkhead"() {
+        when:
+        Flowable<String> result = service.flowable();
+
+        then:
+        result.blockingFirst() == "recovered"
+    }
+
+    void "test completable recovery bulkhead"() {
+        when:
+        CompletableFuture<String> result = service.completable();
+
+
+        then:
+        result.get() == "recovered"
+    }
 
     void "test async recovery threadPoolBulkhead"() {
         when:
@@ -75,27 +76,42 @@ class BulkheadRecoverySpec extends Specification{
         result == "recovered"
     }
 
-
     @Singleton
     static class ThreadpoolBulkheadService extends TestDummyService {
-        @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        CompletableFuture<String> asynRecoverableSemaphore() {
-            return asyncError();
-        }
-
-        @Bulkhead(name = "backend-a", fallbackMethod = 'completionStageRecoveryParam')
-        CompletableFuture<String> asynRecoverableSemaphoreProperty(String parameter) {
-            return asyncError();
-        }
 
         @Bulkhead(name = "backend-a", fallbackMethod = 'syncRecovery')
-        String syncRecoverableSemaphore() {
-            return syncError();
+        @Override
+        String sync() {
+            return syncError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'syncRecoveryParam')
+        @Override
+        String syncWithParam(String param) {
+            return syncError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'completableRecovery')
+        @Override
+        CompletableFuture<String> completable() {
+            return completableFutureError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'completableRecoveryParam')
+        @Override
+        CompletableFuture<String> completableWithParam(String param) {
+            return completableFutureError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'flowableRecovery')
+        @Override
+        Flowable<String> flowable() {
+            return flowableError()
         }
 
         @Bulkhead(name = "default", fallbackMethod = 'completionStageRecovery', type = Bulkhead.Type.THREADPOOL)
         CompletableFuture<String> asyncRecoverablePool() {
-            return asyncError();
+            return completableFutureError();
         }
 
         @Bulkhead(name = "default", fallbackMethod = 'syncRecovery', type = Bulkhead.Type.THREADPOOL)
