@@ -22,6 +22,7 @@ import io.github.resilience4j.kotlin.isCancellation
 import io.github.resilience4j.timelimiter.TimeLimiter
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -45,9 +46,9 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
         }
     } catch (t: Throwable) {
         if (isCancellation(coroutineContext, t)) {
-            onError(t)
+            onError(TimeoutException(t.message))
         } else {
-            onSuccess()
+            onError(t)
         }
         throw t
     }
