@@ -20,6 +20,7 @@ import io.github.resilience4j.mirconaut.annotation.RateLimiter
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
+import io.reactivex.Flowable
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -35,32 +36,62 @@ class RateLimiterRecoverySpec extends Specification {
     @Inject
     RatelimiterService service;
 
-    void "test async recovery ratelimiter"() {
-        when:
-        CompletableFuture<String> body = service.recoverable();
-
-        then:
-        body.get() == "recovered"
-    }
-
     void "test sync recovery ratelimiter"() {
         when:
-        String body = service.syncRecovertable();
+        String result = service.sync();
 
         then:
-        body == "recovered"
+        result == "recovered"
+    }
+
+    void "test flowable recovery ratelimiter"() {
+        when:
+        Flowable<String> result = service.flowable();
+
+        then:
+        result.blockingFirst() == "recovered"
+    }
+
+    void "test completable recovery ratelimiter"() {
+        when:
+        CompletableFuture<String> result = service.completable();
+
+
+        then:
+        result.get() == "recovered"
     }
 
     @Singleton
     static class RatelimiterService extends TestDummyService {
-        @RateLimiter(name = "default", fallbackMethod = 'completionStageRecovery')
-        CompletableFuture<String> recoverable() {
-            return asyncError();
-        }
 
         @RateLimiter(name = "default", fallbackMethod = 'syncRecovery')
-        String syncRecovertable() {
-            return syncError();
+        @Override
+        String sync() {
+            return syncError()
+        }
+
+        @RateLimiter(name = "default", fallbackMethod = 'syncRecoveryParam')
+        @Override
+        String syncWithParam(String param) {
+            return syncError()
+        }
+
+        @RateLimiter(name = "default", fallbackMethod = 'completableRecovery')
+        @Override
+        CompletableFuture<String> completable() {
+            return completableFutureError()
+        }
+
+        @RateLimiter(name = "default", fallbackMethod = 'completableRecoveryParam')
+        @Override
+        CompletableFuture<String> completableWithParam(String param) {
+            return completableFutureError()
+        }
+
+        @RateLimiter(name = "default", fallbackMethod = 'flowableRecovery')
+        @Override
+        Flowable<String> flowable() {
+            return flowableError()
         }
     }
 }

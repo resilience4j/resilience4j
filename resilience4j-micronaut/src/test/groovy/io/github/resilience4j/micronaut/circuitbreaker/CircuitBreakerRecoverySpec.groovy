@@ -20,6 +20,7 @@ import io.github.resilience4j.mirconaut.annotation.CircuitBreaker
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
+import io.reactivex.Flowable
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -35,33 +36,61 @@ class CircuitBreakerRecoverySpec extends Specification {
     @Inject
     CircuitBreakerService service;
 
-    void "test async recovery circuit breaker"() {
+    void "test sync recovery circuitbreaker"() {
         when:
-        CompletableFuture<String> response = service.asynRecoverable();
+        String result = service.sync();
 
         then:
-        response.get() == "recovered"
+        result == "recovered"
     }
 
-
-    void "test sync recovery circuit breaker"() {
+    void "test flowable recovery circuitbreaker"() {
         when:
-        String response = service.syncRecoverable()
+        Flowable<String> result = service.flowable();
 
         then:
-        response == "recovered"
+        result.blockingFirst() == "recovered"
+    }
+
+    void "test completable recovery circuitbreaker"() {
+        when:
+        CompletableFuture<String> result = service.completable();
+
+
+        then:
+        result.get() == "recovered"
     }
 
     @Singleton
     static class CircuitBreakerService extends TestDummyService {
-        @CircuitBreaker(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        CompletableFuture<String> asynRecoverable() {
-            return asyncError();
+        @CircuitBreaker(name = "default", fallbackMethod = 'syncRecovery')
+        @Override
+        String sync() {
+            return syncError()
         }
 
-        @CircuitBreaker(name = "backend-a", fallbackMethod = 'syncRecovery')
-        String syncRecoverable() {
-            return syncError();
+        @CircuitBreaker(name = "default", fallbackMethod = 'syncRecoveryParam')
+        @Override
+        String syncWithParam(String param) {
+            return syncError()
+        }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'completableRecovery')
+        @Override
+        CompletableFuture<String> completable() {
+            return completableFutureError()
+        }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'completableRecoveryParam')
+        @Override
+        CompletableFuture<String> completableWithParam(String param) {
+            return completableFutureError()
+        }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'flowableRecovery')
+        @Override
+        Flowable<String> flowable() {
+            return flowableError()
         }
     }
 }

@@ -30,6 +30,7 @@ dependencies {
     testCompile project(':resilience4j-timelimiter')
     testCompile project(':resilience4j-bulkhead')
     testCompile project(':resilience4j-retry')
+    testCompile project(':resilience4j-rxjava2')
     testCompile project(':resilience4j-consumer')
     testCompile "io.micronaut:micronaut-aop"
 
