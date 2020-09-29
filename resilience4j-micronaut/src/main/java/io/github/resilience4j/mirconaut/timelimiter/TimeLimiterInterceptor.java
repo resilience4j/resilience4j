@@ -87,11 +87,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         Class<Object> returnType = rt.getType();
 
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> ((CompletableFuture<?>) result)), context);
+            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> ((CompletableFuture<?>) context.proceed())), context);
 
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();

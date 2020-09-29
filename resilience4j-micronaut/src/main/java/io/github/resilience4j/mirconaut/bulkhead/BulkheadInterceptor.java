@@ -97,11 +97,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> ((CompletableFuture<?>) result)),context);
+            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> ((CompletableFuture<?>) context.proceed())),context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {

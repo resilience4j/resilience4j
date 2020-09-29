@@ -87,11 +87,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> ((CompletableFuture<?>) result)),context);
+            return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> ((CompletableFuture<?>) context.proceed())),context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {

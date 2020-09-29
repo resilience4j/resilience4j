@@ -83,11 +83,7 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> ((CompletableFuture<?>) result)), context);
+            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> ((CompletableFuture<?>) context.proceed())), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
