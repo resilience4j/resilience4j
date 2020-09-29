@@ -82,14 +82,14 @@ class RateLimiterRecoverySpec extends Specification {
             return completableFutureError()
         }
 
-        @RateLimiter(name = "default", fallbackMethod = 'completableRecoveryParam')
         @Override
+        @RateLimiter(name = "default", fallbackMethod = 'completableRecoveryParam')
         CompletableFuture<String> completableWithParam(String param) {
             return completableFutureError()
         }
 
-        @RateLimiter(name = "default", fallbackMethod = 'flowableRecovery')
         @Override
+        @RateLimiter(name = "default", fallbackMethod = 'flowableRecovery')
         Flowable<String> flowable() {
             return flowableError()
         }

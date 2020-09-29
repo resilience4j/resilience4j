@@ -37,6 +37,7 @@ import io.reactivex.Flowable;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -45,14 +46,13 @@ import java.util.concurrent.CompletionStage;
  **/
 @Singleton
 @Requires(beans = BulkheadRegistry.class)
-public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object>{
+public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
 
     private final BulkheadRegistry bulkheadRegistry;
     private final BeanContext beanContext;
 
     /**
-     *
-     * @param beanContext The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
+     * @param beanContext      The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
      * @param bulkheadRegistry bulkhead registry used to retrieve {@link Bulkhead} by name
      */
     public BulkheadInterceptor(BeanContext beanContext,
@@ -97,7 +97,13 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> ((CompletableFuture<?>) context.proceed())),context);
+            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> {
+                try {
+                    return ((CompletableFuture<?>) context.proceed());
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -107,7 +113,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
 
-            flowable = this.fallbackFlowable(flowable.compose(BulkheadOperator.of(bulkhead)),context);
+            flowable = this.fallbackFlowable(flowable.compose(BulkheadOperator.of(bulkhead)), context);
             return ConversionService.SHARED
                 .convert(flowable, context.getReturnType().asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
@@ -120,5 +126,4 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
             throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
-
 }

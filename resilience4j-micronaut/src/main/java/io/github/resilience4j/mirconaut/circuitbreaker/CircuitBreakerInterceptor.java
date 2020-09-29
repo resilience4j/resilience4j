@@ -36,6 +36,7 @@ import io.reactivex.Flowable;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
@@ -83,7 +84,13 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> ((CompletableFuture<?>) context.proceed())), context);
+            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> {
+                try {
+                    return ((CompletableFuture<?>) context.proceed());
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -92,7 +99,7 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
             Flowable<Object> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(CircuitBreakerOperator.of(circuitBreaker)),context);
+            flowable = this.fallbackFlowable(flowable.compose(CircuitBreakerOperator.of(circuitBreaker)), context);
             return ConversionService.SHARED
                 .convert(flowable, context.getReturnType().asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));

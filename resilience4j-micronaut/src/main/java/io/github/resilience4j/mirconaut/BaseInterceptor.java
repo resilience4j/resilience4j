@@ -109,7 +109,7 @@ public abstract class BaseInterceptor {
     }
 
     public Flowable<Object> fallbackFlowable(Flowable<Object> flowable, MethodInvocationContext<Object, Object> context) {
-        flowable.onErrorResumeNext(throwable -> {
+        return flowable.onErrorResumeNext(throwable -> {
             Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
             if (fallbackMethod.isPresent()) {
                 MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
@@ -131,6 +131,5 @@ public abstract class BaseInterceptor {
             }
             return Flowable.error(throwable);
         });
-        return flowable;
     }
 }
