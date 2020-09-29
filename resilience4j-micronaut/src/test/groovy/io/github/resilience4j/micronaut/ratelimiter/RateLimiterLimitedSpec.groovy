@@ -29,6 +29,7 @@ import javax.inject.Singleton
 @Property(name = "resilience4j.ratelimiter.enabled", value = "true")
 @Property(name = "resilience4j.ratelimiter.instances.low.limitForPeriod", value = "1")
 @Property(name = "resilience4j.ratelimiter.instances.low.limitRefreshPeriod", value = "PT10s")
+@Property(name = "resilience4j.ratelimiter.instances.low.subscribeForEvents", value = "true")
 class RateLimiterLimitedSpec extends Specification{
     @Inject ApplicationContext applicationContext
 
