@@ -28,6 +28,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
+import java.util.concurrent.TimeoutException
 
 class CoroutineTimeLimiterTest {
     @Test
@@ -89,8 +90,8 @@ class CoroutineTimeLimiterTest {
                 timelimiter.executeSuspendFunction {
                     helloWorldService.wait()
                 }
-                Assertions.failBecauseExceptionWasNotThrown<Nothing>(CancellationException::class.java)
-            } catch (e: CancellationException) {
+                Assertions.failBecauseExceptionWasNotThrown<Nothing>(TimeoutException::class.java)
+            } catch (e: TimeoutException) {
                 // nothing - proceed
             }
 
