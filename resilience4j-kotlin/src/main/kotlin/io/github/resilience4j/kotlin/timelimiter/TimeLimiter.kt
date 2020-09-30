@@ -47,8 +47,7 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
         }
     } catch (t: Throwable) {
         if (isCancellation(coroutineContext, t)) {
-            val timeoutException = createdTimeoutExceptionWithName(name)
-            timeoutException.stackTrace = t.stackTrace
+            val timeoutException = TimeLimiter.createdTimeoutExceptionWithName(name, t)
             onError(timeoutException)
             throw timeoutException
         }
@@ -74,8 +73,4 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
  */
 fun <T> TimeLimiter.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
-}
-
-private fun createdTimeoutExceptionWithName(name: String?): TimeoutException {
-    return TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception.", name))
 }
