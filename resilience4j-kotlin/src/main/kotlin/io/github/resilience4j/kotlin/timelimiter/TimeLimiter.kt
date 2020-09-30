@@ -25,6 +25,8 @@ import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.coroutineContext
 
+class TimeLimiterTimeoutException(override val message: String, override val cause: Throwable) : TimeoutException(message)
+
 /**
  * Decorates and executes the given suspend function [block].
  *
@@ -47,7 +49,7 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
         }
     } catch (t: Throwable) {
         if (isCancellation(coroutineContext, t)) {
-            val timeoutException = TimeoutException(t.message)
+            val timeoutException = TimeLimiterTimeoutException("Timelimited suspend function was cancelled.", t)
             onError(timeoutException)
             throw timeoutException
         }

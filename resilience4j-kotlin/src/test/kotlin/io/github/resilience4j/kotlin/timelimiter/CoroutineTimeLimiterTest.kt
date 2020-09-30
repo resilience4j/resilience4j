@@ -23,7 +23,6 @@ import io.github.resilience4j.timelimiter.TimeLimiter
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
