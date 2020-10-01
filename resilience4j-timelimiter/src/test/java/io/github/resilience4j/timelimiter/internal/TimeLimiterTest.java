@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-import static io.github.resilience4j.timelimiter.internal.TimeLimiterImpl.createdTimeoutExceptionWithName;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -49,7 +48,7 @@ public class TimeLimiterTest {
 
         assertThat(decoratedResult.isFailure()).isTrue();
         assertThat(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        assertThat(decoratedResult.getCause()).hasMessage(createdTimeoutExceptionWithName(TIME_LIMITER_NAME).getMessage());
+        assertThat(decoratedResult.getCause()).hasMessage(TimeLimiter.createdTimeoutExceptionWithName(TIME_LIMITER_NAME, null).getMessage());
 
         then(mockFuture).should().cancel(true);
     }
