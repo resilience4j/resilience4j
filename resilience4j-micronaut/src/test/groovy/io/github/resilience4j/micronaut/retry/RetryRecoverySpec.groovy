@@ -50,7 +50,6 @@ class RetryRecoverySpec extends Specification {
         result.blockingFirst() == "recovered"
     }
 
-
     void "test completable recovery retry"() {
         when:
         CompletableFuture<String> result = service.completable()
@@ -58,7 +57,6 @@ class RetryRecoverySpec extends Specification {
         then:
         result.get() == "recovered"
     }
-
 
     @Singleton
     static class RetryService extends TestDummyService {

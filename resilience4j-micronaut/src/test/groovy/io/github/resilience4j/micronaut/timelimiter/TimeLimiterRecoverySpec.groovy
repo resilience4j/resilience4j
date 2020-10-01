@@ -59,7 +59,6 @@ class TimeLimiterRecoverySpec extends Specification {
         result.get() == "recovered"
     }
 
-
     @Singleton
     static class TimeLimiterService extends TestDummyService {
         @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecovery')
