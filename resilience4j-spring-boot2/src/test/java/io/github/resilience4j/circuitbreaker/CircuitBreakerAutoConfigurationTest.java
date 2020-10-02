@@ -175,8 +175,8 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(2);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(70f);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(5L));
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
+            .isEqualTo(5000L);
 
         // Create CircuitBreaker dynamically with default config
         CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry
@@ -220,10 +220,10 @@ public class CircuitBreakerAutoConfigurationTest {
         CircuitBreaker backendB = circuitBreakerRegistry.circuitBreaker("backendB");
         CircuitBreaker backendC = circuitBreakerRegistry.circuitBreaker("backendC");
 
-        Duration defaultWaitDuration = Duration.ofSeconds(10);
+        long defaultWaitDuration = 10_000;
         float defaultFailureRate = 60f;
         int defaultPermittedNumberOfCallsInHalfOpenState = 10;
-        int defaultRingBufferSizeInClosedState = 100;
+        int defaultSlidingWindowSize = 100;
         // test the customizer effect which overload the sliding widow size
         assertThat(backendC.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(100);
 
@@ -235,28 +235,28 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(defaultFailureRate);
-        assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState())
+        assertThat(sharedA.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualTo(defaultWaitDuration);
 
         assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowSize())
-            .isEqualTo(defaultRingBufferSizeInClosedState);
+            .isEqualTo(defaultSlidingWindowSize);
         assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowType())
             .isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
         assertThat(sharedB.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
             .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(defaultFailureRate);
-        assertThat(sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState())
+        assertThat(sharedB.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualTo(defaultWaitDuration);
 
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize())
-            .isEqualTo(defaultRingBufferSizeInClosedState);
+            .isEqualTo(defaultSlidingWindowSize);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig()
             .getPermittedNumberOfCallsInHalfOpenState())
             .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(defaultFailureRate);
-        assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
+        assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualTo(defaultWaitDuration);
     }
 
@@ -315,10 +315,7 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
         assertThat(healthResponse.getBody().getDetails().get("backendSharedA")).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("backendSharedB")).isNotNull();
-
-
     }
-
 
     @Test
     public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
@@ -327,14 +324,13 @@ public class CircuitBreakerAutoConfigurationTest {
             .filter(circuitBreaker -> circuitBreaker.getName().equalsIgnoreCase("backendC"))
             .findAny();
         //then
-        assertThat(backendC.isPresent()).isTrue();
+        assertThat(backendC).isPresent();
         CircuitBreakerConfig backendConfig = backendC.get().getCircuitBreakerConfig();
 
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
-        assertThat(backendConfig.getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(1L));
-
+        assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1))
+            .isEqualByComparingTo(1000L);
     }
 
     /**
@@ -373,8 +369,8 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(5);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(50f);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(5L));
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
+            .isEqualByComparingTo(5000L);
 
         // expect circuitbreakers actuator endpoint contains all circuitbreakers
         ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate

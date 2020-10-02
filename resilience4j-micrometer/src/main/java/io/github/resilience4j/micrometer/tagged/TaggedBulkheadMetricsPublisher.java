@@ -37,12 +37,6 @@ public class TaggedBulkheadMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    @Deprecated
-    public TaggedBulkheadMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
-        super(names);
-        this.meterRegistry = requireNonNull(meterRegistry);
-    }
-
     @Override
     public void publishMetrics(Bulkhead entry) {
         addMetrics(meterRegistry, entry);

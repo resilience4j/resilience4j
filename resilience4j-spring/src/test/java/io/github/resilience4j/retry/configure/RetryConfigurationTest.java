@@ -29,9 +29,9 @@ public class RetryConfigurationTest {
     @Test
     public void testRetryRegistry() {
         InstanceProperties instanceProperties1 = new InstanceProperties();
-        instanceProperties1.setMaxRetryAttempts(3);
+        instanceProperties1.setMaxAttempts(3);
         InstanceProperties instanceProperties2 = new InstanceProperties();
-        instanceProperties2.setMaxRetryAttempts(2);
+        instanceProperties2.setMaxAttempts(2);
         RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
         retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         retryConfigurationProperties.getInstances().put("backend2", instanceProperties2);
@@ -57,10 +57,10 @@ public class RetryConfigurationTest {
     @Test
     public void testCreateRetryRegistryWithSharedConfigs() {
         InstanceProperties defaultProperties = new InstanceProperties();
-        defaultProperties.setMaxRetryAttempts(3);
+        defaultProperties.setMaxAttempts(3);
         defaultProperties.setWaitDuration(Duration.ofMillis(100L));
         InstanceProperties sharedProperties = new InstanceProperties();
-        sharedProperties.setMaxRetryAttempts(2);
+        sharedProperties.setMaxAttempts(2);
         sharedProperties.setWaitDuration(Duration.ofMillis(100L));
         InstanceProperties backendWithDefaultConfig = new InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("default");

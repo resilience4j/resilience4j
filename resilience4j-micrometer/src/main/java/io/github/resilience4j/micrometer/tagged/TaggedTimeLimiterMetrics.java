@@ -57,21 +57,6 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
         return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
     }
 
-    /**
-     * Creates a new binder that uses given {@code registry} as source of time limiters.
-     *
-     * @deprecated Use {@link TaggedTimeLimiterMetrics#ofTimeLimiterRegistry(TimeLimiterMetricNames, TimeLimiterRegistry)} instead
-     *
-     * @param names               custom metric names
-     * @param timeLimiterRegistry the source of time limiters
-     * @return The {@link TaggedTimeLimiterMetrics} instance.
-     */
-    @Deprecated
-    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(MetricNames names,
-                                                                 TimeLimiterRegistry timeLimiterRegistry) {
-        return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
-    }
-
     @Override
     public void bindTo(MeterRegistry registry) {
         for (TimeLimiter timeLimiter : timeLimiterRegistry.getAllTimeLimiters()) {

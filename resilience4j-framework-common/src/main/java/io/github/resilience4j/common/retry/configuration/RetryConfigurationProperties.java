@@ -123,10 +123,6 @@ public class RetryConfigurationProperties extends CommonProperties {
 
         configureRetryIntervalFunction(properties, builder);
 
-        if (properties.getMaxRetryAttempts() != null && properties.getMaxRetryAttempts() != 0) {
-            builder.maxAttempts(properties.getMaxRetryAttempts());
-        }
-
         if (properties.getMaxAttempts() != null && properties.getMaxAttempts() != 0) {
             builder.maxAttempts(properties.getMaxAttempts());
         }
@@ -165,7 +161,6 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     private void configureRetryIntervalFunction(InstanceProperties properties,
         RetryConfig.Builder<Object> builder) {
-        // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
             Duration waitDuration = properties.getWaitDuration();
 
@@ -221,13 +216,6 @@ public class RetryConfigurationProperties extends CommonProperties {
          */
         @Nullable
         private Duration waitDuration;
-
-        /*
-         * max retry attempts value
-         */
-        @Nullable
-        @Deprecated
-        private Integer maxRetryAttempts;
 
         @Nullable
         private Integer maxAttempts;
@@ -298,26 +286,8 @@ public class RetryConfigurationProperties extends CommonProperties {
         }
 
         @Nullable
-        @Deprecated
-        public Integer getMaxRetryAttempts() {
-            return maxRetryAttempts;
-        }
-
-        @Nullable
         public Integer getMaxAttempts() {
             return maxAttempts;
-        }
-
-        @Deprecated
-        public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
-            Objects.requireNonNull(maxRetryAttempts);
-            if (maxRetryAttempts < 1) {
-                throw new IllegalArgumentException(
-                    "maxRetryAttempts must be greater than or equal to 1.");
-            }
-
-            this.maxRetryAttempts = maxRetryAttempts;
-            return this;
         }
 
         public InstanceProperties setMaxAttempts(Integer maxAttempts) {

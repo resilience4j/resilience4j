@@ -38,13 +38,6 @@ public class TaggedThreadPoolBulkheadMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    @Deprecated
-    public TaggedThreadPoolBulkheadMetricsPublisher(MetricNames names,
-                                                    MeterRegistry meterRegistry) {
-        super(names);
-        this.meterRegistry = requireNonNull(meterRegistry);
-    }
-
     @Override
     public void publishMetrics(ThreadPoolBulkhead entry) {
         addMetrics(meterRegistry, entry);
