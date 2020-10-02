@@ -87,12 +87,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         Class<Object> returnType = rt.getType();
 
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> ((CompletableFuture<?>) result)), context);
-
+            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> ((CompletableFuture<?>) context.proceed())), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -111,10 +106,8 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         try {
             return timeLimiter.executeFutureSupplier(
                 () -> CompletableFuture.supplyAsync(context::proceed));
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return this.fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }

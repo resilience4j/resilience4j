@@ -36,6 +36,7 @@ import io.reactivex.Flowable;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
@@ -82,11 +83,13 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(rateLimiter.executeCompletionStage(() -> ((CompletableFuture<?>) result)), context);
+            return this.fallbackCompletable(rateLimiter.executeCompletionStage(() -> {
+                try {
+                    return ((CompletableFuture<?>) context.proceed());
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -102,10 +105,8 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         }
         try {
             return RateLimiter.decorateCheckedSupplier(rateLimiter, context::proceed).apply();
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }

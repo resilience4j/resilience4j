@@ -97,14 +97,10 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
             return this.fallbackCompletable(bulkhead.executeSupplier(() -> {
                 try {
-                    return ((CompletableFuture<?>) result).get();
-                } catch (InterruptedException | ExecutionException e) {
+                    return ((CompletableFuture<?>) context.proceed()).get();
+                } catch (Throwable e) {
                     throw new CompletionException(e);
                 }
             }),context);
@@ -143,8 +139,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
+            return new CompletionException(throwable);
         }
-
     }
 }

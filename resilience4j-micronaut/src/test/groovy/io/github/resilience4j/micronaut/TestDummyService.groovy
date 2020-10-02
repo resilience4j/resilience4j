@@ -16,27 +16,53 @@
 package io.github.resilience4j.micronaut
 
 import io.micronaut.context.annotation.Executable
+import io.reactivex.Completable
+import io.reactivex.Flowable
+import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.Single
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
 
 abstract class TestDummyService {
-    CompletableFuture<String> asyncError() {
-        CompletableFuture<String> future = new CompletableFuture<>();
-        future.completeExceptionally(new RuntimeException("Test"));
-        return future
-    }
+
+    abstract String sync();
+
+    abstract String syncWithParam(String param);
+
+    abstract CompletableFuture<String> completable();
+
+    abstract CompletableFuture<String> completableWithParam(String param);
+
+    abstract Flowable<String> flowable();
 
     String syncError() {
         throw new RuntimeException("Test");
     }
 
+    Flowable<String> flowableError() {
+        return Flowable.error(new RuntimeException("Test"));
+    }
+
+    CompletableFuture<String> completableFutureError() {
+        CompletableFuture<String> future = new CompletableFuture<>();
+        future.completeExceptionally(new RuntimeException("Test"));
+        return future
+    }
+
     @Executable
-    CompletableFuture<String> completionStageRecovery() {
+    Flowable<String> flowableRecovery() {
+        return Flowable.just('recovered');
+    }
+
+    @Executable
+    CompletableFuture<String> completableRecovery() {
         return CompletableFuture.supplyAsync({ -> 'recovered' });
     }
 
     @Executable
-    CompletableFuture<String> completionStageRecoveryParam(String parameter) {
+    CompletableFuture<String> completableRecoveryParam(String parameter) {
         return CompletableFuture.supplyAsync({ -> parameter });
     }
 

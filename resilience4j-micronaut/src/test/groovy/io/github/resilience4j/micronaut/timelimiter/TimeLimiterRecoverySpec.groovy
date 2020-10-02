@@ -19,6 +19,7 @@ import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.mirconaut.annotation.TimeLimiter
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
+import io.reactivex.Flowable
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -32,33 +33,62 @@ class TimeLimiterRecoverySpec extends Specification {
     @Inject
     TimeLimiterService service;
 
-    void "test async recovery retry"() {
+
+    void "test sync recovery timeLimiter"() {
         when:
-        CompletableFuture<String>  result = service.recoverable();
-
-        then:
-        result.get() == "recovered"
-
-    }
-
-    void "test sync recovery retry"() {
-        when:
-        String result = service.syncRecoverable()
+        String result = service.sync();
 
         then:
         result == "recovered"
     }
 
+    void "test flowable recovery timeLimiter"() {
+        when:
+        Flowable<String> result = service.flowable();
+
+        then:
+        result.blockingFirst() == "recovered"
+    }
+
+    void "test completable recovery timeLimiter"() {
+        when:
+        CompletableFuture<String> result = service.completable();
+
+
+        then:
+        result.get() == "recovered"
+    }
+
     @Singleton
     static class TimeLimiterService extends TestDummyService {
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'completionStageRecovery')
-        CompletableFuture<String> recoverable() {
-            return asyncError();
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecovery')
+        @Override
+        String sync() {
+            return syncError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecovery')
-        String syncRecoverable() {
-            return syncError();
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecoveryParam')
+        @Override
+        String syncWithParam(String param) {
+            return syncError()
+        }
+
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'completableRecovery')
+        @Override
+        CompletableFuture<String> completable() {
+            return completableFutureError()
+        }
+
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'completableRecoveryParam')
+        @Override
+        CompletableFuture<String> completableWithParam(String param) {
+            return completableFutureError()
+        }
+
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'flowableRecovery')
+        @Override
+        Flowable<String> flowable() {
+            return flowableError()
         }
     }
 }

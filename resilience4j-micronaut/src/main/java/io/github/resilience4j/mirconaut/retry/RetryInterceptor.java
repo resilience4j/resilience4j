@@ -35,10 +35,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 @Singleton
 @Requires(beans = RetryRegistry.class)
@@ -87,11 +84,13 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> ((CompletableFuture<?>) result)),context);
+            return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> {
+                try {
+                    return ((CompletableFuture<?>) context.proceed());
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -100,7 +99,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
             Flowable<Object> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(RetryTransformer.of(retry)),context);
+            flowable = this.fallbackFlowable(flowable.compose(RetryTransformer.of(retry)), context);
 
             return ConversionService.SHARED
                 .convert(flowable, context.getReturnType().asArgument())
@@ -109,10 +108,8 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
 
         try {
             return retry.executeCheckedSupplier(context::proceed);
-        } catch (RuntimeException exception) {
+        } catch (Throwable exception) {
             return fallback(context, exception);
-        } catch (Throwable throwable) {
-            throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + throwable.getMessage(), throwable);
         }
     }
 }
