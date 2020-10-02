@@ -29,6 +29,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,6 +97,11 @@ public class RetryAutoConfigurationRxJavaTest {
             .isTrue();
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
             .isFalse();
+
+        Function<Integer, Long> exponentialBackoff = retry.getRetryConfig().getIntervalFunction();
+        assertThat(exponentialBackoff.apply(1)).isEqualTo(100);
+        assertThat(exponentialBackoff.apply(2)).isEqualTo(200);
+        assertThat(exponentialBackoff.apply(3)).isEqualTo(222);
 
         assertThat(retryAspect.getOrder()).isEqualTo(399);
 
