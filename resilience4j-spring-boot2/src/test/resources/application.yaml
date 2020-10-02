@@ -75,6 +75,7 @@ resilience4j.circuitbreaker:
       slidingWindowSize: 10
       enableExponentialBackoff: true
       exponentialBackoffMultiplier: 2
+      exponentialMaxWaitDurationInOpenState: 1111ms
       permittedNumberOfCallsInHalfOpenState: 5
       waitDurationInOpenState: 1000
       failureRateThreshold: 50
