@@ -21,6 +21,9 @@ resilience4j.retry:
     retryBackendC:
       maxRetryAttempts: 3
       waitDuration: 100ms
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      exponentialMaxWaitDuration: 222ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.lang.IllegalArgumentException
