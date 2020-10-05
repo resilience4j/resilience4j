@@ -58,22 +58,6 @@ public class TaggedBulkheadMetrics extends AbstractBulkheadMetrics implements Me
         return new TaggedBulkheadMetrics(names, bulkheadRegistry);
     }
 
-    /**
-     * Creates a new binder defining custom metric names and using given {@code registry} as source
-     * of bulkheads.
-     *
-     * @deprecated Use {@link TaggedBulkheadMetrics#ofBulkheadRegistry(BulkheadMetricNames, BulkheadRegistry)} instead
-     *
-     * @param names            custom names of the metrics
-     * @param bulkheadRegistry the source of bulkheads
-     * @return The {@link TaggedBulkheadMetrics} instance.
-     */
-    @Deprecated
-    public static TaggedBulkheadMetrics ofBulkheadRegistry(MetricNames names,
-                                                           BulkheadRegistry bulkheadRegistry) {
-        return new TaggedBulkheadMetrics(names, bulkheadRegistry);
-    }
-
     @Override
     public void bindTo(MeterRegistry registry) {
         for (Bulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {

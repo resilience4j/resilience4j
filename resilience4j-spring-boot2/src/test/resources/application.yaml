@@ -19,7 +19,7 @@ resilience4j.retry:
     retryBackendB:
       baseConfig: default
     retryBackendC:
-      maxRetryAttempts: 3
+      maxAttempts: 3
       waitDuration: 100ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
       retryExceptions:
@@ -162,7 +162,7 @@ resilience4j.thread-pool-bulkhead:
       maxThreadPoolSize: 1
       coreThreadPoolSize: 1
       queueCapacity: 1
-      contextPropagator:
+      contextPropagators:
         - io.github.resilience4j.TestThreadLocalContextPropagator
 
 resilience4j.timelimiter:

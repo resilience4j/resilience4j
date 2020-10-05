@@ -103,12 +103,11 @@ public class RetryConfigurationSpringTest {
             RetryConfigurationPropertiesTest() {
                 InstanceProperties instanceProperties = new InstanceProperties();
                 instanceProperties.setBaseConfig("sharedConfig");
-                instanceProperties.setMaxRetryAttempts(3);
+                instanceProperties.setMaxAttempts(3);
                 getConfigs().put("sharedBackend", instanceProperties);
             }
 
         }
     }
-
 
 }

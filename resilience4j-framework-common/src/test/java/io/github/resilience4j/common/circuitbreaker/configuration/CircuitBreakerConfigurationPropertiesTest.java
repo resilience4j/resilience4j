@@ -84,7 +84,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getSlowCallDurationThreshold().getSeconds()).isEqualTo(5);
         assertThat(circuitBreaker1.getMaxWaitDurationInHalfOpenState().getSeconds()).isEqualTo(5);
         assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
-        assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
+        assertThat(circuitBreaker1.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(100);
         assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
         assertThat(circuitBreaker1.isWritableStackTraceEnabled()).isFalse();
 
@@ -181,7 +181,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         //Then
         assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
 
-        // Should get default config and overwrite setRingBufferSizeInHalfOpenState
+        // Should get default config and overwrite setPermittedNumberOfCallsInHalfOpenState
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("backendWithDefaultConfig", backendWithDefaultConfig,
                 compositeCircuitBreakerCustomizer());
@@ -189,7 +189,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getSlidingWindowSize()).isEqualTo(1000);
         assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(99);
 
-        // Should get shared config and overwrite setRingBufferSizeInHalfOpenState
+        // Should get shared config and overwrite setPermittedNumberOfCallsInHalfOpenState
         CircuitBreakerConfig circuitBreaker2 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("backendWithSharedConfig", backendWithSharedConfig,
                 compositeCircuitBreakerCustomizer());
@@ -242,18 +242,6 @@ public class CircuitBreakerConfigurationPropertiesTest {
     public void testIllegalArgumentOnWaitDurationInOpenState() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setWaitDurationInOpenState(Duration.ZERO);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRingBufferSizeInClosedState() {
-        CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setRingBufferSizeInClosedState(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRingBufferSizeInHalfOpenState() {
-        CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setRingBufferSizeInHalfOpenState(0);
     }
 
     @Test(expected = IllegalArgumentException.class)

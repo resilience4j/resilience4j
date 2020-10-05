@@ -140,15 +140,6 @@ public class RetryImpl<T> implements Retry {
         private ContextImpl() {
         }
 
-        /**
-         * @deprecated since 1.2.0
-         */
-        @Override
-        @Deprecated
-        public void onSuccess() {
-            onComplete();
-        }
-
         @Override
         public void onComplete() {
             int currentNumOfAttempts = numOfAttempts.get();
@@ -257,15 +248,6 @@ public class RetryImpl<T> implements Retry {
 
         private final AtomicInteger numOfAttempts = new AtomicInteger(0);
         private final AtomicReference<Throwable> lastException = new AtomicReference<>();
-
-        /**
-         * @deprecated since 1.2.0
-         */
-        @Override
-        @Deprecated
-        public void onSuccess() {
-            onComplete();
-        }
 
         @Override
         public void onComplete() {

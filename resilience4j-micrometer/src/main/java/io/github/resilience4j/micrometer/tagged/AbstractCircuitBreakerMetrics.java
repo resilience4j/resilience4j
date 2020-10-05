@@ -39,11 +39,6 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    @Deprecated
-    protected AbstractCircuitBreakerMetrics(MetricNames names) {
-        this.names = requireNonNull(names);
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, CircuitBreaker circuitBreaker) {
         List<Tag> customTags = mapToTagsList(circuitBreaker.getTags());
         registerMetrics(meterRegistry, circuitBreaker, customTags);
@@ -150,7 +145,4 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
         meterIdMap.put(circuitBreaker.getName(), idSet);
     }
 
-    @Deprecated
-    public static class MetricNames extends CircuitBreakerMetricNames {
-    }
 }

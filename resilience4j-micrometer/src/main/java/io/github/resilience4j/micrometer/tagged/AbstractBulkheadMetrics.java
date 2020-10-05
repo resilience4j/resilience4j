@@ -36,11 +36,6 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    @Deprecated
-    protected AbstractBulkheadMetrics(MetricNames names) {
-        this.names = requireNonNull(names);
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, Bulkhead bulkhead) {
         List<Tag> customTags = mapToTagsList(bulkhead.getTags());
         registerMetrics(meterRegistry, bulkhead, customTags);
@@ -69,6 +64,4 @@ abstract class AbstractBulkheadMetrics extends AbstractMetrics {
 
     }
 
-    @Deprecated
-    public static class MetricNames extends BulkheadMetricNames { }
 }

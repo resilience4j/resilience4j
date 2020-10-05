@@ -56,9 +56,9 @@ class RetryChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }
                 }
             }
@@ -141,9 +141,9 @@ class RetryChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }
                 }
             }
@@ -215,9 +215,9 @@ class RetryChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.endpoints {
                         it.retries {
                             it.enabled(false)

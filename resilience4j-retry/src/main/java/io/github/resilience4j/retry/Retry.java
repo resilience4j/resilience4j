@@ -436,14 +436,6 @@ public interface Retry {
     interface AsyncContext<T> {
 
         /**
-         * Records a successful call.
-         *
-         * @deprecated since 1.2.0
-         */
-        @Deprecated
-        void onSuccess();
-
-        /**
          * Records a successful call or retryable call with the needed generated retry events. When
          * there is a successful retry before reaching the max retries limit, it will generate
          * {@link RetryOnSuccessEvent}. When the retry reach the max retries limit, it will generate
@@ -476,15 +468,6 @@ public interface Retry {
      * @param <T> the result type
      */
     interface Context<T> {
-
-        /**
-         * Records a successful call.
-         *
-         * @deprecated since 1.2.0
-         */
-        @Deprecated
-        void onSuccess();
-
 
         /**
          * Records a successful call or retryable call with the needed generated retry events. When

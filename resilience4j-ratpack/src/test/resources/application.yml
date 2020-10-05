@@ -19,8 +19,8 @@ resilience4j:
     circuitbreaker:
         configs:
             default:
-                ringBufferSizeInClosedState: 200
-                ringBufferSizeInHalfOpenState: 20
+                slidingWindowSize: 200
+                permittedNumberOfCallsInHalfOpenState: 20
                 waitDurationInOpenState: PT1S
                 failureRateThreshold: 60
                 automaticTransitionFromOpenToHalfOpenEnabled: true
@@ -28,8 +28,8 @@ resilience4j:
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException1
                     - io.github.resilience4j.ratpack.Resilience4jModuleSpec$DummyException2
             shared:
-                ringBufferSizeInClosedState: 200
-                ringBufferSizeInHalfOpenState: 20
+                slidingWindowSize: 200
+                permittedNumberOfCallsInHalfOpenState: 20
                 waitDurationInOpenState: PT1S
                 failureRateThreshold: 60
                 automaticTransitionFromOpenToHalfOpenEnabled: true
@@ -39,10 +39,10 @@ resilience4j:
         instances:
             test1:
                 baseConfig: default
-                ringBufferSizeInClosedState: 100
+                slidingWindowSize: 100
             test2:
-                ringBufferSizeInClosedState: 200
-                ringBufferSizeInHalfOpenState: 20
+                slidingWindowSize: 200
+                permittedNumberOfCallsInHalfOpenState: 20
                 waitDurationInOpenState: PT5S
                 failureRateThreshold: 60
                 automaticTransitionFromOpenToHalfOpenEnabled: true
@@ -69,17 +69,17 @@ resilience4j:
     retry:
         configs:
             default:
-                maxRetryAttempts: 3
+                maxAttempts: 3
                 waitDuration: PT1S
             shared:
-                maxRetryAttempts: 3
+                maxAttempts: 3
                 waitDuration: PT1S
         instances:
             test1:
                 baseConfig: default
-                maxRetryAttempts: 4
+                maxAttempts: 4
             test2:
-                maxRetryAttempts: 3
+                maxAttempts: 3
                 waitDuration: PT1S
     bulkhead:
         configs:

@@ -55,8 +55,8 @@ class Resilience4jModuleSpec extends Specification {
                         .circuitBreaker('test2') {
                             it.setFailureRateThreshold(50)
                                 .setWaitDurationInOpenState(Duration.ofMillis(5000))
-                                .setRingBufferSizeInClosedState(200)
-                                .setRingBufferSizeInHalfOpenState(20)
+                                .setSlidingWindowSize(200)
+                                .setPermittedNumberOfCallsInHalfOpenState(20)
                                 .setFailureRateThreshold(60)
                                 .setAutomaticTransitionFromOpenToHalfOpenEnabled(true)
                         }
@@ -85,7 +85,7 @@ class Resilience4jModuleSpec extends Specification {
         test1.circuitBreakerConfig.with {
             assert slidingWindowSize == 100
             assert permittedNumberOfCallsInHalfOpenState == 10
-            assert waitDurationInOpenState == Duration.ofMinutes(1)
+            assert waitIntervalFunctionInOpenState.apply(1) == 60_000
             assert failureRateThreshold == 50
             assert !automaticTransitionFromOpenToHalfOpenEnabled
             it
@@ -95,7 +95,7 @@ class Resilience4jModuleSpec extends Specification {
         test2.circuitBreakerConfig.with {
             assert slidingWindowSize == 200
             assert permittedNumberOfCallsInHalfOpenState == 20
-            assert waitDurationInOpenState == Duration.ofMillis(5000)
+            assert waitIntervalFunctionInOpenState.apply(1) == 5_000
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
             assert recordExceptionPredicate.test(new Exception())
@@ -166,7 +166,7 @@ class Resilience4jModuleSpec extends Specification {
         test1.circuitBreakerConfig.with {
             assert slidingWindowSize == 100
             assert permittedNumberOfCallsInHalfOpenState == 20
-            assert waitDurationInOpenState == Duration.ofMillis(1000)
+            assert waitIntervalFunctionInOpenState.apply(1) == 1_000
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
             assert recordExceptionPredicate.test(new DummyException1("test"))
@@ -178,7 +178,7 @@ class Resilience4jModuleSpec extends Specification {
         test2.circuitBreakerConfig.with {
             assert slidingWindowSize == 200
             assert permittedNumberOfCallsInHalfOpenState == 20
-            assert waitDurationInOpenState == Duration.ofMillis(5000)
+            assert waitIntervalFunctionInOpenState.apply(1) == 5_000
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
             assert recordExceptionPredicate.test(new DummyException1("test"))
@@ -192,7 +192,7 @@ class Resilience4jModuleSpec extends Specification {
         test3.circuitBreakerConfig.with {
             assert slidingWindowSize == 200
             assert permittedNumberOfCallsInHalfOpenState == 20
-            assert waitDurationInOpenState == Duration.ofMillis(1000)
+            assert waitIntervalFunctionInOpenState.apply(1) == 1_000
             assert failureRateThreshold == 60
             assert automaticTransitionFromOpenToHalfOpenEnabled
             assert recordExceptionPredicate.test(new DummyException1("test"))
@@ -348,7 +348,7 @@ class Resilience4jModuleSpec extends Specification {
                 module(Resilience4jModule) {
                     it.retry('test')
                         .retry('test2') {
-                            it.setMaxRetryAttempts(3)
+                            it.setMaxAttempts(3)
                                 .setWaitDuration(Duration.ofMillis(1000))
                         }
                 }
