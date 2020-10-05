@@ -118,6 +118,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new CircuitBreakerConfigurationProperties.InstanceProperties();
         instanceProperties2.setEnableExponentialBackoff(true);
         instanceProperties2.setExponentialBackoffMultiplier(1.0);
+        instanceProperties2.setExponentialMaxWaitDurationInOpenState(Duration.ofMillis(99L));
         instanceProperties2.setWaitDurationInOpenState(Duration.ofMillis(100L));
 
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
@@ -144,8 +145,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreakerConfig1.getWaitIntervalFunctionInOpenState()).isNotNull();
         assertThat(circuitBreakerConfig2).isNotNull();
         assertThat(circuitBreakerConfig2.getWaitIntervalFunctionInOpenState()).isNotNull();
-
-
+        assertThat(circuitBreakerConfig2.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(99L);
     }
 
     @Test

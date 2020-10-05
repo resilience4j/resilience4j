@@ -115,7 +115,7 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(backendAState.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN.toString());
         assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN);
 
-        // when sending non valid statte change
+        // when sending non valid state change
         HttpEntity<String> nonValid = new HttpEntity<>("{\"updateState\":\"BLA_BLA\"}", headers);
         final ResponseEntity<CircuitBreakerUpdateStateResponse> nonValidResponse = restTemplate
             .postForEntity("/actuator/circuitbreakers/backendA", nonValid, CircuitBreakerUpdateStateResponse.class);
@@ -331,9 +331,9 @@ public class CircuitBreakerAutoConfigurationTest {
 
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
+        assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(2)).isEqualTo(1111);
         assertThat(backendConfig.getWaitDurationInOpenState())
             .isEqualByComparingTo(Duration.ofSeconds(1L));
-
     }
 
     /**
