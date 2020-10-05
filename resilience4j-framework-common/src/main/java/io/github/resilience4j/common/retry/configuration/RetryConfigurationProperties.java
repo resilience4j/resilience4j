@@ -124,10 +124,6 @@ public class RetryConfigurationProperties extends CommonProperties {
 
         configureRetryIntervalFunction(properties, builder);
 
-        if (properties.getMaxRetryAttempts() != null && properties.getMaxRetryAttempts() != 0) {
-            builder.maxAttempts(properties.getMaxRetryAttempts());
-        }
-
         if (properties.getMaxAttempts() != null && properties.getMaxAttempts() != 0) {
             builder.maxAttempts(properties.getMaxAttempts());
         }
@@ -255,15 +251,6 @@ public class RetryConfigurationProperties extends CommonProperties {
         @Nullable
         private Class<? extends IntervalBiFunction<Object>> intervalBiFunction;
 
-        /**
-         * max retry attempts value
-         *
-         * @deprecated use maxAttempts
-         */
-        @Nullable
-        @Deprecated
-        private Integer maxRetryAttempts;
-
         @Nullable
         private Integer maxAttempts;
 
@@ -354,35 +341,9 @@ public class RetryConfigurationProperties extends CommonProperties {
             this.intervalBiFunction = intervalBiFunction;
         }
 
-        /**
-         *
-         * @deprecated use getMaxAttempts()
-         */
-        @Nullable
-        @Deprecated
-        public Integer getMaxRetryAttempts() {
-            return maxRetryAttempts;
-        }
-
         @Nullable
         public Integer getMaxAttempts() {
             return maxAttempts;
-        }
-
-        /**
-         *
-         * @deprecated use setMaxAttempts()
-         */
-        @Deprecated
-        public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
-            Objects.requireNonNull(maxRetryAttempts);
-            if (maxRetryAttempts < 1) {
-                throw new IllegalArgumentException(
-                    "maxRetryAttempts must be greater than or equal to 1.");
-            }
-
-            this.maxRetryAttempts = maxRetryAttempts;
-            return this;
         }
 
         public InstanceProperties setMaxAttempts(Integer maxAttempts) {

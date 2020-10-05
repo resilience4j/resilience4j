@@ -37,12 +37,6 @@ public class TaggedCircuitBreakerMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    @Deprecated
-    public TaggedCircuitBreakerMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
-        super(names);
-        this.meterRegistry = requireNonNull(meterRegistry);
-    }
-
     @Override
     public void publishMetrics(CircuitBreaker entry) {
         addMetrics(meterRegistry, entry);

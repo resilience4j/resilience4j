@@ -54,12 +54,6 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    @SuppressWarnings("deprecation") // Left this use for testing purposes
-    public void ringBufferSizeInHalfOpenStateBelowOneShouldFail() {
-        custom().ringBufferSizeInHalfOpenState(0).build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void zeroPermittedNumberOfCallsInHalfOpenStateShouldFail() {
         custom().permittedNumberOfCallsInHalfOpenState(0).build();
     }
@@ -82,12 +76,6 @@ public class CircuitBreakerConfigTest {
     @Test(expected = IllegalArgumentException.class)
     public void zeroMinimumNumberOfCallsShouldFai2l() {
         custom().minimumNumberOfCalls(0).build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    @SuppressWarnings("deprecation") // Left this use for testing purposes
-    public void zeroRingBufferSizeInClosedStateShouldFail() {
-        custom().ringBufferSizeInClosedState(0).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -126,8 +114,8 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(DEFAULT_SLIDING_WINDOW_TYPE);
         then(circuitBreakerConfig.getMinimumNumberOfCalls())
             .isEqualTo(DEFAULT_MINIMUM_NUMBER_OF_CALLS);
-        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds())
-            .isEqualTo(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
+        then(circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(1))
+            .isEqualTo(DEFAULT_SLOW_CALL_DURATION_THRESHOLD * 1000);
         then(circuitBreakerConfig.getRecordExceptionPredicate()).isNotNull();
         then(circuitBreakerConfig.getSlowCallRateThreshold())
             .isEqualTo(DEFAULT_SLOW_CALL_RATE_THRESHOLD);
@@ -176,9 +164,9 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation") // Left this use for testing purposes
-    public void shouldSetRingBufferSizeInClosedState() {
-        CircuitBreakerConfig circuitBreakerConfig = custom().ringBufferSizeInClosedState(1000)
+    public void shouldSetCountBasedSlidingWindowSize() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .slidingWindow(1000, 1000, SlidingWindowType.COUNT_BASED)
             .build();
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(1000);
     }
@@ -242,7 +230,7 @@ public class CircuitBreakerConfigTest {
     public void shouldSetWaitInterval() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
             .waitDurationInOpenState(Duration.ofSeconds(1)).build();
-        then(circuitBreakerConfig.getWaitDurationInOpenState().getSeconds()).isEqualTo(1);
+        then(circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
     }
 
     @Test
@@ -300,7 +288,7 @@ public class CircuitBreakerConfigTest {
             .recordExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = circuitBreakerConfig
             .getRecordExceptionPredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly recore
+        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly record
         then(failurePredicate.test(new ExtendsError())).isEqualTo(false); // not explicitly included
         then(failurePredicate.test(new ExtendsException()))
             .isEqualTo(false); // not explicitly included
@@ -422,7 +410,7 @@ public class CircuitBreakerConfigTest {
 
         then(extendedConfig.getFailureRateThreshold()).isEqualTo(20f);
         then(extendedConfig.isWritableStackTraceEnabled()).isEqualTo(false);
-        then(extendedConfig.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(20));
+        then(extendedConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(20_000);
         then(extendedConfig.getSlidingWindowSize()).isEqualTo(1000);
         then(extendedConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();

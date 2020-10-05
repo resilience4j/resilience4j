@@ -241,17 +241,6 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
          * @param contextPropagators subclass of {@link ContextPropagator}
          * @return return builder instance back for fluent set up
          */
-        @Deprecated
-        public InstanceProperties setContextPropagator(Class<? extends ContextPropagator>... contextPropagators) {
-            return setContextPropagators(contextPropagators);
-        }
-
-        /**
-         * Set the class type of {@link ContextPropagator}
-         *
-         * @param contextPropagators subclass of {@link ContextPropagator}
-         * @return return builder instance back for fluent set up
-         */
         public InstanceProperties setContextPropagators(Class<? extends ContextPropagator>... contextPropagators) {
             this.contextPropagators = contextPropagators;
             return this;

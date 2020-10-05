@@ -36,11 +36,6 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    @Deprecated
-    protected AbstractThreadPoolBulkheadMetrics(MetricNames names) {
-        this.names = requireNonNull(names);
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, ThreadPoolBulkhead bulkhead) {
         List<Tag> customTags = mapToTagsList(bulkhead.getTags());
         registerMetrics(meterRegistry, bulkhead, customTags);
@@ -89,7 +84,4 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
         meterIdMap.put(bulkhead.getName(), idSet);
     }
 
-    @Deprecated
-    public static class MetricNames extends ThreadPoolBulkheadMetricNames {
-    }
 }

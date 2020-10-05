@@ -27,7 +27,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * unit test for spring confg merge properties
+ * unit test for spring config merge properties
  */
 public class SpringConfigUtilsTest {
 
@@ -51,14 +51,14 @@ public class SpringConfigUtilsTest {
     public void testCircuitBreakerMergeSpringProperties() {
 
         CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        sharedProperties.setRingBufferSizeInClosedState(1337);
-        sharedProperties.setRingBufferSizeInHalfOpenState(1000);
+        sharedProperties.setSlidingWindowSize(1337);
+        sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
         sharedProperties.setRegisterHealthIndicator(true);
         sharedProperties.setAllowHealthIndicatorToFail(true);
         sharedProperties.setEventConsumerBufferSize(200);
 
         CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        backendWithDefaultConfig.setRingBufferSizeInHalfOpenState(99);
+        backendWithDefaultConfig.setPermittedNumberOfCallsInHalfOpenState(99);
         assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
         assertThat(backendWithDefaultConfig.getAllowHealthIndicatorToFail()).isNull();
 
@@ -72,7 +72,7 @@ public class SpringConfigUtilsTest {
     @Test
     public void testRetrySpringProperties() {
         RetryConfigurationProperties.InstanceProperties sharedProperties = new RetryConfigurationProperties.InstanceProperties();
-        sharedProperties.setMaxRetryAttempts(2);
+        sharedProperties.setMaxAttempts(2);
         sharedProperties.setWaitDuration(Duration.ofMillis(100));
         sharedProperties.setEnableRandomizedWait(true);
         sharedProperties.setExponentialBackoffMultiplier(0.1);
