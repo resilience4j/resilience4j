@@ -78,7 +78,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             backendName);
     }
 
-    @SuppressWarnings("deprecation") // deprecated API use left for backward compatibility
     private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
         CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
         String backendName) {
@@ -114,10 +113,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
         }
 
-        if (properties.getRingBufferSizeInClosedState() != null) {
-            builder.ringBufferSizeInClosedState(properties.getRingBufferSizeInClosedState());
-        }
-
         if (properties.getSlidingWindowSize() != null) {
             builder.slidingWindowSize(properties.getSlidingWindowSize());
         }
@@ -128,10 +123,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         if (properties.getSlidingWindowType() != null) {
             builder.slidingWindowType(properties.getSlidingWindowType());
-        }
-
-        if (properties.getRingBufferSizeInHalfOpenState() != null) {
-            builder.ringBufferSizeInHalfOpenState(properties.getRingBufferSizeInHalfOpenState());
         }
 
         if (properties.getPermittedNumberOfCallsInHalfOpenState() != null) {
@@ -173,7 +164,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
      */
     private void configureCircuitBreakerOpenStateIntervalFunction(InstanceProperties properties,
         CircuitBreakerConfig.Builder builder) {
-        // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDurationInOpenState() != null
             && properties.getWaitDurationInOpenState().toMillis() > 0) {
             if (properties.getEnableExponentialBackoff() != null
@@ -267,11 +257,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         private Float slowCallRateThreshold;
 
         @Nullable
-        @Deprecated
-        @SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
-        private Integer ringBufferSizeInClosedState;
-
-        @Nullable
         private SlidingWindowType slidingWindowType;
 
         @Nullable
@@ -282,11 +267,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Integer permittedNumberOfCallsInHalfOpenState;
-
-        @Nullable
-        @Deprecated
-        @SuppressWarnings("DeprecatedIsStillUsed") // Left for backward compatibility
-        private Integer ringBufferSizeInHalfOpenState;
 
         @Nullable
         private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
@@ -394,64 +374,6 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             }
 
             this.waitDurationInOpenState = waitDurationInOpenStateMillis;
-            return this;
-        }
-
-        /**
-         * Returns the ring buffer size for the circuit breaker while in closed state.
-         *
-         * @return the ring buffer size
-         */
-        @Nullable
-        public Integer getRingBufferSizeInClosedState() {
-            return ringBufferSizeInClosedState;
-        }
-
-        /**
-         * Sets the ring buffer size for the circuit breaker while in closed state.
-         *
-         * @param ringBufferSizeInClosedState the ring buffer size
-         * @deprecated Use {@link #setSlidingWindowSize(Integer)} instead.
-         */
-        @Deprecated
-        public InstanceProperties setRingBufferSizeInClosedState(
-            Integer ringBufferSizeInClosedState) {
-            Objects.requireNonNull(ringBufferSizeInClosedState);
-            if (ringBufferSizeInClosedState < 1) {
-                throw new IllegalArgumentException(
-                    "ringBufferSizeInClosedState must be greater than or equal to 1.");
-            }
-
-            this.ringBufferSizeInClosedState = ringBufferSizeInClosedState;
-            return this;
-        }
-
-        /**
-         * Returns the ring buffer size for the circuit breaker while in half open state.
-         *
-         * @return the ring buffer size
-         */
-        @Nullable
-        public Integer getRingBufferSizeInHalfOpenState() {
-            return ringBufferSizeInHalfOpenState;
-        }
-
-        /**
-         * Sets the ring buffer size for the circuit breaker while in half open state.
-         *
-         * @param ringBufferSizeInHalfOpenState the ring buffer size
-         * @deprecated Use {@link #setPermittedNumberOfCallsInHalfOpenState(Integer)} instead.
-         */
-        @Deprecated
-        public InstanceProperties setRingBufferSizeInHalfOpenState(
-            Integer ringBufferSizeInHalfOpenState) {
-            Objects.requireNonNull(ringBufferSizeInHalfOpenState);
-            if (ringBufferSizeInHalfOpenState < 1) {
-                throw new IllegalArgumentException(
-                    "ringBufferSizeInHalfOpenState must be greater than or equal to 1.");
-            }
-
-            this.ringBufferSizeInHalfOpenState = ringBufferSizeInHalfOpenState;
             return this;
         }
 

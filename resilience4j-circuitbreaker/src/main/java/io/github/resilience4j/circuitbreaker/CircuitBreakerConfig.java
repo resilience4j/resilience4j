@@ -118,14 +118,6 @@ public class CircuitBreakerConfig implements Serializable {
     }
 
     /**
-     * @deprecated since 1.2.0 You should use {@link #getWaitIntervalFunctionInOpenState()} instead.
-     */
-    @Deprecated
-    public Duration getWaitDurationInOpenState() {
-        return Duration.ofMillis(waitIntervalFunctionInOpenState.apply(1));
-    }
-
-    /**
      * Returns an interval function which controls how long the CircuitBreaker should stay open,
      * before it switches to half open.
      *
@@ -453,32 +445,6 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
-         * @deprecated Use {@link #permittedNumberOfCallsInHalfOpenState(int)} instead.
-         */
-        @Deprecated
-        public Builder ringBufferSizeInHalfOpenState(int ringBufferSizeInHalfOpenState) {
-            if (ringBufferSizeInHalfOpenState < 1) {
-                throw new IllegalArgumentException(
-                    "ringBufferSizeInHalfOpenState must be greater than 0");
-            }
-            this.permittedNumberOfCallsInHalfOpenState = ringBufferSizeInHalfOpenState;
-            return this;
-        }
-
-        /**
-         * @deprecated Use {@link #slidingWindow(int, int, SlidingWindowType)} instead.
-         */
-        @Deprecated
-        public Builder ringBufferSizeInClosedState(int ringBufferSizeInClosedState) {
-            if (ringBufferSizeInClosedState < 1) {
-                throw new IllegalArgumentException(
-                    "ringBufferSizeInClosedState must be greater than 0");
-            }
-            return slidingWindow(ringBufferSizeInClosedState, ringBufferSizeInClosedState,
-                SlidingWindowType.COUNT_BASED);
-        }
-
-        /**
          * Configures the sliding window which is used to record the outcome of calls when the
          * CircuitBreaker is closed. {@code slidingWindowSize} configures the size of the sliding
          * window. Sliding window can either be count-based or time-based, specified by {@code
@@ -592,15 +558,6 @@ public class CircuitBreakerConfig implements Serializable {
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
-            return this;
-        }
-
-        /**
-         * @deprecated use {@link #recordException(Predicate)} instead.
-         */
-        @Deprecated
-        public Builder recordFailure(Predicate<Throwable> predicate) {
-            this.recordExceptionPredicate = predicate;
             return this;
         }
 

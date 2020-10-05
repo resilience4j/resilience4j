@@ -178,12 +178,6 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMaxRetryAttempts() {
-        RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxRetryAttempts(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnMaxAttempts() {
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxAttempts(0);

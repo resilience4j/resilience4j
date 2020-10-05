@@ -136,7 +136,7 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(sharedA.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(defaultFailureRate);
-        assertThat(sharedA.getCircuitBreakerConfig().getWaitDurationInOpenState())
+        assertThat(sharedA.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualTo(defaultWaitDuration);
 
         assertThat(sharedB.getCircuitBreakerConfig().getSlidingWindowSize())
@@ -147,7 +147,7 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(sharedB.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(defaultFailureRate);
-        assertThat(sharedB.getCircuitBreakerConfig().getWaitDurationInOpenState())
+        assertThat(sharedB.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualTo(defaultWaitDuration);
 
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize())
@@ -157,7 +157,7 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultPermittedNumberOfCallsInHalfOpenState);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
             .isEqualTo(defaultFailureRate);
-        assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
+        assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualTo(defaultWaitDuration);
     }
 
@@ -178,9 +178,9 @@ public class CircuitBreakerAutoConfigurationTest {
             circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
             .isEqualTo(2);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-            .isEqualTo(70f);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(5L));
+            .isEqualTo(50f);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitIntervalFunctionInOpenState().apply(1))
+            .isEqualByComparingTo(Duration.ofSeconds(5000L));
 
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
             .test(new RecordedException())).isTrue();

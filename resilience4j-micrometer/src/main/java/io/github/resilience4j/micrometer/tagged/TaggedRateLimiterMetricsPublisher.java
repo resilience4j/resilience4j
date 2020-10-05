@@ -37,12 +37,6 @@ public class TaggedRateLimiterMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    @Deprecated
-    public TaggedRateLimiterMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
-        super(names);
-        this.meterRegistry = requireNonNull(meterRegistry);
-    }
-
     @Override
     public void publishMetrics(RateLimiter entry) {
         addMetrics(meterRegistry, entry);

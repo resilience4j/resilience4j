@@ -36,11 +36,6 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    @Deprecated
-    protected AbstractRetryMetrics(MetricNames names) {
-        this.names = requireNonNull(names);
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, Retry retry) {
         List<Tag> customTags = mapToTagsList(retry.getTags());
         registerMetrics(meterRegistry, retry, customTags);
@@ -82,7 +77,4 @@ abstract class AbstractRetryMetrics extends AbstractMetrics {
         meterIdMap.put(retry.getName(), idSet);
     }
 
-    @Deprecated
-    public static class MetricNames extends RetryMetricNames {
-    }
 }

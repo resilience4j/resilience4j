@@ -57,21 +57,6 @@ public class TaggedRetryMetrics extends AbstractRetryMetrics implements MeterBin
         return new TaggedRetryMetrics(names, retryRegistry);
     }
 
-    /**
-     * Creates a new binder that uses given {@code registry} as source of retries.
-     *
-     * @deprecated Use {@link TaggedRetryMetrics#ofRetryRegistry(RetryMetricNames, RetryRegistry)} instead
-     *
-     * @param names         custom metric names
-     * @param retryRegistry the source of retries
-     * @return The {@link TaggedRetryMetrics} instance.
-     */
-    @Deprecated
-    public static TaggedRetryMetrics ofRetryRegistry(MetricNames names,
-                                                     RetryRegistry retryRegistry) {
-        return new TaggedRetryMetrics(names, retryRegistry);
-    }
-
     @Override
     public void bindTo(MeterRegistry registry) {
         for (Retry retry : retryRegistry.getAllRetries()) {
