@@ -76,7 +76,6 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         if (!opt.isPresent()) {
             return context.proceed();
         }
-
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(CircuitBreaker.class, "name").orElse("default");
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
@@ -84,24 +83,18 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> {
-                try {
-                    return ((CompletableFuture<?>) context.proceed());
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            }), context);
+            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
                 return result;
             }
-            Flowable<Object> flowable = ConversionService.SHARED
+            Flowable<?> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
             flowable = this.fallbackFlowable(flowable.compose(CircuitBreakerOperator.of(circuitBreaker)), context);
             return ConversionService.SHARED
-                .convert(flowable, context.getReturnType().asArgument())
+                .convert(flowable, rt.asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
         }
         try {

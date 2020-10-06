@@ -84,28 +84,17 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> {
-                try {
-                    return ((CompletableFuture<?>) context.proceed());
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            }), context);
+            return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            Flowable<Object> flowable = ConversionService.SHARED
+            Flowable<?> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
             flowable = this.fallbackFlowable(flowable.compose(RetryTransformer.of(retry)), context);
-
             return ConversionService.SHARED
-                .convert(flowable, context.getReturnType().asArgument())
+                .convert(flowable, rt.asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
         }
-
         try {
             return retry.executeCheckedSupplier(context::proceed);
         } catch (Throwable exception) {

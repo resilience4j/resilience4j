@@ -83,13 +83,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(rateLimiter.executeCompletionStage(() -> {
-                try {
-                    return ((CompletableFuture<?>) context.proceed());
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            }), context);
+            return this.fallbackCompletable(rateLimiter.executeCompletionStage(() -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
@@ -100,7 +94,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
             flowable = this.fallbackFlowable(flowable.compose(RateLimiterOperator.of(rateLimiter)), context);
             return ConversionService.SHARED
-                .convert(flowable, context.getReturnType().asArgument())
+                .convert(flowable, rt.asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
         }
         try {

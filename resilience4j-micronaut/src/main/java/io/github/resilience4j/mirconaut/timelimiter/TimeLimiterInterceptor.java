@@ -87,18 +87,13 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         Class<Object> returnType = rt.getType();
 
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> ((CompletableFuture<?>) context.proceed())), context);
+            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            Flowable<Object> flowable = ConversionService.SHARED
+            Flowable<?> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-
             flowable = this.fallbackFlowable(flowable.compose(TimeLimiterTransformer.of(timeLimiter)), context);
-
             return ConversionService.SHARED
                 .convert(flowable, context.getReturnType().asArgument())
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));

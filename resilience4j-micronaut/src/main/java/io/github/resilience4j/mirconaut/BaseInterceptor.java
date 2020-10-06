@@ -15,12 +15,14 @@
  */
 package io.github.resilience4j.mirconaut;
 
+import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.mirconaut.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.discovery.exceptions.NoAvailableServiceException;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.reactivex.Flowable;
+import io.reactivex.FlowableTransformer;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +31,26 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 
 public abstract class BaseInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(BaseInterceptor.class);
 
     public abstract Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context);
+
+    /**
+     * convert context to a CompletableFuture<?>
+     * @param context invocation context
+     * @return the completable future
+     */
+    public CompletableFuture<?> toCompletionStage(MethodInvocationContext<Object, Object> context) {
+        try {
+            return ((CompletableFuture<?>) context.proceed());
+        } catch (Throwable e) {
+            throw new CompletionException(e);
+        }
+    }
+
 
     /**
      * Resolves a fallback for the given execution context and exception.
