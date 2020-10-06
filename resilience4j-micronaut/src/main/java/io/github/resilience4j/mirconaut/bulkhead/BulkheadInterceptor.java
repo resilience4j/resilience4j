@@ -22,7 +22,6 @@ import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.mirconaut.BaseInterceptor;
 import io.github.resilience4j.mirconaut.ResilienceInterceptPhase;
 import io.github.resilience4j.mirconaut.fallback.UnhandledFallbackException;
-import io.github.resilience4j.retry.transformer.RetryTransformer;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -37,8 +36,6 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 /**
