@@ -98,6 +98,9 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
             return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
+            if (result == null) {
+                return result;
+            }
             Flowable<?> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));

@@ -89,6 +89,9 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
             return this.fallbackCompletable(retry.executeCompletionStage(retryExecutorService, () -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
+            if (result == null) {
+                return result;
+            }
             Flowable<?> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
