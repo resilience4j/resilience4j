@@ -94,15 +94,46 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
 
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
-        CompletableFuture<Object> completableFuture = this.fallbackCompletable(bulkhead.executeSupplier(() -> toCompletionStage(context)), context);
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return completableFuture;
+            return this.fallbackCompletable(bulkhead.executeSupplier(() -> {
+                try {
+                    return ((CompletableFuture<?>) context.proceed()).get();
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             throw new IllegalStateException(
                 "ThreadPool bulkhead is only applicable for completable futures ");
         }
+
+        CompletableFuture<Object> newFuture = new CompletableFuture<>();
+        bulkhead.executeSupplier(context::proceed).whenComplete((o, throwable) -> {
+            if (throwable == null) {
+                newFuture.complete(o);
+            } else {
+                Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
+                if (fallbackMethod.isPresent()) {
+                    MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
+                    }
+                    try {
+                        Object result = fallbackHandle.invoke(context.getParameterValues());
+                        newFuture.complete(result);
+                    } catch (Exception e) {
+                        if (logger.isErrorEnabled()) {
+                            logger.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
+                        }
+                        newFuture.completeExceptionally(throwable);
+                    }
+                } else {
+                    newFuture.completeExceptionally(throwable);
+                }
+            }
+        });
         try {
-            return completableFuture.get();
+            return newFuture.get();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable throwable) {
