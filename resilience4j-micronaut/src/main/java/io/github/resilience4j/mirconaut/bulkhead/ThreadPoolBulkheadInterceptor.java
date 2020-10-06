@@ -20,7 +20,6 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.mirconaut.BaseInterceptor;
 import io.github.resilience4j.mirconaut.ResilienceInterceptPhase;
-import io.github.resilience4j.mirconaut.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -38,7 +37,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 
 /**
  * A {@link MethodInterceptor} that intercepts all method calls which are annotated with a {@link io.github.resilience4j.mirconaut.annotation.Bulkhead}
@@ -83,7 +81,6 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
-
         Optional<AnnotationValue<io.github.resilience4j.mirconaut.annotation.Bulkhead>> opt = context.findAnnotation(io.github.resilience4j.mirconaut.annotation.Bulkhead.class);
         if (!opt.isPresent()) {
             return context.proceed();
@@ -94,6 +91,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
         }
         final String name = opt.get().stringValue().orElse("default");
         ThreadPoolBulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
+
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
@@ -103,7 +101,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
                 } catch (Throwable e) {
                     throw new CompletionException(e);
                 }
-            }),context);
+            }), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             throw new IllegalStateException(
                 "ThreadPool bulkhead is only applicable for completable futures ");

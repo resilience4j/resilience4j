@@ -36,8 +36,6 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -97,22 +95,15 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> {
-                try {
-                    return ((CompletableFuture<?>) context.proceed());
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            }), context);
+            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> toCompletionStage(context)), context);
         } else if (Publishers.isConvertibleToPublisher(returnType)) {
             Object result = context.proceed();
             if (result == null) {
                 return result;
             }
-            Flowable<Object> flowable = ConversionService.SHARED
+            Flowable<?> flowable = ConversionService.SHARED
                 .convert(result, Flowable.class)
                 .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-
             flowable = this.fallbackFlowable(flowable.compose(BulkheadOperator.of(bulkhead)), context);
             return ConversionService.SHARED
                 .convert(flowable, context.getReturnType().asArgument())
