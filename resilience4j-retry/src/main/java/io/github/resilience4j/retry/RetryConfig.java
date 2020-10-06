@@ -19,12 +19,14 @@
 package io.github.resilience4j.retry;
 
 
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -35,6 +37,7 @@ public class RetryConfig implements Serializable {
     public static final long DEFAULT_WAIT_DURATION = 500;
     public static final int DEFAULT_MAX_ATTEMPTS = 3;
     private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = numOfAttempts -> DEFAULT_WAIT_DURATION;
+    private static final IntervalBiFunction DEFAULT_BI_INTERVAL_FUNCTION = IntervalBiFunction.ofIntervalFunction(DEFAULT_INTERVAL_FUNCTION);
     private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
 
     @SuppressWarnings("unchecked")
@@ -49,6 +52,8 @@ public class RetryConfig implements Serializable {
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
     private IntervalFunction intervalFunction = DEFAULT_INTERVAL_FUNCTION;
+
+    private IntervalBiFunction intervalBiFunction = DEFAULT_BI_INTERVAL_FUNCTION;
 
     // The final exception predicate
     private Predicate<Throwable> exceptionPredicate;
@@ -90,6 +95,17 @@ public class RetryConfig implements Serializable {
         return intervalFunction;
     }
 
+    /**
+     * Return the IntervalBiFunction which calculates wait interval based on result or exception
+     *
+     * @param <T> The type of result.
+     * @return the interval bi function
+     */
+    @SuppressWarnings("unchecked")
+    public <T> IntervalBiFunction<T> getIntervalBiFunction() {
+        return intervalBiFunction;
+    }
+
     public Predicate<Throwable> getExceptionPredicate() {
         return exceptionPredicate;
     }
@@ -117,6 +133,9 @@ public class RetryConfig implements Serializable {
         @Nullable
         private Predicate<T> retryOnResultPredicate;
 
+        @Nullable
+        private IntervalBiFunction<T> intervalBiFunction;
+
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] retryExceptions = new Class[0];
         @SuppressWarnings("unchecked")
@@ -132,6 +151,7 @@ public class RetryConfig implements Serializable {
             this.intervalFunction = baseConfig.intervalFunction;
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
+            this.intervalBiFunction = baseConfig.intervalBiFunction;
             this.retryExceptions = baseConfig.retryExceptions;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
         }
@@ -176,6 +196,18 @@ public class RetryConfig implements Serializable {
          */
         public Builder<T> intervalFunction(IntervalFunction f) {
             this.intervalFunction = f;
+            return this;
+        }
+
+        /**
+         * Set a function to modify the waiting interval after a failure based on attempt number and result or exception.
+         * When is set will discard values configured via {@link Builder#intervalFunction} or {@link Builder#waitDuration}.
+         *
+         * @param f Function to modify the interval after a failure
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> intervalBiFunction(IntervalBiFunction<T> f) {
+            this.intervalBiFunction = f;
             return this;
         }
 
@@ -251,6 +283,8 @@ public class RetryConfig implements Serializable {
             config.retryExceptions = retryExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.exceptionPredicate = createExceptionPredicate();
+            config.intervalBiFunction = Optional.ofNullable(intervalBiFunction)
+                .orElse(IntervalBiFunction.ofIntervalFunction(intervalFunction));
             return config;
         }
 

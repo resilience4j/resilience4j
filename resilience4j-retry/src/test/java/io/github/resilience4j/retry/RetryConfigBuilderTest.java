@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.retry;
 
+import io.github.resilience4j.core.IntervalBiFunction;
+import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -68,6 +70,17 @@ public class RetryConfigBuilderTest {
         assertThat(config.getExceptionPredicate().test(new IllegalStateException())).isFalse();
     }
 
+    @Test
+    public void testCreateFromConfigurationShouldCopyIntervalBiFunction() {
+        IntervalBiFunction<Object> biFunction = IntervalBiFunction.ofIntervalFunction(IntervalFunction.ofExponentialBackoff());
+        RetryConfig config = RetryConfig
+            .from(RetryConfig.custom()
+                .intervalBiFunction(biFunction)
+                .build()).build();
+        assertThat(config).isNotNull();
+        assertThat(config.getIntervalBiFunction()).isNotNull();
+        assertThat(config.getIntervalBiFunction()).isEqualTo(biFunction);
+    }
 
     @Test
     public void waitIntervalOverTenMillisShouldSucceed() {

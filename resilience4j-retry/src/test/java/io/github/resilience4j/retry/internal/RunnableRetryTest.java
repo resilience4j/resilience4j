@@ -154,4 +154,41 @@ public class RunnableRetryTest {
             RetryConfig.DEFAULT_WAIT_DURATION +
                 RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
     }
+
+    @Test
+    public void shouldTakeIntoAccountBackoffBiFunction() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        RetryConfig config = RetryConfig
+            .custom()
+            .maxAttempts(3)
+            .intervalBiFunction((attempt, result) -> result.map(e -> 100L).get())
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try.run(retryableRunnable);
+
+        then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(sleptTime).isEqualTo(200);
+    }
+
+    @Test
+    public void shouldNotTakeIntoAccountBackoffFunctionWhenBiFunctionIsSet() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        RetryConfig config = RetryConfig
+            .custom()
+            .maxAttempts(3)
+            .intervalFunction(IntervalFunction.of(Duration.ofMillis(500)))
+            .intervalBiFunction((attempt, result) -> result.map(e -> 100L).get())
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try.run(retryableRunnable);
+
+        then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(sleptTime).isEqualTo(200);
+    }
 }
