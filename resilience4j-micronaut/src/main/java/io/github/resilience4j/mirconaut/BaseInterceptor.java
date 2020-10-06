@@ -39,9 +39,9 @@ public abstract class BaseInterceptor {
     public abstract Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context);
 
     /**
-     * convert context to a CompletableFuture<?>
+     * convert context to a {@link CompletableFuture}
      * @param context invocation context
-     * @return the completable future
+     * @return the future stage from the context
      */
     public CompletableFuture<?> toCompletionStage(MethodInvocationContext<Object, Object> context) {
         try {
