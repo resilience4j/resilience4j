@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Pollind
+ * Copyright 2020 Michael Pollind, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ public abstract class BaseInterceptor {
             }
         } else {
             if (logger.isErrorEnabled()) {
-                logger.error("Type [" + context.getTarget().getClass().getName() + "] executed with error: " + exception.getMessage(), exception);
+                logger.error("Type [{}]  executed with error: {}", context.getTarget().getClass().getName(), exception.getMessage(), exception);
             }
         }
         Optional<? extends MethodExecutionHandle<?, Object>> fallback = findFallbackMethod(context);
@@ -115,7 +115,7 @@ public abstract class BaseInterceptor {
                         }
                     } catch (Exception e) {
                         if (logger.isErrorEnabled()) {
-                            logger.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
+                            logger.error("Error invoking Fallback [{}]: ", fallbackHandle, e);
                         }
                         newFuture.completeExceptionally(throwable);
                     }
