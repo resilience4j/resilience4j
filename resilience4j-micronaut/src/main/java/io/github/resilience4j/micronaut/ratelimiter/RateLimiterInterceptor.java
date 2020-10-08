@@ -21,6 +21,7 @@ import io.github.resilience4j.micronaut.fallback.UnhandledFallbackException;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
+import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -78,27 +79,32 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.RateLimiter.class, "name").orElse("default");
         RateLimiter rateLimiter = this.rateLimiterRegistry.rateLimiter(name);
 
-        ReturnType<Object> rt = context.getReturnType();
-        Class<Object> returnType = rt.getType();
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(rateLimiter.executeCompletionStage(() -> toCompletionStage(context)), context);
-        } else if (Publishers.isConvertibleToPublisher(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            Flowable<Object> flowable = ConversionService.SHARED
-                .convert(result, Flowable.class)
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(RateLimiterOperator.of(rateLimiter)), context);
-            return ConversionService.SHARED
-                .convert(flowable, rt.asArgument())
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-        }
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         try {
-            return RateLimiter.decorateCheckedSupplier(rateLimiter, context::proceed).apply();
-        } catch (Throwable exception) {
-            return fallback(context, exception);
+            switch (interceptedMethod.resultType()) {
+                case PUBLISHER:
+                    return interceptedMethod.handleResult(fallbackReactiveTypes(
+                        Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RateLimiterOperator.of(rateLimiter)),
+                        context));
+                case COMPLETION_STAGE:
+                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
+                    return interceptedMethod.handleResult(
+                        fallbackForFuture(
+                            rateLimiter.executeCompletionStage(() -> completionStage),
+                            context)
+                    );
+                case SYNCHRONOUS:
+                    try {
+                        return rateLimiter.executeCheckedSupplier(context::proceed);
+                    } catch (Throwable exception) {
+                        return fallback(context, exception);
+                    }
+                default:
+                    return interceptedMethod.unsupported();
+            }
+        } catch (Exception e) {
+            return interceptedMethod.handleException(e);
         }
     }
 }
+

@@ -15,12 +15,13 @@
  */
 package io.github.resilience4j.micronaut.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
-import io.github.resilience4j.micronaut.annotation.CircuitBreaker;
 import io.github.resilience4j.micronaut.fallback.UnhandledFallbackException;
+import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -63,42 +64,47 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
     @Override
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String fallbackMethod = executableMethod.stringValue(CircuitBreaker.class, "fallbackMethod").orElse("");
+        final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
         return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
-        Optional<AnnotationValue<CircuitBreaker>> opt = context.findAnnotation(CircuitBreaker.class);
+        Optional<AnnotationValue<io.github.resilience4j.micronaut.annotation.CircuitBreaker>> opt = context.findAnnotation(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class);
         if (!opt.isPresent()) {
             return context.proceed();
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(CircuitBreaker.class, "name").orElse("default");
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
+        final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class, "name").orElse("default");
+        CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
 
-        ReturnType<Object> rt = context.getReturnType();
-        Class<Object> returnType = rt.getType();
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(circuitBreaker.executeCompletionStage(() -> toCompletionStage(context)), context);
-        } else if (Publishers.isConvertibleToPublisher(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            Flowable<?> flowable = ConversionService.SHARED
-                .convert(result, Flowable.class)
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(CircuitBreakerOperator.of(circuitBreaker)), context);
-            return ConversionService.SHARED
-                .convert(flowable, rt.asArgument())
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-        }
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         try {
-            return circuitBreaker.executeCheckedSupplier(context::proceed);
-        } catch (Throwable exception) {
-            return fallback(context, exception);
+            switch (interceptedMethod.resultType()){
+                case PUBLISHER:
+                    return interceptedMethod.handleResult(fallbackReactiveTypes(
+                        Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(CircuitBreakerOperator.of(circuitBreaker)),
+                        context));
+                case COMPLETION_STAGE:
+                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
+                    return interceptedMethod.handleResult(
+                        fallbackForFuture(
+                            circuitBreaker.executeCompletionStage(() -> completionStage),
+                            context)
+                    );
+                case SYNCHRONOUS:
+                    try {
+                        return circuitBreaker.executeCheckedSupplier(context::proceed);
+                    } catch (Throwable exception) {
+                        return fallback(context, exception);
+                    }
+                default:
+                    return interceptedMethod.unsupported();
+            }
+        } catch (Exception e) {
+            return interceptedMethod.handleException(e);
         }
+
     }
 }
