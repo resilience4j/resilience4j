@@ -52,7 +52,7 @@ public enum ResilienceInterceptPhase {
     /**
      * Retry phase of execution.
      */
-    BULKHEAD(-40);
+    BULKHEAD(-42);
 
     private final int position;
 
