@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Pollind
+ * Copyright 2020 Michael Pollind, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,9 @@
 package io.github.resilience4j.micronaut
 
 import io.micronaut.context.annotation.Executable
-import io.reactivex.Completable
-import io.reactivex.Flowable
-import io.reactivex.Maybe
-import io.reactivex.Observable
-import io.reactivex.Single
+import io.reactivex.*
 
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
 
 abstract class TestDummyService {
 
@@ -36,6 +31,14 @@ abstract class TestDummyService {
     abstract CompletableFuture<String> completableWithParam(String param);
 
     abstract Flowable<String> flowable();
+
+    abstract Maybe<String> doSomethingMaybe()
+
+    abstract Single<String> doSomethingSingle();
+
+    abstract Completable doSomethingCompletable();
+
+    abstract Observable<String> doSomethingObservable();
 
     String syncError() {
         throw new RuntimeException("Test");
@@ -51,6 +54,25 @@ abstract class TestDummyService {
         return future
     }
 
+    Maybe<String> doSomethingMaybeError() {
+        return Maybe.error(new RuntimeException("testMaybe"));
+    }
+
+    @Executable
+    Single<String> doSomethingSingleError() {
+        return Single.error(new RuntimeException("testSingle"));
+    }
+
+    @Executable
+    Completable doSomethingCompletableError() {
+        return Completable.error(new RuntimeException("completableError"));
+    }
+
+    @Executable
+    Observable<String> doSomethingObservableError() {
+        return Observable.error(new RuntimeException("testObservable"));
+    }
+
     @Executable
     Flowable<String> flowableRecovery() {
         return Flowable.just('recovered');
@@ -64,6 +86,26 @@ abstract class TestDummyService {
     @Executable
     CompletableFuture<String> completableRecoveryParam(String parameter) {
         return CompletableFuture.supplyAsync({ -> parameter });
+    }
+
+    @Executable
+    Maybe<String> doSomethingMaybeRecovery() {
+        return Maybe.just("testMaybe");
+    }
+
+    @Executable
+    Single<String> doSomethingSingleRecovery() {
+        return Single.just("testSingle");
+    }
+
+    @Executable
+    Completable doSomethingCompletableRecovery() {
+        return Completable.complete();
+    }
+
+    @Executable
+    Observable<String> doSomethingObservableRecovery() {
+        return Observable.just("testObservable");
     }
 
     @Executable

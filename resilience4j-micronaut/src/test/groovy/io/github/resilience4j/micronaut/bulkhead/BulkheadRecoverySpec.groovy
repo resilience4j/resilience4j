@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Pollind
+ * Copyright 2020 Michael Pollind, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.micronaut.annotation.Bulkhead
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
-import io.reactivex.Flowable
+import io.reactivex.*
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -106,6 +106,30 @@ class BulkheadRecoverySpec extends Specification{
         @Override
         Flowable<String> flowable() {
             return flowableError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'doSomethingMaybeRecovery')
+        @Override
+        Maybe<String> doSomethingMaybe() {
+            return doSomethingMaybeError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @Override
+        Single<String> doSomethingSingle() {
+            return doSomethingSingleError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'doSomethingCompletableRecovery')
+        @Override
+        Completable doSomethingCompletable() {
+            return doSomethingCompletableError()
+        }
+
+        @Bulkhead(name = "backend-a", fallbackMethod = 'doSomethingObservableRecovery')
+        @Override
+        Observable<String> doSomethingObservable() {
+            return doSomethingObservableError()
         }
 
         @Bulkhead(name = "default", fallbackMethod = 'completableRecovery', type = Bulkhead.Type.THREADPOOL)

@@ -34,7 +34,7 @@ ext {
     blockhoundVersion = '1.0.1.RELEASE'
     micronautVersion = '2.1.0'
     micronautTestVersion = '2.1.0'
-    groovyVersion = '3.0.3'
+    groovyVersion = '2.5.6'
 
     libraries = [
             // compile
