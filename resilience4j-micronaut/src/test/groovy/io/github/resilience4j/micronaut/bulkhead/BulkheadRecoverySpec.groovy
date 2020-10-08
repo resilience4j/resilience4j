@@ -16,8 +16,7 @@
 package io.github.resilience4j.micronaut.bulkhead
 
 import io.github.resilience4j.micronaut.TestDummyService
-import io.github.resilience4j.mirconaut.annotation.Bulkhead
-import io.github.resilience4j.mirconaut.annotation.RateLimiter
+import io.github.resilience4j.micronaut.annotation.Bulkhead
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
 import io.reactivex.Flowable

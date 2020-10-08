@@ -16,7 +16,7 @@
 package io.github.resilience4j.micronaut.circuitbreaker
 
 import io.github.resilience4j.micronaut.TestDummyService
-import io.github.resilience4j.mirconaut.annotation.CircuitBreaker
+import io.github.resilience4j.micronaut.annotation.CircuitBreaker
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest

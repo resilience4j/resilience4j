@@ -16,7 +16,7 @@
 package io.github.resilience4j.micronaut.timelimiter
 
 import io.github.resilience4j.micronaut.TestDummyService
-import io.github.resilience4j.mirconaut.annotation.TimeLimiter
+import io.github.resilience4j.micronaut.annotation.TimeLimiter
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
 import io.reactivex.Flowable

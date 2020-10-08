@@ -17,7 +17,6 @@ package io.github.resilience4j.micronaut.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import io.github.resilience4j.mirconaut.circuitbreaker.CircuitBreakerProperties
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.annotation.MicronautTest
@@ -93,9 +92,5 @@ class CircuitBreakerRegistrySpec extends Specification {
         instanceProperties.ignoreExceptions.first() == IgnoredException.class
 
         instanceProperties.recordFailurePredicate == RecordFailurePredicate.class
-
-
-
     }
-
 }
