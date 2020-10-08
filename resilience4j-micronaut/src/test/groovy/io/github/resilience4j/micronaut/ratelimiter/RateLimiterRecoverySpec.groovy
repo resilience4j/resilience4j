@@ -106,6 +106,12 @@ class RateLimiterRecoverySpec extends Specification {
             return doSomethingSingleError()
         }
 
+        @RateLimiter(name = "default", fallbackMethod = 'doSomethingSingleRecovery')
+        @Override
+        Single<String> doSomethingSingleNull() {
+            return null
+        }
+
         @RateLimiter(name = "default", fallbackMethod = 'doSomethingCompletableRecovery')
         @Override
         Completable doSomethingCompletable() {

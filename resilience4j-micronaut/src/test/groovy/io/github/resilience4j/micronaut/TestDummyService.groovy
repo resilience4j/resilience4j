@@ -36,6 +36,8 @@ abstract class TestDummyService {
 
     abstract Single<String> doSomethingSingle();
 
+    abstract Single<String> doSomethingSingleNull();
+
     abstract Completable doSomethingCompletable();
 
     abstract Observable<String> doSomethingObservable();

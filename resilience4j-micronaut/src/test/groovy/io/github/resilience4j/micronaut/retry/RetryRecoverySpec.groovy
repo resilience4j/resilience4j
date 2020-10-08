@@ -103,6 +103,12 @@ class RetryRecoverySpec extends Specification {
             return doSomethingSingleError()
         }
 
+        @Retry(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @Override
+        Single<String> doSomethingSingleNull() {
+            return null
+        }
+
         @Retry(name = "backend-a", fallbackMethod = 'doSomethingCompletableRecovery')
         @Override
         Completable doSomethingCompletable() {

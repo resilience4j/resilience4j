@@ -105,6 +105,12 @@ class CircuitBreakerRecoverySpec extends Specification {
             return doSomethingSingleError()
         }
 
+        @CircuitBreaker(name = "default", fallbackMethod = 'doSomethingSingleRecovery')
+        @Override
+        Single<String> doSomethingSingleNull() {
+            return null
+        }
+
         @CircuitBreaker(name = "default", fallbackMethod = 'doSomethingCompletableRecovery')
         @Override
         Completable doSomethingCompletable() {

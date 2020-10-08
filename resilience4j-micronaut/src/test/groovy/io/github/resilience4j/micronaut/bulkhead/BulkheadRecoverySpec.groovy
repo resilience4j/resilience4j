@@ -120,6 +120,12 @@ class BulkheadRecoverySpec extends Specification{
             return doSomethingSingleError()
         }
 
+        @Override
+        @Bulkhead(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        Single<String> doSomethingSingleNull() {
+            return null
+        }
+
         @Bulkhead(name = "backend-a", fallbackMethod = 'doSomethingCompletableRecovery')
         @Override
         Completable doSomethingCompletable() {

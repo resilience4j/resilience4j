@@ -104,6 +104,12 @@ class TimeLimiterRecoverySpec extends Specification {
             return doSomethingSingleError()
         }
 
+        @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @Override
+        Single<String> doSomethingSingleNull() {
+            return null
+        }
+
         @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingCompletableRecovery')
         @Override
         Completable doSomethingCompletable() {
