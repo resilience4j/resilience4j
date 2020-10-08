@@ -1,92 +1,63 @@
-/*
- * Copyright 2020 Michael Pollind, Mahmoud Romeh
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.github.resilience4j.micronaut.timelimiter
 
 import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.micronaut.annotation.TimeLimiter
-import io.micronaut.context.annotation.Property
-import io.micronaut.test.extensions.spock.annotation.MicronautTest
-import io.reactivex.*
+import io.reactivex.Completable
+import io.reactivex.Flowable
+import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.Single
 import spock.lang.Specification
 
 import javax.inject.Inject
 import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
 
-@MicronautTest
-@Property(name = "resilience4j.timelimiter.enabled", value = "true")
-class TimeLimiterRecoverySpec extends Specification {
-
+class TimeLimiterNonRecoverySpec  extends Specification {
     @Inject
-    TimeLimiterService service;
+    TimeLimiterNonRecoveryService service;
 
 
-    void "test sync recovery timeLimiter"() {
+    void "test sync non recovery timelimiter"() {
         when:
-        String result = service.sync();
+        service.sync();
 
         then:
-        result == "recovered"
+        RuntimeException ex = thrown()
+        ex.getMessage() == "Test"
+
     }
 
-    void "test maybe recovery timeLimiter"() {
-        when:
-        Maybe<String> result = service.doSomethingMaybe();
-
-        then:
-        result.blockingGet() == "testMaybe"
-    }
-
-    void "test single recovery timeLimiter"() {
-        when:
-        Single<String> result = service.doSomethingSingle();
-
-        then:
-        result.blockingGet() == "testSingle"
-    }
-
-    void "test flowable recovery timeLimiter"() {
-        when:
-        Flowable<String> result = service.flowable();
-
-        then:
-        result.blockingFirst() == "recovered"
-    }
-
-    void "test single recovery timeLimiter null"() {
+    void "test flowable non recovery timelimiter"() {
         setup:
-        Single<String> result = service.doSomethingSingleNull();
+        Flowable<String> result = service.flowable()
 
         when:
-        result.blockingGet();
+        result.blockingFirst()
 
         then:
-        thrown NoSuchElementException
+        RuntimeException ex = thrown()
+        ex.getMessage() == "Test"
     }
 
-    void "test completable recovery timeLimiter"() {
+    void "test completable non recovery timelimiter"() {
+        setup:
+        CompletableFuture<String> result = service.completable()
+
         when:
-        CompletableFuture<String> result = service.completable();
+        result.get()
 
         then:
-        result.get() == "recovered"
+        ExecutionException ex = thrown()
+        RuntimeException inner = ex.getCause()
+        inner.getMessage() == "Test"
+
     }
+
 
     @Singleton
-    static class TimeLimiterService extends TestDummyService {
+    static class TimeLimiterNonRecoveryService extends TestDummyService {
         @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecovery')
         @Override
         String sync() {
@@ -116,7 +87,6 @@ class TimeLimiterRecoverySpec extends Specification {
         Flowable<String> flowable() {
             return flowableError()
         }
-
 
         @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingMaybeRecovery')
         @Override

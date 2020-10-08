@@ -32,6 +32,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
@@ -77,16 +78,21 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         try {
-            switch (interceptedMethod.resultType()){
+            switch (interceptedMethod.resultType()) {
                 case PUBLISHER:
                     return interceptedMethod.handleResult(fallbackReactiveTypes(
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(CircuitBreakerOperator.of(circuitBreaker)),
                         context));
                 case COMPLETION_STAGE:
-                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            circuitBreaker.executeCompletionStage(() -> completionStage),
+                            circuitBreaker.executeCompletionStage(() -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
                 case SYNCHRONOUS:

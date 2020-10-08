@@ -33,10 +33,7 @@ import io.reactivex.Flowable;
 import javax.annotation.PreDestroy;
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Singleton
 @Requires(beans = RetryRegistry.class)
@@ -90,10 +87,15 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RetryTransformer.of(retry)),
                         context));
                 case COMPLETION_STAGE:
-                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            retry.executeCompletionStage(retryExecutorService,() -> completionStage),
+                            retry.executeCompletionStage(retryExecutorService,() -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
                 case SYNCHRONOUS:

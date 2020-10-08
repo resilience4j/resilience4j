@@ -33,6 +33,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 /**
  * A {@link MethodInterceptor} that intercepts all method calls which are annotated with a {@link io.github.resilience4j.micronaut.annotation.Bulkhead}
@@ -91,7 +92,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         try {
-            switch (interceptedMethod.resultType()){
+            switch (interceptedMethod.resultType()) {
                 case PUBLISHER:
                     return interceptedMethod.handleResult(fallbackReactiveTypes(
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(BulkheadOperator.of(bulkhead)),
@@ -99,7 +100,13 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
                 case COMPLETION_STAGE:
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            bulkhead.executeCompletionStage(interceptedMethod::interceptResultAsCompletionStage),
+                            bulkhead.executeCompletionStage(() -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
                 case SYNCHRONOUS:

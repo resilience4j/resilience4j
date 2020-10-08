@@ -31,9 +31,6 @@ import java.util.concurrent.CompletableFuture
 @Property(name = "resilience4j.circuitbreaker.enabled", value = "true")
 class CircuitBreakerRecoverySpec extends Specification {
     @Inject
-    ApplicationContext applicationContext
-
-    @Inject
     CircuitBreakerService service;
 
     void "test sync recovery circuitbreaker"() {
@@ -52,10 +49,38 @@ class CircuitBreakerRecoverySpec extends Specification {
         result.blockingFirst() == "recovered"
     }
 
+    void "test maybe recovery circuitbreaker"() {
+        when:
+        Maybe<String> result = service.doSomethingMaybe();
+
+        then:
+        result.blockingGet() == "testMaybe"
+    }
+
+    void "test single recovery circuitbreaker"() {
+        when:
+        Single<String> result = service.doSomethingSingle();
+
+        then:
+        result.blockingGet() == "testSingle"
+    }
+
+
+    void "test single recovery circuitbreaker null"() {
+        setup:
+        Single<String> result = service.doSomethingSingleNull();
+
+        when:
+        result.blockingGet();
+
+        then:
+        thrown NoSuchElementException
+    }
+
+
     void "test completable recovery circuitbreaker"() {
         when:
         CompletableFuture<String> result = service.completable();
-
 
         then:
         result.get() == "recovered"

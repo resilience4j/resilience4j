@@ -20,6 +20,7 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
+import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -92,9 +93,8 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
         final String name = opt.get().stringValue().orElse("default");
         ThreadPoolBulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
 
-        ReturnType<Object> rt = context.getReturnType();
-        Class<Object> returnType = rt.getType();
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
+        if(interceptedMethod.resultType() == InterceptedMethod.ResultType.COMPLETION_STAGE){
             return this.fallbackForFuture(bulkhead.executeSupplier(() -> {
                 try {
                     return ((CompletableFuture<?>) context.proceed()).get();
@@ -102,42 +102,9 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
                     throw new CompletionException(e);
                 }
             }), context);
-        } else if (Publishers.isConvertibleToPublisher(returnType)) {
-            throw new IllegalStateException(
-                "ThreadPool bulkhead is only applicable for completable futures ");
         }
 
-        CompletableFuture<Object> newFuture = new CompletableFuture<>();
-        bulkhead.executeSupplier(context::proceed).whenComplete((o, throwable) -> {
-            if (throwable == null) {
-                newFuture.complete(o);
-            } else {
-                Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
-                if (fallbackMethod.isPresent()) {
-                    MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
-                    }
-                    try {
-                        Object result = fallbackHandle.invoke(context.getParameterValues());
-                        newFuture.complete(result);
-                    } catch (Exception e) {
-                        if (logger.isErrorEnabled()) {
-                            logger.error("Error invoking Fallback [" + fallbackHandle + "]: " + e.getMessage(), e);
-                        }
-                        newFuture.completeExceptionally(throwable);
-                    }
-                } else {
-                    newFuture.completeExceptionally(throwable);
-                }
-            }
-        });
-        try {
-            return newFuture.get();
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Throwable throwable) {
-            return new CompletionException(throwable);
-        }
+        throw new IllegalStateException(
+            "ThreadPool bulkhead is only applicable for completable futures");
     }
 }

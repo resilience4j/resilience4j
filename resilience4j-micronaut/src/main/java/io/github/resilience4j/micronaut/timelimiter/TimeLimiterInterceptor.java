@@ -32,10 +32,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 @Singleton
 @Requires(beans = TimeLimiterRegistry.class)
@@ -88,10 +85,15 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(TimeLimiterTransformer.of(timeLimiter)),
                         context));
                 case COMPLETION_STAGE:
-                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> completionStage),
+                            timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
 

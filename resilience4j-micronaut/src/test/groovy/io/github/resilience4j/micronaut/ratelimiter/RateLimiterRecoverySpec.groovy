@@ -31,9 +31,6 @@ import java.util.concurrent.CompletableFuture
 @Property(name = "resilience4j.ratelimiter.enabled", value = "true")
 class RateLimiterRecoverySpec extends Specification {
     @Inject
-    ApplicationContext applicationContext
-
-    @Inject
     RatelimiterService service;
 
     void "test sync recovery ratelimiter"() {
@@ -52,10 +49,36 @@ class RateLimiterRecoverySpec extends Specification {
         result.blockingFirst() == "recovered"
     }
 
+    void "test maybe recovery ratelimiter"() {
+        when:
+        Maybe<String> result = service.doSomethingMaybe();
+
+        then:
+        result.blockingGet() == "testMaybe"
+    }
+
+    void "test single recovery ratelimiter null"() {
+        setup:
+        Single<String> result = service.doSomethingSingleNull();
+
+        when:
+        result.blockingGet();
+
+        then:
+        thrown NoSuchElementException
+    }
+
+    void "test single recovery ratelimiter"() {
+        when:
+        Single<String> result = service.doSomethingSingle();
+
+        then:
+        result.blockingGet() == "testSingle"
+    }
+
     void "test completable recovery ratelimiter"() {
         when:
         CompletableFuture<String> result = service.completable();
-
 
         then:
         result.get() == "recovered"
@@ -123,6 +146,5 @@ class RateLimiterRecoverySpec extends Specification {
         Observable<String> doSomethingObservable() {
             return doSomethingObservableError()
         }
-
     }
 }

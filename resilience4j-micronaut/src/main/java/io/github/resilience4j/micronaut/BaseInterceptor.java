@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.micronaut;
 
-import io.github.resilience4j.micronaut.fallback.UnhandledFallbackException;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.discovery.exceptions.NoAvailableServiceException;
 import io.micronaut.inject.MethodExecutionHandle;
+import io.micronaut.retry.exception.FallbackException;
 import io.reactivex.Flowable;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -34,20 +34,6 @@ public abstract class BaseInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(BaseInterceptor.class);
 
     public abstract Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context);
-
-    /**
-     * convert context to a {@link CompletableFuture}
-     * @param context invocation context
-     * @return the future stage from the context
-     */
-    public CompletableFuture<?> toCompletionStage(MethodInvocationContext<Object, Object> context) {
-        try {
-            return ((CompletableFuture<?>) context.proceed());
-        } catch (Throwable e) {
-            throw new CompletionException(e);
-        }
-    }
-
 
     /**
      * Resolves a fallback for the given execution context and exception.
@@ -71,14 +57,10 @@ public abstract class BaseInterceptor {
         Optional<? extends MethodExecutionHandle<?, Object>> fallback = findFallbackMethod(context);
         if (fallback.isPresent()) {
             MethodExecutionHandle<?, Object> fallbackMethod = fallback.get();
-            try {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass().getName(), fallbackMethod);
-                }
-                return fallbackMethod.invoke(context.getParameterValues());
-            } catch (Exception e) {
-                throw new UnhandledFallbackException("Error invoking fallback for type [" + context.getTarget().getClass().getName() + "]: " + e.getMessage(), e);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass().getName(), fallbackMethod);
             }
+            return fallbackMethod.invoke(context.getParameterValues());
         } else {
             if(exception instanceof RuntimeException) {
                 throw (RuntimeException) exception;
@@ -103,7 +85,7 @@ public abstract class BaseInterceptor {
                     try {
                         CompletableFuture<Object> resultingFuture = (CompletableFuture<Object>) fallbackHandle.invoke(context.getParameterValues());
                         if (resultingFuture == null) {
-                            newFuture.completeExceptionally(new UnhandledFallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                            newFuture.completeExceptionally(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
                         } else {
                             resultingFuture.whenComplete((o1, throwable1) -> {
                                 if (throwable1 == null) {
@@ -142,10 +124,10 @@ public abstract class BaseInterceptor {
                     return Flowable.error(throwable);
                 }
                 if (fallbackResult == null) {
-                    return Flowable.error(new UnhandledFallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                    return Flowable.error(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
                 } else {
                     return ConversionService.SHARED.convert(fallbackResult, Publisher.class)
-                        .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + fallbackResult));
+                        .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + fallbackResult));
                 }
             }
             return Flowable.error(throwable);

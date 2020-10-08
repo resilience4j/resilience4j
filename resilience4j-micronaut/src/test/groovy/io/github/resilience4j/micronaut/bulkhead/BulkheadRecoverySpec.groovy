@@ -55,24 +55,52 @@ class BulkheadRecoverySpec extends Specification{
         when:
         CompletableFuture<String> result = service.completable();
 
-
         then:
         result.get() == "recovered"
+    }
+
+    void "test maybe recovery bulkhead"() {
+        when:
+        Maybe<String> result = service.doSomethingMaybe();
+
+        then:
+        result.blockingGet() == "testMaybe"
+    }
+
+    void "test single recovery bulkhead"() {
+        when:
+        Single<String> result = service.doSomethingSingle();
+
+        then:
+        result.blockingGet() == "testSingle"
+    }
+
+    void "test single recovery bulkhead null"() {
+        setup:
+        Single<String> result = service.doSomethingSingleNull();
+
+        when:
+        result.blockingGet();
+
+        then:
+        thrown NoSuchElementException
     }
 
     void "test async recovery threadPoolBulkhead"() {
         when:
         CompletableFuture<String> result = service.asyncRecoverablePool()
+
         then:
         result.get() == "recovered"
     }
 
     void "test sync recovery threadPoolBulkhead"() {
         when:
-        String result = service.syncRecoverablePool()
+        service.syncRecoverablePool()
 
         then:
-        result == "recovered"
+        IllegalStateException ex = thrown()
+        ex.getMessage() == "ThreadPool bulkhead is only applicable for completable futures"
     }
 
     @Singleton
