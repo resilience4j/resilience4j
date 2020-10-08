@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Pollind
+ * Copyright 2020 Michael Pollind , Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import io.github.resilience4j.micronaut.annotation.CircuitBreaker
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
-import io.reactivex.Flowable
+import io.reactivex.*
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -92,5 +92,30 @@ class CircuitBreakerRecoverySpec extends Specification {
         Flowable<String> flowable() {
             return flowableError()
         }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'doSomethingMaybeRecovery')
+        @Override
+        Maybe<String> doSomethingMaybe() {
+            return doSomethingMaybeError()
+        }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'doSomethingSingleRecovery')
+        @Override
+        Single<String> doSomethingSingle() {
+            return doSomethingSingleError()
+        }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'doSomethingCompletableRecovery')
+        @Override
+        Completable doSomethingCompletable() {
+            return doSomethingCompletableError()
+        }
+
+        @CircuitBreaker(name = "default", fallbackMethod = 'doSomethingObservableRecovery')
+        @Override
+        Observable<String> doSomethingObservable() {
+            return doSomethingObservableError()
+        }
+
     }
 }
