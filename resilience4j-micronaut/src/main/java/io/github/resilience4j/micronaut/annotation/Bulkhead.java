@@ -3,6 +3,7 @@ package io.github.resilience4j.micronaut.annotation;
 import io.github.resilience4j.micronaut.bulkhead.BulkheadInterceptor;
 import io.github.resilience4j.micronaut.bulkhead.ThreadPoolBulkheadInterceptor;
 import io.micronaut.aop.Around;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Type;
 
 import java.lang.annotation.*;
@@ -16,6 +17,7 @@ import java.lang.annotation.*;
 @Around
 @Type({BulkheadInterceptor.class, ThreadPoolBulkheadInterceptor.class})
 @Documented
+@Executable
 public @interface Bulkhead {
 
     /**

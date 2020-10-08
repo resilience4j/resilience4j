@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Michael Pollind
+ * Copyright 2019 Michael Pollind, Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,15 +33,17 @@ import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.reactivex.Flowable;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Requires(beans = RetryRegistry.class)
-public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
+public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
     private final RetryRegistry retryRegistry;
     private final BeanContext beanContext;
     private static final ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
@@ -104,6 +106,21 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
             return retry.executeCheckedSupplier(context::proceed);
         } catch (Throwable exception) {
             return fallback(context, exception);
+        }
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        retryExecutorService.shutdown();
+        try {
+            if (!retryExecutorService.awaitTermination(2, TimeUnit.SECONDS)) {
+                retryExecutorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            if (!retryExecutorService.isTerminated()) {
+                retryExecutorService.shutdownNow();
+            }
+            Thread.currentThread().interrupt();
         }
     }
 }

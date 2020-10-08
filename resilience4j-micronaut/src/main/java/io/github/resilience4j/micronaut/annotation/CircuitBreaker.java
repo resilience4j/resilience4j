@@ -17,6 +17,7 @@ package io.github.resilience4j.micronaut.annotation;
 
 import io.github.resilience4j.micronaut.circuitbreaker.CircuitBreakerInterceptor;
 import io.micronaut.aop.Around;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Type;
 
 import java.lang.annotation.*;
@@ -32,6 +33,7 @@ import java.lang.annotation.*;
 @Around
 @Type(CircuitBreakerInterceptor.class)
 @Documented
+@Executable
 public @interface CircuitBreaker {
 
     /**
