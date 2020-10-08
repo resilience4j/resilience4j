@@ -21,6 +21,7 @@ import io.micronaut.core.convert.ConversionService;
 import io.micronaut.discovery.exceptions.NoAvailableServiceException;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.reactivex.Flowable;
+import io.reactivex.FlowableTransformer;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,9 +89,9 @@ public abstract class BaseInterceptor {
         }
     }
 
-    public <T> CompletableFuture<Object> fallbackCompletable(CompletionStage<T> stage, MethodInvocationContext<Object, Object> context) {
+    public CompletionStage<?> fallbackForFuture(CompletionStage<?> result, MethodInvocationContext<Object, Object> context) {
         CompletableFuture<Object> newFuture = new CompletableFuture<>();
-        stage.whenComplete((o, throwable) -> {
+        result.whenComplete((o, throwable) -> {
             if (throwable == null) {
                 newFuture.complete(o);
             } else {
@@ -127,8 +128,8 @@ public abstract class BaseInterceptor {
         return newFuture;
     }
 
-    public Flowable<Object> fallbackFlowable(Flowable<Object> flowable, MethodInvocationContext<Object, Object> context) {
-        return flowable.onErrorResumeNext(throwable -> {
+    public <T> Publisher<T> fallbackReactiveTypes(Publisher<T> flowable, MethodInvocationContext<Object, Object> context) {
+        return Flowable.fromPublisher(flowable).onErrorResumeNext(throwable -> {
             Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
             if (fallbackMethod.isPresent()) {
                 MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();

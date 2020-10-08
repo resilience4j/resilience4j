@@ -95,7 +95,7 @@ public class ThreadPoolBulkheadInterceptor extends BaseInterceptor implements Me
         ReturnType<Object> rt = context.getReturnType();
         Class<Object> returnType = rt.getType();
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(bulkhead.executeSupplier(() -> {
+            return this.fallbackForFuture(bulkhead.executeSupplier(() -> {
                 try {
                     return ((CompletableFuture<?>) context.proceed()).get();
                 } catch (Throwable e) {

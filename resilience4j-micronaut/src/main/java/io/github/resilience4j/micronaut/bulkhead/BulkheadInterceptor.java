@@ -19,9 +19,11 @@ package io.github.resilience4j.micronaut.bulkhead;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
+import io.github.resilience4j.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.fallback.UnhandledFallbackException;
+import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -92,27 +94,31 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
 
         final String name = opt.get().stringValue("name").orElse("default");
         Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
-        ReturnType<Object> rt = context.getReturnType();
-        Class<Object> returnType = rt.getType();
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(bulkhead.executeCompletionStage(() -> toCompletionStage(context)), context);
-        } else if (Publishers.isConvertibleToPublisher(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            Flowable<?> flowable = ConversionService.SHARED
-                .convert(result, Flowable.class)
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(BulkheadOperator.of(bulkhead)), context);
-            return ConversionService.SHARED
-                .convert(flowable, context.getReturnType().asArgument())
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-        }
+
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         try {
-            return bulkhead.executeSupplier(context::proceed);
-        } catch (Throwable exception) {
-            return this.fallback(context, exception);
+            switch (interceptedMethod.resultType()){
+                case PUBLISHER:
+                    return interceptedMethod.handleResult(fallbackReactiveTypes(
+                        Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(BulkheadOperator.of(bulkhead)),
+                        context));
+                case COMPLETION_STAGE:
+                    return interceptedMethod.handleResult(
+                        fallbackForFuture(
+                            bulkhead.executeCompletionStage(interceptedMethod::interceptResultAsCompletionStage),
+                            context)
+                    );
+                case SYNCHRONOUS:
+                    try {
+                        return bulkhead.executeCheckedSupplier(context::proceed);
+                    } catch (Throwable exception) {
+                        return fallback(context, exception);
+                    }
+                default:
+                    return interceptedMethod.unsupported();
+            }
+        } catch (Exception e) {
+            return interceptedMethod.handleException(e);
         }
     }
 }

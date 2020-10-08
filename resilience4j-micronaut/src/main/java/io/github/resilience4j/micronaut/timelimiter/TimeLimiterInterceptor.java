@@ -18,9 +18,11 @@ package io.github.resilience4j.micronaut.timelimiter;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.fallback.UnhandledFallbackException;
+import io.github.resilience4j.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.transformer.TimeLimiterTransformer;
+import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
@@ -83,29 +85,32 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.TimeLimiter.class).orElse("default");
         TimeLimiter timeLimiter = this.timeLimiterRegistry.timeLimiter(name);
 
-        ReturnType<Object> rt = context.getReturnType();
-        Class<Object> returnType = rt.getType();
-
-        if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return this.fallbackCompletable(timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> toCompletionStage(context)), context);
-        } else if (Publishers.isConvertibleToPublisher(returnType)) {
-            Object result = context.proceed();
-            if (result == null) {
-                return result;
-            }
-            Flowable<?> flowable = ConversionService.SHARED
-                .convert(result, Flowable.class)
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-            flowable = this.fallbackFlowable(flowable.compose(TimeLimiterTransformer.of(timeLimiter)), context);
-            return ConversionService.SHARED
-                .convert(flowable, context.getReturnType().asArgument())
-                .orElseThrow(() -> new UnhandledFallbackException("Unsupported Reactive type: " + result));
-        }
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         try {
-            return timeLimiter.executeFutureSupplier(
-                () -> CompletableFuture.supplyAsync(context::proceed));
-        } catch (Throwable exception) {
-            return this.fallback(context, exception);
+            switch (interceptedMethod.resultType()) {
+                case PUBLISHER:
+                    return interceptedMethod.handleResult(fallbackReactiveTypes(
+                        Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(TimeLimiterTransformer.of(timeLimiter)),
+                        context));
+                case COMPLETION_STAGE:
+                    return interceptedMethod.handleResult(
+                        fallbackForFuture(
+                            timeLimiter.executeCompletionStage(timeLimiterExecutorService, interceptedMethod::interceptResultAsCompletionStage),
+                            context)
+                    );
+
+                case SYNCHRONOUS:
+                    try {
+                        return timeLimiter.executeFutureSupplier(
+                            () -> CompletableFuture.supplyAsync(context::proceed));
+                    } catch (Throwable exception) {
+                        return fallback(context, exception);
+                    }
+                default:
+                    return interceptedMethod.unsupported();
+            }
+        } catch (Exception e) {
+            return interceptedMethod.handleException(e);
         }
     }
 }
