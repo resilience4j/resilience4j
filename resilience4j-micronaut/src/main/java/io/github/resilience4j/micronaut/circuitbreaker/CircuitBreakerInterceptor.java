@@ -87,9 +87,10 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(CircuitBreakerOperator.of(circuitBreaker)),
                         context));
                 case COMPLETION_STAGE:
+                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            circuitBreaker.executeCompletionStage(interceptedMethod::interceptResultAsCompletionStage),
+                            circuitBreaker.executeCompletionStage(() -> completionStage),
                             context)
                     );
                 case SYNCHRONOUS:

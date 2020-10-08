@@ -93,9 +93,10 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(TimeLimiterTransformer.of(timeLimiter)),
                         context));
                 case COMPLETION_STAGE:
+                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            timeLimiter.executeCompletionStage(timeLimiterExecutorService, interceptedMethod::interceptResultAsCompletionStage),
+                            timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> completionStage),
                             context)
                     );
 

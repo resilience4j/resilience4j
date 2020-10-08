@@ -95,9 +95,10 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RetryTransformer.of(retry)),
                         context));
                 case COMPLETION_STAGE:
+                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            retry.executeCompletionStage(retryExecutorService,interceptedMethod::interceptResultAsCompletionStage),
+                            retry.executeCompletionStage(retryExecutorService,() -> completionStage),
                             context)
                     );
                 case SYNCHRONOUS:

@@ -87,9 +87,10 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RateLimiterOperator.of(rateLimiter)),
                         context));
                 case COMPLETION_STAGE:
+                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            rateLimiter.executeCompletionStage(interceptedMethod::interceptResultAsCompletionStage),
+                            rateLimiter.executeCompletionStage(() -> completionStage),
                             context)
                     );
                 case SYNCHRONOUS:
