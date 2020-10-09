@@ -33,6 +33,16 @@ class RetryRecoverySpec extends Specification {
     @Inject
     RetryService service;
 
+
+    void "test completable recovery retry"() {
+        when:
+        CompletableFuture<String> result = service.completable()
+
+        then:
+        result.get() == "recovered"
+    }
+
+
     void "test sync recovery retry"() {
         when:
         String result = service.sync();
@@ -76,72 +86,64 @@ class RetryRecoverySpec extends Specification {
         result.blockingFirst() == "recovered"
     }
 
-    void "test completable recovery retry"() {
-        when:
-        CompletableFuture<String> result = service.completable()
-
-        then:
-        result.get() == "recovered"
-    }
-
     @Singleton
     static class RetryService extends TestDummyService {
 
         @Override
-        @Retry(name = "backend-a", fallbackMethod = 'syncRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'syncRecovery')
         String sync() {
             return syncError()
         }
 
         @Override
-        @Retry(name = "backend-a", fallbackMethod = 'syncRecoveryParam')
+        @Retry(name = "backend-b", fallbackMethod = 'syncRecoveryParam')
         String syncWithParam(String param) {
             return syncError()
         }
 
         @Override
-        @Retry(name = "backend-a", fallbackMethod = 'completableRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'completableRecovery')
         CompletableFuture<String> completable() {
             return completableFutureError()
         }
 
         @Override
-        @Retry(name = "backend-a", fallbackMethod = 'completableRecoveryParam')
+        @Retry(name = "backend-b", fallbackMethod = 'completableRecoveryParam')
         CompletableFuture<String> completableWithParam(String param) {
             return completableFutureError()
         }
 
         @Override
-        @Retry(name = "backend-a", fallbackMethod = 'flowableRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'flowableRecovery')
         Flowable<String> flowable() {
             return flowableError()
         }
 
-        @Retry(name = "backend-a", fallbackMethod = 'doSomethingMaybeRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'doSomethingMaybeRecovery')
         @Override
         Maybe<String> doSomethingMaybe() {
             return doSomethingMaybeError()
         }
 
-        @Retry(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'doSomethingSingleRecovery')
         @Override
         Single<String> doSomethingSingle() {
             return doSomethingSingleError()
         }
 
-        @Retry(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'doSomethingSingleRecovery')
         @Override
         Single<String> doSomethingSingleNull() {
             return null
         }
 
-        @Retry(name = "backend-a", fallbackMethod = 'doSomethingCompletableRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'doSomethingCompletableRecovery')
         @Override
         Completable doSomethingCompletable() {
             return doSomethingCompletableError()
         }
 
-        @Retry(name = "backend-a", fallbackMethod = 'doSomethingObservableRecovery')
+        @Retry(name = "backend-b", fallbackMethod = 'doSomethingObservableRecovery')
         @Override
         Observable<String> doSomethingObservable() {
             return doSomethingObservableError()

@@ -28,9 +28,13 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.reactivex.Flowable;
 
 import javax.annotation.PreDestroy;
+import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -40,12 +44,13 @@ import java.util.concurrent.*;
 public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
     private final RetryRegistry retryRegistry;
     private final BeanContext beanContext;
-    private static final ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService executorService;
 
 
-    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry) {
+    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry, ScheduledExecutorService executorService) {
         this.retryRegistry = retryRegistry;
         this.beanContext = beanContext;
+        this.executorService = executorService;
     }
 
 
@@ -89,7 +94,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
                 case COMPLETION_STAGE:
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            retry.executeCompletionStage(retryExecutorService,() -> {
+                            retry.executeCompletionStage(executorService,() -> {
                                 try {
                                     return interceptedMethod.interceptResultAsCompletionStage();
                                 } catch (Exception e) {
@@ -112,18 +117,5 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         }
     }
 
-    @PreDestroy
-    public void cleanup() {
-        retryExecutorService.shutdown();
-        try {
-            if (!retryExecutorService.awaitTermination(2, TimeUnit.SECONDS)) {
-                retryExecutorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            if (!retryExecutorService.isTerminated()) {
-                retryExecutorService.shutdownNow();
-            }
-            Thread.currentThread().interrupt();
-        }
-    }
+
 }

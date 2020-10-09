@@ -2,6 +2,8 @@ package io.github.resilience4j.micronaut.timelimiter
 
 import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.micronaut.annotation.TimeLimiter
+import io.micronaut.context.annotation.Property
+import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
@@ -14,6 +16,8 @@ import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 
+@MicronautTest
+@Property(name = "resilience4j.timelimiter.enabled", value = "true")
 class TimeLimiterNonRecoverySpec  extends Specification {
     @Inject
     TimeLimiterNonRecoveryService service;
@@ -58,61 +62,61 @@ class TimeLimiterNonRecoverySpec  extends Specification {
 
     @Singleton
     static class TimeLimiterNonRecoveryService extends TestDummyService {
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         String sync() {
             return syncError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'syncRecoveryParam')
+        @TimeLimiter(name = "backend-a")
         @Override
         String syncWithParam(String param) {
             return syncError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'completableRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         CompletableFuture<String> completable() {
             return completableFutureError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'completableRecoveryParam')
+        @TimeLimiter(name = "backend-a")
         @Override
         CompletableFuture<String> completableWithParam(String param) {
             return completableFutureError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'flowableRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         Flowable<String> flowable() {
             return flowableError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingMaybeRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         Maybe<String> doSomethingMaybe() {
             return doSomethingMaybeError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         Single<String> doSomethingSingle() {
             return doSomethingSingleError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingSingleRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         Single<String> doSomethingSingleNull() {
             return null
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingCompletableRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         Completable doSomethingCompletable() {
             return doSomethingCompletableError()
         }
 
-        @TimeLimiter(name = "backend-a", fallbackMethod = 'doSomethingObservableRecovery')
+        @TimeLimiter(name = "backend-a")
         @Override
         Observable<String> doSomethingObservable() {
             return doSomethingObservableError()
