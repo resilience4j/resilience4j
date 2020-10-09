@@ -29,15 +29,14 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.micronaut.scheduling.TaskExecutors;
-import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.reactivex.Flowable;
 
-import javax.annotation.PreDestroy;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Singleton
 @Requires(beans = RetryRegistry.class)
@@ -47,10 +46,10 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
     private final ScheduledExecutorService executorService;
 
 
-    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry, ScheduledExecutorService executorService) {
+    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry, @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
         this.retryRegistry = retryRegistry;
         this.beanContext = beanContext;
-        this.executorService = executorService;
+        this.executorService = (ScheduledExecutorService) executorService;
     }
 
 
@@ -94,7 +93,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
                 case COMPLETION_STAGE:
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            retry.executeCompletionStage(executorService,() -> {
+                            retry.executeCompletionStage(executorService, () -> {
                                 try {
                                     return interceptedMethod.interceptResultAsCompletionStage();
                                 } catch (Exception e) {
@@ -116,6 +115,5 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
             return interceptedMethod.handleException(e);
         }
     }
-
 
 }
