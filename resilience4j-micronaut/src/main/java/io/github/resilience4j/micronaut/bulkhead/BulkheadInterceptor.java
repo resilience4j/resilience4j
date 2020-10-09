@@ -16,8 +16,7 @@
 
 package io.github.resilience4j.micronaut.bulkhead;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.bulkhead.operator.BulkheadOperator;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
@@ -33,27 +32,33 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 
 /**
  * A {@link MethodInterceptor} that intercepts all method calls which are annotated with a {@link io.github.resilience4j.micronaut.annotation.Bulkhead}
  * annotation.
  **/
 @Singleton
-@Requires(beans = BulkheadRegistry.class)
-public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
+@Requires(beans = {BulkheadRegistry.class, ThreadPoolBulkheadRegistry.class})
+public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
 
     private final BulkheadRegistry bulkheadRegistry;
+    private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
     private final BeanContext beanContext;
 
     /**
-     * @param beanContext      The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
-     * @param bulkheadRegistry bulkhead registry used to retrieve {@link Bulkhead} by name
+     * @param beanContext                The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
+     * @param bulkheadRegistry           bulkhead registry used to retrieve {@link Bulkhead} by name
+     * @param threadPoolBulkheadRegistry thread pool bulkhead registry used to retrieve {@link Bulkhead} by name
      */
     public BulkheadInterceptor(BeanContext beanContext,
-                               BulkheadRegistry bulkheadRegistry) {
+                               BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.beanContext = beanContext;
+        this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
     }
 
     @Override
@@ -83,43 +88,72 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
             return context.proceed();
         }
         final io.github.resilience4j.micronaut.annotation.Bulkhead.Type type = opt.get().enumValue("type", io.github.resilience4j.micronaut.annotation.Bulkhead.Type.class).orElse(io.github.resilience4j.micronaut.annotation.Bulkhead.Type.SEMAPHORE);
-        if (type != io.github.resilience4j.micronaut.annotation.Bulkhead.Type.SEMAPHORE) {
-            return context.proceed();
-        }
 
-        final String name = opt.get().stringValue("name").orElse("default");
-        Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
+        if (type == io.github.resilience4j.micronaut.annotation.Bulkhead.Type.THREADPOOL) {
+            return handleThreadPoolBulkhead(context, opt.get());
+        } else {
+
+            final String name = opt.get().stringValue("name").orElse("default");
+            Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
+
+            InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
+            try {
+                switch (interceptedMethod.resultType()) {
+                    case PUBLISHER:
+                        return interceptedMethod.handleResult(fallbackReactiveTypes(
+                            Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(BulkheadOperator.of(bulkhead)),
+                            context));
+                    case COMPLETION_STAGE:
+                        return interceptedMethod.handleResult(
+                            fallbackForFuture(
+                                bulkhead.executeCompletionStage(() -> {
+                                    try {
+                                        return interceptedMethod.interceptResultAsCompletionStage();
+                                    } catch (Exception e) {
+                                        throw new CompletionException(e);
+                                    }
+                                }),
+                                context)
+                        );
+                    case SYNCHRONOUS:
+                        try {
+                            return bulkhead.executeCheckedSupplier(context::proceed);
+                        } catch (Throwable exception) {
+                            return fallback(context, exception);
+                        }
+                    default:
+                        return interceptedMethod.unsupported();
+                }
+            } catch (Exception e) {
+                return interceptedMethod.handleException(e);
+            }
+        }
+    }
+
+    private CompletionStage<?> handleThreadPoolBulkhead(MethodInvocationContext<Object, Object> context, AnnotationValue<io.github.resilience4j.micronaut.annotation.Bulkhead> bulkheadAnnotationValue) {
+        final String name = bulkheadAnnotationValue.stringValue().orElse("default");
+        ThreadPoolBulkhead bulkhead = this.threadPoolBulkheadRegistry.bulkhead(name);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
-        try {
-            switch (interceptedMethod.resultType()) {
-                case PUBLISHER:
-                    return interceptedMethod.handleResult(fallbackReactiveTypes(
-                        Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(BulkheadOperator.of(bulkhead)),
-                        context));
-                case COMPLETION_STAGE:
-                    return interceptedMethod.handleResult(
-                        fallbackForFuture(
-                            bulkhead.executeCompletionStage(() -> {
-                                try {
-                                    return interceptedMethod.interceptResultAsCompletionStage();
-                                } catch (Exception e) {
-                                    throw new CompletionException(e);
-                                }
-                            }),
-                            context)
-                    );
-                case SYNCHRONOUS:
+        if (interceptedMethod.resultType() == InterceptedMethod.ResultType.COMPLETION_STAGE) {
+            try {
+                return this.fallbackForFuture(bulkhead.executeSupplier(() -> {
                     try {
-                        return bulkhead.executeCheckedSupplier(context::proceed);
-                    } catch (Throwable exception) {
-                        return fallback(context, exception);
+                        return ((CompletableFuture<?>) context.proceed()).get();
+                    } catch (ExecutionException e) {
+                        throw new CompletionException(e.getCause());
+                    } catch (Throwable e) {
+                        throw new CompletionException(e);
                     }
-                default:
-                    return interceptedMethod.unsupported();
+                }), context);
+            } catch (BulkheadFullException ex) {
+                CompletableFuture<?> future = new CompletableFuture<>();
+                future.completeExceptionally(ex);
+                return future;
             }
-        } catch (Exception e) {
-            return interceptedMethod.handleException(e);
         }
+
+        throw new IllegalStateException(
+            "ThreadPool bulkhead is only applicable for completable futures");
     }
 }
