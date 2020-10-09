@@ -16,7 +16,7 @@ ext {
 allprojects {
     apply plugin: 'jacoco'
 
-    version = '1.6.1-SNAPSHOT'
+    version = '1.6.1'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
