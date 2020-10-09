@@ -28,13 +28,15 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
+import io.micronaut.scheduling.TaskExecutors;
 import io.reactivex.Flowable;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Singleton
@@ -43,11 +45,12 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
 
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final BeanContext beanContext;
-    private static final ScheduledExecutorService timeLimiterExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService executorService;
 
-    public TimeLimiterInterceptor(BeanContext beanContext, TimeLimiterRegistry timeLimiterRegistry) {
+    public TimeLimiterInterceptor(BeanContext beanContext, TimeLimiterRegistry timeLimiterRegistry, @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
         this.beanContext = beanContext;
         this.timeLimiterRegistry = timeLimiterRegistry;
+        this.executorService = (ScheduledExecutorService) executorService;
     }
 
     @Override
@@ -88,10 +91,15 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(TimeLimiterTransformer.of(timeLimiter)),
                         context));
                 case COMPLETION_STAGE:
-                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> completionStage),
+                            timeLimiter.executeCompletionStage(executorService, () -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
 

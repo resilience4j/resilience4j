@@ -28,27 +28,28 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
+import io.micronaut.scheduling.TaskExecutors;
 import io.reactivex.Flowable;
 
-import javax.annotation.PreDestroy;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Requires(beans = RetryRegistry.class)
 public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
     private final RetryRegistry retryRegistry;
     private final BeanContext beanContext;
-    private static final ScheduledExecutorService retryExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService executorService;
 
 
-    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry) {
+    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry, @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
         this.retryRegistry = retryRegistry;
         this.beanContext = beanContext;
+        this.executorService = (ScheduledExecutorService) executorService;
     }
 
 
@@ -90,10 +91,15 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RetryTransformer.of(retry)),
                         context));
                 case COMPLETION_STAGE:
-                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            retry.executeCompletionStage(retryExecutorService,() -> completionStage),
+                            retry.executeCompletionStage(executorService, () -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
                 case SYNCHRONOUS:
@@ -110,18 +116,4 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         }
     }
 
-    @PreDestroy
-    public void cleanup() {
-        retryExecutorService.shutdown();
-        try {
-            if (!retryExecutorService.awaitTermination(2, TimeUnit.SECONDS)) {
-                retryExecutorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            if (!retryExecutorService.isTerminated()) {
-                retryExecutorService.shutdownNow();
-            }
-            Thread.currentThread().interrupt();
-        }
-    }
 }

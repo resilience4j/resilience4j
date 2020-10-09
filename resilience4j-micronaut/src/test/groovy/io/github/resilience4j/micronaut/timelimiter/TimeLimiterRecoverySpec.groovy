@@ -42,6 +42,22 @@ class TimeLimiterRecoverySpec extends Specification {
         result == "recovered"
     }
 
+    void "test maybe recovery timeLimiter"() {
+        when:
+        Maybe<String> result = service.doSomethingMaybe();
+
+        then:
+        result.blockingGet() == "testMaybe"
+    }
+
+    void "test single recovery timeLimiter"() {
+        when:
+        Single<String> result = service.doSomethingSingle();
+
+        then:
+        result.blockingGet() == "testSingle"
+    }
+
     void "test flowable recovery timeLimiter"() {
         when:
         Flowable<String> result = service.flowable();
@@ -50,10 +66,20 @@ class TimeLimiterRecoverySpec extends Specification {
         result.blockingFirst() == "recovered"
     }
 
+    void "test single recovery timeLimiter null"() {
+        setup:
+        Single<String> result = service.doSomethingSingleNull();
+
+        when:
+        result.blockingGet();
+
+        then:
+        thrown NoSuchElementException
+    }
+
     void "test completable recovery timeLimiter"() {
         when:
         CompletableFuture<String> result = service.completable();
-
 
         then:
         result.get() == "recovered"

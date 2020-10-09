@@ -32,7 +32,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletionException;
 
 @Singleton
 @Requires(beans = RateLimiterRegistry.class)
@@ -83,10 +83,15 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RateLimiterOperator.of(rateLimiter)),
                         context));
                 case COMPLETION_STAGE:
-                    CompletionStage<?> completionStage = interceptedMethod.interceptResultAsCompletionStage();
                     return interceptedMethod.handleResult(
                         fallbackForFuture(
-                            rateLimiter.executeCompletionStage(() -> completionStage),
+                            rateLimiter.executeCompletionStage(() -> {
+                                try {
+                                    return interceptedMethod.interceptResultAsCompletionStage();
+                                } catch (Exception e) {
+                                    throw new CompletionException(e);
+                                }
+                            }),
                             context)
                     );
                 case SYNCHRONOUS:
