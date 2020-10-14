@@ -23,11 +23,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 /**
  * A CircuitBreakerEvent which informs about a state transition.
  */
-public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreakerEvent{
+public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreakerEvent {
 
     private CircuitBreaker.StateTransition stateTransition;
 
-    public CircuitBreakerOnStateTransitionEvent(String circuitBreakerName, CircuitBreaker.StateTransition stateTransition) {
+    public CircuitBreakerOnStateTransitionEvent(String circuitBreakerName,
+        CircuitBreaker.StateTransition stateTransition) {
         super(circuitBreakerName);
         this.stateTransition = stateTransition;
     }
@@ -42,12 +43,12 @@ public class CircuitBreakerOnStateTransitionEvent extends AbstractCircuitBreaker
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return String.format("%s: CircuitBreaker '%s' changed state from %s to %s",
-                getCreationTime(),
-                getCircuitBreakerName(),
-                getStateTransition().getFromState(),
-                getStateTransition().getToState());
+            getCreationTime(),
+            getCircuitBreakerName(),
+            getStateTransition().getFromState(),
+            getStateTransition().getToState());
 
     }
 }

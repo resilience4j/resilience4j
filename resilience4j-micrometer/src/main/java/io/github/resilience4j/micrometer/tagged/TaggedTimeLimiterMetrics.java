@@ -27,14 +27,22 @@ import static java.util.Objects.requireNonNull;
  */
 public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics implements MeterBinder {
 
+    private final TimeLimiterRegistry timeLimiterRegistry;
+
+    private TaggedTimeLimiterMetrics(TimeLimiterMetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
+        super(names);
+        this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
+    }
+
     /**
      * Creates a new binder that uses given {@code registry} as source of time limiters.
      *
      * @param timeLimiterRegistry the source of time limiters
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
-    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterRegistry timeLimiterRegistry) {
-        return new TaggedTimeLimiterMetrics(MetricNames.ofDefaults(), timeLimiterRegistry);
+    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(
+        TimeLimiterRegistry timeLimiterRegistry) {
+        return new TaggedTimeLimiterMetrics(TimeLimiterMetricNames.ofDefaults(), timeLimiterRegistry);
     }
 
     /**
@@ -44,15 +52,24 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
      * @param timeLimiterRegistry the source of time limiters
      * @return The {@link TaggedTimeLimiterMetrics} instance.
      */
-    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
+    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(TimeLimiterMetricNames names,
+                                                                 TimeLimiterRegistry timeLimiterRegistry) {
         return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
     }
 
-    private final TimeLimiterRegistry timeLimiterRegistry;
-
-    private TaggedTimeLimiterMetrics(MetricNames names, TimeLimiterRegistry timeLimiterRegistry) {
-        super(names);
-        this.timeLimiterRegistry = requireNonNull(timeLimiterRegistry);
+    /**
+     * Creates a new binder that uses given {@code registry} as source of time limiters.
+     *
+     * @deprecated Use {@link TaggedTimeLimiterMetrics#ofTimeLimiterRegistry(TimeLimiterMetricNames, TimeLimiterRegistry)} instead
+     *
+     * @param names               custom metric names
+     * @param timeLimiterRegistry the source of time limiters
+     * @return The {@link TaggedTimeLimiterMetrics} instance.
+     */
+    @Deprecated
+    public static TaggedTimeLimiterMetrics ofTimeLimiterRegistry(MetricNames names,
+                                                                 TimeLimiterRegistry timeLimiterRegistry) {
+        return new TaggedTimeLimiterMetrics(names, timeLimiterRegistry);
     }
 
     @Override
@@ -60,8 +77,10 @@ public class TaggedTimeLimiterMetrics extends AbstractTimeLimiterMetrics impleme
         for (TimeLimiter timeLimiter : timeLimiterRegistry.getAllTimeLimiters()) {
             addMetrics(registry, timeLimiter);
         }
-        timeLimiterRegistry.getEventPublisher().onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
-        timeLimiterRegistry.getEventPublisher().onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
+        timeLimiterRegistry.getEventPublisher()
+            .onEntryAdded(event -> addMetrics(registry, event.getAddedEntry()));
+        timeLimiterRegistry.getEventPublisher()
+            .onEntryRemoved(event -> removeMetrics(registry, event.getRemovedEntry().getName()));
         timeLimiterRegistry.getEventPublisher().onEntryReplaced(event -> {
             removeMetrics(registry, event.getOldEntry().getName());
             addMetrics(registry, event.getNewEntry());

@@ -5,7 +5,6 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.Observable;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -13,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 
 /**
  * Unit test for {@link ObserverRateLimiter}.
@@ -22,8 +22,8 @@ public class ObserverRateLimiterTest {
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
-        rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
+    public void setUp() {
+        rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -41,9 +41,9 @@ public class ObserverRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(1).toNanos());
 
         Observable.just(1)
-                .compose(RateLimiterOperator.of(rateLimiter))
-                .test()
-                .awaitTerminalEvent(2, TimeUnit.SECONDS);
+            .compose(RateLimiterOperator.of(rateLimiter))
+            .test()
+            .awaitTerminalEvent(2, TimeUnit.SECONDS);
     }
 
     @Test

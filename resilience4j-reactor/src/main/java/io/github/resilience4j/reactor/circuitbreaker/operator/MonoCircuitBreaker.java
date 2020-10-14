@@ -34,9 +34,9 @@ class MonoCircuitBreaker<T> extends MonoOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, true));
-        }else{
+        } else {
             Operators.error(actual, createCallNotPermittedException(circuitBreaker));
         }
     }

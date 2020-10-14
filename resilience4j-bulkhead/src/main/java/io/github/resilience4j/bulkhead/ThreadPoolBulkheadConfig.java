@@ -18,169 +18,232 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A {@link ThreadPoolBulkheadConfig} configures a {@link Bulkhead}
  */
 public class ThreadPoolBulkheadConfig {
 
-	public static final int DEFAULT_QUEUE_CAPACITY = 100;
-	public static final Duration DEFAULT_KEEP_ALIVE_DURATION = Duration.ofMillis(20);
-	public static final int DEFAULT_CORE_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors() - 1 : 1;
-	public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
-	public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+    public static final int DEFAULT_QUEUE_CAPACITY = 100;
+    public static final Duration DEFAULT_KEEP_ALIVE_DURATION = Duration.ofMillis(20);
+    public static final int DEFAULT_CORE_THREAD_POOL_SIZE =
+        Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors()
+            - 1 : 1;
+    public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime()
+        .availableProcessors();
+    public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
-	private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
-	private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
-	private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
-	private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
-	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
+    private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
+    private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
+    private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
+    private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    private List<ContextPropagator> contextPropagators = new ArrayList<>();
 
-	private ThreadPoolBulkheadConfig() {
-	}
+    private ThreadPoolBulkheadConfig() {
+    }
 
-	/**
-	 * Returns a builder to create a custom ThreadPoolBulkheadConfig.
-	 *
-	 * @return a {@link Builder}
-	 */
-	public static Builder custom() {
-		return new Builder();
-	}
+    /**
+     * Returns a builder to create a custom ThreadPoolBulkheadConfig.
+     *
+     * @return a {@link Builder}
+     */
+    public static Builder custom() {
+        return new Builder();
+    }
 
-	/**
-	 * Returns a builder to create a custom ThreadPoolBulkheadConfig.
-	 *
-	 * @return a {@link Builder}
-	 */
-	public static Builder from(ThreadPoolBulkheadConfig threadPoolBulkheadConfig) {
-		return new Builder(threadPoolBulkheadConfig);
-	}
+    /**
+     * Returns a builder to create a custom ThreadPoolBulkheadConfig.
+     *
+     * @return a {@link Builder}
+     */
+    public static Builder from(ThreadPoolBulkheadConfig threadPoolBulkheadConfig) {
+        return new Builder(threadPoolBulkheadConfig);
+    }
 
-	/**
-	 * Creates a default Bulkhead configuration.
-	 *
-	 * @return a default Bulkhead configuration.
-	 */
-	public static ThreadPoolBulkheadConfig ofDefaults() {
-		return new Builder().build();
-	}
+    /**
+     * Creates a default Bulkhead configuration.
+     *
+     * @return a default Bulkhead configuration.
+     */
+    public static ThreadPoolBulkheadConfig ofDefaults() {
+        return new Builder().build();
+    }
 
-	public Duration getKeepAliveDuration() {
-		return keepAliveDuration;
-	}
+    public Duration getKeepAliveDuration() {
+        return keepAliveDuration;
+    }
 
-	public int getQueueCapacity() {
-		return queueCapacity;
-	}
+    public int getQueueCapacity() {
+        return queueCapacity;
+    }
 
-	public int getMaxThreadPoolSize() {
-		return maxThreadPoolSize;
-	}
+    public int getMaxThreadPoolSize() {
+        return maxThreadPoolSize;
+    }
 
-	public int getCoreThreadPoolSize() {
-		return coreThreadPoolSize;
-	}
+    public int getCoreThreadPoolSize() { return coreThreadPoolSize; }
 
-	public boolean isWritableStackTraceEnabled() {
-		return writableStackTraceEnabled;
-	}
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
+    }
 
-	public static class Builder {
+    public List<ContextPropagator> getContextPropagator() {
+        return contextPropagators;
+    }
 
-		private ThreadPoolBulkheadConfig config;
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ThreadPoolBulkheadConfig{");
+        sb.append("maxThreadPoolSize=").append(maxThreadPoolSize);
+        sb.append(", coreThreadPoolSize=").append(coreThreadPoolSize);
+        sb.append(", queueCapacity=").append(queueCapacity);
+        sb.append(", keepAliveDuration=").append(keepAliveDuration);
+        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
+        sb.append(", contextPropagators=").append(contextPropagators);
+        sb.append('}');
+        return sb.toString();
+    }
 
+    public static class Builder {
+        private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
+        private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
+        private ThreadPoolBulkheadConfig config;
 
-		public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
-			this.config = bulkheadConfig;
-		}
+        public Builder(ThreadPoolBulkheadConfig bulkheadConfig) {
+            this.config = bulkheadConfig;
+        }
 
-		public Builder() {
-			config = new ThreadPoolBulkheadConfig();
-		}
+        public Builder() {
+            config = new ThreadPoolBulkheadConfig();
+        }
 
-		/**
-		 * Configures the max thread pool size.
-		 *
-		 * @param maxThreadPoolSize max thread pool size
-		 * @return the BulkheadConfig.Builder
-		 */
-		public Builder maxThreadPoolSize(int maxThreadPoolSize) {
-			if (maxThreadPoolSize < 1) {
-				throw new IllegalArgumentException("maxThreadPoolSize must be a positive integer value >= 1");
-			}
-			config.maxThreadPoolSize = maxThreadPoolSize;
-			return this;
-		}
+        /**
+         * Configures the max thread pool size.
+         *
+         * @param maxThreadPoolSize max thread pool size
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder maxThreadPoolSize(int maxThreadPoolSize) {
+            if (maxThreadPoolSize < 1) {
+                throw new IllegalArgumentException(
+                    "maxThreadPoolSize must be a positive integer value >= 1");
+            }
+            config.maxThreadPoolSize = maxThreadPoolSize;
+            return this;
+        }
 
-		/**
-		 * Configures the core thread pool size.
-		 *
-		 * @param coreThreadPoolSize core thread pool size
-		 * @return the BulkheadConfig.Builder
-		 */
-		public Builder coreThreadPoolSize(int coreThreadPoolSize) {
-			if (coreThreadPoolSize < 1) {
-				throw new IllegalArgumentException("coreThreadPoolSize must be a positive integer value >= 1");
-			}
-			config.coreThreadPoolSize = coreThreadPoolSize;
-			return this;
-		}
+        /**
+         * Configures the core thread pool size.
+         *
+         * @param coreThreadPoolSize core thread pool size
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder coreThreadPoolSize(int coreThreadPoolSize) {
+            if (coreThreadPoolSize < 1) {
+                throw new IllegalArgumentException(
+                    "coreThreadPoolSize must be a positive integer value >= 1");
+            }
+            config.coreThreadPoolSize = coreThreadPoolSize;
+            return this;
+        }
 
-		/**
-		 * Configures the capacity of the queue.
-		 *
-		 * @param queueCapacity max concurrent calls
-		 * @return the BulkheadConfig.Builder
-		 */
-		public Builder queueCapacity(int queueCapacity) {
-			if (queueCapacity < 1) {
-				throw new IllegalArgumentException("queueCapacity must be a positive integer value >= 1");
-			}
-			config.queueCapacity = queueCapacity;
-			return this;
-		}
+        /**
+         * Configures the context propagator class.
+         *
+         * @return the BulkheadConfig.Builder
+         */
+        public final Builder contextPropagator(
+            @Nullable Class<? extends ContextPropagator>... contextPropagatorClasses) {
+            this.contextPropagatorClasses = contextPropagatorClasses != null
+                ? contextPropagatorClasses
+                : new Class[0];
+            return this;
+        }
 
-		/**
-		 * When the number of threads is greater than
-		 * the core, this is the maximum time duration that excess idle threads
-		 * will wait for new tasks before terminating.
-		 *
-		 * @param keepAliveDuration maximum wait duration for bulkhead thread pool idle thread
-		 * @return the BulkheadConfig.Builder
-		 */
-		public Builder keepAliveDuration(Duration keepAliveDuration) {
-			if (keepAliveDuration.toMillis() < 0) {
-				throw new IllegalArgumentException("keepAliveDuration must be a positive integer value >= 0");
-			}
-			config.keepAliveDuration = keepAliveDuration;
-			return this;
-		}
+        public final Builder contextPropagator(ContextPropagator... contextPropagators) {
+            this.contextPropagators = contextPropagators != null ?
+                Arrays.stream(contextPropagators).collect(toList()) :
+                new ArrayList<>();
+            return this;
+        }
 
-		/**
-		 * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()} returns a zero length array.
-		 * This may be used to reduce log spam when the circuit breaker is open as the cause of the exceptions is already
-		 * known (the circuit breaker is short-circuiting calls).
-		 *
-		 * @param writableStackTraceEnabled flag to control if stack trace is writable
-		 * @return the BulkheadConfig.Builder
-		 */
-		public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
-			config.writableStackTraceEnabled = writableStackTraceEnabled;
-			return this;
-		}
+        /**
+         * Configures the capacity of the queue.
+         *
+         * @param queueCapacity max concurrent calls
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder queueCapacity(int queueCapacity) {
+            if (queueCapacity < 1) {
+                throw new IllegalArgumentException(
+                    "queueCapacity must be a positive integer value >= 1");
+            }
+            config.queueCapacity = queueCapacity;
+            return this;
+        }
 
-		/**
-		 * Builds a BulkheadConfig
-		 *
-		 * @return the BulkheadConfig
-		 */
-		public ThreadPoolBulkheadConfig build() {
-			if (config.maxThreadPoolSize < config.coreThreadPoolSize) {
-				throw new IllegalArgumentException("maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
-			}
-			return config;
-		}
-	}
+        /**
+         * When the number of threads is greater than the core, this is the maximum time duration
+         * that excess idle threads will wait for new tasks before terminating.
+         *
+         * @param keepAliveDuration maximum wait duration for bulkhead thread pool idle thread
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder keepAliveDuration(Duration keepAliveDuration) {
+            if (keepAliveDuration.toMillis() < 0) {
+                throw new IllegalArgumentException(
+                    "keepAliveDuration must be a positive integer value >= 0");
+            }
+            config.keepAliveDuration = keepAliveDuration;
+            return this;
+        }
+
+        /**
+         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
+         * returns a zero length array. This may be used to reduce log spam when the circuit breaker
+         * is open as the cause of the exceptions is already known (the circuit breaker is
+         * short-circuiting calls).
+         *
+         * @param writableStackTraceEnabled flag to control if stack trace is writable
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            config.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
+        }
+
+        /**
+         * Builds a BulkheadConfig
+         *
+         * @return the BulkheadConfig
+         */
+        public ThreadPoolBulkheadConfig build() {
+            if (config.maxThreadPoolSize < config.coreThreadPoolSize) {
+                throw new IllegalArgumentException(
+                    "maxThreadPoolSize must be a greater than or equals to coreThreadPoolSize");
+            }
+            if (contextPropagatorClasses.length > 0) {
+                config.contextPropagators.addAll(stream(contextPropagatorClasses)
+                    .map(ClassUtils::instantiateClassDefConstructor)
+                    .collect(toList()));
+            }
+            //setting bean of type context propagator overrides the class type.
+            if (!contextPropagators.isEmpty()){
+                config.contextPropagators.addAll(this.contextPropagators);
+            }
+
+            return config;
+        }
+    }
 }

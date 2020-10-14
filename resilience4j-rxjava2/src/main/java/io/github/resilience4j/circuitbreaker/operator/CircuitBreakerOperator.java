@@ -23,14 +23,21 @@ import org.reactivestreams.Publisher;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a permission to subscribe to an upstream Publisher.
- * Otherwise emits a {@link CallNotPermittedException} if the CircuitBreaker is OPEN.
+ * A CircuitBreaker operator which checks if a downstream subscriber/observer can acquire a
+ * permission to subscribe to an upstream Publisher. Otherwise emits a {@link
+ * CallNotPermittedException} if the CircuitBreaker is OPEN.
  *
  * @param <T> the value type
  */
-public class CircuitBreakerOperator<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T>{
+public class CircuitBreakerOperator<T> implements FlowableTransformer<T, T>,
+    SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer,
+    ObservableTransformer<T, T> {
 
     private final CircuitBreaker circuitBreaker;
+
+    private CircuitBreakerOperator(CircuitBreaker circuitBreaker) {
+        this.circuitBreaker = requireNonNull(circuitBreaker);
+    }
 
     /**
      * Creates a CircuitBreakerOperator.
@@ -40,10 +47,6 @@ public class CircuitBreakerOperator<T> implements FlowableTransformer<T, T>, Sin
      */
     public static <T> CircuitBreakerOperator<T> of(CircuitBreaker circuitBreaker) {
         return new CircuitBreakerOperator<>(circuitBreaker);
-    }
-
-    private CircuitBreakerOperator(CircuitBreaker circuitBreaker) {
-        this.circuitBreaker = requireNonNull(circuitBreaker);
     }
 
     @Override

@@ -1,23 +1,22 @@
 plugins {
-    id "org.sonarqube" version "2.7"
-    id "com.jfrog.bintray" version "1.8.4"
+    id "org.sonarqube" version "3.0"
+    id "com.jfrog.bintray" version "1.8.5"
     id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
-    id "com.jfrog.artifactory" version "4.9.5"
+    id "com.jfrog.artifactory" version "4.17.2"
+    id 'idea'
 }
-apply plugin: 'idea'
+
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
-    releaseVersion = '1.1.0'
+    releaseVersion = '1.6.0'
 }
 
 allprojects {
     apply plugin: 'jacoco'
-    apply plugin: 'me.champeau.gradle.jmh'
-    apply plugin: 'com.jfrog.artifactory'
 
-    version = '1.1.1-SNAPSHOT'
+    version = '1.6.1-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
@@ -26,11 +25,11 @@ allprojects {
         mavenCentral()
     }
 }
-artifactoryPublish.skip=true // apply to all projects except the root
+artifactoryPublish.skip = true // apply to all projects except the root
 
 ext {
     coreProjects = subprojects.findAll {
-        p -> !p.name.contains("documentation") && !p.name.endsWith("-bom")
+        p -> !p.name.endsWith("-bom")
     }
 }
 
@@ -40,25 +39,26 @@ configure(project.coreProjects) {
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'com.jfrog.artifactory'
     apply from: "${rootDir}/publishing.gradle"
-    apply plugin: 'jacoco'
+    apply plugin: 'me.champeau.gradle.jmh'
 
     dependencies {
-        compile ( libraries.vavr)
-        compile ( libraries.slf4j)
-        
+        compile(libraries.vavr)
+        compile(libraries.slf4j)
+
         // JSR-305 only used for non-required meta-annotations
         compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
-        testCompile ( libraries.junit)
-        testCompile ( libraries.assertj)
-        testCompile ( libraries.logback)
-        testCompile ( libraries.mockito)
-        testCompile ( libraries.powermock)
-        testCompile ( libraries.powermock_api_mockito)
-        testCompile ( libraries.powermock_module_junit4)
-        testCompile ( libraries.awaitility)
-        testCompile ( libraries.jaxws)
+        testCompile(libraries.junit)
+        testCompile(libraries.assertj)
+        testCompile(libraries.logback)
+        testCompile(libraries.mockito)
+        testCompile(libraries.powermock)
+        testCompile(libraries.powermock_api_mockito)
+        testCompile(libraries.powermock_module_junit4)
+        testCompile(libraries.awaitility)
+        testCompile(libraries.jaxws)
     }
 
     tasks.withType(JavaCompile) {
@@ -67,62 +67,74 @@ configure(project.coreProjects) {
         options.deprecation = true
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
-
     }
 
     jmh {
         duplicateClassesStrategy = 'warn'
     }
+
+
+
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+        }
+    }
+
+    afterEvaluate {
+        jar {
+            inputs.property('moduleName', moduleName)
+            manifest.attributes(
+                    'Automatic-Module-Name': moduleName
+            )
+        }
+    }
 }
+
+def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report.xml"
 
 sonarqube {
     properties {
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
-        property "sonar.links.homepage","https://github.com/resilience4j/resilience4j"
-        property "sonar.links.ci","https://travis-ci.org/resilience4j/resilience4j"
-        property "sonar.links.scm","https://github.com/resilience4j/resilience4j"
-        property "sonar.links.issue","https://github.com/resilience4j/resilience4j/issues"
-        property "sonar.language","java"
+        property "sonar.links.homepage", "https://github.com/resilience4j/resilience4j"
+        property "sonar.links.ci", "https://travis-ci.org/resilience4j/resilience4j"
+        property "sonar.links.scm", "https://github.com/resilience4j/resilience4j"
+        property "sonar.links.issue", "https://github.com/resilience4j/resilience4j/issues"
+        property "sonar.language", "java"
+        property "sonar.coverage.jacoco.xmlReportPaths", allTestCoverageFile
     }
 }
-def allTestCoverageFile = "$buildDir/jacoco/allTestCoverage.exec"
 
 task jacocoMergeTest(type: JacocoMerge) {
     destinationFile = file(allTestCoverageFile)
-    executionData = project.fileTree(dir: '.', include:'**/build/jacoco/test.exec')
+    executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
 }
 
-task jacocoMerge(dependsOn: ['jacocoMergeTest']) {
-    // used to run the other merge tasks
-}
+task jacocoRootTestReport(type: JacocoReport) {
 
-subprojects {
-    sonarqube {
-        properties {
-            property "sonar.jacoco.reportPaths", allTestCoverageFile
-        }
+    coreProjects.each { dependsOn("${it.name}:test") }
+    coreProjects.each { dependsOn("${it.name}:jacocoTestReport") }
+
+    additionalSourceDirs.from = coreProjects.sourceSets.main.allSource.srcDirs
+    sourceDirectories.from = coreProjects.sourceSets.main.allSource.srcDirs
+    classDirectories.from = coreProjects.sourceSets.main.output
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+
+    onlyIf {
+        true
     }
-    afterEvaluate {
-        // exclude subprojects that don't produce a jar file or by design.
-        if(!project.name.equals('resilience4j-bom') && !project.name.equals('resilience4j-documentation')
-                && !project.name.equals('resilience4j-test') && !project.name.equals('resilience4j-spring-boot-common')) {
-            jar {
-                inputs.property('moduleName', moduleName)
-                manifest.attributes(
-                    'Automatic-Module-Name': moduleName
-                )
-            }
-        }
+
+    reports {
+        xml.enabled true
+        xml.destination file(allTestCoverageFile)
+        html.enabled true
+        csv.enabled false
     }
 }
 
-tasks.check.dependsOn tasks.jacocoTestReport
-
-
-test {
-    dependsOn(subprojects.test) // required by cobertura to aggregate report
-}
+tasks.check.dependsOn tasks.jacocoRootTestReport
+tasks.jacocoRootTestReport.dependsOn tasks.test
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
@@ -141,7 +153,7 @@ artifactory {
             password = project.hasProperty('bintrayApiKey') ? project.bintrayApiKey : System.getenv('BINTRAY_KEY')
         }
         defaults {
-            publications('mavenJava')
+            publications('resilience4j')
         }
     }
     if (System.properties['https.proxyHost']) {

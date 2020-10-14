@@ -23,15 +23,21 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedRateLimiterMetricsPublisher
-        extends AbstractRateLimiterMetrics implements MetricsPublisher<RateLimiter> {
+    extends AbstractRateLimiterMetrics implements MetricsPublisher<RateLimiter> {
 
     private final MeterRegistry meterRegistry;
 
     public TaggedRateLimiterMetricsPublisher(MeterRegistry meterRegistry) {
-        super(MetricNames.ofDefaults());
+        super(RateLimiterMetricNames.ofDefaults());
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
+    public TaggedRateLimiterMetricsPublisher(RateLimiterMetricNames names, MeterRegistry meterRegistry) {
+        super(names);
+        this.meterRegistry = requireNonNull(meterRegistry);
+    }
+
+    @Deprecated
     public TaggedRateLimiterMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);

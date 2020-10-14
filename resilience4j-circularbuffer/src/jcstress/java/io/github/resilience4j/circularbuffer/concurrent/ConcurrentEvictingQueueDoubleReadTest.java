@@ -18,22 +18,16 @@
  */
 package io.github.resilience4j.circularbuffer.concurrent;
 
-import org.openjdk.jcstress.annotations.Actor;
-import org.openjdk.jcstress.annotations.Arbiter;
-import org.openjdk.jcstress.annotations.Expect;
-import org.openjdk.jcstress.annotations.JCStressTest;
-import org.openjdk.jcstress.annotations.Outcome;
-import org.openjdk.jcstress.annotations.State;
-import org.openjdk.jcstress.infra.results.StringResult2;
-
 import io.github.resilience4j.circularbuffer.ConcurrentEvictingQueue;
+import org.openjdk.jcstress.annotations.*;
+import org.openjdk.jcstress.infra.results.StringResult2;
 
 @JCStressTest
 @State
-@Outcome(id="1, null", expect = Expect.ACCEPTABLE)
-@Outcome(id="null, 1", expect = Expect.ACCEPTABLE)
-@Outcome(id="null, null", expect = Expect.FORBIDDEN)
-@Outcome(id="1, 1", expect = Expect.FORBIDDEN)
+@Outcome(id = "1, null", expect = Expect.ACCEPTABLE)
+@Outcome(id = "null, 1", expect = Expect.ACCEPTABLE)
+@Outcome(id = "null, null", expect = Expect.FORBIDDEN)
+@Outcome(id = "1, 1", expect = Expect.FORBIDDEN)
 public class ConcurrentEvictingQueueDoubleReadTest {
 
     ConcurrentEvictingQueue<Integer> queue;

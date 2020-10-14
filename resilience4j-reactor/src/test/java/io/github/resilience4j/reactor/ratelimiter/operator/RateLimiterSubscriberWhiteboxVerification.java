@@ -22,7 +22,7 @@ import org.reactivestreams.tck.TestEnvironment;
 import reactor.core.publisher.MonoProcessor;
 
 public class RateLimiterSubscriberWhiteboxVerification extends
-        SubscriberWhiteboxVerification<Integer> {
+    SubscriberWhiteboxVerification<Integer> {
 
     public RateLimiterSubscriberWhiteboxVerification() {
         super(new TestEnvironment());

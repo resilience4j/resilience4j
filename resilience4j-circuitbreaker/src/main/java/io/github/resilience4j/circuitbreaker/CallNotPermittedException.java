@@ -19,25 +19,41 @@
 package io.github.resilience4j.circuitbreaker;
 
 /**
- * A {@link CallNotPermittedException} signals that the CircuitBreaker is HALF_OPEN or OPEN
- * and a call is not permitted to be executed.
+ * A {@link CallNotPermittedException} signals that the CircuitBreaker is HALF_OPEN or OPEN and a
+ * call is not permitted to be executed.
  */
 public class CallNotPermittedException extends RuntimeException {
+
+    private final transient String causingCircuitBreakerName;
+
+    private CallNotPermittedException(CircuitBreaker circuitBreaker, String message, boolean writableStackTrace) {
+        super(message, null, false, writableStackTrace);
+        this.causingCircuitBreakerName = circuitBreaker.getName();
+    }
 
     /**
      * Static method to construct a {@link CallNotPermittedException} with a CircuitBreaker.
      *
      * @param circuitBreaker the CircuitBreaker.
      */
-    public static CallNotPermittedException createCallNotPermittedException(CircuitBreaker circuitBreaker) {
-        boolean writableStackTraceEnabled = circuitBreaker.getCircuitBreakerConfig().isWritableStackTraceEnabled();
+    public static CallNotPermittedException createCallNotPermittedException(
+        CircuitBreaker circuitBreaker) {
+        boolean writableStackTraceEnabled = circuitBreaker.getCircuitBreakerConfig()
+            .isWritableStackTraceEnabled();
 
-        String message = String.format("CircuitBreaker '%s' is %s and does not permit further calls", circuitBreaker.getName(), circuitBreaker.getState());
+        String message = String
+            .format("CircuitBreaker '%s' is %s and does not permit further calls",
+                circuitBreaker.getName(), circuitBreaker.getState());
 
-        return new CallNotPermittedException(message, writableStackTraceEnabled);
+        return new CallNotPermittedException(circuitBreaker, message, writableStackTraceEnabled);
     }
 
-    private CallNotPermittedException(String message, boolean writableStackTrace) {
-        super(message, null, false, writableStackTrace);
+    /**
+     * Returns the name of {@link CircuitBreaker} that caused this exception.
+     *
+     * @return the name of  {@link CircuitBreaker} that caused this exception.
+     */
+    public String getCausingCircuitBreakerName() {
+        return this.causingCircuitBreakerName;
     }
 }

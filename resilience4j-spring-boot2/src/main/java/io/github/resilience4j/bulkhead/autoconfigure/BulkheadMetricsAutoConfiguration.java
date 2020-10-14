@@ -21,7 +21,9 @@ import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,12 +31,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-metrics.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-metrics.
  */
 @Configuration
 @ConditionalOnClass({MeterRegistry.class, Bulkhead.class, TaggedBulkheadMetricsPublisher.class})
-@AutoConfigureAfter(MetricsAutoConfiguration.class)
+@AutoConfigureAfter({MetricsAutoConfiguration.class, SimpleMetricsExportAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.enabled", matchIfMissing = true)
 public class BulkheadMetricsAutoConfiguration {
 
@@ -46,9 +48,11 @@ public class BulkheadMetricsAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(MeterRegistry.class)
     @ConditionalOnProperty(value = "resilience4j.bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(MeterRegistry meterRegistry) {
+    public TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher(
+        MeterRegistry meterRegistry) {
         return new TaggedBulkheadMetricsPublisher(meterRegistry);
     }
 

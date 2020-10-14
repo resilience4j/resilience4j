@@ -5,11 +5,11 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.reactivex.Completable;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 /**
@@ -20,8 +20,8 @@ public class CompletableBulkheadTest {
     private Bulkhead bulkhead;
 
     @Before
-    public void setUp(){
-        bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
+    public void setUp() {
+        bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -34,7 +34,7 @@ public class CompletableBulkheadTest {
             .assertSubscribed()
             .assertComplete();
 
-        verify(bulkhead, times(1)).onComplete();
+        then(bulkhead).should().onComplete();
     }
 
     @Test
@@ -48,7 +48,7 @@ public class CompletableBulkheadTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(bulkhead, times(1)).onComplete();
+        then(bulkhead).should().onComplete();
     }
 
     @Test
@@ -62,6 +62,6 @@ public class CompletableBulkheadTest {
             .assertError(BulkheadFullException.class)
             .assertNotComplete();
 
-        verify(bulkhead, never()).onComplete();
+        then(bulkhead).should(never()).onComplete();
     }
 }

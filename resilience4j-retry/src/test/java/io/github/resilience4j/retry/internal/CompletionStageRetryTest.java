@@ -23,12 +23,8 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
 import io.vavr.control.Try;
-import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -38,230 +34,192 @@ import java.util.function.Supplier;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class CompletionStageRetryTest {
 
-	private AsyncHelloWorldService helloWorldService;
-	private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private AsyncHelloWorldService helloWorldService;
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-	@Before
-	public void setUp() {
-		helloWorldService = Mockito.mock(AsyncHelloWorldService.class);
-	}
+    @Before
+    public void setUp() {
+        helloWorldService = mock(AsyncHelloWorldService.class);
+    }
 
-	@Test
-	public void shouldNotRetry() {
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willReturn(completedFuture("Hello world"));
-		// Create a Retry with default configuration
-		Retry retryContext = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
+    @Test
+    public void shouldNotRetry() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(completedFuture("Hello world"));
+        Retry retryContext = Retry.ofDefaults("id");
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
 
-		// When
-		String result = awaitResult(supplier);
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
-		Assertions.assertThat(result).isEqualTo("Hello world");
-	}
+        String result = awaitResult(supplier);
 
-	@Test
-	public void shouldNotRetryWhenReturnVoid() {
-		BDDMockito.given(helloWorldService.sayHelloWorld())
-				.willReturn(completedFuture(null));
+        then(helloWorldService).should().returnHelloWorld();
+        assertThat(result).isEqualTo("Hello world");
+    }
 
-		// Create a Retry with default configuration
-		Retry retryContext = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<Void>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.sayHelloWorld());
+    @Test
+    public void shouldNotRetryWhenReturnVoid() {
+        given(helloWorldService.sayHelloWorld())
+            .willReturn(completedFuture(null));
+        Retry retryContext = Retry.ofDefaults("id");
 
-		// When
-		awaitResult(supplier);
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).sayHelloWorld();
-	}
+        Supplier<CompletionStage<Void>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.sayHelloWorld());
+        awaitResult(supplier);
 
-	@Test
-	public void shouldNotRetryWithThatResult(){
-		// Given the HelloWorldService returns Hello world
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willReturn(completedFuture("Hello world"));
-		// Create a Retry with default configuration
-		final RetryConfig retryConfig = RetryConfig.<String>custom().retryOnResult(s -> s.contains("NoRetry"))
-				.maxAttempts(1)
-				.build();
-		Retry retryContext = Retry.of("id", retryConfig);
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
+        then(helloWorldService).should().sayHelloWorld();
+    }
 
-		// When
-		String result = awaitResult(supplier);
-		// Then the helloWorldService should be invoked 1 time
-		BDDMockito.then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
-		Assertions.assertThat(result).isEqualTo("Hello world");
-	}
+    @Test
+    public void shouldNotRetryWithThatResult() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(completedFuture("Hello world"));
+        final RetryConfig retryConfig = RetryConfig.<String>custom()
+            .retryOnResult(s -> s.contains("NoRetry"))
+            .maxAttempts(1)
+            .build();
+        Retry retryContext = Retry.of("id", retryConfig);
 
-	@Test
-	public void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(1, "Hello world");
-	}
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
+        String result = awaitResult(supplier);
 
-	@Test
-	public void shouldRetryTowAttemptsInCaseOResultRetryMatchAtSyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(2, "Hello world");
-	}
+        then(helloWorldService).should().returnHelloWorld();
+        assertThat(result).isEqualTo("Hello world");
+    }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void shouldRethrowExceptionInCaseOfExceptionAtSyncStage() {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willThrow(new IllegalArgumentException("BAM!"));
+    @Test
+    public void shouldRetryInCaseOResultRetryMatchAtSyncStage() {
+        shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(1, "Hello world");
+    }
 
-		// Create a Retry with default configuration
-		Retry retry = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
-		retry.executeCompletionStage(
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
-	}
+    @Test
+    public void shouldRetryTowAttemptsInCaseOResultRetryMatchAtSyncStage() {
+        shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(2, "Hello world");
+    }
 
-	@Test
-	public void shouldRetryInCaseOfAnExceptionAtAsyncStage() {
-		CompletableFuture<String> failedFuture = new CompletableFuture<>();
-		failedFuture.completeExceptionally(new HelloWorldException());
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldRethrowExceptionInCaseOfExceptionAtSyncStage() {
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new IllegalArgumentException("BAM!"));
+        Retry retry = Retry.ofDefaults("id");
 
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willReturn(failedFuture)
-				.willReturn(completedFuture("Hello world"));
+        retry.executeCompletionStage(
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
+    }
 
-		// Create a Retry with default configuration
-		Retry retryContext = Retry.ofDefaults("id");
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
+    @Test
+    public void shouldRetryInCaseOfAnExceptionAtAsyncStage() {
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new HelloWorldException());
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(failedFuture)
+            .willReturn(completedFuture("Hello world"));
+        Retry retryContext = Retry.ofDefaults("id");
 
-		// When
-		String result = awaitResult(supplier.get());
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
+        String result = awaitResult(supplier.get());
 
-		// Then the helloWorldService should be invoked 2 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(2)).returnHelloWorld();
-		Assertions.assertThat(result).isEqualTo("Hello world");
-	}
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+        assertThat(result).isEqualTo("Hello world");
+    }
 
-	private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(int noOfAttempts) {
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willThrow(new HelloWorldException());
+    private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(int noOfAttempts) {
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new HelloWorldException());
+        Retry retryContext = Retry.of(
+            "id",
+            RetryConfig
+                .custom()
+                .maxAttempts(noOfAttempts)
+                .build());
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
 
-		// Create a Retry with default configuration
-		Retry retryContext = Retry.of(
-				"id",
-				RetryConfig
-						.custom()
-						.maxAttempts(noOfAttempts)
-						.build());
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
+        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
 
-		// When
-		Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+        then(helloWorldService).should(times(noOfAttempts)).returnHelloWorld();
+        assertThat(resultTry.isFailure()).isTrue();
+        assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
+    }
 
-		// Then the helloWorldService should be invoked n + 1  times
-		BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
-		Assertions.assertThat(resultTry.isFailure()).isTrue();
-		Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
-	}
+    @Test
+    public void shouldCompleteFutureAfterOneAttemptInCaseOfExceptionAtAsyncStage() {
+        shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(1);
+    }
 
-	@Test
-	public void shouldCompleteFutureAfterOneAttemptInCaseOfExceptionAtAsyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(1);
-	}
+    @Test
+    public void shouldCompleteFutureAfterTwoAttemptsInCaseOfExceptionAtAsyncStage() {
+        shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(2);
+    }
 
-	@Test
-	public void shouldCompleteFutureAfterTwoAttemptsInCaseOfExceptionAtAsyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(2);
-	}
+    @Test
+    public void shouldCompleteFutureAfterThreeAttemptsInCaseOfExceptionAtAsyncStage() {
+        shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(3);
+    }
 
-	@Test
-	public void shouldCompleteFutureAfterThreeAttemptsInCaseOfExceptionAtAsyncStage() {
-		shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(3);
-	}
+    private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(int noOfAttempts) {
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new HelloWorldException());
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(failedFuture);
+        Retry retryContext = Retry.of(
+            "id",
+            RetryConfig
+                .custom()
+                .maxAttempts(noOfAttempts)
+                .build());
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
 
-	private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtAsyncStage(int noOfAttempts) {
-		CompletableFuture<String> failedFuture = new CompletableFuture<>();
-		failedFuture.completeExceptionally(new HelloWorldException());
+        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
 
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willReturn(failedFuture);
+        then(helloWorldService).should(times(noOfAttempts)).returnHelloWorld();
+        assertThat(resultTry.isFailure()).isTrue();
+        assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
+    }
 
-		// Create a Retry with default configuration
-		Retry retryContext = Retry.of(
-				"id",
-				RetryConfig
-						.custom()
-						.maxAttempts(noOfAttempts)
-						.build());
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
+    private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
+        String retryResponse) {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(completedFuture("Hello world"));
+        Retry retryContext = Retry.of(
+            "id",
+            RetryConfig
+                .<String>custom()
+                .maxAttempts(noOfAttempts)
+                .retryOnResult(s -> s.contains(retryResponse))
+                .build());
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
 
-		// When
-		Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
 
-		// Then the helloWorldService should be invoked n + 1 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
-		Assertions.assertThat(resultTry.isFailure()).isTrue();
-		Assertions.assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
-	}
-
-	private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
-	                                                                               String retryResponse) {
-
-		// Given the HelloWorldService throws an exception
-		BDDMockito.given(helloWorldService.returnHelloWorld())
-				.willReturn(completedFuture("Hello world"));
-
-
-		// Create a Retry with default configuration
-		Retry retryContext = Retry.of(
-				"id",
-				RetryConfig
-						.<String>custom()
-						.maxAttempts(noOfAttempts)
-						.retryOnResult(s -> s.contains(retryResponse))
-						.build());
-		// Decorate the invocation of the HelloWorldService
-		Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-				retryContext,
-				scheduler,
-				() -> helloWorldService.returnHelloWorld());
-
-		// When
-		Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
-
-		// Then the helloWorldService should be invoked n + 1 times
-		BDDMockito.then(helloWorldService).should(Mockito.times(noOfAttempts)).returnHelloWorld();
-		Assert.assertTrue(resultTry.isSuccess());
-
-	}
+        then(helloWorldService).should(times(noOfAttempts)).returnHelloWorld();
+        assertThat(resultTry.isSuccess()).isTrue();
+    }
 
 }

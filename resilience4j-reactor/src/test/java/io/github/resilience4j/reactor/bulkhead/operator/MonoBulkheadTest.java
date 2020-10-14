@@ -19,7 +19,6 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -34,8 +33,8 @@ public class MonoBulkheadTest {
     private Bulkhead bulkhead;
 
     @Before
-    public void setUp(){
-        bulkhead = Mockito.mock(Bulkhead.class, RETURNS_DEEP_STUBS);
+    public void setUp() {
+        bulkhead = mock(Bulkhead.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -43,10 +42,10 @@ public class MonoBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .compose(BulkheadOperator.of(bulkhead)))
-                .expectNext("Event")
-                .verifyComplete();
+            Mono.just("Event")
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectNext("Event")
+            .verifyComplete();
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -56,11 +55,11 @@ public class MonoBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .compose(BulkheadOperator.of(bulkhead)))
-                .expectSubscription()
-                .expectError(IOException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.error(new IOException("BAM!"))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectSubscription()
+            .expectError(IOException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(bulkhead, times(1)).onComplete();
     }
@@ -70,11 +69,11 @@ public class MonoBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .compose(BulkheadOperator.of(bulkhead)))
-                .expectSubscription()
-                .expectError(BulkheadFullException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.just("Event")
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectSubscription()
+            .expectError(BulkheadFullException.class)
+            .verify(Duration.ofSeconds(1));
 
         verify(bulkhead, never()).onComplete();
     }
@@ -84,11 +83,11 @@ public class MonoBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .compose(BulkheadOperator.of(bulkhead)))
-                .expectSubscription()
-                .expectError(BulkheadFullException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.error(new IOException("BAM!"))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectSubscription()
+            .expectError(BulkheadFullException.class)
+            .verify(Duration.ofSeconds(1));
     }
 
     @Test
@@ -96,12 +95,12 @@ public class MonoBulkheadTest {
         given(bulkhead.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .delayElement(Duration.ofHours(1))
-                        .compose(BulkheadOperator.of(bulkhead)))
-                .expectSubscription()
-                .thenCancel()
-                .verify();
+            Mono.just("Event")
+                .delayElement(Duration.ofHours(1))
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectSubscription()
+            .thenCancel()
+            .verify();
 
         verify(bulkhead, times(1)).releasePermission();
     }

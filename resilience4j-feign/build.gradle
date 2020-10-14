@@ -1,8 +1,10 @@
 dependencies {
-    compileOnly ( libraries.feign )
+    compileOnly(libraries.feign)
+    compile project(':resilience4j-retry')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
-    testCompile ( libraries.feign_wiremock )
-    testCompile ( libraries.feign )
+    compile project(':resilience4j-bulkhead')
+    testCompile(libraries.feign_wiremock)
+    testCompile(libraries.feign)
 }
-ext.moduleName='io.github.resilience4j.feign'
+ext.moduleName = 'io.github.resilience4j.feign'

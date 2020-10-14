@@ -23,7 +23,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 import static java.util.Objects.requireNonNull;
@@ -40,9 +39,9 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
     @Override
     protected void subscribeActual(Subscriber<? super T> downstream) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             upstream.subscribe(new CircuitBreakerSubscriber(downstream));
-        }else{
+        } else {
             downstream.onSubscribe(EmptySubscription.INSTANCE);
             downstream.onError(createCallNotPermittedException(circuitBreaker));
         }
@@ -54,24 +53,24 @@ class FlowableCircuitBreaker<T> extends Flowable<T> {
 
         CircuitBreakerSubscriber(Subscriber<? super T> downstreamSubscriber) {
             super(downstreamSubscriber);
-            this.start = System.nanoTime();
+            this.start = circuitBreaker.getCurrentTimestamp();
         }
 
         @Override
         public void hookOnError(Throwable t) {
-            circuitBreaker.onError(System.nanoTime() - start, TimeUnit.NANOSECONDS, t);
+            circuitBreaker.onError(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), t);
         }
 
         @Override
         public void hookOnComplete() {
-            circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
         }
 
         @Override
         public void hookOnCancel() {
-            if(eventWasEmitted.get()){
-                circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
-            }else{
+            if (eventWasEmitted.get()) {
+                circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
+            } else {
                 circuitBreaker.releasePermission();
             }
         }

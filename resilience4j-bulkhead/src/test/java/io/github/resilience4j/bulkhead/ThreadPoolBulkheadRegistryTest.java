@@ -21,10 +21,7 @@ package io.github.resilience4j.bulkhead;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.core.registry.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,172 +33,346 @@ import static org.assertj.core.api.BDDAssertions.assertThat;
 
 public class ThreadPoolBulkheadRegistryTest {
 
-	private ThreadPoolBulkheadConfig config;
-	private ThreadPoolBulkheadRegistry registry;
+    private ThreadPoolBulkheadConfig config;
+    private ThreadPoolBulkheadRegistry registry;
 
-	@Before
-	public void setUp() {
+    private static Optional<EventProcessor<?>> getEventProcessor(
+        Registry.EventPublisher<ThreadPoolBulkhead> ep) {
+        return ep instanceof EventProcessor<?> ? Optional.of((EventProcessor<?>) ep)
+            : Optional.empty();
+    }
 
-		// registry with default config
-		registry = ThreadPoolBulkheadRegistry.ofDefaults();
+    @Before
+    public void setUp() {
+        registry = ThreadPoolBulkheadRegistry.ofDefaults();
+        config = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(100)
+            .build();
+    }
 
-		// registry with custom config
-		config = ThreadPoolBulkheadConfig.custom()
-				.maxThreadPoolSize(100)
-				.build();
-	}
+    @Test
+    public void shouldReturnCustomConfig() {
+        ThreadPoolBulkheadRegistry registry = ThreadPoolBulkheadRegistry.of(config);
 
-	@Test
-	public void shouldReturnCustomConfig() {
+        ThreadPoolBulkheadConfig bulkheadConfig = registry.getDefaultConfig();
 
-		// give
-		ThreadPoolBulkheadRegistry registry = ThreadPoolBulkheadRegistry.of(config);
+        assertThat(bulkheadConfig).isSameAs(config);
+    }
 
-		// when
-		ThreadPoolBulkheadConfig bulkheadConfig = registry.getDefaultConfig();
+    @Test
+    public void shouldReturnTheCorrectName() {
+        ThreadPoolBulkhead bulkhead = registry.bulkhead("test");
 
-		// then
-		assertThat(bulkheadConfig).isSameAs(config);
-	}
+        assertThat(bulkhead).isNotNull();
+        assertThat(bulkhead.getName()).isEqualTo("test");
+        assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize())
+            .isEqualTo(Runtime.getRuntime().availableProcessors());
+    }
 
-	@Test
-	public void shouldReturnTheCorrectName() {
+    @Test
+    public void shouldBeTheSameInstance() {
+        ThreadPoolBulkhead bulkhead1 = registry.bulkhead("test", config);
+        ThreadPoolBulkhead bulkhead2 = registry.bulkhead("test", config);
 
-		ThreadPoolBulkhead bulkhead = registry.bulkhead("test");
+        assertThat(bulkhead1).isSameAs(bulkhead2);
+        assertThat(registry.getAllBulkheads()).hasSize(1);
+    }
 
-		assertThat(bulkhead).isNotNull();
-		assertThat(bulkhead.getName()).isEqualTo("test");
-		assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(Runtime.getRuntime().availableProcessors());
-	}
+    @Test
+    public void shouldBeNotTheSameInstance() {
+        ThreadPoolBulkhead bulkhead1 = registry.bulkhead("test1");
+        ThreadPoolBulkhead bulkhead2 = registry.bulkhead("test2");
 
-	@Test
-	public void shouldBeTheSameInstance() {
+        assertThat(bulkhead1).isNotSameAs(bulkhead2);
+        assertThat(registry.getAllBulkheads()).hasSize(2);
+    }
 
-		ThreadPoolBulkhead bulkhead1 = registry.bulkhead("test", config);
-		ThreadPoolBulkhead bulkhead2 = registry.bulkhead("test", config);
+//	@Test
+//	public void tagsOfRegistryAddedToInstance() {
+//		ThreadPoolBulkhead retryConfig = ThreadPoolBulkhead.ofDefaults();
+//		Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
+//		io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap.of("key1","value1", "key2", "value2");
+//		RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, retryTags);
+//		Retry retry = retryRegistry.retry("testName");
+//
+//		Assertions.assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+//	}
 
-		assertThat(bulkhead1).isSameAs(bulkhead2);
-		assertThat(registry.getAllBulkheads()).hasSize(1);
-	}
+    @Test
+    public void noTagsByDefault() {
+        ThreadPoolBulkhead bulkhead = registry.bulkhead("testName");
+        assertThat(bulkhead.getTags()).hasSize(0);
+    }
 
-	@Test
-	public void shouldBeNotTheSameInstance() {
+    @Test
+    public void tagsAddedToInstance() {
+        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        ThreadPoolBulkhead bulkhead = registry.bulkhead("testName", bulkheadTags);
 
-		ThreadPoolBulkhead bulkhead1 = registry.bulkhead("test1");
-		ThreadPoolBulkhead bulkhead2 = registry.bulkhead("test2");
+        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+    }
 
-		assertThat(bulkhead1).isNotSameAs(bulkhead2);
-		assertThat(registry.getAllBulkheads()).hasSize(2);
-	}
+    @Test
+    public void tagsOfRetriesShouldNotBeMixed() {
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.ofDefaults();
+        io.vavr.collection.Map<String, String> bulkheadTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        ThreadPoolBulkhead bulkhead = registry.bulkhead("testName", config, bulkheadTags);
+        io.vavr.collection.Map<String, String> bulkheadTags2 = io.vavr.collection.HashMap
+            .of("key3", "value3", "key4", "value4");
+        ThreadPoolBulkhead bulkhead2 = registry.bulkhead("otherTestName", config, bulkheadTags2);
 
-	@Test
-	public void testCreateWithConfigurationMap() {
-		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
-		configs.put("default", ThreadPoolBulkheadConfig.ofDefaults());
-		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+        assertThat(bulkhead.getTags()).containsOnlyElementsOf(bulkheadTags);
+        assertThat(bulkhead2.getTags()).containsOnlyElementsOf(bulkheadTags2);
+    }
 
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.of(configs);
+    @Test
+    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+        ThreadPoolBulkheadConfig bulkheadConfig = ThreadPoolBulkheadConfig.ofDefaults();
+        Map<String, ThreadPoolBulkheadConfig> bulkheadConfigs = Collections
+            .singletonMap("default", bulkheadConfig);
+        io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
+            .of("key1", "value3", "key4", "value4");
+        ThreadPoolBulkheadRegistry bulkheadRegistry = ThreadPoolBulkheadRegistry
+            .of(bulkheadConfigs, registryTags);
+        ThreadPoolBulkhead bulkhead = bulkheadRegistry
+            .bulkhead("testName", bulkheadConfig, instanceTags);
 
-		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
-		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
-	}
+        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
+            .of("key1", "value3", "key2", "value2", "key4", "value4");
+        assertThat(bulkhead.getTags()).containsOnlyElementsOf(expectedTags);
+    }
 
-	@Test
-	public void testCreateWithConfigurationMapWithoutDefaultConfig() {
-		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
-		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+    @Test
+    public void testCreateWithConfigurationMap() {
+        Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+        configs.put("default", ThreadPoolBulkheadConfig.ofDefaults());
+        configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
 
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.of(configs);
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
+            .of(configs);
 
-		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
-		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
-	}
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-	@Test
-	public void testCreateWithSingleRegistryEventConsumer() {
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-				ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(), new NoOpThreadPoolBulkheadEventConsumer());
+    @Test
+    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+        Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+        configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
 
-		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
+            .of(configs);
 
-	@Test
-	public void testCreateWithMultipleRegistryEventConsumer() {
-		List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
-		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
-		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-				ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(), registryEventConsumers);
+    @Test
+    public void testCreateWithSingleRegistryEventConsumer() {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry.of(ThreadPoolBulkheadConfig.ofDefaults(),
+                new NoOpThreadPoolBulkheadEventConsumer());
 
-		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-	@Test
-	public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
-		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
-		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+    @Test
+    public void testCreateWithMultipleRegistryEventConsumer() {
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+        registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
 
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-				ThreadPoolBulkheadRegistry.of(configs, new NoOpThreadPoolBulkheadEventConsumer());
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry
+                .of(ThreadPoolBulkheadConfig.ofDefaults(), registryEventConsumers);
 
-		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+        getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-	@Test
-	public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
-		Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
-		configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+    @Test
+    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+        Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+        configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
 
-		List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
-		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
-		registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry.of(configs, new NoOpThreadPoolBulkheadEventConsumer());
 
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
-				ThreadPoolBulkheadRegistry.of(configs, registryEventConsumers);
+        getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
-				.ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
-	}
+    @Test
+    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+        Map<String, ThreadPoolBulkheadConfig> configs = new HashMap<>();
+        configs.put("custom", ThreadPoolBulkheadConfig.ofDefaults());
+        List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
+        registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
+        registryEventConsumers.add(new NoOpThreadPoolBulkheadEventConsumer());
 
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry.of(configs, registryEventConsumers);
 
-	@Test
-	public void testWithNotExistingConfig() {
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+        getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
 
-		assertThatThrownBy(() -> threadPoolBulkheadRegistry.bulkhead("test", "doesNotExist"))
-				.isInstanceOf(ConfigurationNotFoundException.class);
-	}
+    @Test
+    public void testWithNotExistingConfig() {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
+            .ofDefaults();
 
-	@Test
-	public void testAddConfiguration() {
-		ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
-		threadPoolBulkheadRegistry.addConfiguration("custom", ThreadPoolBulkheadConfig.custom().build());
+        assertThatThrownBy(() -> threadPoolBulkheadRegistry.bulkhead("test", "doesNotExist"))
+            .isInstanceOf(ConfigurationNotFoundException.class);
+    }
 
-		assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
-		assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
-	}
+    @Test
+    public void testAddConfiguration() {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry
+            .ofDefaults();
+        threadPoolBulkheadRegistry
+            .addConfiguration("custom", ThreadPoolBulkheadConfig.custom().build());
 
-	private static Optional<EventProcessor<?>> getEventProcessor(Registry.EventPublisher<ThreadPoolBulkhead> eventPublisher) {
-		if (eventPublisher instanceof EventProcessor<?>) {
-			return Optional.of((EventProcessor<?>) eventPublisher);
-		}
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotNull();
+    }
 
-		return Optional.empty();
-	}
+    private static class NoOpThreadPoolBulkheadEventConsumer implements
+        RegistryEventConsumer<ThreadPoolBulkhead> {
 
-	private static class NoOpThreadPoolBulkheadEventConsumer implements RegistryEventConsumer<ThreadPoolBulkhead> {
-		@Override
-		public void onEntryAddedEvent(EntryAddedEvent<ThreadPoolBulkhead> entryAddedEvent) { }
+        @Override
+        public void onEntryAddedEvent(EntryAddedEvent<ThreadPoolBulkhead> entryAddedEvent) {
+        }
 
-		@Override
-		public void onEntryRemovedEvent(EntryRemovedEvent<ThreadPoolBulkhead> entryRemoveEvent) { }
+        @Override
+        public void onEntryRemovedEvent(EntryRemovedEvent<ThreadPoolBulkhead> entryRemoveEvent) {
+        }
 
-		@Override
-		public void onEntryReplacedEvent(EntryReplacedEvent<ThreadPoolBulkhead> entryReplacedEvent) { }
-	}
+        @Override
+        public void onEntryReplacedEvent(
+            EntryReplacedEvent<ThreadPoolBulkhead> entryReplacedEvent) {
+        }
+    }
 
+    @Test
+    public void testCreateUsingBuilderWithDefaultConfig() {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry.custom().withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.ofDefaults()).build();
+        ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead("testName");
+        ThreadPoolBulkhead threadPoolBulkhead2 = threadPoolBulkheadRegistry.bulkhead("otherTestName");
+        assertThat(threadPoolBulkhead).isNotSameAs(threadPoolBulkhead2);
+
+        assertThat(threadPoolBulkheadRegistry.getAllBulkheads()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCustomConfig() {
+        int maxThreadPoolSize = 100;
+        ThreadPoolBulkheadConfig threadPoolBulkheadConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(maxThreadPoolSize).build();
+
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry.custom().withThreadPoolBulkheadConfig(threadPoolBulkheadConfig).build();
+        ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead("testName");
+
+        assertThat(threadPoolBulkhead.getBulkheadConfig().getMaxThreadPoolSize())
+            .isEqualTo(maxThreadPoolSize);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithoutDefaultConfig() {
+        int maxThreadPoolSize = 100;
+        ThreadPoolBulkheadConfig threadPoolBulkheadConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(maxThreadPoolSize).build();
+
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry =
+            ThreadPoolBulkheadRegistry.custom().addThreadPoolBulkheadConfig("someSharedConfig", threadPoolBulkheadConfig).build();
+
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig().getMaxThreadPoolSize())
+            .isEqualTo(Runtime.getRuntime().availableProcessors());
+        assertThat(threadPoolBulkheadRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+
+        ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry
+            .bulkhead("name", "someSharedConfig");
+
+        assertThat(threadPoolBulkhead.getBulkheadConfig()).isEqualTo(threadPoolBulkheadConfig);
+        assertThat(threadPoolBulkhead.getBulkheadConfig().getMaxThreadPoolSize())
+            .isEqualTo(maxThreadPoolSize);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+        ThreadPoolBulkheadConfig threadPoolBulkheadConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(100).build();
+        ThreadPoolBulkheadRegistry.custom().addThreadPoolBulkheadConfig("default", threadPoolBulkheadConfig).build();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+        ThreadPoolBulkheadConfig threadPoolBulkheadConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(100).build();
+        ThreadPoolBulkheadConfig customThreadPoolBulkheadConfig = ThreadPoolBulkheadConfig.custom()
+            .maxThreadPoolSize(200).build();
+
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.custom()
+            .withThreadPoolBulkheadConfig(threadPoolBulkheadConfig)
+            .addThreadPoolBulkheadConfig("custom", customThreadPoolBulkheadConfig)
+            .build();
+
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig()).isNotNull();
+        assertThat(threadPoolBulkheadRegistry.getDefaultConfig().getMaxThreadPoolSize())
+            .isEqualTo(100);
+        assertThat(threadPoolBulkheadRegistry.getConfiguration("custom")).isNotEmpty();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithNullConfig() {
+        assertThatThrownBy(
+            () -> ThreadPoolBulkheadRegistry.custom().withThreadPoolBulkheadConfig(null).build())
+            .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.custom()
+            .withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.ofDefaults())
+            .addRegistryEventConsumer(new NoOpThreadPoolBulkheadEventConsumer())
+            .addRegistryEventConsumer(new NoOpThreadPoolBulkheadEventConsumer())
+            .build();
+
+        getEventProcessor(threadPoolBulkheadRegistry.getEventPublisher())
+            .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryTags() {
+        io.vavr.collection.Map<String, String> threadPoolBulkheadTags = io.vavr.collection.HashMap
+            .of("key1", "value1", "key2", "value2");
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.custom()
+            .withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.ofDefaults())
+            .withTags(threadPoolBulkheadTags)
+            .build();
+        ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead("testName");
+
+        assertThat(threadPoolBulkhead.getTags()).containsOnlyElementsOf(threadPoolBulkheadTags);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryStore() {
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.custom()
+            .withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.ofDefaults())
+            .withRegistryStore(new InMemoryRegistryStore())
+            .build();
+        ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead("testName");
+        ThreadPoolBulkhead threadPoolBulkhead2 = threadPoolBulkheadRegistry.bulkhead("otherTestName");
+
+        assertThat(threadPoolBulkhead).isNotSameAs(threadPoolBulkhead2);
+        assertThat(threadPoolBulkheadRegistry.getAllBulkheads()).hasSize(2);
+    }
 }

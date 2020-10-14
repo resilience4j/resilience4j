@@ -19,7 +19,6 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -28,14 +27,15 @@ import java.time.Duration;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 
 public class FluxRateLimiterTest {
 
     private RateLimiter rateLimiter;
 
     @Before
-    public void setUp(){
-        rateLimiter = Mockito.mock(RateLimiter.class, RETURNS_DEEP_STUBS);
+    public void setUp() {
+        rateLimiter = mock(RateLimiter.class, RETURNS_DEEP_STUBS);
     }
 
     @Test
@@ -43,11 +43,11 @@ public class FluxRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
-                Flux.just("Event 1", "Event 2")
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectNext("Event 1")
-                .expectNext("Event 2")
-                .verifyComplete();
+            Flux.just("Event 1", "Event 2")
+                .transformDeferred(RateLimiterOperator.of(rateLimiter)))
+            .expectNext("Event 1")
+            .expectNext("Event 2")
+            .verifyComplete();
     }
 
     @Test
@@ -55,12 +55,12 @@ public class FluxRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofMillis(50).toNanos());
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"))
-                        .log()
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(IOException.class)
-                .verify(Duration.ofMillis(250));
+            Flux.error(new IOException("BAM!"))
+                .log()
+                .transformDeferred(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(IOException.class)
+            .verify(Duration.ofMillis(250));
     }
 
     @Test
@@ -68,11 +68,11 @@ public class FluxRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(Duration.ofSeconds(0).toNanos());
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"))
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(IOException.class)
-                .verify(Duration.ofMillis(100));
+            Flux.error(new IOException("BAM!"))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(IOException.class)
+            .verify(Duration.ofMillis(100));
 
     }
 
@@ -81,11 +81,11 @@ public class FluxRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         StepVerifier.create(
-                Flux.just("Event")
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofMillis(100));
+            Flux.just("Event")
+                .transformDeferred(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(RequestNotPermitted.class)
+            .verify(Duration.ofMillis(100));
     }
 
     @Test
@@ -93,10 +93,10 @@ public class FluxRateLimiterTest {
         given(rateLimiter.reservePermission()).willReturn(-1L);
 
         StepVerifier.create(
-                Flux.error(new IOException("BAM!"))
-                        .compose(RateLimiterOperator.of(rateLimiter)))
-                .expectSubscription()
-                .expectError(RequestNotPermitted.class)
-                .verify(Duration.ofMillis(100));
+            Flux.error(new IOException("BAM!"))
+                .transformDeferred(RateLimiterOperator.of(rateLimiter)))
+            .expectSubscription()
+            .expectError(RequestNotPermitted.class)
+            .verify(Duration.ofMillis(100));
     }
 }

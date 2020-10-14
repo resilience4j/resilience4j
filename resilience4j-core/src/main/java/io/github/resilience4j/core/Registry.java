@@ -22,6 +22,7 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEvent;
+import io.vavr.collection.Map;
 
 import java.util.Optional;
 
@@ -30,67 +31,72 @@ import java.util.Optional;
  */
 public interface Registry<E, C> {
 
-	/**
-	 * Adds a configuration to the registry
-	 *
-	 * @param configName    the configuration name
-	 * @param configuration the added configuration
-	 */
-	void addConfiguration(String configName, C configuration);
+    /**
+     * Adds a configuration to the registry
+     *
+     * @param configName    the configuration name
+     * @param configuration the added configuration
+     */
+    void addConfiguration(String configName, C configuration);
 
-	/**
-	 * Find a named entry in the Registry
-	 *
-	 * @param name    the  name
-	 */
-	Optional<E> find(String name);
+    /**
+     * Find a named entry in the Registry
+     *
+     * @param name the  name
+     */
+    Optional<E> find(String name);
 
-	/**
-	 * Remove an entry from the Registry
-	 *
-	 * @param name    the  name
-	 */
-	Optional<E> remove(String name);
+    /**
+     * Remove an entry from the Registry
+     *
+     * @param name the  name
+     */
+    Optional<E> remove(String name);
 
-	/**
-	 * Replace an existing entry in the Registry by a new one.
-	 *
-	 * @param name    the existing name
-	 * @param newEntry    a new entry
-	 */
-	Optional<E> replace(String name, E newEntry);
+    /**
+     * Replace an existing entry in the Registry by a new one.
+     *
+     * @param name     the existing name
+     * @param newEntry a new entry
+     */
+    Optional<E> replace(String name, E newEntry);
 
-	/**
-	 * Get a configuration by name
-	 *
-	 * @param configName the configuration name
-	 * @return the found configuration if any
-	 */
-	Optional<C> getConfiguration(String configName);
+    /**
+     * Get a configuration by name
+     *
+     * @param configName the configuration name
+     * @return the found configuration if any
+     */
+    Optional<C> getConfiguration(String configName);
 
-	/**
-	 * Get the default configuration
-	 *
-	 * @return the default configuration
-	 */
-	C getDefaultConfig();
+    /**
+     * Get the default configuration
+     *
+     * @return the default configuration
+     */
+    C getDefaultConfig();
 
-	/**
-	 * Returns an EventPublisher which can be used to register event consumers.
-	 *
-	 * @return an EventPublisher
-	 */
-	EventPublisher<E> getEventPublisher();
+    /**
+     * @return global configured registry tags
+     */
+    Map<String, String> getTags();
 
-	/**
-	 * An EventPublisher can be used to register event consumers.
-	 */
-	interface EventPublisher<E> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
+    /**
+     * Returns an EventPublisher which can be used to register event consumers.
+     *
+     * @return an EventPublisher
+     */
+    EventPublisher<E> getEventPublisher();
 
-		EventPublisher<E> onEntryAdded(EventConsumer<EntryAddedEvent<E>> eventConsumer);
+    /**
+     * An EventPublisher can be used to register event consumers.
+     */
+    interface EventPublisher<E> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
 
-		EventPublisher<E> onEntryRemoved(EventConsumer<EntryRemovedEvent<E>> eventConsumer);
+        EventPublisher<E> onEntryAdded(EventConsumer<EntryAddedEvent<E>> eventConsumer);
 
-		EventPublisher<E> onEntryReplaced(EventConsumer<EntryReplacedEvent<E>> eventConsumer);
-	}
+        EventPublisher<E> onEntryRemoved(EventConsumer<EntryRemovedEvent<E>> eventConsumer);
+
+        EventPublisher<E> onEntryReplaced(EventConsumer<EntryReplacedEvent<E>> eventConsumer);
+    }
 }

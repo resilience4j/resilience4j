@@ -29,44 +29,51 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 public class MetricsAutoConfigurationTest {
 
-	@Autowired(required = false)
-	TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
+    @Autowired(required = false)
+    TaggedCircuitBreakerMetricsPublisher taggedCircuitBreakerMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher;
+    @Autowired(required = false)
+    TaggedBulkheadMetricsPublisher taggedBulkheadMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher;
+    @Autowired(required = false)
+    TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
+    @Autowired(required = false)
+    TaggedRateLimiterMetricsPublisher taggedRateLimiterMetricsPublisher;
 
-	@Autowired(required = false)
-	TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
+    @Autowired(required = false)
+    TaggedRetryMetricsPublisher taggedRetryMetricsPublisher;
+
+    @Autowired(required = false)
+    TaggedTimeLimiterMetricsPublisher taggedTimeLimiterMetricsPublisher;
+
+    @Test
+    public void newCircuitBreakerPublisherIsBound() {
+        assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
+    }
+
+    @Test
+    public void newBulkheadPublisherIsBound() {
+        assertThat(taggedBulkheadMetricsPublisher).isNotNull();
+    }
+
+    @Test
+    public void newThreadPoolBulkheadPublisherIsBound() {
+        assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
+    }
+
+    @Test
+    public void newRateLimiterPublisherIsBound() {
+        assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
+    }
+
+    @Test
+    public void newRetryPublisherIsBound() {
+        assertThat(taggedRetryMetricsPublisher).isNotNull();
+    }
 
 	@Test
-	public void newCircuitBreakerPublisherIsBound() {
-		assertThat(taggedCircuitBreakerMetricsPublisher).isNotNull();
+	public void newTimeLimiterPublisherIsBound() {
+		assertThat(taggedTimeLimiterMetricsPublisher).isNotNull();
 	}
-
-	@Test
-	public void newBulkheadPublisherIsBound() {
-		assertThat(taggedBulkheadMetricsPublisher).isNotNull();
-	}
-
-	@Test
-	public void newThreadPoolBulkheadPublisherIsBound() {
-		assertThat(taggedThreadPoolBulkheadMetricsPublisher).isNotNull();
-	}
-
-	@Test
-	public void newRateLimiterPublisherIsBound() {
-		assertThat(taggedRateLimiterMetricsPublisher).isNotNull();
-	}
-
-	@Test
-	public void newRetryPublisherIsBound() {
-		assertThat(taggedRetryMetricsPublisher).isNotNull();
-	}
-
 }

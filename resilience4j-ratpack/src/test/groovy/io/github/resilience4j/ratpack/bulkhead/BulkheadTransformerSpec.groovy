@@ -27,11 +27,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 import java.time.Duration
-import java.util.concurrent.Callable
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
 class BulkheadTransformerSpec extends Specification {
@@ -52,7 +48,7 @@ class BulkheadTransformerSpec extends Specification {
                 times.getAndIncrement();
                 "s"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -76,7 +72,7 @@ class BulkheadTransformerSpec extends Specification {
                 times.getAndIncrement();
                 "r1"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         and:
@@ -85,7 +81,7 @@ class BulkheadTransformerSpec extends Specification {
                 times.getAndIncrement();
                 "r2"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -118,7 +114,7 @@ class BulkheadTransformerSpec extends Specification {
                 times.getAndIncrement();
                 throw new RuntimeException("Expected")
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         and:
@@ -127,7 +123,7 @@ class BulkheadTransformerSpec extends Specification {
                 times.getAndIncrement();
                 "r2"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -156,7 +152,7 @@ class BulkheadTransformerSpec extends Specification {
         and: "setup an event listener to track the number of onCallFinish"
         def bulkheadEvents = bulkhead.getEventPublisher()
         AtomicInteger timesOnCallFinished = new AtomicInteger(0)
-        bulkheadEvents.onCallFinished({ timesOnCallFinished.getAndIncrement()})
+        bulkheadEvents.onCallFinished({ timesOnCallFinished.getAndIncrement() })
 
 
         when: "The upstream has an error, but is swallowed by `onError`"
@@ -164,8 +160,8 @@ class BulkheadTransformerSpec extends Specification {
             Blocking.<String> get {
                 throw new RuntimeException("Expected")
             }
-                    .onError { e -> Promise.value("not foo") }
-                    .transform(transformer)
+                .onError { e -> Promise.value("not foo") }
+                .transform(transformer)
         }
 
         and: ""
@@ -173,7 +169,7 @@ class BulkheadTransformerSpec extends Specification {
             Blocking.<String> get {
                 "r2"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -214,7 +210,7 @@ class BulkheadTransformerSpec extends Specification {
                     times.getAndIncrement()
                     "r"
                 }
-                        .transform(transformer)
+                    .transform(transformer)
             }
         } as Callable<ExecResult<String>>)
 
@@ -224,7 +220,7 @@ class BulkheadTransformerSpec extends Specification {
             Blocking.<String> get {
                 assert false: "Should never be called"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -249,7 +245,9 @@ class BulkheadTransformerSpec extends Specification {
     def "recovery function is called when execution is blocked"() {
         given:
         def bulkhead = buildBulkhead()
-        BulkheadTransformer<String> transformer = BulkheadTransformer.of(bulkhead).recover { "recover" }
+        BulkheadTransformer<String> transformer = BulkheadTransformer.of(bulkhead).recover {
+            "recover"
+        }
         AtomicInteger times = new AtomicInteger(0)
 
         and:
@@ -265,7 +263,7 @@ class BulkheadTransformerSpec extends Specification {
                     times.getAndIncrement()
                     "r"
                 }
-                        .transform(transformer)
+                    .transform(transformer)
             }
         } as Callable<ExecResult<String>>)
 
@@ -275,7 +273,7 @@ class BulkheadTransformerSpec extends Specification {
             Blocking.<String> get {
                 assert false: "Should never be called"
             }
-                    .transform(transformer)
+                .transform(transformer)
         }
 
         then:
@@ -298,9 +296,9 @@ class BulkheadTransformerSpec extends Specification {
 
     def buildBulkhead() {
         def config = BulkheadConfig.custom()
-                .maxConcurrentCalls(1)
-                .maxWaitDuration(Duration.ZERO)
-                .build()
+            .maxConcurrentCalls(1)
+            .maxWaitDuration(Duration.ZERO)
+            .build()
         Bulkhead.of("test", config)
     }
 }

@@ -88,7 +88,9 @@ class RetryChainSpec extends Specification {
         when: "we get all retry events"
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, { throw new Exception('derek olk'); 'unreachable' } as CheckedFunction0<String>)).recover { "recovered" }.get()
+            Try.of(Retry.decorateCheckedSupplier(r, {
+                throw new Exception('derek olk'); 'unreachable'
+            } as CheckedFunction0<String>)).recover { "recovered" }.get()
         }
         actual = client.get('retry/events')
         def dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
@@ -156,7 +158,9 @@ class RetryChainSpec extends Specification {
         def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, { throw new Exception('derek olk'); 'unreachable' } as CheckedFunction0<String>)).recover { "recovered" }.get()
+            Try.of(Retry.decorateCheckedSupplier(r, {
+                throw new Exception('derek olk'); 'unreachable'
+            } as CheckedFunction0<String>)).recover { "recovered" }.get()
         }
         def actual = ExecHarness.yieldSingle {
             streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/retry/stream/events")) {

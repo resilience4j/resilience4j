@@ -2,7 +2,7 @@
 
 Integration of bulkhead, circuit breaker, rate limiter and retry metrics with http://micrometer.io/[Micrometer].
 
-NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_micrometer_metrics_exporter[Usage Guide]*
+NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/micrometer[Usage Guide]*
 
 == License
 

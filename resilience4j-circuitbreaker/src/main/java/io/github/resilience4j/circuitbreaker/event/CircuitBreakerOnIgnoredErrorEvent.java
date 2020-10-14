@@ -28,7 +28,8 @@ public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEve
     private final Throwable throwable;
     private final Duration elapsedDuration;
 
-    public CircuitBreakerOnIgnoredErrorEvent(String circuitBreakerName, Duration elapsedDuration, Throwable throwable) {
+    public CircuitBreakerOnIgnoredErrorEvent(String circuitBreakerName, Duration elapsedDuration,
+        Throwable throwable) {
         super(circuitBreakerName);
         this.elapsedDuration = elapsedDuration;
         this.throwable = throwable;
@@ -49,7 +50,8 @@ public class CircuitBreakerOnIgnoredErrorEvent extends AbstractCircuitBreakerEve
 
     @Override
     public String toString() {
-        return String.format("%s: CircuitBreaker '%s' recorded an error which has been ignored: '%s'. Elapsed time: %s ms",
+        return String.format(
+            "%s: CircuitBreaker '%s' recorded an error which has been ignored: '%s'. Elapsed time: %s ms",
             getCreationTime(),
             getCircuitBreakerName(),
             getThrowable().toString(),

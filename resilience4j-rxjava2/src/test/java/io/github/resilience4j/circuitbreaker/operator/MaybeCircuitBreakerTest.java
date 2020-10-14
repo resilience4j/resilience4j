@@ -10,28 +10,35 @@ import java.util.concurrent.TimeUnit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 /**
  * Unit test for {@link MaybeCircuitBreaker}.
  */
 public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
+
     @Test
     public void shouldSubscribeToMaybeJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Maybe.just(1)
             .compose(CircuitBreakerOperator.of(circuitBreaker))
             .test()
             .assertResult(1);
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Maybe.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -40,8 +47,9 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should()
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
 
@@ -56,8 +64,9 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -65,14 +74,15 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         Maybe.just(1)
-                .delay(1, TimeUnit.DAYS)
-                .compose(CircuitBreakerOperator.of(circuitBreaker))
-                .test()
-                .cancel();
+            .delay(1, TimeUnit.DAYS)
+            .compose(CircuitBreakerOperator.of(circuitBreaker))
+            .test()
+            .cancel();
 
-        verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().releasePermission();
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
 }

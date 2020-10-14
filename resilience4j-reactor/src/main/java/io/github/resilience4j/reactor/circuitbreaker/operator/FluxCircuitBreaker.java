@@ -34,9 +34,9 @@ class FluxCircuitBreaker<T> extends FluxOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        if(circuitBreaker.tryAcquirePermission()){
+        if (circuitBreaker.tryAcquirePermission()) {
             source.subscribe(new CircuitBreakerSubscriber<>(circuitBreaker, actual, false));
-        }else{
+        } else {
             Operators.error(actual, createCallNotPermittedException(circuitBreaker));
         }
     }

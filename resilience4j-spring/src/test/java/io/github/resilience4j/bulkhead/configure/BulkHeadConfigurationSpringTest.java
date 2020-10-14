@@ -15,11 +15,15 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
+import io.github.resilience4j.TestThreadLocalContextPropagator;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,89 +33,114 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-		BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
+    BulkHeadConfigurationSpringTest.ConfigWithOverrides.class
 })
 public class BulkHeadConfigurationSpringTest {
 
-	@Autowired
-	private ConfigWithOverrides configWithOverrides;
+    @Autowired
+    private ConfigWithOverrides configWithOverrides;
 
-	@Test
-	public void testAllCircuitBreakerConfigurationBeansOverridden() {
-		assertNotNull(configWithOverrides.bulkheadRegistry);
-		assertNotNull(configWithOverrides.bulkheadAspect);
-		assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
-		assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
-		assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
-		assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
-	}
+    @Test
+    public void testAllCircuitBreakerConfigurationBeansOverridden() {
+        assertNotNull(configWithOverrides.bulkheadRegistry);
+        assertNotNull(configWithOverrides.bulkheadAspect);
+        assertNotNull(configWithOverrides.bulkheadConfigurationProperties);
+        assertNotNull(configWithOverrides.threadPoolBulkheadConfigurationProperties);
+        assertNotNull(configWithOverrides.bulkheadEventEventConsumerRegistry);
+        assertNotNull(configWithOverrides.threadPoolBulkheadRegistry);
+        assertTrue(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().containsKey("sharedBackend"));
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()).isNotNull();
+        assertThat(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators().length).isEqualTo(1);
+        assertEquals(configWithOverrides.threadPoolBulkheadConfigurationProperties.getConfigs().get("sharedBackend").getContextPropagators()[0], TestThreadLocalContextPropagator.class);
+        assertTrue(configWithOverrides.bulkheadConfigurationProperties.getConfigs().size() == 1);
+    }
 
-	@Configuration
-	@ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback"})
-	public static class ConfigWithOverrides {
+    @Configuration
+    @ComponentScan({"io.github.resilience4j.bulkhead", "io.github.resilience4j.fallback", "io.github.resilience4j.spelresolver"})
+    public static class ConfigWithOverrides {
 
-		private BulkheadRegistry bulkheadRegistry;
+        private BulkheadRegistry bulkheadRegistry;
 
-		private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
+        private ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
 
-		private BulkheadAspect bulkheadAspect;
+        private BulkheadAspect bulkheadAspect;
 
-		private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
+        private EventConsumerRegistry<BulkheadEvent> bulkheadEventEventConsumerRegistry;
 
-		private BulkheadConfigurationProperties bulkheadConfigurationProperties;
+        private BulkheadConfigurationProperties bulkheadConfigurationProperties;
 
-		@Bean
-		public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
-			threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
-			return threadPoolBulkheadRegistry;
-		}
+        private ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties;
 
-		@Bean
-		public BulkheadRegistry bulkheadRegistry() {
-			bulkheadRegistry = BulkheadRegistry.ofDefaults();
-			return bulkheadRegistry;
-		}
+        @Bean
+        public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
+            threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.ofDefaults();
+            return threadPoolBulkheadRegistry;
+        }
 
-		@Bean
-		public BulkheadAspect bulkheadAspect(BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-		                                     @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-		                                     FallbackDecorators fallbackDecorators) {
-			bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(), threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts, fallbackDecorators);
-			return bulkheadAspect;
-		}
+        @Bean
+        public BulkheadRegistry bulkheadRegistry() {
+            bulkheadRegistry = BulkheadRegistry.ofDefaults();
+            return bulkheadRegistry;
+        }
 
-		@Bean
-		public EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry() {
-			bulkheadEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
-			return bulkheadEventEventConsumerRegistry;
-		}
+        @Bean
+        public BulkheadAspect bulkheadAspect(
+            BulkheadRegistry bulkheadRegistry,
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+            @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
+            FallbackDecorators fallbackDecorators,
+            SpelResolver spelResolver
+        ) {
+            bulkheadAspect = new BulkheadAspect(bulkheadConfigurationProperties(),
+                threadPoolBulkheadRegistry, bulkheadRegistry, bulkheadAspectExts,
+                fallbackDecorators, spelResolver);
+            return bulkheadAspect;
+        }
 
-		@Bean
-		public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
-			bulkheadConfigurationProperties = new BulkheadConfigurationPropertiesTest();
-			return bulkheadConfigurationProperties;
-		}
+        @Bean
+        public EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry() {
+            bulkheadEventEventConsumerRegistry = new DefaultEventConsumerRegistry<>();
+            return bulkheadEventEventConsumerRegistry;
+        }
 
-		private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
+        @Bean
+        public BulkheadConfigurationProperties bulkheadConfigurationProperties() {
+            bulkheadConfigurationProperties = new BulkheadConfigurationPropertiesTest();
+            return bulkheadConfigurationProperties;
+        }
 
-			BulkheadConfigurationPropertiesTest() {
-				InstanceProperties instanceProperties = new InstanceProperties();
-				instanceProperties.setBaseConfig("sharedConfig");
-				instanceProperties.setMaxConcurrentCalls(3);
-				getConfigs().put("sharedBackend", instanceProperties);
-			}
+        @Bean
+        public ThreadPoolBulkheadConfigurationProperties threadpoolBulkheadConfigurationProperties() {
+            threadPoolBulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationPropertiesTest();
+            return threadPoolBulkheadConfigurationProperties;
+        }
 
-		}
-	}
+        private class BulkheadConfigurationPropertiesTest extends BulkheadConfigurationProperties {
 
+            BulkheadConfigurationPropertiesTest() {
+                InstanceProperties instanceProperties = new InstanceProperties();
+                instanceProperties.setBaseConfig("sharedConfig");
+                instanceProperties.setMaxConcurrentCalls(3);
+                getConfigs().put("sharedBackend", instanceProperties);
+            }
 
+        }
+
+        private class ThreadPoolBulkheadConfigurationPropertiesTest extends ThreadPoolBulkheadConfigurationProperties {
+
+            ThreadPoolBulkheadConfigurationPropertiesTest() {
+                InstanceProperties instanceProperties = new InstanceProperties();
+                instanceProperties.setContextPropagators(TestThreadLocalContextPropagator.class);
+                getConfigs().put("sharedBackend", instanceProperties);
+            }
+
+        }
+    }
 }

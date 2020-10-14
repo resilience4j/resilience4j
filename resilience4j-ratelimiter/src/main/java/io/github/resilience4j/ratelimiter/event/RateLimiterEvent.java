@@ -24,9 +24,12 @@ import java.time.ZonedDateTime;
  * An event which is created by a {@link io.github.resilience4j.ratelimiter.RateLimiter}.
  */
 public interface RateLimiterEvent {
+
     String getRateLimiterName();
 
     Type getEventType();
+
+    int getNumberOfPermits();
 
     ZonedDateTime getCreationTime();
 

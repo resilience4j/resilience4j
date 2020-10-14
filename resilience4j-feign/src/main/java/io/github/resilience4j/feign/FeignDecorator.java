@@ -16,11 +16,11 @@
  */
 package io.github.resilience4j.feign;
 
-import java.lang.reflect.Method;
-
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.vavr.CheckedFunction1;
+
+import java.lang.reflect.Method;
 
 /**
  * Used to decorate methods defined by feign interfaces. Decorators can be stacked, allowing
@@ -33,12 +33,13 @@ public interface FeignDecorator {
      * Decorates the invocation of a method defined by a feign interface.
      *
      * @param invocationCall represents the call to the method. This should be decorated by the
-     *        implementing class.
-     * @param method the method of the feign interface that is invoked.
-     * @param methodHandler the feign methodHandler that executes the http request.
+     *                       implementing class.
+     * @param method         the method of the feign interface that is invoked.
+     * @param methodHandler  the feign methodHandler that executes the http request.
      * @return the decorated invocationCall
      */
-    CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall, Method method, MethodHandler methodHandler,
-            Target<?> target);
+    CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> invocationCall,
+        Method method, MethodHandler methodHandler,
+        Target<?> target);
 
 }

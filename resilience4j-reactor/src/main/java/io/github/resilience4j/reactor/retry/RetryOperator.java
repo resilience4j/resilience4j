@@ -17,123 +17,101 @@ package io.github.resilience4j.reactor.retry;
 
 import io.github.resilience4j.reactor.IllegalPublisherException;
 import io.github.resilience4j.retry.Retry;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.Consumer;
+import java.time.Duration;
 import java.util.function.UnaryOperator;
-
-import org.reactivestreams.Publisher;
 
 /**
  * A Reactor Retry operator which wraps a reactive type in a Retry.
+ *
  * @param <T> the value type of the upstream and downstream
  */
 public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
 
-	private final Retry retry;
+    private final Retry retry;
 
-	private RetryOperator(Retry retry) {
-		this.retry = retry;
-	}
+    private RetryOperator(Retry retry) {
+        this.retry = retry;
+    }
 
-	/**
-	 * Creates a retry.
-	 *
-	 * @param <T>   the value type of the upstream and downstream
-	 * @param retry the retry
-	 * @return a RetryOperator
-	 */
-	public static <T> RetryOperator<T> of(Retry retry) {
-		return new RetryOperator<>(retry);
-	}
+    /**
+     * Creates a retry.
+     *
+     * @param <T>   the value type of the upstream and downstream
+     * @param retry the retry
+     * @return a RetryOperator
+     */
+    public static <T> RetryOperator<T> of(Retry retry) {
+        return new RetryOperator<>(retry);
+    }
 
-	@Override
-	public Publisher<T> apply(Publisher<T> publisher) {
-		if (publisher instanceof Mono) {
-			Context<T> context = new Context<>(retry.context());
-			Mono<T> upstream = (Mono<T>) publisher;
-			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
-					.doOnSuccess(t -> context.onComplete());
-		} else if (publisher instanceof Flux) {
-			Context<T> context = new Context<>(retry.context());
-			Flux<T> upstream = (Flux<T>) publisher;
-			return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-					.retryWhen(errors -> errors.doOnNext(throwingConsumerWrapper(context::onError)))
-					.doOnComplete(context::onComplete);
+    @Override
+    public Publisher<T> apply(Publisher<T> publisher) {
+        if (publisher instanceof Mono) {
+            Context<T> context = new Context<>(retry.asyncContext());
+            Mono<T> upstream = (Mono<T>) publisher;
+            return upstream.doOnNext(context::handleResult)
+                .retryWhen(errors -> errors.flatMap(context::handleErrors))
+                .doOnSuccess(t -> context.onComplete());
+        } else if (publisher instanceof Flux) {
+            Context<T> context = new Context<>(retry.asyncContext());
+            Flux<T> upstream = (Flux<T>) publisher;
+            return upstream.doOnNext(context::handleResult)
+                .retryWhen(errors -> errors.flatMap(context::handleErrors))
+                .doOnComplete(context::onComplete);
         } else {
             throw new IllegalPublisherException(publisher);
         }
-	}
+    }
 
+    private static class Context<T> {
 
-	private static class Context<T> {
-		private final Retry.Context<T> context;
+        private final Retry.AsyncContext<T> retryContext;
 
-		Context(Retry.Context<T> context) {
-			this.context = context;
-		}
+        Context(Retry.AsyncContext<T> retryContext) {
+            this.retryContext = retryContext;
+        }
 
-		void onComplete() {
-			this.context.onSuccess();
-		}
+        void onComplete() {
+            this.retryContext.onComplete();
+        }
 
-		void throwExceptionToForceRetryOnResult(T value) {
-			if (context.onResult(value))
-				throw new RetryDueToResultException();
-		}
+        void handleResult(T result) {
+            long waitDurationMillis = retryContext.onResult(result);
+            if (waitDurationMillis != -1) {
+                throw new RetryDueToResultException(waitDurationMillis);
+            }
+        }
 
-		void onError(Throwable throwable) throws Exception {
-			if (throwable instanceof RetryDueToResultException) return;
-			// Filter Error to not retry on it
-			if (throwable instanceof Error) {
-				throw (Error) throwable;
-			}
-			try {
-				if (throwable instanceof RetryExceptionWrapper) {
-					context.onError(castToException(throwable.getCause()));
-				} else {
-					context.onError(castToException(throwable));
-				}
+        Publisher<Long> handleErrors(Throwable throwable) {
+            if (throwable instanceof RetryDueToResultException) {
+                long waitDurationMillis = ((RetryDueToResultException) throwable).waitDurationMillis;
+                return Mono.delay(Duration.ofMillis(waitDurationMillis));
+            }
+            // Filter Error to not retry on it
+            if (throwable instanceof Error) {
+                throw (Error) throwable;
+            }
 
-			} catch (Throwable t) {
-				throw castToException(t);
-			}
-		}
+            long waitDurationMillis = retryContext.onError(throwable);
 
-		private Exception castToException(Throwable throwable) {
-			return throwable instanceof Exception ? (Exception) throwable : new Exception(throwable);
-		}
+            if (waitDurationMillis == -1) {
+                return Mono.error(throwable);
+            }
 
-		private static class RetryDueToResultException extends RuntimeException {
-			RetryDueToResultException() {
-				super("retry due to retryOnResult predicate");
-			}
-		}
-	}
+            return Mono.delay(Duration.ofMillis(waitDurationMillis));
+        }
 
-	/**
-	 * @param <T> input
-	 * @param <E> possible thrown exception
-	 */
-	@FunctionalInterface
-	public interface ThrowingConsumer<T, E extends Exception> {
-		void accept(T t) throws E;
-	}
+        private static class RetryDueToResultException extends RuntimeException {
+            private final long waitDurationMillis;
 
-	/**
-	 * to handle checked exception handling in reactor Function java 8 doOnNext
-	 */
-	private static <T> Consumer<T> throwingConsumerWrapper(
-			ThrowingConsumer<T, Exception> throwingConsumer) {
-
-		return i -> {
-			try {
-				throwingConsumer.accept(i);
-			} catch (Exception ex) {
-				throw new RetryExceptionWrapper(ex);
-			}
-		};
-	}
+            RetryDueToResultException(long waitDurationMillis) {
+                super("retry due to retryOnResult predicate");
+                this.waitDurationMillis = waitDurationMillis;
+            }
+        }
+    }
 }

@@ -23,15 +23,21 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedBulkheadMetricsPublisher
-        extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {
+    extends AbstractBulkheadMetrics implements MetricsPublisher<Bulkhead> {
 
     private final MeterRegistry meterRegistry;
 
     public TaggedBulkheadMetricsPublisher(MeterRegistry meterRegistry) {
-        super(MetricNames.ofDefaults());
+        super(BulkheadMetricNames.ofDefaults());
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
+    public TaggedBulkheadMetricsPublisher(BulkheadMetricNames names, MeterRegistry meterRegistry) {
+        super(names);
+        this.meterRegistry = requireNonNull(meterRegistry);
+    }
+
+    @Deprecated
     public TaggedBulkheadMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);

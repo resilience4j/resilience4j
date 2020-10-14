@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
@@ -22,7 +23,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
  */
 public interface CircuitBreakerAspectExt {
 
-	boolean canHandleReturnType(Class returnType);
+    boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker, String methodName) throws Throwable;
+    Object handle(ProceedingJoinPoint proceedingJoinPoint,
+        CircuitBreaker circuitBreaker, String methodName) throws Throwable;
 }

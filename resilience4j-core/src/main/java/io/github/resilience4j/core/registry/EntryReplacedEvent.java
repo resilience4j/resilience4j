@@ -23,7 +23,7 @@ public class EntryReplacedEvent<E> extends AbstractRegistryEvent {
     private final E oldEntry;
     private final E newEntry;
 
-    EntryReplacedEvent(E oldEntry, E newEntry){
+    EntryReplacedEvent(E oldEntry, E newEntry) {
         super();
         this.oldEntry = oldEntry;
         this.newEntry = newEntry;

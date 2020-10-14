@@ -19,7 +19,9 @@
 package io.github.resilience4j.kotlin.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import io.github.resilience4j.kotlin.isCancellation
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.coroutineContext
 
 /**
  * Decorates and executes the given suspend function [block].
@@ -32,9 +34,13 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
         val durationInNanos = System.nanoTime() - start
         onSuccess(durationInNanos, TimeUnit.NANOSECONDS)
         return result
-    } catch (exception: Exception) {
-        val durationInNanos = System.nanoTime() - start
-        onError(durationInNanos, TimeUnit.NANOSECONDS, exception)
+    } catch (exception: Throwable) {
+        if (isCancellation(coroutineContext, exception)) {
+            releasePermission()
+        } else {
+            val durationInNanos = System.nanoTime() - start
+            onError(durationInNanos, TimeUnit.NANOSECONDS, exception)
+        }
         throw exception
     }
 }
@@ -43,5 +49,19 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
  * Decorates the given *suspend* function [block] and returns it.
  */
 fun <T> CircuitBreaker.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
-    executeSuspendFunction { block() }
+    executeSuspendFunction(block)
+}
+
+/**
+ * Decorates and executes the given function [block].
+ */
+fun <T> CircuitBreaker.executeFunction(block: () -> T): T {
+    return this.decorateCallable(block).call()
+}
+
+/**
+ * Decorates the given function [block] and returns it.
+ */
+fun <T> CircuitBreaker.decorateFunction(block: () -> T): () -> T = {
+    executeFunction(block)
 }

@@ -1,9 +1,8 @@
 package io.github.resilience4j.metrics.assertion;
 
+import com.codahale.metrics.Counter;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
-
-import com.codahale.metrics.Counter;
 
 public class CounterAssert extends AbstractAssert<CounterAssert, Counter> {
 
@@ -17,8 +16,7 @@ public class CounterAssert extends AbstractAssert<CounterAssert, Counter> {
 
     public <T> CounterAssert hasValue(T expected) {
         isNotNull();
-        Assertions.assertThat(actual.getCount())
-                .isEqualTo(expected);
+        Assertions.assertThat(actual.getCount()).isEqualTo(expected);
         return this;
     }
 }

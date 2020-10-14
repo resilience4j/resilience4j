@@ -16,26 +16,15 @@
 
 package io.github.resilience4j.retry.transformer;
 
+import io.github.resilience4j.retry.Retry;
+import io.reactivex.*;
 import org.reactivestreams.Publisher;
 
-import io.github.resilience4j.retry.Retry;
-import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeSource;
-import io.reactivex.MaybeTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.SingleTransformer;
+import java.util.concurrent.TimeUnit;
 
 public class RetryTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>,
-        SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+    SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+
     private final Retry retry;
 
     private RetryTransformer(Retry retry) {
@@ -55,80 +44,107 @@ public class RetryTransformer<T> implements FlowableTransformer<T, T>, Observabl
 
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
-        Context<T> context = new Context<>(retry.context());
-        return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnComplete(context::onComplete);
+        Context<T> context = new Context<>(retry.asyncContext());
+        return upstream.doOnNext(context::handleResult)
+            .retryWhen(errors -> errors.flatMap(context::handleFlowableErrors))
+            .doOnComplete(context::onComplete);
     }
 
     @Override
     public ObservableSource<T> apply(Observable<T> upstream) {
-        Context<T> context = new Context<>(retry.context());
-        return upstream.doOnNext(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnComplete(context::onComplete);
+        Context<T> context = new Context<>(retry.asyncContext());
+        return upstream.doOnNext(context::handleResult)
+            .retryWhen(errors -> errors.flatMap(context::handleObservableErrors))
+            .doOnComplete(context::onComplete);
     }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
-        Context<T> context = new Context<>(retry.context());
-        return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnSuccess(t -> context.onComplete());
+        Context<T> context = new Context<>(retry.asyncContext());
+        return upstream.doOnSuccess(context::handleResult)
+            .retryWhen(errors -> errors.flatMap(context::handleFlowableErrors))
+            .doOnSuccess(t -> context.onComplete());
     }
 
     @Override
     public CompletableSource apply(Completable upstream) {
-        Context<T> context = new Context<>(retry.context());
-        return upstream.retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnComplete(context::onComplete);
+        Context<T> context = new Context<>(retry.asyncContext());
+        return upstream.retryWhen(errors -> errors.flatMap(context::handleFlowableErrors))
+            .doOnComplete(context::onComplete);
     }
 
     @Override
     public MaybeSource<T> apply(Maybe<T> upstream) {
-        Context<T> context = new Context<>(retry.context());
-        return upstream.doOnSuccess(context::throwExceptionToForceRetryOnResult)
-                .retryWhen(errors -> errors.doOnNext(context::onError))
-                .doOnSuccess(t -> context.onComplete())
-                .doOnComplete(context::onComplete);
+        Context<T> context = new Context<>(retry.asyncContext());
+        return upstream.doOnSuccess(context::handleResult)
+            .retryWhen(errors -> errors.flatMap(context::handleFlowableErrors))
+            .doOnSuccess(t -> context.onComplete())
+            .doOnComplete(context::onComplete);
     }
 
     private static class Context<T> {
-        private final Retry.Context<T> context;
 
-        Context(Retry.Context<T> context) {
-            this.context = context;
+        private final Retry.AsyncContext<T> retryContext;
+
+        Context(Retry.AsyncContext<T> retryContext) {
+            this.retryContext = retryContext;
         }
 
         void onComplete() {
-            this.context.onSuccess();
+            this.retryContext.onComplete();
         }
 
-        void throwExceptionToForceRetryOnResult(T value) {
-            if (context.onResult(value))
-                throw new RetryDueToResultException();
+        void handleResult(T result) {
+            long waitDurationMillis = retryContext.onResult(result);
+            if (waitDurationMillis != -1) {
+                throw new RetryDueToResultException(waitDurationMillis);
+            }
         }
 
-        void onError(Throwable throwable) throws Exception {
-            if (throwable instanceof RetryDueToResultException) return;
-	        // Filter Error to not retry on it
+        Publisher<Long> handleFlowableErrors(Throwable throwable) {
+            if (throwable instanceof RetryDueToResultException) {
+                long waitDurationMillis = ((RetryDueToResultException) throwable).waitDurationMillis;
+                return Flowable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
+            }
+            // Filter Error to not retry on it
             if (throwable instanceof Error) {
                 throw (Error) throwable;
             }
-            try {
-                context.onError(castToException(throwable));
-            } catch (Throwable t) {
-                throw castToException(t);
+
+            long waitDurationMillis = retryContext.onError(throwable);
+
+            if (waitDurationMillis == -1) {
+                return Flowable.error(throwable);
             }
+
+            return Flowable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
         }
 
-        private Exception castToException(Throwable throwable) {
-            return throwable instanceof Exception ? (Exception) throwable : new Exception(throwable);
+        ObservableSource<Long> handleObservableErrors(Throwable throwable) {
+            if (throwable instanceof RetryDueToResultException) {
+                long waitDurationMillis = ((RetryDueToResultException) throwable).waitDurationMillis;
+                return Observable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
+            }
+            // Filter Error to not retry on it
+            if (throwable instanceof Error) {
+                throw (Error) throwable;
+            }
+
+            long waitDurationMillis = retryContext.onError(throwable);
+
+            if (waitDurationMillis == -1) {
+                return Observable.error(throwable);
+            }
+
+            return Observable.timer(waitDurationMillis, TimeUnit.MILLISECONDS);
         }
 
         private static class RetryDueToResultException extends RuntimeException {
-            RetryDueToResultException() {
+            private final long waitDurationMillis;
+
+            RetryDueToResultException(long waitDurationMillis) {
                 super("retry due to retryOnResult predicate");
+                this.waitDurationMillis = waitDurationMillis;
             }
         }
     }

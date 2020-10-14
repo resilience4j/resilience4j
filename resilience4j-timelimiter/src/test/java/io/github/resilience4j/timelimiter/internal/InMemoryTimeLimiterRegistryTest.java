@@ -21,19 +21,16 @@ package io.github.resilience4j.timelimiter.internal;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-
-import java.util.function.Supplier;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.function.Supplier;
+
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class InMemoryTimeLimiterRegistryTest {
 

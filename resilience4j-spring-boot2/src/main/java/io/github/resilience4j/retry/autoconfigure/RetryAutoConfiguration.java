@@ -15,14 +15,6 @@
  */
 package io.github.resilience4j.retry.autoconfigure;
 
-import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.Retry;
@@ -30,11 +22,18 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEndpoint;
 import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
- * Auto-configuration} for resilience4j-retry.
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
+ * resilience4j-retry.
  */
 @Configuration
 @ConditionalOnClass(Retry.class)
@@ -42,17 +41,21 @@ import io.github.resilience4j.retry.monitoring.endpoint.RetryEventsEndpoint;
 @Import({RetryConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class RetryAutoConfiguration {
 
-	@Bean
-	@ConditionalOnEnabledEndpoint
-	@ConditionalOnClass(value = {Endpoint.class})
-	public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
-		return new RetryEndpoint(retryRegistry);
-	}
+    @Configuration
+    @ConditionalOnClass(Endpoint.class)
+    static class RetryAutoEndpointConfiguration {
 
-	@Bean
-	@ConditionalOnEnabledEndpoint
-	@ConditionalOnClass(value = {Endpoint.class})
-	public RetryEventsEndpoint retryEventsEndpoint(EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
-		return new RetryEventsEndpoint(eventConsumerRegistry);
-	}
+        @Bean
+        @ConditionalOnAvailableEndpoint
+        public RetryEndpoint retryEndpoint(RetryRegistry retryRegistry) {
+            return new RetryEndpoint(retryRegistry);
+        }
+
+        @Bean
+        @ConditionalOnAvailableEndpoint
+        public RetryEventsEndpoint retryEventsEndpoint(
+            EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+            return new RetryEventsEndpoint(eventConsumerRegistry);
+        }
+    }
 }

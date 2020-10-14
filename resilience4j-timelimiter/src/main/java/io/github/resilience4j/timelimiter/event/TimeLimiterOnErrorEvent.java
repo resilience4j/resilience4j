@@ -34,9 +34,9 @@ public class TimeLimiterOnErrorEvent extends AbstractTimeLimiterEvent {
     @Override
     public String toString() {
         return String.format("%s: TimeLimiter '%s' recorded an error: '%s'",
-                getCreationTime(),
-                getTimeLimiterName(),
-                getThrowable().toString());
+            getCreationTime(),
+            getTimeLimiterName(),
+            getThrowable().toString());
     }
 
 }

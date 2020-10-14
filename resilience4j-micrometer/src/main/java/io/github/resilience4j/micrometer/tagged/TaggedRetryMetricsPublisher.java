@@ -23,15 +23,21 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedRetryMetricsPublisher
-        extends AbstractRetryMetrics implements MetricsPublisher<Retry> {
+    extends AbstractRetryMetrics implements MetricsPublisher<Retry> {
 
     private final MeterRegistry meterRegistry;
 
     public TaggedRetryMetricsPublisher(MeterRegistry meterRegistry) {
-        super(MetricNames.ofDefaults());
+        super(RetryMetricNames.ofDefaults());
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
+    public TaggedRetryMetricsPublisher(RetryMetricNames names, MeterRegistry meterRegistry) {
+        super(names);
+        this.meterRegistry = requireNonNull(meterRegistry);
+    }
+
+    @Deprecated
     public TaggedRetryMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);

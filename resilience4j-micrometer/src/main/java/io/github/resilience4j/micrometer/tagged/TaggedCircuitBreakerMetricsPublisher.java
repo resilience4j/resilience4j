@@ -23,15 +23,21 @@ import io.micrometer.core.instrument.MeterRegistry;
 import static java.util.Objects.requireNonNull;
 
 public class TaggedCircuitBreakerMetricsPublisher
-        extends AbstractCircuitBreakerMetrics implements MetricsPublisher<CircuitBreaker> {
+    extends AbstractCircuitBreakerMetrics implements MetricsPublisher<CircuitBreaker> {
 
     private final MeterRegistry meterRegistry;
 
     public TaggedCircuitBreakerMetricsPublisher(MeterRegistry meterRegistry) {
-        super(MetricNames.ofDefaults());
+        super(CircuitBreakerMetricNames.ofDefaults());
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
+    public TaggedCircuitBreakerMetricsPublisher(CircuitBreakerMetricNames names, MeterRegistry meterRegistry) {
+        super(names);
+        this.meterRegistry = requireNonNull(meterRegistry);
+    }
+
+    @Deprecated
     public TaggedCircuitBreakerMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
         super(names);
         this.meterRegistry = requireNonNull(meterRegistry);

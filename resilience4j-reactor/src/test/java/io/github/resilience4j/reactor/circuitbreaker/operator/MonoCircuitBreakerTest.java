@@ -20,7 +20,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -36,92 +35,107 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
-public class MonoCircuitBreakerTest  {
+public class MonoCircuitBreakerTest {
 
     private CircuitBreaker circuitBreaker;
     private HelloWorldService helloWorldService;
 
     @Before
-    public void setUp(){
-        circuitBreaker = Mockito.mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
-        helloWorldService = Mockito.mock(HelloWorldService.class);
+    public void setUp() {
+        circuitBreaker = mock(CircuitBreaker.class, RETURNS_DEEP_STUBS);
+        helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
     public void shouldSubscribeToMonoJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
-                Mono.just(helloWorldService.returnHelloWorld())
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectNext("Hello World")
-                .verifyComplete();
+            Mono.just(helloWorldService.returnHelloWorld())
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectNext("Hello World")
+            .verifyComplete();
 
-        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should().returnHelloWorld();
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
     public void shouldSubscribeToMonoFromCallable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
-                Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectNext("Hello World")
-                .verifyComplete();
+            Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectNext("Hello World")
+            .verifyComplete();
 
-        then(helloWorldService).should(Mockito.times(1)).returnHelloWorld();
+        then(helloWorldService).should().returnHelloWorld();
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
     public void shouldSubscribeToMonoFromCallableMultipleTimes() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
-                Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
-                        .compose(CircuitBreakerOperator.of(circuitBreaker))
-                        .repeat(2))
-                .expectNext("Hello World")
-                .expectNext("Hello World")
-                .expectNext("Hello World")
-                .verifyComplete();
+            Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .repeat(2))
+            .expectNext("Hello World")
+            .expectNext("Hello World")
+            .expectNext("Hello World")
+            .verifyComplete();
 
-        then(helloWorldService).should(Mockito.times(3)).returnHelloWorld();
+        then(helloWorldService).should(times(3)).returnHelloWorld();
         verify(circuitBreaker, times(3)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
     public void emptyMonoShouldBeSuccessful() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
-                Mono.empty()
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .verifyComplete();
+            Mono.empty()
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .verifyComplete();
 
         verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(IOException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.error(new IOException("BAM!"))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(IOException.class)
+            .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        verify(circuitBreaker, times(1))
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -130,12 +144,13 @@ public class MonoCircuitBreakerTest  {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Mono.error(new IOException("BAM!"))
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CallNotPermittedException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.error(new IOException("BAM!"))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(CallNotPermittedException.class)
+            .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -144,12 +159,13 @@ public class MonoCircuitBreakerTest  {
         given(circuitBreaker.tryAcquirePermission()).willReturn(false);
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CallNotPermittedException.class)
-                .verify(Duration.ofSeconds(1));
+            Mono.just("Event")
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(CallNotPermittedException.class)
+            .verify(Duration.ofSeconds(1));
 
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -158,15 +174,16 @@ public class MonoCircuitBreakerTest  {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
 
         StepVerifier.create(
-                Mono.just("Event")
-                        .delayElement(Duration.ofDays(1))
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                    .expectSubscription()
-                    .thenCancel()
-                    .verify();
+            Mono.just("Event")
+                .delayElement(Duration.ofDays(1))
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectSubscription()
+            .thenCancel()
+            .verify();
 
         verify(circuitBreaker, times(1)).releasePermission();
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
@@ -176,15 +193,16 @@ public class MonoCircuitBreakerTest  {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello World");
 
         StepVerifier.create(
-                Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
-                        .flatMap(Mono::just)
-                        .compose(CircuitBreakerOperator.of(circuitBreaker)))
-                .expectError(CallNotPermittedException.class)
-                .verify();
+            Mono.fromCallable(() -> helloWorldService.returnHelloWorld())
+                .flatMap(Mono::just)
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)))
+            .expectError(CallNotPermittedException.class)
+            .verify();
 
         then(helloWorldService).should(never()).returnHelloWorld();
         verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        verify(circuitBreaker, never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
@@ -193,13 +211,12 @@ public class MonoCircuitBreakerTest  {
 
         try {
             Mono.just("Event")
-                    .compose(CircuitBreakerOperator.of(circuitBreaker))
-                    .toFuture()
-                    .get();
+                .transformDeferred(CircuitBreakerOperator.of(circuitBreaker))
+                .toFuture()
+                .get();
 
         } catch (InterruptedException | ExecutionException e) {
             fail();
         }
-
     }
 }

@@ -22,7 +22,9 @@ import io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetrics;
 import io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetricsPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,22 +32,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnClass({MeterRegistry.class, ThreadPoolBulkhead.class, TaggedThreadPoolBulkheadMetricsPublisher.class})
-@AutoConfigureAfter(MetricsAutoConfiguration.class)
+@ConditionalOnClass({MeterRegistry.class, ThreadPoolBulkhead.class,
+        TaggedThreadPoolBulkheadMetricsPublisher.class})
+@AutoConfigureAfter({MetricsAutoConfiguration.class, SimpleMetricsExportAutoConfiguration.class})
 @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.enabled", matchIfMissing = true)
 public class ThreadPoolBulkheadMetricsAutoConfiguration {
 
     @Bean
     @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled", havingValue = "true")
     @ConditionalOnMissingBean
-    public TaggedThreadPoolBulkheadMetrics registerThreadPoolBulkheadMetrics(ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
-        return TaggedThreadPoolBulkheadMetrics.ofThreadPoolBulkheadRegistry(threadPoolBulkheadRegistry);
+    public TaggedThreadPoolBulkheadMetrics registerThreadPoolBulkheadMetrics(
+        ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
+        return TaggedThreadPoolBulkheadMetrics
+            .ofThreadPoolBulkheadRegistry(threadPoolBulkheadRegistry);
     }
 
     @Bean
+    @ConditionalOnBean(MeterRegistry.class)
     @ConditionalOnProperty(value = "resilience4j.thread-pool-bulkhead.metrics.legacy.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher(MeterRegistry meterRegistry) {
+    public TaggedThreadPoolBulkheadMetricsPublisher taggedThreadPoolBulkheadMetricsPublisher(
+        MeterRegistry meterRegistry) {
         return new TaggedThreadPoolBulkheadMetricsPublisher(meterRegistry);
     }
 

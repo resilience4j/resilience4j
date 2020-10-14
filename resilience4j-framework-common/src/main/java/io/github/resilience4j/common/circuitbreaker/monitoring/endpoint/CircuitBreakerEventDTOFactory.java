@@ -19,41 +19,57 @@ import io.github.resilience4j.circuitbreaker.event.*;
 
 public class CircuitBreakerEventDTOFactory {
 
-    private CircuitBreakerEventDTOFactory(){}
+    private CircuitBreakerEventDTOFactory() {
+    }
 
-    public static CircuitBreakerEventDTO createCircuitBreakerEventDTO(CircuitBreakerEvent event){
-        switch(event.getEventType()) {
+    public static CircuitBreakerEventDTO createCircuitBreakerEventDTO(CircuitBreakerEvent event) {
+        switch (event.getEventType()) {
             case ERROR:
                 CircuitBreakerOnErrorEvent onErrorEvent = (CircuitBreakerOnErrorEvent) event;
-                return newCircuitBreakerEventDTOBuilder(onErrorEvent).setThrowable(onErrorEvent.getThrowable()).setDuration(onErrorEvent.getElapsedDuration())
-                        .build();
+                return newCircuitBreakerEventDTOBuilder(onErrorEvent)
+                    .setThrowable(onErrorEvent.getThrowable())
+                    .setDuration(onErrorEvent.getElapsedDuration())
+                    .build();
             case SUCCESS:
                 CircuitBreakerOnSuccessEvent onSuccessEvent = (CircuitBreakerOnSuccessEvent) event;
-                return newCircuitBreakerEventDTOBuilder(onSuccessEvent).setDuration(onSuccessEvent.getElapsedDuration())
-                        .build();
+                return newCircuitBreakerEventDTOBuilder(onSuccessEvent)
+                    .setDuration(onSuccessEvent.getElapsedDuration())
+                    .build();
             case STATE_TRANSITION:
                 CircuitBreakerOnStateTransitionEvent onStateTransitionEvent = (CircuitBreakerOnStateTransitionEvent) event;
-                return newCircuitBreakerEventDTOBuilder(onStateTransitionEvent).setStateTransition(onStateTransitionEvent.getStateTransition())
-                        .build();
+                return newCircuitBreakerEventDTOBuilder(onStateTransitionEvent)
+                    .setStateTransition(onStateTransitionEvent.getStateTransition())
+                    .build();
             case RESET:
                 CircuitBreakerOnResetEvent onResetEvent = (CircuitBreakerOnResetEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onResetEvent)
-                        .build();
+                    .build();
             case IGNORED_ERROR:
                 CircuitBreakerOnIgnoredErrorEvent onIgnoredErrorEvent = (CircuitBreakerOnIgnoredErrorEvent) event;
-                return newCircuitBreakerEventDTOBuilder(onIgnoredErrorEvent).setThrowable(onIgnoredErrorEvent.getThrowable())
-                        .setDuration(onIgnoredErrorEvent.getElapsedDuration())
-                        .build();
+                return newCircuitBreakerEventDTOBuilder(onIgnoredErrorEvent)
+                    .setThrowable(onIgnoredErrorEvent.getThrowable())
+                    .setDuration(onIgnoredErrorEvent.getElapsedDuration())
+                    .build();
             case NOT_PERMITTED:
                 CircuitBreakerOnCallNotPermittedEvent onCallNotPermittedEvent = (CircuitBreakerOnCallNotPermittedEvent) event;
                 return newCircuitBreakerEventDTOBuilder(onCallNotPermittedEvent)
-                        .build();
+                    .build();
+            case FAILURE_RATE_EXCEEDED:
+                CircuitBreakerOnFailureRateExceededEvent onFailureRateExceededEvent = (CircuitBreakerOnFailureRateExceededEvent) event;
+                return newCircuitBreakerEventDTOBuilder(onFailureRateExceededEvent)
+                    .build();
+            case SLOW_CALL_RATE_EXCEEDED:
+                CircuitBreakerOnSlowCallRateExceededEvent onSlowCallRateExceededEvent = (CircuitBreakerOnSlowCallRateExceededEvent) event;
+                return newCircuitBreakerEventDTOBuilder(onSlowCallRateExceededEvent)
+                    .build();
             default:
                 throw new IllegalArgumentException("Invalid event");
         }
     }
 
-    private static CircuitBreakerEventDTOBuilder newCircuitBreakerEventDTOBuilder(CircuitBreakerEvent event){
-        return new CircuitBreakerEventDTOBuilder(event.getCircuitBreakerName(), event.getEventType(), event.getCreationTime().toString());
+    private static CircuitBreakerEventDTOBuilder newCircuitBreakerEventDTOBuilder(
+        CircuitBreakerEvent event) {
+        return new CircuitBreakerEventDTOBuilder(event.getCircuitBreakerName(),
+            event.getEventType(), event.getCreationTime().toString());
     }
 }

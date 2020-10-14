@@ -22,108 +22,118 @@ import org.junit.Test;
 
 import java.time.Duration;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulkheadConfigTest {
 
-
-	@Test
-	public void testBuildCustomWithDuration() {
-
-		// given
-		int maxConcurrent = 66;
-		long maxWait = 555;
-
-		// when
-		BulkheadConfig config = BulkheadConfig.custom()
-				.maxConcurrentCalls(maxConcurrent)
-				.maxWaitDuration(Duration.ofMillis(555))
-				.build();
-
-		// then
-		assertThat(config).isNotNull();
-		assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
-		assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
-	}
-
     @Test
-    public void testBuildCustomWithWritableStackTraceDisabled() {
-
-        // given
-        int maxConcurrent = 66;
-
-        // when
-        BulkheadConfig config = BulkheadConfig.custom()
-                .maxConcurrentCalls(maxConcurrent)
-                .writableStackTraceEnabled(false)
-                .build();
-
-        // then
-        assertThat(config).isNotNull();
-        assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
-        assertThat(config.isWritableStackTraceEnabled()).isFalse();
-    }
-
-    @Test
-    public void testBuildCustom() {
-
-        // given
+    public void testBuildCustomWithDuration() {
         int maxConcurrent = 66;
         long maxWait = 555;
 
-        // when
         BulkheadConfig config = BulkheadConfig.custom()
-                                              .maxConcurrentCalls(maxConcurrent)
-                                              .maxWaitDuration(Duration.ofMillis(maxWait))
-                                              .build();
+            .maxConcurrentCalls(maxConcurrent)
+            .maxWaitDuration(Duration.ofMillis(555))
+            .build();
 
-        // then
         assertThat(config).isNotNull();
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
         assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
     }
 
     @Test
-    public void testBuildWithZeroMaxCurrentCalls() {
+    public void testBuildCustomWithWritableStackTraceDisabled() {
+        int maxConcurrent = 66;
 
-        // given
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrent)
+            .writableStackTraceEnabled(false)
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
+        assertThat(config.isWritableStackTraceEnabled()).isFalse();
+    }
+
+    @Test
+    public void testBuildCustomWithFairStrategyDisabled() {
+
+        BulkheadConfig config = BulkheadConfig.custom()
+            .fairCallHandlingStrategyEnabled(false)
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.isFairCallHandlingEnabled()).isFalse();
+    }
+
+    @Test
+    public void testBuildCustom() {
+        int maxConcurrent = 66;
+        long maxWait = 555;
+
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrent)
+            .maxWaitDuration(Duration.ofMillis(maxWait))
+            .build();
+
+        assertThat(config).isNotNull();
+        assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
+        assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(maxWait);
+        assertThat(config.isFairCallHandlingEnabled()).isTrue();
+    }
+
+    @Test
+    public void testBuildWithZeroMaxCurrentCalls() {
         int maxConcurrent = 0;
 
-        // when
         BulkheadConfig config = BulkheadConfig.custom()
-                .maxConcurrentCalls(maxConcurrent)
-                .build();
+            .maxConcurrentCalls(maxConcurrent)
+            .build();
 
-        // then
         assertThat(config).isNotNull();
         assertThat(config.getMaxConcurrentCalls()).isEqualTo(maxConcurrent);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalMaxConcurrent() {
-
-        // when
         BulkheadConfig.custom()
-                      .maxConcurrentCalls(-1)
-                      .build();
+            .maxConcurrentCalls(-1)
+            .build();
 
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuildWithIllegalMaxWait() {
-
-        // when
         BulkheadConfig.custom()
             .maxWaitDuration(Duration.ofMillis(-1))
             .build();
     }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testBuildWithIllegalMaxWaitDuration() {
-		// when
-		BulkheadConfig.custom()
-				.maxWaitDuration(Duration.ofSeconds(-1))
-				.build();
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuildWithIllegalMaxWaitDuration() {
+        BulkheadConfig.custom()
+            .maxWaitDuration(Duration.ofSeconds(-1))
+            .build();
+    }
 
+    @Test
+    public void testToString() {
+        int maxConcurrent = 66;
+        long maxWait = 555;
+
+        BulkheadConfig config = BulkheadConfig.custom()
+            .maxConcurrentCalls(maxConcurrent)
+            .maxWaitDuration(Duration.ofMillis(maxWait))
+            .writableStackTraceEnabled(false)
+            .fairCallHandlingStrategyEnabled(false)
+            .build();
+
+        String result = config.toString();
+        assertThat(result).startsWith("BulkheadConfig{");
+        assertThat(result).contains("maxConcurrentCalls=66");
+        assertThat(result).contains("maxWaitDuration=PT0.555S");
+        assertThat(result).contains("writableStackTraceEnabled=false");
+        assertThat(result).contains("fairCallHandlingEnabled=false");
+        assertThat(result).endsWith("}");
+    }
 }

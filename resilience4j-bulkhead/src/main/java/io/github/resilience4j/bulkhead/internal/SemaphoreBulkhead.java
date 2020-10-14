@@ -30,6 +30,8 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.lang.Nullable;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.Map;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ import static java.util.Objects.requireNonNull;
 public class SemaphoreBulkhead implements Bulkhead {
 
     private static final String CONFIG_MUST_NOT_BE_NULL = "Config must not be null";
+    private static final String TAGS_MUST_NOTE_BE_NULL = "Tags must not be null";
 
     private final String name;
     private final Semaphore semaphore;
@@ -50,7 +53,9 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final BulkheadEventProcessor eventProcessor;
 
     private final Object configChangesLock = new Object();
-    @SuppressWarnings("squid:S3077") // this object is immutable and we replace ref entirely during config change.
+    private final Map<String, String> tags;
+    @SuppressWarnings("squid:S3077")
+    // this object is immutable and we replace ref entirely during config change.
     private volatile BulkheadConfig config;
 
     /**
@@ -60,10 +65,23 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param bulkheadConfig custom bulkhead configuration
      */
     public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig) {
+        this(name, bulkheadConfig, HashMap.empty());
+    }
+
+    /**
+     * Creates a bulkhead using a configuration supplied
+     *
+     * @param name           the name of this bulkhead
+     * @param bulkheadConfig custom bulkhead configuration
+     * @param tags           the tags to add to the Bulkhead
+     */
+    public SemaphoreBulkhead(String name, @Nullable BulkheadConfig bulkheadConfig,
+        Map<String, String> tags) {
         this.name = name;
         this.config = requireNonNull(bulkheadConfig, CONFIG_MUST_NOT_BE_NULL);
+        this.tags = requireNonNull(tags, TAGS_MUST_NOTE_BE_NULL);
         // init semaphore
-        this.semaphore = new Semaphore(this.config.getMaxConcurrentCalls(), true);
+        this.semaphore = new Semaphore(config.getMaxConcurrentCalls(), config.isFairCallHandlingEnabled());
 
         this.metrics = new BulkheadMetrics();
         this.eventProcessor = new BulkheadEventProcessor();
@@ -75,7 +93,7 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param name the name of this bulkhead
      */
     public SemaphoreBulkhead(String name) {
-        this(name, BulkheadConfig.ofDefaults());
+        this(name, BulkheadConfig.ofDefaults(), HashMap.empty());
     }
 
     /**
@@ -85,7 +103,19 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @param configSupplier BulkheadConfig supplier
      */
     public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier) {
-        this(name, configSupplier.get());
+        this(name, configSupplier.get(), HashMap.empty());
+    }
+
+    /**
+     * Create a bulkhead using a configuration supplier
+     *
+     * @param name           the name of this bulkhead
+     * @param configSupplier BulkheadConfig supplier
+     * @param tags           tags to add to the Bulkhead
+     */
+    public SemaphoreBulkhead(String name, Supplier<BulkheadConfig> configSupplier,
+        Map<String, String> tags) {
+        this(name, configSupplier.get(), tags);
     }
 
     /**
@@ -112,8 +142,8 @@ public class SemaphoreBulkhead implements Bulkhead {
         boolean callPermitted = tryEnterBulkhead();
 
         publishBulkheadEvent(
-                () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
-                        : new BulkheadOnCallRejectedEvent(name)
+            () -> callPermitted ? new BulkheadOnCallPermittedEvent(name)
+                : new BulkheadOnCallRejectedEvent(name)
         );
 
         return callPermitted;
@@ -179,34 +209,16 @@ public class SemaphoreBulkhead implements Bulkhead {
      * {@inheritDoc}
      */
     @Override
-    public EventPublisher getEventPublisher() {
-        return eventProcessor;
+    public Map<String, String> getTags() {
+        return tags;
     }
 
-    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements EventPublisher, EventConsumer<BulkheadEvent> {
-
-        @Override
-        public EventPublisher onCallPermitted(EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(), onCallPermittedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher onCallRejected(EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(), onCallRejectedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher onCallFinished(EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
-            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(), onCallFinishedEventConsumer);
-            return this;
-        }
-
-        @Override
-        public void consumeEvent(BulkheadEvent event) {
-            super.processEvent(event);
-        }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
     }
 
     @Override
@@ -218,21 +230,14 @@ public class SemaphoreBulkhead implements Bulkhead {
      * @return true if caller was able to wait for permission without {@link Thread#interrupt}
      */
     boolean tryEnterBulkhead() {
-
-        boolean callPermitted;
         long timeout = config.getMaxWaitDuration().toMillis();
 
-        if (timeout == 0) {
-            callPermitted = semaphore.tryAcquire();
-        } else {
-            try {
-                callPermitted = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                callPermitted = false;
-            }
+        try {
+            return semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
         }
-        return callPermitted;
     }
 
     private void publishBulkheadEvent(Supplier<BulkheadEvent> eventSupplier) {
@@ -241,7 +246,41 @@ public class SemaphoreBulkhead implements Bulkhead {
         }
     }
 
+    private class BulkheadEventProcessor extends EventProcessor<BulkheadEvent> implements
+        EventPublisher, EventConsumer<BulkheadEvent> {
+
+        @Override
+        public EventPublisher onCallPermitted(
+            EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
+            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(),
+                onCallPermittedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallRejected(
+            EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
+            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(),
+                onCallRejectedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public EventPublisher onCallFinished(
+            EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
+            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(),
+                onCallFinishedEventConsumer);
+            return this;
+        }
+
+        @Override
+        public void consumeEvent(BulkheadEvent event) {
+            super.processEvent(event);
+        }
+    }
+
     private final class BulkheadMetrics implements Metrics {
+
         private BulkheadMetrics() {
         }
 

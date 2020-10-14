@@ -15,10 +15,11 @@
  */
 package io.github.resilience4j.fallback;
 
+import io.github.resilience4j.timelimiter.configure.IllegalReturnTypeException;
 import io.vavr.CheckedFunction0;
 
 /**
- *  default fallbackMethod decorator. it catches throwable and invoke the fallbackMethod method.
+ * default fallbackMethod decorator. it catches throwable and invoke the fallbackMethod method.
  */
 public class DefaultFallbackDecorator implements FallbackDecorator {
 
@@ -28,12 +29,15 @@ public class DefaultFallbackDecorator implements FallbackDecorator {
     }
 
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod recoveryMethod, CheckedFunction0<Object> supplier) {
+    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
+        CheckedFunction0<Object> supplier) {
         return () -> {
             try {
                 return supplier.apply();
+            } catch (IllegalReturnTypeException e) {
+                throw e;
             } catch (Throwable throwable) {
-                return recoveryMethod.fallback(throwable);
+                return fallbackMethod.fallback(throwable);
             }
         };
     }

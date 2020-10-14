@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
@@ -22,7 +23,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
  */
 public interface BulkheadAspectExt {
 
-	boolean canHandleReturnType(Class returnType);
+    boolean canHandleReturnType(Class returnType);
 
-	Object handle(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.bulkhead.Bulkhead bulkhead, String methodName) throws Throwable;
+	Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName)
+        throws Throwable;
 }

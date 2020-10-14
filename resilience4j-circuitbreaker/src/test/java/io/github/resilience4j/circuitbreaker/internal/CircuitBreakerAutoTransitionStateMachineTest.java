@@ -26,10 +26,12 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 public class CircuitBreakerAutoTransitionStateMachineTest {
@@ -40,18 +42,19 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
     @Before
     public void setUp() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                .permittedNumberOfCallsInHalfOpenState(3)
-                .automaticTransitionFromOpenToHalfOpenEnabled(true)
-                .waitDurationInOpenState(Duration.ofSeconds(2))
-                .recordException(error -> !(error instanceof NumberFormatException))
-                .build();
+            .failureRateThreshold(50)
+            .slidingWindow(5, 5, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .permittedNumberOfCallsInHalfOpenState(3)
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .waitDurationInOpenState(Duration.ofSeconds(2))
+            .recordException(error -> !(error instanceof NumberFormatException))
+            .build();
 
         SchedulerFactory schedulerFactoryMock = mock(SchedulerFactory.class);
         schedulerMock = mock(ScheduledExecutorService.class);
         when(schedulerFactoryMock.getScheduler()).thenReturn(schedulerMock);
-        circuitBreaker = new CircuitBreakerStateMachine("testName", circuitBreakerConfig, schedulerFactoryMock);
+        circuitBreaker = new CircuitBreakerStateMachine("testName", circuitBreakerConfig,
+            schedulerFactoryMock);
     }
 
     @Test
@@ -64,7 +67,9 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         ArgumentCaptor<TimeUnit> unitArgumentCaptor = ArgumentCaptor.forClass(TimeUnit.class);
 
         // Check that schedule is invoked
-        verify(schedulerMock).schedule(runnableArgumentCaptor.capture(), delayArgumentCaptor.capture(), unitArgumentCaptor.capture());
+        verify(schedulerMock)
+            .schedule(runnableArgumentCaptor.capture(), delayArgumentCaptor.capture(),
+                unitArgumentCaptor.capture());
 
         assertThat(delayArgumentCaptor.getValue()).isEqualTo(2000L);
         assertThat(unitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MILLISECONDS);
@@ -73,5 +78,44 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         runnableArgumentCaptor.getValue().run();
 
         assertThat(circuitBreaker.getState()).isEqualTo(HALF_OPEN);
+    }
+
+    @Test
+    public void shouldCancelAutoTransition() {
+
+        ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
+        doReturn(mockFuture)
+            .when(schedulerMock).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition scheduled
+        circuitBreaker.transitionToOpenState();
+        then(schedulerMock).should(times(1)).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition should be canceled
+        circuitBreaker.transitionToForcedOpenState();
+
+        // Verify scheduled future is canceled
+        then(mockFuture).should(times(1)).cancel(true);
+    }
+
+    @Test
+    public void notCancelAutoTransitionFutureIfAlreadyDone() {
+
+        ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
+        doReturn(mockFuture)
+            .when(schedulerMock).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Already done
+        when(mockFuture.isDone()).thenReturn(true);
+
+        // Auto transition scheduled
+        circuitBreaker.transitionToOpenState();
+        then(schedulerMock).should(times(1)).schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+
+        // Auto transition should be canceled
+        circuitBreaker.transitionToForcedOpenState();
+
+        // Not called again because future is already done.
+        then(mockFuture).should(times(0)).cancel(true);
     }
 }

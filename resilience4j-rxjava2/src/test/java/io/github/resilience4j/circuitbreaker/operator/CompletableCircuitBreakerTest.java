@@ -10,7 +10,8 @@ import java.util.concurrent.TimeUnit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 /**
  * Unit test for {@link CompletableCircuitBreaker}.
@@ -20,6 +21,8 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToCompletable() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Completable.complete()
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -27,13 +30,16 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertSubscribed()
             .assertComplete();
 
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 
     @Test
     public void shouldPropagateAndMarkError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Completable.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -42,8 +48,9 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(IOException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, times(1)).onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should()
+            .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -57,7 +64,8 @@ public class CompletableCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
-        verify(circuitBreaker, never()).onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never())
+            .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
 }
