@@ -45,8 +45,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
 
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final TimeLimiterConfigurationProperties properties;
-    private static final ScheduledExecutorService timeLimiterExecutorService = Executors
-        .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService timeLimiterExecutorService;
     @Nullable
     private final List<TimeLimiterAspectExt> timeLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
@@ -62,6 +61,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
         this.spelResolver = spelResolver;
+        this.timeLimiterExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
