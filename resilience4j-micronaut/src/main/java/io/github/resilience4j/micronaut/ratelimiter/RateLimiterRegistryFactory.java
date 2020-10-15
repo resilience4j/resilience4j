@@ -30,6 +30,7 @@ import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.util.StringUtils;
 
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
@@ -40,7 +41,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Factory
-@Requires(property = "resilience4j.ratelimiter.enabled")
+@Requires(property = "resilience4j.ratelimiter.enabled", value = StringUtils.TRUE, defaultValue = StringUtils.FALSE)
 public class RateLimiterRegistryFactory {
 
     @Bean

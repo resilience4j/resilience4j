@@ -24,6 +24,7 @@ import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
@@ -38,12 +39,12 @@ import java.util.concurrent.CompletionException;
 @Requires(beans = RateLimiterRegistry.class)
 public class RateLimiterInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
     private final RateLimiterRegistry rateLimiterRegistry;
-    private final BeanContext beanContext;
+    private final ExecutionHandleLocator executionHandleLocator;
 
 
-    public RateLimiterInterceptor(BeanContext beanContext, RateLimiterRegistry rateLimiterRegistry) {
+    public RateLimiterInterceptor(ExecutionHandleLocator executionHandleLocator, RateLimiterRegistry rateLimiterRegistry) {
         this.rateLimiterRegistry = rateLimiterRegistry;
-        this.beanContext = beanContext;
+        this.executionHandleLocator = executionHandleLocator;
     }
 
     @Override
@@ -61,7 +62,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.RateLimiter.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
-        return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
+        return executionHandleLocator.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
 

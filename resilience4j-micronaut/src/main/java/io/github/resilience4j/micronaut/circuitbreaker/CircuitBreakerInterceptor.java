@@ -24,6 +24,7 @@ import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
@@ -38,12 +39,12 @@ import java.util.concurrent.CompletionException;
 @Requires(beans = CircuitBreakerRegistry.class)
 public class CircuitBreakerInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
     private final CircuitBreakerRegistry circuitBreakerRegistry;
-    private final BeanContext beanContext;
+    private final ExecutionHandleLocator executionHandleLocator;
 
 
-    public CircuitBreakerInterceptor(BeanContext beanContext, CircuitBreakerRegistry circuitBreakerRegistry) {
+    public CircuitBreakerInterceptor(ExecutionHandleLocator executionHandleLocator, CircuitBreakerRegistry circuitBreakerRegistry) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
-        this.beanContext = beanContext;
+        this.executionHandleLocator = executionHandleLocator;
     }
 
     @Override
@@ -62,7 +63,7 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
-        return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
+        return executionHandleLocator.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override

@@ -17,9 +17,11 @@ package io.github.resilience4j.micronaut.circuitbreaker;
 
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.context.annotation.EachProperty;
+import io.micronaut.context.annotation.Parameter;
+import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
-
-import java.util.Map;
+import java.util.List;
 
 /**
  * Configuration for the circuit breaker registry
@@ -28,12 +30,15 @@ import java.util.Map;
 public class CircuitBreakerProperties extends CircuitBreakerConfigurationProperties implements Toggleable {
     private boolean enabled;
 
-    public void setConfigs(Map<String, CircuitBreakerConfigurationProperties.InstanceProperties> configs){
-        this.getConfigs().putAll(configs);
-    }
-
-    public void setInstances(Map<String, CircuitBreakerConfigurationProperties.InstanceProperties> instances) {
-        this.getInstances().putAll(instances);
+    public CircuitBreakerProperties(
+        List<CircuitBreakerProperties.InstancePropertiesConfigs> configs,
+        List<CircuitBreakerProperties.InstancePropertiesInstances> instances) {
+        for (CircuitBreakerProperties.InstancePropertiesConfigs config : configs) {
+            this.getConfigs().put(config.getName(), config);
+        }
+        for (CircuitBreakerProperties.InstancePropertiesInstances instance : instances) {
+            this.getInstances().put(instance.getName(), instance);
+        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -43,5 +48,33 @@ public class CircuitBreakerProperties extends CircuitBreakerConfigurationPropert
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @EachProperty(value = "configs", primary = "default")
+    public static class InstancePropertiesConfigs extends CircuitBreakerConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesConfigs(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
+    @EachProperty(value = "instances", primary = "default")
+    public static class InstancePropertiesInstances extends CircuitBreakerConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesInstances(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

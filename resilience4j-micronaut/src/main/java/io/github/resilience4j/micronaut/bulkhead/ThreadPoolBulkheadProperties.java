@@ -16,24 +16,37 @@
 package io.github.resilience4j.micronaut.bulkhead;
 
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
-import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.context.annotation.*;
+import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
 
-import java.util.Map;
+import java.util.List;
 
+/**
+ * Configures thread pool bulkhead instances and configs.
+ *
+ * @author gkrocher
+ * @author Michael Pollend
+ */
 @ConfigurationProperties("resilience4j.thread-pool-bulkhead")
 public class ThreadPoolBulkheadProperties extends ThreadPoolBulkheadConfigurationProperties implements Toggleable {
     private boolean enabled;
 
-    public void setConfigs(Map<String, ThreadPoolBulkheadConfigurationProperties.InstanceProperties> configs) {
-        this.getConfigs().putAll(configs);
-
+    public ThreadPoolBulkheadProperties(
+        List<InstancePropertiesConfigs> configs,
+        List<InstancePropertiesInstances> instances) {
+        for (InstancePropertiesConfigs config : configs) {
+            this.getConfigs().put(config.getName(), config);
+        }
+        for (InstancePropertiesInstances instance : instances) {
+            this.getInstances().put(instance.getName(), instance);
+        }
     }
 
-    public void setInstances(Map<String, ThreadPoolBulkheadConfigurationProperties.InstanceProperties> instances) {
-        this.getInstances().putAll(instances);
-    }
-
+    /**
+     * Sets whether the config is enabled.
+     * @param enabled True if is enabled
+     */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
@@ -41,5 +54,33 @@ public class ThreadPoolBulkheadProperties extends ThreadPoolBulkheadConfiguratio
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @EachProperty(value = "configs", primary = "default")
+    public static class InstancePropertiesConfigs extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesConfigs(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
+    @EachProperty(value = "instances", primary = "default")
+    public static class InstancePropertiesInstances extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesInstances(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

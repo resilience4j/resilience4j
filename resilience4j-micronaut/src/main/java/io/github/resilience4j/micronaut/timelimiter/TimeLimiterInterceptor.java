@@ -24,6 +24,7 @@ import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
@@ -44,11 +45,11 @@ import java.util.concurrent.ScheduledExecutorService;
 public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
 
     private final TimeLimiterRegistry timeLimiterRegistry;
-    private final BeanContext beanContext;
+    private final ExecutionHandleLocator executionHandleLocator;
     private final ScheduledExecutorService executorService;
 
-    public TimeLimiterInterceptor(BeanContext beanContext, TimeLimiterRegistry timeLimiterRegistry, @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
-        this.beanContext = beanContext;
+    public TimeLimiterInterceptor(ExecutionHandleLocator executionHandleLocator, TimeLimiterRegistry timeLimiterRegistry, @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
+        this.executionHandleLocator = executionHandleLocator;
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.executorService = (ScheduledExecutorService) executorService;
     }
@@ -69,7 +70,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.TimeLimiter.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
-        return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
+        return executionHandleLocator.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override
