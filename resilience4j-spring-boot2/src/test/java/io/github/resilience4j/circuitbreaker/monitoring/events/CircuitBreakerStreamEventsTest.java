@@ -48,7 +48,7 @@ import java.util.List;
 @AutoConfigureWebTestClient(timeout="36000")
 public class CircuitBreakerStreamEventsTest {
 
-    public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/stream-circuitbreaker-events";
+    public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/streamcircuitbreakerevents";
     public static final String ACTUATOR_CIRCUITBREAKEREVENTS = "/actuator/circuitbreakerevents";
     @LocalServerPort
     int randomServerPort;
