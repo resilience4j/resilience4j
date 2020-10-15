@@ -22,6 +22,7 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
+import java.io.Serializable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
@@ -33,7 +34,9 @@ import java.util.function.Predicate;
 /**
  * A {@link CircuitBreakerConfig} configures a {@link CircuitBreaker}
  */
-public class CircuitBreakerConfig {
+public class CircuitBreakerConfig implements Serializable {
+
+    private static final long serialVersionUID = -5429814941777001669L;
 
     public static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50; // Percentage
     public static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 100; // Percentage

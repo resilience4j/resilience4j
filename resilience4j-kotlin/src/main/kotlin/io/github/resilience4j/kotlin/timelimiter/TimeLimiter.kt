@@ -22,16 +22,18 @@ import io.github.resilience4j.kotlin.isCancellation
 import io.github.resilience4j.timelimiter.TimeLimiter
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.coroutineContext
 
 /**
  * Decorates and executes the given suspend function [block].
  *
- * This is an alias for [withTimeout], reading the timeout from the receiver's
+ * This is a wrapper for [withTimeout], reading the timeout from the receiver's
  * [timeLimiterConfig][TimeLimiter.getTimeLimiterConfig].  Specifically, this means:
  *
- * 1. On timeout, a [TimeoutCancellationException] is raised, rather than a TimeoutException as with methods for
- *    non-suspending functions.
+ * 1. On timeout, a [TimeoutException] is raised as with methods for non-suspending functions. It's derived from
+ *    [java.util.concurrent.CancellationException] to ensure the exception is registered properly in events, and
+ *    a [TimeLimiter] can be used safely when using multiple decorators.
  * 1. When a timeout occurs, the coroutine is cancelled, rather than the thread being interrupted as with methods for
  *    non-suspending functions.
  * 1. After the timeout, the given block can only be stopped at a cancellable suspending function call.
@@ -45,10 +47,12 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
         }
     } catch (t: Throwable) {
         if (isCancellation(coroutineContext, t)) {
-            onError(t)
-        } else {
-            onSuccess()
+            val timeoutException = TimeLimiter.createdTimeoutExceptionWithName(name, t)
+            onError(timeoutException)
+            throw timeoutException
         }
+
+        onError(t)
         throw t
     }
 

@@ -18,9 +18,12 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import java.io.Serializable;
 import java.time.Duration;
 
-public interface RateLimiterConfig {
+import static java.util.Objects.requireNonNull;
+
+public interface RateLimiterConfig extends Serializable {
 
     /**
      * Returns a builder to create a custom RateLimiterConfig.

@@ -7,11 +7,9 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
 import io.github.resilience4j.timelimiter.internal.TimeLimiterImpl;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -217,5 +215,13 @@ public interface TimeLimiter {
 
         EventPublisher onTimeout(EventConsumer<TimeLimiterOnTimeoutEvent> eventConsumer);
 
+    }
+
+    static TimeoutException createdTimeoutExceptionWithName(String name, @Nullable Throwable t) {
+        final TimeoutException timeoutException = new TimeoutException(String.format("TimeLimiter '%s' recorded a timeout exception.", name));
+        if(t != null){
+            timeoutException.setStackTrace(t.getStackTrace());
+        }
+        return timeoutException;
     }
 }
