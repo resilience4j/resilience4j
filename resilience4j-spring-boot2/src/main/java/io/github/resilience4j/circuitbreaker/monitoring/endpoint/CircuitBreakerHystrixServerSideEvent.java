@@ -36,9 +36,9 @@ import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
  * This class is used to produce Circuit breaker events as streams in hystrix like fashion
  * <p>
  * The following endpoints are automatically generated and events are produced as Server Sent Event(SSE)
- * curl -vv http://localhost:8090/actuator/hystrix-stream-circuitbreaker-events
- * curl -vv http://localhost:8090/actuator/hystrix-stream-circuitbreaker-events/{circuitbreakername}
- * curl -vv http://localhost:8090/actuator/hystrix-stream-circuitbreaker-events/{circuitbreakername}/{errorType}
+ * curl -vv http://localhost:8090/actuator/hystrixstreamcircuitbreakerevents
+ * curl -vv http://localhost:8090/actuator/hystrixstreamcircuitbreakerevents/{circuitbreakername}
+ * curl -vv http://localhost:8090/actuator/hystrixstreamcircuitbreakerevents/{circuitbreakername}/{errorType}
  * <p>
  * <p>
  * Note: This SSE data can be easily mapped to hystrix compatible data format (specific K V pairs)
@@ -48,7 +48,7 @@ import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
  * those that are migrating from hystrix to resilence4j to continue to use hystrix eco tools.
  */
 
-@Endpoint(id = "hystrix-stream-circuitbreaker-events")
+@Endpoint(id = "hystrixstreamcircuitbreakerevents")
 public class CircuitBreakerHystrixServerSideEvent {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;

@@ -48,7 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureWebTestClient(timeout="36000")
 public class CircuitBreakerHystrixStreamEventsTest {
 
-    public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/hystrix-stream-circuitbreaker-events";
+    public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/hystrixstreamcircuitbreakerevents";
     public static final String ACTUATOR_CIRCUITBREAKEREVENTS = "/actuator/circuitbreakerevents";
 
     @LocalServerPort

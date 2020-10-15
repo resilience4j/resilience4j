@@ -36,12 +36,12 @@ import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
  * This class is used to produce Circuit breaker events as streams.
  * <p>
  * The following endpoints are automatically generated and events are produced as Server Sent Event(SSE)
- * curl -vv http://localhost:8090/actuator/stream-circuitbreaker-events
- * curl -vv http://localhost:8090/actuator/stream-circuitbreaker-events/{circuitbreakername}
- * curl -vv http://localhost:8090/actuator/stream-circuitbreaker-events/{circuitbreakername}/{errorType}
+ * curl -vv http://localhost:8090/actuator/streamcircuitbreakerevents
+ * curl -vv http://localhost:8090/actuator/streamcircuitbreakerevents/{circuitbreakername}
+ * curl -vv http://localhost:8090/actuator/streamcircuitbreakerevents/{circuitbreakername}/{errorType}
  */
 
-@Endpoint(id = "stream-circuitbreaker-events")
+@Endpoint(id = "streamcircuitbreakerevents")
 public class CircuitBreakerServerSideEvent {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
