@@ -24,6 +24,7 @@ import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
@@ -42,13 +43,16 @@ import java.util.concurrent.ScheduledExecutorService;
 @Requires(beans = RetryRegistry.class)
 public class RetryInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
     private final RetryRegistry retryRegistry;
-    private final BeanContext beanContext;
+    private final ExecutionHandleLocator executionHandleLocator;
     private final ScheduledExecutorService executorService;
 
 
-    public RetryInterceptor(BeanContext beanContext, RetryRegistry retryRegistry, @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
+    public RetryInterceptor(
+        ExecutionHandleLocator executionHandleLocator,
+        RetryRegistry retryRegistry,
+        @Named(TaskExecutors.SCHEDULED) ExecutorService executorService) {
         this.retryRegistry = retryRegistry;
-        this.beanContext = beanContext;
+        this.executionHandleLocator = executionHandleLocator;
         this.executorService = (ScheduledExecutorService) executorService;
     }
 
@@ -69,7 +73,7 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.Retry.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
-        return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
+        return executionHandleLocator.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override

@@ -17,9 +17,12 @@ package io.github.resilience4j.micronaut.bulkhead;
 
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.context.annotation.EachProperty;
+import io.micronaut.context.annotation.Parameter;
+import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Configuration for the bulkhead registry
@@ -28,12 +31,15 @@ import java.util.Map;
 public class BulkheadProperties extends BulkheadConfigurationProperties implements Toggleable {
     private boolean enabled;
 
-    public void setConfigs(Map<String, BulkheadConfigurationProperties.InstanceProperties> configs) {
-        this.getConfigs().putAll(configs);
-    }
-
-    public void setInstances(Map<String, BulkheadConfigurationProperties.InstanceProperties> instances) {
-        this.getInstances().putAll(instances);
+    public BulkheadProperties(
+        List<BulkheadProperties.InstancePropertiesConfigs> configs,
+        List<BulkheadProperties.InstancePropertiesInstances> instances) {
+        for (BulkheadProperties.InstancePropertiesConfigs config : configs) {
+            this.getConfigs().put(config.getName(), config);
+        }
+        for (BulkheadProperties.InstancePropertiesInstances instance : instances) {
+            this.getInstances().put(instance.getName(), instance);
+        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -43,5 +49,33 @@ public class BulkheadProperties extends BulkheadConfigurationProperties implemen
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @EachProperty(value = "configs", primary = "default")
+    public static class InstancePropertiesConfigs extends BulkheadConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesConfigs(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
+    @EachProperty(value = "instances", primary = "default")
+    public static class InstancePropertiesInstances extends BulkheadConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesInstances(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

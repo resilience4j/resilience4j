@@ -17,9 +17,11 @@ package io.github.resilience4j.micronaut.timelimiter;
 
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.context.annotation.EachProperty;
+import io.micronaut.context.annotation.Parameter;
+import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
-
-import java.util.Map;
+import java.util.List;
 
 /**
  * Configuration for time limiter registry.
@@ -29,12 +31,15 @@ import java.util.Map;
 public class TimeLimiterProperties extends TimeLimiterConfigurationProperties implements Toggleable {
     private boolean enabled;
 
-    public void setConfigs(Map<String, TimeLimiterConfigurationProperties.InstanceProperties> configs) {
-        this.getConfigs().putAll(configs);
-    }
-
-    public void setInstances(Map<String, TimeLimiterConfigurationProperties.InstanceProperties> instances) {
-        this.getInstances().putAll(instances);
+    public TimeLimiterProperties(
+        List<TimeLimiterProperties.InstancePropertiesConfigs> configs,
+        List<TimeLimiterProperties.InstancePropertiesInstances> instances) {
+        for (TimeLimiterProperties.InstancePropertiesConfigs config : configs) {
+            this.getConfigs().put(config.getName(), config);
+        }
+        for (TimeLimiterProperties.InstancePropertiesInstances instance : instances) {
+            this.getInstances().put(instance.getName(), instance);
+        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -44,5 +49,33 @@ public class TimeLimiterProperties extends TimeLimiterConfigurationProperties im
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @EachProperty(value = "configs", primary = "default")
+    public static class InstancePropertiesConfigs extends TimeLimiterConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesConfigs(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
+    @EachProperty(value = "instances", primary = "default")
+    public static class InstancePropertiesInstances extends TimeLimiterConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesInstances(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

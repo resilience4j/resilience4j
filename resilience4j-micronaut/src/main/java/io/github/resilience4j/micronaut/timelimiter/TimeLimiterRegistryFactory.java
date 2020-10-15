@@ -31,6 +31,7 @@ import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.util.StringUtils;
 import io.vavr.collection.HashMap;
 
 import javax.inject.Singleton;
@@ -41,7 +42,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Factory
-@Requires(property = "resilience4j.timelimiter.enabled")
+@Requires(property = "resilience4j.timelimiter.enabled", value = StringUtils.TRUE, defaultValue = StringUtils.FALSE)
 public class TimeLimiterRegistryFactory {
 
     @Bean

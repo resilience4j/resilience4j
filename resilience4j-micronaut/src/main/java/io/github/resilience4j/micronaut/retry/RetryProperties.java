@@ -17,9 +17,12 @@ package io.github.resilience4j.micronaut.retry;
 
 import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.context.annotation.EachProperty;
+import io.micronaut.context.annotation.Parameter;
+import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Configuration for generic retry registry.
@@ -29,12 +32,15 @@ import java.util.Map;
 public class RetryProperties extends RetryConfigurationProperties implements Toggleable {
     private boolean enabled;
 
-    public void setConfigs(Map<String, RetryConfigurationProperties.InstanceProperties> configs) {
-        this.getConfigs().putAll(configs);
-    }
-
-    public void setInstances(Map<String, RetryConfigurationProperties.InstanceProperties> instances) {
-        this.getInstances().putAll(instances);
+    public RetryProperties(
+        List<RetryProperties.InstancePropertiesConfigs> configs,
+        List<RetryProperties.InstancePropertiesInstances> instances) {
+        for (RetryProperties.InstancePropertiesConfigs config : configs) {
+            this.getConfigs().put(config.getName(), config);
+        }
+        for (RetryProperties.InstancePropertiesInstances instance : instances) {
+            this.getInstances().put(instance.getName(), instance);
+        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -44,5 +50,33 @@ public class RetryProperties extends RetryConfigurationProperties implements Tog
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @EachProperty(value = "configs", primary = "default")
+    public static class InstancePropertiesConfigs extends RetryConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesConfigs(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
+    @EachProperty(value = "instances", primary = "default")
+    public static class InstancePropertiesInstances extends RetryConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesInstances(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

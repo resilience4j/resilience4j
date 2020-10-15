@@ -17,9 +17,12 @@ package io.github.resilience4j.micronaut.ratelimiter;
 
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.context.annotation.EachProperty;
+import io.micronaut.context.annotation.Parameter;
+import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Configuration for generic rate limiting registry.
@@ -29,12 +32,15 @@ import java.util.Map;
 public class RateLimiterProperties extends RateLimiterConfigurationProperties implements Toggleable {
     private boolean enabled;
 
-    public void setConfigs(Map<String, InstanceProperties> configs){
-        this.getConfigs().putAll(configs);
-    }
-
-    public void setInstances(Map<String,InstanceProperties> instances) {
-        this.getInstances().putAll(instances);
+    public RateLimiterProperties(
+        List<RateLimiterProperties.InstancePropertiesConfigs> configs,
+        List<RateLimiterProperties.InstancePropertiesInstances> instances) {
+        for (RateLimiterProperties.InstancePropertiesConfigs config : configs) {
+            this.getConfigs().put(config.getName(), config);
+        }
+        for (RateLimiterProperties.InstancePropertiesInstances instance : instances) {
+            this.getInstances().put(instance.getName(), instance);
+        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -44,5 +50,33 @@ public class RateLimiterProperties extends RateLimiterConfigurationProperties im
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @EachProperty(value = "configs", primary = "default")
+    public static class InstancePropertiesConfigs extends RateLimiterConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesConfigs(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
+
+    @EachProperty(value = "instances", primary = "default")
+    public static class InstancePropertiesInstances extends RateLimiterConfigurationProperties.InstanceProperties implements Named {
+        private final String name;
+
+        public InstancePropertiesInstances(@Parameter String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
     }
 }

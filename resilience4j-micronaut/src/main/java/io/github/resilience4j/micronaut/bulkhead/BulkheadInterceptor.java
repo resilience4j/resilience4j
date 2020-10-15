@@ -24,6 +24,7 @@ import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
@@ -47,17 +48,17 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
 
     private final BulkheadRegistry bulkheadRegistry;
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
-    private final BeanContext beanContext;
+    private final ExecutionHandleLocator executionHandleLocator;
 
     /**
-     * @param beanContext                The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
+     * @param executionHandleLocator                The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
      * @param bulkheadRegistry           bulkhead registry used to retrieve {@link Bulkhead} by name
      * @param threadPoolBulkheadRegistry thread pool bulkhead registry used to retrieve {@link Bulkhead} by name
      */
-    public BulkheadInterceptor(BeanContext beanContext,
+    public BulkheadInterceptor(BeanContext executionHandleLocator,
                                BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry) {
         this.bulkheadRegistry = bulkheadRegistry;
-        this.beanContext = beanContext;
+        this.executionHandleLocator = executionHandleLocator;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
     }
 
@@ -77,7 +78,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.Bulkhead.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
-        return beanContext.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
+        return executionHandleLocator.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
     }
 
     @Override

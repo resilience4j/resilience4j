@@ -30,6 +30,7 @@ import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.util.StringUtils;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 
 @Factory
-@Requires(property = "resilience4j.thread-pool-bulkhead.enabled")
+@Requires(property = "resilience4j.thread-pool-bulkhead.enabled", value = StringUtils.TRUE, defaultValue = StringUtils.FALSE)
 public class ThreadPoolBulkheadFactory {
     @Bean
     @ThreadPoolBulkheadQualifier
