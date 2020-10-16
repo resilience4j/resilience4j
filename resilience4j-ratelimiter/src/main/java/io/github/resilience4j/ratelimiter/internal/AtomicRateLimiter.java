@@ -56,8 +56,9 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
     @Override
     protected State calculateNextState(final int permits, final long timeoutInNanos,
                                      final State activeState) {
-        long cyclePeriodInNanos = activeState.getConfig().getLimitRefreshPeriod().toNanos();
-        int permissionsPerCycle = activeState.getConfig().getLimitForPeriod();
+        RateLimiterConfig config = activeState.getConfig();
+        long cyclePeriodInNanos = config.getLimitRefreshPeriod().toNanos();
+        int permissionsPerCycle = config.getLimitForPeriod();
 
         long currentNanos = currentNanoTime();
         long currentCycle = currentNanos / cyclePeriodInNanos;
@@ -75,7 +76,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
             permits, cyclePeriodInNanos, permissionsPerCycle, nextPermissions, currentNanos,
             currentCycle
         );
-        State nextState = reservePermissions(activeState.getConfig(), permits, timeoutInNanos, nextCycle,
+        State nextState = reservePermissions(config, permits, timeoutInNanos, nextCycle,
             nextPermissions, nextNanosToWait);
         return nextState;
     }
