@@ -170,7 +170,7 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
      * the last {@link AtomicRateLimiter#acquirePermission()} call.</li>
      * </ul>
      */
-    static class State extends BaseState<RateLimiterConfig> {
+    private static class State extends BaseState<RateLimiterConfig> {
 
         private final long activeCycle;
 
