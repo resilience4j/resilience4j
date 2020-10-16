@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2020 Emmanouil Gkatziouras
+ *  Copyright 2016 Robert Winkler, Bohdan Storozhuk and Emmanouil Gkatziouras
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
