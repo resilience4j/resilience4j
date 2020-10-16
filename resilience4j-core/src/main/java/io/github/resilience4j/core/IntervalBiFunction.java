@@ -10,7 +10,7 @@ import java.util.function.BiFunction;
  * milliseconds. The attempt parameter starts at 1 and increases with every further attempt.
  */
 @FunctionalInterface
-public interface IntervalBiFunction<T> extends BiFunction<Integer, Either<T, Throwable>, Long> {
+public interface IntervalBiFunction<T> extends BiFunction<Integer, Either<Throwable, T>, Long> {
 
     static <T> IntervalBiFunction<T> ofIntervalFunction(IntervalFunction f) {
         return (attempt, either) -> f.apply(attempt);

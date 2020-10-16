@@ -177,7 +177,7 @@ public class RetryImpl<T> implements Retry {
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
                 } else {
-                    waitIntervalAfterFailure(currentNumOfAttempts, Either.left(result));
+                    waitIntervalAfterFailure(currentNumOfAttempts, Either.right(result));
                     return true;
                 }
             }
@@ -217,7 +217,7 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                waitIntervalAfterFailure(currentNumOfAttempts, Either.right(throwable));
+                waitIntervalAfterFailure(currentNumOfAttempts, Either.left(throwable));
             }
         }
 
@@ -230,15 +230,15 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                waitIntervalAfterFailure(currentNumOfAttempts, Either.right(throwable));
+                waitIntervalAfterFailure(currentNumOfAttempts, Either.left(throwable));
             }
         }
 
-        private void waitIntervalAfterFailure(int currentNumOfAttempts, Either<T, Throwable> either) {
+        private void waitIntervalAfterFailure(int currentNumOfAttempts, Either<Throwable, T> either) {
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
             publishRetryEvent(
-                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.getOrNull(), interval));
+                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
             Try.run(() -> sleepFunction.accept(interval))
                 .getOrElseThrow(ex -> lastRuntimeException.get());
         }
@@ -310,7 +310,7 @@ public class RetryImpl<T> implements Retry {
                 return -1;
             }
 
-            long interval = intervalBiFunction.apply(attempt, Either.right(throwable));
+            long interval = intervalBiFunction.apply(attempt, Either.left(throwable));
             publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
             return interval;
         }
@@ -322,7 +322,7 @@ public class RetryImpl<T> implements Retry {
                 if (attempt >= maxAttempts) {
                     return -1;
                 }
-                return intervalBiFunction.apply(attempt, Either.left(result));
+                return intervalBiFunction.apply(attempt, Either.right(result));
             } else {
                 return -1;
             }

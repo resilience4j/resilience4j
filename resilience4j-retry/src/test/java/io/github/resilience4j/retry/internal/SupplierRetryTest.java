@@ -534,8 +534,8 @@ public class SupplierRetryTest {
             .willReturn("Await 100")
             .willReturn("Await 200")
             .willReturn("Hello world");
-        IntervalBiFunction<String> intervalBiFunction = (attempt, result) -> result.map(e -> 1000L)
-                .mapLeft(r -> r.contains("100") ? 100L : 200L)
+        IntervalBiFunction<String> intervalBiFunction = (attempt, result) -> result.mapLeft(e -> 1000L)
+                .map(r -> r.contains("100") ? 100L : 200L)
                 .fold(Function.identity(), Function.identity());
 
         RetryConfig retryConfig = RetryConfig.<String>custom()

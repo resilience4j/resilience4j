@@ -161,7 +161,7 @@ public class RunnableRetryTest {
         RetryConfig config = RetryConfig
             .custom()
             .maxAttempts(3)
-            .intervalBiFunction((attempt, result) -> result.map(e -> 100L).get())
+            .intervalBiFunction((attempt, result) -> result.mapLeft(e -> 100L).getLeft())
             .build();
         Retry retry = Retry.of("id", config);
         CheckedRunnable retryableRunnable = Retry
@@ -180,7 +180,7 @@ public class RunnableRetryTest {
             .custom()
             .maxAttempts(3)
             .intervalFunction(IntervalFunction.of(Duration.ofMillis(500)))
-            .intervalBiFunction((attempt, result) -> result.map(e -> 100L).get())
+            .intervalBiFunction((attempt, result) -> result.mapLeft(e -> 100L).getLeft())
             .build();
         Retry retry = Retry.of("id", config);
         CheckedRunnable retryableRunnable = Retry
