@@ -124,7 +124,7 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
     public static InMemoryRateLimiterRegistry<RefillRateLimiterConfig> createRefill(Map<String, RefillRateLimiterConfig> configs,
                                                                                     List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
                                                                                     Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
-        return createRefill(configs, registryEventConsumers, Optional.ofNullable(HashMap.ofAll(tags)).orElse(HashMap.empty()), registryStore);
+        return createRefill(configs, registryEventConsumers, HashMap.ofAll(tags), registryStore);
     }
 
     public static InMemoryRateLimiterRegistry<RefillRateLimiterConfig> createRefill(Map<String, RefillRateLimiterConfig> configs,
@@ -140,7 +140,7 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(Map<String, RateLimiterConfig> configs,
                                                                         List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
                                                                         Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
-        return create(configs, registryEventConsumers, Optional.ofNullable(HashMap.ofAll(tags)).orElse(HashMap.empty()),registryStore);
+        return create(configs, registryEventConsumers, HashMap.ofAll(tags) ,registryStore);
     }
 
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(Map<String, RateLimiterConfig> configs,

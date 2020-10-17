@@ -24,7 +24,10 @@ import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -56,7 +59,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * registry event consumer.
      */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig,
-        RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+                                  RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         return InMemoryRateLimiterRegistry.create(defaultRateLimiterConfig, registryEventConsumer);
     }
 
@@ -70,7 +73,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumers.
      */
     static RateLimiterRegistry of(RateLimiterConfig defaultRateLimiterConfig,
-        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+                                  List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         return InMemoryRateLimiterRegistry.create(defaultRateLimiterConfig, registryEventConsumers);
     }
 
@@ -104,7 +107,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @return a ThreadPoolBulkheadRegistry with a Map of shared RateLimiter configurations.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+                                  io.vavr.collection.Map<String, String> tags) {
         return InMemoryRateLimiterRegistry.create(configs, tags);
     }
 
@@ -118,7 +121,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumer.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-        RegistryEventConsumer<RateLimiter> registryEventConsumer) {
+                                  RegistryEventConsumer<RateLimiter> registryEventConsumer) {
         return InMemoryRateLimiterRegistry.create(configs, registryEventConsumer);
     }
 
@@ -133,8 +136,8 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumer.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-        RegistryEventConsumer<RateLimiter> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+                                  RegistryEventConsumer<RateLimiter> registryEventConsumer,
+                                  io.vavr.collection.Map<String, String> tags) {
         return InMemoryRateLimiterRegistry.create(configs, registryEventConsumer, tags);
     }
 
@@ -148,7 +151,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumers.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
+                                  List<RegistryEventConsumer<RateLimiter>> registryEventConsumers) {
         return InMemoryRateLimiterRegistry.create(configs, registryEventConsumers);
     }
 
@@ -206,7 +209,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @return The {@link RateLimiter}
      */
     RateLimiter rateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-        io.vavr.collection.Map<String, String> tags);
+                            io.vavr.collection.Map<String, String> tags);
 
     /**
      * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom
@@ -232,7 +235,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @return The {@link RateLimiterConfig}
      */
     RateLimiter rateLimiter(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier,
-        io.vavr.collection.Map<String, String> tags);
+                            io.vavr.collection.Map<String, String> tags);
 
     /**
      * Returns a managed {@link RateLimiter} or creates a new one.
@@ -253,7 +256,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @return The {@link RateLimiter}
      */
     RateLimiter rateLimiter(String name, String configName,
-        io.vavr.collection.Map<String, String> tags);
+                            io.vavr.collection.Map<String, String> tags);
 
     /**
      * Returns a builder to create a custom RateLimiterRegistry.
@@ -302,7 +305,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         /**
          * Configures a RateLimiterRegistry with a custom RateLimiter configuration.
          *
-         * @param configName configName for a custom shared RateLimiter configuration
+         * @param configName    configName for a custom shared RateLimiter configuration
          * @param configuration a custom shared RateLimiter configuration
          * @return a {@link RateLimiterRegistry.Builder}
          * @throws IllegalArgumentException if {@code configName.equals("default")}
@@ -346,7 +349,15 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
          * @return the RateLimiterRegistry
          */
         public RateLimiterRegistry build() {
-            return rateLimiterRegistryFactory.create(rateLimiterConfigsMap, registryEventConsumers, Optional.ofNullable(tags.toJavaMap()).orElse(new HashMap<>()), registryStore);
+            return rateLimiterRegistryFactory.create(rateLimiterConfigsMap, registryEventConsumers, tagsAsJavaMap(), registryStore);
+        }
+
+        private Map<String, String> tagsAsJavaMap() {
+            if (tags != null) {
+                return tags.toJavaMap();
+            } else {
+                return new HashMap<>();
+            }
         }
     }
 
