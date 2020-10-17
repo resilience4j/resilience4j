@@ -67,8 +67,8 @@ public class RateLimiterBenchmark {
             .build();
 
         RefillRateLimiterConfig refillRateLimiterConfig = RefillRateLimiterConfig.custom()
-            .limitForPeriod(Integer.MAX_VALUE)
-            .limitRefreshPeriod(Duration.ofNanos(10))
+            .limitForPeriod(1)
+            .limitRefreshPeriod(Duration.ofNanos(1))
             .timeoutDuration(Duration.ofSeconds(5))
             .build();
 

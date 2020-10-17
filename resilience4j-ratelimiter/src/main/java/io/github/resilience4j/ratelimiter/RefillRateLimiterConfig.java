@@ -31,6 +31,8 @@ import java.time.Duration;
 public class RefillRateLimiterConfig extends RateLimiterConfigBase {
 
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+    private static final String ZERO_NANOS_PER_PERMISSION_STATE = "Current settings lead to zero nanos per permission, adjust period adn limit";
+    private static final String ZERO_NANOS_PER_PERMISSION_ARGUMENT = "At least 1 nanos per permission should be provided";
 
     private final int permitCapacity;
     private final int initialPermits;
@@ -39,6 +41,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
     private RefillRateLimiterConfig(Duration timeoutDuration, int permitCapacity, long nanosPerPermit,
                                     int initialPermits, boolean writableStackTraceEnabled) {
         super(timeoutDuration, Duration.ofNanos(nanosPerPermit * permitCapacity), permitCapacity, writableStackTraceEnabled);
+        noZeroNanosOnPermissionArgument(nanosPerPermit);
         this.permitCapacity = permitCapacity;
         this.initialPermits = initialPermits;
         this.nanosPerPermit = nanosPerPermit;
@@ -158,6 +161,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
             }
 
             final long nanosPerPermission = calculateNanosPerPermit(limitRefreshPeriod, limitForPeriod);
+            noZeroNanosOnPermissionState(nanosPerPermission);
 
             return new RefillRateLimiterConfig(timeoutDuration, permitCapacity, nanosPerPermission,
                 initialPermits, writableStackTraceEnabled);
@@ -247,6 +251,18 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
             long permissionsPeriodInNanos = limitRefreshPeriod.toNanos();
             return permissionsPeriodInNanos / limitForPeriod;
         }
-
     }
+
+    private static void noZeroNanosOnPermissionArgument(long nanosPerPermit ) {
+        if(nanosPerPermit<=0) {
+            throw new IllegalArgumentException(ZERO_NANOS_PER_PERMISSION_ARGUMENT);
+        }
+    }
+
+    private static void noZeroNanosOnPermissionState(long nanosPerPermit ) {
+        if(nanosPerPermit<=0) {
+            throw new IllegalStateException(ZERO_NANOS_PER_PERMISSION_STATE);
+        }
+    }
+
 }
