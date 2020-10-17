@@ -31,7 +31,7 @@ import java.time.Duration;
 public class RefillRateLimiterConfig extends RateLimiterConfigBase {
 
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
-    private static final String ZERO_NANOS_PER_PERMISSION_STATE = "Current settings lead to zero nanos per permission, adjust period adn limit";
+    private static final String ZERO_NANOS_PER_PERMISSION_STATE = "Current settings lead to zero nanos per permission, adjust period and limit";
     private static final String ZERO_NANOS_PER_PERMISSION_ARGUMENT = "At least 1 nanos per permission should be provided";
 
     private final int permitCapacity;
