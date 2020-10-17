@@ -24,9 +24,7 @@ import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
 import io.vavr.collection.Seq;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -348,7 +346,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
          * @return the RateLimiterRegistry
          */
         public RateLimiterRegistry build() {
-            return rateLimiterRegistryFactory.create(rateLimiterConfigsMap, registryEventConsumers, tags.toJavaMap(), registryStore);
+            return rateLimiterRegistryFactory.create(rateLimiterConfigsMap, registryEventConsumers, Optional.ofNullable(tags.toJavaMap()).orElse(new HashMap<>()), registryStore);
         }
     }
 
