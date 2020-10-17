@@ -33,6 +33,13 @@ import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
+/**
+ * {@link BaseAtomicLimiter} purpose is to simplify the creation of rate limiters with atomic state changes.
+ * <p>All {@link BaseAtomicLimiter} updates are atomic and state is encapsulated in {@link
+ * AtomicReference} to {@link BaseState}
+ * <p> Rate limiters that extend the {@link BaseAtomicLimiter} will have ,the permission recalculation logic, executed
+ * by their user threads
+ */
 abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState<E>> implements RateLimiter {
 
     protected static final long nanoTimeStart = nanoTime();
