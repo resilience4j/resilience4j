@@ -348,7 +348,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
          * @return the RateLimiterRegistry
          */
         public RateLimiterRegistry build() {
-            return rateLimiterRegistryFactory.create(rateLimiterConfigsMap, registryEventConsumers, tags, registryStore);
+            return rateLimiterRegistryFactory.create(rateLimiterConfigsMap, registryEventConsumers, tags.toJavaMap(), registryStore);
         }
     }
 

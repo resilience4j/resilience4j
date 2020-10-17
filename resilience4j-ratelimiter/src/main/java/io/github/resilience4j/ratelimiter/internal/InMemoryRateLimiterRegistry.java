@@ -122,6 +122,12 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
     }
 
     public static InMemoryRateLimiterRegistry<RefillRateLimiterConfig> createRefill(Map<String, RefillRateLimiterConfig> configs,
+                                                                                    List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
+                                                                                    Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
+        return createRefill(configs, registryEventConsumers, HashMap.ofAll(tags), registryStore);
+    }
+
+    public static InMemoryRateLimiterRegistry<RefillRateLimiterConfig> createRefill(Map<String, RefillRateLimiterConfig> configs,
                                                                               List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
                                                                               io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
         InMemoryRegistry<RateLimiter, RefillRateLimiterConfig> registry = new InMemoryRegistry<>(configs.getOrDefault(DEFAULT_CONFIG, RefillRateLimiterConfig.ofDefaults()),
@@ -129,6 +135,12 @@ public class InMemoryRateLimiterRegistry<E extends RateLimiterConfig> implements
             Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
         registry.putAllConfigurations(configs);
         return new InMemoryRateLimiterRegistry(registry, refillConverter(), atomicFactory());
+    }
+
+    public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(Map<String, RateLimiterConfig> configs,
+                                                                        List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
+                                                                        Map<String, String> tags, RegistryStore<RateLimiter> registryStore) {
+        return create(configs, registryEventConsumers, HashMap.ofAll(tags),registryStore);
     }
 
     public static InMemoryRateLimiterRegistry<RateLimiterConfig> create(Map<String, RateLimiterConfig> configs,

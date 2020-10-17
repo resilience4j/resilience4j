@@ -34,7 +34,7 @@ interface RateLimiterRegistryFactory<C extends RateLimiterConfig> {
 
     RateLimiterRegistry create(Map<String, C> configs,
                                List<RegistryEventConsumer<RateLimiter>> registryEventConsumers,
-                               io.vavr.collection.Map<String, String> tags, RegistryStore<RateLimiter> registryStore);
+                               Map<String, String> tags, RegistryStore<RateLimiter> registryStore);
 
     static RateLimiterRegistryFactory<RateLimiterConfig> defaultConfig() {
         return InMemoryRateLimiterRegistry::create;
