@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -169,9 +170,10 @@ public class CircuitBreakerConfiguration {
      * @param eventConsumerRegistry  The event consumer registry.
      */
     public void registerEventConsumer(CircuitBreakerRegistry circuitBreakerRegistry,
-        EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-        circuitBreakerRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry()));
+                                      EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+        circuitBreakerRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry()))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry()));
     }
 
     private void registerEventConsumer(
@@ -179,8 +181,7 @@ public class CircuitBreakerConfiguration {
         CircuitBreaker circuitBreaker) {
         int eventConsumerBufferSize = circuitBreakerProperties
             .findCircuitBreakerProperties(circuitBreaker.getName())
-            .map(
-                io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
         circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
             .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
