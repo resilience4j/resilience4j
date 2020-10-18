@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.retry.monitoring.endpoint;
 
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.event.RetryEvent;
 
 /**
@@ -35,8 +36,10 @@ class RetryEventDTOBuilder {
         this.creationTime = creationTime;
     }
 
-    RetryEventDTOBuilder throwable(Throwable throwable) {
-        this.errorMessage = throwable.toString();
+    RetryEventDTOBuilder throwable(@Nullable Throwable throwable) {
+        if (throwable != null) {
+            this.errorMessage = throwable.toString();
+        }
         return this;
     }
 
