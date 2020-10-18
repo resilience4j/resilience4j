@@ -52,7 +52,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
      */
     static IntervalFunction of(long intervalMillis) {
         checkInterval(intervalMillis);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
             return intervalMillis;
         };
@@ -72,7 +72,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
     static IntervalFunction ofRandomized(long intervalMillis, double randomizationFactor) {
         checkInterval(intervalMillis);
         checkRandomizationFactor(randomizationFactor);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
             return (long) randomize(intervalMillis, randomizationFactor);
         };
@@ -94,10 +94,23 @@ public interface IntervalFunction extends Function<Integer, Long> {
         return ofRandomized(DEFAULT_INITIAL_INTERVAL, DEFAULT_RANDOMIZATION_FACTOR);
     }
 
+    static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier, long maxIntervalMillis) {
+        checkInterval(maxIntervalMillis);
+        return attempt -> {
+            checkAttempt(attempt);
+            final long interval = ofExponentialBackoff(initialIntervalMillis, multiplier)
+                .apply(attempt);
+            return Math.min(interval, maxIntervalMillis);
+        };
+    }
+
+    static IntervalFunction ofExponentialBackoff(Duration initialInterval, double multiplier, Duration maxInterval) {
+        return ofExponentialBackoff(initialInterval.toMillis(), multiplier, maxInterval.toMillis());
+    }
+
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier) {
         checkMultiplier(multiplier);
-        return of(initialIntervalMillis, (x) -> (long) (x * multiplier));
-
+        return of(initialIntervalMillis, x -> (long) (x * multiplier));
     }
 
     static IntervalFunction ofExponentialBackoff(Duration initialInterval, double multiplier) {
@@ -119,17 +132,42 @@ public interface IntervalFunction extends Function<Integer, Long> {
     static IntervalFunction ofExponentialRandomBackoff(
         long initialIntervalMillis,
         double multiplier,
+        double randomizationFactor,
+        long maxIntervalMillis
+    ) {
+        checkInterval(maxIntervalMillis);
+        return attempt -> {
+            checkAttempt(attempt);
+            final long interval = ofExponentialRandomBackoff(initialIntervalMillis, multiplier, randomizationFactor)
+                .apply(attempt);
+            return Math.min(interval, maxIntervalMillis);
+        };
+    }
+
+    static IntervalFunction ofExponentialRandomBackoff(
+        long initialIntervalMillis,
+        double multiplier,
         double randomizationFactor
     ) {
         checkInterval(initialIntervalMillis);
         checkMultiplier(multiplier);
         checkRandomizationFactor(randomizationFactor);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
-            final long interval = of(initialIntervalMillis, (x) -> (long) (x * multiplier))
+            final long interval = of(initialIntervalMillis, x -> (long) (x * multiplier))
                 .apply(attempt);
             return (long) randomize(interval, randomizationFactor);
         };
+    }
+
+    static IntervalFunction ofExponentialRandomBackoff(
+        Duration initialInterval,
+        double multiplier,
+        double randomizationFactor,
+        Duration maxInterval
+    ) {
+        return ofExponentialRandomBackoff(initialInterval.toMillis(), multiplier,
+            randomizationFactor, maxInterval.toMillis());
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
@@ -143,10 +181,28 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
     static IntervalFunction ofExponentialRandomBackoff(
         long initialIntervalMillis,
+        double multiplier,
+        long maxIntervalMillis
+    ) {
+        return ofExponentialRandomBackoff(initialIntervalMillis, multiplier,
+            DEFAULT_RANDOMIZATION_FACTOR, maxIntervalMillis);
+    }
+
+    static IntervalFunction ofExponentialRandomBackoff(
+        long initialIntervalMillis,
         double multiplier
     ) {
         return ofExponentialRandomBackoff(initialIntervalMillis, multiplier,
             DEFAULT_RANDOMIZATION_FACTOR);
+    }
+
+    static IntervalFunction ofExponentialRandomBackoff(
+        Duration initialInterval,
+        double multiplier,
+        Duration maxInterval
+    ) {
+        return ofExponentialRandomBackoff(initialInterval.toMillis(), multiplier,
+            DEFAULT_RANDOMIZATION_FACTOR, maxInterval.toMillis());
     }
 
     static IntervalFunction ofExponentialRandomBackoff(
@@ -191,9 +247,9 @@ final class IntervalFunctionCompanion {
     }
 
     static void checkInterval(long interval) {
-        if (interval < 10) {
+        if (interval < 1) {
             throw new IllegalArgumentException(
-                "Illegal argument interval: " + interval + " millis");
+                "Illegal argument interval: " + interval + " millis is less than 1");
         }
     }
 

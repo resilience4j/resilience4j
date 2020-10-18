@@ -1,5 +1,7 @@
-package io.github.resilience4j.timelimiter;
+package io.github.resilience4j.timelimiter.internal;
 
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.vavr.control.Try;
 import org.junit.Test;
 
@@ -15,6 +17,8 @@ import static org.mockito.Mockito.never;
 
 public class TimeLimiterTest {
 
+    private static final String TIME_LIMITER_NAME = "TestTimeLimiter";
+
     @Test
     public void shouldReturnCorrectTimeoutDuration() {
         Duration timeoutDuration = Duration.ofSeconds(1);
@@ -27,7 +31,10 @@ public class TimeLimiterTest {
     @Test
     public void shouldThrowTimeoutExceptionAndInvokeCancel() throws Exception {
         Duration timeoutDuration = Duration.ofSeconds(1);
-        TimeLimiter timeLimiter = TimeLimiter.of(timeoutDuration);
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+            .timeoutDuration(timeoutDuration)
+            .build();
+        TimeLimiter timeLimiter = TimeLimiter.of(TIME_LIMITER_NAME,timeLimiterConfig);
 
         @SuppressWarnings("unchecked")
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
@@ -41,6 +48,7 @@ public class TimeLimiterTest {
 
         assertThat(decoratedResult.isFailure()).isTrue();
         assertThat(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        assertThat(decoratedResult.getCause()).hasMessage(TimeLimiter.createdTimeoutExceptionWithName(TIME_LIMITER_NAME, null).getMessage());
 
         then(mockFuture).should().cancel(true);
     }

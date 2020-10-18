@@ -21,6 +21,8 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldSubscribeToObservableJust() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Observable.just("Event 1", "Event 2")
             .compose(CircuitBreakerOperator.of(circuitBreaker))
@@ -35,6 +37,8 @@ public class ObserverCircuitBreakerTest extends BaseCircuitBreakerTest {
     @Test
     public void shouldPropagateError() {
         given(circuitBreaker.tryAcquirePermission()).willReturn(true);
+        given(circuitBreaker.getCurrentTimestamp()).willReturn(System.nanoTime());
+        given(circuitBreaker.getTimestampUnit()).willReturn(TimeUnit.NANOSECONDS);
 
         Observable.error(new IOException("BAM!"))
             .compose(CircuitBreakerOperator.of(circuitBreaker))

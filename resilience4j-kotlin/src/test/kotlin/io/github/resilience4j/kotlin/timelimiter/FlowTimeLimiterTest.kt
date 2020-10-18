@@ -27,6 +27,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
+import java.util.concurrent.TimeoutException
 
 class FlowTimeLimiterTest {
 
@@ -94,8 +95,8 @@ class FlowTimeLimiterTest {
                 flow<String> { helloWorldService.wait() }
                     .timeLimiter(timelimiter)
                     .toList(resultList)
-                Assertions.failBecauseExceptionWasNotThrown<Nothing>(CancellationException::class.java)
-            } catch (e: CancellationException) {
+                Assertions.failBecauseExceptionWasNotThrown<Nothing>(TimeoutException::class.java)
+            } catch (e: TimeoutException) {
                 // nothing - proceed
             }
 

@@ -19,13 +19,16 @@
 package io.github.resilience4j.bulkhead;
 
 import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 import java.time.Duration;
 
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}
  */
 @Immutable
-public class BulkheadConfig {
+public class BulkheadConfig implements Serializable {
+
+    private static final long serialVersionUID = -9139631465007403460L;
 
     public static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
     public static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
@@ -86,6 +89,17 @@ public class BulkheadConfig {
 
     public boolean isFairCallHandlingEnabled() {
         return fairCallHandlingEnabled;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BulkheadConfig{");
+        sb.append("maxConcurrentCalls=").append(maxConcurrentCalls);
+        sb.append(", maxWaitDuration=").append(maxWaitDuration);
+        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
+        sb.append(", fairCallHandlingEnabled=").append(fairCallHandlingEnabled);
+        sb.append('}');
+        return sb.toString();
     }
 
     public static class Builder {
