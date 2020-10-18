@@ -148,7 +148,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
         if (logger.isDebugEnabled()) {
             logger.debug(
                 "Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
-                backend, retry.getRetryConfig().getResultPredicate(), methodName);
+                backend, retry.getRetryConfig().getMaxAttempts(), methodName);
         }
         return retry;
     }
