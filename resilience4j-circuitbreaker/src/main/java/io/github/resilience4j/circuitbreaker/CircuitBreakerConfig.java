@@ -375,11 +375,6 @@ public class CircuitBreakerConfig implements Serializable {
          */
         public Builder waitIntervalFunctionInOpenState(
             IntervalFunction waitIntervalFunctionInOpenState) {
-            if (waitIntervalFunctionInOpenStateAlreadySet) {
-                throw new IllegalArgumentException(
-                    "waitIntervalFunctionInOpenState. " +
-                        "You can't use waitDurationInOpenState and waitIntervalFunctionInOpenState together.");
-            }
             this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             return this;
         }
@@ -723,7 +718,7 @@ public class CircuitBreakerConfig implements Serializable {
          */
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
-            config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
+            config.waitIntervalFunctionInOpenState = createWaitIntervalFunctionInOpenState();
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
@@ -757,6 +752,15 @@ public class CircuitBreakerConfig implements Serializable {
                     .or(recordExceptionPredicate) : predicate)
                 .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
                     : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+        }
+
+        private IntervalFunction createWaitIntervalFunctionInOpenState() {
+            if (waitIntervalFunctionInOpenStateAlreadySet) {
+                throw new IllegalArgumentException(
+                    "waitIntervalFunctionInOpenState. " +
+                        "You can't use waitDurationInOpenState and waitIntervalFunctionInOpenState together.");
+            }
+            return waitIntervalFunctionInOpenState;
         }
     }
 }
