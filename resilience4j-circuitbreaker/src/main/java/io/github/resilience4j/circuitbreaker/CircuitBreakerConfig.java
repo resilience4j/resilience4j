@@ -370,8 +370,6 @@ public class CircuitBreakerConfig implements Serializable {
          * @param waitIntervalFunctionInOpenState Interval function that returns wait time as a
          *                                        function of attempts
          * @return the CircuitBreakerConfig.Builder
-         * @throws IllegalArgumentException if waitIntervalFunctionInOpenState and waitDurationInOpenState
-         * are used together
          */
         public Builder waitIntervalFunctionInOpenState(
             IntervalFunction waitIntervalFunctionInOpenState) {
