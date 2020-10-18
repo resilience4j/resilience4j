@@ -21,8 +21,6 @@ package io.github.resilience4j.ratelimiter;
 import java.io.Serializable;
 import java.time.Duration;
 
-import static java.util.Objects.requireNonNull;
-
 public interface RateLimiterConfig extends Serializable {
 
     /**
