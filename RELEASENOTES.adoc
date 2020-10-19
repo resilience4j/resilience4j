@@ -343,3 +343,8 @@ NOTE: Breaking changes:
 * Problem with registering metrics for more than one circuit breaker [#1131](https://github.com/resilience4j/resilience4j/issues/1131)
 * ConcurrentModificationException warning log while consuming events [#1115](https://github.com/resilience4j/resilience4j/issues/1115)
 * CircuitBreakerConfig.Builder.waitDurationInOpenState() false documentation of when the function throws exception [#1092](https://github.com/resilience4j/resilience4j/issues/1092)
+
+== Version 1.6.1
+
+=== Bugs
+* Spring Boot MVC application failing on startup with ClassNotFoundException [#1192](https://github.com/resilience4j/resilience4j/issues/1192)
