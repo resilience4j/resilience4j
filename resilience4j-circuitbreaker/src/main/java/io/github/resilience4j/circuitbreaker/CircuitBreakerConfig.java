@@ -343,6 +343,10 @@ public class CircuitBreakerConfig implements Serializable {
          * Configures an interval function with a fixed wait duration which controls how long the
          * CircuitBreaker should stay open, before it switches to half open. Default value is 60
          * seconds.
+         * <p>
+         * <b>ATTENTION!!!</b> Do not use with {@link #waitIntervalFunctionInOpenState(IntervalFunction)}!
+         * Please, when using, make sure not to override the value set earlier from the
+         * {@link #waitIntervalFunctionInOpenState(IntervalFunction)}
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the
          *                                CircuitBreaker should stay open
@@ -366,6 +370,10 @@ public class CircuitBreakerConfig implements Serializable {
          * duration of 60 seconds.
          * <p>
          * A custom interval function is useful if you need an exponential backoff algorithm.
+         * <p>
+         * <b>ATTENTION!!!</b> Do not use with {@link #waitDurationInOpenState(Duration)}!
+         * Please, when using, make sure not to override the value set earlier from the
+         * {@link #waitDurationInOpenState(Duration)}
          *
          * @param waitIntervalFunctionInOpenState Interval function that returns wait time as a
          *                                        function of attempts
@@ -713,10 +721,11 @@ public class CircuitBreakerConfig implements Serializable {
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
+         * @throws IllegalStateException when the parameter is invalid
          */
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
-            config.waitIntervalFunctionInOpenState = createWaitIntervalFunctionInOpenState();
+            config.waitIntervalFunctionInOpenState = validateWaitIntervalFunctionInOpenState();
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
@@ -752,11 +761,10 @@ public class CircuitBreakerConfig implements Serializable {
                     : DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
 
-        private IntervalFunction createWaitIntervalFunctionInOpenState() {
+        private IntervalFunction validateWaitIntervalFunctionInOpenState() {
             if (waitIntervalFunctionInOpenStateAlreadySet) {
-                throw new IllegalArgumentException(
-                    "waitIntervalFunctionInOpenState. " +
-                        "You can't use waitDurationInOpenState and waitIntervalFunctionInOpenState together.");
+                throw new IllegalStateException("You have already the durationInOpenState value from the waitDurationInOpenState method." +
+                    "Please don't use waitIntervalFunctionInOpenState with waitDurationInOpenState");
             }
             return waitIntervalFunctionInOpenState;
         }
