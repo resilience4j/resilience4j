@@ -139,7 +139,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         }
     }
 
-    private static Object handleJoinPointCompletableFuture(
+    private Object handleJoinPointCompletableFuture(
             ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) throws Throwable {
         return timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> {
             try {
