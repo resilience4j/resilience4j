@@ -251,6 +251,7 @@ public class CircuitBreakerConfig implements Serializable {
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
+        private boolean waitIntervalFunctionInOpenStateAlreadySet = false;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -355,6 +356,7 @@ public class CircuitBreakerConfig implements Serializable {
                     "waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitIntervalFunctionInOpenState = IntervalFunction.of(waitDurationInMillis);
+            waitIntervalFunctionInOpenStateAlreadySet = true;
             return this;
         }
 
@@ -714,7 +716,7 @@ public class CircuitBreakerConfig implements Serializable {
          */
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
-            config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
+            config.waitIntervalFunctionInOpenState = createWaitIntervalFunctionInOpenState();
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
@@ -748,6 +750,15 @@ public class CircuitBreakerConfig implements Serializable {
                     .or(recordExceptionPredicate) : predicate)
                 .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
                     : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+        }
+
+        private IntervalFunction createWaitIntervalFunctionInOpenState() {
+            if (waitIntervalFunctionInOpenStateAlreadySet) {
+                throw new IllegalArgumentException(
+                    "waitIntervalFunctionInOpenState. " +
+                        "You can't use waitDurationInOpenState and waitIntervalFunctionInOpenState together.");
+            }
+            return waitIntervalFunctionInOpenState;
         }
     }
 }
