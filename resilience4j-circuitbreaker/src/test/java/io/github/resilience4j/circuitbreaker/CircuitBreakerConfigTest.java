@@ -443,7 +443,7 @@ public class CircuitBreakerConfigTest {
         assertThat(result).endsWith("}");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void shouldNotUseWitIntervalFunctionInOpenStateAndWaitDurationInOpenStateTogether() {
         custom()
             .waitDurationInOpenState(Duration.ofMillis(3333))
