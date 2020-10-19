@@ -344,7 +344,7 @@ public class CircuitBreakerConfig implements Serializable {
          * CircuitBreaker should stay open, before it switches to half open. Default value is 60
          * seconds.
          * <p>
-         * <b>ATTENTION!!!</b> Do not use with {@link #waitIntervalFunctionInOpenState(IntervalFunction)}!
+         * Do not use with {@link #waitIntervalFunctionInOpenState(IntervalFunction)}!
          * Please, when using, make sure not to override the value set earlier from the
          * {@link #waitIntervalFunctionInOpenState(IntervalFunction)}
          *
@@ -371,7 +371,7 @@ public class CircuitBreakerConfig implements Serializable {
          * <p>
          * A custom interval function is useful if you need an exponential backoff algorithm.
          * <p>
-         * <b>ATTENTION!!!</b> Do not use with {@link #waitDurationInOpenState(Duration)}!
+         * Do not use with {@link #waitDurationInOpenState(Duration)}!
          * Please, when using, make sure not to override the value set earlier from the
          * {@link #waitDurationInOpenState(Duration)}
          *
