@@ -764,8 +764,8 @@ public class CircuitBreakerConfig implements Serializable {
 
         private IntervalFunction validateWaitIntervalFunctionInOpenState() {
             if (setWaitInOpenStateCounter > 1) {
-                throw new IllegalStateException("You have already the durationInOpenState value from the waitDurationInOpenState method." +
-                    "Please don't use waitIntervalFunctionInOpenState with waitDurationInOpenState");
+                throw new IllegalStateException("The waitIntervalFunction was configured twice which could result in an undesired state. " +
+                    "Please use either waitIntervalFunctionInOpenState or waitDurationInOpenState.");
             }
             return waitIntervalFunctionInOpenState;
         }
