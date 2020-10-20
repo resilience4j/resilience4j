@@ -172,23 +172,4 @@ public class RunnableRetryTest {
         then(helloWorldService).should(times(3)).sayHelloWorld();
         assertThat(sleptTime).isEqualTo(200);
     }
-
-    @Test
-    public void shouldNotTakeIntoAccountBackoffFunctionWhenBiFunctionIsSet() {
-        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
-        RetryConfig config = RetryConfig
-            .custom()
-            .maxAttempts(3)
-            .intervalFunction(IntervalFunction.of(Duration.ofMillis(500)))
-            .intervalBiFunction((attempt, result) -> result.mapLeft(e -> 100L).getLeft())
-            .build();
-        Retry retry = Retry.of("id", config);
-        CheckedRunnable retryableRunnable = Retry
-            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
-
-        Try.run(retryableRunnable);
-
-        then(helloWorldService).should(times(3)).sayHelloWorld();
-        assertThat(sleptTime).isEqualTo(200);
-    }
 }

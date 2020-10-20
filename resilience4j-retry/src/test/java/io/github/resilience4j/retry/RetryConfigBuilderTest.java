@@ -72,7 +72,7 @@ public class RetryConfigBuilderTest {
 
     @Test
     public void testCreateFromConfigurationShouldCopyIntervalBiFunction() {
-        IntervalBiFunction<Object> biFunction = IntervalBiFunction.ofIntervalFunction(IntervalFunction.ofExponentialBackoff());
+        IntervalBiFunction<Object> biFunction = IntervalBiFunction.ofIntervalFunction(IntervalFunction.ofDefaults());
         RetryConfig config = RetryConfig
             .from(RetryConfig.custom()
                 .intervalBiFunction(biFunction)
@@ -80,6 +80,29 @@ public class RetryConfigBuilderTest {
         assertThat(config).isNotNull();
         assertThat(config.getIntervalBiFunction()).isNotNull();
         assertThat(config.getIntervalBiFunction()).isEqualTo(biFunction);
+    }
+
+    @Test
+    public void testCreateFromConfigurationShouldUseIntervalFunction() {
+        RetryConfig config = RetryConfig
+            .from(RetryConfig.custom()
+                .intervalFunction(IntervalFunction.of(100L))
+                .build()).build();
+        assertThat(config).isNotNull();
+        assertThat(config.getIntervalBiFunction()).isNotNull();
+        assertThat(config.getIntervalBiFunction().apply(1, null)).isEqualTo(100L);
+    }
+
+    @Test
+    public void testCreateFromDefaultConfigurationShouldUseIntervalFunction() {
+        RetryConfig baseConfig = RetryConfig.ofDefaults();
+        RetryConfig retryConfig = RetryConfig.from(baseConfig)
+            .intervalFunction(IntervalFunction.of(100L))
+            .build();
+
+        assertThat(retryConfig).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalFunction().apply(1)).isEqualTo(100L);
     }
 
     @Test
@@ -179,6 +202,44 @@ public class RetryConfigBuilderTest {
         final RetryConfig config2 = builder.build();
         assertThat(config2.getMaxAttempts()).isEqualTo(3);
         assertThat(config1.getMaxAttempts()).isEqualTo(5);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void intervalFunctionUsedWithIntervalBiFunctionShouldFail() {
+        RetryConfig.custom().intervalBiFunction((attempt, either) -> 100L)
+            .intervalFunction(IntervalFunction.ofDefaults())
+            .build();
+    }
+
+    @Test
+    public void shouldUseDefaultIntervalFunction() {
+        RetryConfig retryConfig = RetryConfig.ofDefaults();
+
+        assertThat(retryConfig.getIntervalFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction().apply(1, null)).isEqualTo(IntervalFunction.ofDefaults().apply(1));
+    }
+
+    @Test
+    public void shouldUseSetIntervalFunction() {
+        RetryConfig retryConfig = RetryConfig.custom()
+            .intervalFunction(IntervalFunction.of(100L))
+            .build();
+
+        assertThat(retryConfig.getIntervalFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction().apply(1, null)).isEqualTo(100L);
+    }
+
+    @Test
+    public void shouldUseSetIntervalBiFunction() {
+        RetryConfig retryConfig = RetryConfig.custom()
+            .intervalBiFunction(IntervalBiFunction.ofIntervalFunction(IntervalFunction.of(105L)))
+            .build();
+
+        assertThat(retryConfig.getIntervalFunction()).isNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction().apply(1, null)).isEqualTo(105L);
     }
 
     private static class ExtendsException extends Exception {

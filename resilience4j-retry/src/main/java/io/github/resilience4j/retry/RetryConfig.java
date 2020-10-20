@@ -37,7 +37,7 @@ public class RetryConfig implements Serializable {
     public static final long DEFAULT_WAIT_DURATION = 500;
     public static final int DEFAULT_MAX_ATTEMPTS = 3;
     private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = numOfAttempts -> DEFAULT_WAIT_DURATION;
-    private static final IntervalBiFunction DEFAULT_BI_INTERVAL_FUNCTION = IntervalBiFunction.ofIntervalFunction(DEFAULT_INTERVAL_FUNCTION);
+    private static final IntervalBiFunction DEFAULT_INTERVAL_BI_FUNCTION = IntervalBiFunction.ofIntervalFunction(DEFAULT_INTERVAL_FUNCTION);
     private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
 
     @SuppressWarnings("unchecked")
@@ -51,9 +51,11 @@ public class RetryConfig implements Serializable {
     private Predicate retryOnResultPredicate;
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-    private IntervalFunction intervalFunction = DEFAULT_INTERVAL_FUNCTION;
 
-    private IntervalBiFunction intervalBiFunction = DEFAULT_BI_INTERVAL_FUNCTION;
+    @Nullable
+    private IntervalFunction intervalFunction;
+
+    private IntervalBiFunction intervalBiFunction = DEFAULT_INTERVAL_BI_FUNCTION;
 
     // The final exception predicate
     private Predicate<Throwable> exceptionPredicate;
@@ -91,6 +93,11 @@ public class RetryConfig implements Serializable {
         return maxAttempts;
     }
 
+    /**
+     * Use {@link RetryConfig#intervalBiFunction} instead, this method is kept for backwards compatibility
+     */
+    @Nullable
+    @Deprecated
     public Function<Integer, Long> getIntervalFunction() {
         return intervalFunction;
     }
@@ -126,7 +133,9 @@ public class RetryConfig implements Serializable {
     public static class Builder<T> {
 
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-        private IntervalFunction intervalFunction = IntervalFunction.ofDefaults();
+
+        @Nullable
+        private IntervalFunction intervalFunction;
 
         @Nullable
         private Predicate<Throwable> retryOnExceptionPredicate;
@@ -148,12 +157,15 @@ public class RetryConfig implements Serializable {
         @SuppressWarnings("unchecked")
         public Builder(RetryConfig baseConfig) {
             this.maxAttempts = baseConfig.maxAttempts;
-            this.intervalFunction = baseConfig.intervalFunction;
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
-            this.intervalBiFunction = baseConfig.intervalBiFunction;
             this.retryExceptions = baseConfig.retryExceptions;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
+            if (baseConfig.intervalFunction != null) {
+                this.intervalFunction = baseConfig.intervalFunction;
+            } else {
+                this.intervalBiFunction = baseConfig.intervalBiFunction;
+            }
         }
 
         public Builder<T> maxAttempts(int maxAttempts) {
@@ -170,7 +182,7 @@ public class RetryConfig implements Serializable {
                 this.intervalFunction = (x) -> waitDuration.toMillis();
             } else {
                 throw new IllegalArgumentException(
-                    "waitDurationInOpenState must be a positive value");
+                    "waitDuration must be a positive value");
             }
             return this;
         }
@@ -201,7 +213,6 @@ public class RetryConfig implements Serializable {
 
         /**
          * Set a function to modify the waiting interval after a failure based on attempt number and result or exception.
-         * When is set will discard values configured via {@link Builder#intervalFunction} or {@link Builder#waitDuration}.
          *
          * @param f Function to modify the interval after a failure
          * @return the RetryConfig.Builder
@@ -275,17 +286,29 @@ public class RetryConfig implements Serializable {
         }
 
         public RetryConfig build() {
+            if (intervalFunction != null && intervalBiFunction != null) {
+                throw new IllegalStateException("The intervalFunction was configured twice which could result in an" +
+                    " undesired state. Please use either intervalFunction or intervalBiFunction.");
+            }
             RetryConfig config = new RetryConfig();
-            config.intervalFunction = intervalFunction;
             config.maxAttempts = maxAttempts;
             config.retryOnExceptionPredicate = retryOnExceptionPredicate;
             config.retryOnResultPredicate = retryOnResultPredicate;
             config.retryExceptions = retryExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.exceptionPredicate = createExceptionPredicate();
+            config.intervalFunction = createIntervalFunction();
             config.intervalBiFunction = Optional.ofNullable(intervalBiFunction)
-                .orElse(IntervalBiFunction.ofIntervalFunction(intervalFunction));
+                .orElse(IntervalBiFunction.ofIntervalFunction(config.intervalFunction));
             return config;
+        }
+
+        @Nullable
+        private IntervalFunction createIntervalFunction() {
+            if (intervalFunction == null && intervalBiFunction == null) {
+                return IntervalFunction.ofDefaults();
+            }
+            return intervalFunction;
         }
 
         private Predicate<Throwable> createExceptionPredicate() {
