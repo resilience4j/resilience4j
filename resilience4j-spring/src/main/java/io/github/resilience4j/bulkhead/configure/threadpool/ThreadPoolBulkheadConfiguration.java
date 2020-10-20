@@ -115,18 +115,17 @@ public class ThreadPoolBulkheadConfiguration {
      */
     private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,
         EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        bulkheadRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                bulkheadConfigurationProperties));
+        ThreadPoolBulkheadConfigurationProperties properties) {
+        bulkheadRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
     }
 
     private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
         ThreadPoolBulkhead bulkHead,
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
         int eventConsumerBufferSize = ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-            .map(
-                InstanceProperties::getEventConsumerBufferSize)
+            .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
         bulkHead.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(
             String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()),
