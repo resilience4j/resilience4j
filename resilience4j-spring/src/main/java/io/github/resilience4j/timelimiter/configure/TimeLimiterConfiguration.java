@@ -18,6 +18,7 @@ package io.github.resilience4j.timelimiter.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
+import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -157,20 +158,23 @@ public class TimeLimiterConfiguration {
      *
      * @param timeLimiterRegistry   The timeLimiter registry.
      * @param eventConsumerRegistry The event consumer registry.
-     * @param timeLimiterConfigurationProperties timeLimiter configuration properties
+     * @param properties timeLimiter configuration properties
      */
     private static void registerEventConsumer(TimeLimiterRegistry timeLimiterRegistry,
                                               EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry,
-                                              TimeLimiterConfigurationProperties timeLimiterConfigurationProperties) {
-        timeLimiterRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), timeLimiterConfigurationProperties));
+                                              TimeLimiterConfigurationProperties properties) {
+        timeLimiterRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
     }
 
     private static void registerEventConsumer(EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry, TimeLimiter timeLimiter,
                                               TimeLimiterConfigurationProperties timeLimiterConfigurationProperties) {
         int eventConsumerBufferSize = Optional.ofNullable(timeLimiterConfigurationProperties.getInstanceProperties(timeLimiter.getName()))
-                .map(io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+                .map(InstanceProperties::getEventConsumerBufferSize)
                 .orElse(100);
-        timeLimiter.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(timeLimiter.getName(), eventConsumerBufferSize));
+        timeLimiter.getEventPublisher().onEvent(
+            eventConsumerRegistry.createEventConsumer(timeLimiter.getName(), eventConsumerBufferSize));
     }
 
 }
