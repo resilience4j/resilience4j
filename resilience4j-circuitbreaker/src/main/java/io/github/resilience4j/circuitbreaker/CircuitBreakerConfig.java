@@ -251,7 +251,7 @@ public class CircuitBreakerConfig implements Serializable {
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
-        private byte waitInOpenStateCounter = 0;
+        private byte createWaitIntervalFunctionCounter = 0;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -360,7 +360,7 @@ public class CircuitBreakerConfig implements Serializable {
                     "waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitIntervalFunctionInOpenState = IntervalFunction.of(waitDurationInMillis);
-            waitInOpenStateCounter++;
+            createWaitIntervalFunctionCounter++;
             return this;
         }
 
@@ -382,7 +382,7 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder waitIntervalFunctionInOpenState(
             IntervalFunction waitIntervalFunctionInOpenState) {
             this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
-            waitInOpenStateCounter++;
+            createWaitIntervalFunctionCounter++;
             return this;
         }
 
@@ -763,7 +763,7 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         private IntervalFunction validateWaitIntervalFunctionInOpenState() {
-            if (waitInOpenStateCounter > 1) {
+            if (createWaitIntervalFunctionCounter > 1) {
                 throw new IllegalStateException("The waitIntervalFunction was configured multiple times " +
                     "which could result in an undesired state. Please verify that waitIntervalFunctionInOpenState " +
                     "and waitDurationInOpenState are not used together.");
