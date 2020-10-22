@@ -251,7 +251,7 @@ public class CircuitBreakerConfig implements Serializable {
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
-        private byte setWaitInOpenStateCounter = 0;
+        private byte waitInOpenStateCounter = 0;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -360,7 +360,7 @@ public class CircuitBreakerConfig implements Serializable {
                     "waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitIntervalFunctionInOpenState = IntervalFunction.of(waitDurationInMillis);
-            setWaitInOpenStateCounter++;
+            waitInOpenStateCounter++;
             return this;
         }
 
@@ -382,7 +382,7 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder waitIntervalFunctionInOpenState(
             IntervalFunction waitIntervalFunctionInOpenState) {
             this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
-            setWaitInOpenStateCounter++;
+            waitInOpenStateCounter++;
             return this;
         }
 
@@ -763,9 +763,10 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         private IntervalFunction validateWaitIntervalFunctionInOpenState() {
-            if (setWaitInOpenStateCounter > 1) {
-                throw new IllegalStateException("The waitIntervalFunction was configured twice which could result in an undesired state. " +
-                    "Please use either waitIntervalFunctionInOpenState or waitDurationInOpenState.");
+            if (waitInOpenStateCounter > 1) {
+                throw new IllegalStateException("The waitIntervalFunction was configured multiple times " +
+                    "which could result in an undesired state. Please verify that waitIntervalFunctionInOpenState " +
+                    "and waitDurationInOpenState are not used together.");
             }
             return waitIntervalFunctionInOpenState;
         }
