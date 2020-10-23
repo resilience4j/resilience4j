@@ -40,13 +40,13 @@ public class RetryConfigBuilderTest {
     @Test
     public void zeroWaitInterval() {
         final RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(0)).build();
-        assertThat(config.getIntervalFunction().apply(1)).isEqualTo(0);
+        assertThat(config.getIntervalBiFunction().apply(1, null)).isEqualTo(0);
     }
 
     @Test
     public void waitIntervalUnderTenMillisShouldSucceed() {
         RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(5)).build();
-        assertThat(config.getIntervalFunction().apply(1)).isEqualTo(5L);
+        assertThat(config.getIntervalBiFunction().apply(1, null)).isEqualTo(5L);
     }
 
     @Test(expected = IllegalArgumentException.class)

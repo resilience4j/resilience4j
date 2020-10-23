@@ -87,12 +87,12 @@ public class RetryConfigurationTest {
         Retry retry1 = retryRegistry.retry("backendWithDefaultConfig");
         assertThat(retry1).isNotNull();
         assertThat(retry1.getRetryConfig().getMaxAttempts()).isEqualTo(3);
-        assertThat(retry1.getRetryConfig().getIntervalFunction().apply(1)).isEqualTo(200L);
+        assertThat(retry1.getRetryConfig().getIntervalBiFunction().apply(1, null)).isEqualTo(200L);
         // Should get shared config and overwrite wait time
         Retry retry2 = retryRegistry.retry("backendWithSharedConfig");
         assertThat(retry2).isNotNull();
         assertThat(retry2.getRetryConfig().getMaxAttempts()).isEqualTo(2);
-        assertThat(retry2.getRetryConfig().getIntervalFunction().apply(1)).isEqualTo(300L);
+        assertThat(retry2.getRetryConfig().getIntervalBiFunction().apply(1, null)).isEqualTo(300L);
         // Unknown backend should get default config of Registry
         Retry retry3 = retryRegistry.retry("unknownBackend");
         assertThat(retry3).isNotNull();

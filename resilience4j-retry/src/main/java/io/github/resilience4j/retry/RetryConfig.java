@@ -179,7 +179,7 @@ public class RetryConfig implements Serializable {
 
         public Builder<T> waitDuration(Duration waitDuration) {
             if (waitDuration.toMillis() >= 0) {
-                this.intervalFunction = (x) -> waitDuration.toMillis();
+                this.intervalBiFunction = (attempt, either) -> waitDuration.toMillis();
             } else {
                 throw new IllegalArgumentException(
                     "waitDuration must be a positive value");
