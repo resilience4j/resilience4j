@@ -29,9 +29,9 @@ import static java.lang.Long.min;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
- * <p>Each cycle has duration of {@link io.github.resilience4j.ratelimiter.RateLimiterConfigBase#limitRefreshPeriod} in nanoseconds.
+ * <p>Each cycle has duration of {@link io.github.resilience4j.ratelimiter.RefillRateLimiterConfig#limitRefreshPeriod} in nanoseconds.
  * <p>By contract on start of each cycle {@link AtomicRateLimiter} should
- * set {@link State#activePermissions} to {@link io.github.resilience4j.ratelimiter.RateLimiterConfigBase#limitForPeriod}. For the {@link
+ * set {@link State#activePermissions} to {@link io.github.resilience4j.ratelimiter.RefillRateLimiterConfig#limitForPeriod}. For the {@link
  * AtomicRateLimiter} callers it is really looks so, but under the hood there is some optimisations
  * that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
