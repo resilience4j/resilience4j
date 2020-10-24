@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
+import static io.github.resilience4j.ratelimiter.internal.ConfigBuilderHelper.withLimitForPeriod;
+import static io.github.resilience4j.ratelimiter.internal.ConfigBuilderHelper.withTimeoutDuration;
 import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
@@ -63,9 +65,12 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
      */
     @Override
     public void changeTimeoutDuration(final Duration timeoutDuration) {
-        E newConfig = state.get().getConfig()
-            .withTimeoutDuration(timeoutDuration);
-        state.updateAndGet(currentState -> currentState.withConfig(newConfig));
+        try {
+            E newConfig = withTimeoutDuration(timeoutDuration, state.get().getConfig());
+            state.updateAndGet(currentState -> currentState.withConfig(newConfig));
+        } catch (ConfigBuilderHelper.NonRegisteredConfig e) {
+            throw new IllegalStateException("Please override method",e);
+        }
     }
 
     /**
@@ -73,9 +78,12 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
      */
     @Override
     public void changeLimitForPeriod(final int limitForPeriod) {
-        E newConfig = state.get().getConfig()
-            .withLimitForPeriod(limitForPeriod);
-        state.updateAndGet(currentState -> currentState.withConfig(newConfig));
+        try {
+            E newConfig = withLimitForPeriod(limitForPeriod, state.get().getConfig());
+            state.updateAndGet(currentState -> currentState.withConfig(newConfig));
+        } catch (ConfigBuilderHelper.NonRegisteredConfig e) {
+            throw new IllegalStateException("Please override method",e);
+        }
     }
 
     /**

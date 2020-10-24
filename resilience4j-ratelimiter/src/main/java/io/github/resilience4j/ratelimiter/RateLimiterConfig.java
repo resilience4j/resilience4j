@@ -21,24 +21,38 @@ package io.github.resilience4j.ratelimiter;
 import java.io.Serializable;
 import java.time.Duration;
 
-public interface RateLimiterConfig extends Serializable {
+import static java.util.Objects.requireNonNull;
+
+public class RateLimiterConfig implements Serializable {
+
+    private static final long serialVersionUID = -1621614587284115957L;
+
+    private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
+    private static final String LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL = "LimitRefreshPeriod must not be null";
+    private static final Duration ACCEPTABLE_REFRESH_PERIOD = Duration.ofNanos(1L);
+    private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
+
+    private final Duration timeoutDuration;
+    private final Duration limitRefreshPeriod;
+    private final int limitForPeriod;
+    private final boolean writableStackTraceEnabled;
+
+    protected RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
+                              int limitForPeriod, boolean writableStackTraceEnabled) {
+        this.timeoutDuration = timeoutDuration;
+        this.limitRefreshPeriod = limitRefreshPeriod;
+        this.limitForPeriod = limitForPeriod;
+        this.writableStackTraceEnabled = writableStackTraceEnabled;
+    }
+
 
     /**
      * Returns a builder to create a custom RateLimiterConfig.
      *
      * @return a {@link RateLimiterConfig.Builder}
      */
-    static Builder custom() {
-        return new RateLimiterConfigBase.Builder();
-    }
-
-    /**
-     * Returns a builder to create a custom RefillRateLimiterConfig.
-     *
-     * @return a {@link RateLimiterConfig.Builder}
-     */
-    static Builder customRefill() {
-        return new RefillRateLimiterConfig.Builder();
+    public static Builder custom() {
+        return new Builder();
     }
 
     /**
@@ -47,8 +61,8 @@ public interface RateLimiterConfig extends Serializable {
      * @param prototype A {@link RateLimiterConfig} prototype.
      * @return a {@link RateLimiterConfig.Builder}
      */
-    static Builder from(RateLimiterConfig prototype) {
-        return new RateLimiterConfigBase.Builder(prototype);
+    public static Builder from(RateLimiterConfig prototype) {
+        return new Builder(prototype);
     }
 
     /**
@@ -56,30 +70,83 @@ public interface RateLimiterConfig extends Serializable {
      *
      * @return a default RateLimiter configuration.
      */
-    static RateLimiterConfig ofDefaults() {
-        return new RateLimiterConfigBase.Builder().build();
+    public static RateLimiterConfig ofDefaults() {
+        return new Builder().build();
     }
 
-    Duration getTimeoutDuration();
+    protected static Duration checkTimeoutDuration(final Duration timeoutDuration) {
+        return requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
+    }
 
-    Duration getLimitRefreshPeriod();
+    protected static Duration checkLimitRefreshPeriod(Duration limitRefreshPeriod) {
+        requireNonNull(limitRefreshPeriod, LIMIT_REFRESH_PERIOD_MUST_NOT_BE_NULL);
+        boolean refreshPeriodIsTooShort =
+            limitRefreshPeriod.compareTo(ACCEPTABLE_REFRESH_PERIOD) < 0;
+        if (refreshPeriodIsTooShort) {
+            throw new IllegalArgumentException("LimitRefreshPeriod is too short");
+        }
+        return limitRefreshPeriod;
+    }
 
-    int getLimitForPeriod();
+    protected static int checkLimitForPeriod(final int limitForPeriod) {
+        if (limitForPeriod < 1) {
+            throw new IllegalArgumentException("LimitForPeriod should be greater than 0");
+        }
+        return limitForPeriod;
+    }
 
-    boolean isWritableStackTraceEnabled();
+    public Duration getTimeoutDuration() {
+        return timeoutDuration;
+    }
 
-    <T extends RateLimiterConfig> T withTimeoutDuration(Duration timeoutDuration);
+    public Duration getLimitRefreshPeriod() {
+        return limitRefreshPeriod;
+    }
 
-    <T extends RateLimiterConfig> T withLimitForPeriod(int limitForPeriod);
+    public int getLimitForPeriod() {
+        return limitForPeriod;
+    }
 
-    interface Builder {
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
+    }
+
+    @Override
+    public String toString() {
+        return "RateLimiterConfig{" +
+            "timeoutDuration=" + timeoutDuration +
+            ", limitRefreshPeriod=" + limitRefreshPeriod +
+            ", limitForPeriod=" + limitForPeriod +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            '}';
+    }
+
+    public static class Builder {
+
+        private Duration timeoutDuration = Duration.ofSeconds(5);
+        private Duration limitRefreshPeriod = Duration.ofNanos(500);
+        private int limitForPeriod = 50;
+        private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+
+        public Builder() {
+        }
+
+        public Builder(RateLimiterConfig prototype) {
+            this.timeoutDuration = prototype.timeoutDuration;
+            this.limitRefreshPeriod = prototype.limitRefreshPeriod;
+            this.limitForPeriod = prototype.limitForPeriod;
+            this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
+        }
 
         /**
          * Builds a RateLimiterConfig
          *
          * @return the RateLimiterConfig
          */
-        RateLimiterConfig build();
+        public RateLimiterConfig build() {
+            return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod,
+                writableStackTraceEnabled);
+        }
 
         /**
          * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
@@ -90,7 +157,10 @@ public interface RateLimiterConfig extends Serializable {
          * @param writableStackTraceEnabled flag to control if stack trace is writable
          * @return the BulkheadConfig.Builder
          */
-        Builder writableStackTraceEnabled(boolean writableStackTraceEnabled);
+        public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
+        }
 
         /**
          * Configures the default wait for permission duration. Default value is 5 seconds.
@@ -98,29 +168,36 @@ public interface RateLimiterConfig extends Serializable {
          * @param timeoutDuration the default wait for permission duration
          * @return the RateLimiterConfig.Builder
          */
-        Builder timeoutDuration(final Duration timeoutDuration);
+        public Builder timeoutDuration(final Duration timeoutDuration) {
+            this.timeoutDuration = checkTimeoutDuration(timeoutDuration);
+            return this;
+        }
 
         /**
          * Configures the period of limit refresh. After each period rate limiter sets its
-         * permissions count to {@link RateLimiterConfig#getLimitForPeriod()} ()} value. Default value is 500
+         * permissions count to {@link RateLimiterConfig#limitForPeriod} value. Default value is 500
          * nanoseconds.
          *
          * @param limitRefreshPeriod the period of limit refresh
          * @return the RateLimiterConfig.Builder
          */
-        Builder limitRefreshPeriod(final Duration limitRefreshPeriod);
-
+        public Builder limitRefreshPeriod(final Duration limitRefreshPeriod) {
+            this.limitRefreshPeriod = checkLimitRefreshPeriod(limitRefreshPeriod);
+            return this;
+        }
 
         /**
          * Configures the permissions limit for refresh period. Count of permissions available
-         * during one rate limiter period specified by {@link RateLimiterConfig#getLimitRefreshPeriod()} ()}
+         * during one rate limiter period specified by {@link RateLimiterConfig#limitRefreshPeriod}
          * value. Default value is 50.
          *
          * @param limitForPeriod the permissions limit for refresh period
          * @return the RateLimiterConfig.Builder
          */
-        Builder limitForPeriod(final int limitForPeriod);
+        public Builder limitForPeriod(final int limitForPeriod) {
+            this.limitForPeriod = checkLimitForPeriod(limitForPeriod);
+            return this;
+        }
 
     }
-
 }

@@ -20,15 +20,18 @@ package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.ratelimiter.internal.RefillRateLimiter;
 
+import java.io.Serializable;
 import java.time.Duration;
 
 /**
  * {@link RefillRateLimiter} is a permission rate based Rate Limiter.
  * Instead of resetting permits based on a permission period the permission release is based on a rate.
  * Therefore {@link RefillRateLimiterConfig#nanosPerPermit} is used which is a product of the division
- * of {@link RateLimiterConfigBase#limitRefreshPeriod} to {@link RateLimiterConfigBase#limitForPeriod}.
+ * of {@link RateLimiterConfig#limitRefreshPeriod} to {@link RateLimiterConfig#limitForPeriod}.
  */
-public class RefillRateLimiterConfig extends RateLimiterConfigBase {
+public class RefillRateLimiterConfig extends RateLimiterConfig implements Serializable{
+
+    private static final long serialVersionUID = 3095810082683985263L;
 
     private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final String ZERO_NANOS_PER_PERMISSION_STATE = "Current settings lead to zero nanos per permission, adjust period and limit";
@@ -103,20 +106,6 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
     }
 
     @Override
-    public RefillRateLimiterConfig withTimeoutDuration(Duration timeoutDuration) {
-        return new RefillRateLimiterConfig.Builder(this)
-            .timeoutDuration(timeoutDuration)
-            .build();
-    }
-
-    @Override
-    public RefillRateLimiterConfig withLimitForPeriod(int limitForPeriod) {
-        return new RefillRateLimiterConfig.Builder(this)
-            .limitForPeriod(limitForPeriod)
-            .build();
-    }
-
-    @Override
     public String toString() {
         return "RefillRateLimiterConfig{" +
             "timeoutDuration=" + getTimeoutDuration() +
@@ -126,7 +115,7 @@ public class RefillRateLimiterConfig extends RateLimiterConfigBase {
             '}';
     }
 
-    public static class Builder extends RateLimiterConfigBase.Builder {
+    public static class Builder extends RateLimiterConfig.Builder {
 
         private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
