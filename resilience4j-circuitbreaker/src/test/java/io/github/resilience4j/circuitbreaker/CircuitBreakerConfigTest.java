@@ -452,7 +452,7 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
-    public void test2() {
+    public void testOverrideIntervalFunction() {
         assertThat(custom()
             .waitIntervalFunctionInOpenState(IntervalFunction.of(Duration.ofMillis(1234)))
             .build()).isNotNull();
