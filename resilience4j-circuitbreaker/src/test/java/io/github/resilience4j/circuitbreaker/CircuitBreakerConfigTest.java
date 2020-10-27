@@ -443,6 +443,39 @@ public class CircuitBreakerConfigTest {
         assertThat(result).endsWith("}");
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void shouldNotUseWitIntervalFunctionInOpenStateAndWaitDurationInOpenStateTogether() {
+        custom()
+            .waitDurationInOpenState(Duration.ofMillis(3333))
+            .waitIntervalFunctionInOpenState(IntervalFunction.of(Duration.ofMillis(1234)))
+            .build();
+    }
+
+    @Test
+    public void testOverrideIntervalFunction() {
+        assertThat(custom()
+            .waitIntervalFunctionInOpenState(IntervalFunction.of(Duration.ofMillis(1234)))
+            .build()).isNotNull();
+        assertThat(custom()
+            .waitDurationInOpenState(Duration.ofMillis(3333))
+            .build()).isNotNull();
+
+        final CircuitBreakerConfig custom = custom().waitDurationInOpenState(Duration.ofMillis(23434)).build();
+        CircuitBreakerConfig build = from(custom)
+            .waitIntervalFunctionInOpenState(IntervalFunction.of(Duration.ofMillis(1234)))
+            .build();
+
+        assertThat(build.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1234);
+
+        build = from(custom)
+            .waitDurationInOpenState(Duration.ofMillis(1234))
+            .build();
+        assertThat(build.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1234);
+
+        build = from(custom).build();
+        assertThat(build.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(23434);
+    }
+
     private static class ExtendsException extends Exception {
 
         ExtendsException() {
