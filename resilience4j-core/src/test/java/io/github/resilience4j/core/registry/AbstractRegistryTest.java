@@ -168,7 +168,7 @@ public class AbstractRegistryTest {
             this.configurations.put(DEFAULT_CONFIG, "default");
         }
 
-        TestRegistry(List<RegistryEventConsumer<String>> registryEventConsumer, Map<String,String> tags, RegistryStore registryStore) {
+        TestRegistry(List<RegistryEventConsumer<String>> registryEventConsumer, Map<String,String> tags, RegistryStore<String> registryStore) {
             super("default", registryEventConsumer, tags, registryStore);
             this.configurations.put(DEFAULT_CONFIG, "default");
         }
@@ -198,7 +198,7 @@ public class AbstractRegistryTest {
         List<RegistryEventConsumer<String>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);
         TestRegistry testRegistry  = new TestRegistry(
-            registryEventConsumers, io.vavr.collection.HashMap.of("Tag1","Tag1Value"), new InMemoryRegistryStore());
+            registryEventConsumers, io.vavr.collection.HashMap.of("Tag1","Tag1Value"), new InMemoryRegistryStore<>());
 
         assertEquals("Wrong Value", "default", testRegistry.getDefaultConfig());
         assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");

@@ -306,7 +306,7 @@ public interface ThreadPoolBulkheadRegistry extends
     class Builder {
 
         private static final String DEFAULT_CONFIG = "default";
-        private RegistryStore registryStore;
+        private RegistryStore<ThreadPoolBulkhead> registryStore;
         private Map<String, ThreadPoolBulkheadConfig> threadPoolBulkheadConfigsMap;
         private List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers;
         private io.vavr.collection.Map<String, String> tags;
@@ -316,7 +316,7 @@ public interface ThreadPoolBulkheadRegistry extends
             this.registryEventConsumers = new ArrayList<>();
         }
 
-        public Builder withRegistryStore(RegistryStore registryStore) {
+        public Builder withRegistryStore(RegistryStore<ThreadPoolBulkhead> registryStore) {
             this.registryStore = registryStore;
             return this;
         }
