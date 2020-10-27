@@ -168,7 +168,7 @@ public class AbstractRegistryTest {
             this.configurations.put(DEFAULT_CONFIG, "default");
         }
 
-        TestRegistry(List<RegistryEventConsumer<String>> registryEventConsumer, Map<String,String> tags, RegistryStore registryStore) {
+        TestRegistry(List<RegistryEventConsumer<String>> registryEventConsumer, Map<String,String> tags, RegistryStore<String> registryStore) {
             super("default", registryEventConsumer, tags, registryStore);
             this.configurations.put(DEFAULT_CONFIG, "default");
         }

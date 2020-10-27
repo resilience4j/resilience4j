@@ -360,7 +360,7 @@ public class BulkheadRegistryTest {
     public void testCreateUsingBuilderWithRegistryStore() {
         BulkheadRegistry bulkheadRegistry = BulkheadRegistry.custom()
             .withBulkheadConfig(BulkheadConfig.ofDefaults())
-            .withRegistryStore(new InMemoryRegistryStore())
+            .withRegistryStore(new InMemoryRegistryStore<>())
             .build();
         Bulkhead bulkhead = bulkheadRegistry.bulkhead("testName");
         Bulkhead bulkhead2 = bulkheadRegistry.bulkhead("otherTestName");

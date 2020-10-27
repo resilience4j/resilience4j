@@ -404,7 +404,7 @@ public class CircuitBreakerRegistryTest {
     public void testCreateUsingBuilderWithRegistryStore() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.custom()
             .withCircuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
-            .withRegistryStore(new InMemoryRegistryStore())
+            .withRegistryStore(new InMemoryRegistryStore<>())
             .build();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry.circuitBreaker("otherTestName");
