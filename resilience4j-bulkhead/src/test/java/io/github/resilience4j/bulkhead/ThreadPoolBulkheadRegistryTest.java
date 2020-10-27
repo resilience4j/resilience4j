@@ -367,7 +367,7 @@ public class ThreadPoolBulkheadRegistryTest {
     public void testCreateUsingBuilderWithRegistryStore() {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = ThreadPoolBulkheadRegistry.custom()
             .withThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.ofDefaults())
-            .withRegistryStore(new InMemoryRegistryStore())
+            .withRegistryStore(new InMemoryRegistryStore<>())
             .build();
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead("testName");
         ThreadPoolBulkhead threadPoolBulkhead2 = threadPoolBulkheadRegistry.bulkhead("otherTestName");
