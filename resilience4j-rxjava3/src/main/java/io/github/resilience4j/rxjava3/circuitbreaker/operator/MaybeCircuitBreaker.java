@@ -21,7 +21,6 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.MaybeObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
 
-import java.util.Optional;
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class MaybeCircuitBreaker<T> extends Maybe<T> {

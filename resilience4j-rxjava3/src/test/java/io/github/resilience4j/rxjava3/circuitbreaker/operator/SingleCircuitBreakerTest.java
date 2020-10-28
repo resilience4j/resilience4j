@@ -5,7 +5,6 @@ import io.reactivex.rxjava3.core.Single;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -86,7 +85,6 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
 
         then(circuitBreaker).should()
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(Optional.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
     }
 
