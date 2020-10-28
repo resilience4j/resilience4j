@@ -21,6 +21,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
+import java.util.Optional;
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class SingleCircuitBreaker<T> extends Single<T> {
@@ -58,8 +59,8 @@ class SingleCircuitBreaker<T> extends Single<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
+        protected void hookOnSuccess(T value) {
+            circuitBreaker.onResult(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), value);
         }
 
         @Override

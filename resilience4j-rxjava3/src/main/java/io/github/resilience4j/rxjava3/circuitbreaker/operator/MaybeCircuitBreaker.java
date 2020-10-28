@@ -21,6 +21,7 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.MaybeObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
 
+import java.util.Optional;
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class MaybeCircuitBreaker<T> extends Maybe<T> {
@@ -63,8 +64,9 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
+        protected void hookOnSuccess(T value) {
+            circuitBreaker.onResult(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), value);
+
         }
 
         @Override

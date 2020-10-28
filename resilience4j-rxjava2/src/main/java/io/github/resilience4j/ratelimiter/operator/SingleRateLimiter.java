@@ -63,7 +63,7 @@ class SingleRateLimiter<T> extends Single<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
+        protected void hookOnSuccess(T value) {
             // NoOp
         }
 

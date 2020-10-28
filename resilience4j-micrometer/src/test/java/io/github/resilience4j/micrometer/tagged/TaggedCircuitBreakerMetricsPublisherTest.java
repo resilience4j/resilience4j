@@ -57,10 +57,10 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("backendA", configWithSlowCallThreshold);
         // record some basic stats
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         // record slow call
-        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS, Optional.empty());
         circuitBreaker.onError(2000, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
 
     }
@@ -68,7 +68,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
     @Test
     public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
 
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap)
             .containsKeys("backendA", "backendB");
@@ -230,7 +230,7 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         // add meters of old
         taggedCircuitBreakerMetricsPublisher.addMetrics(meterRegistry, oldOne);
         // one success call
-        oldOne.onSuccess(0, TimeUnit.NANOSECONDS);
+        oldOne.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
 
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap).containsKeys("backendC");
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendC")).hasSize(16);
@@ -245,9 +245,9 @@ public class TaggedCircuitBreakerMetricsPublisherTest {
         // add meters of new
         taggedCircuitBreakerMetricsPublisher.addMetrics(meterRegistry, newOne);
         // three success call
-        newOne.onSuccess(0, TimeUnit.NANOSECONDS);
-        newOne.onSuccess(0, TimeUnit.NANOSECONDS);
-        newOne.onSuccess(0, TimeUnit.NANOSECONDS);
+        newOne.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
+        newOne.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
+        newOne.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
 
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap).containsKeys("backendC");
         assertThat(taggedCircuitBreakerMetricsPublisher.meterIdMap.get("backendC")).hasSize(16);

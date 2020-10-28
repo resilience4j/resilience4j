@@ -20,6 +20,7 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.vertx.core.Future;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -69,7 +70,7 @@ public interface VertxCircuitBreaker {
                                 .onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
                             future.fail(result.cause());
                         } else {
-                            circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                            circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS, Optional.of(result));
                             future.complete(result.result());
                         }
                     });

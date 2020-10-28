@@ -20,6 +20,7 @@ package io.github.resilience4j.kotlin.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.kotlin.isCancellation
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.coroutineContext
 
@@ -32,7 +33,7 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
     try {
         val result = block()
         val durationInNanos = System.nanoTime() - start
-        onSuccess(durationInNanos, TimeUnit.NANOSECONDS)
+        onResult(durationInNanos, TimeUnit.NANOSECONDS, result)
         return result
     } catch (exception: Throwable) {
         if (isCancellation(coroutineContext, exception)) {

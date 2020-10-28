@@ -28,6 +28,7 @@ import io.github.resilience4j.metrics.publisher.CircuitBreakerMetricsPublisher;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
@@ -83,7 +84,7 @@ public class StateTransitionMetricsTest {
                 return circuitBreaker.getState().equals(CircuitBreaker.State.HALF_OPEN);
             });
 
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.HALF_OPEN));
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(1));
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));
@@ -94,7 +95,7 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
             equalTo(1));
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.HALF_OPEN));
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(2));
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));
@@ -105,7 +106,7 @@ public class StateTransitionMetricsTest {
         assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
         assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
             equalTo(2));
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
         assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(0));
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));

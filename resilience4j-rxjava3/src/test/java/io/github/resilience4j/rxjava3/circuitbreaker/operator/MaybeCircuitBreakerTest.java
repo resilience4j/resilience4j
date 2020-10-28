@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Maybe;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +30,7 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult(1);
 
-        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -49,6 +50,7 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should()
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
     }
 
 
@@ -65,6 +67,7 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
+        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
     }
 
     @Test
@@ -81,6 +84,7 @@ public class MaybeCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
         then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
     }
 
 }

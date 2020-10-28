@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Completable;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;

@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames;
@@ -51,7 +52,7 @@ public class CircuitBreakerMetricsCollectorTest {
 
         // record some basic stats
         // SLOW_SUCCESS
-        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS, Optional.empty());
         circuitBreaker.onError(100, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
@@ -252,7 +253,7 @@ public class CircuitBreakerMetricsCollectorTest {
             MetricOptions.custom().buckets(new double[]{.005, .01}).build(),
             circuitBreakerRegistry).register(registry);
 
-        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS, Optional.empty());
 
         assertThat(registry.getSampleValue(
             DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
