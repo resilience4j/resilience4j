@@ -27,7 +27,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -85,7 +84,7 @@ public interface RetrofitCircuitBreaker {
                 @Override
                 public void onResponse(final Call<T> call, final Response<T> response) {
                     if (responseSuccess.test(response)) {
-                        circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS, Optional.of(response));
+                        circuitBreaker.onResult(System.nanoTime() - start, TimeUnit.NANOSECONDS, response);
                     } else {
                         final Throwable throwable = new Throwable(
                             "Response error: HTTP " + response.code() + " - " + response.message());
@@ -115,7 +114,7 @@ public interface RetrofitCircuitBreaker {
                 final Response<T> response = call.execute();
 
                 if (responseSuccess.test(response)) {
-                    circuitBreaker.onSuccess(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, Optional.of(response));
+                    circuitBreaker.onResult(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, response);
                 } else {
                     final Throwable throwable = new Throwable(
                         "Response error: HTTP " + response.code() + " - " + response.message());

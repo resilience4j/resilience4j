@@ -4,9 +4,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.vavr.control.Either;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
@@ -22,11 +19,11 @@ public class CircuitBreakerResultHandlingTest {
             .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.of("success"));
+        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, "success");
 
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.of("failure"));
+        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, "failure");
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -43,11 +40,11 @@ public class CircuitBreakerResultHandlingTest {
             .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.of(Either.left("accepted fail")));
+        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, Either.left("accepted fail"));
 
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.of(Either.left("failure")));
+        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, Either.left("failure"));
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);

@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,7 +55,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
             .onEvent(this::logEventType);
 
-        circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS);
 
         then(logger).should(times(1)).info("SUCCESS");
     }
@@ -66,7 +65,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.getEventPublisher()
             .onSuccess(this::logEventType);
 
-        circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(1000, TimeUnit.NANOSECONDS);
 
         then(logger).should(times(1)).info("SUCCESS");
     }
@@ -131,7 +130,7 @@ public class CircuitBreakerEventPublisherTest {
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
         circuitBreaker.tryAcquirePermission();
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreaker.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
 
         //Then we do not produce events

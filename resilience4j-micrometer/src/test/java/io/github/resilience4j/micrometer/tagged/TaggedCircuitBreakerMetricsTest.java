@@ -53,10 +53,10 @@ public class TaggedCircuitBreakerMetricsTest {
         circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("backendA", configWithSlowCallThreshold);
         // record some basic stats
-        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         // record slow calls
-        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
         circuitBreaker.onError(2000, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
 
         taggedCircuitBreakerMetrics = TaggedCircuitBreakerMetrics
@@ -67,7 +67,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldAddMetricsForANewlyCreatedCircuitBreaker() {
         CircuitBreaker newCircuitBreaker = circuitBreakerRegistry.circuitBreaker("backendB");
-        newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
+        newCircuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
 
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendB");
         assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendA")).hasSize(16);
@@ -90,7 +90,7 @@ public class TaggedCircuitBreakerMetricsTest {
     @Test
     public void shouldAddCustomTags() {
         CircuitBreaker circuitBreakerF = circuitBreakerRegistry.circuitBreaker("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
-        circuitBreakerF.onSuccess(0, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreakerF.onSuccess(0, TimeUnit.NANOSECONDS);
         assertThat(taggedCircuitBreakerMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedCircuitBreakerMetrics.meterIdMap.get("backendF")).hasSize(16);
         List<Meter> meters = meterRegistry.getMeters();

@@ -52,7 +52,7 @@ public class CircuitBreakerMetricsCollectorTest {
 
         // record some basic stats
         // SLOW_SUCCESS
-        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
         circuitBreaker.onError(100, TimeUnit.NANOSECONDS, new RuntimeException("oops"));
         circuitBreaker.transitionToOpenState();
     }
@@ -253,7 +253,7 @@ public class CircuitBreakerMetricsCollectorTest {
             MetricOptions.custom().buckets(new double[]{.005, .01}).build(),
             circuitBreakerRegistry).register(registry);
 
-        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS, Optional.empty());
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
 
         assertThat(registry.getSampleValue(
             DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",

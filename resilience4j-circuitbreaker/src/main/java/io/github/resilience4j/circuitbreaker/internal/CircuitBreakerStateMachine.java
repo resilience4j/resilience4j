@@ -240,7 +240,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onSuccess(long duration, TimeUnit durationUnit) {
-        onResult(duration, durationUnit, null);
+        LOG.debug("CircuitBreaker '{}' succeeded:", name);
+        publishSuccessEvent(duration, durationUnit);
+        stateReference.get().onSuccess(duration, durationUnit);
     }
 
     @Override
@@ -251,9 +253,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             publishCircuitErrorEvent(name, duration, durationUnit, failure);
             stateReference.get().onError(duration, durationUnit, failure);
         } else {
-            LOG.debug("CircuitBreaker '{}' succeeded:", name);
-            publishSuccessEvent(duration, durationUnit);
-            stateReference.get().onSuccess(duration, durationUnit);
+            onSuccess(duration, durationUnit);
         }
     }
 
