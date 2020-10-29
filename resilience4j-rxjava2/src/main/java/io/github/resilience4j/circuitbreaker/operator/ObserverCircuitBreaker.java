@@ -21,7 +21,6 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import java.util.Optional;
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class ObserverCircuitBreaker<T> extends Observable<T> {

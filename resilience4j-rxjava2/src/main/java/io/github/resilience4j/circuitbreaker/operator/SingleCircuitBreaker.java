@@ -21,7 +21,6 @@ import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
 
-import java.util.Optional;
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class SingleCircuitBreaker<T> extends Single<T> {

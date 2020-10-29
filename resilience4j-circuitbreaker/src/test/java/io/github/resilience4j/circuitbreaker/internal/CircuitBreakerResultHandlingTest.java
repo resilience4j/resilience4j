@@ -18,11 +18,11 @@ public class CircuitBreakerResultHandlingTest {
             .recordResult(result -> result.equals("failure"))
             .build());
 
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, "success");
 
         // Call 2 is a failure
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, "failure");
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
@@ -39,11 +39,11 @@ public class CircuitBreakerResultHandlingTest {
             )
             .build());
 
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, Either.left("accepted fail"));
 
         // Call 2 is a failure
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, Either.left("failure"));
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);

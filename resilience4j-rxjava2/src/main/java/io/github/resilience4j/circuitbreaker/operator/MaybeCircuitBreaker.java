@@ -20,10 +20,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.internal.disposables.EmptyDisposable;
-
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 
 class MaybeCircuitBreaker<T> extends Maybe<T> {

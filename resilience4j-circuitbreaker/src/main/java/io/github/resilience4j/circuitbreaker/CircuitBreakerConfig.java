@@ -52,7 +52,7 @@ public class CircuitBreakerConfig implements Serializable {
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
-    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = Object -> false;
+    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
