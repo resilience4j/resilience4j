@@ -60,7 +60,7 @@ public class CircuitBreakerConfig implements Serializable {
     private Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
-    private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
+    private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
