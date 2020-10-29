@@ -7,7 +7,7 @@ public class ResultRecordedAsFailureException extends RuntimeException {
 
     private final String circuitBreakerName;
 
-    private transient final Object result;
+    private final transient Object result;
 
     public ResultRecordedAsFailureException(String circuitBreakerName, Object result) {
         super(String.format("CircuitBreaker '%s' has recorded '%s' as a failure", circuitBreakerName, result.toString()));
