@@ -8,6 +8,7 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import org.junit.Test;
 

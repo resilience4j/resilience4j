@@ -1,3 +1,7 @@
+resilience4j.scheduled.executor:
+  coreThreadPoolSize: 10
+  contextPropagators:
+    - io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder
 resilience4j.retry:
   retryAspectOrder: 399
   tags:
@@ -181,6 +185,8 @@ resilience4j.timelimiter:
   instances:
     backendA:
       timeoutDuration: 5s
+    backendB:
+      timeoutDuration: 1s
 
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'

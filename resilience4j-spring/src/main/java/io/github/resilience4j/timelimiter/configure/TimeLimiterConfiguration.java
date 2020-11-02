@@ -21,6 +21,7 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPool;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -88,9 +89,10 @@ public class TimeLimiterConfiguration {
         TimeLimiterRegistry timeLimiterRegistry,
         @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
         FallbackDecorators fallbackDecorators,
-        SpelResolver spelResolver
+        SpelResolver spelResolver,
+        @Autowired(required = false) ContextAwareScheduledThreadPool contextAwareScheduledThreadPool
     ) {
-        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackDecorators, spelResolver);
+        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackDecorators, spelResolver, contextAwareScheduledThreadPool);
     }
 
     @Bean

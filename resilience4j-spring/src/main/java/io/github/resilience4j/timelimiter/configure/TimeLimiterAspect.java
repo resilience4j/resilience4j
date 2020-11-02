@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.timelimiter.configure;
 
+import io.github.resilience4j.core.ContextAwareScheduledThreadPool;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
@@ -55,13 +56,16 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
                              TimeLimiterConfigurationProperties properties,
                              @Nullable List<TimeLimiterAspectExt> timeLimiterAspectExtList,
                              FallbackDecorators fallbackDecorators,
-                             SpelResolver spelResolver) {
+                             SpelResolver spelResolver,
+                             @Nullable ContextAwareScheduledThreadPool contextAwareScheduledThreadPool) {
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.properties = properties;
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
         this.spelResolver = spelResolver;
-        this.timeLimiterExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        this.timeLimiterExecutorService = contextAwareScheduledThreadPool != null ?
+            contextAwareScheduledThreadPool :
+            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
