@@ -18,7 +18,11 @@ package io.github.resilience4j.common.retry.configuration;
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
-import io.github.resilience4j.core.*;
+import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.IntervalBiFunction;
+import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
 
