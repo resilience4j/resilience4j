@@ -17,6 +17,7 @@ package io.github.resilience4j.common.retry.configuration;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
+import io.github.resilience4j.common.TestIntervalBiFunction;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
 import org.junit.Test;
@@ -189,5 +190,20 @@ public class RetryConfigurationPropertiesTest {
 
     private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
         return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
+    @Test
+    public void testIntervalBiFunctionConfig() {
+        RetryConfigurationProperties.InstanceProperties instanceProperties = new RetryConfigurationProperties.InstanceProperties();
+        instanceProperties.setIntervalBiFunction(TestIntervalBiFunction.class);
+
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        retryConfigurationProperties.getInstances().put("backend", instanceProperties);
+
+        RetryConfig retryConfig = retryConfigurationProperties
+            .createRetryConfig("backend", compositeRetryCustomizer());
+
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isExactlyInstanceOf(TestIntervalBiFunction.class);
     }
 }
