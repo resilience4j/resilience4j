@@ -21,6 +21,7 @@ import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
@@ -150,6 +151,11 @@ public class RetryConfigurationProperties extends CommonProperties {
                 .instantiatePredicateClass(properties.getResultPredicate());
             builder.retryOnResult(predicate);
         }
+        if (properties.getIntervalBiFunction() != null) {
+            IntervalBiFunction<Object> intervalBiFunction = ClassUtils
+                .instantiateIntervalBiFunctionClass(properties.getIntervalBiFunction());
+            builder.intervalBiFunction(intervalBiFunction);
+        }
 
         compositeRetryCustomizer.getCustomizer(backend)
             .ifPresent(customizer -> customizer.customize(builder));
@@ -244,6 +250,12 @@ public class RetryConfigurationProperties extends CommonProperties {
         private Duration waitDuration;
 
         /*
+         * retry intervalBiFunction class to be used to calculate wait based on exception or result
+         */
+        @Nullable
+        private Class<? extends IntervalBiFunction<Object>> intervalBiFunction;
+
+        /*
          * max retry attempts value
          */
         @Nullable
@@ -329,6 +341,15 @@ public class RetryConfigurationProperties extends CommonProperties {
 
             this.waitDuration = waitDuration;
             return this;
+        }
+
+        @Nullable
+        public Class<? extends IntervalBiFunction<Object>> getIntervalBiFunction() {
+            return intervalBiFunction;
+        }
+
+        public void setIntervalBiFunction(Class<? extends IntervalBiFunction<Object>> intervalBiFunction) {
+            this.intervalBiFunction = intervalBiFunction;
         }
 
         @Nullable
