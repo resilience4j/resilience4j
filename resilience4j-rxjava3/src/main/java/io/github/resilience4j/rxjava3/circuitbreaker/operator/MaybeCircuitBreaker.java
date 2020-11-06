@@ -63,8 +63,9 @@ class MaybeCircuitBreaker<T> extends Maybe<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
+        protected void hookOnSuccess(T value) {
+            circuitBreaker.onResult(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), value);
+
         }
 
         @Override
