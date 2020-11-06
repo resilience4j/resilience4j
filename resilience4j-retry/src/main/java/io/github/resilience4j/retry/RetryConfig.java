@@ -47,6 +47,7 @@ public class RetryConfig implements Serializable {
 
     @Nullable
     private Predicate<Throwable> retryOnExceptionPredicate;
+
     @Nullable
     private Predicate retryOnResultPredicate;
 
@@ -119,7 +120,7 @@ public class RetryConfig implements Serializable {
 
     /**
      * Return the Predicate which evaluates if an result should be retried. The Predicate must
-     * return true if the result should  be retried, otherwise it must return false.
+     * return true if the result should be retried, otherwise it must return false.
      *
      * @param <T> The type of result.
      * @return the result predicate

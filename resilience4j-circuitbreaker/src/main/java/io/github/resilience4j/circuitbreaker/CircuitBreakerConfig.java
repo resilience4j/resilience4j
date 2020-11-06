@@ -50,15 +50,17 @@ public class CircuitBreakerConfig implements Serializable {
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
-    // The default Function to return current time
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
+    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
     private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
     private Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
+
+    private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
@@ -79,7 +81,6 @@ public class CircuitBreakerConfig implements Serializable {
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
     private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
-
 
     private CircuitBreakerConfig() {
     }
@@ -140,6 +141,10 @@ public class CircuitBreakerConfig implements Serializable {
 
     public Predicate<Throwable> getRecordExceptionPredicate() {
         return recordExceptionPredicate;
+    }
+
+    public Predicate<Object> getRecordResultPredicate() {
+        return recordResultPredicate;
     }
 
     public Predicate<Throwable> getIgnoreExceptionPredicate() {
@@ -240,6 +245,7 @@ public class CircuitBreakerConfig implements Serializable {
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
+        private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
         private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
             .of(Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD));
@@ -272,6 +278,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
             this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
+            this.recordResultPredicate = baseConfig.recordResultPredicate;
         }
 
         public Builder() {
@@ -628,6 +635,21 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
+         * Configures a Predicate which evaluates if the result of the protected function call
+         * should be recorded as a failure and thus increase the failure rate.
+         * The Predicate must return true if the result should count as a failure.
+         * The Predicate must return false, if the result should count
+         * as a success.
+         *
+         * @param predicate the Predicate which evaluates if a result should count as a failure
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder recordResult(Predicate<Object> predicate) {
+            this.recordResultPredicate = predicate;
+            return this;
+        }
+
+        /**
          * Configures a Predicate which evaluates if an exception should be ignored and neither
          * count as a failure nor success. The Predicate must return true if the exception should be
          * ignored. The Predicate must return false, if the exception should count as a failure.
@@ -743,6 +765,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
+            config.recordResultPredicate = recordResultPredicate;
             return config;
         }
 

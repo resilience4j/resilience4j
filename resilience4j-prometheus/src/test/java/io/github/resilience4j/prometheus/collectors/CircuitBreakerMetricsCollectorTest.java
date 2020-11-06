@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames;

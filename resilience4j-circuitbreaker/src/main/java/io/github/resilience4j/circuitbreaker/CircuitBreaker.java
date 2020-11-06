@@ -70,10 +70,10 @@ public interface CircuitBreaker {
             circuitBreaker.acquirePermission();
             final long start = circuitBreaker.getCurrentTimestamp();
             try {
-                T returnValue = supplier.apply();
+                T result = supplier.apply();
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
-                return returnValue;
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
+                return result;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
@@ -115,7 +115,7 @@ public interface CircuitBreaker {
                             }
                             promise.completeExceptionally(throwable);
                         } else {
-                            circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+                            circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
                             promise.complete(result);
                         }
                     });
@@ -168,10 +168,10 @@ public interface CircuitBreaker {
             circuitBreaker.acquirePermission();
             final long start = circuitBreaker.getCurrentTimestamp();
             try {
-                T returnValue = callable.call();
+                T result = callable.call();
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
-                return returnValue;
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
+                return result;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
@@ -194,10 +194,10 @@ public interface CircuitBreaker {
             circuitBreaker.acquirePermission();
             final long start = circuitBreaker.getCurrentTimestamp();
             try {
-                T returnValue = supplier.get();
+                T result = supplier.get();
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
-                return returnValue;
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
+                return result;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
@@ -223,7 +223,7 @@ public interface CircuitBreaker {
                 Either<? extends Exception, T> result = supplier.get();
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
                 if (result.isRight()) {
-                    circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+                    circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
                 } else {
                     Exception exception = result.getLeft();
                     circuitBreaker.onError(duration, circuitBreaker.getTimestampUnit(), exception);
@@ -252,13 +252,12 @@ public interface CircuitBreaker {
                 Try<T> result = supplier.get();
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
                 if (result.isSuccess()) {
-                    circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
-                    return result;
+                    circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
                 } else {
                     circuitBreaker
                         .onError(duration, circuitBreaker.getTimestampUnit(), result.getCause());
-                    return result;
                 }
+                return result;
             } else {
                 return Try.failure(
                     CallNotPermittedException.createCallNotPermittedException(circuitBreaker));
@@ -358,7 +357,7 @@ public interface CircuitBreaker {
             try {
                 R returnValue = function.apply(t);
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), returnValue);
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
@@ -386,7 +385,7 @@ public interface CircuitBreaker {
             try {
                 R returnValue = function.apply(t);
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), returnValue);
                 return returnValue;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
@@ -515,8 +514,8 @@ public interface CircuitBreaker {
      * Releases a permission.
      * <p>
      * Should only be used when a permission was acquired but not used. Otherwise use {@link
-     * CircuitBreaker#onSuccess(long, TimeUnit)} or {@link CircuitBreaker#onError(long, TimeUnit,
-     * Throwable)} to signal a completed or failed call.
+     * CircuitBreaker#onSuccess(long, TimeUnit)} or
+     * {@link CircuitBreaker#onError(long, TimeUnit, Throwable)} to signal a completed or failed call.
      * <p>
      * If the state is HALF_OPEN, the number of allowed test calls is increased by one.
      */
@@ -555,6 +554,16 @@ public interface CircuitBreaker {
      * @param durationUnit The duration unit
      */
     void onSuccess(long duration, TimeUnit durationUnit);
+
+    /**
+     * This method must be invoked when a call returned a result
+     * and the result predicate should decide if the call was successful or not.
+     *
+     * @param duration     The elapsed time duration of the call
+     * @param durationUnit The duration unit
+     * @param result       The result of the protected function
+     */
+    void onResult(long duration, TimeUnit durationUnit, Object result);
 
     /**
      * Returns the circuit breaker to its original closed state, losing statistics.
@@ -1167,7 +1176,9 @@ public interface CircuitBreaker {
             try {
                 T v = future.get();
                 onceToCircuitbreaker
-                    .applyOnce(cb -> cb.onSuccess(cb.getCurrentTimestamp() - start, cb.getTimestampUnit()));
+                    .applyOnce(cb ->
+                        cb.onResult(cb.getCurrentTimestamp() - start, cb.getTimestampUnit(), v)
+                    );
                 return v;
             } catch (CancellationException | InterruptedException e) {
                 onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
@@ -1185,10 +1196,12 @@ public interface CircuitBreaker {
             try {
                 T v = future.get(timeout, unit);
                 onceToCircuitbreaker
-                    .applyOnce(cb -> cb.onSuccess(cb.getCurrentTimestamp() - start, cb.getTimestampUnit()));
+                    .applyOnce(cb ->
+                        cb.onResult(cb.getCurrentTimestamp()  - start, cb.getTimestampUnit(), v)
+                    );
                 return v;
             } catch (CancellationException | InterruptedException e) {
-                onceToCircuitbreaker.applyOnce(cb -> cb.releasePermission());
+                onceToCircuitbreaker.applyOnce(CircuitBreaker::releasePermission);
                 throw e;
             } catch (Exception e) {
                 onceToCircuitbreaker.applyOnce(

@@ -71,7 +71,7 @@ public class FluxCircuitBreakerTest {
 
         verify(circuitBreaker, times(1))
             .onError(anyLong(), any(TimeUnit.class), any(IOException.class));
-        verify(circuitBreaker, never()).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, never()).onResult(anyLong(), any(TimeUnit.class), any());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class FluxCircuitBreakerTest {
             .expectNext("Bla Event 2")
             .verifyComplete();
 
-        verify(circuitBreaker, times(2)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(2)).onResult(anyLong(), any(TimeUnit.class), any(String.class));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
