@@ -66,6 +66,28 @@ public abstract class RateLimitersImplementationTest {
         then(retryInSecondCyclePermission).isTrue();
     }
 
+    @Test
+    public void tryToAcquirePermitsAfterDrainBeforeCycleEndsTest() {
+        RateLimiterConfig config = RateLimiterConfig.custom()
+            .limitForPeriod(10)
+            .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
+            .timeoutDuration(Duration.ZERO)
+            .build();
+        RateLimiter limiter = buildRateLimiter(config);
+        RateLimiter.Metrics metrics = limiter.getMetrics();
+
+        waitForRefresh(metrics, config, '.');
+
+        limiter.drainPermissions();
+        boolean firstNoPermission = limiter.acquirePermission();
+        then(firstNoPermission).isFalse();
+
+        waitForRefresh(metrics, config, '*');
+
+        boolean retryInSecondCyclePermission = limiter.acquirePermission();
+        then(retryInSecondCyclePermission).isTrue();
+    }
+
     protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,
                                   char printedWhileWaiting) {
         Instant start = Instant.now();

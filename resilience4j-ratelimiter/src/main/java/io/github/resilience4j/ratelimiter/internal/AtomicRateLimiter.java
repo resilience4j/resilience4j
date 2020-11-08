@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
@@ -114,7 +115,7 @@ public class AtomicRateLimiter implements RateLimiter {
         long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
-        publishRateLimiterEvent(result, permits);
+        publishRateLimiterAcquisitionEvent(result, permits);
         return result;
     }
 
@@ -128,18 +129,32 @@ public class AtomicRateLimiter implements RateLimiter {
 
         boolean canAcquireImmediately = modifiedState.nanosToWait <= 0;
         if (canAcquireImmediately) {
-            publishRateLimiterEvent(true, permits);
+            publishRateLimiterAcquisitionEvent(true, permits);
             return 0;
         }
 
         boolean canAcquireInTime = timeoutInNanos >= modifiedState.nanosToWait;
         if (canAcquireInTime) {
-            publishRateLimiterEvent(true, permits);
+            publishRateLimiterAcquisitionEvent(true, permits);
             return modifiedState.nanosToWait;
         }
 
-        publishRateLimiterEvent(false, permits);
+        publishRateLimiterAcquisitionEvent(false, permits);
         return -1;
+    }
+
+    @Override
+    public void drainPermissions() {
+        State prevState = state.getAndUpdate(activeState -> {
+                if (activeState.activePermissions > 0) {
+                    return calculateNextState(activeState.activePermissions, 0, activeState);
+                } else {
+                    return activeState;
+                }
+            });
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainEvent(name, Math.min(prevState.activePermissions, 0)));
+        }
     }
 
     /**
@@ -384,7 +399,7 @@ public class AtomicRateLimiter implements RateLimiter {
         return new AtomicRateLimiterMetrics();
     }
 
-    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+    private void publishRateLimiterAcquisitionEvent(boolean permissionAcquired, int permits) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }
