@@ -18,14 +18,14 @@
  */
 package io.github.resilience4j.ratelimiter.event;
 
-public class RateLimiterOnDrainEvent extends AbstractRateLimiterEvent {
+public class RateLimiterOnDrainedEvent extends AbstractRateLimiterEvent {
 
-    public RateLimiterOnDrainEvent(String rateLimiterName, int numberOfPermits) {
+    public RateLimiterOnDrainedEvent(String rateLimiterName, int numberOfPermits) {
         super(rateLimiterName, numberOfPermits);
     }
 
     @Override
     public Type getEventType() {
-        return Type.SUCCESSFUL_ACQUIRE;
+        return Type.DRAINED;
     }
 }
