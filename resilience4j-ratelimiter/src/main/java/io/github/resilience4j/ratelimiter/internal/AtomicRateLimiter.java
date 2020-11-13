@@ -47,7 +47,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  */
 public class AtomicRateLimiter implements RateLimiter {
 
-    private static final long nanoTimeStart = nanoTime();
+    private long nanoTimeStart;
 
     private final String name;
     private final AtomicInteger waitingThreads;
@@ -63,6 +63,7 @@ public class AtomicRateLimiter implements RateLimiter {
                              Map<String, String> tags) {
         this.name = name;
         this.tags = tags;
+        this.nanoTimeStart = nanoTime();
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(
@@ -106,6 +107,10 @@ public class AtomicRateLimiter implements RateLimiter {
         return nanoTime() - nanoTimeStart;
     }
 
+    long getNanoTimeStart() {
+        return this.nanoTimeStart;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -115,6 +120,7 @@ public class AtomicRateLimiter implements RateLimiter {
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
         publishRateLimiterEvent(result, permits);
+
         return result;
     }
 
