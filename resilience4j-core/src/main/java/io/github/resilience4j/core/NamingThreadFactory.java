@@ -1,11 +1,11 @@
 package io.github.resilience4j.core;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Creates threads using "bulkhead-$name-%d" pattern for naming. Is based on {@link
- * java.util.concurrent.Executors.DefaultThreadFactory}.
+ * Creates threads using "$name-%d" pattern for naming. Is based on {@link Executors#defaultThreadFactory}
  */
 public class NamingThreadFactory implements ThreadFactory {
 
