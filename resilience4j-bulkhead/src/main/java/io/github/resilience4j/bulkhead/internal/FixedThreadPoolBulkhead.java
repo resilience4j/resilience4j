@@ -83,7 +83,7 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
             config.getMaxThreadPoolSize(),
             config.getKeepAliveDuration().toMillis(), TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<>(config.getQueueCapacity()),
-            new NamingThreadFactory(name),
+            new BulkheadNamingThreadFactory(name),
             config.getRejectedExecutionHandler());
         // adding prover jvm executor shutdown
         this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();

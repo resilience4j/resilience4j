@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.scheduled.threadpool.autoconfigure;
 
-import io.github.resilience4j.core.ContextAwareScheduledThreadPool;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
 public class ContextAwareScheduledThreadPoolAutoConfiguration {
 
     @Bean
-    public ContextAwareScheduledThreadPool getContextAwareScheduledThreadPool(ContextAwareScheduledThreadPoolProperties contextAwareScheduledThreadPoolProperties) {
+    public ContextAwareScheduledThreadPoolExecutor getContextAwareScheduledThreadPool(ContextAwareScheduledThreadPoolProperties contextAwareScheduledThreadPoolProperties) {
         return contextAwareScheduledThreadPoolProperties.build();
     }
 }

@@ -29,7 +29,6 @@ import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadCo
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPool;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -114,7 +113,7 @@ public class SpringBootCommonTest {
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
+                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()), null)).isNotNull();
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 

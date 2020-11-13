@@ -19,7 +19,7 @@
 package io.github.resilience4j.common.scheduled.threadpool.configuration;
 
 import io.github.resilience4j.core.ClassUtils;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPool;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.ContextPropagator;
 
 import java.util.List;
@@ -54,7 +54,7 @@ public class ContextAwareScheduledThreadPoolConfigurationProperties {
             : new Class[0];
     }
 
-    public ContextAwareScheduledThreadPool build() {
+    public ContextAwareScheduledThreadPoolExecutor build() {
         if (this.coreThreadPoolSize < 1) {
             return null;
         }
@@ -64,7 +64,7 @@ public class ContextAwareScheduledThreadPoolConfigurationProperties {
                 .map(ClassUtils::instantiateClassDefConstructor)
                 .collect(toList());
         }
-        return new ContextAwareScheduledThreadPool(this.coreThreadPoolSize, contextPropagatorsList);
+        return new ContextAwareScheduledThreadPoolExecutor(this.coreThreadPoolSize, contextPropagatorsList);
     }
 
 }

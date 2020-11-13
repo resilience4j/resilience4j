@@ -106,6 +106,7 @@ public class TimeLimiterAutoConfigurationTest {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final CompletableFuture<String> future = dummyService.longDoSomethingAsync().exceptionally(throwable -> {
             if (throwable != null) {
+                assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool-");
                 assertThat(TestThreadLocalContextHolder.get().get()).isEqualTo("ValueShouldCrossThreadBoundary");
                 return (String) TestThreadLocalContextHolder.get().orElse(null);
             }
@@ -143,8 +144,9 @@ public class TimeLimiterAutoConfigurationTest {
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
         final CompletableFuture<String> future = dummyService.longDoSomethingAsync().exceptionally(throwable -> {
             if (throwable != null) {
-                assertThat(TestThreadLocalContextHolder.getMDCContext()).hasSize(2).containsExactlyEntriesOf(contextMap);
-                return TestThreadLocalContextHolder.getMDCContext().get("key");
+                assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool-");
+                assertThat(MDC.getCopyOfContextMap()).hasSize(2).containsExactlyEntriesOf(contextMap);
+                return MDC.getCopyOfContextMap().get("key");
             }
             return null;
         });

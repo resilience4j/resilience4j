@@ -1,4 +1,4 @@
-package io.github.resilience4j.bulkhead.internal;
+package io.github.resilience4j.core;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,15 +7,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Creates threads using "bulkhead-$name-%d" pattern for naming. Is based on {@link
  * java.util.concurrent.Executors.DefaultThreadFactory}.
  */
-class NamingThreadFactory implements ThreadFactory {
+public class NamingThreadFactory implements ThreadFactory {
 
     private final ThreadGroup group;
     private final AtomicInteger threadNumber = new AtomicInteger(1);
     private final String prefix;
 
-    NamingThreadFactory(String name) {
+    public NamingThreadFactory(String name) {
         this.group = getThreadGroup();
-        this.prefix = String.join("-", "bulkhead", name, "");
+        this.prefix = String.join("-",name, "");
     }
 
     private ThreadGroup getThreadGroup() {

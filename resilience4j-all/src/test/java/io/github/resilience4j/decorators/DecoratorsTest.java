@@ -24,11 +24,13 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPool;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.test.AsyncHelloWorldService;
+import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder;
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
@@ -63,10 +65,12 @@ public class DecoratorsTest {
 
     private boolean state = false;
     private HelloWorldService helloWorldService;
+    private AsyncHelloWorldService asyncHelloWorldService;
 
     @Before
     public void setUp() {
         helloWorldService = mock(HelloWorldService.class);
+        asyncHelloWorldService = mock(AsyncHelloWorldService.class);
     }
 
     @Test
@@ -102,11 +106,12 @@ public class DecoratorsTest {
 
         TestThreadLocalContextPropagatorWithHolder propagator = new TestThreadLocalContextPropagatorWithHolder();
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
-        ContextAwareScheduledThreadPool scheduledThreadPool =
-            new ContextAwareScheduledThreadPool(1, Arrays.asList(propagator));
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool =
+            new ContextAwareScheduledThreadPoolExecutor(1, Arrays.asList(propagator));
 
         CompletionStage<String> completionStage = Decorators
             .ofCallable(() -> {
+                assertThat(Thread.currentThread().getName()).isEqualTo("bulkhead-helloBackend-1");
                 Thread.sleep(1000);
                 return "Bla";
             })
@@ -117,6 +122,7 @@ public class DecoratorsTest {
 
         final CompletableFuture<String> completableFuture = completionStage.toCompletableFuture().exceptionally(throwable -> {
             if (throwable != null) {
+                assertThat(Thread.currentThread().getName()).isEqualTo("ContextAwareScheduledThreadPool-1");
                 assertThat(TestThreadLocalContextHolder.get().get()).isEqualTo("ValueShouldCrossThreadBoundary");
                 return (String) TestThreadLocalContextHolder.get().orElse(null);
             }
@@ -138,14 +144,15 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
 
-        MDC.put("key", "ValueShouldCrossThreadBoundary");
+        MDC.put("key", "ValueShouldPropagateThreadBoundary");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
-        ContextAwareScheduledThreadPool scheduledThreadPool =
-            new ContextAwareScheduledThreadPool(1);
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool =
+            new ContextAwareScheduledThreadPoolExecutor(1);
 
         CompletionStage<String> completionStage = Decorators
             .ofCallable(() -> {
+                assertThat(Thread.currentThread().getName()).isEqualTo("bulkhead-helloBackend-1");
                 Thread.sleep(1000);
                 return "Bla";
             })
@@ -156,14 +163,15 @@ public class DecoratorsTest {
 
         final CompletableFuture<String> completableFuture = completionStage.toCompletableFuture().exceptionally(throwable -> {
             if (throwable != null) {
-                assertThat(TestThreadLocalContextHolder.getMDCContext()).hasSize(2).containsExactlyEntriesOf(contextMap);
-                return TestThreadLocalContextHolder.getMDCContext().get("key");
+                assertThat(Thread.currentThread().getName()).isEqualTo("ContextAwareScheduledThreadPool-1");
+                assertThat(MDC.getCopyOfContextMap()).hasSize(2).containsExactlyEntriesOf(contextMap);
+                return MDC.getCopyOfContextMap().get("key");
             }
             return null;
         });
 
         waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldPropagateThreadBoundary")));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -570,6 +578,87 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCompletionStagePropagatesContext() throws ExecutionException, InterruptedException {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        TestThreadLocalContextPropagatorWithHolder propagator = new TestThreadLocalContextPropagatorWithHolder();
+        TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
+        ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor =
+            new ContextAwareScheduledThreadPoolExecutor(1, Arrays.asList(propagator));
+
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new HelloWorldException());
+        given(asyncHelloWorldService.returnHelloWorld())
+            .willReturn(failedFuture);
+
+        CompletionStage<String> completionStage = Decorators
+            .ofCompletionStage(() -> asyncHelloWorldService.returnHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"), contextAwareScheduledThreadPoolExecutor)
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .get();
+
+        final CompletableFuture<String> completableFuture = completionStage.toCompletableFuture().exceptionally(throwable -> {
+            if (throwable != null) {
+                assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool");
+                assertThat(TestThreadLocalContextHolder.get().get()).isEqualTo("ValueShouldCrossThreadBoundary");
+                return (String) TestThreadLocalContextHolder.get().orElse(null);
+            }
+            return null;
+        });
+
+        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
+        then(asyncHelloWorldService).should(times(3)).returnHelloWorld();
+    }
+
+    @Test
+    public void testDecorateCompletionStagePropagatesMDCContext() throws ExecutionException, InterruptedException {
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+
+        MDC.put("key", "ValueShouldCrossThreadBoundary");
+        MDC.put("key2","value2");
+        final Map<String, String> contextMap = MDC.getCopyOfContextMap();
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool =
+            new ContextAwareScheduledThreadPoolExecutor(1);
+
+        CompletableFuture<String> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new HelloWorldException());
+        given(asyncHelloWorldService.returnHelloWorld())
+            .willReturn(failedFuture);
+
+        CompletionStage<String> completionStage = Decorators
+            .ofCompletionStage(() -> asyncHelloWorldService.returnHelloWorld())
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"), scheduledThreadPool)
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .get();
+
+        final CompletableFuture<String> completableFuture = completionStage.toCompletableFuture().exceptionally(throwable -> {
+            if (throwable != null) {
+                assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool");
+                assertThat(MDC.getCopyOfContextMap()).hasSize(2).containsExactlyEntriesOf(contextMap);
+                return MDC.getCopyOfContextMap().get("key");
+            }
+            return null;
+        });
+
+        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
+        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
+        then(asyncHelloWorldService).should(times(3)).returnHelloWorld();
     }
 
     @Test

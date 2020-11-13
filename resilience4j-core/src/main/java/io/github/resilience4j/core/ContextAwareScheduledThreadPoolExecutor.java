@@ -27,17 +27,18 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class ContextAwareScheduledThreadPool extends ScheduledThreadPoolExecutor {
+public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
     private final List<ContextPropagator> contextPropagators;
+    private static final String THREAD_PREFIX = "ContextAwareScheduledThreadPool";
 
-    public ContextAwareScheduledThreadPool(int corePoolSize) {
+    public ContextAwareScheduledThreadPoolExecutor(int corePoolSize) {
         this(corePoolSize, null);
     }
 
-    public ContextAwareScheduledThreadPool(int corePoolSize,
-                                           @Nullable List<ContextPropagator> contextPropagators) {
-        super(corePoolSize);
+    public ContextAwareScheduledThreadPoolExecutor(int corePoolSize,
+                                                   @Nullable List<ContextPropagator> contextPropagators) {
+        super(corePoolSize, new NamingThreadFactory(THREAD_PREFIX));
         this.contextPropagators = contextPropagators != null ? contextPropagators : new ArrayList<>();
     }
 

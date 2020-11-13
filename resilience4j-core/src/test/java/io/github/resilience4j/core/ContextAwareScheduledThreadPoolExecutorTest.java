@@ -34,13 +34,13 @@ import static com.jayway.awaitility.Awaitility.matches;
 import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ContextAwareScheduledThreadPoolTest {
+public class ContextAwareScheduledThreadPoolExecutorTest {
 
-    private ContextAwareScheduledThreadPool schedulerService;
+    private ContextAwareScheduledThreadPoolExecutor schedulerService;
 
     @Before
     public void initialise() {
-        schedulerService = new ContextAwareScheduledThreadPool(
+        schedulerService = new ContextAwareScheduledThreadPoolExecutor(
             20,
             Stream.of(new TestContextPropagators.TestThreadLocalContextPropagatorWithHolder())
                 .collect(Collectors.toList()));
@@ -90,7 +90,7 @@ public class ContextAwareScheduledThreadPoolTest {
 
     @Test
     public void testMDCWithoutContextPropagator() {
-        final ContextAwareScheduledThreadPool schedulerService = new ContextAwareScheduledThreadPool(
+        final ContextAwareScheduledThreadPoolExecutor schedulerService = new ContextAwareScheduledThreadPoolExecutor(
             10);
 
         MDC.put("key", "value");
