@@ -21,7 +21,7 @@ package io.github.resilience4j.ratelimiter.internal;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
@@ -204,7 +204,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     public void drainPermissions() {
         int permits = semaphore.drainPermits();
         if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new RateLimiterOnDrainEvent(name, permits));
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, permits));
         }
     }
 

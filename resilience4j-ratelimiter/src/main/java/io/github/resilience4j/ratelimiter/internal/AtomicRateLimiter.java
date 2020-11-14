@@ -20,7 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
@@ -153,7 +153,7 @@ public class AtomicRateLimiter implements RateLimiter {
                 }
             });
         if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new RateLimiterOnDrainEvent(name, Math.min(prevState.activePermissions, 0)));
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, Math.min(prevState.activePermissions, 0)));
         }
     }
 
