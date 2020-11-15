@@ -145,15 +145,14 @@ public class AtomicRateLimiter implements RateLimiter {
 
     @Override
     public void drainPermissions() {
-        State prevState = state.getAndUpdate(activeState -> {
-                if (activeState.activePermissions > 0) {
-                    return calculateNextState(activeState.activePermissions, 0, activeState);
-                } else {
-                    return activeState;
-                }
-            });
+        AtomicRateLimiter.State prev;
+        AtomicRateLimiter.State next;
+        do {
+            prev = state.get();
+            next = calculateNextState(prev.activePermissions, 0, prev);
+        } while (!compareAndSet(prev, next));
         if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, Math.min(prevState.activePermissions, 0)));
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, Math.min(prev.activePermissions, 0)));
         }
     }
 
