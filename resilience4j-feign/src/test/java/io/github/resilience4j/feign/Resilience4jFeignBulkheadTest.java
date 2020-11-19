@@ -45,6 +45,17 @@ public class Resilience4jFeignBulkheadTest {
         testService.greeting();
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(bulkhead).acquirePermission();
+    }
+
+    @Test
+    public void testSuccessfulCallWithDefaultMethod() {
+        givenResponse(200);
+
+        testService.defaultGreeting();
+
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(bulkhead).acquirePermission();
     }
 
     @Test(expected = BulkheadFullException.class)
