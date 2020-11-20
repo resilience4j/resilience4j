@@ -4,6 +4,7 @@ import io.github.resilience4j.retry.RetryRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
+import io.vavr.control.Either
 import spock.lang.Specification
 
 import javax.inject.Inject
@@ -27,7 +28,7 @@ class RetryRegistrySpec extends Specification {
         expect:
         defaultRetry != null
         defaultRetry.retryConfig.maxAttempts == 3
-        defaultRetry.retryConfig.intervalFunction.apply(0) == 1000
+        defaultRetry.retryConfig.getIntervalBiFunction().apply(0, Either.right(0)) == 1000
         defaultRetry.retryConfig.getExceptionPredicate().test(new IOException())
         !defaultRetry.retryConfig.getExceptionPredicate().test(new IgnoredException())
 
@@ -41,7 +42,7 @@ class RetryRegistrySpec extends Specification {
         expect:
         backendA != null
         backendA.retryConfig.maxAttempts == 1
-        backendA.retryConfig.intervalFunction.apply(0) == 1000
+        backendA.retryConfig.getIntervalBiFunction().apply(0, Either.right(0)) == 1000
         backendA.retryConfig.getExceptionPredicate().test(new IOException())
         !backendA.retryConfig.getExceptionPredicate().test(new IgnoredException())
     }
