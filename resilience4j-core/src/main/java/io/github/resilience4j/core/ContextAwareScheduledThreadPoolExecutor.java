@@ -27,16 +27,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.stream.Collectors.toList;
+
 public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
     private final List<ContextPropagator> contextPropagators;
     private static final String THREAD_PREFIX = "ContextAwareScheduledThreadPool";
 
-    public ContextAwareScheduledThreadPoolExecutor(int corePoolSize) {
-        this(corePoolSize, null);
-    }
-
-    public ContextAwareScheduledThreadPoolExecutor(int corePoolSize,
+    private ContextAwareScheduledThreadPoolExecutor(int corePoolSize,
                                                    @Nullable List<ContextPropagator> contextPropagators) {
         super(corePoolSize, new NamingThreadFactory(THREAD_PREFIX));
         this.contextPropagators = contextPropagators != null ? contextPropagators : new ArrayList<>();
@@ -106,6 +104,35 @@ public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPool
         MDC.clear();
         if (contextMap != null) {
             MDC.setContextMap(contextMap);
+        }
+    }
+
+    public static Builder newScheduledThreadPool() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private List<ContextPropagator> contextPropagators = new ArrayList<>();
+        private int corePoolSize;
+
+        public Builder corePoolSize(int corePoolSize) {
+            if (corePoolSize < 1) {
+                throw new IllegalArgumentException(
+                    "corePoolSize must be a positive integer value >= 1");
+            }
+            this.corePoolSize = corePoolSize;
+            return this;
+        }
+
+        public Builder contextPropagators(ContextPropagator... contextPropagators) {
+            this.contextPropagators = contextPropagators != null ?
+                Arrays.stream(contextPropagators).collect(toList()) :
+                new ArrayList<>();
+            return this;
+        }
+
+        public ContextAwareScheduledThreadPoolExecutor build() {
+            return new ContextAwareScheduledThreadPoolExecutor(corePoolSize, contextPropagators);
         }
     }
 }

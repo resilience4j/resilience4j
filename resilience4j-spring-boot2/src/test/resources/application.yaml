@@ -1,5 +1,5 @@
 resilience4j.scheduled.executor:
-  coreThreadPoolSize: 10
+  corePoolSize: 10
   contextPropagators:
     - io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder
 resilience4j.retry:

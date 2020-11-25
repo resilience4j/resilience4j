@@ -19,12 +19,14 @@
 package io.github.resilience4j.scheduled.threadpool.autoconfigure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(ContextAwareScheduledThreadPoolProperties.class)
+@ConditionalOnProperty(value = "resilience4j.scheduled.executor.corePoolSize")
+@EnableConfigurationProperties({ContextAwareScheduledThreadPoolProperties.class})
 public class ContextAwareScheduledThreadPoolAutoConfiguration {
 
     @Bean

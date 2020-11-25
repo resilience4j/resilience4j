@@ -46,7 +46,6 @@ import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
@@ -106,8 +105,11 @@ public class DecoratorsTest {
 
         TestThreadLocalContextPropagatorWithHolder propagator = new TestThreadLocalContextPropagatorWithHolder();
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
-        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool =
-            new ContextAwareScheduledThreadPoolExecutor(1, Arrays.asList(propagator));
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool = ContextAwareScheduledThreadPoolExecutor
+            .newScheduledThreadPool()
+            .corePoolSize(1)
+            .contextPropagators(propagator)
+            .build();
 
         CompletionStage<String> completionStage = Decorators
             .ofCallable(() -> {
@@ -147,8 +149,10 @@ public class DecoratorsTest {
         MDC.put("key", "ValueShouldPropagateThreadBoundary");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
-        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool =
-            new ContextAwareScheduledThreadPoolExecutor(1);
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool = ContextAwareScheduledThreadPoolExecutor
+            .newScheduledThreadPool()
+            .corePoolSize(1)
+            .build();
 
         CompletionStage<String> completionStage = Decorators
             .ofCallable(() -> {
@@ -581,14 +585,17 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCompletionStagePropagatesContext() throws ExecutionException, InterruptedException {
+    public void testDecorateCompletionStagePropagatesContextWithRetryAsync() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         TestThreadLocalContextPropagatorWithHolder propagator = new TestThreadLocalContextPropagatorWithHolder();
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
-        ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor =
-            new ContextAwareScheduledThreadPoolExecutor(1, Arrays.asList(propagator));
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool = ContextAwareScheduledThreadPoolExecutor
+            .newScheduledThreadPool()
+            .corePoolSize(1)
+            .contextPropagators(propagator)
+            .build();
 
         CompletableFuture<String> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new HelloWorldException());
@@ -598,7 +605,7 @@ public class DecoratorsTest {
         CompletionStage<String> completionStage = Decorators
             .ofCompletionStage(() -> asyncHelloWorldService.returnHelloWorld())
             .withCircuitBreaker(circuitBreaker)
-            .withRetry(Retry.ofDefaults("id"), contextAwareScheduledThreadPoolExecutor)
+            .withRetry(Retry.ofDefaults("id"), scheduledThreadPool)
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .get();
 
@@ -621,15 +628,17 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCompletionStagePropagatesMDCContext() throws ExecutionException, InterruptedException {
+    public void testDecorateCompletionStagePropagatesMDCContextWithRetryAsync() {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
         MDC.put("key", "ValueShouldCrossThreadBoundary");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
-        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool =
-            new ContextAwareScheduledThreadPoolExecutor(1);
+        ContextAwareScheduledThreadPoolExecutor scheduledThreadPool = ContextAwareScheduledThreadPoolExecutor
+            .newScheduledThreadPool()
+            .corePoolSize(1)
+            .build();
 
         CompletableFuture<String> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new HelloWorldException());

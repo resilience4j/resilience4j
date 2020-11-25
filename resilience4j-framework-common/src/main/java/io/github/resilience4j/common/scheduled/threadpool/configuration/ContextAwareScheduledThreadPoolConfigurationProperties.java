@@ -29,19 +29,19 @@ import static java.util.stream.Collectors.toList;
 
 public class ContextAwareScheduledThreadPoolConfigurationProperties {
 
-    private int coreThreadPoolSize;
+    private int corePoolSize;
     private Class<? extends ContextPropagator>[] contextPropagators = new Class[0];
 
-    public int getCoreThreadPoolSize() {
-        return coreThreadPoolSize;
+    public int getCorePoolSize() {
+        return corePoolSize;
     }
 
-    public void setCoreThreadPoolSize(int coreThreadPoolSize) {
-        if (coreThreadPoolSize < 1) {
+    public void setCorePoolSize(int corePoolSize) {
+        if (corePoolSize < 1) {
             throw new IllegalArgumentException(
-                "coreThreadPoolSize must be a positive integer value >= 1");
+                "corePoolSize must be a positive integer value >= 1");
         }
-        this.coreThreadPoolSize = coreThreadPoolSize;
+        this.corePoolSize = corePoolSize;
     }
 
     public Class<? extends ContextPropagator>[] getContextPropagators() {
@@ -55,16 +55,14 @@ public class ContextAwareScheduledThreadPoolConfigurationProperties {
     }
 
     public ContextAwareScheduledThreadPoolExecutor build() {
-        if (this.coreThreadPoolSize < 1) {
-            return null;
-        }
-        List<ContextPropagator> contextPropagatorsList = null;
-        if (contextPropagators.length > 0) {
-            contextPropagatorsList = stream(this.contextPropagators)
-                .map(ClassUtils::instantiateClassDefConstructor)
-                .collect(toList());
-        }
-        return new ContextAwareScheduledThreadPoolExecutor(this.coreThreadPoolSize, contextPropagatorsList);
+        List<ContextPropagator> contextPropagatorsList = stream(this.contextPropagators)
+            .map(ClassUtils::instantiateClassDefConstructor)
+            .collect(toList());
+
+        return ContextAwareScheduledThreadPoolExecutor.newScheduledThreadPool()
+            .corePoolSize(this.corePoolSize)
+            .contextPropagators(contextPropagatorsList.toArray(new ContextPropagator[0]))
+            .build();
     }
 
 }

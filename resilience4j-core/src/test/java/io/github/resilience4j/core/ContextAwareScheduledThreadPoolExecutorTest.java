@@ -25,14 +25,12 @@ import org.junit.Test;
 import org.slf4j.MDC;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.jayway.awaitility.Awaitility.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class ContextAwareScheduledThreadPoolExecutorTest {
 
@@ -40,24 +38,51 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
 
     @Before
     public void initialise() {
-        schedulerService = new ContextAwareScheduledThreadPoolExecutor(
-            20,
-            Stream.of(new TestContextPropagators.TestThreadLocalContextPropagatorWithHolder())
-                .collect(Collectors.toList()));
+        schedulerService = ContextAwareScheduledThreadPoolExecutor.newScheduledThreadPool()
+            .corePoolSize(20)
+            .contextPropagators(new TestContextPropagators.TestThreadLocalContextPropagatorWithHolder())
+            .build();
     }
 
     @Test
     public void testConfigs() {
         assertThat(schedulerService.getCorePoolSize()).isEqualTo(20);
+        assertThat(schedulerService.getThreadFactory()).isInstanceOf(NamingThreadFactory.class);
+        assertThat(schedulerService.getContextPropagators()).hasSize(1)
+            .hasOnlyElementsOfTypes(TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.class);
     }
 
     @Test
-    public void testScheduleRunnablePropagatesContext() throws Exception{
+    public void throwsExceptionWhenCorePoolSizeLessThanOne() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->  ContextAwareScheduledThreadPoolExecutor
+            .newScheduledThreadPool()
+            .corePoolSize(0)
+            .build());
+    }
+
+    @Test
+    public void testScheduleRunnablePropagatesContext() {
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         final ScheduledFuture<?> schedule = schedulerService.schedule(() -> {
             TestThreadLocalContextHolder.get().orElseThrow(() -> new RuntimeException("Found No Context"));
         }, 0, TimeUnit.MILLISECONDS);
-        schedule.get();
+        assertThatCode(() -> schedule.get()).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void testScheduleRunnableWithDelayPropagatesContext() {
+        TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
+        final ScheduledFuture<?> schedule = schedulerService.schedule(() -> {
+            TestThreadLocalContextHolder.get().orElseThrow(() -> new RuntimeException("Found No Context"));
+        }, 100, TimeUnit.MILLISECONDS);
+        await().atMost(200, TimeUnit.MILLISECONDS).until(matches(() -> schedule.get()));
+    }
+
+    @Test
+    public void testThreadFactory() {
+        final ScheduledFuture<String> schedule = schedulerService.schedule(() -> Thread.currentThread().getName(), 0, TimeUnit.MILLISECONDS);
+        waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(schedule.get()).contains("ContextAwareScheduledThreadPool")));
     }
 
     @Test
@@ -77,12 +102,37 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
     }
 
     @Test
-    public void testMDC() {
+    public void testCompletableFuturePropagatesContext() {
+        TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
+        final CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
+            assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool");
+            return (String) TestThreadLocalContextHolder.get().orElse(null);
+        }, schedulerService);
+        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+    }
+
+    @Test
+    public void testCompletableFuturePropagatesMDCContext() {
+        MDC.put("key", "ValueShouldCrossThreadBoundary");
+        MDC.put("key2","value2");
+        final Map<String, String> contextMap = MDC.getCopyOfContextMap();
+        final CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
+            assertThat(Thread.currentThread().getName()).isEqualTo("ContextAwareScheduledThreadPool-1");
+            assertThat(MDC.getCopyOfContextMap()).hasSize(2).containsExactlyEntriesOf(contextMap);
+            return MDC.getCopyOfContextMap().get("key");
+        }, schedulerService);
+        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+    }
+
+    @Test
+    public void testScheduleCallablePropagatesMDCContext() {
         MDC.put("key", "value");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
         final ScheduledFuture<Map<String, String>> scheduledFuture = this.schedulerService
-            .schedule(TestThreadLocalContextHolder::getMDCContext, 0, TimeUnit.MILLISECONDS);
+            .schedule(MDC::getCopyOfContextMap, 0, TimeUnit.MILLISECONDS);
 
         waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
             assertThat(scheduledFuture.get()).hasSize(2).containsExactlyEntriesOf(contextMap)));
@@ -90,14 +140,16 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
 
     @Test
     public void testMDCWithoutContextPropagator() {
-        final ContextAwareScheduledThreadPoolExecutor schedulerService = new ContextAwareScheduledThreadPoolExecutor(
-            10);
+        final ContextAwareScheduledThreadPoolExecutor schedulerService = ContextAwareScheduledThreadPoolExecutor
+            .newScheduledThreadPool()
+            .corePoolSize(10)
+            .build();
 
         MDC.put("key", "value");
         MDC.put("key2","value2");
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
         final ScheduledFuture<Map<String, String>> scheduledFuture = schedulerService
-            .schedule(TestThreadLocalContextHolder::getMDCContext, 0, TimeUnit.MILLISECONDS);
+            .schedule(MDC::getCopyOfContextMap, 0, TimeUnit.MILLISECONDS);
 
         waitAtMost(1, TimeUnit.SECONDS).until(matches(() ->
             assertThat(scheduledFuture.get()).hasSize(2).containsExactlyEntriesOf(contextMap)));
