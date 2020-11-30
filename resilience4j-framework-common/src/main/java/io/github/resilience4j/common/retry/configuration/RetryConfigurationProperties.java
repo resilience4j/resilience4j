@@ -255,8 +255,10 @@ public class RetryConfigurationProperties extends CommonProperties {
         @Nullable
         private Class<? extends IntervalBiFunction<Object>> intervalBiFunction;
 
-        /*
+        /**
          * max retry attempts value
+         *
+         * @deprecated use maxAttempts
          */
         @Nullable
         @Deprecated
@@ -352,6 +354,10 @@ public class RetryConfigurationProperties extends CommonProperties {
             this.intervalBiFunction = intervalBiFunction;
         }
 
+        /**
+         *
+         * @deprecated use getMaxAttempts()
+         */
         @Nullable
         @Deprecated
         public Integer getMaxRetryAttempts() {
@@ -363,6 +369,10 @@ public class RetryConfigurationProperties extends CommonProperties {
             return maxAttempts;
         }
 
+        /**
+         *
+         * @deprecated use setMaxAttempts()
+         */
         @Deprecated
         public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
             Objects.requireNonNull(maxRetryAttempts);
