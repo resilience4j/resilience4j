@@ -18,6 +18,7 @@ package io.github.resilience4j.retry.autoconfigure;
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.configure.RetryAspect;
@@ -93,10 +94,11 @@ public class RetryConfigurationOnMissingBeanTest {
             RetryRegistry retryRegistry,
             @Autowired(required = false) List<RetryAspectExt> retryAspectExts,
             FallbackDecorators fallbackDecorators,
-            SpelResolver spelResolver
+            SpelResolver spelResolver,
+            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
         ) {
             this.retryAspect = new RetryAspect(new RetryProperties(), retryRegistry,
-                retryAspectExts, fallbackDecorators, spelResolver);
+                retryAspectExts, fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
             return retryAspect;
         }
 
