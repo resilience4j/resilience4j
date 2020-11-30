@@ -20,6 +20,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -44,8 +46,9 @@ public class FeignDecoratorsTest {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         final FeignDecorators testSubject = FeignDecorators.builder()
             .withCircuitBreaker(circuitBreaker).build();
+        final Method method = FeignDecoratorsTest.class.getDeclaredMethods()[0];
 
-        final Object result = testSubject.decorate(args -> args[0], null, null, null)
+        final Object result = testSubject.decorate(args -> args[0], method, null, null)
             .apply(new Object[]{"test01"});
 
         assertThat(result)
@@ -62,8 +65,9 @@ public class FeignDecoratorsTest {
         final RateLimiter rateLimiter = spy(RateLimiter.ofDefaults("test"));
         final FeignDecorators testSubject = FeignDecorators.builder().withRateLimiter(rateLimiter)
             .build();
+        final Method method = FeignDecoratorsTest.class.getDeclaredMethods()[0];
 
-        final Object result = testSubject.decorate(args -> args[0], null, null, null)
+        final Object result = testSubject.decorate(args -> args[0], method, null, null)
             .apply(new Object[]{"test01"});
 
         assertThat(result)

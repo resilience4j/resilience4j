@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2020 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,12 +16,9 @@
  */
 package io.github.resilience4j.feign;
 
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import org.junit.Before;
@@ -30,8 +27,7 @@ import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link Retry}
@@ -47,7 +43,7 @@ public class Resilience4jFeignRetryTest {
 
     @Before
     public void setUp() {
-        retry = Retry.ofDefaults("test");
+        retry = spy(Retry.ofDefaults("test"));
         final FeignDecorators decorators = FeignDecorators.builder()
             .withRetry(retry)
             .build();
@@ -62,6 +58,17 @@ public class Resilience4jFeignRetryTest {
         testService.greeting();
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(retry).context();
+    }
+
+    @Test
+    public void testSuccessfulCallWithDefaultMethod() {
+        givenResponse(200);
+
+        testService.defaultGreeting();
+
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(retry).context();
     }
 
     @Test(expected = FeignException.class)

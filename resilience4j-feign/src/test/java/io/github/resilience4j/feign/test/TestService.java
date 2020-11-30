@@ -11,6 +11,10 @@ public interface TestService {
     @RequestLine("GET /greeting")
     String greeting();
 
+    default String defaultGreeting() {
+        return greeting();
+    }
+
     static TestService create(String url, RateLimiter rateLimiter) {
         FeignDecorators decorators = FeignDecorators.builder()
             .withRateLimiter(rateLimiter)

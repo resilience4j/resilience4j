@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019
+ * Copyright 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * Builder to help build stacked decorators. <br>
@@ -88,8 +89,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withRetry(Retry retry) {
-            decorators
-                .add((fn, m, mh, t) -> Retry.decorateCheckedFunction(retry, fn));
+            addFeignDecorator(fn -> Retry.decorateCheckedFunction(retry, fn));
             return this;
         }
 
@@ -100,8 +100,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withCircuitBreaker(CircuitBreaker circuitBreaker) {
-            decorators
-                .add((fn, m, mh, t) -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
+            addFeignDecorator(fn -> CircuitBreaker.decorateCheckedFunction(circuitBreaker, fn));
             return this;
         }
 
@@ -112,7 +111,7 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withRateLimiter(RateLimiter rateLimiter) {
-            decorators.add((fn, m, mh, t) -> RateLimiter.decorateCheckedFunction(rateLimiter, fn));
+            addFeignDecorator(fn -> RateLimiter.decorateCheckedFunction(rateLimiter, fn));
             return this;
         }
 
@@ -214,8 +213,21 @@ public class FeignDecorators implements FeignDecorator {
          * @return the builder
          */
         public Builder withBulkhead(Bulkhead bulkhead) {
-            decorators.add((fn, m, mh, t) -> Bulkhead.decorateCheckedFunction(bulkhead, fn));
+            addFeignDecorator(fn -> Bulkhead.decorateCheckedFunction(bulkhead, fn));
             return this;
+        }
+
+        private void addFeignDecorator(UnaryOperator<CheckedFunction1<Object[], Object>> decorator) {
+            decorators
+                .add((fn, m, mh, t) -> {
+                    // prevent default methods from being decorated
+                    // as they do not participate in actual web requests
+                    if (m.isDefault()) {
+                        return fn;
+                    } else {
+                        return decorator.apply(fn);
+                    }
+                });
         }
 
         /**
