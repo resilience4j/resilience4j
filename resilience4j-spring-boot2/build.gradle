@@ -27,6 +27,7 @@ dependencies {
     testCompile(libraries.spring_cloud_context)
     testCompile(libraries.feign_wiremock)
     testCompile(libraries.spring_boot2_webflux)
+    testCompile project(':resilience4j-test')
 }
 
 compileJava.dependsOn(processResources)

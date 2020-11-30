@@ -17,6 +17,7 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -68,6 +69,8 @@ public class RetryConfigurationSpringTest {
 
         private RetryConfigurationProperties retryConfigurationProperties;
 
+        private ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor;
+
         @Bean
         public RetryRegistry retryRegistry() {
             retryRegistry = RetryRegistry.ofDefaults();
@@ -82,7 +85,7 @@ public class RetryConfigurationSpringTest {
             SpelResolver spelResolver
         ) {
             retryAspect = new RetryAspect(retryConfigurationProperties(), retryRegistry,
-                retryAspectExts, fallbackDecorators, spelResolver);
+                retryAspectExts, fallbackDecorators, spelResolver,contextAwareScheduledThreadPoolExecutor);
             return retryAspect;
         }
 

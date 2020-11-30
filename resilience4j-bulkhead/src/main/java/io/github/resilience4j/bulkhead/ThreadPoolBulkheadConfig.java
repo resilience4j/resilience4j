@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
