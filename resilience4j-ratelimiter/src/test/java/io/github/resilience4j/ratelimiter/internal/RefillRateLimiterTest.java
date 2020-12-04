@@ -570,12 +570,12 @@ public class RefillRateLimiterTest {
         Duration timeoutDuration = Duration.ofMillis(12);
         long periodInNanos = limitRefreshPeriod.toNanos();
 
-        setup(limitRefreshPeriod, timeoutDuration, limitForPeriod);
+        setup(limitRefreshPeriod, timeoutDuration, limitForPeriod, 0);
         setTimeOnNanos(periodInNanos);
 
         ArrayList<Long> timesToWait = new ArrayList<>();
         for (int i = 0; i < tasksNum; i++) {
-            setTimeOnNanos(periodInNanos + i + 1);
+            setTimeOnNanos(periodInNanos);
             long timeToWait = rateLimiter.reservePermission(1);
             timesToWait.add(timeToWait);
         }
