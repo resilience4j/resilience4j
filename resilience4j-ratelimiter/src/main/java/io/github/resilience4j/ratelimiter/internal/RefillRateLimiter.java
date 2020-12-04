@@ -197,6 +197,10 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
             return new State(config, activePermissions, getNanosToWait(), timeIndex);
         }
 
+        State withTimeIndex(long timeIndex) {
+            return new State(getConfig(), activePermissions, getNanosToWait(), timeIndex);
+        }
+
     }
 
     /**
