@@ -25,6 +25,8 @@ import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
 import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.Integer.min;
 import static java.lang.System.nanoTime;
 
 /**
@@ -64,7 +66,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         long currentNanoTime = nanoTime();
 
         if(permissionsNeededExtra<0) {
-            return new State(activeState.getConfig(), -permissionsNeededExtra, 0, activeState.updatedAt);
+            return new State(activeState.getConfig(), -permissionsNeededExtra, 0, activeState.timeIndex);
         } else if(permissionsNeededExtra==0) {
             return new State(activeState.getConfig(), 0, 0, currentNanoTime);
         } else {
@@ -82,7 +84,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
     private State lazyPermissionCalculation(int permits,int permissionsNeededExtra, final State activeState, long currentNanoTime, long timeoutInNanos) {
         RefillRateLimiterConfig config = activeState.getConfig();
 
-        long nanosSinceLastUpdate = currentNanoTime - activeState.updatedAt;
+        long nanosSinceLastUpdate = currentNanoTime - activeState.timeIndex;
 
         if(nanosSinceLastUpdate >= config.getNanosPerFullCapacity()) {
             /**
@@ -97,7 +99,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
              * We have not reached the max capacity. Thus we need to calculate the extra permissions needed.
              */
             long nanosForPermissions = nanosNeededForExtraPermissions(permissionsNeededExtra, config);
-            long nanosToCurrentIndex = activeState.updatedAt + nanosForPermissions;
+            long nanosToCurrentIndex = activeState.timeIndex + nanosForPermissions;
 
             long nanosToWait = nanosForPermissions - nanosSinceLastUpdate;
 
@@ -107,7 +109,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
                 if(canAcquireInTime) {
                     return new State(config, 0, nanosToWait, nanosToCurrentIndex);
                 } else {
-                    return new State(activeState.getConfig(), activeState.activePermissions, nanosToWait, activeState.updatedAt);
+                    return new State(activeState.getConfig(), activeState.activePermissions, nanosToWait, activeState.timeIndex);
                 }
             } else {
                 return new State(config, 0, 0, nanosToCurrentIndex);
@@ -123,8 +125,17 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         return permits - currentPermits;
     }
 
-    private long nanosSinceLastUpdate(State activeState) {
-        return nanoTime() - activeState.updatedAt;
+    /**
+     * Used only for metrics. Not good for rate limiter use.
+     * @param state
+     * @return
+     */
+    private final int availablePermissions(State state) {
+        long nanosSinceLastUpdate = nanoTime() - state.timeIndex;
+        int permitCapacity = state.getConfig().getPermitCapacity();
+        long accumulatedPermissions = nanosSinceLastUpdate / state.getConfig().getNanosPerPermit();
+        int totalPermissions =  state.getActivePermissions() + (int) accumulatedPermissions;
+        return min(permitCapacity, totalPermissions);
     }
 
     @Override
@@ -160,17 +171,17 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
     static class State extends BaseState<RefillRateLimiterConfig> {
 
         private final int activePermissions;
-        private final long updatedAt;
+        private final long timeIndex;
 
-        public State(RefillRateLimiterConfig config, int activePermissions, long nanosToWait, long updatedAt) {
+        public State(RefillRateLimiterConfig config, int activePermissions, long nanosToWait, long timeIndex) {
             super(config, activePermissions, nanosToWait);
             this.activePermissions = activePermissions;
-            this.updatedAt = updatedAt;
+            this.timeIndex = timeIndex;
         }
 
         @Override
         State withConfig(RefillRateLimiterConfig config) {
-            return new State(config, activePermissions, getNanosToWait(), updatedAt);
+            return new State(config, activePermissions, getNanosToWait(), timeIndex);
         }
 
     }
@@ -197,8 +208,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         @Override
         public int getAvailablePermissions() {
             State currentState = state().get();
-            State estimatedState = calculateNextState(1, -1, currentState);
-            return estimatedState.activePermissions;
+            return availablePermissions(currentState);
         }
 
         /**
