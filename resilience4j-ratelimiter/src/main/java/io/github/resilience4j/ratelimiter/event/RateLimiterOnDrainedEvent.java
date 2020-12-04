@@ -18,24 +18,14 @@
  */
 package io.github.resilience4j.ratelimiter.event;
 
-import java.time.ZonedDateTime;
+public class RateLimiterOnDrainedEvent extends AbstractRateLimiterEvent {
 
-/**
- * An event which is created by a {@link io.github.resilience4j.ratelimiter.RateLimiter}.
- */
-public interface RateLimiterEvent {
+    public RateLimiterOnDrainedEvent(String rateLimiterName, int numberOfPermits) {
+        super(rateLimiterName, numberOfPermits);
+    }
 
-    String getRateLimiterName();
-
-    Type getEventType();
-
-    int getNumberOfPermits();
-
-    ZonedDateTime getCreationTime();
-
-    enum Type {
-        FAILED_ACQUIRE,
-        SUCCESSFUL_ACQUIRE,
-        DRAINED
+    @Override
+    public Type getEventType() {
+        return Type.DRAINED;
     }
 }

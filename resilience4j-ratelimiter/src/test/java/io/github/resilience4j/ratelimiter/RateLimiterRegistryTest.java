@@ -311,7 +311,7 @@ public class RateLimiterRegistryTest {
     public void testCreateUsingBuilderWithRegistryStore() {
         RateLimiterRegistry rateLimiterRegistry = RateLimiterRegistry.custom()
             .withRateLimiterConfig(RateLimiterConfig.ofDefaults())
-            .withRegistryStore(new InMemoryRegistryStore())
+            .withRegistryStore(new InMemoryRegistryStore<>())
             .build();
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("testName");
         RateLimiter rateLimiter2 = rateLimiterRegistry.rateLimiter("otherTestName");

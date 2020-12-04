@@ -670,6 +670,11 @@ public interface RateLimiter {
     long reservePermission(int permits);
 
     /**
+     * Drains all the permits left in the current period.
+     */
+    void drainPermissions();
+
+    /**
      * Get the name of this RateLimiter
      *
      * @return the name of this RateLimiter

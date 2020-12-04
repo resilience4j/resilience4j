@@ -156,6 +156,17 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
         return new AtomicRateLimiterMetrics();
     }
 
+    private void publishRateLimiterAcquisitionEvent(boolean permissionAcquired, int permits) {
+        if (!eventProcessor.hasConsumers()) {
+            return;
+        }
+        if (permissionAcquired) {
+            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
+            return;
+        }
+        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
+    }
+
     /**
      * <p>{@link AtomicRateLimiter.State} represents immutable state of {@link AtomicRateLimiter}
      * where:
