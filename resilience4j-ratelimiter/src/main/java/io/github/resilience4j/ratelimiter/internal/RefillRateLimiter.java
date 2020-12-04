@@ -130,7 +130,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
      * @param state
      * @return
      */
-    private final int availablePermissions(State state) {
+    private int availablePermissions(State state) {
         long nanosSinceLastUpdate = nanoTime() - state.timeIndex;
         int permitCapacity = state.getConfig().getPermitCapacity();
         long accumulatedPermissions = nanosSinceLastUpdate / state.getConfig().getNanosPerPermit();
