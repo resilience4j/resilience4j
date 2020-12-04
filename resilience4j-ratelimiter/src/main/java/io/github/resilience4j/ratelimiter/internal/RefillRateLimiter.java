@@ -21,6 +21,7 @@ package io.github.resilience4j.ratelimiter.internal;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
@@ -151,6 +152,23 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         return min(permitCapacity, totalPermissions);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void drainPermissions() {
+        RefillRateLimiter.State prev;
+        RefillRateLimiter.State next;
+        do {
+            long nanoTime = refillLimiterNanoTime();
+            prev = state().get();
+            next = prev.withTimeIndex(nanoTime).withTimeIndex(nanoTime).withPermissions(0);
+        } while (!compareAndSet(prev, next));
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(getName(), Math.min(prev.getActivePermissions(), 0)));
+        }
+    }
+
     @Override
     public String toString() {
         return "RefillRateLimiter{" +
@@ -199,6 +217,10 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
 
         State withTimeIndex(long timeIndex) {
             return new State(getConfig(), activePermissions, getNanosToWait(), timeIndex);
+        }
+
+        State withPermissions(int permissions) {
+            return new State(getConfig(), permissions, getNanosToWait(), timeIndex);
         }
 
     }

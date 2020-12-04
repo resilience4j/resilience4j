@@ -360,5 +360,4 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
             }
         }
     }
-
 }

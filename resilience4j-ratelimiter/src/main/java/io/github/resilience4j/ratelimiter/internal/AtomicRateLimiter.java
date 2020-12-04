@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
@@ -79,6 +80,22 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
         State nextState = reservePermissions(config, permits, timeoutInNanos, nextCycle,
             nextPermissions, nextNanosToWait);
         return nextState;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void drainPermissions() {
+        AtomicRateLimiter.State prev;
+        AtomicRateLimiter.State next;
+        do {
+            prev = state().get();
+            next = calculateNextState(prev.getActivePermissions(), 0, prev);
+        } while (!compareAndSet(prev, next));
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(getName(), Math.min(prev.getActivePermissions(), 0)));
+        }
     }
 
     /**
@@ -154,17 +171,6 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
     @Override
     public AtomicRateLimiterMetrics getDetailedMetrics() {
         return new AtomicRateLimiterMetrics();
-    }
-
-    private void publishRateLimiterAcquisitionEvent(boolean permissionAcquired, int permits) {
-        if (!eventProcessor.hasConsumers()) {
-            return;
-        }
-        if (permissionAcquired) {
-            eventProcessor.consumeEvent(new RateLimiterOnSuccessEvent(name, permits));
-            return;
-        }
-        eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 
     /**

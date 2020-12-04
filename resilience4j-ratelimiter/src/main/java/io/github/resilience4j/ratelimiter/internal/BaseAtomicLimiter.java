@@ -50,7 +50,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
     private final AtomicInteger waitingThreads;
     private final AtomicReference<T> state;
     private final Map<String, String> tags;
-    private final RateLimiterEventProcessor eventProcessor;
+    protected final RateLimiterEventProcessor eventProcessor;
 
     BaseAtomicLimiter(String name, AtomicReference<T> state, Map<String, String> tags) {
         this.name = name;
@@ -101,7 +101,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         long timeoutInNanos = state().get().getTimeoutInNanos();
         T modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.getNanosToWait());
-        publishRateLimiterEvent(result, permits);
+        publishRateLimiterAcquisitionEvent(result, permits);
         return result;
     }
 
@@ -115,17 +115,17 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
 
         boolean canAcquireImmediately = modifiedState.getNanosToWait()<= 0;
         if (canAcquireImmediately) {
-            publishRateLimiterEvent(true, permits);
+            publishRateLimiterAcquisitionEvent(true, permits);
             return 0;
         }
 
         boolean canAcquireInTime = timeoutInNanos >= modifiedState.getNanosToWait();
         if (canAcquireInTime) {
-            publishRateLimiterEvent(true, permits);
+            publishRateLimiterAcquisitionEvent(true, permits);
             return modifiedState.getNanosToWait();
         }
 
-        publishRateLimiterEvent(false, permits);
+        publishRateLimiterAcquisitionEvent(false, permits);
         return -1;
     }
 
@@ -285,7 +285,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
      */
     public abstract <T extends Metrics> T getDetailedMetrics();
 
-    protected void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+    protected void publishRateLimiterAcquisitionEvent(boolean permissionAcquired, int permits) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }
@@ -295,6 +295,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         }
         eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
+
 
     protected AtomicInteger waitingThreads() {
         return waitingThreads;
