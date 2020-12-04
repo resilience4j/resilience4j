@@ -17,6 +17,7 @@ package io.github.resilience4j.common.retry.configuration;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
+import io.github.resilience4j.common.TestIntervalBiFunction;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
 import org.junit.Test;
@@ -134,14 +135,14 @@ public class RetryConfigurationPropertiesTest {
             .createRetryConfig("backendWithDefaultConfig", compositeRetryCustomizer());
         assertThat(retry1).isNotNull();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
-        assertThat(retry1.getIntervalFunction().apply(1)).isEqualTo(200L);
+        assertThat(retry1.getIntervalBiFunction().apply(1, null)).isEqualTo(200L);
 
         // Should get shared config and overwrite wait time
         RetryConfig retry2 = retryConfigurationProperties
             .createRetryConfig("backendWithSharedConfig", compositeRetryCustomizer());
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
-        assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(300L);
+        assertThat(retry2.getIntervalBiFunction().apply(1, null)).isEqualTo(300L);
 
         // Unknown backend should get default config of Registry
         RetryConfig retry3 = retryConfigurationProperties
@@ -189,5 +190,20 @@ public class RetryConfigurationPropertiesTest {
 
     private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
         return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
+    @Test
+    public void testIntervalBiFunctionConfig() {
+        RetryConfigurationProperties.InstanceProperties instanceProperties = new RetryConfigurationProperties.InstanceProperties();
+        instanceProperties.setIntervalBiFunction(TestIntervalBiFunction.class);
+
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        retryConfigurationProperties.getInstances().put("backend", instanceProperties);
+
+        RetryConfig retryConfig = retryConfigurationProperties
+            .createRetryConfig("backend", compositeRetryCustomizer());
+
+        assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
+        assertThat(retryConfig.getIntervalBiFunction()).isExactlyInstanceOf(TestIntervalBiFunction.class);
     }
 }

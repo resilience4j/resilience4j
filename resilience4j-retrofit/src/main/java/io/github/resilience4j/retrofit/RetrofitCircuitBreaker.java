@@ -84,7 +84,7 @@ public interface RetrofitCircuitBreaker {
                 @Override
                 public void onResponse(final Call<T> call, final Response<T> response) {
                     if (responseSuccess.test(response)) {
-                        circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+                        circuitBreaker.onResult(System.nanoTime() - start, TimeUnit.NANOSECONDS, response);
                     } else {
                         final Throwable throwable = new Throwable(
                             "Response error: HTTP " + response.code() + " - " + response.message());
@@ -114,7 +114,7 @@ public interface RetrofitCircuitBreaker {
                 final Response<T> response = call.execute();
 
                 if (responseSuccess.test(response)) {
-                    circuitBreaker.onSuccess(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS);
+                    circuitBreaker.onResult(stopWatch.stop().toNanos(), TimeUnit.NANOSECONDS, response);
                 } else {
                     final Throwable throwable = new Throwable(
                         "Response error: HTTP " + response.code() + " - " + response.message());

@@ -282,7 +282,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
     class Builder {
 
         private static final String DEFAULT_CONFIG = "default";
-        private RegistryStore registryStore;
+        private RegistryStore<Bulkhead> registryStore;
         private Map<String, BulkheadConfig> bulkheadConfigsMap;
         private List<RegistryEventConsumer<Bulkhead>> registryEventConsumers;
         private io.vavr.collection.Map<String, String> tags;
@@ -292,7 +292,7 @@ public interface BulkheadRegistry extends Registry<Bulkhead, BulkheadConfig> {
             this.registryEventConsumers = new ArrayList<>();
         }
 
-        public Builder withRegistryStore(RegistryStore registryStore) {
+        public Builder withRegistryStore(RegistryStore<Bulkhead> registryStore) {
             this.registryStore = registryStore;
             return this;
         }

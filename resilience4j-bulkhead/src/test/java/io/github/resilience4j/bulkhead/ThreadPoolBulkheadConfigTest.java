@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import io.github.resilience4j.core.ContextPropagator;
 import org.junit.Test;
 
 import java.time.Duration;

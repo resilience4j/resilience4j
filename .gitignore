@@ -1,6 +1,5 @@
 !.idea
 .idea/*
-!.idea/codeStyles
 *.iml
 .gradle
 build

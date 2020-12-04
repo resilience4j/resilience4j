@@ -343,3 +343,21 @@ NOTE: Breaking changes:
 * Problem with registering metrics for more than one circuit breaker [#1131](https://github.com/resilience4j/resilience4j/issues/1131)
 * ConcurrentModificationException warning log while consuming events [#1115](https://github.com/resilience4j/resilience4j/issues/1115)
 * CircuitBreakerConfig.Builder.waitDurationInOpenState() false documentation of when the function throws exception [#1092](https://github.com/resilience4j/resilience4j/issues/1092)
+
+=== Version 1.6.1
+
+==== Bugs
+* Springboot application failing on startup with version 1.6.0 [#1192](https://github.com/resilience4j/resilience4j/issues/1192)
+
+== Version 1.7.0
+
+=== Enhancements
+- RateLimiter: Reduce RateLimiter memory footprint of high cardinality keys [#1221](https://github.com/resilience4j/resilience4j/issues/1221)
+- CircuitBreaker: When waitDurationInOpenState and waitIntervalFunctionInOpenStat are used together, waitDurationInOpenState will be overridden [#1214](https://github.com/resilience4j/resilience4j/issues/1214)
+- TimeLimiterAspect does not refresh static timeLimiterExecutorService on Spring context shutdown and restart [#1203](https://github.com/resilience4j/resilience4j/issues/1203)
+- CircuitBreaker: Record a failure on result [#384](https://github.com/resilience4j/resilience4j/issues/384)
+- Added Micronaut module
+
+=== Bugs
+- NullPointerException requesting actuator metrics for retries using retryOnResult [#1205](https://github.com/resilience4j/resilience4j/issues/1205)
+- CircuitBreakers events endpoint doesn't work after replacing instances at runtime  [#1116](https://github.com/resilience4j/resilience4j/issues/1116)

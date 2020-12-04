@@ -24,11 +24,11 @@ import io.github.resilience4j.core.EventConsumer;
 import io.vavr.collection.List;
 
 /**
- * A RxJava consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
+ * A consumer which stores CircuitBreakerEvents in a circular buffer with a fixed capacity.
  */
 public class CircularEventConsumer<T> implements EventConsumer<T> {
 
-    private CircularFifoBuffer<T> eventCircularFifoBuffer;
+    private final CircularFifoBuffer<T> eventCircularFifoBuffer;
 
     /**
      * Creates an {@code CircuitBreakerEventConsumer} with the given (fixed) capacity

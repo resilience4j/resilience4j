@@ -68,7 +68,7 @@ class MaybeRateLimiter<T> extends Maybe<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
+        protected void hookOnSuccess(T value) {
             // NoOp
         }
 

@@ -275,7 +275,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
     class Builder {
 
         private static final String DEFAULT_CONFIG = "default";
-        private RegistryStore registryStore;
+        private RegistryStore<CircuitBreaker> registryStore;
         private Map<String, CircuitBreakerConfig> circuitBreakerConfigsMap;
         private List<RegistryEventConsumer<CircuitBreaker>> registryEventConsumers;
         private io.vavr.collection.Map<String, String> tags;
@@ -285,7 +285,7 @@ public interface CircuitBreakerRegistry extends Registry<CircuitBreaker, Circuit
             this.registryEventConsumers = new ArrayList<>();
         }
 
-        public Builder withRegistryStore(RegistryStore registryStore) {
+        public Builder withRegistryStore(RegistryStore<CircuitBreaker> registryStore) {
             this.registryStore = registryStore;
             return this;
         }

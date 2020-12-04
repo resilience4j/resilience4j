@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.retry.configure;
 
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
@@ -64,8 +65,7 @@ import java.util.concurrent.*;
 public class RetryAspect implements Ordered, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryAspect.class);
-    private final static ScheduledExecutorService retryExecutorService = Executors
-        .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService retryExecutorService;
     private final RetryConfigurationProperties retryConfigurationProperties;
     private final RetryRegistry retryRegistry;
     private final @Nullable
@@ -84,12 +84,16 @@ public class RetryAspect implements Ordered, AutoCloseable {
                        RetryRegistry retryRegistry,
                        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
                        FallbackDecorators fallbackDecorators,
-                       SpelResolver spelResolver) {
+                       SpelResolver spelResolver,
+                       @Nullable ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
         this.retryConfigurationProperties = retryConfigurationProperties;
         this.retryRegistry = retryRegistry;
         this.retryAspectExtList = retryAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
         this.spelResolver = spelResolver;
+        this.retryExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
+            contextAwareScheduledThreadPoolExecutor :
+            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
@@ -148,7 +152,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
         if (logger.isDebugEnabled()) {
             logger.debug(
                 "Created or retrieved retry '{}' with max attempts rate '{}'  for method: '{}'",
-                backend, retry.getRetryConfig().getResultPredicate(), methodName);
+                backend, retry.getRetryConfig().getMaxAttempts(), methodName);
         }
         return retry;
     }

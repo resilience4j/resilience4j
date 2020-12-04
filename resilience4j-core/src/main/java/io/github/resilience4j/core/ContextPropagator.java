@@ -1,6 +1,25 @@
-package io.github.resilience4j.bulkhead;
+/*
+ *
+ *  Copyright 2020 krnsaurabh
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
+package io.github.resilience4j.core;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -84,6 +103,57 @@ public interface ContextPropagator<T> {
             try {
                 values.forEach((p, v) -> p.copy().accept(v));
                 return supplier.get();
+            } finally {
+                values.forEach((p, v) -> p.clear().accept(v));
+            }
+        };
+    }
+
+    /**
+     * Method decorates callable to copy variables across thread boundary.
+     *
+     * @param propagator the instance of {@link ContextPropagator}
+     * @param callable   the callable to be decorated
+     * @param <T>        the type of variable that cross thread boundary
+     * @return decorated callable of type T
+     */
+    static <T> Callable<T> decorateCallable(ContextPropagator propagator, Callable<T> callable) {
+        final Optional value = (Optional) propagator.retrieve().get();
+        return () -> {
+            try {
+                propagator.copy().accept(value);
+                return callable.call();
+            } finally {
+                propagator.clear().accept(value);
+            }
+        };
+    }
+
+    /**
+     * Method decorates callable to copy variables across thread boundary.
+     *
+     * @param propagators the instance of {@link ContextPropagator} should be non null.
+     * @param callable    the callable to be decorated
+     * @param <T>         the type of variable that cross thread boundary
+     * @return decorated callable of type T
+     */
+    static <T> Callable<T> decorateCallable(List<? extends ContextPropagator> propagators,
+                                            Callable<T> callable) {
+
+        Objects.requireNonNull(propagators, "ContextPropagator list should be non null");
+
+        //Create identity map of <ContextPropagator,Optional Supplier value>, if we have duplicate ContextPropagators then last one wins.
+        final Map<? extends ContextPropagator, Object> values = propagators.stream()
+            .collect(toMap(
+                p -> p, //key as ContextPropagator instance itself
+                p -> p.retrieve().get(), //Supplier Optional value
+                (first, second) -> second, //Merge function, this simply choose later value in key collision
+                HashMap::new)); //type of map
+
+        return () -> {
+            try {
+                values.forEach((p, v) -> p.copy().accept(v));
+                return callable.call();
             } finally {
                 values.forEach((p, v) -> p.clear().accept(v));
             }

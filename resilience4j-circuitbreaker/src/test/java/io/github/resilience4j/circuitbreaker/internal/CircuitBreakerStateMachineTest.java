@@ -40,10 +40,7 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.*;
 
 public class CircuitBreakerStateMachineTest {
 
@@ -54,6 +51,8 @@ public class CircuitBreakerStateMachineTest {
     private EventConsumer<CircuitBreakerOnStateTransitionEvent> mockOnStateTransitionEventConsumer;
     private EventConsumer<CircuitBreakerOnFailureRateExceededEvent> mockOnFailureRateExceededEventConsumer;
     private EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> mockOnSlowCallRateExceededEventConsumer;
+
+//    TODO: add tests here for record Result
 
     @Before
     public void setUp() {

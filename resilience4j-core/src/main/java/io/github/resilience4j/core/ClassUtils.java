@@ -31,6 +31,20 @@ public final class ClassUtils {
         // utils
     }
 
+    public static <T> IntervalBiFunction<T> instantiateIntervalBiFunctionClass(
+        Class<? extends IntervalBiFunction<T>> clazz) {
+        try {
+            Constructor<? extends IntervalBiFunction<T>> c = clazz.getConstructor();
+            if (c != null) {
+                return c.newInstance();
+            } else {
+                throw new InstantiationException(INSTANTIATION_ERROR_PREFIX + clazz.getName());
+            }
+        } catch (Exception e) {
+            throw new InstantiationException(INSTANTIATION_ERROR_PREFIX + clazz.getName(), e);
+        }
+    }
+
     public static <T> Predicate<T> instantiatePredicateClass(Class<? extends Predicate<T>> clazz) {
         try {
             Constructor<? extends Predicate<T>> c = clazz.getConstructor();

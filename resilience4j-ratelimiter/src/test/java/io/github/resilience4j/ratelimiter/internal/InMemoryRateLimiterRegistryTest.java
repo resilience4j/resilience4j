@@ -251,7 +251,7 @@ public class InMemoryRateLimiterRegistryTest {
         final InMemoryRateLimiterRegistry inMemoryRateLimiterRegistry =
             InMemoryRateLimiterRegistry.create(configs, registryEventConsumers,
                 io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore());
-            new InMemoryRateLimiterRegistry(configs, registryEventConsumers,
+            InMemoryRateLimiterRegistry.create(configs, registryEventConsumers,
                 io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         AssertionsForClassTypes.assertThat(inMemoryRateLimiterRegistry).isNotNull();
