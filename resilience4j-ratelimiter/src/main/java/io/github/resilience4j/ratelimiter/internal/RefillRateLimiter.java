@@ -69,7 +69,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
             return new State(activeState.getConfig(), 0, 0, currentNanoTime);
         } else {
             assertLessPermitsThanCapacity(permits, activeState);
-            return lazyPermissionCalculation(permits ,permissionsNeededExtra, activeState, currentNanoTime);
+            return lazyPermissionCalculation(permits ,permissionsNeededExtra, activeState, currentNanoTime, timeoutInNanos);
         }
     }
 
@@ -79,7 +79,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         }
     }
 
-    private State lazyPermissionCalculation(int permits,int permissionsNeededExtra, final State activeState, long currentNanoTime) {
+    private State lazyPermissionCalculation(int permits,int permissionsNeededExtra, final State activeState, long currentNanoTime, long timeoutInNanos) {
         RefillRateLimiterConfig config = activeState.getConfig();
 
         long nanosSinceLastUpdate = currentNanoTime - activeState.updatedAt;
@@ -99,10 +99,16 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
             long nanosForPermissions = nanosNeededForExtraPermissions(permissionsNeededExtra, config);
             long nanosToCurrentIndex = activeState.updatedAt + nanosForPermissions;
 
-            long extraNanos = nanosForPermissions - nanosSinceLastUpdate;
+            long nanosToWait = nanosForPermissions - nanosSinceLastUpdate;
 
-            if(extraNanos>0) {
-                return new State(config, 0, extraNanos, nanosToCurrentIndex);
+            if(nanosToWait>0) {
+                boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
+
+                if(canAcquireInTime) {
+                    return new State(config, 0, nanosToWait, nanosToCurrentIndex);
+                } else {
+                    return new State(activeState.getConfig(), activeState.activePermissions, nanosToWait, activeState.updatedAt);
+                }
             } else {
                 return new State(config, 0, 0, nanosToCurrentIndex);
             }
