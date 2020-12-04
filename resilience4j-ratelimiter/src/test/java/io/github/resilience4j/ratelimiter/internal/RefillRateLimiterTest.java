@@ -22,6 +22,7 @@ import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
+import io.vavr.collection.HashMap;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -77,6 +78,10 @@ public class RefillRateLimiterTest {
         setup(Duration.ofNanos(PERIOD_IN_NANOS), timeoutDuration, PERMISSIONS_IN_PERIOD);
     }
 
+    public void setup(Duration timeoutDuration, long startNanos) {
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), timeoutDuration, PERMISSIONS_IN_PERIOD, startNanos);
+    }
+
     public void setup(Duration periodDuration, Duration timeoutDuration, int permissionPerCycle) {
         RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
             .limitForPeriod(permissionPerCycle)
@@ -84,6 +89,17 @@ public class RefillRateLimiterTest {
             .timeoutDuration(timeoutDuration)
             .build();
         RefillRateLimiter testLimiter = new RefillRateLimiter(LIMITER_NAME, rateLimiterConfig);
+        rateLimiter = PowerMockito.spy(testLimiter);
+        metrics = rateLimiter.getDetailedMetrics();
+    }
+
+    public void setup(Duration periodDuration, Duration timeoutDuration, int permissionPerCycle, long startNanos) {
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
+            .limitForPeriod(permissionPerCycle)
+            .limitRefreshPeriod(periodDuration)
+            .timeoutDuration(timeoutDuration)
+            .build();
+        RefillRateLimiter testLimiter = new RefillRateLimiter(LIMITER_NAME, rateLimiterConfig, HashMap.empty(),startNanos);
         rateLimiter = PowerMockito.spy(testLimiter);
         metrics = rateLimiter.getDetailedMetrics();
     }
@@ -243,9 +259,9 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void defaultPermissionsAtStartup() throws Exception {
-        setup(Duration.ZERO);
+        setup(Duration.ZERO, 0l);
 
-        setTimeOnNanos(PERIOD_IN_NANOS - 10);
+        setTimeOnNanos(PERIOD_IN_NANOS);
         RateLimiter.Metrics metrics = rateLimiter.getMetrics();
         int availablePermissions = metrics.getAvailablePermissions();
         then(availablePermissions).isEqualTo(PERMISSIONS_IN_PERIOD);
