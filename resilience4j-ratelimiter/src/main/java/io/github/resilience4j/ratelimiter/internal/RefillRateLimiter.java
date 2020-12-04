@@ -50,8 +50,13 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
 
     public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig,
                              Map<String, String> tags) {
+        this(name, rateLimiterConfig, tags, nanoTime());
+    }
+
+    public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig,
+                             Map<String, String> tags, long nanoTime) {
         super(name, new AtomicReference<>(new State(
-            rateLimiterConfig, rateLimiterConfig.getInitialPermits(), 0, nanoTime()
+            rateLimiterConfig, rateLimiterConfig.getInitialPermits(), 0, nanoTime
         )),tags);
     }
 
@@ -63,7 +68,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
                                      final State activeState) {
         int permissionsNeededExtra = permissionsMissing(permits, activeState.activePermissions);
 
-        long currentNanoTime = nanoTime();
+        long currentNanoTime = refillLimiterNanoTime();
 
         if(permissionsNeededExtra<0) {
             return new State(activeState.getConfig(), -permissionsNeededExtra, 0, activeState.timeIndex);
@@ -125,13 +130,17 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         return permits - currentPermits;
     }
 
+    private long refillLimiterNanoTime() {
+        return nanoTime();
+    }
+
     /**
      * Used only for metrics. Not good for rate limiter use.
      * @param state
      * @return
      */
     private int availablePermissions(State state) {
-        long nanosSinceLastUpdate = nanoTime() - state.timeIndex;
+        long nanosSinceLastUpdate = refillLimiterNanoTime() - state.timeIndex;
         int permitCapacity = state.getConfig().getPermitCapacity();
         long accumulatedPermissions = nanosSinceLastUpdate / state.getConfig().getNanosPerPermit();
         int totalPermissions =  state.getActivePermissions() + (int) accumulatedPermissions;
