@@ -93,6 +93,10 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         return nanoTime() - nanoTimeStart;
     }
 
+    long getNanoTimeStart() {
+        return this.nanoTimeStart;
+    }
+    
     /**
      * {@inheritDoc}
      */
