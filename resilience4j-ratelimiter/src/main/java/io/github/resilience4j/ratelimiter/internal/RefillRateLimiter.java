@@ -20,12 +20,11 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 
 import java.util.concurrent.atomic.AtomicReference;
-
-import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
 
 /**
@@ -50,7 +49,7 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
     public RefillRateLimiter(String name, RefillRateLimiterConfig rateLimiterConfig,
                              Map<String, String> tags) {
         super(name, new AtomicReference<>(new State(
-            rateLimiterConfig, rateLimiterConfig.getInitialPermits(), 0, nanoTime() - nanoTimeStart
+            rateLimiterConfig, rateLimiterConfig.getInitialPermits(), 0, nanoTime()
         )),tags);
     }
 
@@ -60,87 +59,66 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
     @Override
     protected State calculateNextState(final int permits, final long timeoutInNanos,
                                      final State activeState) {
-        long nanosSinceLastUpdate = nanosSinceLastUpdate(activeState);
-        int nexPermissions = calculateNextPermissions(activeState, nanosSinceLastUpdate);
+        int permissionsNeededExtra = permissionsMissing(permits, activeState.activePermissions);
 
-        long nextNanosToWait = nanosToWaitForPermission(
-            permits, activeState.getConfig().getNanosPerPermit(), nexPermissions);
+        long currentNanoTime = nanoTime();
 
-        State nextState = reservePermissions(activeState.getConfig(), permits, timeoutInNanos,
-            nexPermissions, nextNanosToWait);
-        return nextState;
+        if(permissionsNeededExtra<0) {
+            return new State(activeState.getConfig(), -permissionsNeededExtra, 0, activeState.updatedAt);
+        } else if(permissionsNeededExtra==0) {
+            return new State(activeState.getConfig(), 0, 0, currentNanoTime);
+        } else {
+            assertLessPermitsThanCapacity(permits, activeState);
+            return lazyPermissionCalculation(permits ,permissionsNeededExtra, activeState, currentNanoTime);
+        }
     }
 
-    private int calculateNextPermissions(State activeState, long nanosSinceLastUpdate) {
-        long accumulatedPermissions = accumulatedPermissions(activeState, nanosSinceLastUpdate);
-        return (int) min(activeState.getConfig().getPermitCapacity(), accumulatedPermissions);
+    private void assertLessPermitsThanCapacity(int permits, State activeState) {
+        if(permits > activeState.getConfig().getPermitCapacity()) {
+            throw RequestNotPermitted.createRequestNotPermitted("Permits requested cannot exceed rate limiter capacity", this);
+        }
     }
 
-    private long accumulatedPermissions(State activeState, long nanosSinceLastUpdate) {
-        int currentPermissions = activeState.activePermissions;
-        long permissionsBatches = calculateBatches(activeState.getConfig().getNanosPerPermit(), nanosSinceLastUpdate);
-        return permissionsBatches + currentPermissions;
+    private State lazyPermissionCalculation(int permits,int permissionsNeededExtra, final State activeState, long currentNanoTime) {
+        RefillRateLimiterConfig config = activeState.getConfig();
+
+        long nanosSinceLastUpdate = currentNanoTime - activeState.updatedAt;
+
+        if(nanosSinceLastUpdate >= config.getNanosPerFullCapacity()) {
+            /**
+             * We reached our max capacity. We remove the permits from the max capacity
+             * Regardless of the permits leased previously our permits could not exceeded the max
+             * so we clean up
+             */
+            int permitsLeft = config.getPermitCapacity() - permits;
+            return new State(activeState.getConfig(), permitsLeft, 0, currentNanoTime);
+        } else {
+            /**
+             * We have not reached the max capacity. Thus we need to calculate the extra permissions needed.
+             */
+            long nanosForPermissions = nanosNeededForExtraPermissions(permissionsNeededExtra, config);
+            long nanosToCurrentIndex = activeState.updatedAt + nanosForPermissions;
+
+            long extraNanos = nanosForPermissions - nanosSinceLastUpdate;
+
+            if(extraNanos>0) {
+                return new State(config, 0, extraNanos, nanosToCurrentIndex);
+            } else {
+                return new State(config, 0, 0, nanosToCurrentIndex);
+            }
+        }
+    }
+
+    private long nanosNeededForExtraPermissions(int neededPermissions, RefillRateLimiterConfig config) {
+        return neededPermissions * config.getNanosPerPermit();
+    }
+
+    private int permissionsMissing(int permits, int currentPermits) {
+        return permits - currentPermits;
     }
 
     private long nanosSinceLastUpdate(State activeState) {
-        return currentNanoTime() - activeState.updatedAt;
-    }
-
-    /**
-     * Calculate the batches, should be inlined
-     * @param nanosPerPermission
-     * @param nanosSinceLastUpdate
-     * @return
-     */
-    private long calculateBatches(long nanosPerPermission, long nanosSinceLastUpdate) {
-        if(nanosSinceLastUpdate<=0l) {
-            return 0l;
-        }
-
-        return nanosSinceLastUpdate / nanosPerPermission;
-    }
-
-    /**
-     * Calculates time to wait for the required permits of permissions to get accumulated
-     *
-     * @param permits              permits of required permissions
-     * @param nanosPerPermission   nanos needed for one permission to be released
-     * @param availablePermissions currently available permissions, can be negative if some
-     *                             permissions have been reserved
-     */
-    private long nanosToWaitForPermission(final int permits, final long nanosPerPermission,
-                                          final long availablePermissions) {
-        if (availablePermissions >= permits) {
-            return 0L;
-        }
-
-        long permissionsWanted = permits - availablePermissions;
-        long nanosToWait = permissionsWanted*nanosPerPermission;
-        return nanosToWait;
-    }
-
-    /**
-     * Determines whether caller can acquire permission before timeout or not and then creates
-     * corresponding {@link State}. Reserves permissions only if caller can successfully wait for
-     * permission.
-     *
-     * @param config
-     * @param permits        permits of permissions
-     * @param timeoutInNanos max time that caller can wait for permission in nanoseconds
-     * @param permissions    permissions for new {@link State}
-     * @param nanosToWait    nanoseconds to wait for the next permission
-     * @return new {@link State} with possibly reserved permissions and time to wait
-     */
-    private State reservePermissions(final RefillRateLimiterConfig config, final int permits,
-                                     final long timeoutInNanos,
-                                     final int permissions, final long nanosToWait) {
-        boolean canAcquireInTime = timeoutInNanos >= nanosToWait;
-        int permissionsWithReservation = permissions;
-        if (canAcquireInTime) {
-            permissionsWithReservation -= permits;
-        }
-
-        return new State(config, permissionsWithReservation, nanosToWait, currentNanoTime());
+        return nanoTime() - activeState.updatedAt;
     }
 
     @Override
@@ -190,7 +168,6 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         }
 
     }
-
 
     /**
      * Enhanced {@link Metrics} with some implementation specific details

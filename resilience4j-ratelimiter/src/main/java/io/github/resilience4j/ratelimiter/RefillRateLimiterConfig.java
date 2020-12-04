@@ -38,14 +38,17 @@ public class RefillRateLimiterConfig extends RateLimiterConfig implements Serial
     private static final String ZERO_NANOS_PER_PERMISSION_ARGUMENT = "At least 1 nanos per permission should be provided";
 
     private final int permitCapacity;
+    private final long nanosPerFullCapacity;
     private final int initialPermits;
     private final long nanosPerPermit;
 
     private RefillRateLimiterConfig(Duration timeoutDuration, int permitCapacity, long nanosPerPermit,
+                                    long nanosPerFullCapacity,
                                     int initialPermits, boolean writableStackTraceEnabled) {
         super(timeoutDuration, Duration.ofNanos(nanosPerPermit * permitCapacity), permitCapacity, writableStackTraceEnabled);
         noZeroNanosOnPermissionArgument(nanosPerPermit);
         this.permitCapacity = permitCapacity;
+        this.nanosPerFullCapacity = nanosPerFullCapacity;
         this.initialPermits = initialPermits;
         this.nanosPerPermit = nanosPerPermit;
     }
@@ -105,6 +108,14 @@ public class RefillRateLimiterConfig extends RateLimiterConfig implements Serial
         return nanosPerPermit;
     }
 
+    /**
+     * Get the nanos needed to reach full capacity
+     * @return
+     */
+    public long getNanosPerFullCapacity() {
+        return nanosPerFullCapacity;
+    }
+
     @Override
     public String toString() {
         return "RefillRateLimiterConfig{" +
@@ -152,7 +163,9 @@ public class RefillRateLimiterConfig extends RateLimiterConfig implements Serial
             final long nanosPerPermission = calculateNanosPerPermit(limitRefreshPeriod, limitForPeriod);
             noZeroNanosOnPermissionState(nanosPerPermission);
 
-            return new RefillRateLimiterConfig(timeoutDuration, permitCapacity, nanosPerPermission,
+            final long nanosPerFullCapacity = calculateNanosPerFullCapacity(nanosPerPermission, permitCapacity);
+
+            return new RefillRateLimiterConfig(timeoutDuration, permitCapacity, nanosPerPermission, nanosPerFullCapacity,
                 initialPermits, writableStackTraceEnabled);
         }
 
@@ -239,6 +252,10 @@ public class RefillRateLimiterConfig extends RateLimiterConfig implements Serial
         private long calculateNanosPerPermit(Duration limitRefreshPeriod, int limitForPeriod) {
             long permissionsPeriodInNanos = limitRefreshPeriod.toNanos();
             return permissionsPeriodInNanos / limitForPeriod;
+        }
+
+        private long calculateNanosPerFullCapacity(long nanosPerPermission, long permitCapacity) {
+            return nanosPerPermission * permitCapacity;
         }
     }
 

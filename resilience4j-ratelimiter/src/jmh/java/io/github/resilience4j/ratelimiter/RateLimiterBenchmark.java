@@ -74,6 +74,7 @@ public class RateLimiterBenchmark {
 
         semaphoreBasedRateLimiter = new SemaphoreBasedRateLimiter("semaphoreBased",
             rateLimiterConfig);
+
         atomicRateLimiter = new AtomicRateLimiter("atomicBased", rateLimiterConfig);
         refillRateLimiter = new RefillRateLimiter("refillBased", refillRateLimiterConfig);
 
@@ -81,6 +82,7 @@ public class RateLimiterBenchmark {
             Blackhole.consumeCPU(1);
             return "Hello Benchmark";
         };
+
         semaphoreGuardedSupplier = RateLimiter
             .decorateSupplier(semaphoreBasedRateLimiter, stringSupplier);
         atomicGuardedSupplier = RateLimiter.decorateSupplier(atomicRateLimiter, stringSupplier);
