@@ -70,7 +70,7 @@ public class RefillRateLimiterTest {
 
     private void setTimeOnNanos(long nanoTime) throws Exception {
         PowerMockito.doReturn(nanoTime)
-            .when(rateLimiter, "currentNanoTime");
+            .when(rateLimiter, "refillLimiterNanoTime");
     }
 
     public void setup(Duration timeoutDuration) {

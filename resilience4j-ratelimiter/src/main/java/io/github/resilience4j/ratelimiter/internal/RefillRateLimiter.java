@@ -130,6 +130,10 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
         return permits - currentPermits;
     }
 
+    /**
+     * Needed for testing. Inlining will take care of it.
+     * @return
+     */
     private long refillLimiterNanoTime() {
         return nanoTime();
     }
