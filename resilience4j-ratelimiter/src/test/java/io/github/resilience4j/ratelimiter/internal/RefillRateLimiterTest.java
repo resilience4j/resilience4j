@@ -22,6 +22,7 @@ import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RefillRateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.vavr.collection.HashMap;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -425,16 +426,13 @@ public class RefillRateLimiterTest {
     }
 
     /**
-     * Equivalent to {@link AtomicRateLimiterTest#reserveManyCyclesIfWegithgreaterThenLimitPerPeriod}
-     *
      * @throws Exception
      */
-    @Test
-    public void reserveManyCyclesIfWegithgreaterThenLimitPerPeriod() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS * 5));
+    @Test(expected = RequestNotPermitted.class)
+    public void tryToReserveMoreThatRateLimiterCapacity() throws Exception {
+        setup(Duration.ofNanos(PERIOD_IN_NANOS * 5), 0l);
         setTimeOnNanos(PERIOD_IN_NANOS);
-        long nanosToWait = rateLimiter.reservePermission(PERMISSIONS_IN_PERIOD * 3);
-        then(nanosToWait).isGreaterThan(PERIOD_IN_NANOS);
+        rateLimiter.reservePermission(PERMISSIONS_IN_PERIOD * 3);
     }
 
     /**
@@ -444,7 +442,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void rejectedByTimeoutNonBlocking() throws Exception {
-        setup(Duration.ZERO);
+        setup(Duration.ZERO, 0l);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         long permission = rateLimiter.reservePermission();
@@ -461,6 +459,11 @@ public class RefillRateLimiterTest {
 
         long updatedPeriod = PERIOD_IN_NANOS * 2 - 1;
         setTimeOnNanos(updatedPeriod);
+
+        RefillRateLimiter.State state = rateLimiter.state().get();
+        PowerMockito.doReturn(new AtomicReference<>(state.withTimeIndex(PERIOD_IN_NANOS)))
+            .when(rateLimiter, "state");
+
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo((PERIOD_IN_NANOS));
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
