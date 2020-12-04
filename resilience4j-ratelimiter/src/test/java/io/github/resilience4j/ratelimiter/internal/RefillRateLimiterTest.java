@@ -304,7 +304,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void reserveAndRefresh() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS));
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), 0l);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         boolean permission = rateLimiter.acquirePermission();
@@ -333,7 +333,7 @@ public class RefillRateLimiterTest {
          * Due to not acting in the context of cycles put on the time expected to reserve
          */
         then(metrics.getAvailablePermissions()).isEqualTo(0);
-        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
+        then(metrics.getNanosToWait()).isBetween(PERIOD_IN_NANOS-10, PERIOD_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
