@@ -55,6 +55,22 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
      * {@inheritDoc}
      */
     @Override
+    public void drainPermissions() {
+        AtomicRateLimiter.State prev;
+        AtomicRateLimiter.State next;
+        do {
+            prev = state().get();
+            next = calculateNextState(prev.getActivePermissions(), 0, prev);
+        } while (!compareAndSet(prev, next));
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(getName(), Math.min(prev.getActivePermissions(), 0)));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected State calculateNextState(final int permits, final long timeoutInNanos,
                                      final State activeState) {
         RateLimiterConfig config = activeState.getConfig();
@@ -82,21 +98,6 @@ public class AtomicRateLimiter extends BaseAtomicLimiter<RateLimiterConfig, Atom
         return nextState;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void drainPermissions() {
-        AtomicRateLimiter.State prev;
-        AtomicRateLimiter.State next;
-        do {
-            prev = state().get();
-            next = calculateNextState(prev.getActivePermissions(), 0, prev);
-        } while (!compareAndSet(prev, next));
-        if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(getName(), Math.min(prev.getActivePermissions(), 0)));
-        }
-    }
 
     /**
      * Calculates time to wait for the required permits of permissions to get accumulated

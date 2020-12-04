@@ -44,7 +44,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  */
 abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState<E>> implements RateLimiter {
 
-    protected static final long nanoTimeStart = nanoTime();
+    protected long nanoTimeStart;
 
     private final String name;
     private final AtomicInteger waitingThreads;
@@ -57,6 +57,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         this.waitingThreads = new AtomicInteger(0);
         this.state = state;
         this.tags = tags;
+        this.nanoTimeStart = nanoTime();
         this.eventProcessor =  new RateLimiterEventProcessor();
     }
 
@@ -117,7 +118,7 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
         long timeoutInNanos = state().get().getTimeoutInNanos();
         T modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
 
-        boolean canAcquireImmediately = modifiedState.getNanosToWait()<= 0;
+        boolean canAcquireImmediately = modifiedState.getNanosToWait() <= 0;
         if (canAcquireImmediately) {
             publishRateLimiterAcquisitionEvent(true, permits);
             return 0;
