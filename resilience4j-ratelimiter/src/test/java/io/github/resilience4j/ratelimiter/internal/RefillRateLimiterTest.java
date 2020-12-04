@@ -465,7 +465,7 @@ public class RefillRateLimiterTest {
             .when(rateLimiter, "state");
 
         then(metrics.getAvailablePermissions()).isEqualTo(0);
-        then(metrics.getNanosToWait()).isEqualTo((PERIOD_IN_NANOS));
+        then(metrics.getNanosToWait()).isEqualTo((1));
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
