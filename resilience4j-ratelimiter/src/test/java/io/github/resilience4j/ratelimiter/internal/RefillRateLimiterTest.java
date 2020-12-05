@@ -275,7 +275,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void acquireAndRefreshWithEventPublishing() throws Exception {
-        setup(Duration.ZERO);
+        setup(Duration.ZERO, PERIOD_IN_NANOS);
         setTimeOnNanos(PERIOD_IN_NANOS);
 
         boolean permission = rateLimiter.acquirePermission();
@@ -305,7 +305,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void reserveAndRefresh() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS), 0l);
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), PERIOD_IN_NANOS);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         boolean permission = rateLimiter.acquirePermission();
@@ -322,7 +322,7 @@ public class RefillRateLimiterTest {
             .atMost(5, SECONDS)
             .until(caller::getState, equalTo(Thread.State.TIMED_WAITING));
         then(metrics.getAvailablePermissions()).isEqualTo(-1);
-        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS + PERIOD_IN_NANOS);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS*2);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(1);
 
         setTimeOnNanos(PERIOD_IN_NANOS * 2 + 10);
@@ -331,10 +331,10 @@ public class RefillRateLimiterTest {
             .until(reservedPermission::get, equalTo(true));
 
         /**
-         * Due to not acting in the context of cycles put on the time expected to reserve
+         * The update happens due to the reservation and is on PERIOD_IN_NANOS*2 so 10 less nanos to be needed
          */
         then(metrics.getAvailablePermissions()).isEqualTo(0);
-        then(metrics.getNanosToWait()).isBetween(PERIOD_IN_NANOS-10, PERIOD_IN_NANOS);
+        then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS-10);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
     }
 
@@ -345,7 +345,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void reserveFewThenSkipNanosBeforeRefillNonBlocking() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS));
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), PERIOD_IN_NANOS);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         long permission = rateLimiter.reservePermission();
@@ -380,7 +380,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void reserveFewThenWaitBeforeReachingMaxCapacity() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS));
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), PERIOD_IN_NANOS);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         boolean permission = rateLimiter.acquirePermission();
@@ -444,7 +444,7 @@ public class RefillRateLimiterTest {
     public void rejectedByTimeoutNonBlocking() throws Exception {
         setup(Duration.ZERO, 0l);
 
-        setTimeOnNanos(PERIOD_IN_NANOS);
+        setTimeOnNanos(0l);
         long permission = rateLimiter.reservePermission();
         then(permission).isZero();
         then(metrics.getAvailablePermissions()).isEqualTo(0);
@@ -457,12 +457,8 @@ public class RefillRateLimiterTest {
         then(metrics.getNanosToWait()).isEqualTo(PERIOD_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
 
-        long updatedPeriod = PERIOD_IN_NANOS * 2 - 1;
+        long updatedPeriod = PERIOD_IN_NANOS - 1;
         setTimeOnNanos(updatedPeriod);
-
-        RefillRateLimiter.State state = rateLimiter.state().get();
-        PowerMockito.doReturn(new AtomicReference<>(state.withTimeIndex(PERIOD_IN_NANOS)))
-            .when(rateLimiter, "state");
 
         then(metrics.getAvailablePermissions()).isEqualTo(0);
         then(metrics.getNanosToWait()).isEqualTo((1));
@@ -476,7 +472,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void waitingThreadIsInterrupted() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS));
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), PERIOD_IN_NANOS);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         boolean permission = rateLimiter.acquirePermission();
@@ -520,7 +516,7 @@ public class RefillRateLimiterTest {
      */
     @Test
     public void changePermissionsLimitBetweenCycles() throws Exception {
-        setup(Duration.ofNanos(PERIOD_IN_NANOS), 0);
+        setup(Duration.ofNanos(PERIOD_IN_NANOS), PERIOD_IN_NANOS);
 
         setTimeOnNanos(PERIOD_IN_NANOS);
         boolean permission = rateLimiter.acquirePermission();
@@ -570,7 +566,7 @@ public class RefillRateLimiterTest {
         Duration timeoutDuration = Duration.ofMillis(12);
         long periodInNanos = limitRefreshPeriod.toNanos();
 
-        setup(limitRefreshPeriod, timeoutDuration, limitForPeriod, 0);
+        setup(limitRefreshPeriod, timeoutDuration, limitForPeriod, periodInNanos);
         setTimeOnNanos(periodInNanos);
 
         ArrayList<Long> timesToWait = new ArrayList<>();

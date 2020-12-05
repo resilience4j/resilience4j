@@ -71,10 +71,13 @@ public class RefillRateLimiter extends BaseAtomicLimiter<RefillRateLimiterConfig
 
         long currentNanoTime = refillLimiterNanoTime();
 
-        if(permissionsNeededExtra<0) {
+        if(permissionsNeededExtra<=0) {
             return new State(activeState.getConfig(), -permissionsNeededExtra, 0, activeState.timeIndex);
+            /*
         } else if(permissionsNeededExtra==0) {
             return new State(activeState.getConfig(), 0, 0, currentNanoTime);
+
+             */
         } else {
             assertLessPermitsThanCapacity(permits, activeState);
             return lazyPermissionCalculation(permits ,permissionsNeededExtra, activeState, currentNanoTime, timeoutInNanos);
