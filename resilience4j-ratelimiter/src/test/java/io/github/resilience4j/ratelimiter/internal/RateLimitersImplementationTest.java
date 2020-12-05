@@ -1,6 +1,5 @@
 package io.github.resilience4j.ratelimiter.internal;
 
-import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
@@ -90,8 +89,6 @@ public abstract class RateLimitersImplementationTest {
         boolean retryInSecondCyclePermission = limiter.acquirePermission();
         then(retryInSecondCyclePermission).isTrue();
     }
-
-
 
     @Test
     public void drainCycleWhichAlreadyHashNoPremitsLeftTest() {
