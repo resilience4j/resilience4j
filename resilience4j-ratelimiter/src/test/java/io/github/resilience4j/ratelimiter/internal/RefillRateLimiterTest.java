@@ -32,9 +32,14 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -722,6 +727,54 @@ public class RefillRateLimiterTest {
         }
 
         Assert.assertFalse(refillRateLimiter.acquirePermission(1));
+    }
+
+    @Test
+    public void testScenarioTest() throws Exception {
+        String scenario = "refill_no_wait_five_bucket_scenario.csv";
+        List<RefillScenarioEntry> entries = getRefillScenarioEntries(scenario);
+
+        RefillRateLimiterConfig rateLimiterConfig = RefillRateLimiterConfig.custom()
+            .initialPermits(5)
+            .limitForPeriod(1)
+            .limitRefreshPeriod(Duration.ofNanos(1))
+            .permitCapacity(5)
+            .timeoutDuration(Duration.ZERO)
+            .build();
+
+        RefillRateLimiter refillRateLimiter = new RefillRateLimiter("refill_bucket_five", rateLimiterConfig,
+            HashMap.empty(),
+            1);
+
+        rateLimiter = PowerMockito.spy(refillRateLimiter);
+
+        for(RefillScenarioEntry entry: entries) {
+            setTimeOnNanos(entry.getNano());
+            boolean result = rateLimiter.acquirePermission(entry.getRequest());
+            Assert.assertEquals(entry.getResult(), result);
+        }
+    }
+
+    private List<RefillScenarioEntry> getRefillScenarioEntries(String scenario) throws IOException {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(scenario);
+        List<RefillScenarioEntry> entries = new ArrayList<>();
+        try(BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+
+            String line = br.readLine();
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                RefillScenarioEntry refillScenarioEntry = new RefillScenarioEntry(
+                    Long.valueOf(values[0]),
+                    Integer.parseInt(values[1]),
+                    Integer.parseInt(values[2]),
+                    Integer.parseInt(values[3]),
+                    Boolean.parseBoolean(values[4])
+                );
+
+                entries.add(refillScenarioEntry);
+            }
+        }
+        return entries;
     }
 
     private void waitForMaxPermissions(
