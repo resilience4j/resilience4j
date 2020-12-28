@@ -66,5 +66,18 @@ public class RetryEventDTOFactoryTest {
         assertThat(retryEventDTO.getErrorMessage()).isEqualTo("java.io.IOException: Error Message");
         assertThat(retryEventDTO.getCreationTime()).isNotNull();
     }
+
+    @Test
+    public void shouldMapRetryOnRetryEventWithoutThrowable() {
+        RetryOnRetryEvent event = new RetryOnRetryEvent("name", 1, null, 5000);
+
+        RetryEventDTO retryEventDTO = RetryEventDTOFactory.createRetryEventDTO(event);
+
+        assertThat(retryEventDTO.getRetryName()).isEqualTo("name");
+        assertThat(retryEventDTO.getNumberOfAttempts()).isEqualTo(1);
+        assertThat(retryEventDTO.getType()).isEqualTo(RetryEvent.Type.RETRY);
+        assertThat(retryEventDTO.getErrorMessage()).isNull();
+        assertThat(retryEventDTO.getCreationTime()).isNotNull();
+    }
 }
 

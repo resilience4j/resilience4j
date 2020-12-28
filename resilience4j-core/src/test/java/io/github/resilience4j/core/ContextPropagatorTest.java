@@ -1,11 +1,30 @@
-package io.github.resilience4j.bulkhead;
+/*
+ *
+ *  Copyright 2020 krnsaurabh
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ */
+package io.github.resilience4j.core;
 
-import io.github.resilience4j.bulkhead.TestContextPropagators.TestThreadLocalContextPropagator;
+import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagator;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,6 +59,15 @@ public class ContextPropagatorTest {
 
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
             assertThat(future).isCompletedWithValue("Hello World")));
+    }
+
+    @Test
+    public void contextPropagationEmptyListShouldNotFailWithCallable() {
+        //Thread boundary
+        Callable<String> decorateCallable = ContextPropagator.decorateCallable(Collections.emptyList(), () -> "Hello World");
+
+        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(decorateCallable.call()).isEqualTo("Hello World")));
     }
 
     @Test
@@ -86,6 +114,29 @@ public class ContextPropagatorTest {
     }
 
     @Test
+    public void contextPropagationSupplierMultipleTestWithCallable() {
+        ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
+        threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
+
+        ThreadLocal<String> threadLocalTwo = new ThreadLocal<>();
+        threadLocalTwo.set("SecondValueShouldCrossThreadBoundary");
+
+        TestThreadLocalContextPropagator propagatorOne = new TestThreadLocalContextPropagator(threadLocalOne);
+        TestThreadLocalContextPropagator propagatorTwo = new TestThreadLocalContextPropagator(threadLocalTwo);
+
+        Callable<List<String>> callable = ContextPropagator.decorateCallable(
+            Arrays.asList(propagatorOne, propagatorTwo),
+            () -> Arrays.asList(threadLocalOne.get(), threadLocalTwo.get()));
+        //Thread boundary
+
+        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+            assertThat(callable.call()).containsExactlyInAnyOrder(
+                "FirstValueShouldCrossThreadBoundary",
+                "SecondValueShouldCrossThreadBoundary")
+        ));
+    }
+
+    @Test
     public void contextPropagationSupplierSingleTest() {
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShouldCrossThreadBoundary");
@@ -98,6 +149,19 @@ public class ContextPropagatorTest {
 
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
             assertThat(future).isCompletedWithValue("SingleValueShouldCrossThreadBoundary")));
+    }
+
+    @Test
+    public void contextPropagationSupplierSingleTestWithCallable() {
+        ThreadLocal<String> threadLocal = new ThreadLocal<>();
+        threadLocal.set("SingleValueShouldCrossThreadBoundary");
+
+        Callable<String> callable = ContextPropagator.decorateCallable(
+            new TestThreadLocalContextPropagator(threadLocal),
+            threadLocal::get);
+
+        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
+            assertThat(callable.call()).isEqualTo("SingleValueShouldCrossThreadBoundary")));
     }
 
     @Test

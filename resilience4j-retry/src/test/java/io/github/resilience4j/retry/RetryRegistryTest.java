@@ -383,7 +383,7 @@ public class RetryRegistryTest {
     public void testCreateUsingBuilderWithRegistryStore() {
         RetryRegistry retryRegistry = RetryRegistry.custom()
             .withRetryConfig(RetryConfig.ofDefaults())
-            .withRegistryStore(new InMemoryRegistryStore())
+            .withRegistryStore(new InMemoryRegistryStore<>())
             .build();
         Retry retry = retryRegistry.retry("testName");
         Retry retry2 = retryRegistry.retry("otherTestName");

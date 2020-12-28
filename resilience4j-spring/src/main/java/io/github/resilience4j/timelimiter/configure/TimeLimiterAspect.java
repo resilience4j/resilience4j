@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.timelimiter.configure;
 
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.FallbackMethod;
@@ -45,8 +46,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
 
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final TimeLimiterConfigurationProperties properties;
-    private static final ScheduledExecutorService timeLimiterExecutorService = Executors
-        .newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService timeLimiterExecutorService;
     @Nullable
     private final List<TimeLimiterAspectExt> timeLimiterAspectExtList;
     private final FallbackDecorators fallbackDecorators;
@@ -56,12 +56,16 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
                              TimeLimiterConfigurationProperties properties,
                              @Nullable List<TimeLimiterAspectExt> timeLimiterAspectExtList,
                              FallbackDecorators fallbackDecorators,
-                             SpelResolver spelResolver) {
+                             SpelResolver spelResolver,
+                             @Nullable ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.properties = properties;
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackDecorators = fallbackDecorators;
         this.spelResolver = spelResolver;
+        this.timeLimiterExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
+            contextAwareScheduledThreadPoolExecutor :
+            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     @Pointcut(value = "@within(timeLimiter) || @annotation(timeLimiter)", argNames = "timeLimiter")
@@ -139,7 +143,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         }
     }
 
-    private static Object handleJoinPointCompletableFuture(
+    private Object handleJoinPointCompletableFuture(
             ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.timelimiter.TimeLimiter timeLimiter) throws Throwable {
         return timeLimiter.executeCompletionStage(timeLimiterExecutorService, () -> {
             try {

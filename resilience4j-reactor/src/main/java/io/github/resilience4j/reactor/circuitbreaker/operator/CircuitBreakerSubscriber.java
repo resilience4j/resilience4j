@@ -20,7 +20,6 @@ import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
@@ -53,7 +52,7 @@ class CircuitBreakerSubscriber<T> extends AbstractSubscriber<T> {
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
             if (singleProducer && successSignaled.compareAndSet(false, true)) {
-                circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
+                circuitBreaker.onResult(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), value);
             }
             eventWasEmitted.set(true);
 

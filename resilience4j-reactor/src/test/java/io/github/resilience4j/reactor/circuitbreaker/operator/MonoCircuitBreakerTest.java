@@ -60,7 +60,7 @@ public class MonoCircuitBreakerTest {
             .verifyComplete();
 
         then(helloWorldService).should().returnHelloWorld();
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onResult(anyLong(), any(TimeUnit.class), any(String.class));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -79,7 +79,7 @@ public class MonoCircuitBreakerTest {
             .verifyComplete();
 
         then(helloWorldService).should().returnHelloWorld();
-        verify(circuitBreaker, times(1)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(1)).onResult(anyLong(), any(TimeUnit.class), any(String.class));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -101,7 +101,7 @@ public class MonoCircuitBreakerTest {
             .verifyComplete();
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
-        verify(circuitBreaker, times(3)).onSuccess(anyLong(), any(TimeUnit.class));
+        verify(circuitBreaker, times(3)).onResult(anyLong(), any(TimeUnit.class), any(String.class));
         verify(circuitBreaker, never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }

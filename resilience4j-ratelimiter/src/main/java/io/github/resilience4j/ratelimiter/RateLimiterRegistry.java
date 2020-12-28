@@ -265,7 +265,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
     class Builder {
 
         private static final String DEFAULT_CONFIG = "default";
-        private RegistryStore registryStore;
+        private RegistryStore<RateLimiter> registryStore;
         private Map<String, RateLimiterConfig> rateLimiterConfigsMap;
         private List<RegistryEventConsumer<RateLimiter>> registryEventConsumers;
         private io.vavr.collection.Map<String, String> tags;
@@ -275,7 +275,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
             this.registryEventConsumers = new ArrayList<>();
         }
 
-        public Builder withRegistryStore(RegistryStore registryStore) {
+        public Builder withRegistryStore(RegistryStore<RateLimiter> registryStore) {
             this.registryStore = registryStore;
             return this;
         }

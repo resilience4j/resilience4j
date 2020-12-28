@@ -21,6 +21,7 @@ package io.github.resilience4j.ratelimiter.internal;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
@@ -167,11 +168,11 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
             boolean success = semaphore
                 .tryAcquire(permits, rateLimiterConfig.get().getTimeoutDuration().toNanos(),
                     TimeUnit.NANOSECONDS);
-            publishRateLimiterEvent(success, permits);
+            publishRateLimiterAcquisitionEvent(success, permits);
             return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            publishRateLimiterEvent(false, permits);
+            publishRateLimiterAcquisitionEvent(false, permits);
             return false;
         }
     }
@@ -197,6 +198,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     public long reservePermission(int permits) {
         throw new UnsupportedOperationException(
             "Reserving permissions is not supported in the semaphore based implementation");
+    }
+
+    @Override
+    public void drainPermissions() {
+        int permits = semaphore.drainPermits();
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, permits));
+        }
     }
 
     /**
@@ -241,7 +250,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return tags;
     }
 
-    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+    private void publishRateLimiterAcquisitionEvent(boolean permissionAcquired, int permits) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }

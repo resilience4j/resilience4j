@@ -5,6 +5,7 @@ dependencies {
     compile project(':resilience4j-retry')
     compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-timelimiter')
+    testCompile project(':resilience4j-test')
 }
 
 ext.moduleName = 'io.github.resilience4j.frameworkcommon'
