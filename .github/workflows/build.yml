@@ -1,0 +1,73 @@
+name: Build
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+jobs:
+  validation:
+    name: "Gradle wrapper validation"
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: gradle/wrapper-validation-action@v1
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+    - name: Set up JDK
+      uses: joschi/setup-jdk@v2.3.0
+      with:
+        java-version: 8
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v2.1.3
+      if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+    - name: Build
+      id: gradle
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: check
+        dependencies-cache-enabled: true
+        configuration-cache-enabled: true
+    - name: Comment build scan URL
+      uses: actions/github-script@v3
+      if: github.event_name == 'pull_request' && steps.gradle.outputs.build-scan-url != '' && failure()
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '❌ ${{ github.workflow }} failed: ${{ steps.gradle.outputs.build-scan-url }}'
+          })
+    - name: Analyze with SonarCloud
+      if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
+      uses: eskatos/gradle-command-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        arguments: sonarqube -Psonar.organization=resilience4j
+        dependencies-cache-enabled: true
+        configuration-cache-enabled: true
+    - name: Publish
+      if: env.BINTRAY_USER != null && env.BINTRAY_USER != '' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: eskatos/gradle-command-action@v1
+      env:
+        BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+        BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+      with:
+        arguments: artifactoryPublish -PbintrayUsername="${BINTRAY_USER}" -PbintrayApiKey="${BINTRAY_KEY}"
+        dependencies-cache-enabled: true
+        configuration-cache-enabled: true
