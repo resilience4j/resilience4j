@@ -4,6 +4,7 @@ plugins {
     id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
     id "com.jfrog.artifactory" version "4.18.3"
+    id "org.gradle.test-retry" version "1.2.0"
     id 'idea'
 }
 
@@ -42,6 +43,7 @@ configure(project.coreProjects) {
     apply plugin: 'com.jfrog.artifactory'
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: 'me.champeau.gradle.jmh'
+    apply plugin: "org.gradle.test-retry"
 
     dependencies {
         compile(libraries.vavr)
@@ -73,7 +75,12 @@ configure(project.coreProjects) {
         duplicateClassesStrategy = 'warn'
     }
 
-
+    test {
+        retry {
+            maxRetries = 3
+            maxFailures = 20
+        }
+    }
 
     jacocoTestReport {
         reports {
