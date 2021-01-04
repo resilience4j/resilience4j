@@ -38,7 +38,6 @@ import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -336,8 +335,6 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(2)).isEqualTo(1111);
-        assertThat(backendConfig.getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(1L));
         assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1))
             .isEqualByComparingTo(1000L);
     }

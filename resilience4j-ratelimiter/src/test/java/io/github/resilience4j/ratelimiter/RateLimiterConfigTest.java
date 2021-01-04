@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.vavr.control.Either;
+import io.github.resilience4j.core.functions.Either;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

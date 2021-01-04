@@ -21,8 +21,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerHystrixStreamEventsDTO;
-import io.vavr.collection.Array;
-import io.vavr.collection.Seq;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
@@ -66,12 +64,12 @@ public class CircuitBreakerHystrixServerSideEvent {
 
     @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> getAllCircuitBreakerHystrixStreamEvents() {
-        Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
-            .map(
+        Flux<CircuitBreakerEvent> eventStreams = Flux.fromIterable(circuitBreakerRegistry.getAllCircuitBreakers())
+            .flatMap(
                 circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
         BiFunction<CircuitBreakerEvent, CircuitBreaker, String> data = getCircuitBreakerEventStringFunction();
-        return Flux.merge(publishEvents(Array.ofAll(eventStreams)), getHeartbeatStream());
+        return Flux.merge(publishEvents(eventStreams), getHeartbeatStream());
     }
 
     @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
@@ -80,7 +78,7 @@ public class CircuitBreakerHystrixServerSideEvent {
 
         CircuitBreaker circuitBreaker = getCircuitBreaker(name);
         Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher());
-        return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
+        return Flux.merge(publishEvents(eventStream), getHeartbeatStream());
 
     }
 
@@ -93,7 +91,7 @@ public class CircuitBreakerHystrixServerSideEvent {
             .filter(
                 event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
             );
-        return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
+        return Flux.merge(publishEvents(eventStream), getHeartbeatStream());
 
     }
 
@@ -123,9 +121,9 @@ public class CircuitBreakerHystrixServerSideEvent {
             .map(i -> ServerSentEvent.<String>builder().event("ping").build());
     }
 
-    private Flux<ServerSentEvent<String>> publishEvents(Seq<Flux<CircuitBreakerEvent>> eventStreams) {
+    private Flux<ServerSentEvent<String>> publishEvents(Flux<CircuitBreakerEvent> eventStreams) {
         BiFunction<CircuitBreakerEvent, CircuitBreaker, String> circuitBreakerEventDataFn = getCircuitBreakerEventStringFunction();
-        return Flux.merge(eventStreams)
+        return eventStreams
             .onBackpressureDrop()
             .delayElements(Duration.ofMillis(100))
             .map(cbEvent ->

@@ -1,7 +1,7 @@
 package io.github.resilience4j.common;
 
 import io.github.resilience4j.core.IntervalBiFunction;
-import io.vavr.control.Either;
+import io.github.resilience4j.core.functions.Either;
 
 public class TestIntervalBiFunction implements IntervalBiFunction<Object> {
     @Override

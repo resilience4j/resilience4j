@@ -15,12 +15,11 @@
  */
 package io.github.resilience4j.rxjava3.ratelimiter.operator;
 
-import io.github.resilience4j.rxjava3.AbstractSubscriber;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.rxjava3.AbstractSubscriber;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.internal.subscriptions.EmptySubscription;
-import io.vavr.control.Either;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 

@@ -20,8 +20,9 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.IntervalBiFunction;
+import io.github.resilience4j.core.functions.CheckedConsumer;
+import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.MaxRetriesExceeded;
 import io.github.resilience4j.retry.MaxRetriesExceededException;
@@ -155,10 +156,10 @@ public class RetryImpl<T> implements Retry {
             } else {
                 if (currentNumOfAttempts >= maxAttempts) {
                     failedAfterRetryCounter.increment();
-                    Throwable throwable = Option.of(lastException.get())
-                        .orElse(Option.of(lastRuntimeException.get()))
+                    Throwable throwable = Optional.ofNullable(lastException.get())
+                        .or(() -> Optional.ofNullable(lastRuntimeException.get()))
                         .filter(p -> !failAfterMaxAttempts)
-                        .getOrElse(new MaxRetriesExceeded(
+                        .orElse(new MaxRetriesExceeded(
                             "max retries is reached out for the result predicate check"
                         ));
                     publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts, throwable));
@@ -267,9 +268,9 @@ public class RetryImpl<T> implements Retry {
             } else {
                 if (currentNumOfAttempts >= maxAttempts) {
                     failedAfterRetryCounter.increment();
-                    Throwable throwable = Option.of(lastException.get())
+                    Throwable throwable = Optional.ofNullable(lastException.get())
                         .filter(p -> !failAfterMaxAttempts)
-                        .getOrElse(new MaxRetriesExceeded(
+                        .orElse(new MaxRetriesExceeded(
                             "max retries is reached out for the result predicate check"
                         ));
 

@@ -15,14 +15,13 @@
  */
 package io.github.resilience4j.rxjava3.ratelimiter.operator;
 
-import io.github.resilience4j.rxjava3.AbstractSingleObserver;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.rxjava3.AbstractSingleObserver;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
-import io.vavr.control.Either;
 
 import java.util.concurrent.TimeUnit;
 
