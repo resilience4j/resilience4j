@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.ratelimiter.configure;
 
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -22,7 +23,6 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -112,7 +112,7 @@ public class RateLimiterAspect implements Ordered {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
             methodName, name);
         Class<?> returnType = method.getReturnType();
-        final CheckedFunction0<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
+        final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
     }
 

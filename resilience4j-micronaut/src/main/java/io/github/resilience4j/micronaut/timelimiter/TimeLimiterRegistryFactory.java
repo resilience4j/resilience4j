@@ -32,7 +32,6 @@ import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.util.StringUtils;
-import io.vavr.collection.HashMap;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
@@ -109,8 +108,7 @@ public class TimeLimiterRegistryFactory {
                 entry -> timeLimiterConfigurationProperties.createTimeLimiterConfig(
                     entry.getKey(), entry.getValue(), compositeTimeLimiterCustomizer)));
 
-        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer,
-            HashMap.ofAll(timeLimiterConfigurationProperties.getTags()));
+        return TimeLimiterRegistry.of(configs, timeLimiterRegistryEventConsumer, timeLimiterConfigurationProperties.getTags());
     }
 
     /**

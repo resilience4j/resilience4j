@@ -1,21 +1,21 @@
 package io.github.resilience4j.micronaut.retry
 
+import io.github.resilience4j.core.functions.Either
 import io.github.resilience4j.retry.RetryRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
-import io.vavr.control.Either
 import spock.lang.Specification
 
 import javax.inject.Inject
 
 @MicronautTest
 @Property(name = "resilience4j.retry.enabled", value = "true")
-@Property(name = "resilience4j.retry.configs.default.maxRetryAttempts", value = "3")
+@Property(name = "resilience4j.retry.configs.default.maxAttempts", value = "3")
 @Property(name = "resilience4j.retry.configs.default.waitDuration", value = "PT1S")
 @Property(name = "resilience4j.retry.configs.default.retryExceptions", value = "java.io.IOException")
 @Property(name = "resilience4j.retry.instances.backendA.baseConfig", value = "default")
-@Property(name = "resilience4j.retry.instances.backendA.maxRetryAttempts", value = "1")
+@Property(name = "resilience4j.retry.instances.backendA.maxAttempts", value = "1")
 class RetryRegistrySpec extends Specification {
     @Inject
     ApplicationContext applicationContext

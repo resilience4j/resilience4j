@@ -134,8 +134,7 @@ public class RateLimiterRegistryFactory {
                     .createRateLimiterConfig(entry.getValue(), compositeRateLimiterCustomizer,
                         entry.getKey())));
 
-        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer,
-            io.vavr.collection.HashMap.ofAll(rateLimiterConfigurationProperties.getTags()));
+        return RateLimiterRegistry.of(configs, rateLimiterRegistryEventConsumer, rateLimiterConfigurationProperties.getTags());
     }
 
 }

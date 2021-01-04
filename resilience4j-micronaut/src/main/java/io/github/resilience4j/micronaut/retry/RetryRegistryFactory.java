@@ -128,7 +128,6 @@ public class RetryRegistryFactory {
                     .createRetryConfig(entry.getValue(), compositeRateLimiterCustomizer,
                         entry.getKey())));
 
-        return RetryRegistry.of(configs, rateLimiterRegistryEventConsumer,
-            io.vavr.collection.HashMap.ofAll(retryProperties.getTags()));
+        return RetryRegistry.of(configs, rateLimiterRegistryEventConsumer, retryProperties.getTags());
     }
 }

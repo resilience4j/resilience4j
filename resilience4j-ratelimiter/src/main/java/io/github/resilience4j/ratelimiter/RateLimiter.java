@@ -23,6 +23,7 @@ import io.github.resilience4j.core.exception.AcquirePermissionCancelledException
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
@@ -34,7 +35,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
-import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -215,7 +215,14 @@ public interface RateLimiter {
                                                           CheckedSupplier<T> supplier) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            return supplier.get();
+            try {
+                T result = supplier.get();
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -245,7 +252,13 @@ public interface RateLimiter {
 
         return () -> {
             waitForPermission(rateLimiter, permits);
-            runnable.run();
+            try {
+                runnable.run();
+                rateLimiter.onSuccess();
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -275,10 +288,8 @@ public interface RateLimiter {
      */
     static <T, R> CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
                                                                  int permits, CheckedFunction<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permits);
-            return function.apply(t);
-        };
+        return (T t) -> decorateCheckedSupplier(rateLimiter, permits, () -> function.apply(t))
+            .get();
     }
 
     /**
@@ -294,10 +305,8 @@ public interface RateLimiter {
      */
     static <T, R> CheckedFunction<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
                                                                  Function<T, Integer> permitsCalculator, CheckedFunction<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            return function.apply(t);
-        };
+        return (T t) -> decorateCheckedFunction(rateLimiter, permitsCalculator.apply(t), function)
+            .apply(t);
     }
 
     /**

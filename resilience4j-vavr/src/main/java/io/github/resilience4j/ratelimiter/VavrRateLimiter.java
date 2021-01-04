@@ -38,8 +38,7 @@ public interface VavrRateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter,
-                                                           CheckedFunction0<T> supplier) {
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter, CheckedFunction0<T> supplier) {
         return decorateCheckedSupplier(rateLimiter, 1, supplier);
     }
 
@@ -56,7 +55,14 @@ public interface VavrRateLimiter {
                                                            CheckedFunction0<T> supplier) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            return supplier.apply();
+            try {
+                T result = supplier.apply();
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -67,9 +73,7 @@ public interface VavrRateLimiter {
      * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
-    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter,
-                                                   CheckedRunnable runnable) {
-
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, CheckedRunnable runnable) {
         return decorateCheckedRunnable(rateLimiter, 1, runnable);
     }
 
@@ -81,12 +85,16 @@ public interface VavrRateLimiter {
      * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
-    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, int permits,
-                                                   CheckedRunnable runnable) {
-
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, int permits, CheckedRunnable runnable) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            runnable.run();
+            try {
+                runnable.run();
+                rateLimiter.onSuccess();
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -116,10 +124,8 @@ public interface VavrRateLimiter {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
                                                                  int permits, CheckedFunction1<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permits);
-            return function.apply(t);
-        };
+        return (T t) -> decorateCheckedSupplier(rateLimiter, permits, () -> function.apply(t))
+            .apply();
     }
 
     /**
@@ -135,10 +141,8 @@ public interface VavrRateLimiter {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
                                                                  Function<T, Integer> permitsCalculator, CheckedFunction1<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            return function.apply(t);
-        };
+        return (T t) -> decorateCheckedFunction(rateLimiter, permitsCalculator.apply(t), function)
+            .apply(t);
     }
 
     /**
@@ -149,8 +153,7 @@ public interface VavrRateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter,
-                                                    Supplier<Try<T>> supplier) {
+    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, Supplier<Try<T>> supplier) {
         return decorateTrySupplier(rateLimiter, 1, supplier);
     }
 
@@ -163,12 +166,22 @@ public interface VavrRateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, int permits,
-                                                    Supplier<Try<T>> supplier) {
+    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, int permits, Supplier<Try<T>> supplier) {
         return () -> {
             try {
                 waitForPermission(rateLimiter, permits);
-                return supplier.get();
+                try {
+                    Try<T> result = supplier.get();
+                    if (result.isSuccess()) {
+                        rateLimiter.onResult(result.get());
+                    } else {
+                        rateLimiter.onError(result.getCause());
+                    }
+                    return result;
+                } catch (Exception exception) {
+                    rateLimiter.onError(exception);
+                    throw exception;
+                }
             } catch (RequestNotPermitted requestNotPermitted) {
                 return Try.failure(requestNotPermitted);
             }
@@ -202,7 +215,18 @@ public interface VavrRateLimiter {
         return () -> {
             try {
                 waitForPermission(rateLimiter, permits);
-                return Either.narrow(supplier.get());
+                try {
+                    Either<? extends Exception, T> result = supplier.get();
+                    if (result.isRight()) {
+                        rateLimiter.onResult(result.get());
+                    } else {
+                        rateLimiter.onError(result.getLeft());
+                    }
+                    return Either.narrow(result);
+                } catch (Exception exception) {
+                    rateLimiter.onError(exception);
+                    throw exception;
+                }
             } catch (RequestNotPermitted requestNotPermitted) {
                 return Either.left(requestNotPermitted);
             }

@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.core;
 
-import io.vavr.control.Either;
+import io.github.resilience4j.core.functions.Either;
 
 import java.util.function.Function;
 

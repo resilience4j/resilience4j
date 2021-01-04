@@ -217,7 +217,7 @@ public class FeignDecorators implements FeignDecorator {
             return this;
         }
 
-        private void addFeignDecorator(UnaryOperator<CheckedFunction1<Object[], Object>> decorator) {
+        private void addFeignDecorator(UnaryOperator<CheckedFunction<Object[], Object>> decorator) {
             decorators
                 .add((fn, m, mh, t) -> {
                     // prevent default methods from being decorated

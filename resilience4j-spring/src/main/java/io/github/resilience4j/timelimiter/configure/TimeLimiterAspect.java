@@ -17,6 +17,7 @@
 package io.github.resilience4j.timelimiter.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
@@ -24,7 +25,6 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -87,7 +87,7 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         io.github.resilience4j.timelimiter.TimeLimiter timeLimiter =
             getOrCreateTimeLimiter(methodName, name);
         Class<?> returnType = method.getReturnType();
-        final CheckedFunction0<Object> timeLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType);
+        final CheckedSupplier<Object> timeLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, timeLimiterAnnotation.fallbackMethod(), timeLimiterExecution);
     }
 
