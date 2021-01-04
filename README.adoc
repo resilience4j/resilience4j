@@ -96,6 +96,8 @@ Setup and usage is described in our *https://resilience4j.readme.io/docs[User Gu
 
 - https://github.com/resilience4j-docs-ja/resilience4j-docs-ja[有志による日本語訳(非公式) Japanese translation by volunteers(Unofficial)]
 
+- https://github.com/lmhmhl/Resilience4j-Guides-Chinese[这是Resilience4j的非官方中文文档 Chinese translation by volunteers(Unofficial)]
+
 == Overview
 
 Resilience4j provides several core modules:
