@@ -13,7 +13,7 @@ ext {
     powermockVersion = '2.0.0'
     jcacheVersion = '1.1.0'
     awaitilityVersion = '1.7.0'
-    metricsVersion = '3.2.6'
+    metricsVersion = '4.1.16'
     vertxVersion = '3.7.0'
     aspectjVersion = '1.9.2'
     springVersion = '5.2.6.RELEASE'
