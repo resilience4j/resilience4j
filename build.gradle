@@ -3,20 +3,21 @@ plugins {
     id "com.jfrog.bintray" version "1.8.5"
     id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
-    id "com.jfrog.artifactory" version "4.18.1"
+    id "com.jfrog.artifactory" version "4.18.3"
+    id "org.gradle.test-retry" version "1.2.0"
     id 'idea'
 }
 
 apply from: "${rootDir}/libraries.gradle"
 
 ext {
-    releaseVersion = '1.7.0'
+    releaseVersion = '1.6.1'
 }
 
 allprojects {
     apply plugin: 'jacoco'
 
-    version = '1.7.0'
+    version = '1.7.0-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
@@ -42,6 +43,7 @@ configure(project.coreProjects) {
     apply plugin: 'com.jfrog.artifactory'
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: 'me.champeau.gradle.jmh'
+    apply plugin: "org.gradle.test-retry"
 
     dependencies {
         compile(libraries.vavr)
@@ -73,7 +75,13 @@ configure(project.coreProjects) {
         duplicateClassesStrategy = 'warn'
     }
 
-
+    test {
+        retry {
+            maxRetries = 3
+            maxFailures = 20
+            failOnPassedAfterRetry = true
+        }
+    }
 
     jacocoTestReport {
         reports {
