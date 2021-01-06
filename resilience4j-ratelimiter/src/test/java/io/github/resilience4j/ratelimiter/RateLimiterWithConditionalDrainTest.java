@@ -18,34 +18,19 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.core.functions.CallsResult;
 import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.concurrent.Future;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.LockSupport;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.API.*;
-import static io.vavr.Predicates.instanceOf;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willCallRealMethod;
 import static org.mockito.Mockito.*;
 
 
@@ -56,7 +41,7 @@ public class RateLimiterWithConditionalDrainTest {
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
 
-    private Function<CallsResult, Boolean> drainConditionChecker;
+    private Function<Either<? extends Throwable, ?>, Boolean> drainConditionChecker;
     private RateLimiterConfig config;
     private RateLimiter limit;
 
@@ -70,6 +55,10 @@ public class RateLimiterWithConditionalDrainTest {
             .drainPermissionsOnResult(drainConditionChecker)
             .build();
         limit = mock(RateLimiter.class);
+        willCallRealMethod().given(limit).onResult(any());
+        willCallRealMethod().given(limit).onSuccess();
+        willCallRealMethod().given(limit).onError(any());
+        willCallRealMethod().given(limit).drainIfNeeded(any());
         given(limit.getRateLimiterConfig()).willReturn(config);
     }
 
@@ -83,7 +72,7 @@ public class RateLimiterWithConditionalDrainTest {
         Try result = Try.of(decorated);
 
         assertThat(result.isSuccess()).isTrue();
-        verify(drainConditionChecker).apply(argThat(CallsResult::isSuccessful));
+        verify(drainConditionChecker).apply(argThat(Either::isRight));
         verify(limit, never()).drainPermissions();
     }
 
@@ -98,7 +87,7 @@ public class RateLimiterWithConditionalDrainTest {
         Try result = Try.of(decorated);
 
         assertThat(result.isFailure()).isTrue();
-        verify(drainConditionChecker).apply(argThat(CallsResult::isFailed));
+        verify(drainConditionChecker).apply(argThat(Either::isLeft));
         verify(limit, never()).drainPermissions();
     }
 
@@ -112,9 +101,7 @@ public class RateLimiterWithConditionalDrainTest {
         Try result = Try.of(decorated);
 
         assertThat(result.isSuccess()).isTrue();
-        verify(drainConditionChecker).apply(argThat(CallsResult::isSuccessful));
+        verify(drainConditionChecker).apply(argThat(Either::isRight));
         verify(limit).drainPermissions();
     }
-
-    // TODO: I'll write more tests after this features implementation was approved
 }

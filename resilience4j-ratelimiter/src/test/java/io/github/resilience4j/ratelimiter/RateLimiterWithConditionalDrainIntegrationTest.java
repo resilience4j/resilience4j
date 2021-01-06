@@ -5,6 +5,8 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.function.Supplier;
 
+import static io.github.resilience4j.core.ResultUtils.isFailedAndThrown;
+import static io.github.resilience4j.core.ResultUtils.isSuccessfulAndReturned;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -16,7 +18,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
             .drainPermissionsOnResult(
-                callsResult -> callsResult.isFailedAndThrown(SubsystemOverloadException.class))
+                callsResult -> isFailedAndThrown(callsResult, SubsystemOverloadException.class))
             .build());
         Runnable call = () -> {
             throw new SpecificSubsystemOverloadException();
@@ -35,7 +37,8 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
             .drainPermissionsOnResult(
-                callsResult -> callsResult.isSuccessfulAndReturned(
+                callsResult -> isSuccessfulAndReturned(
+                    callsResult,
                     ResponseWithOverloadIndication.class,
                     response -> response.isPotentialOverload()))
             .build());
@@ -54,7 +57,8 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
             .limitForPeriod(5)
             .limitRefreshPeriod(Duration.ofHours(1))
             .drainPermissionsOnResult(
-                callsResult -> callsResult.isSuccessfulAndReturned(
+                callsResult -> isSuccessfulAndReturned(
+                    callsResult,
                     ResponseWithOverloadIndication.class,
                     response -> response.isPotentialOverload()))
             .build());

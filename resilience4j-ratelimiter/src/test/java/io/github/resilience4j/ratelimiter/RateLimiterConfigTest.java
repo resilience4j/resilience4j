@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.github.resilience4j.core.functions.CallsResult;
+import io.vavr.control.Either;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -34,7 +34,7 @@ public class RateLimiterConfigTest {
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
-    private static final Function<CallsResult, Boolean> DRAIN_CONDITION_CHECKER = result -> false;
+    private static final Function<Either<? extends Throwable, ?>, Boolean> DRAIN_CONDITION_CHECKER = result -> false;
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String REFRESH_PERIOD_MUST_NOT_BE_NULL = "RefreshPeriod must not be null";
 

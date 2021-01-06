@@ -20,7 +20,6 @@ package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
-import io.github.resilience4j.core.functions.CallsResult;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
@@ -34,10 +33,7 @@ import io.vavr.control.Either;
 import io.vavr.control.Try;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -142,10 +138,10 @@ public interface RateLimiter {
                     .whenComplete(
                         (result, throwable) -> {
                             if (throwable != null) {
-                                drainIfNeeded(rateLimiter, CallsResult.failure(throwable));
+                                rateLimiter.onError(throwable);
                                 promise.completeExceptionally(throwable);
                             } else {
-                                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                                rateLimiter.onResult(result);
                                 promise.complete(result);
                             }
                         }
@@ -153,7 +149,7 @@ public interface RateLimiter {
             } catch (RequestNotPermitted requestNotPermitted) {
                 promise.completeExceptionally(requestNotPermitted);
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 promise.completeExceptionally(exception);
             }
             return promise;
@@ -193,10 +189,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 F result = supplier.get();
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -230,10 +226,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 T result = supplier.apply();
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -267,9 +263,9 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 runnable.run();
-                drainIfNeeded(rateLimiter, CallsResult.success());
+                rateLimiter.onSuccess();
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -305,10 +301,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 R result = function.apply(t);
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -331,10 +327,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permitsCalculator.apply(t));
             try {
                 R result = function.apply(t);
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -367,10 +363,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 T result = supplier.get();
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -406,13 +402,13 @@ public interface RateLimiter {
                 try {
                     Try<T> result = supplier.get();
                     if (result.isSuccess()) {
-                        drainIfNeeded(rateLimiter, CallsResult.success(result.get()));
+                        rateLimiter.onResult(result.get());
                     } else {
-                        drainIfNeeded(rateLimiter, CallsResult.failure(result.getCause()));
+                        rateLimiter.onError(result.getCause());
                     }
                     return result;
                 } catch (Exception exception) {
-                    drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                    rateLimiter.onError(exception);
                     throw exception;
                 }
             } catch (RequestNotPermitted requestNotPermitted) {
@@ -451,13 +447,13 @@ public interface RateLimiter {
                 try {
                     Either<? extends Exception, T> result = supplier.get();
                     if (result.isRight()) {
-                        drainIfNeeded(rateLimiter, CallsResult.success(result.get()));
+                        rateLimiter.onResult(result.get());
                     } else {
-                        drainIfNeeded(rateLimiter, CallsResult.failure(result.getLeft()));
+                        rateLimiter.onError(result.getLeft());
                     }
                     return Either.narrow(result);
                 } catch (Exception exception) {
-                    drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                    rateLimiter.onError(exception);
                     throw exception;
                 }
             } catch (RequestNotPermitted requestNotPermitted) {
@@ -493,10 +489,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 T result = callable.call();
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -529,9 +525,9 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 consumer.accept(t);
-                drainIfNeeded(rateLimiter, CallsResult.success());
+                rateLimiter.onSuccess();
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -553,9 +549,9 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permitsCalculator.apply(t));
             try {
                 consumer.accept(t);
-                drainIfNeeded(rateLimiter, CallsResult.success());
+                rateLimiter.onSuccess();
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -585,9 +581,9 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 runnable.run();
-                drainIfNeeded(rateLimiter, CallsResult.success());
+                rateLimiter.onSuccess();
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -623,10 +619,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permits);
             try {
                 R result = function.apply(t);
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -649,10 +645,10 @@ public interface RateLimiter {
             waitForPermission(rateLimiter, permitsCalculator.apply(t));
             try {
                 R result = function.apply(t);
-                drainIfNeeded(rateLimiter, CallsResult.success(result));
+                rateLimiter.onResult(result);
                 return result;
             } catch (Exception exception) {
-                drainIfNeeded(rateLimiter, CallsResult.failure(exception));
+                rateLimiter.onError(exception);
                 throw exception;
             }
         };
@@ -689,14 +685,21 @@ public interface RateLimiter {
         }
     }
 
-    static void drainIfNeeded(RateLimiter rateLimiter, CallsResult callsResult) {
-        Function<CallsResult, Boolean> checker = rateLimiter.getRateLimiterConfig().getDrainPermissionsOnResult();
+    /**
+     * Will drain permits remaining in cycle if calls result meet the criteria defined in
+     * {@link RateLimiterConfig#getDrainPermissionsOnResult()}.
+     *
+     * @param callsResult result of a methods call that was rate limiter by this rate limiter
+     */
+    default void drainIfNeeded(Either<? extends Throwable, ?> callsResult) {
+        Function<Either<? extends Throwable, ?>, Boolean> checker = getRateLimiterConfig()
+            .getDrainPermissionsOnResult();
         if (checker == null) {
             return;
         }
         boolean drainNeeded = checker.apply(callsResult);
         if (drainNeeded) {
-            rateLimiter.drainPermissions();
+            drainPermissions();
         }
     }
 
@@ -786,6 +789,33 @@ public interface RateLimiter {
      * Drains all the permits left in the current period.
      */
     void drainPermissions();
+
+    /**
+     * Records a failed call. This method must be invoked when a call failed.
+     *
+     * @param throwable The throwable which must be recorded
+     */
+    default void onError(Throwable throwable) {
+        drainIfNeeded(Either.left(throwable));
+    }
+
+    /**
+     * Records a successful call. This method must be invoked when a call was
+     * successful.
+     */
+    default void onSuccess() {
+        drainIfNeeded(Either.right(null));
+    }
+
+    /**
+     * This method must be invoked when a call returned a result
+     * and the result predicate should decide if the call was successful or not.
+     *
+     * @param result The result of the protected function
+     */
+    default void onResult(Object result) {
+        drainIfNeeded(Either.right(result));
+    }
 
     /**
      * Get the name of this RateLimiter
