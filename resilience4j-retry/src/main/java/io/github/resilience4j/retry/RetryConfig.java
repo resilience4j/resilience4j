@@ -52,6 +52,7 @@ public class RetryConfig implements Serializable {
     private Predicate retryOnResultPredicate;
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+    private boolean failAfterMaxAttempts = false;
 
     @Nullable
     private IntervalFunction intervalFunction;
@@ -95,6 +96,13 @@ public class RetryConfig implements Serializable {
     }
 
     /**
+     * @return if exception should be thrown after max attempts are made with no satisfactory result
+     */
+    public boolean isFailAfterMaxAttempts() {
+        return failAfterMaxAttempts;
+    }
+
+    /**
      * Use {@link RetryConfig#intervalBiFunction} instead, this method is kept for backwards compatibility
      */
     @Nullable
@@ -134,6 +142,7 @@ public class RetryConfig implements Serializable {
     public static class Builder<T> {
 
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+        private boolean failAfterMaxAttempts = false;
 
         @Nullable
         private IntervalFunction intervalFunction;
@@ -160,6 +169,7 @@ public class RetryConfig implements Serializable {
             this.maxAttempts = baseConfig.maxAttempts;
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
+            this.failAfterMaxAttempts = baseConfig.failAfterMaxAttempts;
             this.retryExceptions = baseConfig.retryExceptions;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             if (baseConfig.intervalFunction != null) {
@@ -197,6 +207,18 @@ public class RetryConfig implements Serializable {
          */
         public Builder<T> retryOnResult(Predicate<T> predicate) {
             this.retryOnResultPredicate = predicate;
+            return this;
+        }
+
+        /**
+         * Configures the Retry to throw a {@link MaxRetriesExceeded} exception once {@link #maxAttempts} has been reached,
+         * and the result is still not satisfactory (according to {@link #retryOnResultPredicate})
+         *
+         * @param bool a boolean flag to enable or disable throwing. (Default is {@code false}
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> failAfterMaxAttempts(boolean bool) {
+            this.failAfterMaxAttempts = bool;
             return this;
         }
 
@@ -293,6 +315,7 @@ public class RetryConfig implements Serializable {
             }
             RetryConfig config = new RetryConfig();
             config.maxAttempts = maxAttempts;
+            config.failAfterMaxAttempts = failAfterMaxAttempts;
             config.retryOnExceptionPredicate = retryOnExceptionPredicate;
             config.retryOnResultPredicate = retryOnResultPredicate;
             config.retryExceptions = retryExceptions;

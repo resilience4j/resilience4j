@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.rxjava3.retry.transformer;
 
+import io.github.resilience4j.retry.MaxRetriesExceeded;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.rxjava3.retry.transformer.RetryTransformer;
@@ -655,6 +656,27 @@ public class RetryTransformerTest {
             .assertValueCount(1)
             .assertValue("retry")
             .assertComplete();
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
+
+    @Test
+    public void shouldThrowMaxRetriesExceptionAfterRetriesExhaustedWhenConfigured() throws InterruptedException {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(50))
+            .maxAttempts(3)
+            .failAfterMaxAttempts(true)
+            .build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("retry");
+
+        Flowable.fromCallable(helloWorldService::returnHelloWorld)
+            .compose(RetryTransformer.of(retry))
+            .test()
+            .await()
+            .assertFailure(MaxRetriesExceeded.class, "retry");
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }

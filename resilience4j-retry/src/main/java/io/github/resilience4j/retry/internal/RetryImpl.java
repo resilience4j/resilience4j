@@ -54,6 +54,7 @@ public class RetryImpl<T> implements Retry {
     private final Map<String, String> tags;
 
     private final int maxAttempts;
+    private final boolean failAfterMaxAttempts;
     private final IntervalBiFunction<T> intervalBiFunction;
     private final Predicate<Throwable> exceptionPredicate;
     private final LongAdder succeededAfterRetryCounter;
@@ -70,6 +71,7 @@ public class RetryImpl<T> implements Retry {
         this.config = config;
         this.tags = tags;
         this.maxAttempts = config.getMaxAttempts();
+        this.failAfterMaxAttempts = config.isFailAfterMaxAttempts();
         this.intervalBiFunction = config.getIntervalBiFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         this.resultPredicate = config.getResultPredicate();
@@ -161,9 +163,15 @@ public class RetryImpl<T> implements Retry {
                     failedAfterRetryCounter.increment();
                     Throwable throwable = Option.of(lastException.get())
                         .getOrElse(lastRuntimeException.get());
+                    RuntimeException maxRetriesExceeded = new MaxRetriesExceeded(
+                        "Max retries reached for retry=" + name
+                    );
                     publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts,
-                        throwable != null ? throwable : new MaxRetriesExceeded(
-                            "max retries is reached out for the result predicate check")));
+                        throwable != null && !failAfterMaxAttempts ? throwable : maxRetriesExceeded));
+
+                    if (failAfterMaxAttempts) {
+                        throw maxRetriesExceeded;
+                    }
                 } else {
                     succeededWithoutRetryCounter.increment();
                 }
@@ -269,9 +277,15 @@ public class RetryImpl<T> implements Retry {
             } else {
                 if (currentNumOfAttempts >= maxAttempts) {
                     failedAfterRetryCounter.increment();
+                    RuntimeException maxRetriesExceeded = new MaxRetriesExceeded(
+                        "Max retries reached for retry=" + name
+                    );
                     publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts,
-                        lastException.get() != null ? lastException.get() : new MaxRetriesExceeded(
-                            "max retries is reached out for the result predicate check")));
+                        lastException.get() != null && !failAfterMaxAttempts ? lastException.get() : maxRetriesExceeded));
+
+                    if (failAfterMaxAttempts) {
+                        throw maxRetriesExceeded;
+                    }
                 } else {
                     succeededWithoutRetryCounter.increment();
 

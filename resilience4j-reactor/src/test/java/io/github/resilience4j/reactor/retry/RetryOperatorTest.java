@@ -272,6 +272,8 @@ public class RetryOperatorTest {
     }
 
     private RetryConfig retryConfig() {
-        return RetryConfig.custom().waitDuration(Duration.ofMillis(10)).build();
+        return RetryConfig.custom()
+            .waitDuration(Duration.ofMillis(10))
+            .build();
     }
 }
