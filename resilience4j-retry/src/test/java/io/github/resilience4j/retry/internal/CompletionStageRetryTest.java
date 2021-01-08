@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.retry.internal;
 
-import io.github.resilience4j.retry.MaxRetriesExceeded;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
@@ -160,8 +160,8 @@ public class CompletionStageRetryTest {
             .failsWithin(5, TimeUnit.SECONDS)
             .withThrowableOfType(ExecutionException.class)
             .havingCause()
-            .isInstanceOf(MaxRetriesExceeded.class)
-            .withMessage("Max retries reached for retry=retry");
+            .isInstanceOf(MaxRetriesExceededException.class)
+            .withMessage("Retry 'retry' has exhausted all attempts (3)");
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
 

@@ -16,7 +16,7 @@
 
 package io.github.resilience4j.reactor.retry;
 
-import io.github.resilience4j.retry.MaxRetriesExceeded;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
@@ -227,7 +227,7 @@ public class RetryOperatorTest {
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
             .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
-            .expectError(MaxRetriesExceeded.class)
+            .expectError(MaxRetriesExceededException.class)
             .verify(Duration.ofSeconds(1));
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
@@ -307,7 +307,7 @@ public class RetryOperatorTest {
             .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectNextCount(1)
-            .expectError(MaxRetriesExceeded.class)
+            .expectError(MaxRetriesExceededException.class)
             .verify(Duration.ofSeconds(1));
 
         Retry.Metrics metrics = retry.getMetrics();

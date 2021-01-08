@@ -20,7 +20,7 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.MaxRetriesExceeded;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
@@ -571,8 +571,8 @@ public class SupplierRetryTest {
             .decorateSupplier(retry, helloWorldService::returnHelloWorld);
 
         assertThatThrownBy(supplier::get)
-            .isInstanceOf(MaxRetriesExceeded.class)
-            .hasMessage("Max retries reached for retry=test");
+            .isInstanceOf(MaxRetriesExceededException.class)
+            .hasMessage("Retry 'test' has exhausted all attempts (3)");
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }

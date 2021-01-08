@@ -53,6 +53,7 @@ public class RetryConfig implements Serializable {
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
     private boolean failAfterMaxAttempts = false;
+    private boolean writableStackTraceEnabled = true;
 
     @Nullable
     private IntervalFunction intervalFunction;
@@ -103,6 +104,13 @@ public class RetryConfig implements Serializable {
     }
 
     /**
+     * @return if any thrown {@link MaxRetriesExceededException} should contain a stacktrace
+     */
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
+    }
+
+    /**
      * Use {@link RetryConfig#intervalBiFunction} instead, this method is kept for backwards compatibility
      */
     @Nullable
@@ -143,6 +151,7 @@ public class RetryConfig implements Serializable {
 
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
         private boolean failAfterMaxAttempts = false;
+        private boolean writableStackTraceEnabled = true;
 
         @Nullable
         private IntervalFunction intervalFunction;
@@ -170,6 +179,7 @@ public class RetryConfig implements Serializable {
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
             this.failAfterMaxAttempts = baseConfig.failAfterMaxAttempts;
+            this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.retryExceptions = baseConfig.retryExceptions;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             if (baseConfig.intervalFunction != null) {
@@ -219,6 +229,20 @@ public class RetryConfig implements Serializable {
          */
         public Builder<T> failAfterMaxAttempts(boolean bool) {
             this.failAfterMaxAttempts = bool;
+            return this;
+        }
+
+        /**
+         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
+         * returns a zero length array. This may be used to reduce log spam when the Retry
+         * has exceeded the maximum nbr of attempts, and flag {@link #failAfterMaxAttempts} has been enabled.
+         * The thrown {@link MaxRetriesExceededException} will then have no stacktrace.
+         *
+         * @param bool the flag to enable writable stack traces.
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> writableStackTraceEnabled(boolean bool) {
+            this.writableStackTraceEnabled = bool;
             return this;
         }
 
@@ -316,6 +340,7 @@ public class RetryConfig implements Serializable {
             RetryConfig config = new RetryConfig();
             config.maxAttempts = maxAttempts;
             config.failAfterMaxAttempts = failAfterMaxAttempts;
+            config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.retryOnExceptionPredicate = retryOnExceptionPredicate;
             config.retryOnResultPredicate = retryOnResultPredicate;
             config.retryExceptions = retryExceptions;

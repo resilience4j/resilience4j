@@ -16,10 +16,9 @@
 
 package io.github.resilience4j.rxjava3.retry.transformer;
 
-import io.github.resilience4j.retry.MaxRetriesExceeded;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.rxjava3.retry.transformer.RetryTransformer;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.reactivex.rxjava3.core.*;
@@ -676,7 +675,7 @@ public class RetryTransformerTest {
             .compose(RetryTransformer.of(retry))
             .test()
             .await()
-            .assertFailure(MaxRetriesExceeded.class, "retry");
+            .assertFailure(MaxRetriesExceededException.class, "retry");
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
