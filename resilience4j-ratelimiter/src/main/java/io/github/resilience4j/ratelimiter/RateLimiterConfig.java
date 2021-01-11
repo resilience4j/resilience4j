@@ -18,8 +18,11 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.vavr.control.Either;
+
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,13 +38,18 @@ public class RateLimiterConfig implements Serializable {
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
     private final int limitForPeriod;
+    private final Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult;
     private final boolean writableStackTraceEnabled;
 
-    private RateLimiterConfig(Duration timeoutDuration, Duration limitRefreshPeriod,
-        int limitForPeriod, boolean writableStackTraceEnabled) {
+    private RateLimiterConfig(Duration timeoutDuration,
+                              Duration limitRefreshPeriod,
+                              int limitForPeriod,
+                              Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult,
+                              boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
         this.limitForPeriod = limitForPeriod;
+        this.drainPermissionsOnResult = drainPermissionsOnResult;
         this.writableStackTraceEnabled = writableStackTraceEnabled;
     }
 
@@ -106,6 +114,10 @@ public class RateLimiterConfig implements Serializable {
         return limitForPeriod;
     }
 
+    public Function<Either<? extends Throwable, ?>, Boolean> getDrainPermissionsOnResult() {
+        return drainPermissionsOnResult;
+    }
+
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
     }
@@ -125,6 +137,7 @@ public class RateLimiterConfig implements Serializable {
         private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
+        private Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult = any -> false;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
@@ -134,6 +147,7 @@ public class RateLimiterConfig implements Serializable {
             this.timeoutDuration = prototype.timeoutDuration;
             this.limitRefreshPeriod = prototype.limitRefreshPeriod;
             this.limitForPeriod = prototype.limitForPeriod;
+            this.drainPermissionsOnResult = prototype.drainPermissionsOnResult;
             this.writableStackTraceEnabled = prototype.writableStackTraceEnabled;
         }
 
@@ -144,7 +158,7 @@ public class RateLimiterConfig implements Serializable {
          */
         public RateLimiterConfig build() {
             return new RateLimiterConfig(timeoutDuration, limitRefreshPeriod, limitForPeriod,
-                writableStackTraceEnabled);
+                drainPermissionsOnResult, writableStackTraceEnabled);
         }
 
         /**
@@ -158,6 +172,22 @@ public class RateLimiterConfig implements Serializable {
          */
         public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
             this.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
+        }
+
+        /**
+         * Allows you to check the result of a call decorated by this rate limiter and make a decision
+         * should we drain all the permissions left it the current period. Useful in situations when
+         * despite using a RateLimiter the underlining called service will say that you passed the maximum number of calls for a given period.
+         *
+         * @param drainPermissionsOnResult your function should return true when the permissions drain
+         *                                 should happen
+         * @return the RateLimiterConfig.Builder
+         * @see RateLimiter#drainPermissions()
+         */
+        public Builder drainPermissionsOnResult(
+            Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult) {
+            this.drainPermissionsOnResult = drainPermissionsOnResult;
             return this;
         }
 
