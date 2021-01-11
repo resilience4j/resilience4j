@@ -33,10 +33,7 @@ import io.vavr.control.Either;
 import io.vavr.control.Try;
 
 import java.time.Duration;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -141,13 +138,18 @@ public interface RateLimiter {
                     .whenComplete(
                         (result, throwable) -> {
                             if (throwable != null) {
+                                rateLimiter.onError(throwable);
                                 promise.completeExceptionally(throwable);
                             } else {
+                                rateLimiter.onResult(result);
                                 promise.complete(result);
                             }
                         }
                     );
+            } catch (RequestNotPermitted requestNotPermitted) {
+                promise.completeExceptionally(requestNotPermitted);
             } catch (Exception exception) {
+                rateLimiter.onError(exception);
                 promise.completeExceptionally(exception);
             }
             return promise;
@@ -185,7 +187,14 @@ public interface RateLimiter {
     ) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            return supplier.get();
+            try {
+                F result = supplier.get();
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -215,7 +224,14 @@ public interface RateLimiter {
         CheckedFunction0<T> supplier) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            return supplier.apply();
+            try {
+                T result = supplier.apply();
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -245,7 +261,13 @@ public interface RateLimiter {
 
         return () -> {
             waitForPermission(rateLimiter, permits);
-            runnable.run();
+            try {
+                runnable.run();
+                rateLimiter.onSuccess();
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -277,7 +299,14 @@ public interface RateLimiter {
         int permits, CheckedFunction1<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter, permits);
-            return function.apply(t);
+            try {
+                R result = function.apply(t);
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -296,7 +325,14 @@ public interface RateLimiter {
         Function<T, Integer> permitsCalculator, CheckedFunction1<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            return function.apply(t);
+            try {
+                R result = function.apply(t);
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -325,7 +361,14 @@ public interface RateLimiter {
         Supplier<T> supplier) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            return supplier.get();
+            try {
+                T result = supplier.get();
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -356,7 +399,18 @@ public interface RateLimiter {
         return () -> {
             try {
                 waitForPermission(rateLimiter, permits);
-                return supplier.get();
+                try {
+                    Try<T> result = supplier.get();
+                    if (result.isSuccess()) {
+                        rateLimiter.onResult(result.get());
+                    } else {
+                        rateLimiter.onError(result.getCause());
+                    }
+                    return result;
+                } catch (Exception exception) {
+                    rateLimiter.onError(exception);
+                    throw exception;
+                }
             } catch (RequestNotPermitted requestNotPermitted) {
                 return Try.failure(requestNotPermitted);
             }
@@ -390,7 +444,18 @@ public interface RateLimiter {
         return () -> {
             try {
                 waitForPermission(rateLimiter, permits);
-                return Either.narrow(supplier.get());
+                try {
+                    Either<? extends Exception, T> result = supplier.get();
+                    if (result.isRight()) {
+                        rateLimiter.onResult(result.get());
+                    } else {
+                        rateLimiter.onError(result.getLeft());
+                    }
+                    return Either.narrow(result);
+                } catch (Exception exception) {
+                    rateLimiter.onError(exception);
+                    throw exception;
+                }
             } catch (RequestNotPermitted requestNotPermitted) {
                 return Either.left(requestNotPermitted);
             }
@@ -422,7 +487,14 @@ public interface RateLimiter {
         Callable<T> callable) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            return callable.call();
+            try {
+                T result = callable.call();
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -451,7 +523,13 @@ public interface RateLimiter {
         Consumer<T> consumer) {
         return (T t) -> {
             waitForPermission(rateLimiter, permits);
-            consumer.accept(t);
+            try {
+                consumer.accept(t);
+                rateLimiter.onSuccess();
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -469,7 +547,13 @@ public interface RateLimiter {
         Function<T, Integer> permitsCalculator, Consumer<T> consumer) {
         return (T t) -> {
             waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            consumer.accept(t);
+            try {
+                consumer.accept(t);
+                rateLimiter.onSuccess();
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -495,7 +579,13 @@ public interface RateLimiter {
     static Runnable decorateRunnable(RateLimiter rateLimiter, int permits, Runnable runnable) {
         return () -> {
             waitForPermission(rateLimiter, permits);
-            runnable.run();
+            try {
+                runnable.run();
+                rateLimiter.onSuccess();
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -527,7 +617,14 @@ public interface RateLimiter {
         Function<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter, permits);
-            return function.apply(t);
+            try {
+                R result = function.apply(t);
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -546,7 +643,14 @@ public interface RateLimiter {
         Function<T, Integer> permitsCalculator, Function<T, R> function) {
         return (T t) -> {
             waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            return function.apply(t);
+            try {
+                R result = function.apply(t);
+                rateLimiter.onResult(result);
+                return result;
+            } catch (Exception exception) {
+                rateLimiter.onError(exception);
+                throw exception;
+            }
         };
     }
 
@@ -578,6 +682,24 @@ public interface RateLimiter {
         }
         if (!permission) {
             throw RequestNotPermitted.createRequestNotPermitted(rateLimiter);
+        }
+    }
+
+    /**
+     * Will drain permits remaining in cycle if calls result meet the criteria defined in
+     * {@link RateLimiterConfig#getDrainPermissionsOnResult()}.
+     *
+     * @param callsResult result of a methods call that was rate limiter by this rate limiter
+     */
+    default void drainIfNeeded(Either<? extends Throwable, ?> callsResult) {
+        Function<Either<? extends Throwable, ?>, Boolean> checker = getRateLimiterConfig()
+            .getDrainPermissionsOnResult();
+        if (checker == null) {
+            return;
+        }
+        boolean drainNeeded = checker.apply(callsResult);
+        if (drainNeeded) {
+            drainPermissions();
         }
     }
 
@@ -667,6 +789,33 @@ public interface RateLimiter {
      * Drains all the permits left in the current period.
      */
     void drainPermissions();
+
+    /**
+     * Records a failed call. This method must be invoked when a call failed.
+     *
+     * @param throwable The throwable which must be recorded
+     */
+    default void onError(Throwable throwable) {
+        drainIfNeeded(Either.left(throwable));
+    }
+
+    /**
+     * Records a successful call. This method must be invoked when a call was
+     * successful.
+     */
+    default void onSuccess() {
+        drainIfNeeded(Either.right(null));
+    }
+
+    /**
+     * This method must be invoked when a call returned a result
+     * and the result predicate should decide if the call was successful or not.
+     *
+     * @param result The result of the protected function
+     */
+    default void onResult(Object result) {
+        drainIfNeeded(Either.right(result));
+    }
 
     /**
      * Get the name of this RateLimiter
