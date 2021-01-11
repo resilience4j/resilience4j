@@ -678,8 +678,12 @@ public interface Retry {
             final long delay = retryContext.onResult(result);
 
             if (delay < 1) {
-                promise.complete(result);
-                retryContext.onComplete();
+                try {
+                    retryContext.onComplete();
+                    promise.complete(result);
+                } catch (Exception e) {
+                    promise.completeExceptionally(e);
+                }
             } else {
                 scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
             }

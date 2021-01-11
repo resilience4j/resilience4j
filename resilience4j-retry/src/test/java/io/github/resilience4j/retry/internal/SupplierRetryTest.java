@@ -20,6 +20,7 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
@@ -44,6 +45,7 @@ import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static io.vavr.API.$;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -554,4 +556,43 @@ public class SupplierRetryTest {
         assertThat(sleptTime).isEqualTo(300L);
     }
 
+    @Test
+    public void shouldThrowMaxRetriesExceededIfConfigured() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("retryable response");
+
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+            .retryOnResult(s -> s.equals("retryable response"))
+            .maxAttempts(3)
+            .failAfterMaxAttempts(true)
+            .build();
+        Retry retry = Retry.of("test", retryConfig);
+        Supplier<String> supplier = Retry
+            .decorateSupplier(retry, helloWorldService::returnHelloWorld);
+
+        assertThatThrownBy(supplier::get)
+            .isInstanceOf(MaxRetriesExceededException.class)
+            .hasMessage("Retry 'test' has exhausted all attempts (3)");
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
+
+    @Test
+    public void shouldNotThrowMaxRetriesExceededIfCompletedExceptionally() {
+        given(helloWorldService.returnHelloWorld())
+            .willThrow(new HelloWorldException());
+
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+            .maxAttempts(3)
+            .failAfterMaxAttempts(true)
+            .build();
+        Retry retry = Retry.of("test", retryConfig);
+        Supplier<String> supplier = Retry
+            .decorateSupplier(retry, helloWorldService::returnHelloWorld);
+
+        assertThatThrownBy(supplier::get)
+            .isInstanceOf(HelloWorldException.class);
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
 }
