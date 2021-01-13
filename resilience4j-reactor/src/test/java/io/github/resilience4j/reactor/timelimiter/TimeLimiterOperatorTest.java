@@ -22,6 +22,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -108,7 +109,7 @@ public class TimeLimiterOperatorTest {
         given(timeLimiter.getTimeLimiterConfig())
             .willReturn(toConfig(Duration.ofMinutes(1)));
 
-        Flux<?> flux = Flux.interval(Duration.ofMillis(1))
+        Flux<?> flux = Flux.interval(Duration.ofMillis(1), Schedulers.single())
             .take(2)
             .transformDeferred(TimeLimiterOperator.of(timeLimiter));
 

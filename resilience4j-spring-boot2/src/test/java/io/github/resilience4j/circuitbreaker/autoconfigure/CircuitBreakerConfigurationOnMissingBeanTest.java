@@ -13,7 +13,7 @@ import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.health.HealthIndicatorAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-    HealthIndicatorAutoConfiguration.class,
+    HealthContributorAutoConfiguration.class,
     CircuitBreakerConfigurationOnMissingBeanTest.ConfigWithOverrides.class,
     CircuitBreakerAutoConfiguration.class,
     CircuitBreakerConfigurationOnMissingBean.class
