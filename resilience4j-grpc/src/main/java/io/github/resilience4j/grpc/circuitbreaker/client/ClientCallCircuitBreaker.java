@@ -29,16 +29,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class ClientCallCircuitBreaker<ReqT, RespT>
-        extends ClientInterceptors.CheckedForwardingClientCall<ReqT, RespT> {
+    extends ClientInterceptors.CheckedForwardingClientCall<ReqT, RespT> {
 
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
     private boolean isCancelled = false;
 
     private ClientCallCircuitBreaker(
-            ClientCall<ReqT, RespT> delegate,
-            CircuitBreaker circuitBreaker,
-            Predicate<Status> successStatusPredicate) {
+        ClientCall<ReqT, RespT> delegate,
+        CircuitBreaker circuitBreaker,
+        Predicate<Status> successStatusPredicate) {
 
         super(delegate);
         this.circuitBreaker = circuitBreaker;
@@ -46,12 +46,12 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
     }
 
     public static <ReqT, RespT> ClientCallCircuitBreaker<ReqT, RespT> decorate(
-            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker) {
+        ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker) {
         return new ClientCallCircuitBreaker<>(call, circuitBreaker, Status::isOk);
     }
 
     public static <ReqT, RespT> ClientCallCircuitBreaker<ReqT, RespT> decorate(
-            ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        ClientCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ClientCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
@@ -60,15 +60,15 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
             circuitBreaker.acquirePermission();
         } catch (Exception exception) {
             throw Status.UNAVAILABLE
-                    .withDescription(exception.getMessage())
-                    .withCause(exception)
-                    .asException();
+                .withDescription(exception.getMessage())
+                .withCause(exception)
+                .asException();
         }
     }
 
     @Override
     protected void checkedStart(
-            Listener<RespT> responseListener, Metadata headers) throws Exception {
+        Listener<RespT> responseListener, Metadata headers) throws Exception {
         acquirePermissionOrThrowStatus();
         delegate().start(new CircuitBreakerListener(responseListener), headers);
     }
@@ -80,7 +80,7 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
     }
 
     private class CircuitBreakerListener
-            extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
+        extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
 
         private final long startTime = System.nanoTime();
 
@@ -97,8 +97,8 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
                 circuitBreaker.onSuccess(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
             } else {
                 circuitBreaker.onError(
-                        System.nanoTime() - startTime, TimeUnit.NANOSECONDS,
-                        status.asRuntimeException(trailers));
+                    System.nanoTime() - startTime, TimeUnit.NANOSECONDS,
+                    status.asRuntimeException(trailers));
             }
             super.onClose(status, trailers);
         }

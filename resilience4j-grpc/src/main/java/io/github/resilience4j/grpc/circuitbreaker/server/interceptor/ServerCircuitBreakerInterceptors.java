@@ -34,19 +34,19 @@ public class ServerCircuitBreakerInterceptors {
     }
 
     public static ServerCircuitBreakerInterceptor from(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return ServerCircuitBreakerInterceptor.from(circuitBreaker, successStatusPredicate);
     }
 
     public static ServiceMethodCircuitBreakerInterceptor forMethod(
-            MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker) {
+        MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker) {
         return forMethod(methodDescriptor, circuitBreaker, Status::isOk);
     }
 
     public static ServiceMethodCircuitBreakerInterceptor forMethod(
-            MethodDescriptor<?, ?> methodDescriptor,
-            CircuitBreaker circuitBreaker,
-            Predicate<Status> successStatusPredicate) {
+        MethodDescriptor<?, ?> methodDescriptor,
+        CircuitBreaker circuitBreaker,
+        Predicate<Status> successStatusPredicate) {
         return ServiceMethodCircuitBreakerInterceptor.from(methodDescriptor, circuitBreaker, successStatusPredicate);
     }
 

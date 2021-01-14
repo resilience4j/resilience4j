@@ -25,10 +25,10 @@ import java.util.function.Predicate;
 public class CircuitBreakerCallOptions {
 
     public static CallOptions.Key<CircuitBreaker> CIRCUIT_BREAKER = CallOptions.Key
-            .create("resilience4j-circuitbreaker");
+        .create("resilience4j-circuitbreaker");
 
     public static CallOptions.Key<Predicate<Status>> SUCCESS_STATUS = CallOptions.Key
-            .createWithDefault("resilience4j-circuitbreaker-success-status", Status::isOk);
+        .createWithDefault("resilience4j-circuitbreaker-success-status", Status::isOk);
 
     private CircuitBreakerCallOptions() {
     }

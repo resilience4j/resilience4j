@@ -32,23 +32,23 @@ public class ServerCircuitBreakerInterceptor implements ServerInterceptor {
     private final Predicate<Status> successStatusPredicate;
 
     private ServerCircuitBreakerInterceptor(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         this.circuitBreaker = circuitBreaker;
         this.successStatusPredicate = successStatusPredicate;
     }
 
     public static ServerCircuitBreakerInterceptor from(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ServerCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
     }
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-            ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
+        ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
         ServerCall<ReqT, RespT> callToExecute = ServerCallCircuitBreaker.decorate(
-                call, circuitBreaker, successStatusPredicate);
+            call, circuitBreaker, successStatusPredicate);
 
         return next.startCall(callToExecute, headers);
     }

@@ -34,8 +34,8 @@ public class ServiceMethodCircuitBreakerInterceptor implements ServerInterceptor
     private final Predicate<Status> successStatusPredicate;
 
     private ServiceMethodCircuitBreakerInterceptor(
-            MethodDescriptor<?, ?> methodDescriptor,
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        MethodDescriptor<?, ?> methodDescriptor,
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         this.methodDescriptor = methodDescriptor;
         this.circuitBreaker = circuitBreaker;
@@ -43,20 +43,20 @@ public class ServiceMethodCircuitBreakerInterceptor implements ServerInterceptor
     }
 
     public static ServiceMethodCircuitBreakerInterceptor from(
-            MethodDescriptor<?, ?> methodDescriptor,
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        MethodDescriptor<?, ?> methodDescriptor,
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         return new ServiceMethodCircuitBreakerInterceptor(methodDescriptor, circuitBreaker, successStatusPredicate);
     }
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-            ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
+        ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
         ServerCall<ReqT, RespT> callToExecute = call;
 
         if (call.getMethodDescriptor().getFullMethodName()
-                .equals(methodDescriptor.getFullMethodName())) {
+            .equals(methodDescriptor.getFullMethodName())) {
             callToExecute = ServerCallCircuitBreaker.decorate(call, circuitBreaker, successStatusPredicate);
         }
 

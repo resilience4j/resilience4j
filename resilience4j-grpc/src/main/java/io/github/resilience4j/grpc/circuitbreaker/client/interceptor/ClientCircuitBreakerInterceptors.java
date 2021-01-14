@@ -38,7 +38,7 @@ public class ClientCircuitBreakerInterceptors {
     }
 
     public static <S extends AbstractStub<S>> S decorate(
-            S stub, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        S stub, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         return stub.withInterceptors(ClientCircuitBreakerInterceptor.of(circuitBreaker, successStatusPredicate));
     }
@@ -52,9 +52,9 @@ public class ClientCircuitBreakerInterceptors {
     }
 
     public static Channel intercept(
-            Channel channel, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        Channel channel, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         return ClientInterceptors.intercept(
-                channel, ClientCircuitBreakerInterceptor.of(circuitBreaker, successStatusPredicate));
+            channel, ClientCircuitBreakerInterceptor.of(circuitBreaker, successStatusPredicate));
     }
 }

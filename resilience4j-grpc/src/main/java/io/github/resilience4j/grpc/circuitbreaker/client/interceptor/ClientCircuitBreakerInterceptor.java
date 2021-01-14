@@ -33,22 +33,22 @@ public class ClientCircuitBreakerInterceptor implements ClientInterceptor {
     private final Predicate<Status> successStatusPredicate;
 
     private ClientCircuitBreakerInterceptor(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
 
         this.circuitBreaker = circuitBreaker;
         this.successStatusPredicate = successStatusPredicate;
     }
 
     public static ClientCircuitBreakerInterceptor of(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ClientCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
     }
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-            MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+        MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
 
         return ClientCallCircuitBreaker.decorate(
-                next.newCall(method, callOptions), circuitBreaker, successStatusPredicate);
+            next.newCall(method, callOptions), circuitBreaker, successStatusPredicate);
     }
 }

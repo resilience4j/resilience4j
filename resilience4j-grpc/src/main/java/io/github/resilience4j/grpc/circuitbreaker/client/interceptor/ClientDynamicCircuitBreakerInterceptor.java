@@ -29,15 +29,14 @@ public class ClientDynamicCircuitBreakerInterceptor implements ClientInterceptor
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-            MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+        MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
 
-        CircuitBreaker circuitBreaker = callOptions
-                .getOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER);
+        CircuitBreaker circuitBreaker = callOptions.getOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER);
 
         if (circuitBreaker != null) {
             return ClientCallCircuitBreaker.decorate(
-                    next.newCall(method, callOptions), circuitBreaker,
-                    callOptions.getOption(CircuitBreakerCallOptions.SUCCESS_STATUS));
+                next.newCall(method, callOptions), circuitBreaker,
+                callOptions.getOption(CircuitBreakerCallOptions.SUCCESS_STATUS));
         } else {
             return next.newCall(method, callOptions);
         }

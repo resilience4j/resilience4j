@@ -31,16 +31,16 @@ public abstract class ServerCircuitBreakerDecorator {
     protected final List<ServerInterceptor> interceptors = new ArrayList<>();
 
     public ServerCircuitBreakerDecorator interceptMethod(
-            MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker) {
+        MethodDescriptor<?, ?> methodDescriptor, CircuitBreaker circuitBreaker) {
         return interceptMethod(methodDescriptor, circuitBreaker, Status::isOk);
     }
 
     public ServerCircuitBreakerDecorator interceptMethod(
-            MethodDescriptor<?, ?> methodDescriptor,
-            CircuitBreaker circuitBreaker,
-            Predicate<Status> successStatusPredicate) {
+        MethodDescriptor<?, ?> methodDescriptor,
+        CircuitBreaker circuitBreaker,
+        Predicate<Status> successStatusPredicate) {
         interceptors.add(ServerCircuitBreakerInterceptors
-                .forMethod(methodDescriptor, circuitBreaker, successStatusPredicate));
+            .forMethod(methodDescriptor, circuitBreaker, successStatusPredicate));
 
         return this;
     }
@@ -50,7 +50,7 @@ public abstract class ServerCircuitBreakerDecorator {
     }
 
     public ServerCircuitBreakerDecorator interceptAll(
-            CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         interceptors.add(ServerCircuitBreakerInterceptors.from(circuitBreaker, successStatusPredicate));
         return this;
     }

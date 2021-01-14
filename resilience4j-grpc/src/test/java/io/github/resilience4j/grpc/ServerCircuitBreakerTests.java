@@ -44,19 +44,19 @@ public class ServerCircuitBreakerTests {
         public void unaryRpc(SimpleRequest request, StreamObserver<SimpleResponse> responseObserver) {
             Status status = Status.Code.valueOf(request.getRequestMessage()).toStatus();
 
-            if(status.isOk()){
+            if (status.isOk()) {
                 responseObserver.onNext(SimpleResponse.newBuilder()
-                        .setResponseMessage("response: "+request.getRequestMessage())
-                        .build());
+                    .setResponseMessage("response: " + request.getRequestMessage())
+                    .build());
                 responseObserver.onCompleted();
-            }else{
+            } else {
                 responseObserver.onError(status.asRuntimeException());
             }
         }
     };
 
     @Test
-    public void decorateSuccessServiceCall(){
+    public void decorateSuccessServiceCall() {
         CircuitBreaker methodCircuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
         CircuitBreaker serviceCircuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
 
@@ -64,33 +64,33 @@ public class ServerCircuitBreakerTests {
             status.isOk() || status.getCode() == Status.INVALID_ARGUMENT.getCode();
 
         serverRule.getServiceRegistry().addService(
-                ServerCircuitBreakerInterceptors.decoratorFor(service)
-                        .interceptAll(serviceCircuitBreaker, isValidStatus)
-                        .interceptMethod(
-                                SimpleServiceGrpc.getUnaryRpcMethod(),
-                                methodCircuitBreaker,
-                                isValidStatus)
-                        .build()
+            ServerCircuitBreakerInterceptors.decoratorFor(service)
+                .interceptAll(serviceCircuitBreaker, isValidStatus)
+                .interceptMethod(
+                    SimpleServiceGrpc.getUnaryRpcMethod(),
+                    methodCircuitBreaker,
+                    isValidStatus)
+                .build()
         );
 
         SimpleServiceGrpc.SimpleServiceBlockingStub stub = SimpleServiceGrpc
-                .newBlockingStub(serverRule.getChannel());
+            .newBlockingStub(serverRule.getChannel());
 
         try {
             // Service CB: Record success
             // Method CB: Record success
             stub.unaryRpc(SimpleRequest.newBuilder()
-                    .setRequestMessage(Status.Code.INVALID_ARGUMENT.name())
-                    .build());
-        }catch (StatusRuntimeException ignored){
+                .setRequestMessage(Status.Code.INVALID_ARGUMENT.name())
+                .build());
+        } catch (StatusRuntimeException ignored) {
         }
 
 
         // Service CB: Record success
         // Method CB: Record success
         stub.unaryRpc(SimpleRequest.newBuilder()
-                .setRequestMessage(Status.Code.OK.name())
-                .build());
+            .setRequestMessage(Status.Code.OK.name())
+            .build());
 
 
         // Assert the expected calls to the method level circuit breaker
@@ -110,45 +110,45 @@ public class ServerCircuitBreakerTests {
     }
 
     @Test
-    public void decorateFailedServiceCall(){
+    public void decorateFailedServiceCall() {
         CircuitBreaker methodCircuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
         CircuitBreaker serviceCircuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
 
         serverRule.getServiceRegistry().addService(
-                ServerCircuitBreakerInterceptors.decoratorFor(service)
-                        .interceptAll(serviceCircuitBreaker)
-                        .interceptMethod(
-                                SimpleServiceGrpc.getUnaryRpcMethod(),
-                                methodCircuitBreaker,
-                                status -> status.getCode() != Status.INVALID_ARGUMENT.getCode())
-                        .build()
+            ServerCircuitBreakerInterceptors.decoratorFor(service)
+                .interceptAll(serviceCircuitBreaker)
+                .interceptMethod(
+                    SimpleServiceGrpc.getUnaryRpcMethod(),
+                    methodCircuitBreaker,
+                    status -> status.getCode() != Status.INVALID_ARGUMENT.getCode())
+                .build()
         );
 
         SimpleServiceGrpc.SimpleServiceBlockingStub stub = SimpleServiceGrpc
-                .newBlockingStub(serverRule.getChannel());
+            .newBlockingStub(serverRule.getChannel());
 
         try {
             // Service CB: Record error
             // Method CB: Record error
             stub.unaryRpc(SimpleRequest.newBuilder()
-                    .setRequestMessage(Status.Code.INVALID_ARGUMENT.name())
-                    .build());
-        }catch (StatusRuntimeException ignored){
+                .setRequestMessage(Status.Code.INVALID_ARGUMENT.name())
+                .build());
+        } catch (StatusRuntimeException ignored) {
         }
 
         // Service CB: Record success
         // Method CB: Record success
         stub.unaryRpc(SimpleRequest.newBuilder()
-                .setRequestMessage(Status.Code.OK.name())
-                .build());
+            .setRequestMessage(Status.Code.OK.name())
+            .build());
 
         try {
             // Service CB: Record error
             // Method CB: Record success
             stub.unaryRpc(SimpleRequest.newBuilder()
-                    .setRequestMessage(Status.Code.FAILED_PRECONDITION.name())
-                    .build());
-        }catch (StatusRuntimeException ignored){
+                .setRequestMessage(Status.Code.FAILED_PRECONDITION.name())
+                .build());
+        } catch (StatusRuntimeException ignored) {
         }
 
         // Assert the expected calls to the method level circuit breaker
@@ -167,19 +167,19 @@ public class ServerCircuitBreakerTests {
 
     }
 
-    public void recordFaliureOnNotPermittedServiceCalls(){
+    public void recordFaliureOnNotPermittedServiceCalls() {
 
     }
 
-    public void recordFaliureOnNotPermittedMethodCalls(){
+    public void recordFaliureOnNotPermittedMethodCalls() {
 
     }
 
-    public void shouldNotRecordFaliureWhenMethodCallCancelled(){
+    public void shouldNotRecordFaliureWhenMethodCallCancelled() {
 
     }
 
-    public void shouldNotRecordFaliureWhenServiceCallCancelled(){
+    public void shouldNotRecordFaliureWhenServiceCallCancelled() {
 
     }
 }

@@ -26,16 +26,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class ServerCallCircuitBreaker<ReqT, RespT>
-        extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
+    extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
 
     private final long startTime = System.nanoTime();
     private final CircuitBreaker circuitBreaker;
     private final Predicate<Status> successStatusPredicate;
 
     private ServerCallCircuitBreaker(
-            ServerCall<ReqT, RespT> delegate,
-            CircuitBreaker circuitBreaker,
-            Predicate<Status> successStatusPredicate) {
+        ServerCall<ReqT, RespT> delegate,
+        CircuitBreaker circuitBreaker,
+        Predicate<Status> successStatusPredicate) {
 
         super(delegate);
         this.circuitBreaker = circuitBreaker;
@@ -43,12 +43,12 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
     }
 
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(
-            ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker) {
+        ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker) {
         return decorate(call, circuitBreaker, Status::isOk);
     }
 
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(
-            ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
+        ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ServerCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
@@ -61,8 +61,8 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
             circuitBreaker.onSuccess(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
         } else {
             circuitBreaker.onError(
-                    System.nanoTime() - startTime, TimeUnit.NANOSECONDS,
-                    status.asRuntimeException(trailers));
+                System.nanoTime() - startTime, TimeUnit.NANOSECONDS,
+                status.asRuntimeException(trailers));
         }
         super.close(status, trailers);
     }

@@ -37,12 +37,12 @@ public class ClientStubCircuitBreakerTests {
     @Rule
     public GrpcServerRule serverRule = new GrpcServerRule();
 
-    private Channel getInterceptedChannel(){
+    private Channel getInterceptedChannel() {
         return ClientCircuitBreakerInterceptors.intercept(serverRule.getChannel());
     }
 
     @Test
-    public void decorateSuccessfulCall(){
+    public void decorateSuccessfulCall() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
 
         serverRule.getServiceRegistry().addService(new SimpleServiceGrpc.SimpleServiceImplBase() {
@@ -50,21 +50,21 @@ public class ClientStubCircuitBreakerTests {
             @Override
             public void unaryRpc(SimpleRequest request, StreamObserver<SimpleResponse> responseObserver) {
                 responseObserver.onNext(SimpleResponse.newBuilder()
-                        .setResponseMessage("response: "+request.getRequestMessage())
-                        .build());
+                    .setResponseMessage("response: " + request.getRequestMessage())
+                    .build());
                 responseObserver.onCompleted();
             }
         });
 
         SimpleServiceGrpc.SimpleServiceBlockingStub stub = SimpleServiceGrpc
-                .newBlockingStub(getInterceptedChannel())
-                .withOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER, circuitBreaker)
-                .withOption(CircuitBreakerCallOptions.SUCCESS_STATUS,
-                        status -> status.getCode() != Status.INVALID_ARGUMENT.getCode());
+            .newBlockingStub(getInterceptedChannel())
+            .withOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER, circuitBreaker)
+            .withOption(CircuitBreakerCallOptions.SUCCESS_STATUS,
+                status -> status.getCode() != Status.INVALID_ARGUMENT.getCode());
 
         SimpleResponse response = stub.unaryRpc(SimpleRequest.newBuilder()
-                .setRequestMessage("req:1")
-                .build());
+            .setRequestMessage("req:1")
+            .build());
 
         assertThat(response.getResponseMessage()).isEqualTo("response: req:1");
         // No metrics should exist because circuit breaker wasn't used
@@ -77,7 +77,7 @@ public class ClientStubCircuitBreakerTests {
     }
 
     @Test
-    public void decorateFailedCall(){
+    public void decorateFailedCall() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
 
         serverRule.getServiceRegistry().addService(new SimpleServiceGrpc.SimpleServiceImplBase() {
@@ -89,17 +89,17 @@ public class ClientStubCircuitBreakerTests {
         });
 
         SimpleServiceGrpc.SimpleServiceBlockingStub stub = SimpleServiceGrpc
-                .newBlockingStub(getInterceptedChannel())
-                .withOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER, circuitBreaker)
-                .withOption(CircuitBreakerCallOptions.SUCCESS_STATUS,
-                        status -> status.getCode() != Status.INVALID_ARGUMENT.getCode());
+            .newBlockingStub(getInterceptedChannel())
+            .withOption(CircuitBreakerCallOptions.CIRCUIT_BREAKER, circuitBreaker)
+            .withOption(CircuitBreakerCallOptions.SUCCESS_STATUS,
+                status -> status.getCode() != Status.INVALID_ARGUMENT.getCode());
 
         try {
             //noinspection ResultOfMethodCallIgnored
             stub.unaryRpc(SimpleRequest.newBuilder()
-                    .setRequestMessage("req:1")
-                    .build());
-        }catch (StatusRuntimeException ignored){
+                .setRequestMessage("req:1")
+                .build());
+        } catch (StatusRuntimeException ignored) {
 
         }
 
@@ -112,11 +112,11 @@ public class ClientStubCircuitBreakerTests {
 
     }
 
-    public void recordFaliureOnNotPermittedCalls(){
+    public void recordFaliureOnNotPermittedCalls() {
 
     }
 
-    public void shouldNotRecordFaliureWhenCallCancelled(){
+    public void shouldNotRecordFaliureWhenCallCancelled() {
 
     }
 
