@@ -35,7 +35,7 @@ ext {
     micronautVersion = '2.1.0'
     micronautTestVersion = '2.1.0'
     groovyVersion = '2.5.6'
-    grpcVersion = '1.24.0'
+    grpcVersion = '1.35.0'
 
     libraries = [
             // compile
