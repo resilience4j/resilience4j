@@ -65,7 +65,7 @@ class CompletableRateLimiter extends Completable {
 
         @Override
         protected void hookOnError(Throwable e) {
-            rateLimiter.drainIfNeeded(Either.left(e));
+            rateLimiter.onError(e);
         }
 
         @Override

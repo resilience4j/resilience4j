@@ -61,12 +61,12 @@ class ObserverRateLimiter<T> extends Observable<T> {
 
         @Override
         protected void hookOnError(Throwable e) {
-            rateLimiter.drainIfNeeded(Either.left(e));
+            rateLimiter.onError(e);
         }
 
         @Override
         protected void hookOnNext(T value) {
-            rateLimiter.drainIfNeeded(Either.right(value));
+            rateLimiter.onResult(value);
         }
 
         @Override

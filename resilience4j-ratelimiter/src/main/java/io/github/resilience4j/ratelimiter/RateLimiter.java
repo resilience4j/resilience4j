@@ -690,7 +690,9 @@ public interface RateLimiter {
      * {@link RateLimiterConfig#getDrainPermissionsOnResult()}.
      *
      * @param callsResult result of a methods call that was rate limiter by this rate limiter
+     * @deprecated because of changing visiblity to private in Java9+
      */
+    @Deprecated
     default void drainIfNeeded(Either<? extends Throwable, ?> callsResult) {
         Function<Either<? extends Throwable, ?>, Boolean> checker = getRateLimiterConfig()
             .getDrainPermissionsOnResult();
