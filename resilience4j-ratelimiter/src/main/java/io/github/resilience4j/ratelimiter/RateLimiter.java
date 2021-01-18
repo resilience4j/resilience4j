@@ -694,11 +694,7 @@ public interface RateLimiter {
     default void drainIfNeeded(Either<? extends Throwable, ?> callsResult) {
         Function<Either<? extends Throwable, ?>, Boolean> checker = getRateLimiterConfig()
             .getDrainPermissionsOnResult();
-        if (checker == null) {
-            return;
-        }
-        boolean drainNeeded = checker.apply(callsResult);
-        if (drainNeeded) {
+        if (checker != null && checker.apply(callsResult)) {
             drainPermissions();
         }
     }

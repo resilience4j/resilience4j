@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.reactivestreams.tck.SubscriberWhiteboxVerification;
@@ -30,7 +31,7 @@ public class RateLimiterSubscriberWhiteboxVerification extends
 
     @Override
     public Subscriber<Integer> createSubscriber(WhiteboxSubscriberProbe<Integer> probe) {
-        return new RateLimiterSubscriber<Integer>(MonoProcessor.create()) {
+        return new RateLimiterSubscriber<Integer>(RateLimiter.ofDefaults("verification"), MonoProcessor.create()) {
             @Override
             public void hookOnSubscribe(Subscription subscription) {
                 super.hookOnSubscribe(subscription);
