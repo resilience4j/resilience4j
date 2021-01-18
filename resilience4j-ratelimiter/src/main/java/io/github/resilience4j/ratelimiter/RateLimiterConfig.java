@@ -22,7 +22,7 @@ import io.vavr.control.Either;
 
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,13 +38,13 @@ public class RateLimiterConfig implements Serializable {
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
     private final int limitForPeriod;
-    private final Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult;
+    private final Predicate<Either<? extends Throwable, ?>> drainPermissionsOnResult;
     private final boolean writableStackTraceEnabled;
 
     private RateLimiterConfig(Duration timeoutDuration,
                               Duration limitRefreshPeriod,
                               int limitForPeriod,
-                              Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult,
+                              Predicate<Either<? extends Throwable, ?>> drainPermissionsOnResult,
                               boolean writableStackTraceEnabled) {
         this.timeoutDuration = timeoutDuration;
         this.limitRefreshPeriod = limitRefreshPeriod;
@@ -114,7 +114,7 @@ public class RateLimiterConfig implements Serializable {
         return limitForPeriod;
     }
 
-    public Function<Either<? extends Throwable, ?>, Boolean> getDrainPermissionsOnResult() {
+    public Predicate<Either<? extends Throwable, ?>> getDrainPermissionsOnResult() {
         return drainPermissionsOnResult;
     }
 
@@ -137,7 +137,7 @@ public class RateLimiterConfig implements Serializable {
         private Duration timeoutDuration = Duration.ofSeconds(5);
         private Duration limitRefreshPeriod = Duration.ofNanos(500);
         private int limitForPeriod = 50;
-        private Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult = any -> false;
+        private Predicate<Either<? extends Throwable, ?>> drainPermissionsOnResult = any -> false;
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
         public Builder() {
@@ -186,7 +186,7 @@ public class RateLimiterConfig implements Serializable {
          * @see RateLimiter#drainPermissions()
          */
         public Builder drainPermissionsOnResult(
-            Function<Either<? extends Throwable, ?>, Boolean> drainPermissionsOnResult) {
+            Predicate<Either<? extends Throwable, ?>> drainPermissionsOnResult) {
             this.drainPermissionsOnResult = drainPermissionsOnResult;
             return this;
         }
