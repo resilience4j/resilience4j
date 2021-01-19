@@ -36,16 +36,16 @@ class RateLimiterSubscriber<T> extends AbstractSubscriber<T> {
     }
 
     @Override
-    public void hookOnNext(T t) {
+    public void hookOnNext(T value) {
         if (!isDisposed()) {
-            rateLimiter.drainIfNeeded(Either.right(t));
-            downstreamSubscriber.onNext(t);
+            rateLimiter.onResult(value);
+            downstreamSubscriber.onNext(value);
         }
     }
 
     @Override
     public void hookOnError(Throwable t) {
-        rateLimiter.drainIfNeeded(Either.left(t));
+        rateLimiter.onError(t);
         downstreamSubscriber.onError(t);
     }
 
