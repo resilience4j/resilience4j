@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.time.Duration;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -34,7 +34,7 @@ public class RateLimiterConfigTest {
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
-    private static final Function<Either<? extends Throwable, ?>, Boolean> DRAIN_CONDITION_CHECKER = result -> false;
+    private static final Predicate<Either<? extends Throwable, ?>> DRAIN_CONDITION_CHECKER = result -> false;
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String REFRESH_PERIOD_MUST_NOT_BE_NULL = "RefreshPeriod must not be null";
 
