@@ -21,6 +21,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
+import io.vavr.control.Either;
 
 import java.util.concurrent.TimeUnit;
 
@@ -60,7 +61,12 @@ class ObserverRateLimiter<T> extends Observable<T> {
 
         @Override
         protected void hookOnError(Throwable e) {
-            // NoOp
+            rateLimiter.onError(e);
+        }
+
+        @Override
+        protected void hookOnNext(T value) {
+            rateLimiter.onResult(value);
         }
 
         @Override
