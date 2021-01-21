@@ -25,6 +25,7 @@ import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.Metrics;
 import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,7 +37,7 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     private final float failureRateThreshold;
     private final float slowCallRateThreshold;
     private final long slowCallDurationThresholdInNanos;
-    private int minimumNumberOfCalls;
+    private final int minimumNumberOfCalls;
 
     private AdaptiveBulkheadMetrics(int slidingWindowSize,
         AdaptiveBulkheadConfig.SlidingWindowType slidingWindowType,
@@ -67,9 +68,9 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     public Result onSuccess(long duration, TimeUnit durationUnit) {
         Snapshot snapshot;
         if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
-            snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_SUCCESS);
+            snapshot = record(duration, durationUnit, Outcome.SLOW_SUCCESS);
         } else {
-            snapshot = metrics.record(duration, durationUnit, Outcome.SUCCESS);
+            snapshot = record(duration, durationUnit, Outcome.SUCCESS);
         }
         return checkIfThresholdsExceeded(snapshot);
     }
@@ -82,11 +83,15 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     public Result onError(long duration, TimeUnit durationUnit) {
         Snapshot snapshot;
         if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
-            snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_ERROR);
+            snapshot = record(duration, durationUnit, Outcome.SLOW_ERROR);
         } else {
-            snapshot = metrics.record(duration, durationUnit, Outcome.ERROR);
+            snapshot = record(duration, durationUnit, Outcome.ERROR);
         }
         return checkIfThresholdsExceeded(snapshot);
+    }
+
+    Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
+        return metrics.record(duration, durationUnit, outcome);
     }
 
     /**
@@ -177,6 +182,18 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     @Override
     public int getNumberOfSlowFailedCalls() {
         return this.metrics.getSnapshot().getNumberOfSlowFailedCalls();
+    }
+
+    @Override
+    public int getAvailableConcurrentCalls() {
+        // TODO
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public int getMaxAllowedConcurrentCalls() {
+        // TODO
+        throw new NotImplementedException();
     }
 
     enum Result {

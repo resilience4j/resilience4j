@@ -4,7 +4,6 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.adaptive.internal.amid.AimdLimiter;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.knowm.xchart.BitmapEncoder;
@@ -28,27 +27,25 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 public class AimdLimiterTest {
 	private AdaptiveBulkhead bulkhead;
-	private AdaptiveBulkheadConfig<AimdConfig> config;
-	private AimdLimiter aimdLimiter;
+	private AdaptiveBulkheadConfig config;
+    private AimdLimiter aimdLimiter;
 	// enable if u need to see the graphs of the executions
     private boolean drawGraphs = false;
 
 	@Before
 	public void setup() {
-		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
+        config = AdaptiveBulkheadConfig.builder()
+				.maxConcurrentRequestsLimit(50)
 				.minConcurrentRequestsLimit(5)
 				.slidingWindowSize(5)
-				.slidingWindowTime(2)
+//            .slidingWindowTime(2)
+                .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
 				.failureRateThreshold(50)
 				.slowCallRateThreshold(50)
 				.slowCallDurationThreshold(200)
-				.build()).build();
-
-
+				.build();
 		bulkhead = AdaptiveBulkhead.of("test", config);
-
 		aimdLimiter = new AimdLimiter(config);
-
 	}
 
 	@Test
@@ -59,9 +56,9 @@ public class AimdLimiterTest {
 		// if u like to get the graphs , increase the number of iterations to have better distribution
 		for (int i = 0; i < 3000; i++) {
 			final Duration duration = Duration.ofMillis(randomLatency(5, 400));
-			AdaptiveLimitBulkhead adaptiveLimitBulkhead = (AdaptiveLimitBulkhead) bulkhead;
+			AdaptiveBulkheadStateMachine adaptiveBulkheadStateMachine = (AdaptiveBulkheadStateMachine) bulkhead;
 			Random random = new Random();
-			final LimitResult limitResult = adaptiveLimitBulkhead.record(duration.toMillis(), random.nextBoolean(), randomLInFlight(1, 50));
+			final LimitResult limitResult = adaptiveBulkheadStateMachine.record(duration.toMillis(), random.nextBoolean(), randomLInFlight(1, 50));
 			if (drawGraphs) {
 				maxConcurrentCalls.add((double) limitResult.getLimit());
 				time.add((double) count.incrementAndGet());

@@ -11,13 +11,13 @@ import org.junit.Test;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 
 /**
  * @author romeh
  */
 public class InMemoryAdaptiveBulkheadRegistryTest {
-	private AdaptiveBulkheadConfig<AimdConfig> config;
+
+    private AdaptiveBulkheadConfig config;
 	private AdaptiveBulkheadRegistry registry;
 
 	@Before
@@ -25,11 +25,10 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 		// registry with default config
 		registry = AdaptiveBulkheadRegistry.ofDefaults();
 		// registry with custom config
-		config = AdaptiveBulkheadConfig.<AimdConfig>builder().config(AimdConfig.builder()
+        config = AdaptiveBulkheadConfig.builder()
 				.maxConcurrentRequestsLimit(300)
 				.slowCallDurationThreshold(1)
-				.slowCallDurationThreshold(200)
-				.build()).build();
+				.build();
 	}
 
 	@Test
@@ -44,16 +43,13 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 
 	@Test
 	public void shouldReturnTheCorrectName() {
-
 		AdaptiveBulkhead bulkhead = registry.bulkhead("test");
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getName()).isEqualTo("test");
-		assertThat(((AdaptiveBulkheadConfig<AimdConfig>) bulkhead.getBulkheadConfig()).getConfiguration().getMaxLimit()).isEqualTo(200);
 	}
 
 	@Test
 	public void shouldBeTheSameInstance() {
-
 		AdaptiveBulkhead bulkhead1 = registry.bulkhead("test", config);
 		AdaptiveBulkhead bulkhead2 = registry.bulkhead("test", config);
 
@@ -63,7 +59,6 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 
 	@Test
 	public void shouldBeNotTheSameInstance() {
-
 		AdaptiveBulkhead bulkhead1 = registry.bulkhead("test1");
 		AdaptiveBulkhead bulkhead2 = registry.bulkhead("test2");
 

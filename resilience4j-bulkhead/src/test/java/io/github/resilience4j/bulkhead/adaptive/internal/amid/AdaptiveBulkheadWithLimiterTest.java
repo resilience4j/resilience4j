@@ -3,7 +3,6 @@ package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import org.apache.http.client.HttpClient;
@@ -55,20 +54,20 @@ public class AdaptiveBulkheadWithLimiterTest {
     private boolean drawGraphs = false;
     private List<LogEntry> maxConcurrentCalls = new CopyOnWriteArrayList<>();
     private AdaptiveBulkhead bulkhead;
-    private AdaptiveBulkheadConfig<AimdConfig> config;
+    private AdaptiveBulkheadConfig config;
     private final String baseUrl = mockServerContainer.getEndpoint() + "/testService/2";
 
     @Before
     public void init() {
         maxConcurrentCalls.clear();
-        config = AdaptiveBulkheadConfig.<AimdConfig>builder()
-            .config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
+        config = AdaptiveBulkheadConfig.builder()
+                .maxConcurrentRequestsLimit(50)
                 .minConcurrentRequestsLimit(10)
                 .slidingWindowSize(20)
                 .failureRateThreshold(50)
                 .slowCallRateThreshold(50)
                 .slowCallDurationThreshold(150)
-                .build()).build();
+                .build();
 
         bulkhead = AdaptiveBulkhead.of("test", config);
         bulkhead.getEventPublisher().onEvent(event -> {
@@ -143,14 +142,11 @@ public class AdaptiveBulkheadWithLimiterTest {
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet httpGet = new HttpGet(getUrl);
         httpGet.setHeader("Content-type", "application/json");
-        org.apache.http.HttpResponse response = null;
         try {
-            response = client.execute(httpGet);
-
+            return client.execute(httpGet);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return response;
     }
 
 

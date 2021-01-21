@@ -19,7 +19,7 @@ import static org.mockito.Mockito.times;
 public class BulkheadFutureTest {
 
     private HelloWorldService helloWorldService;
-    private Future future;
+    private Future<String> future;
     private BulkheadConfig config;
 
     @Before
@@ -98,9 +98,8 @@ public class BulkheadFutureTest {
                 .decorateFuture(bulkhead, helloWorldService::returnHelloWorldFuture);
 
         Future<String> decoratedFuture = supplier.get();
-
-        catchThrowable(() -> decoratedFuture.get());
-        catchThrowable(() -> decoratedFuture.get());
+        catchThrowable(decoratedFuture::get);
+        catchThrowable(decoratedFuture::get);                                            
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();

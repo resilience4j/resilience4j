@@ -39,7 +39,15 @@ public interface Metrics {
     Snapshot getSnapshot();
 
     enum Outcome {
-        SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR
+        SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR;
+
+        public static Outcome of(boolean slow, boolean success) {
+            if (success) {
+                return slow ? Outcome.SLOW_SUCCESS : Outcome.SUCCESS;
+            } else {
+                return slow ? Outcome.SLOW_ERROR : Outcome.ERROR;
+            }
+        }
     }
 
 }

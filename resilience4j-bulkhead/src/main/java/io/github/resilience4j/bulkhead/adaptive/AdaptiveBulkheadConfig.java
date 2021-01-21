@@ -45,6 +45,7 @@ public class AdaptiveBulkheadConfig {
 	private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
 	private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     private static final int DEFAULT_INCREASE_SUMMAND = 1;
+    private static final float DEFAULT_INCREASE_MULTIPLIER = 2f;
     private static final float DEFAULT_DECREASE_MULTIPLIER = 0.5f;
 
     @SuppressWarnings("unchecked")
@@ -83,7 +84,13 @@ public class AdaptiveBulkheadConfig {
 	private AdaptiveBulkheadConfig() {
 	}
 
-	public Predicate<Throwable> getRecordExceptionPredicate() {
+
+    @Deprecated
+    public static Builder builder() {
+	    return custom();
+    }
+
+    public Predicate<Throwable> getRecordExceptionPredicate() {
 		return recordExceptionPredicate;
 	}
 
@@ -146,9 +153,34 @@ public class AdaptiveBulkheadConfig {
     public float getDecreaseMultiplier() {
         return decreaseMultiplier;
     }
+    
+    public float getIncreaseMultiplier() {
+	    // TODO
+        return DEFAULT_INCREASE_MULTIPLIER;
+    }
 
     public Duration getMaxWaitDuration() {
         return maxWaitDuration;
+    }
+
+    @Deprecated
+    public int getMaxLimit() {
+        return getMaxConcurrentCalls();
+    }
+
+    @Deprecated
+    public int getMinLimit() {
+        return getMinConcurrentCalls();
+    }
+
+    @Deprecated
+    public float getConcurrencyDropMultiplier() {
+        return getDecreaseMultiplier();
+    }
+
+    @Deprecated
+    public Duration getDesirableLatency() {
+        return getMaxWaitDuration();
     }
 
     public enum SlidingWindowType {
@@ -498,6 +530,26 @@ public class AdaptiveBulkheadConfig {
                     .or(recordExceptionPredicate) : predicate)
                 .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
                     : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+        }
+
+        @Deprecated
+        public Builder maxConcurrentRequestsLimit(int i) {
+            return maxConcurrentCalls(i);
+        }
+
+        @Deprecated
+        public Builder minConcurrentRequestsLimit(int i) {
+            return minConcurrentCalls(i);
+        }
+
+        @Deprecated
+        public Builder slowCallDurationThreshold(int i) {
+            return slowCallDurationThreshold(Duration.ofMillis(i));
+        }
+
+        @Deprecated
+        public Builder concurrencyDropMultiplier(float v) {
+            return decreaseMultiplier(v);
         }
     }
 
