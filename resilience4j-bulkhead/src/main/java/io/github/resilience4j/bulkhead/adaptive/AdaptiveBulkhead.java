@@ -496,6 +496,10 @@ public interface AdaptiveBulkhead {
 		return new AdaptiveBulkheadStateMachine(name, bulkheadConfigSupplier.get());
 	}
 
+    void transitionToCongestionAvoidance();
+
+    void transitionToSlowStart();
+
     /**
      * States of the AdaptiveBulkhead.
      */
@@ -601,15 +605,17 @@ public interface AdaptiveBulkhead {
 	 */
     interface AdaptiveEventPublisher extends io.github.resilience4j.core.EventPublisher<AdaptiveBulkheadEvent> {
 
-		EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
+		EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer);
 
-		EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer);
+		EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
 
 		EventPublisher onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer);
 
 		EventPublisher onError(EventConsumer<BulkheadOnErrorEvent> eventConsumer);
 
 		EventPublisher onIgnoredError(EventConsumer<BulkheadOnIgnoreEvent> eventConsumer);
+
+        EventPublisher onStateTransition(EventConsumer<BulkheadOnStateTransitionEvent> eventConsumer);
 
 	}
 }

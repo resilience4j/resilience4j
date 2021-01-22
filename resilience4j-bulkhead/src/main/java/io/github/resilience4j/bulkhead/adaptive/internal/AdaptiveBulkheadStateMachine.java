@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import static io.github.resilience4j.core.metrics.Metrics.Outcome;
 
@@ -102,31 +103,29 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 	@Override
 	public void onSuccess(long duration, TimeUnit durationUnit) {
         stateReference.get().onSuccess(duration, durationUnit);
-
-        // TODO
 		publishBulkheadEvent(new BulkheadOnSuccessEvent(shortName(bulkhead), Collections.emptyMap()));
-		final LimitResult limitResult = record(duration, true, inFlight.getAndDecrement());
-		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
+        // TODO
+//		final LimitResult limitResult = record(duration, true, inFlight.getAndDecrement());
+//		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
 
 	@Override
 	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
-		//noinspection unchecked
 		if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
             releasePermission();
 			publishBulkheadEvent(new BulkheadOnIgnoreEvent(shortName(bulkhead), errorData(throwable)));
 		} else if (adaptiveBulkheadConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
-			Instant finish = Instant.now();
-			this.handleError(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit, throwable);
-		} else {
-			if (start != 0) {
-				Instant finish = Instant.now();
-				this.onSuccess(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit);
-			}
+			handleError(timeUntilNow(start), durationUnit, throwable);
+		} else if (start != 0) {
+            onSuccess(timeUntilNow(start), durationUnit);
 		}
 	}
 
-	@Override
+    private long timeUntilNow(long start) {
+        return Duration.between(Instant.ofEpochMilli(start), Instant.now()).toMillis();
+    }
+
+    @Override
 	public AdaptiveBulkheadConfig getBulkheadConfig() {
 		return adaptiveBulkheadConfig;
 	}
@@ -146,6 +145,24 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 		return name;
 	}
 
+    @Override
+    public void transitionToCongestionAvoidance() {
+        stateTransition(State.CONGESTION_AVOIDANCE, current ->
+            new CongestionAvoidance(current.getMetrics(), current::publishBulkheadEvent));
+    }
+
+    @Override
+    public void transitionToSlowStart() {
+        stateTransition(State.SLOW_START, current ->
+            new SlowStartState(current.getMetrics(), current::publishBulkheadEvent));
+    }
+
+    // TODO
+    private void stateTransition(State newState,
+        UnaryOperator<AdaptiveBulkheadState> newStateGenerator) {
+        AdaptiveBulkheadState previousState = stateReference.getAndUpdate(newStateGenerator);
+        publishBulkheadEvent(new BulkheadOnStateTransitionEvent(name, Collections.emptyMap()));
+    }
 
     private class SlowStartState implements AdaptiveBulkheadState {
 
@@ -207,7 +224,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
                     if (isSlowStart.compareAndSet(true, false)) {
                         recalculateMaxConcurrentCalls(
                             bulkhead, adaptiveBulkheadConfig.getDecreaseMultiplier());
-                        // TODO transition
+                        transitionToCongestionAvoidance();
                     }
                     break;
                 case BELOW_MINIMUM_CALLS_THRESHOLD:
@@ -301,7 +318,8 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
                     break;
                 case BELOW_MINIMUM_CALLS_THRESHOLD:
                     if (congestionAvoidance.compareAndSet(true, false)) {
-                        // TODO transition
+                        // set max as adaptiveBulkheadConfig.getInitialConcurrentCalls?
+                        transitionToSlowStart();
                     }
                     break;
             }
@@ -342,13 +360,13 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private static class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
 
 		@Override
-		public EventPublisher<?> onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
+		public EventPublisher<?> onLimitIncreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
 			registerConsumer(BulkheadOnLimitIncreasedEvent.class.getSimpleName(), eventConsumer);
 			return this;
 		}
 
 		@Override
-		public EventPublisher<?> onLimitDecreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
+		public EventPublisher<?> onLimitDecreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
 			registerConsumer(BulkheadOnLimitDecreasedEvent.class.getSimpleName(), eventConsumer);
 			return this;
 		}
@@ -371,7 +389,13 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 			return this;
 		}
 
-		@Override
+        @Override
+        public EventPublisher<?> onStateTransition(EventConsumer<BulkheadOnStateTransitionEvent> eventConsumer) {
+            registerConsumer(BulkheadOnStateTransitionEvent.class.getSimpleName(), eventConsumer);
+            return this;
+        }
+
+        @Override
         public void consumeEvent(AdaptiveBulkheadEvent event) {
 			super.processEvent(event);
 		}
@@ -539,8 +563,9 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 	private void handleError(long callTime, TimeUnit durationUnit, Throwable throwable) {
 		bulkhead.onComplete();
         publishBulkheadEvent(new BulkheadOnErrorEvent(shortName(bulkhead), errorData(throwable)));
-		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
-		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
+//      TODO
+//		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
+//		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
 	}
 
 }

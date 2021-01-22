@@ -21,7 +21,7 @@ package io.github.resilience4j.bulkhead.event;
 import java.time.ZonedDateTime;
 import java.util.Map;
 
-abstract class AbstractBulkheadLimitEvent implements AdaptiveBulkheadEvent {
+public abstract class AbstractBulkheadLimitEvent implements AdaptiveBulkheadEvent {
 
 	private final String bulkheadName;
 	private final Map<String, String> eventData;
