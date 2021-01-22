@@ -465,8 +465,6 @@ public interface AdaptiveBulkhead {
 		};
 	}
 
-
-
 	/**
 	 * Create a Bulkhead with a default configuration.
 	 *

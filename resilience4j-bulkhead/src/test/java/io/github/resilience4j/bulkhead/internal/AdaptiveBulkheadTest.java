@@ -31,7 +31,6 @@ import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 
 
-// TODO
 @Ignore
 public class AdaptiveBulkheadTest {
 	private AdaptiveBulkhead default_bulkhead;
@@ -42,7 +41,8 @@ public class AdaptiveBulkheadTest {
 	public void setUp() {
 		helloWorldService = Mockito.mock(HelloWorldService.class);
 
-		config = AdaptiveBulkheadConfig.builder().maxConcurrentRequestsLimit(2)
+		config = AdaptiveBulkheadConfig.builder()
+                .maxConcurrentRequestsLimit(2)
 				.minConcurrentRequestsLimit(1)
 				.slowCallDurationThreshold(100)
 				.build();
