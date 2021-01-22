@@ -32,14 +32,10 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-/**
- * test the adoptive bulkhead limiter logic
- */
-@Ignore
-public class AdaptiveBulkheadWithLimiterTest {
+@Ignore("uses Docker")
+public class AdaptiveBulkheadLimitsTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-        AdaptiveBulkheadWithLimiterTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdaptiveBulkheadLimitsTest.class);
     private static MockServerContainer mockServerContainer;
     private static MockServerClient client;
 

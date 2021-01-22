@@ -11,88 +11,150 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
+import java.awt.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * test the adoptive bulkhead limiter logic
  */
 public class AdaptiveBulkheadGraphTest {
 
+    private static final Random NON_RANDOM = new Random(0);
     private static final int SLOW_CALL_DURATION_THRESHOLD = 200;
+    public static final int RATE_THRESHOLD = 50;
+    public static final int MAX_CONCURRENT_CALLS = 100;
     private AdaptiveBulkheadStateMachine bulkhead;
-    private AdaptiveBulkheadConfig config;
-    // enable if u need to see the graphs of the executions
+    // TODO disable
     private boolean drawGraphs = !false;
-    AtomicInteger count = new AtomicInteger();
     List<Double> time = new ArrayList<>();
     List<Integer> maxConcurrentCalls = new ArrayList<>();
+    List<Float> callsRates = new ArrayList<>();
 
     @Before
     public void setup() {
-        config = AdaptiveBulkheadConfig.custom()
-            .maxConcurrentCalls(50)
-            .minConcurrentCalls(5)
+        AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
+            .maxConcurrentCalls(MAX_CONCURRENT_CALLS)
+            .minConcurrentCalls(2)
+            .initialConcurrentCalls(10)
             .slidingWindowSize(5)
-//            .slidingWindowTime(2)
             .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
-            .failureRateThreshold(50)
-            .slowCallRateThreshold(50)
+            .failureRateThreshold(RATE_THRESHOLD)
+            .slowCallRateThreshold(RATE_THRESHOLD)
             .slowCallDurationThreshold(Duration.ofMillis(SLOW_CALL_DURATION_THRESHOLD))
             .build();
         bulkhead = (AdaptiveBulkheadStateMachine) AdaptiveBulkhead.of("test", config);
+        bulkhead.getEventPublisher().onLimitIncreased(this::recordLimitChange);
+        bulkhead.getEventPublisher().onLimitDecreased(this::recordLimitChange);
     }
 
     @Test
-    public void testLimiter() {
-        if (drawGraphs) {
-            bulkhead.getEventPublisher().onLimitIncreased(this::recordLimitChange);
-            bulkhead.getEventPublisher().onLimitDecreased(this::recordLimitChange);
-        }
-        // if u like to get the graphs, increase the number of iterations to have better distribution
-        for (int i = 0; i < 3000; i++) {
-            final Duration duration = Duration.ofMillis(randomLatency(5, 2 * SLOW_CALL_DURATION_THRESHOLD));
-            bulkhead.onSuccess(duration.toMillis(), TimeUnit.MILLISECONDS);
-        }
+    public void testSlowCalls() {
+        bulkhead.getEventPublisher().onLimitIncreased(this::recordSlowCallsRates);
+        bulkhead.getEventPublisher().onLimitDecreased(this::recordSlowCallsRates);
 
-        assertThat(config).isNotNull();
-        assertThat(bulkhead).isNotNull();
-
-        if (drawGraphs) {
-            // Create Chart
-            XYChart chart2 = new XYChartBuilder().width(800).height(600)
-                .title(getClass().getSimpleName()).xAxisTitle("time")
-                .yAxisTitle("Concurrency limit").build();
-            chart2.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
-            chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-            chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
-            chart2.getStyler().setYAxisDecimalPattern("ConcurrentCalls #");
-            chart2.getStyler().setPlotMargin(0);
-            chart2.getStyler().setPlotContentSize(.95);
-
-            chart2.addSeries("MaxConcurrentCalls", time, maxConcurrentCalls);
-            try {
-                BitmapEncoder
-                    .saveJPGWithQuality(chart2, "./AdaptiveBulkheadConcurrency.jpg", 0.95f);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        for (int i = 0; i < 800; i++) {
+            bulkhead.onSuccess(nextLatency(), TimeUnit.MILLISECONDS);
         }
+        drawGraph("testSlowCalls");
     }
 
-    public long randomLatency(int min, int max) {
-        return min + ThreadLocalRandom.current().nextLong(max - min);
+    @Test
+    public void testFailedCalls() {
+        bulkhead.getEventPublisher().onLimitIncreased(this::recordFailureCallsRates);
+        bulkhead.getEventPublisher().onLimitDecreased(this::recordFailureCallsRates);
+        Throwable failure = new Throwable();
+
+        for (int i = 0; i < 800; i++) {
+            if (nextErrorOccurred()) {
+                bulkhead.onError(1, TimeUnit.MILLISECONDS, failure);
+            } else {
+                bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+            }
+        }
+        drawGraph("testFailedCalls");
+    }
+
+    @Test
+    public void testFailedCallsOnly() {
+        bulkhead.getEventPublisher().onLimitIncreased(this::recordFailureCallsRates);
+        bulkhead.getEventPublisher().onLimitDecreased(this::recordFailureCallsRates);
+        Throwable failure = new Throwable();
+
+        for (int i = 0; i < 800; i++) {
+            bulkhead.onError(1, TimeUnit.MILLISECONDS, failure);
+        }
+        drawGraph("testFailedCallsOnly");
+    }
+
+    @Test
+    public void testSuccessfulCallsOnly() {
+        bulkhead.getEventPublisher().onLimitIncreased(this::recordFailureCallsRates);
+        bulkhead.getEventPublisher().onLimitDecreased(this::recordFailureCallsRates);
+
+        for (int i = 0; i < 800; i++) {
+            bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+        }
+        drawGraph("testSuccessfulCallsOnly");
+    }
+
+    private int nextLatency() {
+        return NON_RANDOM.nextInt(2 * SLOW_CALL_DURATION_THRESHOLD);
+    }
+
+    private boolean nextErrorOccurred() {
+        return NON_RANDOM.nextInt(2) == 0;
     }
 
     private void recordLimitChange(AbstractBulkheadLimitEvent event) {
-        maxConcurrentCalls.add(Integer.parseInt(event.eventData().get("newMaxConcurrentCalls")));
-        time.add((double) count.incrementAndGet());
+        maxConcurrentCalls.add(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
+        time.add((double) maxConcurrentCalls.size());
+    }
+
+    private void recordSlowCallsRates(AbstractBulkheadLimitEvent event) {
+        callsRates.add((float) (bulkhead.getMetrics().getSlowCallRate() >=
+            bulkhead.getBulkheadConfig().getSlowCallRateThreshold() ? MAX_CONCURRENT_CALLS : 0));
+    }
+
+    private void recordFailureCallsRates(AbstractBulkheadLimitEvent event) {
+        callsRates.add((float) (bulkhead.getMetrics().getFailureRate() >=
+            bulkhead.getBulkheadConfig().getFailureRateThreshold() ? MAX_CONCURRENT_CALLS : 0));
+    }
+
+    private void drawGraph(String testName) {
+        if (!drawGraphs) {
+            return;
+        }
+        XYChart chart2 = new XYChartBuilder().title(getClass().getSimpleName() + " - " + testName)
+            .width(1600)
+            .height(800)
+            .xAxisTitle("time")
+            .yAxisTitle("concurrency limit")
+            .build();
+        chart2.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
+        chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+        //noinspection SuspiciousNameCombination
+        chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
+        chart2.getStyler().setPlotMargin(0);
+        chart2.getStyler().setPlotContentSize(.95);
+
+        chart2.addSeries("CallsRates", time, callsRates)
+            .setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.StepArea)
+            .setMarkerColor(Color.WHITE)
+            .setLineColor(Color.ORANGE)
+            .setFillColor(Color.ORANGE);
+        chart2.addSeries("MaxConcurrentCalls", time, maxConcurrentCalls)
+            .setMarkerColor(Color.CYAN)
+            .setLineColor(Color.BLUE);
+        try {
+            BitmapEncoder
+                .saveJPGWithQuality(chart2, "./" + testName + ".jpg", 0.95f);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

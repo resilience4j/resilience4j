@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.function.Predicate;
 
 import org.junit.Ignore;
@@ -20,6 +21,7 @@ public class AdaptiveBulkheadConfigTest {
 						.slowCallDurationThreshold(150)
 						.slowCallRateThreshold(50)
 						.failureRateThreshold(50)
+                        .maxWaitDuration(Duration.ofMillis(150))
 //						.slidingWindowTime(5)
 						.slidingWindowSize(100)
                         .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
@@ -29,7 +31,7 @@ public class AdaptiveBulkheadConfigTest {
 		assertThat(config.getDecreaseMultiplier()).isEqualTo(0.3f);
 		assertThat(config.getMinLimit()).isEqualTo(3);
 		assertThat(config.getMaxLimit()).isEqualTo(3);
-//		assertThat(config.getDesirableLatency().toMillis()).isEqualTo(150);
+		assertThat(config.getDesirableLatency().toMillis()).isEqualTo(150);
 		assertThat(config.getSlidingWindowSize()).isEqualTo(100);
 //		assertThat(config.getSlidingWindowTime()).isEqualTo(5);
 		assertThat(config.getSlowCallRateThreshold()).isEqualTo(50);
@@ -37,46 +39,36 @@ public class AdaptiveBulkheadConfigTest {
 		assertThat(config.getSlidingWindowType()).isEqualTo(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED);
 	}
 
-	@Ignore
 	@Test
 	public void tesConcurrencyDropMultiplierConfig() {
-		AdaptiveBulkheadConfig build = AdaptiveBulkheadConfig.builder().concurrencyDropMultiplier(0f).build();
-		assertThat(build.getConcurrencyDropMultiplier()).isEqualTo(0.85d);
+		AdaptiveBulkheadConfig build = AdaptiveBulkheadConfig.builder().concurrencyDropMultiplier(0.85f).build();
+		assertThat(build.getConcurrencyDropMultiplier()).isEqualTo(0.85f);
 	}
 
-	@Ignore
 	@Test
 	public void testNotSetDesirableOperationLatencyConfig() {
 		assertThatThrownBy(() -> AdaptiveBulkheadConfig.builder().slowCallDurationThreshold(0).build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("slowCallDurationThreshold must be a positive value greater than zero");
+				.hasMessage("slowCallDurationThreshold must be at least 1[ns]");
 	}
 
-    @Ignore
 	@Test
 	public void testNotSetMaxAcceptableRequestLatencyConfig() {
 		assertThatThrownBy(() -> AdaptiveBulkheadConfig.builder().maxConcurrentRequestsLimit(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("maxConcurrentRequestsLimit must be a positive value greater than zero");
+				.hasMessage("maxConcurrentCalls must greater than 0");
 	}
 
-    @Ignore
 	@Test
 	public void testNotSetMinAcceptableRequestLatencyConfig() {
 		assertThatThrownBy(() -> AdaptiveBulkheadConfig.builder().minConcurrentRequestsLimit(0)
 				.build())
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("minConcurrentRequestsLimit must be a positive value greater than zero");
+				.hasMessage("minConcurrentCalls must greater than 0");
 	}
 
-//	@Test
-//	public void testLimitIncrementInflightFactor() {
-//		AdaptiveBulkheadConfig build = AdaptiveBulkheadConfig.builder().limitIncrementInflightFactor(1).build();
-//		assertThat(build.getLimitIncrementInflightFactor()).isEqualTo(1);
-//	}
-
-    @Ignore
+	@Ignore
 	@Test
 	public void testEqual() {
 		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder()
@@ -155,7 +147,7 @@ public class AdaptiveBulkheadConfigTest {
 		then(ignoreExceptionPredicate.test(new ExtendsExtendsException())).isEqualTo(true); // explicitly ignored
 	}
 
-    @Ignore
+	@Ignore
 	@Test
 	public void shouldUseRecordExceptionsToBuildPredicate() {
 		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder(AdaptiveBulkheadConfig.ofDefaults())
@@ -205,6 +197,5 @@ public class AdaptiveBulkheadConfigTest {
 		then(ignoreExceptionPredicate.test(new ExtendsRuntimeException())).isEqualTo(true); // explicitly ignored 2
 		then(ignoreExceptionPredicate.test(new ExtendsExtendsException())).isEqualTo(true); // implicitly ignored by ExtendsRuntimeException
 	}
-
 
 }

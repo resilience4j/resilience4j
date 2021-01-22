@@ -32,17 +32,19 @@ import java.util.function.Predicate;
 public class AdaptiveBulkheadConfig {
 
     private static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
-    private static final int DEFAULT_INITIAL_CONCURRENT_CALLS = 5;
     private static final int DEFAULT_MIN_CONCURRENT_CALLS = 2;
+    private static final int DEFAULT_INITIAL_CONCURRENT_CALLS = DEFAULT_MIN_CONCURRENT_CALLS;
     private static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
 
-    private static final float DEFAULT_FAILURE_RATE_THRESHOLD = 50.0f; // Percentage
-    private static final float DEFAULT_SLOW_CALL_RATE_THRESHOLD = 50.0f; // Percentage
+    private static final float DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE = 50.0f;
+    private static final float DEFAULT_SLOW_CALL_RATE_THRESHOLD_PERCENTAGE = 50.0f;
     private static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
-    private static final long DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 5; // Seconds
+    private static final long DEFAULT_SLOW_CALL_DURATION_THRESHOLD_SECONDS = 5;
     private static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 100;
     private static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
-	private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
+    // The default exception predicate counts all exceptions as failures.
+    private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
+	// The default exception predicate ignores no exceptions.
 	private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     private static final int DEFAULT_INCREASE_SUMMAND = 1;
     private static final float DEFAULT_INCREASE_MULTIPLIER = 2f;
@@ -52,25 +54,19 @@ public class AdaptiveBulkheadConfig {
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
-
-	// The default exception predicate counts all exceptions as failures.
 	@NonNull
 	private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
-	// The default exception predicate ignores no exceptions.
 	@NonNull
 	private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
-
-	private int initialConcurrency = 1;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
 	private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
-    private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
+    private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
     private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
-    private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
+    private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD_PERCENTAGE;
     private Duration slowCallDurationThreshold = Duration
-        .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
-
+        .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD_SECONDS);
     private int minConcurrentCalls = DEFAULT_MIN_CONCURRENT_CALLS;
     private int initialConcurrentCalls = DEFAULT_INITIAL_CONCURRENT_CALLS;
     private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
@@ -78,12 +74,8 @@ public class AdaptiveBulkheadConfig {
     private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
     private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
 
-    // LimitIncrementInflightFactor will increment the limit only if inflight * LimitIncrementInflightFactor > limit
-    private int limitIncrementInflightFactor = 2;
-
 	private AdaptiveBulkheadConfig() {
 	}
-
 
     @Deprecated
     public static Builder builder() {
@@ -98,20 +90,14 @@ public class AdaptiveBulkheadConfig {
 		return ignoreExceptionPredicate;
 	}
 
-	public int getInitialConcurrency() {
-		return initialConcurrency;
-	}
-
     public int getMinimumNumberOfCalls() {
         return minimumNumberOfCalls;
     }
 
-    @NonNull
     public float getFailureRateThreshold() {
         return failureRateThreshold;
     }
 
-    @NonNull
     public int getSlidingWindowSize() {
         return slidingWindowSize;
     }
@@ -121,7 +107,6 @@ public class AdaptiveBulkheadConfig {
         return slidingWindowType;
     }
 
-    @NonNull
     public float getSlowCallRateThreshold() {
         return slowCallRateThreshold;
     }
@@ -225,33 +210,30 @@ public class AdaptiveBulkheadConfig {
 
 	public static class Builder {
 
-        private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
+        private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
-        private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
+        private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD_PERCENTAGE;
         private Duration slowCallDurationThreshold = Duration
-            .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
-
+            .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD_SECONDS);
+        private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
         private int minConcurrentCalls = DEFAULT_MIN_CONCURRENT_CALLS;
-        private int initialConcurrentCalls = DEFAULT_INITIAL_CONCURRENT_CALLS;
         private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
+        private int initialConcurrentCalls = DEFAULT_INITIAL_CONCURRENT_CALLS;
         private int increaseSummand = DEFAULT_INCREASE_SUMMAND;
         private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
         private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
-
 		@Nullable
 		private Predicate<Throwable> recordExceptionPredicate;
 		@Nullable
 		private Predicate<Throwable> ignoreExceptionPredicate;
-
-
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] recordExceptions = new Class[0];
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
-		private Builder() {
+        private Builder() {
 		}
 
 		private Builder(AdaptiveBulkheadConfig baseConfig) {
@@ -262,7 +244,8 @@ public class AdaptiveBulkheadConfig {
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.recordExceptions = baseConfig.recordExceptions;
             this.recordExceptionPredicate = baseConfig.recordExceptionPredicate;
-            this.ignoreExceptionPredicate = baseConfig.ignoreExceptionPredicate;
+            this.ignoreExceptions = baseConfig.ignoreExceptions;
+            this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
             this.minConcurrentCalls = baseConfig.minConcurrentCalls;
@@ -427,6 +410,11 @@ public class AdaptiveBulkheadConfig {
 			return this;
 		}
 
+        public final Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
+            this.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
+        }
+
         public final Builder minConcurrentCalls(int minConcurrentCalls) {
             if (minConcurrentCalls <= 0) {
                 throw new IllegalArgumentException(
@@ -472,7 +460,6 @@ public class AdaptiveBulkheadConfig {
             return this;
         }
 
-
         /**
          * Configures a maximum amount of time which the calling thread will wait to enter the
          * bulkhead. If bulkhead has space available, entry is guaranteed and immediate. If bulkhead
@@ -504,6 +491,8 @@ public class AdaptiveBulkheadConfig {
             config.slidingWindowSize = slidingWindowSize;
             config.minimumNumberOfCalls = minimumNumberOfCalls;
             config.recordExceptions = recordExceptions;
+            config.ignoreExceptions = ignoreExceptions;
+            config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.minConcurrentCalls = minConcurrentCalls;
             config.maxConcurrentCalls = maxConcurrentCalls;
             config.initialConcurrentCalls = initialConcurrentCalls;
@@ -514,7 +503,6 @@ public class AdaptiveBulkheadConfig {
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
             return config;
 		}
-
 
         private Predicate<Throwable> createIgnoreFailurePredicate() {
             return PredicateCreator.createExceptionsPredicate(ignoreExceptions)

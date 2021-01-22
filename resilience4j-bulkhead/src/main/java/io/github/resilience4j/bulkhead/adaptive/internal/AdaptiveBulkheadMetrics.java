@@ -54,15 +54,15 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
         }
         this.failureRateThreshold = adaptiveBulkheadConfig.getFailureRateThreshold();
         this.slowCallRateThreshold = adaptiveBulkheadConfig.getSlowCallRateThreshold();
-        this.slowCallDurationThresholdInNanos = adaptiveBulkheadConfig.getSlowCallDurationThreshold()
-            .toNanos();
+        this.slowCallDurationThresholdInNanos = adaptiveBulkheadConfig
+            .getSlowCallDurationThreshold().toNanos();
         this.internalBulkheadMetrics = internalBulkheadMetrics;
     }
 
     public AdaptiveBulkheadMetrics(AdaptiveBulkheadConfig adaptiveBulkheadConfig,
         Bulkhead.Metrics internalBulkheadMetrics) {
         this(adaptiveBulkheadConfig.getSlidingWindowSize(),
-            adaptiveBulkheadConfig.getSlidingWindowType(), 
+            adaptiveBulkheadConfig.getSlidingWindowType(),
             adaptiveBulkheadConfig,
             internalBulkheadMetrics);
     }
@@ -73,13 +73,7 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      * @return the result of the check
      */
     public Result onSuccess(long duration, TimeUnit durationUnit) {
-        Snapshot snapshot;
-        if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
-            snapshot = record(duration, durationUnit, Outcome.SLOW_SUCCESS);
-        } else {
-            snapshot = record(duration, durationUnit, Outcome.SUCCESS);
-        }
-        return checkIfThresholdsExceeded(snapshot);
+        return checkIfThresholdsExceeded(record(duration, durationUnit, true));
     }
 
     /**
@@ -88,17 +82,12 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      * @return the result of the check
      */
     public Result onError(long duration, TimeUnit durationUnit) {
-        Snapshot snapshot;
-        if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
-            snapshot = record(duration, durationUnit, Outcome.SLOW_ERROR);
-        } else {
-            snapshot = record(duration, durationUnit, Outcome.ERROR);
-        }
-        return checkIfThresholdsExceeded(snapshot);
+        return checkIfThresholdsExceeded(record(duration, durationUnit, false));
     }
 
-    Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
-        return slidingWindowMetrics.record(duration, durationUnit, outcome);
+    Snapshot record(long duration, TimeUnit durationUnit, boolean success) {
+        boolean slow = durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos;
+        return slidingWindowMetrics.record(duration, durationUnit, Outcome.of(slow, success));
     }
 
     /**
@@ -198,12 +187,22 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
 
     @Override
     public int getMaxAllowedConcurrentCalls() {
-        return  internalBulkheadMetrics.getMaxAllowedConcurrentCalls();
+        return internalBulkheadMetrics.getMaxAllowedConcurrentCalls();
     }
 
     enum Result {
+        /**
+         * Is below the error or slow calls rate.
+         */
         BELOW_THRESHOLDS,
+        /**
+         * Is above the error or slow calls rate.
+         */
         ABOVE_THRESHOLDS,
+        /**
+         * Is below minimum number of calls which are required (per sliding window period) before
+         * the Adaptive Bulkhead can calculate the error or slow calls rate.
+         */
         BELOW_MINIMUM_CALLS_THRESHOLD
     }
 }

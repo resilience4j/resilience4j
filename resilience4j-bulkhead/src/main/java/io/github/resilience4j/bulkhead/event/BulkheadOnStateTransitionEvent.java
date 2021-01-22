@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.bulkhead.event;
 
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+
 import java.util.Map;
 
 /**
@@ -25,23 +27,36 @@ import java.util.Map;
  */
 public class BulkheadOnStateTransitionEvent extends AbstractBulkheadLimitEvent {
 
-	public BulkheadOnStateTransitionEvent(String bulkheadName, Map<String, String> eventData) {
-		super(bulkheadName, eventData);
-	}
+    private final AdaptiveBulkhead.State fromState;
+    private final AdaptiveBulkhead.State toState;
 
-	@Override
-	public Type getEventType() {
-        return Type.SUCCESS;
-	}
+    public BulkheadOnStateTransitionEvent(String bulkheadName, Map<String, String> eventData,
+        AdaptiveBulkhead.State fromState,
+        AdaptiveBulkhead.State toState) {
+        super(bulkheadName, eventData);
+        this.fromState = fromState;
+        this.toState = toState;
+    }
 
-	@Override
-	public String toString() {
+    @Override
+    public Type getEventType() {
+        return Type.STATE_TRANSITION;
+    }
+
+    public AdaptiveBulkhead.State getFromState() {
+        return fromState;
+    }
+
+    public AdaptiveBulkhead.State getToState() {
+        return toState;
+    }
+
+    @Override
+    public String toString() {
         return String.format("%s: Bulkhead '%s' changed state from %s to %s",
             getCreationTime(),
             getBulkheadName(),
-            // TODO
-            "fromState",
-            "toState");
-
+            fromState,
+            toState);
     }
 }
