@@ -39,9 +39,9 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
  * This class is used to produce Circuit breaker events as streams in hystrix like fashion
  * <p>
  * The following endpoints are automatically generated and events are produced as Server Sent Event(SSE)
- * curl -vv http://localhost:8090/actuator/hystrix-stream-circuitbreaker-events
- * curl -vv http://localhost:8090/actuator/hystrix-stream-circuitbreaker-events/{circuitbreakername}
- * curl -vv http://localhost:8090/actuator/hystrix-stream-circuitbreaker-events/{circuitbreakername}/{errorType}
+ * curl -vv http://localhost:8090/actuator/hystrixstreamcircuitbreakerevents
+ * curl -vv http://localhost:8090/actuator/hystrixstreamcircuitbreakerevents/{circuitbreakername}
+ * curl -vv http://localhost:8090/actuator/hystrixstreamcircuitbreakerevents/{circuitbreakername}/{errorType}
  * <p>
  * <p>
  * Note: This SSE data can be easily mapped to hystrix compatible data format (specific K V pairs)
@@ -53,7 +53,7 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
  * Note:  Please see the example of how to consume SSE event here CircuitBreakerHystrixStreamEventsTest.java
  */
 
-@Endpoint(id = "hystrix-stream-circuitbreaker-events")
+@Endpoint(id = "hystrixstreamcircuitbreakerevents")
 public class CircuitBreakerHystrixServerSideEvent {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
@@ -81,18 +81,21 @@ public class CircuitBreakerHystrixServerSideEvent {
         CircuitBreaker circuitBreaker = getCircuitBreaker(name);
         Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher());
         return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
+
     }
 
     @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> getHystrixStreamEventsFilteredByCircuitBreakerNameAndEventType(
         @Selector String name, @Selector String eventType) {
 
-        CircuitBreaker circuitBreaker = getCircuitBreaker(name);
-        Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher())
-            .filter(
-                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
+        CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
+        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
+            .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
+            .map(
+                circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
         return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
+
     }
 
     private BiFunction<CircuitBreakerEvent, CircuitBreaker, String> getCircuitBreakerEventStringFunction() {

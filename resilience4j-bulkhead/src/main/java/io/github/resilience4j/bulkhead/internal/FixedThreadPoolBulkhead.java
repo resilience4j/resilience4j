@@ -20,13 +20,13 @@ package io.github.resilience4j.bulkhead.internal;
 
 
 import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.ContextPropagator;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallFinishedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallPermittedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnCallRejectedEvent;
+import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.Nullable;
@@ -83,7 +83,8 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
             config.getMaxThreadPoolSize(),
             config.getKeepAliveDuration().toMillis(), TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<>(config.getQueueCapacity()),
-            new NamingThreadFactory(name));
+            new BulkheadNamingThreadFactory(name),
+            config.getRejectedExecutionHandler());
         // adding prover jvm executor shutdown
         this.metrics = new FixedThreadPoolBulkhead.BulkheadMetrics();
         this.eventProcessor = new FixedThreadPoolBulkhead.BulkheadEventProcessor();

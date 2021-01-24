@@ -1,9 +1,12 @@
 package io.github.resilience4j.service.test;
 
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import io.vavr.control.Try;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -31,5 +34,12 @@ public class DummyServiceImpl implements DummyService {
             return future;
         }
         return CompletableFuture.supplyAsync(() -> "Test result");
+    }
+
+    @Bulkhead(name = BulkheadDummyService.BACKEND_D, type = Bulkhead.Type.THREADPOOL)
+    @TimeLimiter(name = BACKEND_B)
+    public CompletableFuture<String> longDoSomethingAsync() {
+        Try.run(() -> Thread.sleep(2000));
+        return CompletableFuture.completedFuture("Test result");
     }
 }

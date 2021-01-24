@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
@@ -26,10 +27,7 @@ import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
@@ -141,25 +139,30 @@ public class CompletionStageRetryTest {
         assertThat(result).isEqualTo("Hello world");
     }
 
-    private void shouldCompleteFutureAfterAttemptsInCaseOfExceptionAtSyncStage(int noOfAttempts) {
+    @Test
+    public void shouldThrowOnceMaxAttemptsReachedIfConfigured() {
         given(helloWorldService.returnHelloWorld())
-            .willThrow(new HelloWorldException());
-        Retry retryContext = Retry.of(
-            "id",
-            RetryConfig
-                .custom()
-                .maxAttempts(noOfAttempts)
-                .build());
+            .willReturn(CompletableFuture.completedFuture("invalid response"));
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+            .retryOnResult(s -> s.equals("invalid response"))
+            .maxAttempts(3)
+            .failAfterMaxAttempts(true)
+            .build();
+
+        Retry retry = Retry.of("retry", retryConfig);
         Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-            retryContext,
+            retry,
             scheduler,
-            () -> helloWorldService.returnHelloWorld());
+            helloWorldService::returnHelloWorld
+        );
 
-        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
-
-        then(helloWorldService).should(times(noOfAttempts)).returnHelloWorld();
-        assertThat(resultTry.isFailure()).isTrue();
-        assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
+        assertThat(supplier.get())
+            .failsWithin(5, TimeUnit.SECONDS)
+            .withThrowableOfType(ExecutionException.class)
+            .havingCause()
+            .isInstanceOf(MaxRetriesExceededException.class)
+            .withMessage("Retry 'retry' has exhausted all attempts (3)");
+        then(helloWorldService).should(times(3)).returnHelloWorld();
     }
 
     @Test

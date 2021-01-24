@@ -54,13 +54,13 @@ public class RetryOperator<T> implements UnaryOperator<Publisher<T>> {
             Context<T> context = new Context<>(retry.asyncContext());
             Mono<T> upstream = (Mono<T>) publisher;
             return upstream.doOnNext(context::handleResult)
-                .retryWhen(errors -> errors.flatMap(context::handleErrors))
+                .retryWhen(reactor.util.retry.Retry.withThrowable(errors -> errors.flatMap(context::handleErrors)))
                 .doOnSuccess(t -> context.onComplete());
         } else if (publisher instanceof Flux) {
             Context<T> context = new Context<>(retry.asyncContext());
             Flux<T> upstream = (Flux<T>) publisher;
             return upstream.doOnNext(context::handleResult)
-                .retryWhen(errors -> errors.flatMap(context::handleErrors))
+                .retryWhen(reactor.util.retry.Retry.withThrowable(errors -> errors.flatMap(context::handleErrors)))
                 .doOnComplete(context::onComplete);
         } else {
             throw new IllegalPublisherException(publisher);

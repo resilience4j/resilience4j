@@ -20,6 +20,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.internal.subscriptions.EmptySubscription;
+import io.vavr.control.Either;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
@@ -62,8 +63,13 @@ class FlowableRateLimiter<T> extends Flowable<T> {
         }
 
         @Override
-        public void hookOnError(Throwable t) {
-            // NoOp
+        protected void hookOnError(Throwable e) {
+            rateLimiter.onError(e);
+        }
+
+        @Override
+        protected void hookOnNext(T value) {
+            rateLimiter.onResult(value);
         }
 
         @Override

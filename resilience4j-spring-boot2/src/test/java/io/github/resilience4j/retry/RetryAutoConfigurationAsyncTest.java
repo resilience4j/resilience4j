@@ -22,8 +22,10 @@ import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.service.test.TestApplication;
 import io.github.resilience4j.service.test.retry.RetryDummyService;
+import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -32,10 +34,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.Map;
+import java.util.concurrent.*;
 
 import static io.github.resilience4j.service.test.retry.ReactiveRetryDummyService.BACKEND_C;
 import static io.github.resilience4j.service.test.retry.RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME;
@@ -86,6 +86,118 @@ public class RetryAutoConfigurationAsyncTest {
             assertThat(ex.getMessage()).contains("Test Message");
         }
         // The invocation is recorded by the CircuitBreaker as a success.
+        String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
+        assertThat(resultSuccess).isNotEmpty();
+        Retry retry = retryRegistry.retry(RETRY_BACKEND_B);
+        assertThat(retry).isNotNull();
+
+        // expect retry is configured as defined in application.yml
+        assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(4);
+        assertThat(retry.getName()).isEqualTo(RETRY_BACKEND_B);
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+
+        // expect retry actuator endpoint contains both retries
+        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
+            .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+        assertThat(new HashSet<>(retriesList.getBody().getRetries()))
+            .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+
+        // expect retry-event actuator endpoint recorded both events
+        RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
+
+        retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListForBBefore.getRetryEvents().size() + 4);
+
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+            .isFalse();
+        assertThat(retryAspect.getOrder()).isEqualTo(399);
+    }
+
+    @Test
+    public void testRetryAutoConfigurationAsyncWithMDCContext() throws Throwable {
+        assertThat(retryRegistry).isNotNull();
+
+        RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
+        RetryEventsEndpointResponse retryEventListForBBefore = retryEvents(
+            "/actuator/retryevents/" + RETRY_BACKEND_B);
+
+        MDC.put("key", "ValueShouldCrossThreadBoundary");
+        MDC.put("key2", "value2");
+        final Map<String, String> contextMap = MDC.getCopyOfContextMap();
+
+        final CompletionStage<String> stringCompletionStage = retryDummyService
+            .doSomethingAsync(true);
+        final CompletableFuture<String> completableFuture = stringCompletionStage.toCompletableFuture().exceptionally(throwable -> {
+            if (throwable != null) {
+                assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool");
+                assertThat(MDC.getCopyOfContextMap()).hasSize(2).containsExactlyEntriesOf(contextMap);
+                return MDC.getCopyOfContextMap().get("key");
+            }
+            return null;
+        });
+        String result = awaitResult(completableFuture, 5);
+        assertThat(result).isEqualTo("ValueShouldCrossThreadBoundary");
+
+        String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
+        assertThat(resultSuccess).isNotEmpty();
+        Retry retry = retryRegistry.retry(RETRY_BACKEND_B);
+        assertThat(retry).isNotNull();
+
+        // expect retry is configured as defined in application.yml
+        assertThat(retry.getRetryConfig().getMaxAttempts()).isEqualTo(4);
+        assertThat(retry.getName()).isEqualTo(RETRY_BACKEND_B);
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+
+        // expect retry actuator endpoint contains both retries
+        ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
+            .getForEntity("/actuator/retries", RetryEndpointResponse.class);
+        assertThat(new HashSet<>(retriesList.getBody().getRetries()))
+            .contains(RETRY_BACKEND_A, RETRY_BACKEND_B,
+                BACKEND_C, RETRY_DUMMY_FEIGN_CLIENT_NAME);
+
+        // expect retry-event actuator endpoint recorded both events
+        RetryEventsEndpointResponse retryEventList = retryEvents("/actuator/retryevents");
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListBefore.getRetryEvents().size() + 4);
+
+        retryEventList = retryEvents("/actuator/retryevents/" + RETRY_BACKEND_B);
+        assertThat(retryEventList.getRetryEvents())
+            .hasSize(retryEventListForBBefore.getRetryEvents().size() + 4);
+
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
+        assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
+            .isFalse();
+        assertThat(retryAspect.getOrder()).isEqualTo(399);
+    }
+
+    @Test
+    public void testRetryAutoConfigurationAsyncWithContextPropagator() throws Throwable {
+        assertThat(retryRegistry).isNotNull();
+
+        RetryEventsEndpointResponse retryEventListBefore = retryEvents("/actuator/retryevents");
+        RetryEventsEndpointResponse retryEventListForBBefore = retryEvents(
+            "/actuator/retryevents/" + RETRY_BACKEND_B);
+
+        TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
+
+        final CompletionStage<String> stringCompletionStage = retryDummyService
+            .doSomethingAsync(true);
+        final CompletableFuture<String> completableFuture = stringCompletionStage.toCompletableFuture().exceptionally(throwable -> {
+            if (throwable != null) {
+                assertThat(Thread.currentThread().getName()).contains("ContextAwareScheduledThreadPool");
+                assertThat(TestThreadLocalContextHolder.get().get()).isEqualTo("ValueShouldCrossThreadBoundary");
+                return (String) TestThreadLocalContextHolder.get().orElse(null);
+            }
+            return null;
+        });
+        String result = awaitResult(completableFuture, 5);
+        assertThat(result).isEqualTo("ValueShouldCrossThreadBoundary");
+
         String resultSuccess = awaitResult(retryDummyService.doSomethingAsync(false), 5);
         assertThat(resultSuccess).isNotEmpty();
         Retry retry = retryRegistry.retry(RETRY_BACKEND_B);

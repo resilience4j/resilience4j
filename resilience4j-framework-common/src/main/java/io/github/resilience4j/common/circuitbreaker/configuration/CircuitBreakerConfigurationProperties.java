@@ -174,42 +174,49 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDurationInOpenState() != null
             && properties.getWaitDurationInOpenState().toMillis() > 0) {
-            Duration waitDuration = properties.getWaitDurationInOpenState();
             if (properties.getEnableExponentialBackoff() != null
                 && properties.getEnableExponentialBackoff()) {
-                configureEnableExponentialBackoff(properties, builder, waitDuration);
+                configureEnableExponentialBackoff(properties, builder);
             } else if (properties.getEnableRandomizedWait() != null
                 && properties.getEnableRandomizedWait()) {
-                configureEnableRandomizedWait(properties, builder, waitDuration);
+                configureEnableRandomizedWait(properties, builder);
             } else {
                 builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
             }
         }
     }
 
-    private void configureEnableExponentialBackoff(InstanceProperties properties, Builder builder, Duration waitDuration) {
-        if (properties.getExponentialBackoffMultiplier() != null) {
+    private void configureEnableExponentialBackoff(InstanceProperties properties, Builder builder) {
+        Duration maxWaitDuration = properties.getExponentialMaxWaitDurationInOpenState();
+        Double backoffMultiplier = properties.getExponentialBackoffMultiplier();
+        Duration waitDuration = properties.getWaitDurationInOpenState();
+        if (maxWaitDuration != null
+            && backoffMultiplier != null) {
             builder.waitIntervalFunctionInOpenState(
-                IntervalFunction.ofExponentialBackoff(waitDuration.toMillis(), properties.getExponentialBackoffMultiplier()));
+                IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier, maxWaitDuration));
+        } else if (backoffMultiplier != null) {
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier));
         } else {
             builder.waitIntervalFunctionInOpenState(
-                IntervalFunction.ofExponentialBackoff(properties.getWaitDurationInOpenState().toMillis()));
+                IntervalFunction.ofExponentialBackoff(waitDuration));
         }
     }
 
-    private void configureEnableRandomizedWait(InstanceProperties properties, Builder builder, Duration waitDuration) {
+    private void configureEnableRandomizedWait(InstanceProperties properties, Builder builder) {
+        Duration waitDuration = properties.getWaitDurationInOpenState();
         if (properties.getRandomizedWaitFactor() != null) {
             builder.waitIntervalFunctionInOpenState(
-                IntervalFunction.ofRandomized(waitDuration.toMillis(), properties.getRandomizedWaitFactor()));
+                IntervalFunction.ofRandomized(waitDuration, properties.getRandomizedWaitFactor()));
         } else {
-            builder.waitIntervalFunctionInOpenState(IntervalFunction.ofRandomized(waitDuration));
+            builder.waitIntervalFunctionInOpenState(
+                IntervalFunction.ofRandomized(waitDuration));
         }
     }
 
     private void buildRecordFailurePredicate(InstanceProperties properties, Builder builder) {
         if (properties.getRecordFailurePredicate() != null) {
-            Predicate<Throwable> predicate = ClassUtils
-                .instantiatePredicateClass(properties.getRecordFailurePredicate());
+            Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
             if (predicate != null) {
                 builder.recordException(predicate);
             }
@@ -306,22 +313,29 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         @Nullable
         private String baseConfig;
 
-        /*
+        /**
          * flag to enable Exponential backoff policy or not for retry policy delay
          */
         @Nullable
         private Boolean enableExponentialBackoff;
-        /*
+
+        /**
          * exponential backoff multiplier value
          */
         private Double exponentialBackoffMultiplier;
 
-        /*
+        /**
+         * exponential max interval value
+         */
+        private Duration exponentialMaxWaitDurationInOpenState;
+
+        /**
          * flag to enable randomized delay  policy or not for retry policy delay
          */
         @Nullable
         private Boolean enableRandomizedWait;
-        /*
+
+        /**
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
@@ -712,6 +726,17 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         public InstanceProperties setExponentialBackoffMultiplier(
             Double exponentialBackoffMultiplier) {
             this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
+            return this;
+        }
+
+        @Nullable
+        public Duration getExponentialMaxWaitDurationInOpenState() {
+            return exponentialMaxWaitDurationInOpenState;
+        }
+
+        public InstanceProperties setExponentialMaxWaitDurationInOpenState(
+            Duration exponentialMaxWaitDurationInOpenState) {
+            this.exponentialMaxWaitDurationInOpenState = exponentialMaxWaitDurationInOpenState;
             return this;
         }
 

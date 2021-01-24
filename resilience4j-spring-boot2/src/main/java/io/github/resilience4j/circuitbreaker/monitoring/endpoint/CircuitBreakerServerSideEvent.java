@@ -46,7 +46,7 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
  * Note:  Please see the example of how to consume SSE event here CircuitBreakerStreamEventsTest.java
  */
 
-@Endpoint(id = "stream-circuitbreaker-events")
+@Endpoint(id = "streamcircuitbreakerevents")
 public class CircuitBreakerServerSideEvent {
 
     private final CircuitBreakerRegistry circuitBreakerRegistry;
@@ -78,11 +78,11 @@ public class CircuitBreakerServerSideEvent {
     @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerNameAndEventType(
         @Selector String name, @Selector String eventType) {
-
-        CircuitBreaker circuitBreaker = getCircuitBreaker(name);
-        Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher())
-            .filter(
-                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
+        CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
+        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
+            .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
+            .map(
+                circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
         return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
     }

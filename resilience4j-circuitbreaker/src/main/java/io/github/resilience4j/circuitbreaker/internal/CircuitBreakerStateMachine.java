@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
@@ -239,8 +240,21 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
     @Override
     public void onSuccess(long duration, TimeUnit durationUnit) {
+        LOG.debug("CircuitBreaker '{}' succeeded:", name);
         publishSuccessEvent(duration, durationUnit);
         stateReference.get().onSuccess(duration, durationUnit);
+    }
+
+    @Override
+    public void onResult(long duration, TimeUnit durationUnit, @Nullable Object result) {
+        if (result != null && circuitBreakerConfig.getRecordResultPredicate().test(result)) {
+            LOG.debug("CircuitBreaker '{}' recorded a result type '{}' as failure:", name, result.getClass());
+            ResultRecordedAsFailureException failure = new ResultRecordedAsFailureException(name, result);
+            publishCircuitErrorEvent(name, duration, durationUnit, failure);
+            stateReference.get().onError(duration, durationUnit, failure);
+        } else {
+            onSuccess(duration, durationUnit);
+        }
     }
 
     /**

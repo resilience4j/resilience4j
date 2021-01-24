@@ -58,8 +58,8 @@ class SingleCircuitBreaker<T> extends Single<T> {
         }
 
         @Override
-        protected void hookOnSuccess() {
-            circuitBreaker.onSuccess(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit());
+        protected void hookOnSuccess(T value) {
+            circuitBreaker.onResult(circuitBreaker.getCurrentTimestamp() - start, circuitBreaker.getTimestampUnit(), value);
         }
 
         @Override

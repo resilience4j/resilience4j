@@ -69,7 +69,7 @@ public interface VertxCircuitBreaker {
                                 .onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
                             future.fail(result.cause());
                         } else {
-                            circuitBreaker.onSuccess(durationInNanos, TimeUnit.NANOSECONDS);
+                            circuitBreaker.onResult(durationInNanos, TimeUnit.NANOSECONDS, result);
                             future.complete(result.result());
                         }
                     });

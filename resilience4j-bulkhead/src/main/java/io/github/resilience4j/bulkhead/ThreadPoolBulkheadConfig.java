@@ -19,12 +19,16 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -49,6 +53,7 @@ public class ThreadPoolBulkheadConfig {
     private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private List<ContextPropagator> contextPropagators = new ArrayList<>();
+    private RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.AbortPolicy();
 
     private ThreadPoolBulkheadConfig() {
     }
@@ -102,6 +107,10 @@ public class ThreadPoolBulkheadConfig {
         return contextPropagators;
     }
 
+    public RejectedExecutionHandler getRejectedExecutionHandler() {
+        return rejectedExecutionHandler;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ThreadPoolBulkheadConfig{");
@@ -111,6 +120,7 @@ public class ThreadPoolBulkheadConfig {
         sb.append(", keepAliveDuration=").append(keepAliveDuration);
         sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
         sb.append(", contextPropagators=").append(contextPropagators);
+        sb.append(", rejectExecutionHandle=").append(rejectedExecutionHandler.getClass().getSimpleName());
         sb.append('}');
         return sb.toString();
     }
@@ -220,6 +230,19 @@ public class ThreadPoolBulkheadConfig {
          */
         public Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
             config.writableStackTraceEnabled = writableStackTraceEnabled;
+            return this;
+        }
+
+        /**
+         * Replaces the default {@link java.util.concurrent.ThreadPoolExecutor.AbortPolicy}
+         * with the {@link RejectedExecutionHandler} provided.
+         *
+         * @param rejectedExecutionHandler handler to use for rejection of execution.
+         * @return the BulkheadConfig.Builder
+         */
+        public Builder rejectedExecutionHandler(RejectedExecutionHandler rejectedExecutionHandler) {
+            Objects.requireNonNull(rejectedExecutionHandler);
+            config.rejectedExecutionHandler = rejectedExecutionHandler;
             return this;
         }
 

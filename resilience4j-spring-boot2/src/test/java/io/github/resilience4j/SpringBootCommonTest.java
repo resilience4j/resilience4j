@@ -113,7 +113,7 @@ public class SpringBootCommonTest {
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
+                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()), null)).isNotNull();
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -152,7 +152,8 @@ public class SpringBootCommonTest {
             .timeLimiterAspect(new TimeLimiterConfigurationProperties(),
                 TimeLimiterRegistry.ofDefaults(), Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
+                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()),
+                null)).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }

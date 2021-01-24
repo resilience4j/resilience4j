@@ -20,11 +20,14 @@ package io.github.resilience4j.kotlin.timelimiter
 
 import io.github.resilience4j.kotlin.CoroutineHelloWorldService
 import io.github.resilience4j.timelimiter.TimeLimiter
-import kotlinx.coroutines.CancellationException
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent
+import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
+import java.util.concurrent.TimeoutException
 
 class CoroutineTimeLimiterTest {
     @Test
@@ -32,6 +35,8 @@ class CoroutineTimeLimiterTest {
         runBlocking {
             val timelimiter = TimeLimiter.ofDefaults()
             val helloWorldService = CoroutineHelloWorldService()
+            val successfulEvents = mutableListOf<TimeLimiterOnSuccessEvent>()
+            timelimiter.eventPublisher.onSuccess(successfulEvents::add)
 
             //When
             val result = timelimiter.executeSuspendFunction {
@@ -42,6 +47,7 @@ class CoroutineTimeLimiterTest {
             Assertions.assertThat(result).isEqualTo("Hello world")
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            Assertions.assertThat(successfulEvents).hasSize(1)
         }
     }
 
@@ -50,6 +56,8 @@ class CoroutineTimeLimiterTest {
         runBlocking {
             val timelimiter = TimeLimiter.ofDefaults()
             val helloWorldService = CoroutineHelloWorldService()
+            val errorEvents = mutableListOf<TimeLimiterOnErrorEvent>()
+            timelimiter.eventPublisher.onError(errorEvents::add)
 
             //When
             try {
@@ -64,6 +72,7 @@ class CoroutineTimeLimiterTest {
             //Then
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            Assertions.assertThat(errorEvents).hasSize(1)
         }
     }
 
@@ -71,22 +80,24 @@ class CoroutineTimeLimiterTest {
     fun `should cancel operation that times out`() {
         runBlocking {
             val timelimiter = TimeLimiter.of(TimeLimiterConfig { timeoutDuration(Duration.ofMillis(10)) })
-
             val helloWorldService = CoroutineHelloWorldService()
+            val timeoutEvents = mutableListOf<TimeLimiterOnTimeoutEvent>()
+            timelimiter.eventPublisher.onTimeout(timeoutEvents::add)
 
             //When
             try {
                 timelimiter.executeSuspendFunction {
                     helloWorldService.wait()
                 }
-                Assertions.failBecauseExceptionWasNotThrown<Nothing>(CancellationException::class.java)
-            } catch (e: CancellationException) {
+                Assertions.failBecauseExceptionWasNotThrown<Nothing>(TimeoutException::class.java)
+            } catch (e: TimeoutException) {
                 // nothing - proceed
             }
 
             //Then
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            Assertions.assertThat(timeoutEvents).hasSize(1)
         }
     }
 
@@ -95,6 +106,8 @@ class CoroutineTimeLimiterTest {
         runBlocking {
             val timelimiter = TimeLimiter.ofDefaults()
             val helloWorldService = CoroutineHelloWorldService()
+            val successfulEvents = mutableListOf<TimeLimiterOnSuccessEvent>()
+            timelimiter.eventPublisher.onSuccess(successfulEvents::add)
 
             //When
             val function = timelimiter.decorateSuspendFunction {
@@ -105,6 +118,8 @@ class CoroutineTimeLimiterTest {
             Assertions.assertThat(function()).isEqualTo("Hello world")
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            Assertions.assertThat(successfulEvents).hasSize(1)
+
         }
     }
 }

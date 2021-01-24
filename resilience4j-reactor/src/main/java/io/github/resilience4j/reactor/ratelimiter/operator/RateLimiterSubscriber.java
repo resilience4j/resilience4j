@@ -15,7 +15,9 @@
  */
 package io.github.resilience4j.reactor.ratelimiter.operator;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.reactor.AbstractSubscriber;
+import io.vavr.control.Either;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
@@ -26,19 +28,24 @@ import reactor.core.CoreSubscriber;
  */
 class RateLimiterSubscriber<T> extends AbstractSubscriber<T> {
 
-    protected RateLimiterSubscriber(CoreSubscriber<? super T> downstreamSubscriber) {
+    private final RateLimiter rateLimiter;
+
+    protected RateLimiterSubscriber(RateLimiter rateLimiter, CoreSubscriber<? super T> downstreamSubscriber) {
         super(downstreamSubscriber);
+        this.rateLimiter = rateLimiter;
     }
 
     @Override
-    public void hookOnNext(T t) {
+    public void hookOnNext(T value) {
         if (!isDisposed()) {
-            downstreamSubscriber.onNext(t);
+            rateLimiter.onResult(value);
+            downstreamSubscriber.onNext(value);
         }
     }
 
     @Override
     public void hookOnError(Throwable t) {
+        rateLimiter.onError(t);
         downstreamSubscriber.onError(t);
     }
 

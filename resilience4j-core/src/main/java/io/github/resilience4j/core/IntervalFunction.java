@@ -52,7 +52,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
      */
     static IntervalFunction of(long intervalMillis) {
         checkInterval(intervalMillis);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
             return intervalMillis;
         };
@@ -72,7 +72,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
     static IntervalFunction ofRandomized(long intervalMillis, double randomizationFactor) {
         checkInterval(intervalMillis);
         checkRandomizationFactor(randomizationFactor);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
             return (long) randomize(intervalMillis, randomizationFactor);
         };
@@ -96,7 +96,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier, long maxIntervalMillis) {
         checkInterval(maxIntervalMillis);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
             final long interval = ofExponentialBackoff(initialIntervalMillis, multiplier)
                 .apply(attempt);
@@ -110,7 +110,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier) {
         checkMultiplier(multiplier);
-        return of(initialIntervalMillis, (x) -> (long) (x * multiplier));
+        return of(initialIntervalMillis, x -> (long) (x * multiplier));
     }
 
     static IntervalFunction ofExponentialBackoff(Duration initialInterval, double multiplier) {
@@ -136,7 +136,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
         long maxIntervalMillis
     ) {
         checkInterval(maxIntervalMillis);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
             final long interval = ofExponentialRandomBackoff(initialIntervalMillis, multiplier, randomizationFactor)
                 .apply(attempt);
@@ -152,9 +152,9 @@ public interface IntervalFunction extends Function<Integer, Long> {
         checkInterval(initialIntervalMillis);
         checkMultiplier(multiplier);
         checkRandomizationFactor(randomizationFactor);
-        return (attempt) -> {
+        return attempt -> {
             checkAttempt(attempt);
-            final long interval = of(initialIntervalMillis, (x) -> (long) (x * multiplier))
+            final long interval = of(initialIntervalMillis, x -> (long) (x * multiplier))
                 .apply(attempt);
             return (long) randomize(interval, randomizationFactor);
         };

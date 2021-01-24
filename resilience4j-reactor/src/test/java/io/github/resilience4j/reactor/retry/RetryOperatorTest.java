@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.reactor.retry;
 
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
@@ -212,6 +213,27 @@ public class RetryOperatorTest {
     }
 
     @Test
+    public void retryOnResultFailAfterMaxAttemptsWithExceptionUsingMono() {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(10))
+            .maxAttempts(3)
+            .failAfterMaxAttempts(true)
+            .build();
+        Retry retry = Retry.of("testName", config);
+        given(helloWorldService.returnHelloWorld())
+            .willReturn("retry");
+
+        StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
+            .transformDeferred(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectError(MaxRetriesExceededException.class)
+            .verify(Duration.ofSeconds(1));
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
+
+    @Test
     public void shouldFailWithExceptionFlux() {
         RetryConfig config = retryConfig();
         Retry retry = Retry.of("testName", config);
@@ -271,7 +293,31 @@ public class RetryOperatorTest {
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
     }
 
+    @Test
+    public void retryOnResultFailAfterMaxAttemptsWithExceptionUsingFlux() {
+        RetryConfig config = RetryConfig.<String>custom()
+            .retryOnResult("retry"::equals)
+            .waitDuration(Duration.ofMillis(10))
+            .maxAttempts(3)
+            .failAfterMaxAttempts(true)
+            .build();
+        Retry retry = Retry.of("testName", config);
+
+        StepVerifier.create(Flux.just("retry")
+            .transformDeferred(RetryOperator.of(retry)))
+            .expectSubscription()
+            .expectNextCount(1)
+            .expectError(MaxRetriesExceededException.class)
+            .verify(Duration.ofSeconds(1));
+
+        Retry.Metrics metrics = retry.getMetrics();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+    }
+
     private RetryConfig retryConfig() {
-        return RetryConfig.custom().waitDuration(Duration.ofMillis(10)).build();
+        return RetryConfig.custom()
+            .waitDuration(Duration.ofMillis(10))
+            .build();
     }
 }

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018
+ * Copyright 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -61,6 +61,20 @@ public class Resilience4jFeignCircuitBreakerTest {
         setupStub(200);
 
         testService.greeting();
+
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        assertThat(metrics.getNumberOfSuccessfulCalls())
+            .describedAs("Successful Calls")
+            .isEqualTo(1);
+    }
+
+    @Test
+    public void testSuccessfulCallWithDefaultMethod() throws Exception {
+        final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+
+        setupStub(200);
+
+        testService.defaultGreeting();
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
         assertThat(metrics.getNumberOfSuccessfulCalls())

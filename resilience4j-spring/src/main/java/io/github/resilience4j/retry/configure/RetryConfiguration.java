@@ -17,8 +17,10 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
@@ -116,18 +118,17 @@ public class RetryConfiguration {
      */
     private void registerEventConsumer(RetryRegistry retryRegistry,
         EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
-        RetryConfigurationProperties retryConfigurationProperties) {
-        retryRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                retryConfigurationProperties));
+        RetryConfigurationProperties properties) {
+        retryRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
     }
 
     private void registerEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
         Retry retry, RetryConfigurationProperties retryConfigurationProperties) {
         int eventConsumerBufferSize = Optional
             .ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
-            .map(
-                io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
         retry.getEventPublisher().onEvent(
             eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
@@ -145,10 +146,11 @@ public class RetryConfiguration {
         RetryRegistry retryRegistry,
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
         FallbackDecorators fallbackDecorators,
-        SpelResolver spelResolver
+        SpelResolver spelResolver,
+        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-            fallbackDecorators, spelResolver);
+            fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean

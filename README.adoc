@@ -80,7 +80,7 @@ TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(1));
 
 CompletableFuture<String> future = Decorators.ofSupplier(supplier)
     .withThreadPoolBulkhead(threadPoolBulkhead)
-    .withTimeLimiter(timeLimiter, scheduledExecutorService)
+    .withTimeLimiter(timeLimiter, scheduler)
     .withCircuitBreaker(circuitBreaker)
     .withFallback(asList(TimeoutException.class, CallNotPermittedException.class, BulkheadFullException.class),
       throwable -> "Hello from Recovery")
@@ -95,6 +95,8 @@ https://mvnrepository.com/artifact/io.github.resilience4j[*pick what you need*].
 Setup and usage is described in our *https://resilience4j.readme.io/docs[User Guide]*.
 
 - https://github.com/resilience4j-docs-ja/resilience4j-docs-ja[有志による日本語訳(非公式) Japanese translation by volunteers(Unofficial)]
+
+- https://github.com/lmhmhl/Resilience4j-Guides-Chinese[这是Resilience4j的非官方中文文档 Chinese translation by volunteers(Unofficial)]
 
 == Overview
 
@@ -293,7 +295,7 @@ It is based on a semaphore, and unlike Hystrix, does not provide "shadow" thread
 // Create a custom Bulkhead configuration
 BulkheadConfig config = BulkheadConfig.custom()
     .maxConcurrentCalls(150)
-    .maxWaitTime(100)
+    .maxWaitDuration(100)
     .build();
 
 Bulkhead bulkhead = Bulkhead.of("backendName", config);
