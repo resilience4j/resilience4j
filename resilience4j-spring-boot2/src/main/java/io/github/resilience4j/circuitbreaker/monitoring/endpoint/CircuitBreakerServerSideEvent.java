@@ -21,6 +21,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTOFactory;
+import io.vavr.collection.Array;
 import io.vavr.collection.Seq;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
@@ -28,9 +29,11 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.function.Function;
 
 import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
+import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
 /**
  * This class is used to produce Circuit breaker events as streams.
@@ -39,6 +42,8 @@ import static io.github.resilience4j.reactor.adapter.ReactorAdapter.toFlux;
  * curl -vv http://localhost:8090/actuator/stream-circuitbreaker-events
  * curl -vv http://localhost:8090/actuator/stream-circuitbreaker-events/{circuitbreakername}
  * curl -vv http://localhost:8090/actuator/stream-circuitbreaker-events/{circuitbreakername}/{errorType}
+ *
+ * Note:  Please see the example of how to consume SSE event here CircuitBreakerStreamEventsTest.java
  */
 
 @Endpoint(id = "stream-circuitbreaker-events")
@@ -53,39 +58,24 @@ public class CircuitBreakerServerSideEvent {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
-    @ReadOperation(produces = "text/event-stream")
+    @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> getAllCircuitBreakerServerSideEvent() {
         Seq<Flux<CircuitBreakerEvent>> eventStreams = circuitBreakerRegistry.getAllCircuitBreakers()
             .map(
                 circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
-        Function<CircuitBreakerEvent, String> data = getCircuitBreakerEventStringFunction();
-        return Flux.merge(eventStreams).map(
-            cbEvent -> ServerSentEvent.<String>builder()
-                .id(cbEvent.getCircuitBreakerName())
-                .event(cbEvent.getEventType().name())
-                .data(data.apply(cbEvent))
-                .build()
-        );
+        return Flux.merge(publishEvents(Array.ofAll(eventStreams)),getHeartbeatStream());
     }
 
-    @ReadOperation(produces = "text/event-stream")
-    public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerName(
-        @Selector String name) {
-
+    @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerName(@Selector String name) {
         CircuitBreaker circuitBreaker = getCircuitBreaker(name);
         Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher());
-        Function<CircuitBreakerEvent, String> data = getCircuitBreakerEventStringFunction();
-        return eventStream.map(
-            cbEvent -> ServerSentEvent.<String>builder()
-                .id(cbEvent.getCircuitBreakerName())
-                .event(cbEvent.getEventType().name())
-                .data(data.apply(cbEvent))
-                .build()
-        );
+        return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
     }
 
-    @ReadOperation(produces = "text/event-stream")
+
+    @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerNameAndEventType(
         @Selector String name, @Selector String eventType) {
 
@@ -94,13 +84,21 @@ public class CircuitBreakerServerSideEvent {
             .filter(
                 event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
             );
-        Function<CircuitBreakerEvent, String> data = getCircuitBreakerEventStringFunction();
-        return eventStream.map(cbEvent -> ServerSentEvent.<String>builder()
-            .id(cbEvent.getCircuitBreakerName())
-            .event(cbEvent.getEventType().name())
-            .data(data.apply(cbEvent))
-            .build()
-        );
+        return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
+    }
+
+    private Flux<ServerSentEvent<String>> publishEvents(Seq<Flux<CircuitBreakerEvent>> eventStreams) {
+        Function<CircuitBreakerEvent, String> circuitBreakerEventDataFn = getCircuitBreakerEventStringFunction();
+        return Flux.merge(eventStreams)
+            .onBackpressureDrop()
+            .delayElements(Duration.ofMillis(100))
+            .map(cbEvent ->
+                ServerSentEvent.<String>builder()
+                    .id(cbEvent.getCircuitBreakerName())
+                    .event(cbEvent.getEventType().name())
+                    .data(circuitBreakerEventDataFn.apply(cbEvent))
+                    .build()
+            );
     }
 
     private Function<CircuitBreakerEvent, String> getCircuitBreakerEventStringFunction() {
@@ -118,5 +116,10 @@ public class CircuitBreakerServerSideEvent {
 
     private CircuitBreaker getCircuitBreaker(String circuitBreakerName) {
         return circuitBreakerRegistry.circuitBreaker(circuitBreakerName);
+    }
+
+    private Flux<ServerSentEvent<String>> getHeartbeatStream() {
+        return Flux.interval(Duration.ofSeconds(1))
+            .map(i -> ServerSentEvent.<String>builder().event("ping").build());
     }
 }
