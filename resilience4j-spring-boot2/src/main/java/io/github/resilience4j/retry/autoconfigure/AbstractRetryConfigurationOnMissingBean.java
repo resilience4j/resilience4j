@@ -18,6 +18,7 @@ package io.github.resilience4j.retry.autoconfigure;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackDecorators;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
@@ -96,11 +97,12 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
         RetryRegistry retryRegistry,
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
         FallbackDecorators fallbackDecorators,
-        SpelResolver spelResolver
+        SpelResolver spelResolver,
+        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
         return retryConfiguration
             .retryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-                fallbackDecorators, spelResolver);
+                fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean

@@ -22,6 +22,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.MaybeObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
+import io.vavr.control.Either;
 
 import java.util.concurrent.TimeUnit;
 
@@ -64,12 +65,12 @@ class MaybeRateLimiter<T> extends Maybe<T> {
 
         @Override
         protected void hookOnError(Throwable e) {
-            // NoOp
+            rateLimiter.onError(e);
         }
 
         @Override
-        protected void hookOnSuccess() {
-            // NoOp
+        protected void hookOnSuccess(T value) {
+            rateLimiter.onResult(value);
         }
 
         @Override

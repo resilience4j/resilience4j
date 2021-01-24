@@ -35,6 +35,7 @@ public interface RateLimiterEvent {
 
     enum Type {
         FAILED_ACQUIRE,
-        SUCCESSFUL_ACQUIRE
+        SUCCESSFUL_ACQUIRE,
+        DRAINED
     }
 }

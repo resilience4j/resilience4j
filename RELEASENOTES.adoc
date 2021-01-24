@@ -287,12 +287,12 @@ NOTE: Breaking changes:
 * Issue #775: Added Getter for RetryOnRetryEvent
 * Issue #769: Fixed Duplicated auto complete support in IDEA
 * Issue #765: Added support to use Retry with Feign client
-* Issue #751: Vavr upgrade to 0.10.2 
-* Issue #718: Fixed blocking behavior in Reactor Retry Operator 
+* Issue #751: Vavr upgrade to 0.10.2
+* Issue #718: Fixed blocking behavior in Reactor Retry Operator
 * Issue #711: Added support to use SpEL in resilienec4j spring annoations
 * Issue #751: Fixed Resilience4j Spring boot modules MetricsAutoConfiguration
-* Issue #565: Added ThreadLocal passing support to the Threadpool bulkhead implementation 
-* Issue #430: Added TimeLimiter spring boot starter support 
+* Issue #565: Added ThreadLocal passing support to the Threadpool bulkhead implementation
+* Issue #430: Added TimeLimiter spring boot starter support
 * Issue #509: Added support to extend Micrometer tags
 * PR #831: non backward compatible API change in ThreadPoolBulkhead decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) now return Supplier<CompletionStage<Void>> instead of Runnable
 
@@ -325,3 +325,49 @@ NOTE: Breaking changes:
 * Issue #991: Fixed bug that auto transition to half_open happens even if the state is forced open.
 * Issue #1000: Added toString to CircuitBreakerConfig
 * Issue #1003: Fixed bug that CircuitBreaker tries to obtain permission twice in circuitBreaker.decorateEitherSupplier()
+
+== Version 1.6.0
+
+=== Enhancements
+* RetryConfig.DEFAULT_MAX_ATTEMPTS should be public [#1180](https://github.com/resilience4j/resilience4j/issues/1180)
+* Circuitbreaker doesn't open when nested TimeLimiter throws TimeOutCancellationException [#1123](https://github.com/resilience4j/resilience4j/issues/1123)
+* Enhance Server Side Events  `/circuitbreaker/events`  [#1076](https://github.com/resilience4j/resilience4j/issues/1076)
+* CallNotPermittedException should contain circuit breaker name (and possibly other information) [#1062](https://github.com/resilience4j/resilience4j/issues/1062)
+* Retry: Exponential backoff with constant behaviour after certain time [#1044](https://github.com/resilience4j/resilience4j/issues/1044)
+* Respecting the clock set in the CircuitBreakerStateMachine for detecting slow calls [#734](https://github.com/resilience4j/resilience4j/issues/734)
+
+=== Bugs
+* Circuit breaker stuck in HALF_OPEN state [#935](https://github.com/resilience4j/resilience4j/issues/935)
+* Circuit breaker global fallback seems to not work when annotated method has more than 1 parameter [#1174](https://github.com/resilience4j/resilience4j/issues/1174)
+* Timelimiter metrics not calculated when using resilince4j-kotlin [#1168](https://github.com/resilience4j/resilience4j/issues/1168)
+* Problem with registering metrics for more than one circuit breaker [#1131](https://github.com/resilience4j/resilience4j/issues/1131)
+* ConcurrentModificationException warning log while consuming events [#1115](https://github.com/resilience4j/resilience4j/issues/1115)
+* CircuitBreakerConfig.Builder.waitDurationInOpenState() false documentation of when the function throws exception [#1092](https://github.com/resilience4j/resilience4j/issues/1092)
+
+=== Version 1.6.1
+
+==== Bugs
+* Springboot application failing on startup with version 1.6.0 [#1192](https://github.com/resilience4j/resilience4j/issues/1192)
+
+== Version 1.7.0
+
+=== Enhancements
+- RateLimiter: Reduce RateLimiter memory footprint of high cardinality keys [#1221](https://github.com/resilience4j/resilience4j/issues/1221)
+- CircuitBreaker: When waitDurationInOpenState and waitIntervalFunctionInOpenStat are used together, waitDurationInOpenState will be overridden [#1214](https://github.com/resilience4j/resilience4j/issues/1214)
+- TimeLimiterAspect does not refresh static timeLimiterExecutorService on Spring context shutdown and restart [#1203](https://github.com/resilience4j/resilience4j/issues/1203)
+- CircuitBreaker: Record a failure on result [#384](https://github.com/resilience4j/resilience4j/issues/384)
+- Added support for Micronaut
+- Updated Spring Boot from 2.3.0.RELEASE to 2.4.1
+- Updated Reactor from 3.3.0.RELEASE to 3.4.0
+- Updated Spring Cloud Context from 2.2.2.RELEASE to 3.0.0
+- Updated Spring Framework from 5.2.6.RELEASE to 5.3.2
+- Updated Spring Boot Open Feign from 2.2.2.RELEASE to 2.2.6.RELEASE
+- Updated Kotlin Coroutines from 1.3.2 to 1.4.2
+- Updated Dropwizard Metrics from 3.2.6 to 4.1.16
+- Prevent the decoration of default methods in feign client [#1245](https://github.com/resilience4j/resilience4j/pull/1245)
+- Added RateLimiter.drainPermissions method [#1240](https://github.com/resilience4j/resilience4j/pull/1240)
+- Added failAfterMaxAttempts flag to RetryConfig and a new MaxRetriesExceededException [#1293](https://github.com/resilience4j/resilience4j/pull/1293)
+
+=== Bugs
+- NullPointerException requesting actuator metrics for retries using retryOnResult [#1205](https://github.com/resilience4j/resilience4j/issues/1205)
+- CircuitBreakers events endpoint doesn't work after replacing instances at runtime  [#1116](https://github.com/resilience4j/resilience4j/issues/1116)

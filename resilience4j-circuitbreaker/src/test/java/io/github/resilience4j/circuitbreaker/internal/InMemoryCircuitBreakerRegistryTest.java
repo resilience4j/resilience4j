@@ -115,7 +115,7 @@ public class InMemoryCircuitBreakerRegistryTest {
         configs.put("default", defaultConfig);
         final InMemoryCircuitBreakerRegistry inMemoryCircuitBreakerRegistry =
             new InMemoryCircuitBreakerRegistry(configs, registryEventConsumers,
-                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore());
+                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         assertThat(inMemoryCircuitBreakerRegistry).isNotNull();
         assertThat(inMemoryCircuitBreakerRegistry.getDefaultConfig()).isEqualTo(defaultConfig);

@@ -261,7 +261,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
     class Builder {
 
         private static final String DEFAULT_CONFIG = "default";
-        private RegistryStore registryStore;
+        private RegistryStore<Retry> registryStore;
         private Map<String, RetryConfig> retryConfigsMap;
         private List<RegistryEventConsumer<Retry>> registryEventConsumers;
         private io.vavr.collection.Map<String, String> tags;
@@ -271,7 +271,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
             this.registryEventConsumers = new ArrayList<>();
         }
 
-        public Builder withRegistryStore(RegistryStore registryStore) {
+        public Builder withRegistryStore(RegistryStore<Retry> registryStore) {
             this.registryStore = registryStore;
             return this;
         }

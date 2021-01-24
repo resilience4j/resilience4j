@@ -30,7 +30,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .test()
             .assertResult(1);
 
-        then(circuitBreaker).should().onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should().onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -49,7 +49,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertResult("Hello World", "Hello World");
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
-        then(circuitBreaker).should(times(2)).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(times(2)).onResult(anyLong(), any(TimeUnit.class), any(String.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -66,7 +66,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertNotComplete();
 
         then(helloWorldService).should(never()).returnHelloWorld();
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(String.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -98,7 +98,7 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
             .assertError(CallNotPermittedException.class)
             .assertNotComplete();
 
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
     }
@@ -116,6 +116,6 @@ public class SingleCircuitBreakerTest extends BaseCircuitBreakerTest {
         then(circuitBreaker).should().releasePermission();
         then(circuitBreaker).should(never())
             .onError(anyLong(), any(TimeUnit.class), any(Throwable.class));
-        then(circuitBreaker).should(never()).onSuccess(anyLong(), any(TimeUnit.class));
+        then(circuitBreaker).should(never()).onResult(anyLong(), any(TimeUnit.class), any(Integer.class));
     }
 }

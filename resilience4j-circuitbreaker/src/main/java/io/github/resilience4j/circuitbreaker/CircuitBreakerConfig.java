@@ -22,6 +22,7 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
+import java.io.Serializable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
@@ -33,7 +34,9 @@ import java.util.function.Predicate;
 /**
  * A {@link CircuitBreakerConfig} configures a {@link CircuitBreaker}
  */
-public class CircuitBreakerConfig {
+public class CircuitBreakerConfig implements Serializable {
+
+    private static final long serialVersionUID = -5429814941777001669L;
 
     public static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50; // Percentage
     public static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 100; // Percentage
@@ -47,15 +50,17 @@ public class CircuitBreakerConfig {
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
-    // The default Function to return current time
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
+    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
     private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
     private Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
+
+    private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
@@ -76,7 +81,6 @@ public class CircuitBreakerConfig {
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
     private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
-
 
     private CircuitBreakerConfig() {
     }
@@ -137,6 +141,10 @@ public class CircuitBreakerConfig {
 
     public Predicate<Throwable> getRecordExceptionPredicate() {
         return recordExceptionPredicate;
+    }
+
+    public Predicate<Object> getRecordResultPredicate() {
+        return recordResultPredicate;
     }
 
     public Predicate<Throwable> getIgnoreExceptionPredicate() {
@@ -237,6 +245,7 @@ public class CircuitBreakerConfig {
         private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
         private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
         private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
+        private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
         private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
             .of(Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD));
@@ -248,6 +257,7 @@ public class CircuitBreakerConfig {
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
+        private byte createWaitIntervalFunctionCounter = 0;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -268,6 +278,7 @@ public class CircuitBreakerConfig {
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
             this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
+            this.recordResultPredicate = baseConfig.recordResultPredicate;
         }
 
         public Builder() {
@@ -339,6 +350,10 @@ public class CircuitBreakerConfig {
          * Configures an interval function with a fixed wait duration which controls how long the
          * CircuitBreaker should stay open, before it switches to half open. Default value is 60
          * seconds.
+         * <p>
+         * Do not use with {@link #waitIntervalFunctionInOpenState(IntervalFunction)}!
+         * Please, when using, make sure not to override the value set earlier from the
+         * {@link #waitIntervalFunctionInOpenState(IntervalFunction)}
          *
          * @param waitDurationInOpenState the wait duration which specifies how long the
          *                                CircuitBreaker should stay open
@@ -352,6 +367,7 @@ public class CircuitBreakerConfig {
                     "waitDurationInOpenState must be at least 1[ms]");
             }
             this.waitIntervalFunctionInOpenState = IntervalFunction.of(waitDurationInMillis);
+            createWaitIntervalFunctionCounter++;
             return this;
         }
 
@@ -361,6 +377,10 @@ public class CircuitBreakerConfig {
          * duration of 60 seconds.
          * <p>
          * A custom interval function is useful if you need an exponential backoff algorithm.
+         * <p>
+         * Do not use with {@link #waitDurationInOpenState(Duration)}!
+         * Please, when using, make sure not to override the value set earlier from the
+         * {@link #waitDurationInOpenState(Duration)}
          *
          * @param waitIntervalFunctionInOpenState Interval function that returns wait time as a
          *                                        function of attempts
@@ -369,6 +389,7 @@ public class CircuitBreakerConfig {
         public Builder waitIntervalFunctionInOpenState(
             IntervalFunction waitIntervalFunctionInOpenState) {
             this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
+            createWaitIntervalFunctionCounter++;
             return this;
         }
 
@@ -400,7 +421,7 @@ public class CircuitBreakerConfig {
          * @param maxWaitDurationInHalfOpenState the wait duration which specifies how long the
          *                                CircuitBreaker should stay in Half Open
          * @return the CircuitBreakerConfig.Builder
-         * @throws IllegalArgumentException if {@code waitDurationInOpenState.toMillis() < 1000}
+         * @throws IllegalArgumentException if {@code maxWaitDurationInHalfOpenState.toMillis() < 1}
          */
         public Builder maxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
             if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
@@ -614,6 +635,21 @@ public class CircuitBreakerConfig {
         }
 
         /**
+         * Configures a Predicate which evaluates if the result of the protected function call
+         * should be recorded as a failure and thus increase the failure rate.
+         * The Predicate must return true if the result should count as a failure.
+         * The Predicate must return false, if the result should count
+         * as a success.
+         *
+         * @param predicate the Predicate which evaluates if a result should count as a failure
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder recordResult(Predicate<Object> predicate) {
+            this.recordResultPredicate = predicate;
+            return this;
+        }
+
+        /**
          * Configures a Predicate which evaluates if an exception should be ignored and neither
          * count as a failure nor success. The Predicate must return true if the exception should be
          * ignored. The Predicate must return false, if the exception should count as a failure.
@@ -708,10 +744,11 @@ public class CircuitBreakerConfig {
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
+         * @throws IllegalStateException when the parameter is invalid
          */
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
-            config.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
+            config.waitIntervalFunctionInOpenState = validateWaitIntervalFunctionInOpenState();
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
@@ -728,6 +765,7 @@ public class CircuitBreakerConfig {
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
+            config.recordResultPredicate = recordResultPredicate;
             return config;
         }
 
@@ -745,6 +783,15 @@ public class CircuitBreakerConfig {
                     .or(recordExceptionPredicate) : predicate)
                 .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
                     : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+        }
+
+        private IntervalFunction validateWaitIntervalFunctionInOpenState() {
+            if (createWaitIntervalFunctionCounter > 1) {
+                throw new IllegalStateException("The waitIntervalFunction was configured multiple times " +
+                    "which could result in an undesired state. Please verify that waitIntervalFunctionInOpenState " +
+                    "and waitDurationInOpenState are not used together.");
+            }
+            return waitIntervalFunctionInOpenState;
         }
     }
 }

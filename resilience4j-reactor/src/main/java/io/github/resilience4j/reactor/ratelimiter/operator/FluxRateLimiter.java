@@ -19,35 +19,19 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxOperator;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.Operators;
-
-import java.time.Duration;
-
-import static io.github.resilience4j.ratelimiter.RequestNotPermitted.createRequestNotPermitted;
 
 class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
-    private final RateLimiter rateLimiter;
+    private final CorePublisherRateLimiterOperator<T> operator;
 
     FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter) {
         super(source);
-        this.rateLimiter = rateLimiter;
+        this.operator = new CorePublisherRateLimiterOperator<T>(source, rateLimiter);
     }
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        long waitDuration = rateLimiter.reservePermission();
-        if (waitDuration >= 0) {
-            if (waitDuration > 0) {
-                Mono.delay(Duration.ofNanos(waitDuration))
-                    .subscribe(delay -> source.subscribe(new RateLimiterSubscriber<>(actual)));
-            } else {
-                source.subscribe(new RateLimiterSubscriber<>(actual));
-            }
-        } else {
-            Operators.error(actual, createRequestNotPermitted(rateLimiter));
-        }
+        operator.subscribe(actual);
     }
 
 }

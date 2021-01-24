@@ -19,19 +19,25 @@
 package io.github.resilience4j.retry;
 
 
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
+import java.io.Serializable;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class RetryConfig {
+public class RetryConfig implements Serializable {
+
+    private static final long serialVersionUID = 3522903275067138911L;
 
     public static final long DEFAULT_WAIT_DURATION = 500;
-    private static final int DEFAULT_MAX_ATTEMPTS = 3;
+    public static final int DEFAULT_MAX_ATTEMPTS = 3;
     private static final IntervalFunction DEFAULT_INTERVAL_FUNCTION = numOfAttempts -> DEFAULT_WAIT_DURATION;
+    private static final IntervalBiFunction DEFAULT_INTERVAL_BI_FUNCTION = IntervalBiFunction.ofIntervalFunction(DEFAULT_INTERVAL_FUNCTION);
     private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
 
     @SuppressWarnings("unchecked")
@@ -41,11 +47,18 @@ public class RetryConfig {
 
     @Nullable
     private Predicate<Throwable> retryOnExceptionPredicate;
+
     @Nullable
     private Predicate retryOnResultPredicate;
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-    private IntervalFunction intervalFunction = DEFAULT_INTERVAL_FUNCTION;
+    private boolean failAfterMaxAttempts = false;
+    private boolean writableStackTraceEnabled = true;
+
+    @Nullable
+    private IntervalFunction intervalFunction;
+
+    private IntervalBiFunction intervalBiFunction = DEFAULT_INTERVAL_BI_FUNCTION;
 
     // The final exception predicate
     private Predicate<Throwable> exceptionPredicate;
@@ -83,8 +96,38 @@ public class RetryConfig {
         return maxAttempts;
     }
 
+    /**
+     * @return if exception should be thrown after max attempts are made with no satisfactory result
+     */
+    public boolean isFailAfterMaxAttempts() {
+        return failAfterMaxAttempts;
+    }
+
+    /**
+     * @return if any thrown {@link MaxRetriesExceededException} should contain a stacktrace
+     */
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
+    }
+
+    /**
+     * Use {@link RetryConfig#intervalBiFunction} instead, this method is kept for backwards compatibility
+     */
+    @Nullable
+    @Deprecated
     public Function<Integer, Long> getIntervalFunction() {
         return intervalFunction;
+    }
+
+    /**
+     * Return the IntervalBiFunction which calculates wait interval based on result or exception
+     *
+     * @param <T> The type of result.
+     * @return the interval bi function
+     */
+    @SuppressWarnings("unchecked")
+    public <T> IntervalBiFunction<T> getIntervalBiFunction() {
+        return intervalBiFunction;
     }
 
     public Predicate<Throwable> getExceptionPredicate() {
@@ -93,7 +136,7 @@ public class RetryConfig {
 
     /**
      * Return the Predicate which evaluates if an result should be retried. The Predicate must
-     * return true if the result should  be retried, otherwise it must return false.
+     * return true if the result should be retried, otherwise it must return false.
      *
      * @param <T> The type of result.
      * @return the result predicate
@@ -107,12 +150,19 @@ public class RetryConfig {
     public static class Builder<T> {
 
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
-        private IntervalFunction intervalFunction = IntervalFunction.ofDefaults();
+        private boolean failAfterMaxAttempts = false;
+        private boolean writableStackTraceEnabled = true;
+
+        @Nullable
+        private IntervalFunction intervalFunction;
 
         @Nullable
         private Predicate<Throwable> retryOnExceptionPredicate;
         @Nullable
         private Predicate<T> retryOnResultPredicate;
+
+        @Nullable
+        private IntervalBiFunction<T> intervalBiFunction;
 
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] retryExceptions = new Class[0];
@@ -126,11 +176,17 @@ public class RetryConfig {
         @SuppressWarnings("unchecked")
         public Builder(RetryConfig baseConfig) {
             this.maxAttempts = baseConfig.maxAttempts;
-            this.intervalFunction = baseConfig.intervalFunction;
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
+            this.failAfterMaxAttempts = baseConfig.failAfterMaxAttempts;
+            this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.retryExceptions = baseConfig.retryExceptions;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
+            if (baseConfig.intervalFunction != null) {
+                this.intervalFunction = baseConfig.intervalFunction;
+            } else {
+                this.intervalBiFunction = baseConfig.intervalBiFunction;
+            }
         }
 
         public Builder<T> maxAttempts(int maxAttempts) {
@@ -144,10 +200,10 @@ public class RetryConfig {
 
         public Builder<T> waitDuration(Duration waitDuration) {
             if (waitDuration.toMillis() >= 0) {
-                this.intervalFunction = (x) -> waitDuration.toMillis();
+                this.intervalBiFunction = (attempt, either) -> waitDuration.toMillis();
             } else {
                 throw new IllegalArgumentException(
-                    "waitDurationInOpenState must be a positive value");
+                    "waitDuration must be a positive value");
             }
             return this;
         }
@@ -165,6 +221,32 @@ public class RetryConfig {
         }
 
         /**
+         * Configures the Retry to throw a {@link MaxRetriesExceeded} exception once {@link #maxAttempts} has been reached,
+         * and the result is still not satisfactory (according to {@link #retryOnResultPredicate})
+         *
+         * @param bool a boolean flag to enable or disable throwing. (Default is {@code false}
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> failAfterMaxAttempts(boolean bool) {
+            this.failAfterMaxAttempts = bool;
+            return this;
+        }
+
+        /**
+         * Enables writable stack traces. When set to false, {@link Exception#getStackTrace()}
+         * returns a zero length array. This may be used to reduce log spam when the Retry
+         * has exceeded the maximum nbr of attempts, and flag {@link #failAfterMaxAttempts} has been enabled.
+         * The thrown {@link MaxRetriesExceededException} will then have no stacktrace.
+         *
+         * @param bool the flag to enable writable stack traces.
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> writableStackTraceEnabled(boolean bool) {
+            this.writableStackTraceEnabled = bool;
+            return this;
+        }
+
+        /**
          * Set a function to modify the waiting interval after a failure. By default the interval
          * stays the same.
          *
@@ -173,6 +255,17 @@ public class RetryConfig {
          */
         public Builder<T> intervalFunction(IntervalFunction f) {
             this.intervalFunction = f;
+            return this;
+        }
+
+        /**
+         * Set a function to modify the waiting interval after a failure based on attempt number and result or exception.
+         *
+         * @param f Function to modify the interval after a failure
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> intervalBiFunction(IntervalBiFunction<T> f) {
+            this.intervalBiFunction = f;
             return this;
         }
 
@@ -240,15 +333,31 @@ public class RetryConfig {
         }
 
         public RetryConfig build() {
+            if (intervalFunction != null && intervalBiFunction != null) {
+                throw new IllegalStateException("The intervalFunction was configured twice which could result in an" +
+                    " undesired state. Please use either intervalFunction or intervalBiFunction.");
+            }
             RetryConfig config = new RetryConfig();
-            config.intervalFunction = intervalFunction;
             config.maxAttempts = maxAttempts;
+            config.failAfterMaxAttempts = failAfterMaxAttempts;
+            config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.retryOnExceptionPredicate = retryOnExceptionPredicate;
             config.retryOnResultPredicate = retryOnResultPredicate;
             config.retryExceptions = retryExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.exceptionPredicate = createExceptionPredicate();
+            config.intervalFunction = createIntervalFunction();
+            config.intervalBiFunction = Optional.ofNullable(intervalBiFunction)
+                .orElse(IntervalBiFunction.ofIntervalFunction(config.intervalFunction));
             return config;
+        }
+
+        @Nullable
+        private IntervalFunction createIntervalFunction() {
+            if (intervalFunction == null && intervalBiFunction == null) {
+                return IntervalFunction.ofDefaults();
+            }
+            return intervalFunction;
         }
 
         private Predicate<Throwable> createExceptionPredicate() {

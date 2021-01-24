@@ -20,14 +20,17 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.MaxRetriesExceeded;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.*;
 import io.vavr.CheckedConsumer;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
+import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 
@@ -36,7 +39,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -53,7 +55,8 @@ public class RetryImpl<T> implements Retry {
     private final Map<String, String> tags;
 
     private final int maxAttempts;
-    private final Function<Integer, Long> intervalFunction;
+    private final boolean failAfterMaxAttempts;
+    private final IntervalBiFunction<T> intervalBiFunction;
     private final Predicate<Throwable> exceptionPredicate;
     private final LongAdder succeededAfterRetryCounter;
     private final LongAdder failedAfterRetryCounter;
@@ -69,7 +72,8 @@ public class RetryImpl<T> implements Retry {
         this.config = config;
         this.tags = tags;
         this.maxAttempts = config.getMaxAttempts();
-        this.intervalFunction = config.getIntervalFunction();
+        this.failAfterMaxAttempts = config.isFailAfterMaxAttempts();
+        this.intervalBiFunction = config.getIntervalBiFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         this.resultPredicate = config.getResultPredicate();
         this.metrics = this.new RetryMetrics();
@@ -159,10 +163,16 @@ public class RetryImpl<T> implements Retry {
                 if (currentNumOfAttempts >= maxAttempts) {
                     failedAfterRetryCounter.increment();
                     Throwable throwable = Option.of(lastException.get())
-                        .getOrElse(lastRuntimeException.get());
-                    publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts,
-                        throwable != null ? throwable : new MaxRetriesExceeded(
-                            "max retries is reached out for the result predicate check")));
+                        .orElse(Option.of(lastRuntimeException.get()))
+                        .filter(p -> !failAfterMaxAttempts)
+                        .getOrElse(new MaxRetriesExceeded(
+                            "max retries is reached out for the result predicate check"
+                        ));
+                    publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts, throwable));
+
+                    if (failAfterMaxAttempts) {
+                        throw MaxRetriesExceededException.createMaxRetriesExceededException(RetryImpl.this);
+                    }
                 } else {
                     succeededWithoutRetryCounter.increment();
                 }
@@ -176,7 +186,7 @@ public class RetryImpl<T> implements Retry {
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
                 } else {
-                    waitIntervalAfterFailure(currentNumOfAttempts, null);
+                    waitIntervalAfterFailure(currentNumOfAttempts, Either.right(result));
                     return true;
                 }
             }
@@ -216,7 +226,7 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                waitIntervalAfterFailure(currentNumOfAttempts, throwable);
+                waitIntervalAfterFailure(currentNumOfAttempts, Either.left(throwable));
             }
         }
 
@@ -229,16 +239,15 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                waitIntervalAfterFailure(currentNumOfAttempts, throwable);
+                waitIntervalAfterFailure(currentNumOfAttempts, Either.left(throwable));
             }
         }
 
-        private void waitIntervalAfterFailure(int currentNumOfAttempts,
-                                              @Nullable Throwable throwable) {
+        private void waitIntervalAfterFailure(int currentNumOfAttempts, Either<Throwable, T> either) {
             // wait interval until the next attempt should start
-            long interval = intervalFunction.apply(numOfAttempts.get());
+            long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
             publishRetryEvent(
-                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, throwable, interval));
+                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
             Try.run(() -> sleepFunction.accept(interval))
                 .getOrElseThrow(ex -> lastRuntimeException.get());
         }
@@ -269,9 +278,17 @@ public class RetryImpl<T> implements Retry {
             } else {
                 if (currentNumOfAttempts >= maxAttempts) {
                     failedAfterRetryCounter.increment();
-                    publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts,
-                        lastException.get() != null ? lastException.get() : new MaxRetriesExceeded(
-                            "max retries is reached out for the result predicate check")));
+                    Throwable throwable = Option.of(lastException.get())
+                        .filter(p -> !failAfterMaxAttempts)
+                        .getOrElse(new MaxRetriesExceeded(
+                            "max retries is reached out for the result predicate check"
+                        ));
+
+                    publishRetryEvent(() -> new RetryOnErrorEvent(name, currentNumOfAttempts, throwable));
+
+                    if (failAfterMaxAttempts) {
+                        throw MaxRetriesExceededException.createMaxRetriesExceededException(RetryImpl.this);
+                    }
                 } else {
                     succeededWithoutRetryCounter.increment();
 
@@ -310,7 +327,7 @@ public class RetryImpl<T> implements Retry {
                 return -1;
             }
 
-            long interval = intervalFunction.apply(attempt);
+            long interval = intervalBiFunction.apply(attempt, Either.left(throwable));
             publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
             return interval;
         }
@@ -322,7 +339,7 @@ public class RetryImpl<T> implements Retry {
                 if (attempt >= maxAttempts) {
                     return -1;
                 }
-                return intervalFunction.apply(attempt);
+                return intervalBiFunction.apply(attempt, Either.right(result));
             } else {
                 return -1;
             }

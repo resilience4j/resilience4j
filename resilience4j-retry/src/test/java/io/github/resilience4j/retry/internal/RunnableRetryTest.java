@@ -154,4 +154,22 @@ public class RunnableRetryTest {
             RetryConfig.DEFAULT_WAIT_DURATION +
                 RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
     }
+
+    @Test
+    public void shouldTakeIntoAccountBackoffBiFunction() {
+        willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorld();
+        RetryConfig config = RetryConfig
+            .custom()
+            .maxAttempts(3)
+            .intervalBiFunction((attempt, result) -> result.mapLeft(e -> 100L).getLeft())
+            .build();
+        Retry retry = Retry.of("id", config);
+        CheckedRunnable retryableRunnable = Retry
+            .decorateCheckedRunnable(retry, helloWorldService::sayHelloWorld);
+
+        Try.run(retryableRunnable);
+
+        then(helloWorldService).should(times(3)).sayHelloWorld();
+        assertThat(sleptTime).isEqualTo(200);
+    }
 }

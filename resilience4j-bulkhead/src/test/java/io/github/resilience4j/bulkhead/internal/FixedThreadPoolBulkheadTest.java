@@ -19,11 +19,11 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
-import io.github.resilience4j.bulkhead.TestContextPropagators;
-import io.github.resilience4j.bulkhead.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.registry.*;
+import io.github.resilience4j.test.TestContextPropagators;
+import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,7 +124,7 @@ public class FixedThreadPoolBulkheadTest {
         configs.put("default", defaultConfig);
         final InMemoryThreadPoolBulkheadRegistry inMemoryThreadPoolBulkheadRegistry =
             new InMemoryThreadPoolBulkheadRegistry(configs, registryEventConsumers,
-                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore());
+                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry).isNotNull();
         AssertionsForClassTypes.assertThat(inMemoryThreadPoolBulkheadRegistry.getDefaultConfig()).isEqualTo(defaultConfig);

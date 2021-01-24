@@ -21,6 +21,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.internal.disposables.EmptyDisposable;
+import io.vavr.control.Either;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,8 +41,8 @@ class CompletableRateLimiter extends Completable {
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 Completable.timer(waitDuration, TimeUnit.NANOSECONDS)
-                    .subscribe(
-                        () -> upstream.subscribe(new RateLimiterCompletableObserver(downstream)));
+                    .subscribe(() -> upstream.subscribe(
+                        new RateLimiterCompletableObserver(downstream)));
             } else {
                 upstream.subscribe(new RateLimiterCompletableObserver(downstream));
             }
@@ -64,7 +65,7 @@ class CompletableRateLimiter extends Completable {
 
         @Override
         protected void hookOnError(Throwable e) {
-            // NoOp
+            rateLimiter.onError(e);
         }
 
         @Override

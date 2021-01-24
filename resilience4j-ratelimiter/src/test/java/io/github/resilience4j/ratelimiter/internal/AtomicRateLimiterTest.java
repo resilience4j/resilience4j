@@ -88,6 +88,7 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
             .timeoutDuration(Duration.ZERO)
             .build();
         AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
+
         AtomicRateLimiter.AtomicRateLimiterMetrics rawDetailedMetrics = rawLimiter
             .getDetailedMetrics();
 
@@ -119,6 +120,29 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
 
         then(secondCycle - firstCycle).isEqualTo(2);
         then(thirdCycle - secondCycle).isEqualTo(1);
+    }
+
+    @Test
+    public void firstIterationAtomicRateLimitNanoTime() {
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(PERMISSIONS_RER_CYCLE)
+            .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
+            .timeoutDuration(Duration.ZERO)
+            .build();
+        AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
+
+        rawLimiter.acquirePermission();
+        rawLimiter.acquirePermission();
+        boolean firstNoPermission = rawLimiter.acquirePermission();
+        then(firstNoPermission).isFalse();
+
+        AtomicRateLimiter rawLimiterTwo = new AtomicRateLimiter("rawLimiter", rateLimiterConfig);
+        rawLimiterTwo.acquirePermission();
+        rawLimiterTwo.acquirePermission();
+        boolean firstNoPermissionLimiterTwo = rawLimiterTwo.acquirePermission();
+        then(firstNoPermissionLimiterTwo).isFalse();
+
+        then(rawLimiter.getNanoTimeStart() != rawLimiterTwo.getNanoTimeStart()).isTrue();
     }
 
     @Test
@@ -474,17 +498,29 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
 
     @Test
     public void metricsTest() {
-        setup(Duration.ZERO);
+        RateLimiterConfig rateLimiterConfig = RateLimiterConfig.custom()
+            .limitForPeriod(PERMISSIONS_RER_CYCLE)
+            .limitRefreshPeriod(Duration.ofNanos(CYCLE_IN_NANOS))
+            .timeoutDuration(Duration.ZERO)
+            .build();
 
-        RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+        AtomicRateLimiter rawLimiter = new AtomicRateLimiter("rawLimiterMetric", rateLimiterConfig);
+        RateLimiter.Metrics metrics = rawLimiter.getMetrics();
         then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
         then(metrics.getAvailablePermissions()).isEqualTo(1);
 
-        AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = rateLimiter
+        AtomicRateLimiter.AtomicRateLimiterMetrics detailedMetrics = rawLimiter
             .getDetailedMetrics();
         then(detailedMetrics.getNumberOfWaitingThreads()).isEqualTo(0);
         then(detailedMetrics.getAvailablePermissions()).isEqualTo(1);
         then(detailedMetrics.getNanosToWait()).isEqualTo(0);
+        boolean firstPermission = rawLimiter.acquirePermission();
+        waitForPermissionRenewal(detailedMetrics, '*');
+
+        boolean secondPermission = rawLimiter.acquirePermission();
+        boolean firstNoPermission = rawLimiter.acquirePermission();
+        then(firstNoPermission).isFalse();
+
         then(detailedMetrics.getCycle()).isGreaterThan(0);
     }
 

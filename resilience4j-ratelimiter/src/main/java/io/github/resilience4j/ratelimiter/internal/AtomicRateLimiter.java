@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.HashMap;
@@ -37,9 +38,9 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
- * <p>Each cycle has duration of {@link RateLimiterConfig#limitRefreshPeriod} in nanoseconds.
+ * <p>Each cycle has duration of {@link RateLimiterConfig#getLimitRefreshPeriod} in nanoseconds.
  * <p>By contract on start of each cycle {@link AtomicRateLimiter} should
- * set {@link State#activePermissions} to {@link RateLimiterConfig#limitForPeriod}. For the {@link
+ * set {@link State#activePermissions} to {@link RateLimiterConfig#getLimitForPeriod}. For the {@link
  * AtomicRateLimiter} callers it is really looks so, but under the hood there is some optimisations
  * that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
@@ -47,8 +48,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  */
 public class AtomicRateLimiter implements RateLimiter {
 
-    private static final long nanoTimeStart = nanoTime();
-
+    private final long nanoTimeStart;
     private final String name;
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;
@@ -63,6 +63,7 @@ public class AtomicRateLimiter implements RateLimiter {
                              Map<String, String> tags) {
         this.name = name;
         this.tags = tags;
+        this.nanoTimeStart = nanoTime();
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(
@@ -106,6 +107,10 @@ public class AtomicRateLimiter implements RateLimiter {
         return nanoTime() - nanoTimeStart;
     }
 
+    long getNanoTimeStart() {
+        return this.nanoTimeStart;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -114,7 +119,7 @@ public class AtomicRateLimiter implements RateLimiter {
         long timeoutInNanos = state.get().config.getTimeoutDuration().toNanos();
         State modifiedState = updateStateWithBackOff(permits, timeoutInNanos);
         boolean result = waitForPermissionIfNecessary(timeoutInNanos, modifiedState.nanosToWait);
-        publishRateLimiterEvent(result, permits);
+        publishRateLimiterAcquisitionEvent(result, permits);
         return result;
     }
 
@@ -128,18 +133,31 @@ public class AtomicRateLimiter implements RateLimiter {
 
         boolean canAcquireImmediately = modifiedState.nanosToWait <= 0;
         if (canAcquireImmediately) {
-            publishRateLimiterEvent(true, permits);
+            publishRateLimiterAcquisitionEvent(true, permits);
             return 0;
         }
 
         boolean canAcquireInTime = timeoutInNanos >= modifiedState.nanosToWait;
         if (canAcquireInTime) {
-            publishRateLimiterEvent(true, permits);
+            publishRateLimiterAcquisitionEvent(true, permits);
             return modifiedState.nanosToWait;
         }
 
-        publishRateLimiterEvent(false, permits);
+        publishRateLimiterAcquisitionEvent(false, permits);
         return -1;
+    }
+
+    @Override
+    public void drainPermissions() {
+        AtomicRateLimiter.State prev;
+        AtomicRateLimiter.State next;
+        do {
+            prev = state.get();
+            next = calculateNextState(prev.activePermissions, 0, prev);
+        } while (!compareAndSet(prev, next));
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, Math.min(prev.activePermissions, 0)));
+        }
     }
 
     /**
@@ -384,7 +402,7 @@ public class AtomicRateLimiter implements RateLimiter {
         return new AtomicRateLimiterMetrics();
     }
 
-    private void publishRateLimiterEvent(boolean permissionAcquired, int permits) {
+    private void publishRateLimiterAcquisitionEvent(boolean permissionAcquired, int permits) {
         if (!eventProcessor.hasConsumers()) {
             return;
         }

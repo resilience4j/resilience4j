@@ -18,11 +18,13 @@
  */
 package io.github.resilience4j.ratelimiter;
 
+import io.vavr.control.Either;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.time.Duration;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -32,6 +34,7 @@ public class RateLimiterConfigTest {
     private static final int LIMIT = 50;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
+    private static final Predicate<Either<? extends Throwable, ?>> DRAIN_CONDITION_CHECKER = result -> false;
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
     private static final String REFRESH_PERIOD_MUST_NOT_BE_NULL = "RefreshPeriod must not be null";
 
@@ -45,11 +48,13 @@ public class RateLimiterConfigTest {
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)
+            .drainPermissionsOnResult(DRAIN_CONDITION_CHECKER)
             .build();
 
         then(config.getLimitForPeriod()).isEqualTo(LIMIT);
         then(config.getLimitRefreshPeriod()).isEqualTo(REFRESH_PERIOD);
         then(config.getTimeoutDuration()).isEqualTo(TIMEOUT);
+        then(config.getDrainPermissionsOnResult()).isEqualTo(DRAIN_CONDITION_CHECKER);
     }
 
     @Test

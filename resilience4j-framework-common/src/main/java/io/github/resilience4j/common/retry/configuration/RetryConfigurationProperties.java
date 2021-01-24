@@ -21,6 +21,7 @@ import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ClassUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
@@ -150,6 +151,11 @@ public class RetryConfigurationProperties extends CommonProperties {
                 .instantiatePredicateClass(properties.getResultPredicate());
             builder.retryOnResult(predicate);
         }
+        if (properties.getIntervalBiFunction() != null) {
+            IntervalBiFunction<Object> intervalBiFunction = ClassUtils
+                .instantiateIntervalBiFunctionClass(properties.getIntervalBiFunction());
+            builder.intervalBiFunction(intervalBiFunction);
+        }
 
         compositeRetryCustomizer.getCustomizer(backend)
             .ifPresent(customizer -> customizer.customize(builder));
@@ -163,50 +169,71 @@ public class RetryConfigurationProperties extends CommonProperties {
      * @param properties the backend retry properties
      * @param builder    the retry config builder
      */
-    private void configureRetryIntervalFunction(InstanceProperties properties,
-        RetryConfig.Builder<Object> builder) {
+    private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
         // these take precedence over deprecated properties. Setting one or the other will still work.
         if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
-            Duration waitDuration = properties.getWaitDuration();
-
             if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
                 Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
-
-                if ((properties.getRandomizedWaitFactor() != null) &&
-                    (properties.getExponentialBackoffMultiplier() != null)) {
-                    builder.intervalFunction(IntervalFunction
-                        .ofExponentialRandomBackoff(waitDuration.toMillis(),
-                            properties.getExponentialBackoffMultiplier(),
-                            properties.getRandomizedWaitFactor()));
-                } else if (properties.getExponentialBackoffMultiplier() != null) {
-                    builder.intervalFunction(IntervalFunction
-                        .ofExponentialRandomBackoff(waitDuration.toMillis(),
-                            properties.getExponentialBackoffMultiplier()));
-                } else {
-                    builder.intervalFunction(IntervalFunction
-                        .ofExponentialRandomBackoff(waitDuration.toMillis()));
-                }
-
+                configureExponentialBackoffAndRandomizedWait(properties, builder);
             } else if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff())) {
-                if (properties.getExponentialBackoffMultiplier() != null) {
-                    builder.intervalFunction(IntervalFunction
-                        .ofExponentialBackoff(waitDuration.toMillis(),
-                            properties.getExponentialBackoffMultiplier()));
-                } else {
-                    builder.intervalFunction(IntervalFunction
-                        .ofExponentialBackoff(properties.getWaitDuration().toMillis()));
-                }
-
+                configureExponentialBackoff(properties, builder);
             } else if (Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
-                if (properties.getRandomizedWaitFactor() != null) {
-                    builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration.toMillis(),
-                        properties.getRandomizedWaitFactor()));
-                } else {
-                    builder.intervalFunction(IntervalFunction.ofRandomized(waitDuration));
-                }
+                configureRandomizedWait(properties, builder);
             } else {
-                builder.waitDuration(Duration.ofMillis(properties.getWaitDuration().toMillis()));
+                builder.waitDuration(properties.getWaitDuration());
             }
+        }
+    }
+
+    private void configureExponentialBackoffAndRandomizedWait(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
+        Duration waitDuration = properties.getWaitDuration();
+        Double backoffMultiplier = properties.getExponentialBackoffMultiplier();
+        Double randomizedWaitFactor = properties.getRandomizedWaitFactor();
+        Duration maxWaitDuration = properties.getExponentialMaxWaitDuration();
+        if (maxWaitDuration != null &&
+            randomizedWaitFactor != null &&
+            backoffMultiplier != null) {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier, randomizedWaitFactor, maxWaitDuration));
+        } else if (randomizedWaitFactor != null &&
+            backoffMultiplier != null) {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier, randomizedWaitFactor));
+        } else if (backoffMultiplier != null) {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier));
+        } else {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialRandomBackoff(waitDuration));
+        }
+    }
+
+    private void configureExponentialBackoff(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
+        Duration waitDuration = properties.getWaitDuration();
+        Double backoffMultiplier = properties.getExponentialBackoffMultiplier();
+        Duration maxWaitDuration = properties.getExponentialMaxWaitDuration();
+        if (maxWaitDuration != null &&
+            backoffMultiplier != null) {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier, maxWaitDuration));
+        } else if (backoffMultiplier != null) {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier));
+        } else {
+            builder.intervalFunction(
+                IntervalFunction.ofExponentialBackoff(waitDuration));
+        }
+    }
+
+    private void configureRandomizedWait(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
+        Duration waitDuration = properties.getWaitDuration();
+        Double randomizedWaitFactor = properties.getRandomizedWaitFactor();
+        if (randomizedWaitFactor != null) {
+            builder.intervalFunction(
+                IntervalFunction.ofRandomized(waitDuration, randomizedWaitFactor));
+        } else {
+            builder.intervalFunction(
+                IntervalFunction.ofRandomized(waitDuration));
         }
     }
 
@@ -223,7 +250,15 @@ public class RetryConfigurationProperties extends CommonProperties {
         private Duration waitDuration;
 
         /*
+         * retry intervalBiFunction class to be used to calculate wait based on exception or result
+         */
+        @Nullable
+        private Class<? extends IntervalBiFunction<Object>> intervalBiFunction;
+
+        /**
          * max retry attempts value
+         *
+         * @deprecated use maxAttempts
          */
         @Nullable
         @Deprecated
@@ -231,49 +266,62 @@ public class RetryConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Integer maxAttempts;
-        /*
+
+        /**
          * retry exception predicate class to be used to evaluate the exception to retry or not
          */
         @Nullable
         private Class<? extends Predicate<Throwable>> retryExceptionPredicate;
-        /*
+
+        /**
          * retry setResultPredicate predicate class to be used to evaluate the result to retry or not
          */
         @Nullable
         private Class<? extends Predicate<Object>> resultPredicate;
-        /*
+
+        /**
          * list of retry exception classes
          */
         @SuppressWarnings("unchecked")
         @Nullable
         private Class<? extends Throwable>[] retryExceptions;
-        /*
+
+        /**
          * list of retry ignored exception classes
          */
         @SuppressWarnings("unchecked")
         @Nullable
         private Class<? extends Throwable>[] ignoreExceptions;
-        /*
+
+        /**
          * event buffer size for generated retry events
          */
         @Nullable
         private Integer eventConsumerBufferSize;
-        /*
+
+        /**
          * flag to enable Exponential backoff policy or not for retry policy delay
          */
         @Nullable
         private Boolean enableExponentialBackoff;
-        /*
+
+        /**
          * exponential backoff multiplier value
          */
         private Double exponentialBackoffMultiplier;
 
-        /*
+        /**
+         * exponential max interval value
+         */
+        private Duration exponentialMaxWaitDuration;
+
+        /**
          * flag to enable randomized delay  policy or not for retry policy delay
          */
         @Nullable
         private Boolean enableRandomizedWait;
-        /*
+
+        /**
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
@@ -298,6 +346,19 @@ public class RetryConfigurationProperties extends CommonProperties {
         }
 
         @Nullable
+        public Class<? extends IntervalBiFunction<Object>> getIntervalBiFunction() {
+            return intervalBiFunction;
+        }
+
+        public void setIntervalBiFunction(Class<? extends IntervalBiFunction<Object>> intervalBiFunction) {
+            this.intervalBiFunction = intervalBiFunction;
+        }
+
+        /**
+         *
+         * @deprecated use getMaxAttempts()
+         */
+        @Nullable
         @Deprecated
         public Integer getMaxRetryAttempts() {
             return maxRetryAttempts;
@@ -308,6 +369,10 @@ public class RetryConfigurationProperties extends CommonProperties {
             return maxAttempts;
         }
 
+        /**
+         *
+         * @deprecated use setMaxAttempts()
+         */
         @Deprecated
         public InstanceProperties setMaxRetryAttempts(Integer maxRetryAttempts) {
             Objects.requireNonNull(maxRetryAttempts);
@@ -403,9 +468,18 @@ public class RetryConfigurationProperties extends CommonProperties {
             return exponentialBackoffMultiplier;
         }
 
-        public InstanceProperties setExponentialBackoffMultiplier(
-            Double exponentialBackoffMultiplier) {
+        public InstanceProperties setExponentialBackoffMultiplier(Double exponentialBackoffMultiplier) {
             this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
+            return this;
+        }
+
+        @Nullable
+        public Duration getExponentialMaxWaitDuration() {
+            return exponentialMaxWaitDuration;
+        }
+
+        public InstanceProperties setExponentialMaxWaitDuration(Duration exponentialMaxWaitDuration) {
+            this.exponentialMaxWaitDuration = exponentialMaxWaitDuration;
             return this;
         }
 

@@ -46,10 +46,14 @@ public abstract class AbstractSubscriber<T> implements Subscriber<T>, Subscripti
     @Override
     public void onNext(T value) {
         if (!isDisposed()) {
+            hookOnNext(value);
             eventWasEmitted.set(true);
             downstreamSubscriber.onNext(value);
         }
+    }
 
+    protected void hookOnNext(T value) {
+        // NoOp
     }
 
     @Override

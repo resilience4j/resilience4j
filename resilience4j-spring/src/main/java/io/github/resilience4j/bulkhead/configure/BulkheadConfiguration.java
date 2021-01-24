@@ -23,6 +23,7 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -117,18 +118,17 @@ public class BulkheadConfiguration {
      */
     private void registerEventConsumer(BulkheadRegistry bulkheadRegistry,
         EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
-        BulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        bulkheadRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                bulkheadConfigurationProperties));
+        BulkheadConfigurationProperties properties) {
+        bulkheadRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
     }
 
     private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
         Bulkhead bulkHead, BulkheadConfigurationProperties bulkheadConfigurationProperties) {
         int eventConsumerBufferSize = Optional
             .ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
-            .map(
-                io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
         bulkHead.getEventPublisher().onEvent(
             eventConsumerRegistry.createEventConsumer(bulkHead.getName(), eventConsumerBufferSize));

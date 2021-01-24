@@ -76,6 +76,7 @@ public class SpringConfigUtilsTest {
         sharedProperties.setWaitDuration(Duration.ofMillis(100));
         sharedProperties.setEnableRandomizedWait(true);
         sharedProperties.setExponentialBackoffMultiplier(0.1);
+        sharedProperties.setExponentialMaxWaitDuration(Duration.ofMinutes(2));
         sharedProperties.setEnableExponentialBackoff(false);
 
         RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RetryConfigurationProperties.InstanceProperties();
@@ -83,11 +84,13 @@ public class SpringConfigUtilsTest {
         backendWithDefaultConfig.setWaitDuration(Duration.ofMillis(200L));
         assertThat(backendWithDefaultConfig.getEnableExponentialBackoff()).isNull();
         assertThat(backendWithDefaultConfig.getExponentialBackoffMultiplier()).isNull();
+        assertThat(backendWithDefaultConfig.getExponentialMaxWaitDuration()).isNull();
         assertThat(backendWithDefaultConfig.getEnableRandomizedWait()).isNull();
 
         ConfigUtils.mergePropertiesIfAny(sharedProperties, backendWithDefaultConfig);
         assertThat(backendWithDefaultConfig.getEnableExponentialBackoff()).isFalse();
         assertThat(backendWithDefaultConfig.getExponentialBackoffMultiplier()).isEqualTo(0.1);
+        assertThat(backendWithDefaultConfig.getExponentialMaxWaitDuration()).isEqualTo(Duration.ofMinutes(2));
         assertThat(backendWithDefaultConfig.getEnableRandomizedWait()).isTrue();
     }
 

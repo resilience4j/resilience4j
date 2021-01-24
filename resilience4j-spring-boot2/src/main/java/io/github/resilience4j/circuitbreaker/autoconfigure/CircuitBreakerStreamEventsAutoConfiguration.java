@@ -25,19 +25,17 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.condition.Conditi
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
 
 @Configuration
-@ConditionalOnClass({CircuitBreaker.class, Endpoint.class})
+@ConditionalOnClass({CircuitBreaker.class, Endpoint.class, Flux.class, ReactorAdapter.class})
 @AutoConfigureAfter(CircuitBreakerAutoConfiguration.class)
 public class CircuitBreakerStreamEventsAutoConfiguration {
 
     @Bean
     @ConditionalOnAvailableEndpoint
-    @ConditionalOnClass({Flux.class, ReactorAdapter.class})
     public CircuitBreakerServerSideEvent circuitBreakerServerSideEventEndpoint(
         CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerServerSideEvent(circuitBreakerRegistry);
@@ -45,7 +43,6 @@ public class CircuitBreakerStreamEventsAutoConfiguration {
 
     @Bean
     @ConditionalOnAvailableEndpoint
-    @ConditionalOnClass({Flux.class, ReactorAdapter.class})
     public CircuitBreakerHystrixServerSideEvent circuitBreakerHystrixServerSideEventEndpoint(
         CircuitBreakerRegistry circuitBreakerRegistry) {
         return new CircuitBreakerHystrixServerSideEvent(circuitBreakerRegistry);

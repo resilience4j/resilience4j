@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018
+ * Copyright 2020
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -27,8 +27,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}
@@ -60,6 +59,18 @@ public class Resilience4jFeignRateLimiterTest {
         testService.greeting();
 
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(rateLimiter).acquirePermission(anyInt());
+    }
+
+    @Test
+    public void testSuccessfulCallWithDefaultMethod() {
+        givenResponse(200);
+        when(rateLimiter.acquirePermission(1)).thenReturn(true);
+
+        testService.defaultGreeting();
+
+        verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
+        verify(rateLimiter).acquirePermission(anyInt());
     }
 
     @Test(expected = RequestNotPermitted.class)

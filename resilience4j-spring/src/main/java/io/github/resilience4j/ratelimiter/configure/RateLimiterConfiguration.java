@@ -18,6 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
+import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -116,21 +117,21 @@ public class RateLimiterConfiguration {
      */
     private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,
         EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-        rateLimiterRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                rateLimiterConfigurationProperties));
+        RateLimiterConfigurationProperties properties) {
+        rateLimiterRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
     }
 
     private void registerEventConsumer(
         EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter,
         RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-        final io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties
-            .getInstances().get(rateLimiter.getName());
+        InstanceProperties limiterProperties = rateLimiterConfigurationProperties.getInstances()
+            .get(rateLimiter.getName());
         if (limiterProperties != null && limiterProperties.getSubscribeForEvents() != null
             && limiterProperties.getSubscribeForEvents()) {
-            rateLimiter.getEventPublisher().onEvent(eventConsumerRegistry
-                .createEventConsumer(rateLimiter.getName(),
+            rateLimiter.getEventPublisher().onEvent(
+                eventConsumerRegistry.createEventConsumer(rateLimiter.getName(),
                     limiterProperties.getEventConsumerBufferSize() != null
                         && limiterProperties.getEventConsumerBufferSize() != 0 ? limiterProperties
                         .getEventConsumerBufferSize() : 100));

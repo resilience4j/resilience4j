@@ -2,10 +2,12 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -64,6 +66,52 @@ public abstract class RateLimitersImplementationTest {
 
         boolean retryInSecondCyclePermission = limiter.acquirePermission(5);
         then(retryInSecondCyclePermission).isTrue();
+    }
+
+    @Test
+    public void tryToAcquirePermitsAfterDrainBeforeCycleEndsTest() {
+        RateLimiterConfig config = RateLimiterConfig.custom()
+            .limitForPeriod(10)
+            .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
+            .timeoutDuration(Duration.ZERO)
+            .build();
+        RateLimiter limiter = buildRateLimiter(config);
+        RateLimiter.Metrics metrics = limiter.getMetrics();
+
+        waitForRefresh(metrics, config, '.');
+
+        limiter.drainPermissions();
+        boolean firstNoPermission = limiter.acquirePermission();
+        then(firstNoPermission).isFalse();
+
+        waitForRefresh(metrics, config, '*');
+
+        boolean retryInSecondCyclePermission = limiter.acquirePermission();
+        then(retryInSecondCyclePermission).isTrue();
+    }
+
+    @Test
+    public void drainCycleWhichAlreadyHashNoPremitsLeftTest() {
+        RateLimiterConfig config = RateLimiterConfig.custom()
+            .limitForPeriod(10)
+            .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
+            .timeoutDuration(Duration.ZERO)
+            .build();
+        RateLimiter limiter = buildRateLimiter(config);
+        RateLimiter.Metrics metrics = limiter.getMetrics();
+
+        waitForRefresh(metrics, config, '.');
+
+        limiter.drainPermissions();
+        boolean firstPermission = limiter.acquirePermission(10);
+        then(firstPermission).isFalse();
+
+        AtomicReference<Object> eventAfterDrainCatcher = new AtomicReference<>();
+        limiter.getEventPublisher().onEvent(event -> eventAfterDrainCatcher.set(event));
+        limiter.drainPermissions();
+        Object event = eventAfterDrainCatcher.get();
+        then(event).isInstanceOf(RateLimiterOnDrainedEvent.class);
+        then(((RateLimiterOnDrainedEvent) event).getNumberOfPermits()).isEqualTo(0);
     }
 
     protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,
