@@ -78,11 +78,10 @@ public class CircuitBreakerServerSideEvent {
     @ReadOperation(produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> getEventsFilteredByCircuitBreakerNameAndEventType(
         @Selector String name, @Selector String eventType) {
-        CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
-        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
-            .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
-            .map(
-                circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
+        CircuitBreaker circuitBreaker = getCircuitBreaker(name);
+        Flux<CircuitBreakerEvent> eventStream = toFlux(circuitBreaker.getEventPublisher())
+            .filter(
+                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
             );
         return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
     }

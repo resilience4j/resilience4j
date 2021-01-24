@@ -89,10 +89,9 @@ public class CircuitBreakerHystrixServerSideEvent {
         @Selector String name, @Selector String eventType) {
 
         CircuitBreaker givenCircuitBreaker = getCircuitBreaker(name);
-        Seq<Flux<CircuitBreakerEvent>> eventStream = circuitBreakerRegistry.getAllCircuitBreakers()
-            .filter(circuitBreaker -> circuitBreaker.getName().equals(givenCircuitBreaker.getName()))
-            .map(
-                circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
+        Flux<CircuitBreakerEvent> eventStream = toFlux(givenCircuitBreaker.getEventPublisher())
+            .filter(
+                event -> event.getEventType() == CircuitBreakerEvent.Type.valueOf(eventType.toUpperCase())
             );
         return Flux.merge(publishEvents(Array.of(eventStream)), getHeartbeatStream());
 

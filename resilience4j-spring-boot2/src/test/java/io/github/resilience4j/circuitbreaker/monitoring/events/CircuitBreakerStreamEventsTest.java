@@ -130,7 +130,7 @@ public class CircuitBreakerStreamEventsTest {
             .retrieve()
             .bodyToFlux(type)
             .filter(eventData -> !eventData.event().equals("ping"))
-            .take(2);
+            .take(3);
         return eventStream;
     }
 
