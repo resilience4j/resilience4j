@@ -14,6 +14,7 @@ import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.AxesChartStyler;
 import org.knowm.xchart.style.Styler;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.model.HttpRequest;
@@ -167,7 +168,8 @@ public class AdaptiveBulkheadLimitsTest {
                 .xAxisTitle("Seconds").yAxisTitle("Max Concurrent Limit").build();
             chart2.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
             chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-            chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
+            //noinspection SuspiciousNameCombination
+            chart2.getStyler().setYAxisLabelAlignment(AxesChartStyler.TextAlignment.Right);
             chart2.getStyler().setYAxisDecimalPattern("Max Concurrent Limit #");
             chart2.getStyler().setPlotMargin(0);
             chart2.getStyler().setPlotContentSize(0.50);

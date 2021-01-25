@@ -18,44 +18,57 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 
-/**
- * Calculates concurrency limit, a new value of inner bulkhead MaxConcurrentCalls.
- */
 class AdaptationCalculator {
 
-    private final AdaptiveBulkheadConfig adaptiveBulkheadConfig;
-    private final Bulkhead innerBulkhead;
+    private final AdaptiveBulkhead adaptiveBulkhead;
 
-    AdaptationCalculator(AdaptiveBulkheadConfig adaptiveBulkheadConfig,
-        Bulkhead innerBulkhead) {
-        this.adaptiveBulkheadConfig = adaptiveBulkheadConfig;
-        this.innerBulkhead = innerBulkhead;
+    AdaptationCalculator(AdaptiveBulkhead adaptiveBulkhead) {
+        this.adaptiveBulkhead = adaptiveBulkhead;
     }
 
+    /**
+     * additive increase
+     *
+     * @return new concurrency limit to apply
+     */
     int increment() {
         return fitToRange(
-            getActualConcurrencyLimit() + adaptiveBulkheadConfig.getIncreaseSummand());
+            getActualConcurrencyLimit() + getConfig().getIncreaseSummand());
     }
 
+    /**
+     * multiplicative increase
+     *
+     * @return new concurrency limit to apply
+     */
     int increase() {
         return fitToRange(
-            (int) (getActualConcurrencyLimit() * adaptiveBulkheadConfig.getIncreaseMultiplier()));
+            (int) (getActualConcurrencyLimit() * getConfig().getIncreaseMultiplier()));
     }
 
+    /**
+     * multiplicative decrease
+     *
+     * @return new concurrency limit to apply
+     */
     int decrease() {
         return fitToRange(
-            (int) (getActualConcurrencyLimit() * adaptiveBulkheadConfig.getDecreaseMultiplier()));
+            (int) (getActualConcurrencyLimit() * getConfig().getDecreaseMultiplier()));
     }
 
-    private int fitToRange(int concurrencyLimitProposal) {
-        return Math.min(adaptiveBulkheadConfig.getMaxConcurrentCalls(),
-            Math.max(adaptiveBulkheadConfig.getMinConcurrentCalls(), concurrencyLimitProposal));
+    private AdaptiveBulkheadConfig getConfig() {
+        return adaptiveBulkhead.getBulkheadConfig();
     }
 
     private int getActualConcurrencyLimit() {
-        return innerBulkhead.getBulkheadConfig().getMaxConcurrentCalls();
+        return adaptiveBulkhead.getMetrics().getMaxAllowedConcurrentCalls();
+    }
+
+    private int fitToRange(int concurrencyLimitProposal) {
+        return Math.min(getConfig().getMaxConcurrentCalls(),
+            Math.max(getConfig().getMinConcurrentCalls(), concurrencyLimitProposal));
     }
 }

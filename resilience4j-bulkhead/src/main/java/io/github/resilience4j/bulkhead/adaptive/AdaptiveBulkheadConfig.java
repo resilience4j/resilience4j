@@ -41,6 +41,7 @@ public class AdaptiveBulkheadConfig {
     private static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
     private static final long DEFAULT_SLOW_CALL_DURATION_THRESHOLD_SECONDS = 5;
     private static final int DEFAULT_MINIMUM_NUMBER_OF_CALLS = 100;
+    private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
     // The default exception predicate counts all exceptions as failures.
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
@@ -59,7 +60,6 @@ public class AdaptiveBulkheadConfig {
 	@NonNull
 	private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
-	private static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
@@ -244,7 +244,6 @@ public class AdaptiveBulkheadConfig {
             this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.recordExceptions = baseConfig.recordExceptions;
             this.recordExceptionPredicate = baseConfig.recordExceptionPredicate;
-            this.ignoreExceptions = baseConfig.ignoreExceptions;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
@@ -267,7 +266,7 @@ public class AdaptiveBulkheadConfig {
          * #slowCallDurationThreshold(Duration)}.
          *
          * @param slowCallRateThreshold the slow calls threshold in percentage
-         * @return the CircuitBreakerConfig.Builder
+         * @return the AdaptiveBulkheadConfig.Builder
          * @throws IllegalArgumentException if {@code slowCallRateThreshold <= 0 ||
          *                                  slowCallRateThreshold > 100}
          */
@@ -285,7 +284,7 @@ public class AdaptiveBulkheadConfig {
          * the slow calls percentage. Default value is 60 seconds.
          *
          * @param slowCallDurationThreshold the duration above which calls are considered as slow
-         * @return the CircuitBreakerConfig.Builder
+         * @return the AdaptiveBulkheadConfig.Builder
          * @throws IllegalArgumentException if {@code slowCallDurationThreshold.toNanos() < 1}
          */
         public Builder slowCallDurationThreshold(Duration slowCallDurationThreshold) {
@@ -305,9 +304,9 @@ public class AdaptiveBulkheadConfig {
          * <p>
          * Default slidingWindowSize is 100.
          *
-         * @param slidingWindowSize the size of the sliding window when the CircuitBreaker is
+         * @param slidingWindowSize the size of the sliding window when the AdaptiveBulkhead is
          *                          closed.
-         * @return the CircuitBreakerConfig.Builder
+         * @return the AdaptiveBulkheadConfig.Builder
          * @throws IllegalArgumentException if {@code slidingWindowSize < 1}
          */
         public Builder slidingWindowSize(int slidingWindowSize) {
@@ -326,7 +325,7 @@ public class AdaptiveBulkheadConfig {
          *
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
          *                          TIME_BASED.
-         * @return the CircuitBreakerConfig.Builder
+         * @return the AdaptiveBulkheadConfig.Builder
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
@@ -341,7 +340,7 @@ public class AdaptiveBulkheadConfig {
          * percentage.
          *
          * @param failureRateThreshold the failure rate threshold in percentage
-         * @return the CircuitBreakerConfig.Builder
+         * @return the AdaptiveBulkheadConfig.Builder
          * @throws IllegalArgumentException if {@code failureRateThreshold <= 0 ||
          *                                  failureRateThreshold > 100}
          */
@@ -409,6 +408,27 @@ public class AdaptiveBulkheadConfig {
 			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
 			return this;
 		}
+
+        /**
+         * Configures the minimum number of calls which are required (per sliding window period)
+         * before the AdaptiveBulkhead can calculate the error or slow rate. For example, if {@code
+         * minimumNumberOfCalls} is 10, then at least 10 calls must be recorded, before the failure
+         * rate can be calculated.
+         * <p>
+         * Default minimumNumberOfCalls is 100
+         *
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the
+         *                             failure rate can be calculated.
+         * @return the Builder
+         * @throws IllegalArgumentException if {@code minimumNumberOfCalls < 1}
+         */
+        public Builder minimumNumberOfCalls(int minimumNumberOfCalls) {
+            if (minimumNumberOfCalls < 1) {
+                throw new IllegalArgumentException("minimumNumberOfCalls must be greater than 0");
+            }
+            this.minimumNumberOfCalls = minimumNumberOfCalls;
+            return this;
+        }
 
         public final Builder writableStackTraceEnabled(boolean writableStackTraceEnabled) {
             this.writableStackTraceEnabled = writableStackTraceEnabled;

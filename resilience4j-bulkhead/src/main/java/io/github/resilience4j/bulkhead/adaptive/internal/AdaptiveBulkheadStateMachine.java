@@ -45,6 +45,8 @@ import java.util.function.UnaryOperator;
 public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdaptiveBulkheadStateMachine.class);
+    // TODO remove
+    public static final boolean RESET_METRICS_ON_TRANSITION = true;
 
     private final String name;
     private final AtomicReference<AdaptiveBulkheadState> stateReference;
@@ -68,7 +70,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             adaptiveBulkheadConfig, innerBulkhead.getMetrics());
         this.stateReference = new AtomicReference<>(new SlowStartState(metrics));
         this.eventProcessor = new AdaptiveBulkheadEventProcessor();
-        this.adaptationCalculator = new AdaptationCalculator(adaptiveBulkheadConfig, innerBulkhead);
+        this.adaptationCalculator = new AdaptationCalculator(this);
     }
 
     @Override
@@ -86,10 +88,6 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     @Override
     public void releasePermission() {
         stateReference.get().releasePermission();
-        // TODO remove
-        if (metrics.getAvailableConcurrentCalls() == 0) {
-            LOG.warn("too many releasePermission calls?");
-        }
         innerBulkhead.releasePermission();
     }
 
@@ -153,14 +151,14 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     @Override
     public void transitionToCongestionAvoidance() {
-        stateTransition(State.CONGESTION_AVOIDANCE, current ->
-            new CongestionAvoidance(current.getMetrics()));
+        stateTransition(State.CONGESTION_AVOIDANCE,
+            current -> new CongestionAvoidance(current.getMetrics()));
     }
 
     @Override
     public void transitionToSlowStart() {
-        stateTransition(State.SLOW_START, current ->
-            new SlowStartState(current.getMetrics()));
+        stateTransition(State.SLOW_START,
+            current -> new SlowStartState(current.getMetrics()));
     }
 
     private void stateTransition(State newState,
@@ -171,23 +169,26 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             name, Collections.emptyMap(), previous.getState(), newState));
     }
 
-    private void changeMaxConcurrentCalls(int newValue) {
+    private void changeConcurrencyLimit(int newValue) {
         int oldValue = innerBulkhead.getBulkheadConfig().getMaxConcurrentCalls();
         if (newValue > oldValue) {
-            updateInternalBulkheadConfig(oldValue, newValue);
+            changeInternals(oldValue, newValue);
             publishBulkheadOnLimitIncreasedEvent(newValue);
         } else if (newValue < oldValue) {
-            updateInternalBulkheadConfig(oldValue, newValue);
+            changeInternals(oldValue, newValue);
             publishBulkheadOnLimitDecreasedEvent(newValue);
         }
     }
 
-    private void updateInternalBulkheadConfig(int oldValue, int newValue) {
-        LOG.debug("changeMaxConcurrentCalls from {} to {}", oldValue, newValue);
+    private void changeInternals(int oldValue, int newValue) {
+        LOG.debug("changeConcurrencyLimit from {} to {}", oldValue, newValue);
         innerBulkhead.changeConfig(
             BulkheadConfig.from(innerBulkhead.getBulkheadConfig())
                 .maxConcurrentCalls(newValue)
                 .build());
+        if (RESET_METRICS_ON_TRANSITION) {
+            metrics.resetRecords();
+        }
     }
 
     private void publishBulkheadOnLimitIncreasedEvent(int maxConcurrentCalls) {
@@ -206,6 +207,10 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
                 maxConcurrentCalls)));
     }
 
+    /**
+     * Although the strategy is referred to as slow start, its congestion window growth is quite
+     * aggressive, more aggressive than the congestion avoidance phase.
+     */
     private class SlowStartState implements AdaptiveBulkheadState {
 
         private final AdaptiveBulkheadMetrics adaptiveBulkheadMetrics;
@@ -252,14 +257,15 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
          * @param result the Result
          */
         private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
+            logStateDetails(result);
             if (isSlowStart.get()) {
                 switch (result) {
                     case BELOW_THRESHOLDS:
-                        changeMaxConcurrentCalls(adaptationCalculator.increase());
+                        changeConcurrencyLimit(adaptationCalculator.increase());
                         break;
                     case ABOVE_THRESHOLDS:
                         if (isSlowStart.compareAndSet(true, false)) {
-                            changeMaxConcurrentCalls(adaptationCalculator.decrease());
+                            changeConcurrencyLimit(adaptationCalculator.decrease());
                             transitionToCongestionAvoidance();
                         }
                         break;
@@ -283,6 +289,14 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             return adaptiveBulkheadMetrics;
         }
 
+    }
+
+    private void logStateDetails(AdaptiveBulkheadMetrics.Result result) {
+        LOG.debug("calls:{}/{}, rate:{} result:{}",
+            metrics.getNumberOfBufferedCalls(),
+            adaptiveBulkheadConfig.getMinimumNumberOfCalls(),
+            Math.max(metrics.getSnapshot().getFailureRate(), metrics.getSnapshot().getSlowCallRate()),
+            result);
     }
 
 
@@ -332,21 +346,28 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
          * @param result the Result
          */
         private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
+            logStateDetails(result);
             if (congestionAvoidance.get()) {
                 switch (result) {
                     case BELOW_THRESHOLDS:
-                        changeMaxConcurrentCalls(adaptationCalculator.increment());
+                        if (isConcurrencyLimitTooLow()) {
+                            if (congestionAvoidance.compareAndSet(true, false)) {
+                                transitionToSlowStart();
+                            }
+                        } else {
+                            changeConcurrencyLimit(adaptationCalculator.increment());
+                        }
                         break;
                     case ABOVE_THRESHOLDS:
-                        changeMaxConcurrentCalls(adaptationCalculator.decrease());
-                        break;
-                    case BELOW_MINIMUM_CALLS_THRESHOLD:
-                        if (congestionAvoidance.compareAndSet(true, false)) {
-                            transitionToSlowStart();
-                        }
+                        changeConcurrencyLimit(adaptationCalculator.decrease());
                         break;
                 }
             }
+        }
+
+        private boolean isConcurrencyLimitTooLow() {
+            return getMetrics().getMaxAllowedConcurrentCalls()
+                == adaptiveBulkheadConfig.getMinConcurrentCalls();
         }
 
         /**

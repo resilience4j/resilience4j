@@ -4,7 +4,7 @@ dependencies {
     testCompile project(':resilience4j-rxjava2')
     jmh project(':resilience4j-rxjava2')
     testCompile(libraries.rxjava2)
-    testCompile("org.knowm.xchart:xchart:3.5.4")
+    testCompile("org.knowm.xchart:xchart:3.8.0")
     testCompile("org.testcontainers:mockserver:1.12.3")
     testCompile("org.mock-server:mockserver-client-java:3.10.8")
     testCompile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.12'

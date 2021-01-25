@@ -38,6 +38,8 @@ public interface Metrics {
      */
     Snapshot getSnapshot();
 
+    void resetRecords();
+
     enum Outcome {
         SUCCESS, ERROR, SLOW_SUCCESS, SLOW_ERROR;
 

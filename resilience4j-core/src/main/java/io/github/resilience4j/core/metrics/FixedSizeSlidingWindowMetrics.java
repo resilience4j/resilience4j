@@ -41,7 +41,7 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
     private final int windowSize;
     private final TotalAggregation totalAggregation;
     private final Measurement[] measurements;
-    int headIndex;
+    private int headIndex;
 
     /**
      * Creates a new {@link FixedSizeSlidingWindowMetrics} with the given window size.
@@ -63,6 +63,11 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
         totalAggregation.record(duration, durationUnit, outcome);
         moveWindowByOne().record(duration, durationUnit, outcome);
         return new SnapshotImpl(totalAggregation);
+    }
+
+    @Override
+    public void resetRecords() {
+        totalAggregation.reset();
     }
 
     public synchronized Snapshot getSnapshot() {
@@ -91,5 +96,9 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
      */
     void moveHeadIndexByOne() {
         this.headIndex = (headIndex + 1) % windowSize;
+    }
+
+    int getHeadIndex() {
+        return headIndex;
     }
 }

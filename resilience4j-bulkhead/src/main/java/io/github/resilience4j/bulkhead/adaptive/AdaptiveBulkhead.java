@@ -614,6 +614,8 @@ public interface AdaptiveBulkhead {
          * @return the current number of successful buffered calls in the sliding window
          */
         int getNumberOfSuccessfulCalls();
+
+      void resetRecords();
     }
 
     /**

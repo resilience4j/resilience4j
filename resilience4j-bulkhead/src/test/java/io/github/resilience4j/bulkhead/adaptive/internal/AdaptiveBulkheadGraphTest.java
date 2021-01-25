@@ -5,42 +5,43 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.AbstractBulkheadLimitEvent;
 import org.junit.Before;
 import org.junit.Test;
-import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.*;
+import org.knowm.xchart.style.AxesChartStyler;
 import org.knowm.xchart.style.Styler;
+import org.knowm.xchart.style.markers.None;
 
 import java.awt.*;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-/**
- * test the adoptive bulkhead limiter logic
- */
 public class AdaptiveBulkheadGraphTest {
 
+    public static final int CALLS = 300;
     private static final Random NON_RANDOM = new Random(0);
     private static final int SLOW_CALL_DURATION_THRESHOLD = 200;
     public static final int RATE_THRESHOLD = 50;
     public static final int MAX_CONCURRENT_CALLS = 100;
+    public static final int MIN_CONCURRENT_CALLS = 10;
+    public static final int INITIAL_CONCURRENT_CALLS = 30;
     private AdaptiveBulkheadStateMachine bulkhead;
     // TODO disable
     private boolean drawGraphs = !false;
     List<Double> time = new ArrayList<>();
-    List<Integer> maxConcurrentCalls = new ArrayList<>();
-    List<Float> callsRates = new ArrayList<>();
+    List<Integer> concurrencyLimitData = new ArrayList<>();
+    List<Float> slowCallsRateData = new ArrayList<>();
+    List<Float> errorCallsRateData = new ArrayList<>();
 
     @Before
     public void setup() {
         AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
+            .increaseSummand(5)
             .maxConcurrentCalls(MAX_CONCURRENT_CALLS)
-            .minConcurrentCalls(2)
-            .initialConcurrentCalls(10)
+            .minConcurrentCalls(MIN_CONCURRENT_CALLS)
+            .initialConcurrentCalls(INITIAL_CONCURRENT_CALLS)
+            .minimumNumberOfCalls(5)
             .slidingWindowSize(5)
             .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
             .failureRateThreshold(RATE_THRESHOLD)
@@ -48,16 +49,13 @@ public class AdaptiveBulkheadGraphTest {
             .slowCallDurationThreshold(Duration.ofMillis(SLOW_CALL_DURATION_THRESHOLD))
             .build();
         bulkhead = (AdaptiveBulkheadStateMachine) AdaptiveBulkhead.of("test", config);
-        bulkhead.getEventPublisher().onLimitIncreased(this::recordLimitChange);
-        bulkhead.getEventPublisher().onLimitDecreased(this::recordLimitChange);
+        bulkhead.getEventPublisher().onSuccess(this::recordCallStats);
+        bulkhead.getEventPublisher().onError(this::recordCallStats);
     }
 
     @Test
     public void testSlowCalls() {
-        bulkhead.getEventPublisher().onLimitIncreased(this::recordSlowCallsRates);
-        bulkhead.getEventPublisher().onLimitDecreased(this::recordSlowCallsRates);
-
-        for (int i = 0; i < 800; i++) {
+        for (int i = 0; i < CALLS; i++) {
             bulkhead.onSuccess(nextLatency(), TimeUnit.MILLISECONDS);
         }
         drawGraph("testSlowCalls");
@@ -65,11 +63,9 @@ public class AdaptiveBulkheadGraphTest {
 
     @Test
     public void testFailedCalls() {
-        bulkhead.getEventPublisher().onLimitIncreased(this::recordFailureCallsRates);
-        bulkhead.getEventPublisher().onLimitDecreased(this::recordFailureCallsRates);
         Throwable failure = new Throwable();
 
-        for (int i = 0; i < 800; i++) {
+        for (int i = 0; i < CALLS; i++) {
             if (nextErrorOccurred()) {
                 bulkhead.onError(1, TimeUnit.MILLISECONDS, failure);
             } else {
@@ -81,11 +77,9 @@ public class AdaptiveBulkheadGraphTest {
 
     @Test
     public void testFailedCallsOnly() {
-        bulkhead.getEventPublisher().onLimitIncreased(this::recordFailureCallsRates);
-        bulkhead.getEventPublisher().onLimitDecreased(this::recordFailureCallsRates);
         Throwable failure = new Throwable();
 
-        for (int i = 0; i < 800; i++) {
+        for (int i = 0; i < CALLS; i++) {
             bulkhead.onError(1, TimeUnit.MILLISECONDS, failure);
         }
         drawGraph("testFailedCallsOnly");
@@ -93,68 +87,105 @@ public class AdaptiveBulkheadGraphTest {
 
     @Test
     public void testSuccessfulCallsOnly() {
-        bulkhead.getEventPublisher().onLimitIncreased(this::recordFailureCallsRates);
-        bulkhead.getEventPublisher().onLimitDecreased(this::recordFailureCallsRates);
-
-        for (int i = 0; i < 800; i++) {
+        for (int i = 0; i < CALLS; i++) {
             bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
         }
         drawGraph("testSuccessfulCallsOnly");
     }
 
+    @Test
+    public void testSlowCallsWithLowMinConcurrentCalls() {
+        AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
+            .increaseSummand(1)
+            .maxConcurrentCalls(MAX_CONCURRENT_CALLS)
+            .minConcurrentCalls(10)
+            .initialConcurrentCalls(20)
+            .minimumNumberOfCalls(1)
+            .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
+            .failureRateThreshold(RATE_THRESHOLD)
+            .slowCallRateThreshold(RATE_THRESHOLD)
+            .slowCallDurationThreshold(Duration.ofMillis(SLOW_CALL_DURATION_THRESHOLD))
+            .build();
+        bulkhead = (AdaptiveBulkheadStateMachine) AdaptiveBulkhead
+            .of("test", config);
+        bulkhead.getEventPublisher().onSuccess(this::recordCallStats);
+        bulkhead.getEventPublisher().onError(this::recordCallStats);
+        Throwable failure = new Throwable();
+
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 5; i++) {
+                bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+            }
+            for (int i = 0; i < 3; i++) {
+                bulkhead.onError(System.currentTimeMillis(), TimeUnit.MILLISECONDS, failure);
+            }
+        }
+        drawGraph("WithLowMinConcurrentCalls");
+    }
+
     private int nextLatency() {
-        return NON_RANDOM.nextInt(2 * SLOW_CALL_DURATION_THRESHOLD);
+        return NON_RANDOM.nextInt((int) (1.8f * SLOW_CALL_DURATION_THRESHOLD));
     }
 
     private boolean nextErrorOccurred() {
-        return NON_RANDOM.nextInt(2) == 0;
+        return NON_RANDOM.nextInt(4) == 0;
     }
 
-    private void recordLimitChange(AbstractBulkheadLimitEvent event) {
-        maxConcurrentCalls.add(bulkhead.getMetrics().getMaxAllowedConcurrentCalls());
-        time.add((double) maxConcurrentCalls.size());
-    }
-
-    private void recordSlowCallsRates(AbstractBulkheadLimitEvent event) {
-        callsRates.add((float) (bulkhead.getMetrics().getSlowCallRate() >=
-            bulkhead.getBulkheadConfig().getSlowCallRateThreshold() ? MAX_CONCURRENT_CALLS : 0));
-    }
-
-    private void recordFailureCallsRates(AbstractBulkheadLimitEvent event) {
-        callsRates.add((float) (bulkhead.getMetrics().getFailureRate() >=
-            bulkhead.getBulkheadConfig().getFailureRateThreshold() ? MAX_CONCURRENT_CALLS : 0));
+    private void recordCallStats(AbstractBulkheadLimitEvent event) {
+        AdaptiveBulkheadMetrics metrics = (AdaptiveBulkheadMetrics) bulkhead.getMetrics();
+        concurrencyLimitData.add(metrics.getMaxAllowedConcurrentCalls());
+        time.add((double) concurrencyLimitData.size());
+        slowCallsRateData.add(MAX_CONCURRENT_CALLS * metrics.getSnapshot().getSlowCallRate() / 100);
+        errorCallsRateData.add(MAX_CONCURRENT_CALLS * metrics.getSnapshot().getFailureRate() / 100);
     }
 
     private void drawGraph(String testName) {
         if (!drawGraphs) {
             return;
         }
-        XYChart chart2 = new XYChartBuilder().title(getClass().getSimpleName() + " - " + testName)
-            .width(1600)
+        XYChart chart = new XYChartBuilder()
+            .title(getClass().getSimpleName() + " - " + testName)
+            .width(2200)
             .height(800)
             .xAxisTitle("time")
             .yAxisTitle("concurrency limit")
             .build();
-        chart2.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
-        chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+        chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
+        chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
         //noinspection SuspiciousNameCombination
-        chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
-        chart2.getStyler().setPlotMargin(0);
-        chart2.getStyler().setPlotContentSize(.95);
+        chart.getStyler().setYAxisLabelAlignment(AxesChartStyler.TextAlignment.Right);
+        chart.getStyler().setPlotMargin(0);
+        chart.getStyler().setPlotContentSize(.95);
+        drawAnnotationText(chart, "RATE_THRESHOLD",
+            (int) bulkhead.getBulkheadConfig().getFailureRateThreshold());
+        drawAnnotationText(chart, "MAX_CONCURRENT_CALLS",
+            bulkhead.getBulkheadConfig().getMaxConcurrentCalls());
+        drawAnnotationText(chart, "MIN_CONCURRENT_CALLS",
+            bulkhead.getBulkheadConfig().getMinConcurrentCalls());
+        drawAnnotationText(chart, "INITIAL_CONCURRENT_CALLS",
+            bulkhead.getBulkheadConfig().getInitialConcurrentCalls());
 
-        chart2.addSeries("CallsRates", time, callsRates)
-            .setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.StepArea)
-            .setMarkerColor(Color.WHITE)
-            .setLineColor(Color.ORANGE)
-            .setFillColor(Color.ORANGE);
-        chart2.addSeries("MaxConcurrentCalls", time, maxConcurrentCalls)
+        drawAreaSeries(chart, "slowCallsRate", slowCallsRateData, Color.LIGHT_GRAY);
+        drawAreaSeries(chart, "failureCallsRate", errorCallsRateData, Color.GRAY);
+        chart.addSeries("concurrency limit", time, concurrencyLimitData)
             .setMarkerColor(Color.CYAN)
             .setLineColor(Color.BLUE);
         try {
-            BitmapEncoder
-                .saveJPGWithQuality(chart2, "./" + testName + ".jpg", 0.95f);
-        } catch (IOException e) {
+            BitmapEncoder.saveJPGWithQuality(chart, "./" + testName + ".jpg", 0.95f);
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void drawAnnotationText(XYChart chart, String text, int y) {
+        chart.addAnnotation(new AnnotationText(text, 5, y, false));
+    }
+
+    private void drawAreaSeries(XYChart chart, String text, List<Float> yData, Color color) {
+        chart.addSeries(text, time, yData)
+            .setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area)
+            .setMarker(new None())
+            .setLineColor(color)
+            .setFillColor(color);
     }
 }
