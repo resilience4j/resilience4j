@@ -35,6 +35,7 @@ public class Resilience4jConfig {
     private RateLimiterConfigurationProperties ratelimiter = new RateLimiterConfigurationProperties();
     private RetryConfigurationProperties retry = new RetryConfigurationProperties();
     private TimeLimiterConfigurationProperties timeLimiter = new TimeLimiterConfigurationProperties();
+    private boolean micrometer = false;
     private boolean metrics = false;
     private boolean prometheus = false;
     private EndpointsConfig endpoints = new EndpointsConfig();
@@ -145,6 +146,11 @@ public class Resilience4jConfig {
         return this;
     }
 
+    public Resilience4jConfig micrometer(boolean micrometer) {
+        this.micrometer = micrometer;
+        return this;
+    }
+
     public Resilience4jConfig endpoints(
         Function<? super EndpointsConfig, ? extends EndpointsConfig> configure) {
         try {
@@ -189,5 +195,9 @@ public class Resilience4jConfig {
 
     public EndpointsConfig getEndpoints() {
         return endpoints;
+    }
+
+    public boolean isMicrometer() {
+        return micrometer;
     }
 }

@@ -44,6 +44,8 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.metrics.*;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
 import io.github.resilience4j.prometheus.collectors.*;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -67,6 +69,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.prometheus.client.CollectorRegistry;
 import ratpack.dropwizard.metrics.DropwizardMetricsModule;
 import ratpack.guice.ConfigurableModule;
@@ -489,6 +492,15 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
             BulkheadRegistry bulkheadRegistry = registry.get(BulkheadRegistry.class);
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry = registry
                 .get(ThreadPoolBulkheadRegistry.class);
+
+            // micrometer metrics
+            if (resilience4jConfig.isMicrometer() && registry.maybeGet(MeterRegistry.class)
+                .isPresent()) {
+                MeterRegistry meterRegistry = registry.get(MeterRegistry.class);
+                TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bindTo(meterRegistry);
+                TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);
+             // fill the rest...
+            }
 
             // dropwizard metrics
             if (resilience4jConfig.isMetrics() && registry.maybeGet(MetricRegistry.class)
