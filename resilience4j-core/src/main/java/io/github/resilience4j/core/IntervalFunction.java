@@ -82,8 +82,8 @@ public interface IntervalFunction extends Function<Integer, Long> {
         return ofRandomized(interval.toMillis(), randomizationFactor);
     }
 
-    static IntervalFunction ofRandomized(long interval) {
-        return ofRandomized(interval, DEFAULT_RANDOMIZATION_FACTOR);
+    static IntervalFunction ofRandomized(long intervalMillis) {
+        return ofRandomized(intervalMillis, DEFAULT_RANDOMIZATION_FACTOR);
     }
 
     static IntervalFunction ofRandomized(Duration interval) {
@@ -246,10 +246,10 @@ final class IntervalFunctionCompanion {
         return (min + (Math.random() * (max - min + 1)));
     }
 
-    static void checkInterval(long interval) {
-        if (interval < 1) {
+    static void checkInterval(long intervalMillis) {
+        if (intervalMillis < 1) {
             throw new IllegalArgumentException(
-                "Illegal argument interval: " + interval + " millis is less than 1");
+                "Illegal argument interval: " + intervalMillis + " millis is less than 1");
         }
     }
 
