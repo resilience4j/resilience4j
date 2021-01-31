@@ -23,24 +23,27 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.micrometer.tagged.CircuitBreakerMetricNames
+import io.github.resilience4j.micrometer.tagged.RetryMetricNames
 import io.github.resilience4j.micrometer.tagged.TagNames
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.retry.RetryRegistry
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.FunctionCounter
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.Meter
+import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry
 import io.prometheus.client.CollectorRegistry
 import ratpack.dropwizard.metrics.DropwizardMetricsModule
 import ratpack.test.embed.EmbeddedApp
 import ratpack.test.http.TestHttpClient
 import spock.lang.AutoCleanup
 import spock.lang.Specification
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.github.resilience4j.circuitbreaker.CircuitBreaker.State
 
 import java.time.Duration
+import java.util.stream.Collectors
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
@@ -791,20 +794,23 @@ class Resilience4jModuleSpec extends Specification {
         def circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
         circuitBreakerRegistry.circuitBreaker('test')
         given:
+        def registry = new CompositeMeterRegistry()
         app = ratpack {
             serverConfig {
                 development(false)
             }
             bindings {
                 module(Resilience4jModule) {
-                    it.metrics(false)
+                    it.metrics(false) //disabling drop wizard
                     it.micrometer(true)
                     it.circuitBreaker('test')
                     it.rateLimiter('test')
                     it.retry('test')
                     it.bulkhead('test')
+                    it.threadPoolBulkhead('test')
                 }
                 bind(Something)
+                bindInstance(MeterRegistry.class, registry)
             }
             handlers {
                 get { Something something ->
@@ -823,60 +829,79 @@ class Resilience4jModuleSpec extends Specification {
         actual.statusCode == 200
         actual.body.text == "dan"
 
-        when:
-        def registry = new SimpleMeterRegistry()
-        TaggedCircuitBreakerMetrics taggedCircuitBreakerMetrics = TaggedCircuitBreakerMetrics
-            .ofCircuitBreakerRegistry(circuitBreakerRegistry)
-        taggedCircuitBreakerMetrics.bindTo(registry)
-
-        then:
-        registry.getMeters().size() == 16
+        and:
+        registry.getMeters().size() == 29
+        def metricsNamesList = registry.getMeters().stream().map {
+            it -> it.id.name
+        }.collect(Collectors.toList())
+        metricsNamesList == ["resilience4j.bulkhead.queue.capacity",
+                             "resilience4j.retry.calls",
+                             "resilience4j.circuitbreaker.failure.rate",
+                             "resilience4j.circuitbreaker.slow.call.rate",
+                             "resilience4j.bulkhead.max.allowed.concurrent.calls",
+                             "resilience4j.circuitbreaker.not.permitted.calls",
+                             "resilience4j.circuitbreaker.state",
+                             "resilience4j.circuitbreaker.slow.calls",
+                             "resilience4j.circuitbreaker.slow.calls",
+                             "resilience4j.bulkhead.core.thread.pool.size",
+                             "resilience4j.circuitbreaker.state",
+                             "resilience4j.ratelimiter.available.permissions",
+                             "resilience4j.circuitbreaker.calls",
+                             "resilience4j.bulkhead.max.thread.pool.size",
+                             "resilience4j.retry.calls",
+                             "resilience4j.retry.calls",
+                             "resilience4j.bulkhead.thread.pool.size",
+                             "resilience4j.circuitbreaker.state",
+                             "resilience4j.circuitbreaker.state",
+                             "resilience4j.circuitbreaker.state",
+                             "resilience4j.circuitbreaker.calls",
+                             "resilience4j.circuitbreaker.buffered.calls",
+                             "resilience4j.circuitbreaker.buffered.calls",
+                             "resilience4j.bulkhead.available.concurrent.calls",
+                             "resilience4j.bulkhead.queue.depth",
+                             "resilience4j.ratelimiter.waiting_threads",
+                             "resilience4j.retry.calls",
+                             "resilience4j.circuitbreaker.calls",
+                             "resilience4j.circuitbreaker.state"].toList()
 
         and:
-        Collection<Gauge> bufferedCalls = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges()
-        bufferedCalls.size() == 2
-        bufferedCalls.findAll { it.id.name == CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS }.size() == 2
-        bufferedCalls.findAll { it.id.type == Meter.Type.GAUGE }.size() == 2
+        Collection<FunctionCounter> retryCalls = registry.get(RetryMetricNames.DEFAULT_RETRY_CALLS).functionCounters()
+        assertMicroMeterMetrics(retryCalls, 4, RetryMetricNames.DEFAULT_RETRY_CALLS, Meter.Type.COUNTER)
 
+        Collection<Gauge> bufferedCalls = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS).gauges()
+        assertMicroMeterMetrics(bufferedCalls, 2, CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS, Meter.Type.GAUGE)
 
         Timer call = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS).timer()
-        call.id.name == CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS
-        call.id.type == Meter.Type.TIMER
+        assertMicroMeterMetrics([call], 1, CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_CALLS, Meter.Type.TIMER)
 
-        Collection<Gauge> failureRate = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauges()
-        failureRate.size() == 1
-        failureRate.findAll { it.id.name == CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE }.size() == 1
-        failureRate.findAll { it.id.type == Meter.Type.GAUGE }.size() == 1
+        Collection<Gauge> failureRates = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE).gauges()
+        assertMicroMeterMetrics(failureRates, 1, CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE, Meter.Type.GAUGE)
 
         Collection<Counter> notPermittedCalls = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS).counters()
-        notPermittedCalls.size() == 1
-        notPermittedCalls.findAll { it.id.name == CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS }.size() == 1
-        notPermittedCalls.findAll { it.id.type == Meter.Type.COUNTER }.size() == 1
-
+        assertMicroMeterMetrics(notPermittedCalls, 1, CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_NOT_PERMITTED_CALLS, Meter.Type.COUNTER)
 
         Collection<Gauge> slowCallRateCalls = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE).gauges()
-        slowCallRateCalls.size() == 1
-        slowCallRateCalls.findAll { it.id.name == CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE }.size() == 1
-        slowCallRateCalls.findAll { it.id.type == Meter.Type.GAUGE }.size() == 1
-
+        assertMicroMeterMetrics(slowCallRateCalls, 1, CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE, Meter.Type.GAUGE)
 
         Collection<Gauge> slowCalls = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS).gauges()
-        slowCalls.size() == 2
-        slowCalls.findAll { it.id.name == CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS }.size() == 2
-        slowCalls.findAll { it.id.type == Meter.Type.GAUGE }.size() == 2
+        assertMicroMeterMetrics(slowCalls, 2, CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS, Meter.Type.GAUGE)
 
+        Collection<Gauge> cbStates = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_STATE).gauges()
+        cbStates.size() == State.values().size()
+        assertMicroMeterMetrics(cbStates, cbStates.size(), CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_STATE, Meter.Type.GAUGE)
 
-        Collection<Gauge> state = registry.get(CircuitBreakerMetricNames.DEFAULT_CIRCUIT_BREAKER_STATE).gauges()
-        state.size() == State.values().size()
+        cbStates.count { g -> ("test" == g.getId().getTag(TagNames.NAME)) } == cbStates.size() //CB name
+        cbStates.count { g -> (State.OPEN.toString().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+        cbStates.count { g -> (State.CLOSED.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+        cbStates.count { g -> (State.FORCED_OPEN.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+        cbStates.count { g -> (State.HALF_OPEN.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+        cbStates.count { g -> (State.METRICS_ONLY.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+        cbStates.count { g -> (State.DISABLED.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+    }
 
-        state.count { g -> ("test" == g.getId().getTag(TagNames.NAME)) } == state.size()
-
-        state.count { g -> (State.OPEN.toString().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
-        state.count { g -> (State.CLOSED.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
-        state.count { g -> (State.FORCED_OPEN.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
-        state.count { g -> (State.HALF_OPEN.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
-        state.count { g -> (State.METRICS_ONLY.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
-        state.count { g -> (State.DISABLED.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
+    private void assertMicroMeterMetrics(Collection<Meter> metricCalls, int size, String circuitBreakerName, Meter.Type type) {
+        metricCalls.findAll { it.id.name == circuitBreakerName }.size() == size
+        metricCalls.findAll { it.id.type == type }.size() == size
     }
 
     def "test prometheus"() {

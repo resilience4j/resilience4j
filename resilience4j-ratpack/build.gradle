@@ -4,6 +4,7 @@ dependencies {
     compileOnly(libraries.ratpack)
     compile project(':resilience4j-annotations')
     compile project(':resilience4j-framework-common')
+    compileOnly(libraries.micrometer)
     compile project(':resilience4j-bulkhead')
     compile project(':resilience4j-circuitbreaker')
     compile project(':resilience4j-ratelimiter')
@@ -24,6 +25,7 @@ dependencies {
     testCompile project(':resilience4j-prometheus')
     testCompile project(':resilience4j-metrics')
     testCompile project(':resilience4j-micrometer')
+    testCompile(libraries.micrometer)
     testCompile(libraries.ratpack)
 }
 ext.moduleName = 'io.github.resilience4j.ratpack'

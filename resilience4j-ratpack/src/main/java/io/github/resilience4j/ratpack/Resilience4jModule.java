@@ -44,8 +44,7 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.metrics.*;
-import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
-import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.tagged.*;
 import io.github.resilience4j.prometheus.collectors.*;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -225,7 +224,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public CircuitBreakerRegistryProvider(Resilience4jConfig resilience4jConfig,
-            EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
+                                              EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -269,7 +268,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public RateLimiterRegistryProvider(Resilience4jConfig resilience4jConfig,
-            EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
+                                           EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -313,7 +312,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public RetryRegistryProvider(Resilience4jConfig resilience4jConfig,
-            EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
+                                     EventConsumerRegistry<RetryEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -354,7 +353,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public BulkheadRegistryProvider(Resilience4jConfig resilience4jConfig,
-            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+                                        EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -397,7 +396,7 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
 
         @Inject
         public ThreadPoolBulkheadRegistryProvider(Resilience4jConfig resilience4jConfig,
-            EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
+                                                  EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry) {
             this.resilience4jConfig = resilience4jConfig;
             this.eventConsumerRegistry = eventConsumerRegistry;
         }
@@ -499,7 +498,9 @@ public class Resilience4jModule extends ConfigurableModule<Resilience4jConfig> {
                 MeterRegistry meterRegistry = registry.get(MeterRegistry.class);
                 TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry).bindTo(meterRegistry);
                 TaggedBulkheadMetrics.ofBulkheadRegistry(bulkheadRegistry).bindTo(meterRegistry);
-             // fill the rest...
+                TaggedRetryMetrics.ofRetryRegistry(retryRegistry).bindTo(meterRegistry);
+                TaggedRateLimiterMetrics.ofRateLimiterRegistry(rateLimiterRegistry).bindTo(meterRegistry);
+                TaggedThreadPoolBulkheadMetrics.ofThreadPoolBulkheadRegistry(threadPoolBulkheadRegistry).bindTo(meterRegistry);
             }
 
             // dropwizard metrics
