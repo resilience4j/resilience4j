@@ -831,9 +831,10 @@ class Resilience4jModuleSpec extends Specification {
 
         and:
         registry.getMeters().size() == 29
-        def metricsNamesList = registry.getMeters().stream().map {
-            it -> it.id.name
-        }.collect(Collectors.toList())
+        def metricsNamesList = registry.getMeters()
+            .collect {
+                it -> it.id.name
+            }.toList()
         metricsNamesList == ["resilience4j.bulkhead.queue.capacity",
                              "resilience4j.retry.calls",
                              "resilience4j.circuitbreaker.failure.rate",
@@ -899,8 +900,8 @@ class Resilience4jModuleSpec extends Specification {
         cbStates.count { g -> (State.DISABLED.name().equalsIgnoreCase(g.getId().getTag("state"))) } == 1
     }
 
-    private void assertMicroMeterMetrics(Collection<Meter> metricCalls, int size, String circuitBreakerName, Meter.Type type) {
-        metricCalls.findAll { it.id.name == circuitBreakerName }.size() == size
+    private void assertMicroMeterMetrics(Collection<Meter> metricCalls, int size, String metricName, Meter.Type type) {
+        metricCalls.findAll { it.id.name == metricName }.size() == size
         metricCalls.findAll { it.id.type == type }.size() == size
     }
 

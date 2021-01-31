@@ -44,7 +44,11 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.metrics.*;
-import io.github.resilience4j.micrometer.tagged.*;
+import io.github.resilience4j.micrometer.tagged.TaggedBulkheadMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedThreadPoolBulkheadMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRateLimiterMetrics;
+import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics;
 import io.github.resilience4j.prometheus.collectors.*;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
