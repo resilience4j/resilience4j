@@ -67,7 +67,11 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
 
     @Override
     public void resetRecords() {
+        headIndex = 0;
         totalAggregation.reset();
+        for (Measurement measurement : measurements) {
+            measurement.reset();
+        }
     }
 
     public synchronized Snapshot getSnapshot() {

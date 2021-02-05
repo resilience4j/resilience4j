@@ -89,6 +89,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
 
     @Override
     public void resetRecords() {
+        headIndex = 0;
         totalAggregation.reset();
     }
 

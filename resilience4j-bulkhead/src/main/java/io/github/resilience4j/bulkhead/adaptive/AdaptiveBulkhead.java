@@ -24,15 +24,14 @@ import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMa
 import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
+import io.github.resilience4j.core.functions.OnceConsumer;
 import io.vavr.CheckedConsumer;
 import io.vavr.CheckedFunction0;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedRunnable;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -247,6 +246,33 @@ public interface AdaptiveBulkhead {
                 }
             }
             return promise;
+        };
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a bulkhead. AdaptiveBulkhead will reserve permission until {@link Future#get()}
+     * or {@link Future#get(long, TimeUnit)} is evaluated even if the underlying call took less time to return. Any delays in evaluating
+     * future will result in holding of permission in the underlying Semaphore.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of the returned Future result
+     * @return a supplier which is decorated by a AdaptiveBulkhead.
+     */
+    static <T> Supplier<Future<T>> decorateFuture(AdaptiveBulkhead bulkhead, Supplier<Future<T>> supplier) {
+        return () -> {
+            if (!bulkhead.tryAcquirePermission()) {
+                final CompletableFuture<T> promise = new CompletableFuture<>();
+                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
+                return promise;
+            }
+            long start = System.currentTimeMillis();
+            try {
+                return new BulkheadFuture<T>(bulkhead, supplier.get());
+            } catch (Throwable e) {
+                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                throw e;
+            }
         };
     }
 
@@ -523,6 +549,7 @@ public interface AdaptiveBulkhead {
          * A DISABLED adaptive bulkhead is not operating (no state transition, no events) and no
          * limit changes.
          */
+        // TODO not implemented
         DISABLED(3, false),
 
         SLOW_START(1, true),
@@ -621,8 +648,7 @@ public interface AdaptiveBulkhead {
     /**
      * An EventPublisher which can be used to register event consumers.
      */
-    interface AdaptiveEventPublisher extends
-        io.github.resilience4j.core.EventPublisher<AdaptiveBulkheadEvent> {
+    interface AdaptiveEventPublisher extends EventPublisher<AdaptiveBulkheadEvent> {
 
         // TODO Maybe we can replace these 2 events by 1 BulkheadOnLimitChangedEvent(oldValue, newValue) 
         EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer);
@@ -638,5 +664,61 @@ public interface AdaptiveBulkhead {
         EventPublisher onStateTransition(
             EventConsumer<BulkheadOnStateTransitionEvent> eventConsumer);
 
+    }
+
+    /**
+     * This class decorates future with AdaptiveBulkhead functionality around invocation.
+     *
+     * @param <T> of return type
+     */
+    final class BulkheadFuture<T> implements Future<T> {
+        final private Future<T> future;
+        final private OnceConsumer<AdaptiveBulkhead> onceToBulkhead;
+
+        BulkheadFuture(AdaptiveBulkhead bulkhead, Future<T> future) {
+            Objects.requireNonNull(future, "Non null Future is required to decorate");
+            this.onceToBulkhead = OnceConsumer.of(bulkhead);
+            this.future = future;
+
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return future.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return future.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return future.isDone();
+        }
+
+        @Override
+        public T get() throws InterruptedException, ExecutionException {
+            long start = System.currentTimeMillis();
+            try {
+                return future.get();
+            }  finally {
+                // TODO onError?
+                onceToBulkhead.applyOnce(b ->
+                    b.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS));
+            }
+        }
+
+        @Override
+        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            long start = System.currentTimeMillis();
+            try {
+                return future.get(timeout, unit);
+            } finally {
+                // TODO onError?
+                onceToBulkhead.applyOnce(b ->
+                    b.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS));
+            }
+        }
     }
 }

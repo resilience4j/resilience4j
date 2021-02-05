@@ -24,9 +24,6 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.core.lang.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,20 +72,17 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     @Override
     public boolean tryAcquirePermission() {
-        return stateReference.get().tryAcquirePermission()
-            && innerBulkhead.tryAcquirePermission();
+        return stateReference.get().tryAcquirePermission();
     }
 
     @Override
     public void acquirePermission() {
         stateReference.get().acquirePermission();
-        innerBulkhead.acquirePermission();
     }
 
     @Override
     public void releasePermission() {
         stateReference.get().releasePermission();
-        innerBulkhead.releasePermission();
     }
 
     /**
@@ -214,29 +208,26 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private class SlowStartState implements AdaptiveBulkheadState {
 
         private final AdaptiveBulkheadMetrics adaptiveBulkheadMetrics;
-        private final AtomicBoolean isSlowStart;
+        private final AtomicBoolean slowStart;
 
         SlowStartState(AdaptiveBulkheadMetrics adaptiveBulkheadMetrics) {
             this.adaptiveBulkheadMetrics = adaptiveBulkheadMetrics;
-            this.isSlowStart = new AtomicBoolean(true);
+            this.slowStart = new AtomicBoolean(true);
         }
 
-        /**
-         * @return "always" true
-         */
         @Override
         public boolean tryAcquirePermission() {
-            return isSlowStart.get();
+            return slowStart.get() && innerBulkhead.tryAcquirePermission();
         }
 
         @Override
         public void acquirePermission() {
-            // noOp
+            innerBulkhead.acquirePermission();
         }
 
         @Override
         public void releasePermission() {
-            // noOp
+            innerBulkhead.releasePermission();
         }
 
         @Override
@@ -258,13 +249,13 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
          */
         private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
             logStateDetails(result);
-            if (isSlowStart.get()) {
+            if (slowStart.get()) {
                 switch (result) {
                     case BELOW_THRESHOLDS:
                         changeConcurrencyLimit(adaptationCalculator.increase());
                         break;
                     case ABOVE_THRESHOLDS:
-                        if (isSlowStart.compareAndSet(true, false)) {
+                        if (slowStart.compareAndSet(true, false)) {
                             changeConcurrencyLimit(adaptationCalculator.decrease());
                             transitionToCongestionAvoidance();
                         }
@@ -291,6 +282,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     }
 
+    @Deprecated
     private void logStateDetails(AdaptiveBulkheadMetrics.Result result) {
         LOG.debug("calls:{}/{}, rate:{} result:{}",
             metrics.getNumberOfBufferedCalls(),
@@ -310,22 +302,19 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             this.congestionAvoidance = new AtomicBoolean(true);
         }
 
-        /**
-         * @return "always" true
-         */
         @Override
         public boolean tryAcquirePermission() {
-            return congestionAvoidance.get();
+            return congestionAvoidance.get() && innerBulkhead.tryAcquirePermission();
         }
 
         @Override
         public void acquirePermission() {
-            // noOp
+            innerBulkhead.acquirePermission();
         }
 
         @Override
         public void releasePermission() {
-            // noOp
+            innerBulkhead.releasePermission();
         }
 
         @Override
@@ -388,86 +377,9 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     }
 
-    private static class AdaptiveBulkheadEventProcessor extends
-        EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher,
-        EventConsumer<AdaptiveBulkheadEvent> {
-
-        @Override
-        public EventPublisher<?> onLimitIncreased(
-            EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
-            registerConsumer(BulkheadOnLimitIncreasedEvent.class.getSimpleName(), eventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher<?> onLimitDecreased(
-            EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
-            registerConsumer(BulkheadOnLimitDecreasedEvent.class.getSimpleName(), eventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher<?> onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer) {
-            registerConsumer(BulkheadOnSuccessEvent.class.getSimpleName(), eventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher<?> onError(EventConsumer<BulkheadOnErrorEvent> eventConsumer) {
-            registerConsumer(BulkheadOnErrorEvent.class.getSimpleName(), eventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher<?> onIgnoredError(
-            EventConsumer<BulkheadOnIgnoreEvent> eventConsumer) {
-            registerConsumer(BulkheadOnIgnoreEvent.class.getSimpleName(), eventConsumer);
-            return this;
-        }
-
-        @Override
-        public EventPublisher<?> onStateTransition(
-            EventConsumer<BulkheadOnStateTransitionEvent> eventConsumer) {
-            registerConsumer(BulkheadOnStateTransitionEvent.class.getSimpleName(), eventConsumer);
-            return this;
-        }
-
-        @Override
-        public void consumeEvent(AdaptiveBulkheadEvent event) {
-            super.processEvent(event);
-        }
-    }
-
     @Override
     public String toString() {
         return String.format("AdaptiveBulkhead '%s'", this.name);
-    }
-
-    private interface AdaptiveBulkheadState {
-
-        boolean tryAcquirePermission();
-
-        void acquirePermission();
-
-        void releasePermission();
-
-        void onError(long duration, TimeUnit durationUnit, Throwable throwable);
-
-        void onSuccess(long duration, TimeUnit durationUnit);
-
-        AdaptiveBulkhead.State getState();
-
-        AdaptiveBulkheadMetrics getMetrics();
-
-        /**
-         * Should the AdaptiveBulkhead in this state publish events
-         *
-         * @return a boolean signaling if the events should be published
-         */
-        default boolean shouldPublishEvents(AdaptiveBulkheadEvent event) {
-            return event.getEventType().forcePublish || getState().allowPublish;
-        }
-
     }
 
     /**

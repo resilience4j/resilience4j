@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@Deprecated
 @Ignore("uses Docker")
 public class AdaptiveBulkheadLimitsTest {
 

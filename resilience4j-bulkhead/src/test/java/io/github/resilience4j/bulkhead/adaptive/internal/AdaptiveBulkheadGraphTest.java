@@ -128,7 +128,7 @@ public class AdaptiveBulkheadGraphTest {
     }
 
     private boolean nextErrorOccurred() {
-        return NON_RANDOM.nextInt(4) == 0;
+        return NON_RANDOM.nextInt(2) == 0;
     }
 
     private void recordCallStats(AbstractBulkheadLimitEvent event) {
