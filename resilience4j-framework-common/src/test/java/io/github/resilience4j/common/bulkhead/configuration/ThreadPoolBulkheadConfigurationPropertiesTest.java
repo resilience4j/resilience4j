@@ -59,6 +59,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
 
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         sharedProperties.setCoreThreadPoolSize(2);
+        sharedProperties.setMaxThreadPoolSize(20);
         sharedProperties.setQueueCapacity(2);
 
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
@@ -87,6 +88,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
                 compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getCoreThreadPoolSize()).isEqualTo(3);
+        assertThat(bulkhead1.getMaxThreadPoolSize()).isEqualTo(10);
         assertThat(bulkhead1.getQueueCapacity()).isEqualTo(1);
         // Should get shared config and overwrite core number
         ThreadPoolBulkheadConfig bulkhead2 = bulkheadConfigurationProperties
@@ -94,6 +96,7 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
                 compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(4);
+        assertThat(bulkhead2.getMaxThreadPoolSize()).isEqualTo(20);
         assertThat(bulkhead2.getQueueCapacity()).isEqualTo(2);
         // Unknown backend should get default config of Registry
         ThreadPoolBulkheadConfig bulkhead3 = bulkheadConfigurationProperties
