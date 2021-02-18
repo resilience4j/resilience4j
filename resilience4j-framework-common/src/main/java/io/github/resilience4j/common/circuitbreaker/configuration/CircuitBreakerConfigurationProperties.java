@@ -72,9 +72,8 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
         String backendName) {
         ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        CircuitBreakerConfig baseConfig = buildConfig(custom(), baseProperties,
-            compositeCircuitBreakerCustomizer,
-            backendName);
+        CircuitBreakerConfig baseConfig = createCircuitBreakerConfig(
+            backendName, baseProperties, compositeCircuitBreakerCustomizer);
         return buildConfig(from(baseConfig), instanceProperties, compositeCircuitBreakerCustomizer,
             backendName);
     }

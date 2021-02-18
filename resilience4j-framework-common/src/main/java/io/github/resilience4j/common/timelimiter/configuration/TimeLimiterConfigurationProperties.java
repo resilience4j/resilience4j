@@ -70,13 +70,13 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
             compositeTimeLimiterCustomizer, backendName);
     }
 
-    private static TimeLimiterConfig buildConfigFromBaseConfig(
+    private TimeLimiterConfig buildConfigFromBaseConfig(
         InstanceProperties baseProperties, InstanceProperties instanceProperties,
         CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer, String backendName) {
 
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        TimeLimiterConfig baseConfig = buildTimeLimiterConfig(TimeLimiterConfig.custom(), baseProperties,
-            compositeTimeLimiterCustomizer, backendName);
+        TimeLimiterConfig baseConfig = createTimeLimiterConfig(
+            backendName, baseProperties, compositeTimeLimiterCustomizer);
         return buildTimeLimiterConfig(TimeLimiterConfig.from(baseConfig), instanceProperties,
             compositeTimeLimiterCustomizer, backendName);
     }

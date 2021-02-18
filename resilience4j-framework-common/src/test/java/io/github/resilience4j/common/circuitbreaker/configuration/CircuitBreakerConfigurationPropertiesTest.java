@@ -84,7 +84,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getSlowCallDurationThreshold().getSeconds()).isEqualTo(5);
         assertThat(circuitBreaker1.getMaxWaitDurationInHalfOpenState().getSeconds()).isEqualTo(5);
         assertThat(circuitBreaker1.getSlowCallRateThreshold()).isEqualTo(50f);
-        assertThat(circuitBreaker1.getWaitDurationInOpenState().toMillis()).isEqualTo(100);
+        assertThat(circuitBreaker1.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(100);
         assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
         assertThat(circuitBreaker1.isWritableStackTraceEnabled()).isFalse();
 
@@ -293,6 +293,33 @@ public class CircuitBreakerConfigurationPropertiesTest {
     public void testIllegalArgumentOnWaitDurationInHalfOpenState() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ZERO);
+    }
+
+    @Test
+    public void testCircuitBreakerConfigWithBaseConfig() {
+        CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultConfig.setSlidingWindowSize(2000);
+        defaultConfig.setWaitDurationInOpenState(Duration.ofMillis(100L));
+
+        CircuitBreakerConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        sharedConfigWithDefaultConfig.setWaitDurationInOpenState(Duration.ofMillis(1000L));
+        sharedConfigWithDefaultConfig.setBaseConfig("defaultConfig");
+
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceWithSharedConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        instanceWithSharedConfig.setBaseConfig("sharedConfig");
+
+
+        CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+        circuitBreakerConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+        circuitBreakerConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
+        circuitBreakerConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);
+
+
+        CircuitBreakerConfig instance = circuitBreakerConfigurationProperties
+            .createCircuitBreakerConfig("instanceWithSharedConfig", instanceWithSharedConfig, compositeCircuitBreakerCustomizer());
+        assertThat(instance).isNotNull();
+        assertThat(instance.getSlidingWindowSize()).isEqualTo(2000);
+        assertThat(instance.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000L);
     }
 
     private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer() {

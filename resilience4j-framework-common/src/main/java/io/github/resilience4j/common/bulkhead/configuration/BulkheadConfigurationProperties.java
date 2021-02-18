@@ -53,7 +53,7 @@ public class BulkheadConfigurationProperties extends CommonProperties {
         CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer,
         String instanceName) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        BulkheadConfig baseConfig = buildBulkheadConfig(BulkheadConfig.custom(), baseProperties,
+        BulkheadConfig baseConfig = createBulkheadConfig(baseProperties,
             compositeBulkheadCustomizer, instanceName);
         return buildBulkheadConfig(BulkheadConfig.from(baseConfig), instanceProperties,
             compositeBulkheadCustomizer, instanceName);
