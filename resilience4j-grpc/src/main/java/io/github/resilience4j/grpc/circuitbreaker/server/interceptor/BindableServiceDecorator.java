@@ -28,6 +28,7 @@ class BindableServiceDecorator extends ServerCircuitBreakerDecorator {
         this.bindableService = bindableService;
     }
 
+    @Override
     public ServerServiceDefinition build() {
         return ServerInterceptors.interceptForward(bindableService, interceptors);
     }
