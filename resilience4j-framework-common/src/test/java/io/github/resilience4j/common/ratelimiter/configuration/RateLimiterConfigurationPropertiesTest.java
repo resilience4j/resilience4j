@@ -172,6 +172,32 @@ public class RateLimiterConfigurationPropertiesTest {
             .isFalse();
     }
 
+    @Test
+    public void testRateLimiterConfigWithBaseConfig() {
+        RateLimiterConfigurationProperties.InstanceProperties defaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        defaultConfig.setLimitForPeriod(2000);
+        defaultConfig.setLimitRefreshPeriod(Duration.ofMillis(100L));
+
+        RateLimiterConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        sharedConfigWithDefaultConfig.setLimitRefreshPeriod(Duration.ofMillis(1000L));
+        sharedConfigWithDefaultConfig.setBaseConfig("defaultConfig");
+
+        RateLimiterConfigurationProperties.InstanceProperties instanceWithSharedConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        instanceWithSharedConfig.setBaseConfig("sharedConfig");
+
+
+        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        rateLimiterConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+        rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
+        rateLimiterConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);
+
+
+        RateLimiterConfig instance = rateLimiterConfigurationProperties
+            .createRateLimiterConfig(instanceWithSharedConfig, compositeRateLimiterCustomizer(), "instanceWithSharedConfig");
+        assertThat(instance).isNotNull();
+        assertThat(instance.getLimitForPeriod()).isEqualTo(2000);
+        assertThat(instance.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(1000L));
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnEventConsumerBufferSize() {
