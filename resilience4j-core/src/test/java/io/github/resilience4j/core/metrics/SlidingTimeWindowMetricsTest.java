@@ -215,6 +215,18 @@ public class SlidingTimeWindowMetricsTest {
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
+        assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
+        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+
+        clock.advanceBySeconds(5);
+
+        snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
+        assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getFailureRate()).isEqualTo(0);
