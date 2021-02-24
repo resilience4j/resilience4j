@@ -66,7 +66,7 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
         CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
         String instanceName) {
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        RateLimiterConfig baseConfig = buildRateLimiterConfig(RateLimiterConfig.custom(),
+        RateLimiterConfig baseConfig = createRateLimiterConfig(
             baseProperties, compositeRateLimiterCustomizer, instanceName);
         return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties,
             compositeRateLimiterCustomizer, instanceName);

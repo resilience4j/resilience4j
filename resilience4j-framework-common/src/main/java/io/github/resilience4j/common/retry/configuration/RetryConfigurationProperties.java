@@ -102,7 +102,7 @@ public class RetryConfigurationProperties extends CommonProperties {
         InstanceProperties instanceProperties,
         CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
         String backend) {
-        RetryConfig baseConfig = buildRetryConfig(RetryConfig.custom(), baseProperties,
+        RetryConfig baseConfig = createRetryConfig(baseProperties,
             compositeRetryCustomizer, backend);
         ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
         return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties,

@@ -38,7 +38,6 @@ public class RetryConfigurationPropertiesTest {
     @Test
     public void testRetryProperties() {
         RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
-        instanceProperties1.setMaxRetryAttempts(3);
         instanceProperties1.setMaxAttempts(3);
         instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
         instanceProperties1.setEnableExponentialBackoff(false);
@@ -49,7 +48,6 @@ public class RetryConfigurationPropertiesTest {
         instanceProperties1.setRetryExceptionPredicate(RecordFailurePredicate.class);
 
         RetryConfigurationProperties.InstanceProperties instanceProperties2 = new RetryConfigurationProperties.InstanceProperties();
-        instanceProperties2.setMaxRetryAttempts(2);
         instanceProperties2.setMaxAttempts(2);
         instanceProperties2.setEnableExponentialBackoff(true);
         instanceProperties2.setExponentialBackoffMultiplier(1.0);
@@ -84,7 +82,7 @@ public class RetryConfigurationPropertiesTest {
     @Test
     public void testExponentialRandomBackoffConfig() {
         RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
-        instanceProperties1.setMaxRetryAttempts(3);
+        instanceProperties1.setMaxAttempts(3);
         instanceProperties1.setMaxAttempts(3);
         instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
         instanceProperties1.setEnableExponentialBackoff(true);
@@ -98,20 +96,20 @@ public class RetryConfigurationPropertiesTest {
         RetryConfig retry1 = retryConfigurationProperties.createRetryConfig("backend1", compositeRetryCustomizer());
 
         assertThat(retry1).isNotNull();
-        assertThat(retry1.getIntervalFunction().apply(1)).isBetween(500L, 1500L);
-        assertThat(retry1.getIntervalFunction().apply(2)).isBetween(1000L, 3000L);
-        assertThat(retry1.getIntervalFunction().apply(3)).isBetween(2000L, 3000L);
+        assertThat(retry1.getIntervalBiFunction().apply(1, null)).isBetween(500L, 1500L);
+        assertThat(retry1.getIntervalBiFunction().apply(2, null)).isBetween(1000L, 3000L);
+        assertThat(retry1.getIntervalBiFunction().apply(3, null)).isBetween(2000L, 3000L);
     }
 
     @Test
     public void testCreateRetryPropertiesWithSharedConfigs() {
         RetryConfigurationProperties.InstanceProperties defaultProperties = new RetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxRetryAttempts(3);
+        defaultProperties.setMaxAttempts(3);
         defaultProperties.setMaxAttempts(3);
         defaultProperties.setWaitDuration(Duration.ofMillis(100L));
 
         RetryConfigurationProperties.InstanceProperties sharedProperties = new RetryConfigurationProperties.InstanceProperties();
-        sharedProperties.setMaxRetryAttempts(2);
+        sharedProperties.setMaxAttempts(2);
         sharedProperties.setMaxAttempts(2);
         sharedProperties.setWaitDuration(Duration.ofMillis(100L));
 
@@ -188,10 +186,6 @@ public class RetryConfigurationPropertiesTest {
         defaultProperties.setMaxAttempts(0);
     }
 
-    private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
-        return new CompositeCustomizer<>(Collections.emptyList());
-    }
-
     @Test
     public void testIntervalBiFunctionConfig() {
         RetryConfigurationProperties.InstanceProperties instanceProperties = new RetryConfigurationProperties.InstanceProperties();
@@ -205,5 +199,36 @@ public class RetryConfigurationPropertiesTest {
 
         assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
         assertThat(retryConfig.getIntervalBiFunction()).isExactlyInstanceOf(TestIntervalBiFunction.class);
+    }
+
+    @Test
+    public void testRetryConfigWithBaseConfig() {
+        RetryConfigurationProperties.InstanceProperties defaultConfig = new RetryConfigurationProperties.InstanceProperties();
+        defaultConfig.setMaxAttempts(10);
+        defaultConfig.setWaitDuration(Duration.ofMillis(100L));
+
+        RetryConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new RetryConfigurationProperties.InstanceProperties();
+        sharedConfigWithDefaultConfig.setWaitDuration(Duration.ofMillis(1000L));
+        sharedConfigWithDefaultConfig.setBaseConfig("defaultConfig");
+
+        RetryConfigurationProperties.InstanceProperties instanceWithSharedConfig = new RetryConfigurationProperties.InstanceProperties();
+        instanceWithSharedConfig.setBaseConfig("sharedConfig");
+
+
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        retryConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+        retryConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
+        retryConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);
+
+
+        RetryConfig instance = retryConfigurationProperties
+            .createRetryConfig("instanceWithSharedConfig", compositeRetryCustomizer());
+        assertThat(instance).isNotNull();
+        assertThat(instance.getMaxAttempts()).isEqualTo(10);
+        assertThat(instance.getIntervalBiFunction().apply(1, null)).isEqualTo(1000L);
+    }
+
+    private CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
     }
 }

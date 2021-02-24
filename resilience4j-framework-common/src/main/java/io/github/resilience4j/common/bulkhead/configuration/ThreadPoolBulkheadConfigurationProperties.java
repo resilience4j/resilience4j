@@ -82,9 +82,8 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         InstanceProperties baseProperties, InstanceProperties instanceProperties,
         CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
         String instanceName) {
-        ThreadPoolBulkheadConfig baseConfig = buildThreadPoolBulkheadConfig(
-            ThreadPoolBulkheadConfig.custom(), baseProperties,
-            compositeThreadPoolBulkheadCustomizer, instanceName);
+        ThreadPoolBulkheadConfig baseConfig = createThreadPoolBulkheadConfig(
+            baseProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
             instanceProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
     }
