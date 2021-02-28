@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter.internal;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.vavr.collection.Map;
@@ -132,6 +133,19 @@ abstract class BaseAtomicLimiter<E extends RateLimiterConfig,T extends BaseState
 
         publishRateLimiterAcquisitionEvent(false, permits);
         return -1;
+    }
+
+    @Override
+    public void drainPermissions() {
+        T prev;
+        T next;
+        do {
+            prev = state.get();
+            next = calculateNextState(prev.getActivePermissions(), 0, prev);
+        } while (!compareAndSet(prev, next));
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(new RateLimiterOnDrainedEvent(name, Math.min(prev.getActivePermissions(), 0)));
+        }
     }
 
     /**
