@@ -389,6 +389,10 @@ public class RefillRateLimiter implements RateLimiter {
         return eventProcessor;
     }
 
+    public RefillRateLimiterMetrics getDetailedMetrics() {
+        return new RefillRateLimiterMetrics();
+    }
+
     /**
      * Atomically sets the value to the given updated value if the current value {@code ==} the
      * expected value. It differs from {@link AtomicReference#updateAndGet(UnaryOperator)} by
