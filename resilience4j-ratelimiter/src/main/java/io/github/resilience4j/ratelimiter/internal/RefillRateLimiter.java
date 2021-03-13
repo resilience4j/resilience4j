@@ -133,8 +133,8 @@ public class RefillRateLimiter implements RateLimiter {
     }
 
     /**
-     * Atomically updates the current {@link T} with the results of applying the {@link
-     * BaseAtomicLimiter#calculateNextState}, returning the updated {@link T}. It differs from
+     * Atomically updates the current {@link State} with the results of applying the {@link
+     * RefillRateLimiter#calculateNextState}, returning the updated {@link State}. It differs from
      * {@link AtomicReference#updateAndGet(UnaryOperator)} by constant back off. It means that after
      * one try to {@link AtomicReference#compareAndSet(Object, Object)} this method will wait for a
      * while before try one more time. This technique was originally described in this
