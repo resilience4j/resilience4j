@@ -76,7 +76,7 @@ public class RefillRateLimiter implements RateLimiter {
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new RefillRateLimiter.State(
-            rateLimiterConfig, 0, rateLimiterConfig.getLimitForPeriod(), 0
+            rateLimiterConfig, rateLimiterConfig.getInitialPermits(), 0, nanoTime
         ));
         eventProcessor = new RateLimiterEventProcessor();
     }
