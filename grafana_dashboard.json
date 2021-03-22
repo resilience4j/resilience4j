@@ -1019,7 +1019,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(resilience4j_retry_calls{application=~\"$application\",name=~\"$retry_name\",}[1m])",
+          "expr": "rate(resilience4j_retry_calls_total{application=~\"$application\",name=~\"$retry_name\",}[1m])",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{ kind }}",
@@ -1294,14 +1294,14 @@
           ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(resilience4j_retry_calls, name)",
+        "definition": "label_values(resilience4j_retry_calls_total, name)",
         "hide": 0,
         "includeAll": true,
         "label": "Retry Name",
         "multi": true,
         "name": "retry_name",
         "options": [],
-        "query": "label_values(resilience4j_retry_calls, name)",
+        "query": "label_values(resilience4j_retry_calls_total, name)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
