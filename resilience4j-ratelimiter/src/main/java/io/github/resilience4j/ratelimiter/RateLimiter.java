@@ -637,6 +637,15 @@ public interface RateLimiter {
      */
     void changeLimitForPeriod(int limitForPeriod);
 
+
+    /**
+     * Dynamic rate limiter configuration change. This method allows to change duration of permissions
+     * available during refresh period.
+     *
+     * @param refreshPeriod new refresh period
+     */
+    void changeLimitRefreshPeriod(Duration refreshPeriod);
+
     /**
      * Acquires a permission from this rate limiter, blocking until one is available, or the thread
      * is interrupted. Maximum wait time is {@link RateLimiterConfig#getTimeoutDuration()}

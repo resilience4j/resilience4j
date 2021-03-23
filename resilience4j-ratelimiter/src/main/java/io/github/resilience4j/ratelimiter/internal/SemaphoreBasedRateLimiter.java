@@ -49,7 +49,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     private final String name;
     private final AtomicReference<RateLimiterConfig> rateLimiterConfig;
-    private final ScheduledExecutorService scheduler;
+    private ScheduledExecutorService scheduler;
     private final Semaphore semaphore;
     private final SemaphoreBasedRateLimiterMetrics metrics;
     private final Map<String, String> tags;
@@ -73,7 +73,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param tags              tags to assign to the RateLimiter
      */
     public SemaphoreBasedRateLimiter(final String name, final RateLimiterConfig rateLimiterConfig,
-        Map<String, String> tags) {
+                                     Map<String, String> tags) {
         this(name, rateLimiterConfig, null, tags);
     }
 
@@ -85,7 +85,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param scheduler         executor that will refresh permissions
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-        @Nullable ScheduledExecutorService scheduler) {
+                                     @Nullable ScheduledExecutorService scheduler) {
         this(name, rateLimiterConfig, scheduler, HashMap.empty());
     }
 
@@ -98,7 +98,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
      * @param tags              tags to assign to the RateLimiter
      */
     public SemaphoreBasedRateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-        @Nullable ScheduledExecutorService scheduler, Map<String, String> tags) {
+                                     @Nullable ScheduledExecutorService scheduler, Map<String, String> tags) {
         this.name = requireNonNull(name, NAME_MUST_NOT_BE_NULL);
         this.rateLimiterConfig = new AtomicReference<>(
             requireNonNull(rateLimiterConfig, CONFIG_MUST_NOT_BE_NULL));
@@ -157,6 +157,20 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
             .limitForPeriod(limitForPeriod)
             .build();
         rateLimiterConfig.set(newConfig);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeLimitRefreshPeriod(Duration refreshPeriod) {
+        RateLimiterConfig newConfig = RateLimiterConfig.from(rateLimiterConfig.get())
+            .limitRefreshPeriod(refreshPeriod)
+            .build();
+        scheduler.shutdown();
+        rateLimiterConfig.set(newConfig);
+        scheduler = configureScheduler();
+        scheduleLimitRefresh();
     }
 
     /**

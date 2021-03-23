@@ -28,6 +28,7 @@ import io.vavr.collection.Map;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
@@ -48,7 +49,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  */
 public class AtomicRateLimiter implements RateLimiter {
 
-    private final long nanoTimeStart;
+    private final AtomicLong nanoTimeStart;
     private final String name;
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;
@@ -63,7 +64,7 @@ public class AtomicRateLimiter implements RateLimiter {
                              Map<String, String> tags) {
         this.name = name;
         this.tags = tags;
-        this.nanoTimeStart = nanoTime();
+        this.nanoTimeStart = new AtomicLong(nanoTime());
 
         waitingThreads = new AtomicInteger(0);
         state = new AtomicReference<>(new State(
@@ -101,14 +102,29 @@ public class AtomicRateLimiter implements RateLimiter {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void changeLimitRefreshPeriod(Duration refreshPeriod) {
+        RateLimiterConfig newConfig = RateLimiterConfig.from(state.get().config)
+            .limitRefreshPeriod(refreshPeriod)
+            .build();
+        nanoTimeStart.compareAndSet(nanoTimeStart.get(), nanoTime());
+        state.updateAndGet(currentState -> new State(
+            newConfig, currentState.activeCycle, currentState.activePermissions,
+            0
+        ));
+    }
+
+    /**
      * Calculates time elapsed from the class loading.
      */
     private long currentNanoTime() {
-        return nanoTime() - nanoTimeStart;
+        return nanoTime() - nanoTimeStart.get();
     }
 
     long getNanoTimeStart() {
-        return this.nanoTimeStart;
+        return this.nanoTimeStart.get();
     }
 
     /**
