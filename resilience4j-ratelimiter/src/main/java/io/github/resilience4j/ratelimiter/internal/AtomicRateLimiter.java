@@ -28,7 +28,6 @@ import io.vavr.collection.Map;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
@@ -81,7 +80,7 @@ public class AtomicRateLimiter implements RateLimiter {
             .build();
         state.updateAndGet(currentState -> new State(
             newConfig, currentState.activeCycle, currentState.activePermissions,
-            currentState.nanosToWait,currentState.nanoTimeStart
+            currentState.nanosToWait, currentState.nanoTimeStart
         ));
     }
 
@@ -95,7 +94,7 @@ public class AtomicRateLimiter implements RateLimiter {
             .build();
         state.updateAndGet(currentState -> new State(
             newConfig, currentState.activeCycle, currentState.activePermissions,
-            currentState.nanosToWait,currentState.nanoTimeStart
+            currentState.nanosToWait, currentState.nanoTimeStart
         ));
     }
 
@@ -109,7 +108,7 @@ public class AtomicRateLimiter implements RateLimiter {
             .build();
         state.updateAndGet(currentState -> new State(
             newConfig, currentState.activeCycle, currentState.activePermissions,
-            0,currentNanoTime()
+            0, nanoTime()
         ));
     }
 
@@ -249,7 +248,7 @@ public class AtomicRateLimiter implements RateLimiter {
             currentCycle
         );
         State nextState = reservePermissions(activeState.config, permits, timeoutInNanos, nextCycle,
-            nextPermissions, nextNanosToWait,activeState.nanoTimeStart);
+            nextPermissions, nextNanosToWait, activeState.nanoTimeStart);
         return nextState;
     }
 
@@ -310,7 +309,7 @@ public class AtomicRateLimiter implements RateLimiter {
         if (canAcquireInTime) {
             permissionsWithReservation -= permits;
         }
-        return new State(config, cycle, permissionsWithReservation, nanosToWait,nanoTimeStart);
+        return new State(config, cycle, permissionsWithReservation, nanosToWait, nanoTimeStart);
     }
 
     /**
@@ -452,7 +451,7 @@ public class AtomicRateLimiter implements RateLimiter {
         private final long nanoTimeStart;
 
         private State(RateLimiterConfig config,
-                      final long activeCycle, final int activePermissions, final long nanosToWait,long nanoTimeStart) {
+                      final long activeCycle, final int activePermissions, final long nanosToWait, long nanoTimeStart) {
             this.config = config;
             this.activeCycle = activeCycle;
             this.activePermissions = activePermissions;
