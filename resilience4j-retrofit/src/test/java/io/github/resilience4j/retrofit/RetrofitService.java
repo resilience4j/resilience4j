@@ -31,6 +31,6 @@ public interface RetrofitService {
     @GET("delegated")
     Single<String> delegated();
 
-    @GET("greetings")
-    Call<ResponseBody> greetings();
+    @GET("greetingsResponse")
+    Call<ResponseBody> greetingsResponse();
 }

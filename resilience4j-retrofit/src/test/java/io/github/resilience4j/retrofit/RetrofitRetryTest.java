@@ -76,34 +76,34 @@ public class RetrofitRetryTest {
 
     @Test
     public void decorateSuccessfulCall() throws Exception {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "text/plain")
                 .withBody("hello world")));
 
-        service.greetings().execute();
+        service.greetingsResponse().execute();
 
-        verify(1, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(1, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
     @Test
     public void decorateSuccessfulEnqueuedCall() throws Throwable {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "text/plain")
                 .withBody("hello world")));
 
-        EnqueueDecorator.enqueue(service.greetings());
+        EnqueueDecorator.enqueue(service.greetingsResponse());
 
-        verify(1, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(1, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
     //Test Retry for IO Exception
     @Test
     public void decorateTimingOutCall() {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
                 .withStatus(200)
@@ -111,19 +111,19 @@ public class RetrofitRetryTest {
                 .withBody("hello world")));
 
         try {
-            service.greetings().execute();
+            service.greetingsResponse().execute();
         } catch (Throwable ignored) {
         }
 
         final Retry.Metrics metrics = retry.getMetrics();
-        verify(3, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt())
             .isEqualTo(0);
     }
 
     @Test
     public void decorateCancelledCall() {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
                 .withStatus(200)
@@ -131,13 +131,13 @@ public class RetrofitRetryTest {
                 .withBody("hello world")));
 
         try {
-            Call<ResponseBody> call = service.greetings();
+            Call<ResponseBody> call = service.greetingsResponse();
             cancelAsync(call, 100);
             call.execute();
         } catch (Throwable ignored) {
         }
 
-        verify(3, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
         final Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt())
             .isEqualTo(0);
@@ -145,14 +145,14 @@ public class RetrofitRetryTest {
 
     @Test
     public void decorateCancelledEnqueuedCall() {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
                 .withStatus(200)
                 .withHeader("Content-Type", "text/plain")
                 .withBody("hello world")));
 
-        Call<ResponseBody> call = service.greetings();
+        Call<ResponseBody> call = service.greetingsResponse();
         cancelAsync(call, 100);
         EnqueueDecorator.performCatchingEnqueue(call);
 
@@ -160,12 +160,12 @@ public class RetrofitRetryTest {
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt())
             .isEqualTo(0);
 
-        verify(3, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
     @Test
     public void decorateTimingOutEnqueuedCall() {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
                 .withStatus(200)
@@ -173,46 +173,46 @@ public class RetrofitRetryTest {
                 .withBody("hello world")));
 
         try {
-            EnqueueDecorator.enqueue(service.greetings());
+            EnqueueDecorator.enqueue(service.greetingsResponse());
         } catch (Throwable ignored) {
         }
 
         final Retry.Metrics metrics = retry.getMetrics();
-        verify(3, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
     }
 
     @Test
     public void decorateUnsuccessfulCall() throws Exception {
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(504)
                 .withHeader("Content-Type", "text/plain")));
 
-        final Response<ResponseBody> response = service.greetings().execute();
+        final Response<ResponseBody> response = service.greetingsResponse().execute();
 
         assertThat(response.code())
             .describedAs("Response code")
             .isEqualTo(504);
 
-        verify(3, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
     @Test
     public void decorateUnsuccessfulEnqueuedCall() throws Throwable {
 
-        stubFor(get(urlPathEqualTo("/greetings"))
+        stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(504)
                 .withHeader("Content-Type", "text/plain")));
 
-        final Response<ResponseBody> response = EnqueueDecorator.enqueue(service.greetings());
+        final Response<ResponseBody> response = EnqueueDecorator.enqueue(service.greetingsResponse());
 
         assertThat(response.code())
             .describedAs("Response code")
             .isEqualTo(504);
 
-        verify(3, getRequestedFor(urlPathEqualTo("/greetings")));
+        verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
     private void cancelAsync(Call<?> call, long delayMs) {
