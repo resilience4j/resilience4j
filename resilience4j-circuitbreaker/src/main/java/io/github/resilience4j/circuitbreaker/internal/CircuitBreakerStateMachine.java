@@ -402,9 +402,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private void publishSuccessEvent(final long duration, TimeUnit durationUnit) {
-        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name,
-            Duration.ofNanos(durationUnit.toNanos(duration)));
-        publishEventIfPossible(event);
+        if (!eventProcessor.hasConsumers()) {
+            return;
+        }
+
+        final Duration elapsedDuration = Duration.ofNanos(durationUnit.toNanos(duration));
+        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name, elapsedDuration);
+        if (shouldPublishEvents(event)) {
+            try {
+                eventProcessor.consumeEvent(event);
+                LOG.debug("Event {} published: {}", event.getEventType(), event);
+            } catch (Throwable t) {
+                LOG.warn("Failed to handle event {}", event.getEventType(), t);
+            }
+        } else {
+            LOG.debug("Publishing not allowed: Event {} not published", event.getEventType());
+        }
     }
 
     private void publishCircuitErrorEvent(final String name, final long duration,
