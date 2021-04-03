@@ -8,9 +8,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Decorates a Retrofit {@link Call} to inform a Retry when an exception is thrown.
- * All exceptions are marked as errors or responses not matching the supplied predicate.  For
- * example:
+ * Decorates a Retrofit {@link Call} to inform a Retry when an retryOnResults matches and retryExceptions are thrown.
+ * All exceptions are marked as errors or responses not matching the supplied predicate.
+ * For example:
  * <p>
  * <code>
  * RetrofitRetry.decorateCall(retry, call);
@@ -18,14 +18,12 @@ import retrofit2.Response;
  */
 public interface RetrofitRetry {
 
-    /**
+    /**Zoom
      * Decorate {@link Call}s allow Retry functionality.
      *
      * @param retry Retry to apply
      * @param call  Call to decorate
-     *              response
-     * @param <T>   Response type of call
-     * @return Original Call decorated with CircuitBreaker
+     * @return Original Call decorated with Retry
      */
     static <T> Call<T> decorateCall(final Retry retry, final Call<T> call) {
         return new RetryCall<>(call, retry);
@@ -33,8 +31,8 @@ public interface RetrofitRetry {
 
     class RetryCall<T> extends DecoratedCall<T> {
 
-        private Call<T> call;
-        private Retry retry;
+        private final Call<T> call;
+        private final Retry retry;
         private int retryCount = 0;
 
         public RetryCall(Call<T> call, Retry retry) {
