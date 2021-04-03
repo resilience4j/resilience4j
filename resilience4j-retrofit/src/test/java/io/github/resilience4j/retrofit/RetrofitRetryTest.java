@@ -75,7 +75,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateSuccessfulCall() throws Exception {
+    public void shouldNotRetrySuccessfulCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(200)
@@ -88,7 +88,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateSuccessfulEnqueuedCall() throws Throwable {
+    public void shouldNotRetrySuccessfulEnqueuedCall() throws Throwable {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(200)
@@ -100,9 +100,8 @@ public class RetrofitRetryTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
-    //Test Retry for IO Exception
     @Test
-    public void decorateTimingOutCall() {
+    public void shouldRetryOnIOExceptionTimingOutCall() {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -122,7 +121,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateCancelledCall() {
+    public void shouldRetryOnIOExceptionForCancelledCall() {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -144,7 +143,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateCancelledEnqueuedCall() {
+    public void shouldRetryOnIOExceptionForCancelledEnqueuedCall() {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -164,7 +163,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateTimingOutEnqueuedCall() {
+    public void shouldRetryOnIOExceptionTimingOutEnqueuedCall() {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -183,7 +182,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateUnsuccessfulCall() throws Exception {
+    public void shouldRetryOn504ForUnsuccessfulCall() throws Exception {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withStatus(504)
@@ -199,7 +198,7 @@ public class RetrofitRetryTest {
     }
 
     @Test
-    public void decorateUnsuccessfulEnqueuedCall() throws Throwable {
+    public void shouldRetryOn504ForUnsuccessfulEnqueuedCall() throws Throwable {
 
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
