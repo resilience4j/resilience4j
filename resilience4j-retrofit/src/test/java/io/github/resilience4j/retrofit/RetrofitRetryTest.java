@@ -142,8 +142,8 @@ public class RetrofitRetryTest {
             .isEqualTo(0);
     }
 
-    @Test
-    public void shouldRetryOnIOExceptionForCancelledEnqueuedCall() {
+    @Test(expected = IOException.class)
+    public void shouldRetryOnIOExceptionForCancelledEnqueuedCall() throws IOException {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -153,7 +153,11 @@ public class RetrofitRetryTest {
 
         Call<ResponseBody> call = service.greetingsResponse();
         cancelAsync(call, 100);
-        EnqueueDecorator.performCatchingEnqueue(call);
+        try {
+            EnqueueDecorator.enqueue(call);
+        } catch (Throwable e) {
+            throw new IOException();
+        }
 
         final Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt())
