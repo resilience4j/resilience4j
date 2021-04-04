@@ -97,8 +97,9 @@ public class RetrofitRetryTest {
         verify(1, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
-    @Test
-    public void shouldRetryOnIOExceptionTimingOutCall() {
+
+    @Test(expected = IOException.class)
+    public void shouldRetryOnIOExceptionTimingOutCall() throws IOException {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -108,7 +109,8 @@ public class RetrofitRetryTest {
 
         try {
             service.greetingsResponse().execute();
-        } catch (Throwable ignored) {
+        } catch (Exception e) {
+            throw new IOException();
         }
 
         final Retry.Metrics metrics = retry.getMetrics();
@@ -117,8 +119,8 @@ public class RetrofitRetryTest {
             .isEqualTo(0);
     }
 
-    @Test
-    public void shouldRetryOnIOExceptionForCancelledCall() {
+    @Test(expected = IOException.class)
+    public void shouldRetryOnIOExceptionForCancelledCall() throws IOException {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -130,7 +132,8 @@ public class RetrofitRetryTest {
             Call<ResponseBody> call = service.greetingsResponse();
             cancelAsync(call, 100);
             call.execute();
-        } catch (Throwable ignored) {
+        } catch (Exception e) {
+            throw new IOException();
         }
 
         verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
@@ -159,8 +162,8 @@ public class RetrofitRetryTest {
         verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
 
-    @Test
-    public void shouldRetryOnIOExceptionTimingOutEnqueuedCall() {
+    @Test(expected = IOException.class)
+    public void shouldRetryOnIOExceptionTimingOutEnqueuedCall() throws IOException {
         stubFor(get(urlPathEqualTo("/greetingsResponse"))
             .willReturn(aResponse()
                 .withFixedDelay(500)
@@ -170,7 +173,8 @@ public class RetrofitRetryTest {
 
         try {
             EnqueueDecorator.enqueue(service.greetingsResponse());
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            throw new IOException();
         }
 
         final Retry.Metrics metrics = retry.getMetrics();
@@ -215,7 +219,8 @@ public class RetrofitRetryTest {
         CompletableFuture.runAsync(() -> {
             try {
                 Thread.sleep(delayMs);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
             call.cancel();
         });

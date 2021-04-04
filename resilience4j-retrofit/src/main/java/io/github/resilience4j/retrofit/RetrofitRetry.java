@@ -34,7 +34,6 @@ import retrofit2.Response;
 public interface RetrofitRetry {
 
     /**
-     * Zoom
      * Decorate {@link Call}s allow Retry functionality.
      *
      * @param retry Retry to apply
@@ -59,6 +58,10 @@ public interface RetrofitRetry {
 
         private final Callback retriedCallback(Callback callback) {
             return new Callback() {
+
+                /**
+                 * Invoked for a received HTTP response.
+                 */
                 @Override
                 public void onResponse(Call call, Response response) {
                     if (retry.context().onResult(response) && ++retryCount < retry.getRetryConfig().getMaxAttempts()) {
@@ -68,6 +71,10 @@ public interface RetrofitRetry {
                     }
                 }
 
+                /**
+                 * Invoked when a network exception occurred talking to the server or when an unexpected
+                 * exception occurred creating the request or processing the response.
+                 */
                 @Override
                 public void onFailure(Call call, Throwable throwable) {
                     if (retry.getRetryConfig().getExceptionPredicate().test(throwable) && ++retryCount < retry.getRetryConfig().getMaxAttempts()) {
@@ -82,6 +89,9 @@ public interface RetrofitRetry {
                     }
                 }
 
+                /**
+                 * resilience4j accepts exceptions only
+                 */
                 private final Exception asException(Throwable throwable) {
                     return throwable instanceof Exception ?
                         (Exception) throwable :
@@ -90,48 +100,78 @@ public interface RetrofitRetry {
             };
         }
 
+        /**
+         * Asynchronously send the request and notify callback of its response or if an error
+         * occurred talking to the server, creating the request, or processing the response.
+         */
         @Override
         public void enqueue(final Callback callback) {
             call.enqueue(retriedCallback(callback));
         }
 
+        /**
+         * Synchronously send the request and return its response
+         */
         @Override
         public Response<T> execute() {
             Response<T> response = null;
+
             try {
                 response = retry.executeCallable(() -> executableCall().execute());
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException();
             }
             return response;
         }
 
+        /**
+         * Returns cloned call, if the call has been either {@linkplain #execute() executed} or {@linkplain
+         * #enqueue(Callback) enqueued} already else would return the actual call.
+         */
         private Call<T> executableCall() {
             if (call.isExecuted())
                 return call.clone();
             return call;
         }
 
+        /**
+         * Create a new, identical call to this one which can be enqueued or executed even if this call
+         * has already been.
+         */
         @Override
         public Call<T> clone() {
             return (new RetryCall<>(executableCall(), retry));
         }
 
+        /**
+         * Returns true if this call has been either {@linkplain #execute() executed} or {@linkplain
+         * #enqueue(Callback) enqueued}. It is an error to execute or enqueue a call more than once.
+         */
         @Override
         public boolean isExecuted() {
             return call.isExecuted();
         }
 
+        /**
+         * True if {@link #cancel()} was called.
+         */
         @Override
         public boolean isCanceled() {
             return call.isCanceled();
         }
 
+        /**
+         * Cancel this call. An attempt will be made to cancel in-flight calls, and if the call has not
+         * yet been executed it never will be.
+         */
         @Override
         public void cancel() {
             call.cancel();
         }
 
+        /**
+         * The original HTTP request.
+         */
         @Override
         public Request request() {
             return call.request();
