@@ -7,6 +7,7 @@ import java.util.Objects;
 /**
  * @author romeh
  */
+@Deprecated
 public class LogEntry implements Comparable<LogEntry> {
 
     @Override

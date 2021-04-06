@@ -66,12 +66,12 @@ public interface AdaptiveBulkhead {
 
     boolean tryAcquirePermission();
 
-	/**
-	 * Acquires a permission to execute a call, only if one is available at the time of invocation
-	 *
-	 * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
-	 */
-	void acquirePermission();
+    /**
+     * Acquires a permission to execute a call, only if one is available at the time of invocation
+     *
+     * @throws BulkheadFullException when the Bulkhead is full and no further calls are permitted.
+     */
+    void acquirePermission();
 
     /**
      * Releases a permission and increases the number of available permits by one.
@@ -244,6 +244,33 @@ public interface AdaptiveBulkhead {
                 }
             }
             return promise;
+        };
+    }
+
+    /**
+     * Returns a supplier of type Future which is decorated by a bulkhead. AdaptiveBulkhead will reserve permission until {@link Future#get()}
+     * or {@link Future#get(long, TimeUnit)} is evaluated even if the underlying call took less time to return. Any delays in evaluating
+     * future will result in holding of permission in the underlying Semaphore.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the original supplier
+     * @param <T> the type of the returned Future result
+     * @return a supplier which is decorated by a AdaptiveBulkhead.
+     */
+    static <T> Supplier<Future<T>> decorateFuture(AdaptiveBulkhead bulkhead, Supplier<Future<T>> supplier) {
+        return () -> {
+            if (!bulkhead.tryAcquirePermission()) {
+                final CompletableFuture<T> promise = new CompletableFuture<>();
+                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
+                return promise;
+            }
+            long start = System.currentTimeMillis();
+            try {
+                return new BulkheadFuture<T>(bulkhead, supplier.get());
+            } catch (Throwable e) {
+                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                throw e;
+            }
         };
     }
 
@@ -578,8 +605,8 @@ public interface AdaptiveBulkhead {
         }
     }
 
-	interface Metrics extends Bulkhead.Metrics {
-        
+    interface Metrics extends Bulkhead.Metrics {
+
         /**
          * Returns the current failure rate in percentage. If the number of measured calls is below
          * the minimum number of measured calls, it returns -1.
