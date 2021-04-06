@@ -21,13 +21,14 @@ package io.github.resilience4j.bulkhead.event;
 import java.time.ZonedDateTime;
 import java.util.Map;
 
-abstract class AbstractBulkheadLimitEvent implements AdaptiveBulkheadEvent {
+public abstract class AbstractBulkheadLimitEvent implements AdaptiveBulkheadEvent {
 
 	private final String bulkheadName;
+	// TODO replace by fields
 	private final Map<String, String> eventData;
 	private final ZonedDateTime creationTime;
 
-	AbstractBulkheadLimitEvent(String bulkheadName, Map<String, String> eventData) {
+    AbstractBulkheadLimitEvent(String bulkheadName, Map<String, String> eventData) {
 		this.bulkheadName = bulkheadName;
 		this.eventData = eventData;
 		this.creationTime = ZonedDateTime.now();

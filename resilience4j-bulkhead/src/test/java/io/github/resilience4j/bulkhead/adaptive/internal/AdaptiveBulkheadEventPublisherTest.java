@@ -20,7 +20,6 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.bulkhead.event.AdaptiveBulkheadEvent;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +81,7 @@ public class AdaptiveBulkheadEventPublisherTest {
 
 	@Test
 	public void shouldConsumeIgnoredErrorEvent() {
-		AdaptiveBulkheadConfig adaptiveBulkheadConfig = AdaptiveBulkheadConfig.builder().config(AimdConfig.ofDefaults())
+		AdaptiveBulkheadConfig adaptiveBulkheadConfig = AdaptiveBulkheadConfig.builder()
 				.ignoreExceptions(IOException.class)
 				.build();
 

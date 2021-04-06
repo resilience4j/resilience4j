@@ -34,6 +34,10 @@ public class BulkheadOnLimitIncreasedEvent extends AbstractBulkheadLimitEvent {
 		return Type.LIMIT_INCREASED;
 	}
 
+    public int getNewMaxConcurrentCalls(){
+	    return Integer.parseInt(eventData().get("newMaxConcurrentCalls"));
+    }
+
 	@Override
 	public String toString() {
 		return String.format(

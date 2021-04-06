@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
 
+import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
@@ -32,31 +33,38 @@ import static io.github.resilience4j.core.metrics.Metrics.Outcome;
 
 class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
 
-    private final Metrics metrics;
+    private final Metrics slidingWindowMetrics;
     private final float failureRateThreshold;
     private final float slowCallRateThreshold;
     private final long slowCallDurationThresholdInNanos;
-    private int minimumNumberOfCalls;
+    private final int minimumNumberOfCalls;
+    private final Bulkhead.Metrics internalBulkheadMetrics;
 
     private AdaptiveBulkheadMetrics(int slidingWindowSize,
         AdaptiveBulkheadConfig.SlidingWindowType slidingWindowType,
-        AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
+        AdaptiveBulkheadConfig adaptiveBulkheadConfig,
+        Bulkhead.Metrics internalBulkheadMetrics) {
         if (slidingWindowType == AdaptiveBulkheadConfig.SlidingWindowType.COUNT_BASED) {
-            this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
+            this.slidingWindowMetrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = Math
                 .min(adaptiveBulkheadConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         } else {
-            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize);
+            this.slidingWindowMetrics = new SlidingTimeWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = adaptiveBulkheadConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = adaptiveBulkheadConfig.getFailureRateThreshold();
         this.slowCallRateThreshold = adaptiveBulkheadConfig.getSlowCallRateThreshold();
-        this.slowCallDurationThresholdInNanos = adaptiveBulkheadConfig.getSlowCallDurationThreshold()
-            .toNanos();
+        this.slowCallDurationThresholdInNanos = adaptiveBulkheadConfig
+            .getSlowCallDurationThreshold().toNanos();
+        this.internalBulkheadMetrics = internalBulkheadMetrics;
     }
 
-    public AdaptiveBulkheadMetrics(AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
-        this(adaptiveBulkheadConfig.getSlidingWindowSize(), adaptiveBulkheadConfig.getSlidingWindowType(), adaptiveBulkheadConfig);
+    public AdaptiveBulkheadMetrics(AdaptiveBulkheadConfig adaptiveBulkheadConfig,
+        Bulkhead.Metrics internalBulkheadMetrics) {
+        this(adaptiveBulkheadConfig.getSlidingWindowSize(),
+            adaptiveBulkheadConfig.getSlidingWindowType(),
+            adaptiveBulkheadConfig,
+            internalBulkheadMetrics);
     }
 
     /**
@@ -65,13 +73,7 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      * @return the result of the check
      */
     public Result onSuccess(long duration, TimeUnit durationUnit) {
-        Snapshot snapshot;
-        if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
-            snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_SUCCESS);
-        } else {
-            snapshot = metrics.record(duration, durationUnit, Outcome.SUCCESS);
-        }
-        return checkIfThresholdsExceeded(snapshot);
+        return checkIfThresholdsExceeded(record(duration, durationUnit, true));
     }
 
     /**
@@ -80,13 +82,12 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      * @return the result of the check
      */
     public Result onError(long duration, TimeUnit durationUnit) {
-        Snapshot snapshot;
-        if (durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos) {
-            snapshot = metrics.record(duration, durationUnit, Outcome.SLOW_ERROR);
-        } else {
-            snapshot = metrics.record(duration, durationUnit, Outcome.ERROR);
-        }
-        return checkIfThresholdsExceeded(snapshot);
+        return checkIfThresholdsExceeded(record(duration, durationUnit, false));
+    }
+
+    Snapshot record(long duration, TimeUnit durationUnit, boolean success) {
+        boolean slow = durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos;
+        return slidingWindowMetrics.record(duration, durationUnit, Outcome.of(slow, success));
     }
 
     /**
@@ -97,34 +98,19 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      * @return false, if the thresholds haven't been exceeded.
      */
     private Result checkIfThresholdsExceeded(Snapshot snapshot) {
-        float failureRateInPercentage = getFailureRate(snapshot);
-        if (failureRateInPercentage == -1) {
-            return Result.BELOW_MINIMUM_CALLS_THRESHOLD;
-        }
-        if (failureRateInPercentage >= failureRateThreshold) {
+        if (isBelowMinimumNumberOfCalls(snapshot)) {
+            return Result.UNRELIABLE_THRESHOLDS;
+        } else if (snapshot.getFailureRate() >= failureRateThreshold
+            || snapshot.getSlowCallRate() >= slowCallRateThreshold) {
             return Result.ABOVE_THRESHOLDS;
+        } else {
+            return Result.BELOW_THRESHOLDS;
         }
-        float slowCallsInPercentage = getSlowCallRate(snapshot);
-        if (slowCallsInPercentage >= slowCallRateThreshold) {
-            return Result.ABOVE_THRESHOLDS;
-        }
-        return Result.BELOW_THRESHOLDS;
     }
 
-    private float getSlowCallRate(Snapshot snapshot) {
-        int bufferedCalls = snapshot.getTotalNumberOfCalls();
-        if (bufferedCalls == 0 || bufferedCalls < minimumNumberOfCalls) {
-            return -1.0f;
-        }
-        return snapshot.getSlowCallRate();
-    }
-
-    private float getFailureRate(Snapshot snapshot) {
-        int bufferedCalls = snapshot.getTotalNumberOfCalls();
-        if (bufferedCalls == 0 || bufferedCalls < minimumNumberOfCalls) {
-            return -1.0f;
-        }
-        return snapshot.getFailureRate();
+    private boolean isBelowMinimumNumberOfCalls(Snapshot snapshot) {
+        return snapshot.getTotalNumberOfCalls() == 0
+            || snapshot.getTotalNumberOfCalls() < minimumNumberOfCalls;
     }
 
     /**
@@ -132,7 +118,8 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      */
     @Override
     public float getFailureRate() {
-        return getFailureRate(metrics.getSnapshot());
+        Snapshot snapshot = slidingWindowMetrics.getSnapshot();
+        return isBelowMinimumNumberOfCalls(snapshot) ? -1 : snapshot.getFailureRate();
     }
 
     /**
@@ -140,7 +127,8 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      */
     @Override
     public float getSlowCallRate() {
-        return getSlowCallRate(metrics.getSnapshot());
+        Snapshot snapshot = slidingWindowMetrics.getSnapshot();
+        return isBelowMinimumNumberOfCalls(snapshot) ? -1 : snapshot.getSlowCallRate();
     }
 
     /**
@@ -148,7 +136,12 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      */
     @Override
     public int getNumberOfSuccessfulCalls() {
-        return this.metrics.getSnapshot().getNumberOfSuccessfulCalls();
+        return slidingWindowMetrics.getSnapshot().getNumberOfSuccessfulCalls();
+    }
+
+    @Override
+    public void resetRecords() {
+        slidingWindowMetrics.resetRecords();
     }
 
     /**
@@ -156,32 +149,62 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      */
     @Override
     public int getNumberOfBufferedCalls() {
-        return this.metrics.getSnapshot().getTotalNumberOfCalls();
+        return slidingWindowMetrics.getSnapshot().getTotalNumberOfCalls();
     }
 
     @Override
     public int getNumberOfFailedCalls() {
-        return this.metrics.getSnapshot().getNumberOfFailedCalls();
+        return slidingWindowMetrics.getSnapshot().getNumberOfFailedCalls();
     }
 
     @Override
     public int getNumberOfSlowCalls() {
-        return this.metrics.getSnapshot().getTotalNumberOfSlowCalls();
+        return slidingWindowMetrics.getSnapshot().getTotalNumberOfSlowCalls();
     }
 
     @Override
     public int getNumberOfSlowSuccessfulCalls() {
-        return this.metrics.getSnapshot().getNumberOfSlowSuccessfulCalls();
+        return slidingWindowMetrics.getSnapshot().getNumberOfSlowSuccessfulCalls();
     }
 
     @Override
     public int getNumberOfSlowFailedCalls() {
-        return this.metrics.getSnapshot().getNumberOfSlowFailedCalls();
+        return slidingWindowMetrics.getSnapshot().getNumberOfSlowFailedCalls();
+    }
+
+    Snapshot getSnapshot() {
+        return slidingWindowMetrics.getSnapshot();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getAvailableConcurrentCalls() {
+        return internalBulkheadMetrics.getAvailableConcurrentCalls();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getMaxAllowedConcurrentCalls() {
+        return internalBulkheadMetrics.getMaxAllowedConcurrentCalls();
     }
 
     enum Result {
+        /**
+         * Is below the error or slow calls rate.
+         */
         BELOW_THRESHOLDS,
+        /**
+         * Is above the error or slow calls rate.
+         */
         ABOVE_THRESHOLDS,
-        BELOW_MINIMUM_CALLS_THRESHOLD
+        /**
+         * Is below minimum number of calls which are required (per sliding window period) before
+         * the Adaptive Bulkhead can calculate the reliable error or slow calls rate.
+         */
+        UNRELIABLE_THRESHOLDS
     }
 }

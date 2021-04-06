@@ -27,4 +27,12 @@ class TotalAggregation extends AbstractAggregation {
         this.numberOfFailedCalls -= bucket.numberOfFailedCalls;
         this.numberOfCalls -= bucket.numberOfCalls;
     }
+
+    public void reset() {
+        this.totalDurationInMillis = 0;
+        this.numberOfSlowCalls = 0;
+        this.numberOfSlowFailedCalls = 0;
+        this.numberOfFailedCalls = 0;
+        this.numberOfCalls = 0;
+    }
 }
