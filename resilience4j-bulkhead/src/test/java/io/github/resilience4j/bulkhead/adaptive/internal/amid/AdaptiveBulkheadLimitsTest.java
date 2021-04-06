@@ -3,7 +3,6 @@ package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
 import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
 import org.apache.http.client.HttpClient;
@@ -15,6 +14,7 @@ import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.AxesChartStyler;
 import org.knowm.xchart.style.Styler;
 import org.mockserver.client.server.MockServerClient;
 import org.mockserver.model.HttpRequest;
@@ -33,14 +33,11 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-/**
- * test the adoptive bulkhead limiter logic
- */
-@Ignore
-public class AdaptiveBulkheadWithLimiterTest {
+@Deprecated
+@Ignore("uses Docker")
+public class AdaptiveBulkheadLimitsTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(
-        AdaptiveBulkheadWithLimiterTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdaptiveBulkheadLimitsTest.class);
     private static MockServerContainer mockServerContainer;
     private static MockServerClient client;
 
@@ -55,20 +52,20 @@ public class AdaptiveBulkheadWithLimiterTest {
     private boolean drawGraphs = false;
     private List<LogEntry> maxConcurrentCalls = new CopyOnWriteArrayList<>();
     private AdaptiveBulkhead bulkhead;
-    private AdaptiveBulkheadConfig<AimdConfig> config;
+    private AdaptiveBulkheadConfig config;
     private final String baseUrl = mockServerContainer.getEndpoint() + "/testService/2";
 
     @Before
     public void init() {
         maxConcurrentCalls.clear();
-        config = AdaptiveBulkheadConfig.<AimdConfig>builder()
-            .config(AimdConfig.builder().maxConcurrentRequestsLimit(50)
+        config = AdaptiveBulkheadConfig.builder()
+                .maxConcurrentRequestsLimit(50)
                 .minConcurrentRequestsLimit(10)
                 .slidingWindowSize(20)
                 .failureRateThreshold(50)
                 .slowCallRateThreshold(50)
                 .slowCallDurationThreshold(150)
-                .build()).build();
+                .build();
 
         bulkhead = AdaptiveBulkhead.of("test", config);
         bulkhead.getEventPublisher().onEvent(event -> {
@@ -143,14 +140,11 @@ public class AdaptiveBulkheadWithLimiterTest {
         HttpClient client = HttpClientBuilder.create().build();
         HttpGet httpGet = new HttpGet(getUrl);
         httpGet.setHeader("Content-type", "application/json");
-        org.apache.http.HttpResponse response = null;
         try {
-            response = client.execute(httpGet);
-
+            return client.execute(httpGet);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return response;
     }
 
 
@@ -175,7 +169,8 @@ public class AdaptiveBulkheadWithLimiterTest {
                 .xAxisTitle("Seconds").yAxisTitle("Max Concurrent Limit").build();
             chart2.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
             chart2.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-            chart2.getStyler().setYAxisLabelAlignment(Styler.TextAlignment.Right);
+            //noinspection SuspiciousNameCombination
+            chart2.getStyler().setYAxisLabelAlignment(AxesChartStyler.TextAlignment.Right);
             chart2.getStyler().setYAxisDecimalPattern("Max Concurrent Limit #");
             chart2.getStyler().setPlotMargin(0);
             chart2.getStyler().setPlotContentSize(0.50);

@@ -7,6 +7,7 @@ import org.junit.Test;
 /**
  * @author romeh
  */
+@Deprecated
 public class LimitResultTest {
 
 	@Test

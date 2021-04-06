@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead.adaptive.internal.amid;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,13 +30,13 @@ import org.slf4j.LoggerFactory;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.LimitPolicy;
 import io.github.resilience4j.bulkhead.adaptive.LimitResult;
-import io.github.resilience4j.bulkhead.adaptive.internal.config.AimdConfig;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.metrics.Snapshot;
 
 /**
  * limit adapter based sliding window metrics and AMID algorithm
  */
+@Deprecated
 public class AimdLimiter implements LimitPolicy {
 	private static final Logger LOG = LoggerFactory.getLogger(AimdLimiter.class);
 	private static final long MILLI_SCALE = 1_000_000L;
@@ -44,24 +45,26 @@ public class AimdLimiter implements LimitPolicy {
 	private final AdaptiveBulkheadConfig amidConfigAdaptiveBulkheadConfig;
 	private final long desirableLatency;
 
-
 	public AimdLimiter(@NonNull AdaptiveBulkheadConfig config) {
 		this.amidConfigAdaptiveBulkheadConfig = config;
-		this.currentMaxLimit = new AtomicInteger(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit());
-		desirableLatency = amidConfigAdaptiveBulkheadConfig.getConfiguration().getDesirableLatency().toNanos();
+		this.currentMaxLimit = new AtomicInteger(config.getMinLimit());
+// TODO
+//      this.desirableLatency = amidConfigAdaptiveBulkheadConfig.getDesirableLatency().toNanos();
+        this.desirableLatency = config.getMaxWaitDuration().toNanos();
 	}
 
+	@NonNull
 	@Override
 	public LimitResult adaptLimitIfAny(@NonNull Snapshot snapshot, int inFlight) {
 		return checkIfThresholdsExceeded(snapshot, inFlight);
 	}
 
 	/**
-	 * Checks if the following :
-	 * 1- if slow call rate and failure rate =-1 , do nothing
-	 * 2- if failure rate is > the failure threshold -> drop limit by drop multiplier
-	 * 3- if slow call rate > the slow threshold ->  drop limit by drop multiplier
-	 * 4- if none , then increase the limit +1 and check at the end if the new limit is > the max limit , divide it by 2 to maintain the limit within min and max limit range
+	 * Checks the following:
+	 * when slow call rate and failure rate =-1, then do nothing
+	 * when failure rate is > the failure threshold, then drop limit by drop multiplier
+	 * when slow call rate > the slow threshold, then  drop limit by drop multiplier
+	 * when none, then increase the limit +1 and check at the end if the new limit is > the max limit, divide it by 2 to maintain the limit within min and max limit range
 	 */
 	private LimitResult checkIfThresholdsExceeded(Snapshot snapshot, int inFlight) {
 		float failureRateInPercentage = getFailureRate(snapshot);
@@ -70,36 +73,36 @@ public class AimdLimiter implements LimitPolicy {
 		Long waitTimeMillis = null;
 		if (failureRateInPercentage == -1 && slowCallRate == -1) {
 			// do nothing
-		} else if (failureRateInPercentage >= amidConfigAdaptiveBulkheadConfig.getConfiguration().getFailureRateThreshold()) {
+		} else if (failureRateInPercentage >= amidConfigAdaptiveBulkheadConfig.getFailureRateThreshold()) {
 			waitTimeMillis = handleDropLimit(averageLatencySeconds);
-		} else if (getSlowCallRate(snapshot) >= amidConfigAdaptiveBulkheadConfig.getConfiguration().getSlowCallRateThreshold()) {
+		} else if (getSlowCallRate(snapshot) >= amidConfigAdaptiveBulkheadConfig.getSlowCallRateThreshold()) {
 			waitTimeMillis = handleDropLimit(averageLatencySeconds);
 		} else {
-			if (inFlight * amidConfigAdaptiveBulkheadConfig.getConfiguration().getLimitIncrementInflightFactor() >= getCurrentLimit()) {
-				final int limit = currentMaxLimit.incrementAndGet();
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("increasing the limit by increasing the max concurrent calls for {}", limit);
-				}
-			}
+		    // TODO getLimitIncrementInflightFactor?
+//			if (inFlight * amidConfigAdaptiveBulkheadConfig.getLimitIncrementInflightFactor() >= getCurrentLimit()) {
+//				final int limit = currentMaxLimit.incrementAndGet();
+//				if (LOG.isDebugEnabled()) {
+//					LOG.debug("increasing the limit by increasing the max concurrent calls for {}", limit);
+//				}
+//			}
 		}
-		if (getCurrentLimit() > amidConfigAdaptiveBulkheadConfig.getConfiguration().getMaxLimit()) {
+        if (currentMaxLimit.get() > amidConfigAdaptiveBulkheadConfig.getMaxLimit()) {
 			final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> limit / 2);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
 			}
 		}
-		final int updatedLimit = currentMaxLimit.updateAndGet(currLimit -> Math.min(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMaxLimit(), max(amidConfigAdaptiveBulkheadConfig.getConfiguration().getMinLimit(), currLimit)));
+		final int updatedLimit = currentMaxLimit.updateAndGet(currLimit -> min(
+		    amidConfigAdaptiveBulkheadConfig.getMaxLimit(), 
+            max(amidConfigAdaptiveBulkheadConfig.getMinLimit(), currLimit)));
 		return new LimitResult(updatedLimit, waitTimeMillis != null ? waitTimeMillis : 0);
 	}
 
-	private int getCurrentLimit() {
-		return currentMaxLimit.get();
-	}
-
-	private Long handleDropLimit(Duration averageLatencySeconds) {
-		Long waitTimeMillis;
-		waitTimeMillis = (max(0L, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
-		final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> max((int) (limit * amidConfigAdaptiveBulkheadConfig.getConfiguration().getConcurrencyDropMultiplier()), 1));
+    private Long handleDropLimit(Duration averageLatencySeconds) {
+		long waitTimeMillis;
+		waitTimeMillis = (max(0, desirableLatency - averageLatencySeconds.toNanos()) * MILLI_SCALE);
+		final int currentMaxLimitUpdated = currentMaxLimit.updateAndGet(limit -> 
+            max(1, (int) (limit * amidConfigAdaptiveBulkheadConfig.getConcurrencyDropMultiplier())));
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(DROPPING_THE_LIMIT_WITH_NEW_MAX_CONCURRENT_CALLS, currentMaxLimitUpdated);
 		}
@@ -121,6 +124,5 @@ public class AimdLimiter implements LimitPolicy {
 		}
 		return snapshot.getFailureRate();
 	}
-
 
 }

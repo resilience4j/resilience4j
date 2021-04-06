@@ -627,7 +627,7 @@ public interface Bulkhead {
             try {
                 return future.get();
             }  finally {
-                onceToBulkhead.applyOnce(bh -> bh.onComplete());
+                onceToBulkhead.applyOnce(Bulkhead::onComplete);
             }
         }
 
@@ -636,7 +636,7 @@ public interface Bulkhead {
             try {
                 return future.get(timeout, unit);
             } finally {
-                onceToBulkhead.applyOnce(bh -> bh.onComplete());
+                onceToBulkhead.applyOnce(Bulkhead::onComplete);
             }
         }
     }

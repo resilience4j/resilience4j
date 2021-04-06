@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019: Bohdan Storozhuk, Mahmoud Romeh
+ *  Copyright 2019: Bohdan Storozhuk, Mahmoud Romeh, Tomasz Skowroński
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,14 +22,9 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.LimitResult;
 import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventProcessor;
-import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.core.lang.NonNull;
-import io.github.resilience4j.core.metrics.Snapshot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,168 +36,236 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadMetrics.Result.ABOVE_THRESHOLDS;
+import java.util.function.UnaryOperator;
 
 public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AdaptiveBulkheadStateMachine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AdaptiveBulkheadStateMachine.class);
+    // TODO remove
+    public static final boolean RESET_METRICS_ON_TRANSITION = true;
 
-	private final String name;
+    private final String name;
     private final AtomicReference<AdaptiveBulkheadState> stateReference;
     private final AdaptiveBulkheadConfig adaptiveBulkheadConfig;
     private final AdaptiveBulkheadEventProcessor eventProcessor;
-	private final AdaptiveBulkheadMetrics metrics;
-	private final Bulkhead bulkhead;
-	private final AtomicInteger inFlight = new AtomicInteger();
+    private final AdaptiveBulkheadMetrics metrics;
+    private final Bulkhead innerBulkhead;
+    private final AdaptationCalculator adaptationCalculator;
 
-	public AdaptiveBulkheadStateMachine(@NonNull String name, @NonNull AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
-		this.name = name;
+    public AdaptiveBulkheadStateMachine(@NonNull String name,
+        @NonNull AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
+        this.name = name;
         this.adaptiveBulkheadConfig = Objects
             .requireNonNull(adaptiveBulkheadConfig, "Config must not be null");
-        this.metrics = new AdaptiveBulkheadMetrics(adaptiveBulkheadConfig);
-        this.stateReference = new AtomicReference<>(new SlowStartState(metrics));
-        this.eventProcessor = new AdaptiveBulkheadEventProcessor();
-
         BulkheadConfig internalBulkheadConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(adaptiveBulkheadConfig.getInitialConcurrentCalls())
             .maxWaitDuration(adaptiveBulkheadConfig.getMaxWaitDuration())
             .build();
+        this.innerBulkhead = new SemaphoreBulkhead(name + "-internal", internalBulkheadConfig);
+        this.metrics = new AdaptiveBulkheadMetrics(
+            adaptiveBulkheadConfig, innerBulkhead.getMetrics());
+        this.stateReference = new AtomicReference<>(new SlowStartState(metrics));
+        this.eventProcessor = new AdaptiveBulkheadEventProcessor();
+        this.adaptationCalculator = new AdaptationCalculator(this);
+    }
 
-		bulkhead = new SemaphoreBulkhead(name + "-internal", internalBulkheadConfig);
-	}
+    @Override
+    public boolean tryAcquirePermission() {
+        return stateReference.get().tryAcquirePermission();
+    }
 
-	@Override
-	public boolean tryAcquirePermission() {
-		boolean isAcquire = stateReference.get().tryAcquirePermission();
-		if (isAcquire) {
-			inFlight.incrementAndGet();
-		}
-		return isAcquire;
-	}
-
-	@Override
-	public void acquirePermission() {
+    @Override
+    public void acquirePermission() {
         stateReference.get().acquirePermission();
-		inFlight.incrementAndGet();
-	}
+    }
 
-	@Override
-	public void releasePermission() {
+    @Override
+    public void releasePermission() {
         stateReference.get().releasePermission();
-		inFlight.decrementAndGet();
-	}
+    }
 
-	@Override
-	public void onSuccess(long duration, TimeUnit durationUnit) {
+    /**
+     * @param duration     call time
+     * @param durationUnit call time unit
+     */
+    @Override
+    public void onSuccess(long duration, TimeUnit durationUnit) {
+        releasePermission(); // ?
         stateReference.get().onSuccess(duration, durationUnit);
+        publishBulkheadEvent(new BulkheadOnSuccessEvent(
+            shortName(innerBulkhead), Collections.emptyMap()));
+    }
 
-        // TODO
-		publishBulkheadEvent(new BulkheadOnSuccessEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), Collections.emptyMap()));
-		final LimitResult limitResult = record(duration, true, inFlight.getAndDecrement());
-		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
-	}
-
-	@Override
-	public void onError(long start, TimeUnit durationUnit, Throwable throwable) {
-		//noinspection unchecked
-		if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
+    /**
+     * @param startTime    call start time in millis or 0
+     * @param durationUnit call time unit
+     * @param throwable    an error
+     */
+    @Override
+    public void onError(long startTime, TimeUnit durationUnit, Throwable throwable) {
+        if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
             releasePermission();
-			publishBulkheadEvent(new BulkheadOnIgnoreEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
-		} else if (adaptiveBulkheadConfig.getRecordExceptionPredicate().test(throwable) && start != 0) {
-			Instant finish = Instant.now();
-			this.handleError(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit, throwable);
-		} else {
-			if (start != 0) {
-				Instant finish = Instant.now();
-				this.onSuccess(Duration.between(Instant.ofEpochMilli(start), finish).toMillis(), durationUnit);
-			}
-		}
-	}
+            publishBulkheadEvent(new BulkheadOnIgnoreEvent(
+                shortName(innerBulkhead), errorData(throwable)));
+        } else if (startTime != 0
+            && adaptiveBulkheadConfig.getRecordExceptionPredicate().test(throwable)) {
+            releasePermission(); // ?
+            stateReference.get().onError(timeUntilNow(startTime), durationUnit, throwable);
+            publishBulkheadEvent(new BulkheadOnErrorEvent(
+                shortName(innerBulkhead), errorData(throwable)));
+        } else if (startTime != 0) {
+            onSuccess(timeUntilNow(startTime), durationUnit);
+        }
+    }
 
-	@Override
-	public AdaptiveBulkheadConfig getBulkheadConfig() {
-		return adaptiveBulkheadConfig;
-	}
+    private long timeUntilNow(long start) {
+        return Duration.between(Instant.ofEpochMilli(start), Instant.now()).toMillis();
+    }
 
-	@Override
-	public Metrics getMetrics() {
-		return metrics;
-	}
+    @Override
+    public AdaptiveBulkheadConfig getBulkheadConfig() {
+        return adaptiveBulkheadConfig;
+    }
 
-	@Override
-	public AdaptiveEventPublisher getEventPublisher() {
-		return eventProcessor;
-	}
+    @Override
+    public Metrics getMetrics() {
+        return metrics;
+    }
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    @Override
+    public AdaptiveEventPublisher getEventPublisher() {
+        return eventProcessor;
+    }
 
+    @Override
+    public String getName() {
+        return name;
+    }
 
+    @Override
+    public void transitionToCongestionAvoidance() {
+        stateTransition(State.CONGESTION_AVOIDANCE,
+            current -> new CongestionAvoidance(current.getMetrics()));
+    }
+
+    @Override
+    public void transitionToSlowStart() {
+        stateTransition(State.SLOW_START,
+            current -> new SlowStartState(current.getMetrics()));
+    }
+
+    private void stateTransition(State newState,
+        UnaryOperator<AdaptiveBulkheadState> newStateGenerator) {
+        LOG.debug("stateTransition to {}", newState);
+        AdaptiveBulkheadState previous = stateReference.getAndUpdate(newStateGenerator);
+        publishBulkheadEvent(new BulkheadOnStateTransitionEvent(
+            name, Collections.emptyMap(), previous.getState(), newState));
+    }
+
+    private void changeConcurrencyLimit(int newValue) {
+        int oldValue = innerBulkhead.getBulkheadConfig().getMaxConcurrentCalls();
+        if (newValue > oldValue) {
+            changeInternals(oldValue, newValue);
+            publishBulkheadOnLimitIncreasedEvent(newValue);
+        } else if (newValue < oldValue) {
+            changeInternals(oldValue, newValue);
+            publishBulkheadOnLimitDecreasedEvent(newValue);
+        }
+    }
+
+    private void changeInternals(int oldValue, int newValue) {
+        LOG.debug("changeConcurrencyLimit from {} to {}", oldValue, newValue);
+        innerBulkhead.changeConfig(
+            BulkheadConfig.from(innerBulkhead.getBulkheadConfig())
+                .maxConcurrentCalls(newValue)
+                .build());
+        if (RESET_METRICS_ON_TRANSITION) {
+            metrics.resetRecords();
+        }
+    }
+
+    private void publishBulkheadOnLimitIncreasedEvent(int maxConcurrentCalls) {
+        publishBulkheadEvent(new BulkheadOnLimitIncreasedEvent(
+            shortName(innerBulkhead),
+            limitChangeEventData(
+                innerBulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(),
+                maxConcurrentCalls)));
+    }
+
+    private void publishBulkheadOnLimitDecreasedEvent(int maxConcurrentCalls) {
+        publishBulkheadEvent(new BulkheadOnLimitDecreasedEvent(
+            shortName(innerBulkhead),
+            limitChangeEventData(
+                innerBulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(),
+                maxConcurrentCalls)));
+    }
+
+    /**
+     * Although the strategy is referred to as slow start, its congestion window growth is quite
+     * aggressive, more aggressive than the congestion avoidance phase.
+     */
     private class SlowStartState implements AdaptiveBulkheadState {
 
         private final AdaptiveBulkheadMetrics adaptiveBulkheadMetrics;
-        private final AtomicBoolean isSlowStart;
+        private final AtomicBoolean slowStart;
 
         SlowStartState(AdaptiveBulkheadMetrics adaptiveBulkheadMetrics) {
             this.adaptiveBulkheadMetrics = adaptiveBulkheadMetrics;
-            this.isSlowStart = new AtomicBoolean(true);
+            this.slowStart = new AtomicBoolean(true);
         }
 
-        /**
-         * Returns always true, because the CircuitBreaker is closed.
-         *
-         * @return always true, because the CircuitBreaker is closed.
-         */
         @Override
         public boolean tryAcquirePermission() {
-            return isSlowStart.get();
+            return slowStart.get() && innerBulkhead.tryAcquirePermission();
         }
 
-        /**
-         * Does not throw an exception, because the CircuitBreaker is closed.
-         */
         @Override
         public void acquirePermission() {
-            // noOp
+            innerBulkhead.acquirePermission();
         }
 
         @Override
         public void releasePermission() {
-            // noOp
+            innerBulkhead.releasePermission();
         }
 
         @Override
         public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
-            // CircuitBreakerMetrics is thread-safe
+            // AdaptiveBulkheadMetrics is thread-safe
             checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(duration, durationUnit));
         }
 
         @Override
         public void onSuccess(long duration, TimeUnit durationUnit) {
-            // CircuitBreakerMetrics is thread-safe
+            // AdaptiveBulkheadMetrics is thread-safe
             checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(duration, durationUnit));
         }
 
         /**
-         * Transitions to open state when thresholds have been exceeded.
+         * Transitions to CONGESTION_AVOIDANCE state when thresholds have been exceeded.
          *
          * @param result the Result
          */
         private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
-            if (result == ABOVE_THRESHOLDS) {
-                if (isSlowStart.compareAndSet(true, false)) {
-                    // TODO DECREASE LIMIT
+            logStateDetails(result);
+            if (slowStart.get()) {
+                switch (result) {
+                    case BELOW_THRESHOLDS:
+                        changeConcurrencyLimit(adaptationCalculator.increase());
+                        break;
+                    case ABOVE_THRESHOLDS:
+                        if (slowStart.compareAndSet(true, false)) {
+                            changeConcurrencyLimit(adaptationCalculator.decrease());
+                            transitionToCongestionAvoidance();
+                        }
+                        break;
                 }
             }
         }
 
         /**
-         * Get the state of the CircuitBreaker
+         * Get the state of the AdaptiveBulkhead
          */
         @Override
         public AdaptiveBulkhead.State getState() {
@@ -210,193 +273,153 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         }
 
         /**
-         * Get metrics of the CircuitBreaker
+         * Get metrics of the AdaptiveBulkhead
          */
         @Override
         public AdaptiveBulkheadMetrics getMetrics() {
             return adaptiveBulkheadMetrics;
         }
+
     }
 
-    private static class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEvent> implements AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
+    @Deprecated
+    private void logStateDetails(AdaptiveBulkheadMetrics.Result result) {
+        LOG.debug("calls:{}/{}, rate:{} result:{}",
+            metrics.getNumberOfBufferedCalls(),
+            adaptiveBulkheadConfig.getMinimumNumberOfCalls(),
+            Math.max(metrics.getSnapshot().getFailureRate(), metrics.getSnapshot().getSlowCallRate()),
+            result);
+    }
 
-		@Override
-		public EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
-			registerConsumer(BulkheadOnLimitIncreasedEvent.class.getSimpleName(), eventConsumer);
-			return this;
-		}
 
-		@Override
-		public EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
-			registerConsumer(BulkheadOnLimitDecreasedEvent.class.getSimpleName(), eventConsumer);
-			return this;
-		}
+    private class CongestionAvoidance implements AdaptiveBulkheadState {
 
-		@Override
-		public EventPublisher onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer) {
-			registerConsumer(BulkheadOnSuccessEvent.class.getSimpleName(), eventConsumer);
-			return this;
-		}
+        private final AdaptiveBulkheadMetrics adaptiveBulkheadMetrics;
+        private final AtomicBoolean congestionAvoidance;
 
-		@Override
-		public EventPublisher onError(EventConsumer<BulkheadOnErrorEvent> eventConsumer) {
-			registerConsumer(BulkheadOnErrorEvent.class.getSimpleName(), eventConsumer);
-			return this;
-		}
+        CongestionAvoidance(AdaptiveBulkheadMetrics adaptiveBulkheadMetrics) {
+            this.adaptiveBulkheadMetrics = adaptiveBulkheadMetrics;
+            this.congestionAvoidance = new AtomicBoolean(true);
+        }
 
-		@Override
-		public EventPublisher onIgnoredError(EventConsumer<BulkheadOnIgnoreEvent> eventConsumer) {
-			registerConsumer(BulkheadOnIgnoreEvent.class.getSimpleName(), eventConsumer);
-			return this;
-		}
+        @Override
+        public boolean tryAcquirePermission() {
+            return congestionAvoidance.get() && innerBulkhead.tryAcquirePermission();
+        }
 
-		@Override
-        public void consumeEvent(AdaptiveBulkheadEvent event) {
-			super.processEvent(event);
-		}
-	}
+        @Override
+        public void acquirePermission() {
+            innerBulkhead.acquirePermission();
+        }
 
-	@Override
-	public String toString() {
-		return String.format("AdaptiveBulkhead '%s'", this.name);
-	}
+        @Override
+        public void releasePermission() {
+            innerBulkhead.releasePermission();
+        }
 
-    private interface AdaptiveBulkheadState {
+        @Override
+        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
+            // AdaptiveBulkheadMetrics is thread-safe
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(duration, durationUnit));
+        }
 
-        boolean tryAcquirePermission();
-
-        void acquirePermission();
-
-        void releasePermission();
-
-        void onError(long duration, TimeUnit durationUnit, Throwable throwable);
-
-        void onSuccess(long duration, TimeUnit durationUnit);
-
-        AdaptiveBulkhead.State getState();
-
-        AdaptiveBulkheadMetrics getMetrics();
+        @Override
+        public void onSuccess(long duration, TimeUnit durationUnit) {
+            // AdaptiveBulkheadMetrics is thread-safe
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(duration, durationUnit));
+        }
 
         /**
-         * Should the AdaptiveBulkhead in this state publish events
+         * Transitions to SLOW_START state when Minimum Concurrency Limit have been reached.
          *
-         * @return a boolean signaling if the events should be published
+         * @param result the Result
          */
-        default boolean shouldPublishEvents(AdaptiveBulkheadEvent event) {
-            return event.getEventType().forcePublish || getState().allowPublish;
+        private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
+            logStateDetails(result);
+            if (congestionAvoidance.get()) {
+                switch (result) {
+                    case BELOW_THRESHOLDS:
+                        if (isConcurrencyLimitTooLow()) {
+                            if (congestionAvoidance.compareAndSet(true, false)) {
+                                transitionToSlowStart();
+                            }
+                        } else {
+                            changeConcurrencyLimit(adaptationCalculator.increment());
+                        }
+                        break;
+                    case ABOVE_THRESHOLDS:
+                        changeConcurrencyLimit(adaptationCalculator.decrease());
+                        break;
+                }
+            }
+        }
+
+        private boolean isConcurrencyLimitTooLow() {
+            return getMetrics().getMaxAllowedConcurrentCalls()
+                == adaptiveBulkheadConfig.getMinConcurrentCalls();
+        }
+
+        /**
+         * Get the state of the AdaptiveBulkhead
+         */
+        @Override
+        public AdaptiveBulkhead.State getState() {
+            return State.CONGESTION_AVOIDANCE;
+        }
+
+        /**
+         * Get metrics of the AdaptiveBulkhead
+         */
+        @Override
+        public AdaptiveBulkheadMetrics getMetrics() {
+            return adaptiveBulkheadMetrics;
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        return String.format("AdaptiveBulkhead '%s'", this.name);
+    }
+
+    /**
+     * @param eventSupplier the event supplier to be pushed to consumers
+     */
+    private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
+        if (eventProcessor.hasConsumers()) {
+            eventProcessor.consumeEvent(eventSupplier);
         }
     }
 
-	/**
-	 * @param eventSupplier the event supplier to be pushed to consumers
-	 */
-    private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
-		if (eventProcessor.hasConsumers()) {
-			eventProcessor.consumeEvent(eventSupplier);
-		}
-	}
+    // it's a workaround for "-internal" suffix
+    @Deprecated
+    private static String shortName(Bulkhead bulkhead) {
+        int cut = bulkhead.getName().indexOf('-');
+        return cut > 0 ? bulkhead.getName().substring(0, cut) : bulkhead.getName();
+    }
 
+    /**
+     * @param waitTimeMillis        new wait time
+     * @param newMaxConcurrentCalls new max concurrent data
+     * @return map of kep value string of the event properties
+     */
+    private static Map<String, String> limitChangeEventData(long waitTimeMillis,
+        int newMaxConcurrentCalls) {
+        Map<String, String> eventData = new HashMap<>();
+        eventData.put("newMaxConcurrentCalls", String.valueOf(newMaxConcurrentCalls));
+        // TODO do we need newWaitTimeMillis here?
+        eventData.put("newWaitTimeMillis", String.valueOf(waitTimeMillis));
+        return eventData;
+    }
 
-	/**
-	 * @param callTime  the call duration
-	 * @param isSuccess is the call successful or not
-	 * @param inFlight  current in flight calls
-	 * @return the update limit result DTO @{@link LimitResult}
-	 */
-	protected LimitResult record(@NonNull long callTime, boolean isSuccess, int inFlight) {
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("starting the adaption of the limit for callTime :{} , isSuccess: {}, inFlight: {}", callTime, isSuccess, inFlight);
-		}
-		Snapshot snapshot;
-		final long callTimeNanos = TimeUnit.MILLISECONDS.toNanos(callTime);
-		final long slowCallDurationThresholdInNanos = adaptiveBulkheadConfig.getSlowCallDurationThreshold().toNanos();
-		if (isSuccess) {
-			if (callTimeNanos > slowCallDurationThresholdInNanos) {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_SUCCESS);
-			} else {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SUCCESS);
-			}
-		} else {
-			if (callTimeNanos > slowCallDurationThresholdInNanos) {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.SLOW_ERROR);
-			} else {
-				snapshot = recordMetrics.record(callTimeNanos, TimeUnit.NANOSECONDS, io.github.resilience4j.core.metrics.Metrics.Outcome.ERROR);
-			}
-		}
-		return limitAdapter.adaptLimitIfAny(snapshot, inFlight);
-	}
-
-	/**
-	 * adopt the limit based into the new calculated average
-	 *
-	 * @param bulkhead       the target semaphore bulkhead
-	 * @param updatedLimit   calculated new limit
-	 * @param waitTimeMillis new wait time
-	 */
-	private void adoptLimit(Bulkhead bulkhead, int updatedLimit, long waitTimeMillis) {
-		if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() < updatedLimit) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("increasing bulkhead limit by increasing the max concurrent calls for {}", updatedLimit);
-			}
-			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
-					.maxConcurrentCalls(updatedLimit)
-					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
-					.build();
-			bulkhead.changeConfig(updatedConfig);
-			publishBulkheadEvent(new BulkheadOnLimitIncreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
-					limitChangeEventData(waitTimeMillis, updatedLimit)));
-		} else if (bulkhead.getBulkheadConfig().getMaxConcurrentCalls() == updatedLimit) {
-			// do nothing
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Dropping the bulkhead limit with new max concurrent calls {}", updatedLimit);
-			}
-			final BulkheadConfig updatedConfig = BulkheadConfig.custom()
-					.maxConcurrentCalls(updatedLimit)
-					.maxWaitDuration(Duration.ofMillis(waitTimeMillis))
-					.build();
-			bulkhead.changeConfig(updatedConfig);
-			publishBulkheadEvent(new BulkheadOnLimitDecreasedEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')),
-					limitChangeEventData(waitTimeMillis, updatedLimit)));
-		}
-
-	}
-
-	/**
-	 * @param waitTimeMillis        new wait time
-	 * @param newMaxConcurrentCalls new max concurrent data
-	 * @return map of kep value string of the event properties
-	 */
-	private Map<String, String> limitChangeEventData(long waitTimeMillis, int newMaxConcurrentCalls) {
-		Map<String, String> eventData = new HashMap<>();
-		eventData.put("newMaxConcurrentCalls", String.valueOf(newMaxConcurrentCalls));
-		eventData.put("newWaitTimeMillis", String.valueOf(waitTimeMillis));
-		return eventData;
-	}
-
-
-	/**
-	 * @param throwable error exception to be wrapped into the event data
-	 * @return map of kep value string of the event properties
-	 */
-	private Map<String, String> errorData(Throwable throwable) {
-		Map<String, String> eventData = new HashMap<>();
-		eventData.put("exceptionMsg", throwable.getMessage());
-		return eventData;
-	}
-
-
-	/**
-	 * @param callTime the call duration time
-	 * @param durationUnit the duration unit
-	 * @param throwable the error exception
-	 */
-	private void handleError(long callTime, TimeUnit durationUnit, Throwable throwable) {
-		bulkhead.onComplete();
-        publishBulkheadEvent(new BulkheadOnErrorEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
-		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
-		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
-	}
+    /**
+     * @param throwable error exception to be wrapped into the event data
+     * @return map of kep value string of the event properties
+     */
+    private Map<String, String> errorData(Throwable throwable) {
+        Map<String, String> eventData = new HashMap<>();
+        eventData.put("exceptionMsg", throwable.getMessage());
+        return eventData;
+    }
 
 }
