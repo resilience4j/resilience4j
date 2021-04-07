@@ -2,6 +2,7 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,16 +21,16 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
     private AdaptiveBulkheadConfig config;
 	private AdaptiveBulkheadRegistry registry;
 
-	@Before
-	public void setUp() {
-		// registry with default config
-		registry = AdaptiveBulkheadRegistry.ofDefaults();
-		// registry with custom config
-        config = AdaptiveBulkheadConfig.builder()
-				.maxConcurrentRequestsLimit(300)
-				.slowCallDurationThreshold(1)
-				.build();
-	}
+    @Before
+    public void setUp() {
+        // registry with default config
+        registry = AdaptiveBulkheadRegistry.ofDefaults();
+        // registry with custom config
+        config = AdaptiveBulkheadConfig.custom()
+            .maxConcurrentCalls(300)
+            .slowCallDurationThreshold(Duration.ofMillis(1))
+            .build();
+    }
 
 	@Test
 	public void shouldReturnCustomConfig() {
