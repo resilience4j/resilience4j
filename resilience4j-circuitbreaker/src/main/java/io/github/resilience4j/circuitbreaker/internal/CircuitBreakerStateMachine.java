@@ -359,55 +359,20 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         stateTransition(HALF_OPEN, currentState -> new HalfOpenState(currentState.attempts()));
     }
 
-
     private boolean shouldPublishEvents(CircuitBreakerEvent event) {
         return stateReference.get().shouldPublishEvents(event);
     }
 
     private void publishEventIfPossible(CircuitBreakerEvent event) {
-        if (shouldPublishEvents(event)) {
-            if (eventProcessor.hasConsumers()) {
-                try {
-                    eventProcessor.consumeEvent(event);
-                    LOG.debug("Event {} published: {}", event.getEventType(), event);
-                } catch (Throwable t) {
-                    LOG.warn("Failed to handle event {}", event.getEventType(), t);
-                }
-            } else {
-                LOG.debug("No Consumers: Event {} not published", event.getEventType());
-            }
-        } else {
-            LOG.debug("Publishing not allowed: Event {} not published", event.getEventType());
-        }
-    }
-
-    private void publishStateTransitionEvent(final StateTransition stateTransition) {
-        if (StateTransition.isInternalTransition(stateTransition)) {
-            return;
-        }
-        final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(
-            name, stateTransition);
-        publishEventIfPossible(event);
-    }
-
-    private void publishResetEvent() {
-        final CircuitBreakerOnResetEvent event = new CircuitBreakerOnResetEvent(name);
-        publishEventIfPossible(event);
-    }
-
-    private void publishCallNotPermittedEvent() {
-        final CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent(
-            name);
-        publishEventIfPossible(event);
-    }
-
-    private void publishSuccessEvent(final long duration, TimeUnit durationUnit) {
         if (!eventProcessor.hasConsumers()) {
+            LOG.debug("No Consumers: Event {} not published", event.getEventType());
             return;
         }
 
-        final Duration elapsedDuration = Duration.ofNanos(durationUnit.toNanos(duration));
-        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name, elapsedDuration);
+        publishEvent(event);
+    }
+
+    private void publishEvent(CircuitBreakerEvent event) {
         if (shouldPublishEvents(event)) {
             try {
                 eventProcessor.consumeEvent(event);
@@ -420,36 +385,58 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
     }
 
-    private void publishCircuitErrorEvent(final String name, final long duration,
-        TimeUnit durationUnit, final Throwable throwable) {
-        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name,
-            Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
-        publishEventIfPossible(event);
+    private void publishStateTransitionEvent(final StateTransition stateTransition) {
+        if (StateTransition.isInternalTransition(stateTransition)) {
+            return;
+        }
+        publishEventIfPossible(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
     }
 
-    private void publishCircuitIgnoredErrorEvent(String name, long duration, TimeUnit durationUnit,
-        Throwable throwable) {
-        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name,
-            Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
-        publishEventIfPossible(event);
+    private void publishResetEvent() {
+        publishEventIfPossible(new CircuitBreakerOnResetEvent(name));
     }
 
-    private void publishCircuitFailureRateExceededEvent(String name, float failureRate) {
-        final CircuitBreakerOnFailureRateExceededEvent event = new CircuitBreakerOnFailureRateExceededEvent(name,
-            failureRate);
-        publishEventIfPossible(event);
+    private void publishCallNotPermittedEvent() {
+        publishEventIfPossible(new CircuitBreakerOnCallNotPermittedEvent(name));
     }
 
-    private void publishCircuitSlowCallRateExceededEvent(String name, float slowCallRate) {
-        final CircuitBreakerOnSlowCallRateExceededEvent event = new CircuitBreakerOnSlowCallRateExceededEvent(name,
-            slowCallRate);
-        publishEventIfPossible(event);
+    private void publishSuccessEvent(final long duration, TimeUnit durationUnit) {
+        if (eventProcessor.hasConsumers()) {
+            publishEvent(new CircuitBreakerOnSuccessEvent(name, elapsedDuration(duration, durationUnit)));
+        }
     }
 
-    private void publishCircuitThresholdsExceededEvent(Result result, CircuitBreakerMetrics metrics) {
+    private Duration elapsedDuration(final long duration, TimeUnit durationUnit) {
+        return Duration.ofNanos(durationUnit.toNanos(duration));
+    }
+
+    private void publishCircuitErrorEvent(final String name, final long duration, final TimeUnit durationUnit,
+                                          final Throwable throwable) {
+        if (eventProcessor.hasConsumers()) {
+            final Duration elapsedDuration = elapsedDuration(duration, durationUnit);
+            publishEvent(new CircuitBreakerOnErrorEvent(name, elapsedDuration, throwable));
+        }
+    }
+
+    private void publishCircuitIgnoredErrorEvent(final String name, long duration, final TimeUnit durationUnit,
+                                                 final Throwable throwable) {
+        final Duration elapsedDuration = elapsedDuration(duration, durationUnit);
+        publishEventIfPossible(new CircuitBreakerOnIgnoredErrorEvent(name, elapsedDuration, throwable));
+    }
+
+    private void publishCircuitFailureRateExceededEvent(final String name, float failureRate) {
+        publishEventIfPossible(new CircuitBreakerOnFailureRateExceededEvent(name, failureRate));
+    }
+
+    private void publishCircuitSlowCallRateExceededEvent(final String name, float slowCallRate) {
+        publishEventIfPossible(new CircuitBreakerOnSlowCallRateExceededEvent(name, slowCallRate));
+    }
+
+    private void publishCircuitThresholdsExceededEvent(final Result result, final CircuitBreakerMetrics metrics) {
         if (Result.hasFailureRateExceededThreshold(result)) {
             publishCircuitFailureRateExceededEvent(getName(), metrics.getFailureRate());
         }
+
         if (Result.hasSlowCallRateExceededThreshold(result)) {
             publishCircuitSlowCallRateExceededEvent(getName(), metrics.getSlowCallRate());
         }
@@ -998,7 +985,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         @Nullable
-        private final ScheduledFuture<?>  transitionToOpenFuture;
+        private final ScheduledFuture<?> transitionToOpenFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
