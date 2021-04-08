@@ -76,11 +76,6 @@ public class AdaptiveBulkheadConfig {
 	private AdaptiveBulkheadConfig() {
 	}
 
-    @Deprecated
-    public static Builder builder() {
-	    return custom();
-    }
-
     public Predicate<Throwable> getRecordExceptionPredicate() {
 		return recordExceptionPredicate;
 	}
@@ -145,26 +140,6 @@ public class AdaptiveBulkheadConfig {
 
     public Duration getMaxWaitDuration() {
         return maxWaitDuration;
-    }
-
-    @Deprecated
-    public int getMaxLimit() {
-        return getMaxConcurrentCalls();
-    }
-
-    @Deprecated
-    public int getMinLimit() {
-        return getMinConcurrentCalls();
-    }
-
-    @Deprecated
-    public float getConcurrencyDropMultiplier() {
-        return getDecreaseMultiplier();
-    }
-
-    @Deprecated
-    public Duration getDesirableLatency() {
-        return getMaxWaitDuration();
     }
 
     public enum SlidingWindowType {
