@@ -45,6 +45,7 @@ public class CircuitBreakerBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
+            .include(CircuitBreakerBenchmark.class.getName())
             .addProfiler(GCProfiler.class)
             .build();
         new Runner(options).run();
@@ -59,6 +60,12 @@ public class CircuitBreakerBenchmark {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
         protectedSupplier = circuitBreaker.decorateSupplier(stringSupplier);
+
+        CircuitBreaker circuitBreakerWithSubscriber = CircuitBreaker.ofDefaults("testCircuitBreakerWithSb");
+        circuitBreakerWithSubscriber.getEventPublisher().onEvent(event -> {
+        });
+        protectedSupplierWithSb = CircuitBreaker.decorateSupplier(circuitBreakerWithSubscriber, stringSupplier);
+
     }
 
     @Benchmark
@@ -77,5 +84,14 @@ public class CircuitBreakerBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String protectedSupplier() {
         return protectedSupplier.get();
+    }
+
+    @Benchmark
+    @Fork(value = FORK_COUNT)
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String protectedSupplierWithSubscriber() {
+        return protectedSupplierWithSb.get();
     }
 }

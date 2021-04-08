@@ -18,16 +18,20 @@
  */
 package io.github.resilience4j.circuitbreaker.event;
 
+import java.time.Clock;
 import java.time.ZonedDateTime;
 
 abstract class AbstractCircuitBreakerEvent implements CircuitBreakerEvent {
+
+    //Immutable and thread-safe
+    private static final Clock SYSTEM_CLOCK = Clock.systemDefaultZone();
 
     private final String circuitBreakerName;
     private final ZonedDateTime creationTime;
 
     AbstractCircuitBreakerEvent(String circuitBreakerName) {
         this.circuitBreakerName = circuitBreakerName;
-        this.creationTime = ZonedDateTime.now();
+        this.creationTime = ZonedDateTime.now(SYSTEM_CLOCK);
     }
 
     @Override

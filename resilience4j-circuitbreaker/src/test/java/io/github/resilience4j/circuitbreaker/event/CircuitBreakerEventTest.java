@@ -21,10 +21,15 @@ package io.github.resilience4j.circuitbreaker.event;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition;
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerEventTest {
@@ -101,4 +106,21 @@ public class CircuitBreakerEventTest {
             .contains("CircuitBreaker 'test' recorded a call which was not permitted.");
     }
 
+    @Test
+    public void name() throws InterruptedException {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        final ZonedDateTime now = ZonedDateTime.now();
+        System.out.println(now.format(formatter));
+
+        final Clock clock = Clock.systemDefaultZone();
+        final Instant instant0 = clock.instant();
+        assertThat(clock.millis()).isEqualTo(instant0.toEpochMilli());
+        SECONDS.sleep(1);
+
+        final Instant instant1 = clock.instant();
+        assertThat(instant1.toEpochMilli() - instant0.toEpochMilli()).isGreaterThanOrEqualTo(1000L);
+
+        final ZonedDateTime dateTime = ZonedDateTime.ofInstant(instant1, clock.getZone());
+        assertThat(dateTime.format(formatter)).isNotEqualTo(now.format(formatter));
+    }
 }
