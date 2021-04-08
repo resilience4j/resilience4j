@@ -77,11 +77,6 @@ public class AdaptiveBulkheadConfig {
 	private AdaptiveBulkheadConfig() {
 	}
 
-    @Deprecated
-    public static Builder builder() {
-	    return custom();
-    }
-
     public Predicate<Throwable> getRecordExceptionPredicate() {
 		return recordExceptionPredicate;
 	}
@@ -146,26 +141,6 @@ public class AdaptiveBulkheadConfig {
 
     public Duration getMaxWaitDuration() {
         return maxWaitDuration;
-    }
-
-    @Deprecated
-    public int getMaxLimit() {
-        return getMaxConcurrentCalls();
-    }
-
-    @Deprecated
-    public int getMinLimit() {
-        return getMinConcurrentCalls();
-    }
-
-    @Deprecated
-    public float getConcurrencyDropMultiplier() {
-        return getDecreaseMultiplier();
-    }
-
-    @Deprecated
-    public Duration getDesirableLatency() {
-        return getMaxWaitDuration();
     }
 
     public enum SlidingWindowType {
@@ -256,9 +231,7 @@ public class AdaptiveBulkheadConfig {
 
         /**
          * Configures a threshold in percentage. The  AdaptiveBulkhead considers a call as slow when
-         * the call duration is greater than {@link #slowCallDurationThreshold(Duration)}. When the
-         * percentage of slow calls is equal to or greater than the threshold, the AdaptiveBulkhead
-         * invokes the LimitPolicy.
+         * the call duration is greater than {@link #slowCallDurationThreshold(Duration)}.
          *
          * <p>
          * The threshold must be greater than 0 and not greater than 100. Default value is 100
@@ -333,8 +306,7 @@ public class AdaptiveBulkheadConfig {
         }
 
         /**
-         * Configures the failure rate threshold in percentage. If the failure rate is equal to or
-         * greater than the threshold, the AdaptiveBulkhead invokes the LimitPolicy.
+         * Configures the failure rate threshold in percentage.
          * <p>
          * The threshold must be greater than 0 and not greater than 100. Default value is 50
          * percentage.
@@ -540,25 +512,6 @@ public class AdaptiveBulkheadConfig {
                     : DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
 
-        @Deprecated
-        public Builder maxConcurrentRequestsLimit(int i) {
-            return maxConcurrentCalls(i);
-        }
-
-        @Deprecated
-        public Builder minConcurrentRequestsLimit(int i) {
-            return minConcurrentCalls(i);
-        }
-
-        @Deprecated
-        public Builder slowCallDurationThreshold(int i) {
-            return slowCallDurationThreshold(Duration.ofMillis(i));
-        }
-
-        @Deprecated
-        public Builder concurrencyDropMultiplier(float v) {
-            return decreaseMultiplier(v);
-        }
     }
 
 }

@@ -13,25 +13,25 @@ import org.junit.Test;
 public class AdaptiveBulkheadConfigTest {
 	
     @Test
-	public void testBuildCustom() {
-		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder()
-						.concurrencyDropMultiplier(0.3f)
-						.minConcurrentRequestsLimit(3)
-						.maxConcurrentRequestsLimit(3)
-						.slowCallDurationThreshold(150)
-						.slowCallRateThreshold(50)
-						.failureRateThreshold(50)
-                        .maxWaitDuration(Duration.ofMillis(150))
+    public void testBuildCustom() {
+        AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
+            .decreaseMultiplier(0.3f)
+            .minConcurrentCalls(3)
+            .maxConcurrentCalls(3)
+            .slowCallDurationThreshold(Duration.ofMillis(150))
+            .slowCallRateThreshold(50)
+            .failureRateThreshold(50)
+            .maxWaitDuration(Duration.ofMillis(150))
 //						.slidingWindowTime(5)
-						.slidingWindowSize(100)
-                        .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
-						.build();
+            .slidingWindowSize(100)
+            .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
+            .build();
 
 		assertThat(config).isNotNull();
 		assertThat(config.getDecreaseMultiplier()).isEqualTo(0.3f);
-		assertThat(config.getMinLimit()).isEqualTo(3);
-		assertThat(config.getMaxLimit()).isEqualTo(3);
-		assertThat(config.getDesirableLatency().toMillis()).isEqualTo(150);
+        assertThat(config.getMinConcurrentCalls()).isEqualTo(3);
+        assertThat(config.getMaxConcurrentCalls()).isEqualTo(3);
+        assertThat(config.getMaxWaitDuration().toMillis()).isEqualTo(150);
 		assertThat(config.getSlidingWindowSize()).isEqualTo(100);
 //		assertThat(config.getSlidingWindowTime()).isEqualTo(5);
 		assertThat(config.getSlowCallRateThreshold()).isEqualTo(50);
@@ -39,63 +39,69 @@ public class AdaptiveBulkheadConfigTest {
 		assertThat(config.getSlidingWindowType()).isEqualTo(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED);
 	}
 
-	@Test
-	public void tesConcurrencyDropMultiplierConfig() {
-		AdaptiveBulkheadConfig build = AdaptiveBulkheadConfig.builder().concurrencyDropMultiplier(0.85f).build();
-		assertThat(build.getConcurrencyDropMultiplier()).isEqualTo(0.85f);
-	}
+    @Test
+    public void tesConcurrencyDropMultiplierConfig() {
+        AdaptiveBulkheadConfig build = AdaptiveBulkheadConfig.custom()
+            .decreaseMultiplier(0.85f)
+            .build();
+        assertThat(build.getDecreaseMultiplier()).isEqualTo(0.85f);
+    }
 
-	@Test
-	public void testNotSetDesirableOperationLatencyConfig() {
-		assertThatThrownBy(() -> AdaptiveBulkheadConfig.builder().slowCallDurationThreshold(0).build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("slowCallDurationThreshold must be at least 1[ns]");
-	}
+    @Test
+    public void testNotSetDesirableOperationLatencyConfig() {
+        assertThatThrownBy(() -> AdaptiveBulkheadConfig.custom()
+            .slowCallDurationThreshold(Duration.ofMillis(0))
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("slowCallDurationThreshold must be at least 1[ns]");
+    }
 
-	@Test
-	public void testNotSetMaxAcceptableRequestLatencyConfig() {
-		assertThatThrownBy(() -> AdaptiveBulkheadConfig.builder().maxConcurrentRequestsLimit(0)
-				.build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("maxConcurrentCalls must greater than 0");
-	}
+    @Test
+    public void testNotSetMaxAcceptableRequestLatencyConfig() {
+        assertThatThrownBy(() -> AdaptiveBulkheadConfig.custom()
+            .maxConcurrentCalls(0)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("maxConcurrentCalls must greater than 0");
+    }
 
-	@Test
-	public void testNotSetMinAcceptableRequestLatencyConfig() {
-		assertThatThrownBy(() -> AdaptiveBulkheadConfig.builder().minConcurrentRequestsLimit(0)
-				.build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("minConcurrentCalls must greater than 0");
-	}
+    @Test
+    public void testNotSetMinAcceptableRequestLatencyConfig() {
+        assertThatThrownBy(() -> AdaptiveBulkheadConfig.custom()
+            .minConcurrentCalls(0)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("minConcurrentCalls must greater than 0");
+    }
 
-	@Ignore
-	@Test
-	public void testEqual() {
-		AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.builder()
-				.concurrencyDropMultiplier(0.6f)
-				.minConcurrentRequestsLimit(3)
-				.maxConcurrentRequestsLimit(3)
-				.slowCallDurationThreshold(150)
-				.slowCallRateThreshold(50)
-				.failureRateThreshold(50)
+    @Ignore
+    @Test
+    public void testEqual() {
+        AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
+            .decreaseMultiplier(0.6f)
+            .minConcurrentCalls(3)
+            .maxConcurrentCalls(3)
+            .slowCallDurationThreshold(Duration.ofMillis(150))
+            .slowCallRateThreshold(50)
+            .failureRateThreshold(50)
 //				.slidingWindowTime(5)
-				.slidingWindowSize(100)
-				.slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
-				.build();
-		AdaptiveBulkheadConfig config2 = AdaptiveBulkheadConfig.builder()
-				.concurrencyDropMultiplier(0.6f)
-				.minConcurrentRequestsLimit(3)
-				.maxConcurrentRequestsLimit(3)
-				.slowCallDurationThreshold(150)
-				.slowCallRateThreshold(50)
-				.failureRateThreshold(50)
+            .slidingWindowSize(100)
+            .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
+            .build();
+        AdaptiveBulkheadConfig config2 = AdaptiveBulkheadConfig.custom()
+            .decreaseMultiplier(0.6f)
+            .minConcurrentCalls(3)
+            .maxConcurrentCalls(3)
+            .slowCallDurationThreshold(Duration.ofMillis(150))
+            .slowCallRateThreshold(50)
+            .failureRateThreshold(50)
 //				.slidingWindowTime(5)
-				.slidingWindowSize(100)
-                .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
-				.build();
+            .slidingWindowSize(100)
+            .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
+            .build();
 
         assertThat(AdaptiveBulkheadConfig.from(config2).build()).isEqualTo(config2);
-		assertThat(AdaptiveBulkheadConfig.ofDefaults().getMaxLimit()).isEqualTo(200);
+        assertThat(AdaptiveBulkheadConfig.ofDefaults().getMaxConcurrentCalls()).isEqualTo(200);
 		assertThat(config).isEqualTo(config2);
 		assertThat(config.hashCode()).isEqualTo(config2.hashCode());
 	}

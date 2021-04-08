@@ -54,9 +54,6 @@ import java.util.function.Supplier;
  * TimeUnit, Throwable)}  in order to maintain integrity of internal bulkhead state which is handled
  * by invoking the configured adaptive limit policy.
  * <p>
- * Adaptive capacity management by default use AIMD algorithm for limit control but the user can
- * inject custom limiter implementation by implementing {@link LimitPolicy}
- * <p>
  */
 public interface AdaptiveBulkhead {
 
