@@ -79,9 +79,9 @@ public class AdaptiveBulkheadEventPublisherTest {
 		logger.info(event.getEventType().toString());
 	}
 
-	@Test
-	public void shouldConsumeIgnoredErrorEvent() {
-		AdaptiveBulkheadConfig adaptiveBulkheadConfig = AdaptiveBulkheadConfig.builder()
+    @Test
+    public void shouldConsumeIgnoredErrorEvent() {
+      AdaptiveBulkheadConfig adaptiveBulkheadConfig = AdaptiveBulkheadConfig.custom()
 				.ignoreExceptions(IOException.class)
 				.build();
 
