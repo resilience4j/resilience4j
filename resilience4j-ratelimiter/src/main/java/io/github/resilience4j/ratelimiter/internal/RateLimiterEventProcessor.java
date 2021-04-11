@@ -37,14 +37,14 @@ public class RateLimiterEventProcessor extends
     @Override
     public RateLimiter.EventPublisher onSuccess(
         EventConsumer<RateLimiterOnSuccessEvent> onSuccessEventConsumer) {
-        registerConsumer(RateLimiterOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
+        registerConsumer(RateLimiterOnSuccessEvent.class.getName(), onSuccessEventConsumer);
         return this;
     }
 
     @Override
     public RateLimiter.EventPublisher onFailure(
         EventConsumer<RateLimiterOnFailureEvent> onOnFailureEventConsumer) {
-        registerConsumer(RateLimiterOnFailureEvent.class.getSimpleName(), onOnFailureEventConsumer);
+        registerConsumer(RateLimiterOnFailureEvent.class.getName(), onOnFailureEventConsumer);
         return this;
     }
 }

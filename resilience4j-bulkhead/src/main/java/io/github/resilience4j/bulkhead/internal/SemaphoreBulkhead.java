@@ -252,7 +252,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         @Override
         public EventPublisher onCallPermitted(
             EventConsumer<BulkheadOnCallPermittedEvent> onCallPermittedEventConsumer) {
-            registerConsumer(BulkheadOnCallPermittedEvent.class.getSimpleName(),
+            registerConsumer(BulkheadOnCallPermittedEvent.class.getName(),
                 onCallPermittedEventConsumer);
             return this;
         }
@@ -260,7 +260,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         @Override
         public EventPublisher onCallRejected(
             EventConsumer<BulkheadOnCallRejectedEvent> onCallRejectedEventConsumer) {
-            registerConsumer(BulkheadOnCallRejectedEvent.class.getSimpleName(),
+            registerConsumer(BulkheadOnCallRejectedEvent.class.getName(),
                 onCallRejectedEventConsumer);
             return this;
         }
@@ -268,7 +268,7 @@ public class SemaphoreBulkhead implements Bulkhead {
         @Override
         public EventPublisher onCallFinished(
             EventConsumer<BulkheadOnCallFinishedEvent> onCallFinishedEventConsumer) {
-            registerConsumer(BulkheadOnCallFinishedEvent.class.getSimpleName(),
+            registerConsumer(BulkheadOnCallFinishedEvent.class.getName(),
                 onCallFinishedEventConsumer);
             return this;
         }
