@@ -38,21 +38,21 @@ public class TimeLimiterEventProcessor extends EventProcessor<TimeLimiterEvent> 
     @Override
     public TimeLimiter.EventPublisher onSuccess(
         EventConsumer<TimeLimiterOnSuccessEvent> onSuccessEventConsumer) {
-        registerConsumer(TimeLimiterOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
+        registerConsumer(TimeLimiterOnSuccessEvent.class.getName(), onSuccessEventConsumer);
         return this;
     }
 
     @Override
     public TimeLimiter.EventPublisher onError(
         EventConsumer<TimeLimiterOnErrorEvent> onOnFailureEventConsumer) {
-        registerConsumer(TimeLimiterOnErrorEvent.class.getSimpleName(), onOnFailureEventConsumer);
+        registerConsumer(TimeLimiterOnErrorEvent.class.getName(), onOnFailureEventConsumer);
         return this;
     }
 
     @Override
     public TimeLimiter.EventPublisher onTimeout(
         EventConsumer<TimeLimiterOnTimeoutEvent> onOnFailureEventConsumer) {
-        registerConsumer(TimeLimiterOnTimeoutEvent.class.getSimpleName(), onOnFailureEventConsumer);
+        registerConsumer(TimeLimiterOnTimeoutEvent.class.getName(), onOnFailureEventConsumer);
         return this;
     }
 }

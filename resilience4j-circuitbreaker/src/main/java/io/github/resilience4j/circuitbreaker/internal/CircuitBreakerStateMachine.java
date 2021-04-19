@@ -489,7 +489,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onSuccess(
             EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
-            registerConsumer(CircuitBreakerOnSuccessEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnSuccessEvent.class.getName(),
                 onSuccessEventConsumer);
             return this;
         }
@@ -497,7 +497,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onError(
             EventConsumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnErrorEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnErrorEvent.class.getName(),
                 onErrorEventConsumer);
             return this;
         }
@@ -505,7 +505,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onStateTransition(
             EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
-            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getName(),
                 onStateTransitionEventConsumer);
             return this;
         }
@@ -513,7 +513,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onReset(
             EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
-            registerConsumer(CircuitBreakerOnResetEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnResetEvent.class.getName(),
                 onResetEventConsumer);
             return this;
         }
@@ -521,7 +521,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onIgnoredError(
             EventConsumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getName(),
                 onIgnoredErrorEventConsumer);
             return this;
         }
@@ -529,7 +529,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onCallNotPermitted(
             EventConsumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
-            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getName(),
                 onCallNotPermittedEventConsumer);
             return this;
         }
@@ -537,7 +537,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onFailureRateExceeded(
             EventConsumer<CircuitBreakerOnFailureRateExceededEvent> onFailureRateExceededConsumer) {
-            registerConsumer(CircuitBreakerOnFailureRateExceededEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnFailureRateExceededEvent.class.getName(),
                 onFailureRateExceededConsumer);
             return this;
         }
@@ -545,7 +545,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onSlowCallRateExceeded(
             EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> onSlowCallRateExceededConsumer) {
-            registerConsumer(CircuitBreakerOnSlowCallRateExceededEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnSlowCallRateExceededEvent.class.getName(),
                 onSlowCallRateExceededConsumer);
             return this;
         }
