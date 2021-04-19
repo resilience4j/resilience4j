@@ -36,8 +36,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized void registerConsumer(String className,
-        EventConsumer<? extends T> eventConsumer) {
+    public synchronized void registerConsumer(String className, EventConsumer<? extends T> eventConsumer) {
         this.eventConsumerMap.compute(className, (k, consumers) -> {
             if (consumers == null) {
                 consumers = new CopyOnWriteArrayList<>();
@@ -53,15 +52,20 @@ public class EventProcessor<T> implements EventPublisher<T> {
 
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
+        final List<EventConsumer<T>> onEventConsumers = this.onEventConsumers;
         if (!onEventConsumers.isEmpty()) {
-            onEventConsumers.forEach(onEventConsumer -> onEventConsumer.consumeEvent(event));
+            for (int i = 0, size = onEventConsumers.size(); i < size; i++) {
+                onEventConsumers.get(i).consumeEvent(event);
+            }
             consumed = true;
         }
+
         if (!eventConsumerMap.isEmpty()) {
-            List<EventConsumer<T>> eventConsumers = this.eventConsumerMap
-                .get(event.getClass().getSimpleName());
-            if (eventConsumers != null && !eventConsumers.isEmpty()) {
-                eventConsumers.forEach(consumer -> consumer.consumeEvent(event));
+            final List<EventConsumer<T>> consumers = this.eventConsumerMap.get(event.getClass().getName());
+            if (consumers != null && !consumers.isEmpty()) {
+                for (int i = 0, size = consumers.size(); i < size; i++) {
+                    consumers.get(i).consumeEvent(event);
+                }
                 consumed = true;
             }
         }
