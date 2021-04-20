@@ -382,27 +382,26 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public EventPublisher onRetry(EventConsumer<RetryOnRetryEvent> onRetryEventConsumer) {
-            registerConsumer(RetryOnRetryEvent.class.getSimpleName(), onRetryEventConsumer);
+            registerConsumer(RetryOnRetryEvent.class.getName(), onRetryEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onSuccess(EventConsumer<RetryOnSuccessEvent> onSuccessEventConsumer) {
-            registerConsumer(RetryOnSuccessEvent.class.getSimpleName(), onSuccessEventConsumer);
+            registerConsumer(RetryOnSuccessEvent.class.getName(), onSuccessEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onError(EventConsumer<RetryOnErrorEvent> onErrorEventConsumer) {
-            registerConsumer(RetryOnErrorEvent.class.getSimpleName(), onErrorEventConsumer);
+            registerConsumer(RetryOnErrorEvent.class.getName(), onErrorEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher onIgnoredError(
             EventConsumer<RetryOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            registerConsumer(RetryOnIgnoredErrorEvent.class.getSimpleName(),
-                onIgnoredErrorEventConsumer);
+            registerConsumer(RetryOnIgnoredErrorEvent.class.getName(), onIgnoredErrorEventConsumer);
             return this;
         }
     }

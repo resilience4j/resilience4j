@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,14 +41,13 @@ public class RateLimiterWithConditionalDrainTest {
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
 
-    private Function<Either<? extends Throwable, ?>, Boolean> drainConditionChecker;
-    private RateLimiterConfig config;
+    private Predicate<Either<? extends Throwable, ?>> drainConditionChecker;
     private RateLimiter limit;
 
     @Before
     public void init() {
-        drainConditionChecker = mock(Function.class);
-        config = RateLimiterConfig.custom()
+        drainConditionChecker = mock(Predicate.class);
+        RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)
@@ -64,44 +63,44 @@ public class RateLimiterWithConditionalDrainTest {
 
     @Test
     public void decorateCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
-        CheckedFunction0 supplier = mock(CheckedFunction0.class);
-        CheckedFunction0 decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedFunction0<?> supplier = mock(CheckedFunction0.class);
+        CheckedFunction0<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
-        given(drainConditionChecker.apply(any())).willReturn(false);
+        given(drainConditionChecker.test(any())).willReturn(false);
 
-        Try result = Try.of(decorated);
+        Try<?> result = Try.of(decorated);
 
         assertThat(result.isSuccess()).isTrue();
-        verify(drainConditionChecker).apply(argThat(Either::isRight));
+        verify(drainConditionChecker).test(argThat(Either::isRight));
         verify(limit, never()).drainPermissions();
     }
 
     @Test
     public void decorateFailingCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
-        CheckedFunction0 supplier = mock(CheckedFunction0.class);
+        CheckedFunction0<?> supplier = mock(CheckedFunction0.class);
         when(supplier.apply()).thenThrow(RuntimeException.class);
-        CheckedFunction0 decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedFunction0<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
-        given(drainConditionChecker.apply(any())).willReturn(false);
+        given(drainConditionChecker.test(any())).willReturn(false);
 
-        Try result = Try.of(decorated);
+        Try<?> result = Try.of(decorated);
 
         assertThat(result.isFailure()).isTrue();
-        verify(drainConditionChecker).apply(argThat(Either::isLeft));
+        verify(drainConditionChecker).test(argThat(Either::isLeft));
         verify(limit, never()).drainPermissions();
     }
 
     @Test
     public void decorateCheckedSupplierAndApplyWithDrainConditionMet() throws Throwable {
-        CheckedFunction0 supplier = mock(CheckedFunction0.class);
-        CheckedFunction0 decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedFunction0<?> supplier = mock(CheckedFunction0.class);
+        CheckedFunction0<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
-        given(drainConditionChecker.apply(any())).willReturn(true);
+        given(drainConditionChecker.test(any())).willReturn(true);
 
-        Try result = Try.of(decorated);
+        Try<?> result = Try.of(decorated);
 
         assertThat(result.isSuccess()).isTrue();
-        verify(drainConditionChecker).apply(argThat(Either::isRight));
+        verify(drainConditionChecker).test(argThat(Either::isRight));
         verify(limit).drainPermissions();
     }
 }

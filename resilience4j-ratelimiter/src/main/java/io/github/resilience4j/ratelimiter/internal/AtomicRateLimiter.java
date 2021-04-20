@@ -38,9 +38,9 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.
- * <p>Each cycle has duration of {@link RateLimiterConfig#limitRefreshPeriod} in nanoseconds.
+ * <p>Each cycle has duration of {@link RateLimiterConfig#getLimitRefreshPeriod} in nanoseconds.
  * <p>By contract on start of each cycle {@link AtomicRateLimiter} should
- * set {@link State#activePermissions} to {@link RateLimiterConfig#limitForPeriod}. For the {@link
+ * set {@link State#activePermissions} to {@link RateLimiterConfig#getLimitForPeriod}. For the {@link
  * AtomicRateLimiter} callers it is really looks so, but under the hood there is some optimisations
  * that will skip this refresh if {@link AtomicRateLimiter} is not used actively.
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
@@ -48,8 +48,7 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  */
 public class AtomicRateLimiter implements RateLimiter {
 
-    private long nanoTimeStart;
-
+    private final long nanoTimeStart;
     private final String name;
     private final AtomicInteger waitingThreads;
     private final AtomicReference<State> state;

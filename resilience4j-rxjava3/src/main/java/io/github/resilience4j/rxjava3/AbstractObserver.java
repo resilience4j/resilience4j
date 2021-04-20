@@ -23,9 +23,14 @@ public abstract class AbstractObserver<T> extends AbstractDisposable implements 
     @Override
     public void onNext(T item) {
         whenNotDisposed(() -> {
+            hookOnNext(item);
             eventWasEmitted.set(true);
             downstreamObserver.onNext(item);
         });
+    }
+
+    protected void hookOnNext(T value) {
+        // NoOp
     }
 
     @Override

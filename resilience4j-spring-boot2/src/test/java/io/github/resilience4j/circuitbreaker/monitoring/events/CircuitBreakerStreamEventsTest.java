@@ -129,6 +129,7 @@ public class CircuitBreakerStreamEventsTest {
             .accept(MediaType.TEXT_EVENT_STREAM)
             .retrieve()
             .bodyToFlux(type)
+            .filter(eventData -> !eventData.event().equals("ping"))
             .take(3);
         return eventStream;
     }

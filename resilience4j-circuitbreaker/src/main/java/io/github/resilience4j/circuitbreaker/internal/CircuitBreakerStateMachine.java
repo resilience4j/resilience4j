@@ -359,22 +359,26 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         stateTransition(HALF_OPEN, currentState -> new HalfOpenState(currentState.attempts()));
     }
 
-
     private boolean shouldPublishEvents(CircuitBreakerEvent event) {
         return stateReference.get().shouldPublishEvents(event);
     }
 
-    private void publishEventIfPossible(CircuitBreakerEvent event) {
+    private void publishEventIfHasConsumer(CircuitBreakerEvent event) {
+        if (!eventProcessor.hasConsumers()) {
+            LOG.debug("No Consumers: Event {} not published", event.getEventType());
+            return;
+        }
+
+        publishEvent(event);
+    }
+
+    private void publishEvent(CircuitBreakerEvent event) {
         if (shouldPublishEvents(event)) {
-            if (eventProcessor.hasConsumers()) {
-                try {
-                    eventProcessor.consumeEvent(event);
-                    LOG.debug("Event {} published: {}", event.getEventType(), event);
-                } catch (Throwable t) {
-                    LOG.warn("Failed to handle event {}", event.getEventType(), t);
-                }
-            } else {
-                LOG.debug("No Consumers: Event {} not published", event.getEventType());
+            try {
+                eventProcessor.consumeEvent(event);
+                LOG.debug("Event {} published: {}", event.getEventType(), event);
+            } catch (Throwable t) {
+                LOG.warn("Failed to handle event {}", event.getEventType(), t);
             }
         } else {
             LOG.debug("Publishing not allowed: Event {} not published", event.getEventType());
@@ -385,58 +389,54 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         if (StateTransition.isInternalTransition(stateTransition)) {
             return;
         }
-        final CircuitBreakerOnStateTransitionEvent event = new CircuitBreakerOnStateTransitionEvent(
-            name, stateTransition);
-        publishEventIfPossible(event);
+        publishEventIfHasConsumer(new CircuitBreakerOnStateTransitionEvent(name, stateTransition));
     }
 
     private void publishResetEvent() {
-        final CircuitBreakerOnResetEvent event = new CircuitBreakerOnResetEvent(name);
-        publishEventIfPossible(event);
+        publishEventIfHasConsumer(new CircuitBreakerOnResetEvent(name));
     }
 
     private void publishCallNotPermittedEvent() {
-        final CircuitBreakerOnCallNotPermittedEvent event = new CircuitBreakerOnCallNotPermittedEvent(
-            name);
-        publishEventIfPossible(event);
+        publishEventIfHasConsumer(new CircuitBreakerOnCallNotPermittedEvent(name));
     }
 
     private void publishSuccessEvent(final long duration, TimeUnit durationUnit) {
-        final CircuitBreakerOnSuccessEvent event = new CircuitBreakerOnSuccessEvent(name,
-            Duration.ofNanos(durationUnit.toNanos(duration)));
-        publishEventIfPossible(event);
+        if (eventProcessor.hasConsumers()) {
+            publishEvent(new CircuitBreakerOnSuccessEvent(name, elapsedDuration(duration, durationUnit)));
+        }
     }
 
-    private void publishCircuitErrorEvent(final String name, final long duration,
-        TimeUnit durationUnit, final Throwable throwable) {
-        final CircuitBreakerOnErrorEvent event = new CircuitBreakerOnErrorEvent(name,
-            Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
-        publishEventIfPossible(event);
+    private Duration elapsedDuration(final long duration, TimeUnit durationUnit) {
+        return Duration.ofNanos(durationUnit.toNanos(duration));
     }
 
-    private void publishCircuitIgnoredErrorEvent(String name, long duration, TimeUnit durationUnit,
-        Throwable throwable) {
-        final CircuitBreakerOnIgnoredErrorEvent event = new CircuitBreakerOnIgnoredErrorEvent(name,
-            Duration.ofNanos(durationUnit.toNanos(duration)), throwable);
-        publishEventIfPossible(event);
+    private void publishCircuitErrorEvent(final String name, final long duration, final TimeUnit durationUnit,
+                                          final Throwable throwable) {
+        if (eventProcessor.hasConsumers()) {
+            final Duration elapsedDuration = elapsedDuration(duration, durationUnit);
+            publishEvent(new CircuitBreakerOnErrorEvent(name, elapsedDuration, throwable));
+        }
     }
 
-    private void publishCircuitFailureRateExceededEvent(String name, float failureRate) {
-        final CircuitBreakerOnFailureRateExceededEvent event = new CircuitBreakerOnFailureRateExceededEvent(name,
-            failureRate);
-        publishEventIfPossible(event);
+    private void publishCircuitIgnoredErrorEvent(final String name, long duration, final TimeUnit durationUnit,
+                                                 final Throwable throwable) {
+        final Duration elapsedDuration = elapsedDuration(duration, durationUnit);
+        publishEventIfHasConsumer(new CircuitBreakerOnIgnoredErrorEvent(name, elapsedDuration, throwable));
     }
 
-    private void publishCircuitSlowCallRateExceededEvent(String name, float slowCallRate) {
-        final CircuitBreakerOnSlowCallRateExceededEvent event = new CircuitBreakerOnSlowCallRateExceededEvent(name,
-            slowCallRate);
-        publishEventIfPossible(event);
+    private void publishCircuitFailureRateExceededEvent(final String name, float failureRate) {
+        publishEventIfHasConsumer(new CircuitBreakerOnFailureRateExceededEvent(name, failureRate));
     }
 
-    private void publishCircuitThresholdsExceededEvent(Result result, CircuitBreakerMetrics metrics) {
+    private void publishCircuitSlowCallRateExceededEvent(final String name, float slowCallRate) {
+        publishEventIfHasConsumer(new CircuitBreakerOnSlowCallRateExceededEvent(name, slowCallRate));
+    }
+
+    private void publishCircuitThresholdsExceededEvent(final Result result, final CircuitBreakerMetrics metrics) {
         if (Result.hasFailureRateExceededThreshold(result)) {
             publishCircuitFailureRateExceededEvent(getName(), metrics.getFailureRate());
         }
+
         if (Result.hasSlowCallRateExceededThreshold(result)) {
             publishCircuitSlowCallRateExceededEvent(getName(), metrics.getSlowCallRate());
         }
@@ -489,7 +489,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onSuccess(
             EventConsumer<CircuitBreakerOnSuccessEvent> onSuccessEventConsumer) {
-            registerConsumer(CircuitBreakerOnSuccessEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnSuccessEvent.class.getName(),
                 onSuccessEventConsumer);
             return this;
         }
@@ -497,7 +497,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onError(
             EventConsumer<CircuitBreakerOnErrorEvent> onErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnErrorEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnErrorEvent.class.getName(),
                 onErrorEventConsumer);
             return this;
         }
@@ -505,7 +505,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onStateTransition(
             EventConsumer<CircuitBreakerOnStateTransitionEvent> onStateTransitionEventConsumer) {
-            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnStateTransitionEvent.class.getName(),
                 onStateTransitionEventConsumer);
             return this;
         }
@@ -513,7 +513,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onReset(
             EventConsumer<CircuitBreakerOnResetEvent> onResetEventConsumer) {
-            registerConsumer(CircuitBreakerOnResetEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnResetEvent.class.getName(),
                 onResetEventConsumer);
             return this;
         }
@@ -521,7 +521,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onIgnoredError(
             EventConsumer<CircuitBreakerOnIgnoredErrorEvent> onIgnoredErrorEventConsumer) {
-            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnIgnoredErrorEvent.class.getName(),
                 onIgnoredErrorEventConsumer);
             return this;
         }
@@ -529,7 +529,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onCallNotPermitted(
             EventConsumer<CircuitBreakerOnCallNotPermittedEvent> onCallNotPermittedEventConsumer) {
-            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnCallNotPermittedEvent.class.getName(),
                 onCallNotPermittedEventConsumer);
             return this;
         }
@@ -537,7 +537,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onFailureRateExceeded(
             EventConsumer<CircuitBreakerOnFailureRateExceededEvent> onFailureRateExceededConsumer) {
-            registerConsumer(CircuitBreakerOnFailureRateExceededEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnFailureRateExceededEvent.class.getName(),
                 onFailureRateExceededConsumer);
             return this;
         }
@@ -545,7 +545,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public EventPublisher onSlowCallRateExceeded(
             EventConsumer<CircuitBreakerOnSlowCallRateExceededEvent> onSlowCallRateExceededConsumer) {
-            registerConsumer(CircuitBreakerOnSlowCallRateExceededEvent.class.getSimpleName(),
+            registerConsumer(CircuitBreakerOnSlowCallRateExceededEvent.class.getName(),
                 onSlowCallRateExceededConsumer);
             return this;
         }
@@ -985,7 +985,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         @Nullable
-        private final ScheduledFuture<?>  transitionToOpenFuture;
+        private final ScheduledFuture<?> transitionToOpenFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig

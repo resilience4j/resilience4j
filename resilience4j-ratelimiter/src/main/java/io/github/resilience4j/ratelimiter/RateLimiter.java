@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -130,7 +131,6 @@ public interface RateLimiter {
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(RateLimiter rateLimiter,
         int permits, Supplier<CompletionStage<T>> supplier) {
         return () -> {
-
             final CompletableFuture<T> promise = new CompletableFuture<>();
             try {
                 waitForPermission(rateLimiter, permits);
@@ -180,22 +180,10 @@ public interface RateLimiter {
      * @param <F>         the return type of the original Supplier (extends Future&lt;T&gt;)
      * @return a supplier which is decorated by a rate limiter.
      */
-    static <T, F extends Future<T>> Supplier<F> decorateFuture(
-        RateLimiter rateLimiter,
-        int permits,
-        Supplier<? extends F> supplier
-    ) {
-        return () -> {
-            waitForPermission(rateLimiter, permits);
-            try {
-                F result = supplier.get();
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+    static <T, F extends Future<T>> Supplier<F> decorateFuture(RateLimiter rateLimiter, int permits,
+        Supplier<? extends F> supplier) {
+        return () -> decorateSupplier(rateLimiter, permits, supplier)
+            .get();
     }
 
     /**
@@ -206,8 +194,7 @@ public interface RateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter,
-        CheckedFunction0<T> supplier) {
+    static <T> CheckedFunction0<T> decorateCheckedSupplier(RateLimiter rateLimiter, CheckedFunction0<T> supplier) {
         return decorateCheckedSupplier(rateLimiter, 1, supplier);
     }
 
@@ -242,9 +229,7 @@ public interface RateLimiter {
      * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
-    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter,
-        CheckedRunnable runnable) {
-
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, CheckedRunnable runnable) {
         return decorateCheckedRunnable(rateLimiter, 1, runnable);
     }
 
@@ -256,9 +241,7 @@ public interface RateLimiter {
      * @param runnable    the original runnable
      * @return a runnable which is restricted by a RateLimiter.
      */
-    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, int permits,
-        CheckedRunnable runnable) {
-
+    static CheckedRunnable decorateCheckedRunnable(RateLimiter rateLimiter, int permits, CheckedRunnable runnable) {
         return () -> {
             waitForPermission(rateLimiter, permits);
             try {
@@ -297,17 +280,8 @@ public interface RateLimiter {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
         int permits, CheckedFunction1<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permits);
-            try {
-                R result = function.apply(t);
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+        return (T t) -> decorateCheckedSupplier(rateLimiter, permits, () -> function.apply(t))
+            .apply();
     }
 
     /**
@@ -323,17 +297,8 @@ public interface RateLimiter {
      */
     static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(RateLimiter rateLimiter,
         Function<T, Integer> permitsCalculator, CheckedFunction1<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            try {
-                R result = function.apply(t);
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+        return (T t) -> decorateCheckedFunction(rateLimiter, permitsCalculator.apply(t), function)
+            .apply(t);
     }
 
     /**
@@ -357,19 +322,9 @@ public interface RateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, int permits,
-        Supplier<T> supplier) {
-        return () -> {
-            waitForPermission(rateLimiter, permits);
-            try {
-                T result = supplier.get();
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+    static <T> Supplier<T> decorateSupplier(RateLimiter rateLimiter, int permits, Supplier<T> supplier) {
+        return decorateCheckedSupplier(rateLimiter, permits, supplier::get)
+            .unchecked();
     }
 
     /**
@@ -380,8 +335,7 @@ public interface RateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter,
-        Supplier<Try<T>> supplier) {
+    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, Supplier<Try<T>> supplier) {
         return decorateTrySupplier(rateLimiter, 1, supplier);
     }
 
@@ -394,8 +348,7 @@ public interface RateLimiter {
      * @param <T>         the type of results supplied supplier
      * @return a supplier which is restricted by a RateLimiter.
      */
-    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, int permits,
-        Supplier<Try<T>> supplier) {
+    static <T> Supplier<Try<T>> decorateTrySupplier(RateLimiter rateLimiter, int permits, Supplier<Try<T>> supplier) {
         return () -> {
             try {
                 waitForPermission(rateLimiter, permits);
@@ -483,19 +436,10 @@ public interface RateLimiter {
      * @param <T>         the type of results supplied by callable
      * @return a callable which is restricted by a RateLimiter.
      */
-    static <T> Callable<T> decorateCallable(RateLimiter rateLimiter, int permits,
-        Callable<T> callable) {
-        return () -> {
-            waitForPermission(rateLimiter, permits);
-            try {
-                T result = callable.call();
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+    static <T> Callable<T> decorateCallable(RateLimiter rateLimiter, int permits, Callable<T> callable) {
+        return () -> decorateCheckedSupplier(rateLimiter, permits, callable::call)
+            .unchecked()
+            .get();
     }
 
     /**
@@ -545,16 +489,7 @@ public interface RateLimiter {
      */
     static <T> Consumer<T> decorateConsumer(RateLimiter rateLimiter,
         Function<T, Integer> permitsCalculator, Consumer<T> consumer) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            try {
-                consumer.accept(t);
-                rateLimiter.onSuccess();
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+        return (T t) -> decorateConsumer(rateLimiter, permitsCalculator.apply(t), consumer).accept(t);
     }
 
     /**
@@ -577,16 +512,8 @@ public interface RateLimiter {
      * @return a runnable which is restricted by a RateLimiter.
      */
     static Runnable decorateRunnable(RateLimiter rateLimiter, int permits, Runnable runnable) {
-        return () -> {
-            waitForPermission(rateLimiter, permits);
-            try {
-                runnable.run();
-                rateLimiter.onSuccess();
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+        return decorateCheckedRunnable(rateLimiter, permits, runnable::run)
+            .unchecked();
     }
 
     /**
@@ -613,19 +540,9 @@ public interface RateLimiter {
      * @param <R>         the type of the result of the function
      * @return a function which is restricted by a RateLimiter.
      */
-    static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter, int permits,
-        Function<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permits);
-            try {
-                R result = function.apply(t);
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+    static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter, int permits, Function<T, R> function) {
+        return decorateCheckedFunction(rateLimiter, permits, function::apply)
+            .unchecked();
     }
 
     /**
@@ -641,17 +558,7 @@ public interface RateLimiter {
      */
     static <T, R> Function<T, R> decorateFunction(RateLimiter rateLimiter,
         Function<T, Integer> permitsCalculator, Function<T, R> function) {
-        return (T t) -> {
-            waitForPermission(rateLimiter, permitsCalculator.apply(t));
-            try {
-                R result = function.apply(t);
-                rateLimiter.onResult(result);
-                return result;
-            } catch (Exception exception) {
-                rateLimiter.onError(exception);
-                throw exception;
-            }
-        };
+        return (T t) -> decorateFunction(rateLimiter, permitsCalculator.apply(t), function).apply(t);
     }
 
     /**
@@ -690,15 +597,13 @@ public interface RateLimiter {
      * {@link RateLimiterConfig#getDrainPermissionsOnResult()}.
      *
      * @param callsResult result of a methods call that was rate limiter by this rate limiter
+     * @deprecated because of changing visiblity to private in Java9+
      */
+    @Deprecated
     default void drainIfNeeded(Either<? extends Throwable, ?> callsResult) {
-        Function<Either<? extends Throwable, ?>, Boolean> checker = getRateLimiterConfig()
+        Predicate<Either<? extends Throwable, ?>> checker = getRateLimiterConfig()
             .getDrainPermissionsOnResult();
-        if (checker == null) {
-            return;
-        }
-        boolean drainNeeded = checker.apply(callsResult);
-        if (drainNeeded) {
+        if (checker != null && checker.test(callsResult)) {
             drainPermissions();
         }
     }

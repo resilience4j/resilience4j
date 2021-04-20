@@ -3,7 +3,6 @@ package io.github.resilience4j.common.timelimiter.configuration;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.vavr.collection.List;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -144,4 +143,36 @@ public class TimeLimiterConfigurationPropertiesTest {
         assertThat(config).isNotNull();
         assertThat(config.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(10));
     }
+
+    @Test
+    public void testTimeLimiterConfigWithBaseConfig() {
+        TimeLimiterConfigurationProperties.InstanceProperties defaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+        defaultConfig.setTimeoutDuration(Duration.ofMillis(4000L));
+        defaultConfig.setCancelRunningFuture(false);
+
+        TimeLimiterConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+        sharedConfigWithDefaultConfig.setCancelRunningFuture(true);
+        sharedConfigWithDefaultConfig.setBaseConfig("defaultConfig");
+
+        TimeLimiterConfigurationProperties.InstanceProperties instanceWithSharedConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+        instanceWithSharedConfig.setBaseConfig("sharedConfig");
+
+
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
+        timeLimiterConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+        timeLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
+        timeLimiterConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);
+
+
+        TimeLimiterConfig instance = timeLimiterConfigurationProperties
+            .createTimeLimiterConfig("instanceWithSharedConfig", instanceWithSharedConfig, compositeTimeLimiterCustomizer());
+        assertThat(instance).isNotNull();
+        assertThat(instance.getTimeoutDuration()).isEqualTo(Duration.ofMillis(4000L));
+        assertThat(instance.shouldCancelRunningFuture()).isEqualTo(true);
+    }
+
+    private CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer() {
+        return new CompositeCustomizer<>(Collections.emptyList());
+    }
+
 }

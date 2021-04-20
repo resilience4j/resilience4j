@@ -25,10 +25,10 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
         };
         Runnable decoratedCall = RateLimiter.decorateRunnable(limiter, call);
 
-        Throwable thrown = catchThrowable(() -> decoratedCall.run());
+        Throwable thrown = catchThrowable(decoratedCall::run);
 
         assertThat(thrown).isInstanceOf(SubsystemOverloadException.class);
-        assertThat(limiter.getMetrics().getAvailablePermissions()).isEqualTo(0);
+        assertThat(limiter.getMetrics().getAvailablePermissions()).isZero();
     }
 
     @Test
@@ -40,7 +40,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
                 callsResult -> isSuccessfulAndReturned(
                     callsResult,
                     ResponseWithOverloadIndication.class,
-                    response -> response.isPotentialOverload()))
+                    ResponseWithOverloadIndication::isPotentialOverload))
             .build());
         Supplier<Object> call = () -> new SpecificResponseWithOverloadIndication(true);
         Supplier<Object> decoratedCall = RateLimiter.decorateSupplier(limiter, call);
@@ -48,7 +48,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
         Object result = decoratedCall.get();
 
         assertThat(result).isInstanceOf(ResponseWithOverloadIndication.class);
-        assertThat(limiter.getMetrics().getAvailablePermissions()).isEqualTo(0);
+        assertThat(limiter.getMetrics().getAvailablePermissions()).isZero();
     }
 
     @Test
@@ -60,7 +60,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
                 callsResult -> isSuccessfulAndReturned(
                     callsResult,
                     ResponseWithOverloadIndication.class,
-                    response -> response.isPotentialOverload()))
+                    ResponseWithOverloadIndication::isPotentialOverload))
             .build());
         Supplier<Object> call = () -> new SpecificResponseWithOverloadIndication(false);
         Supplier<Object> decoratedCall = RateLimiter.decorateSupplier(limiter, call);
@@ -76,7 +76,7 @@ public class RateLimiterWithConditionalDrainIntegrationTest {
     private static class SpecificSubsystemOverloadException extends SubsystemOverloadException { }
 
     private static class ResponseWithOverloadIndication {
-        private boolean potentialOverload;
+        private final boolean potentialOverload;
 
         public ResponseWithOverloadIndication(boolean potentialOverload) {
             this.potentialOverload = potentialOverload;
