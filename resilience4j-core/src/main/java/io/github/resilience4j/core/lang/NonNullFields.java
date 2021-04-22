@@ -37,7 +37,7 @@ import java.lang.annotation.*;
  * @see NonNull
  */
 @Target(ElementType.PACKAGE)
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 @Nonnull
 @TypeQualifierDefault(ElementType.FIELD)
