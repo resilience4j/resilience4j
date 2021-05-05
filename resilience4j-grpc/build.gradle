@@ -1,6 +1,7 @@
 dependencies {
     compileOnly(libraries.grpc_stub)
     compile project(':resilience4j-circuitbreaker')
+    compile project(':resilience4j-ratelimiter')
 
     testCompile(libraries.grpc_api)
     testCompile(libraries.grpc_testing)
