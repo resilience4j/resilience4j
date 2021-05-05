@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-package io.github.resilience4j.grpc;
+package io.github.resilience4j.grpc.circuitbreaker.server;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.grpc.circuitbreaker.server.interceptor.ServerCircuitBreakerInterceptors;
