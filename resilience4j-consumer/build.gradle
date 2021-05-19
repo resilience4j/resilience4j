@@ -1,6 +1,6 @@
 dependencies {
-    compile project(':resilience4j-core')
-    compile project(':resilience4j-circularbuffer')
-    testCompile project(':resilience4j-circuitbreaker')
+    implementation project(':resilience4j-core')
+    implementation project(':resilience4j-circularbuffer')
+    testImplementation project(':resilience4j-circuitbreaker')
 }
 ext.moduleName = 'io.github.resilience4j.consumer'

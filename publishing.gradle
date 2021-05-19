@@ -43,6 +43,7 @@ artifacts {
     archives javadocJar
 }
 
+/*
 bintray {
     user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
@@ -77,7 +78,9 @@ bintray {
         }
     }
 }
-
+/*
+ */
+/*
 publishing {
     publications {
         resilience4j(MavenPublication) {
@@ -123,3 +126,4 @@ publishing {
         }
     }
 }
+*/

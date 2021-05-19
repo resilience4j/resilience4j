@@ -1,7 +1,6 @@
 plugins {
     id "org.sonarqube" version "3.1.1"
     id "com.jfrog.bintray" version "1.8.5"
-    id "me.champeau.gradle.jmh" version "0.4.8"
     id 'org.asciidoctor.convert' version '1.6.0'
     id "com.jfrog.artifactory" version "4.18.3"
     id "org.gradle.test-retry" version "1.2.1"
@@ -9,10 +8,6 @@ plugins {
 }
 
 apply from: "${rootDir}/libraries.gradle"
-
-ext {
-    releaseVersion = '1.7.0'
-}
 
 allprojects {
     apply plugin: 'jacoco'
@@ -36,31 +31,28 @@ ext {
 
 configure(project.coreProjects) {
     apply plugin: 'java'
-    apply plugin: 'osgi'
-    apply plugin: 'maven'
     apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.bintray'
-    apply plugin: 'com.jfrog.artifactory'
-    apply from: "${rootDir}/publishing.gradle"
-    apply plugin: 'me.champeau.gradle.jmh'
+    //apply plugin: 'com.jfrog.bintray'
+    //apply plugin: 'com.jfrog.artifactory'
+    //apply from: "${rootDir}/publishing.gradle"
     apply plugin: "org.gradle.test-retry"
 
     dependencies {
-        compile(libraries.vavr)
-        compile(libraries.slf4j)
+        implementation (libraries.vavr)
+        implementation (libraries.slf4j)
 
         // JSR-305 only used for non-required meta-annotations
         compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
-        testCompile(libraries.junit)
-        testCompile(libraries.assertj)
-        testCompile(libraries.logback)
-        testCompile(libraries.mockito)
-        testCompile(libraries.powermock)
-        testCompile(libraries.powermock_api_mockito)
-        testCompile(libraries.powermock_module_junit4)
-        testCompile(libraries.awaitility)
-        testCompile(libraries.jaxws)
+        testImplementation (libraries.junit)
+        testImplementation (libraries.assertj)
+        testImplementation (libraries.logback)
+        testImplementation (libraries.mockito)
+        testImplementation (libraries.powermock)
+        testImplementation (libraries.powermock_api_mockito)
+        testImplementation (libraries.powermock_module_junit4)
+        testImplementation (libraries.awaitility)
+        testImplementation (libraries.jaxws)
     }
 
     tasks.withType(JavaCompile) {
@@ -69,10 +61,6 @@ configure(project.coreProjects) {
         options.deprecation = true
         options.encoding = 'UTF-8'
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
-    }
-
-    jmh {
-        duplicateClassesStrategy = 'warn'
     }
 
     test {
@@ -142,7 +130,7 @@ task jacocoRootTestReport(type: JacocoReport) {
 }
 
 tasks.check.dependsOn tasks.jacocoRootTestReport
-tasks.jacocoRootTestReport.dependsOn tasks.test
+//tasks.jacocoRootTestReport.dependsOn tasks.test
 
 artifactory {
     contextUrl = 'https://oss.jfrog.org'
