@@ -11,7 +11,6 @@ dependencies {
     compileOnly(project(':resilience4j-ratelimiter'))
     compileOnly(project(':resilience4j-retry'))
     compileOnly(project(':resilience4j-timelimiter'))
-    compileOnly project(':resilience4j-core')
 
     testImplementation(project(':resilience4j-bulkhead'))
     testImplementation(project(':resilience4j-circuitbreaker'))

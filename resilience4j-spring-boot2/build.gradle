@@ -1,14 +1,6 @@
 dependencies {
-    implementation project(':resilience4j-core')
-    implementation project(':resilience4j-spring')
-    implementation project(':resilience4j-bulkhead')
-    implementation project(':resilience4j-circuitbreaker')
-    implementation project(':resilience4j-ratelimiter')
-    implementation project(':resilience4j-timelimiter')
-    implementation project(':resilience4j-retry')
-    implementation project(':resilience4j-framework-common')
+    api project(':resilience4j-spring')
     implementation project(':resilience4j-micrometer')
-    implementation project(':resilience4j-consumer')
     compileOnly project(':resilience4j-reactor')
 
     compileOnly(libraries.spring_boot2_webflux)

@@ -1,14 +1,5 @@
 dependencies {
-    implementation project(':resilience4j-framework-common')
-    implementation project(':resilience4j-core')
-    implementation project(':resilience4j-spring')
     implementation project(':resilience4j-spring-boot2')
-    implementation project(':resilience4j-bulkhead')
-    implementation project(':resilience4j-circuitbreaker')
-    implementation project(':resilience4j-ratelimiter')
-    implementation project(':resilience4j-timelimiter')
-    implementation project(':resilience4j-retry')
-    implementation project(':resilience4j-consumer')
 
     compileOnly(libraries.spring_cloud_context2)
     compileOnly(libraries.spring_boot2_config_processor)

@@ -2,7 +2,6 @@ dependencies {
     compileOnly(libraries.retrofit)
     implementation project(':resilience4j-circuitbreaker')
     implementation project(':resilience4j-ratelimiter')
-    implementation project(':resilience4j-core')
     testImplementation(libraries.retrofit_test)
     testImplementation(libraries.retrofit_wiremock)
     testImplementation(libraries.retrofit)

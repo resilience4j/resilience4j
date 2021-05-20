@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(':resilience4j-core')
+    api project(':resilience4j-core')
     testImplementation project(':resilience4j-test')
     testImplementation project(':resilience4j-rxjava2')
     testImplementation(libraries.rxjava2)
