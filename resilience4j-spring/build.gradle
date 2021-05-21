@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(':resilience4j-annotations')
+    api project(':resilience4j-annotations')
     api project(':resilience4j-consumer')
     api project(':resilience4j-framework-common')
     compileOnly(libraries.aspectj)
