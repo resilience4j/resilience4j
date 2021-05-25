@@ -57,7 +57,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
         if: always()
         with:
-          files: test-results/**/*.xml
+          files: '**/test-results/**/*.xml'
       - name: Analyze with SonarCloud
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         uses: eskatos/gradle-command-action@v1
