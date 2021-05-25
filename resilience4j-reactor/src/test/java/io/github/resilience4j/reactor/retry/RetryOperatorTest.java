@@ -68,12 +68,12 @@ public class RetryOperatorTest {
             .transformDeferred(retryOperator))
             .expectNext("Hello world")
             .expectComplete()
-            .verify(Duration.ofSeconds(1));
+            .verify();
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
             .transformDeferred(retryOperator))
             .expectNext("Hello world")
             .expectComplete()
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should(times(4)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -96,7 +96,7 @@ public class RetryOperatorTest {
             .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(StackOverflowError.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
     }
 
     @Test
@@ -111,7 +111,7 @@ public class RetryOperatorTest {
             .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(Error.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -132,13 +132,13 @@ public class RetryOperatorTest {
             .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         StepVerifier.create(Mono.fromCallable(helloWorldService::returnHelloWorld)
             .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -160,7 +160,7 @@ public class RetryOperatorTest {
             .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -184,7 +184,7 @@ public class RetryOperatorTest {
             .expectSubscription()
             .expectNext("success")
             .expectComplete()
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
@@ -207,7 +207,7 @@ public class RetryOperatorTest {
             .expectSubscription()
             .expectNextCount(1)
             .expectComplete()
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
@@ -228,7 +228,7 @@ public class RetryOperatorTest {
             .transformDeferred(RetryOperator.of(retry)))
             .expectSubscription()
             .expectError(MaxRetriesExceededException.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
@@ -243,7 +243,7 @@ public class RetryOperatorTest {
             .transformDeferred(retryOperator))
             .expectSubscription()
             .expectError(HelloWorldException.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -286,7 +286,7 @@ public class RetryOperatorTest {
             .expectSubscription()
             .expectNextCount(1)
             .expectComplete()
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
@@ -308,7 +308,7 @@ public class RetryOperatorTest {
             .expectSubscription()
             .expectNextCount(1)
             .expectError(MaxRetriesExceededException.class)
-            .verify(Duration.ofSeconds(1));
+            .verify();
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
