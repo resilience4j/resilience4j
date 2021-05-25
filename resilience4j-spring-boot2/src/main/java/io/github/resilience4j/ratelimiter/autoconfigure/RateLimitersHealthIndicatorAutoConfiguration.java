@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnClass({RateLimiter.class, HealthIndicator.class})
+@ConditionalOnClass({RateLimiter.class, HealthIndicator.class, StatusAggregator.class})
 @AutoConfigureAfter(RateLimiterAutoConfiguration.class)
 @AutoConfigureBefore(HealthContributorAutoConfiguration.class)
 public class RateLimitersHealthIndicatorAutoConfiguration {
