@@ -67,8 +67,8 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
 
-        List<CircuitBreakerEventDTO> circuitBreakerEventsBefore = getCircuitBreakersEvents();
-        List<CircuitBreakerEventDTO> circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA");
+        int circuitBreakerEventsBefore = getCircuitBreakersEvents().size();
+        int circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA").size();
 
         try {
             dummyService.doSomething(true);
@@ -97,9 +97,9 @@ public class CircuitBreakerAutoConfigurationTest {
 
         // expect circuitbreaker-event actuator endpoint recorded all events
         assertThat(getCircuitBreakersEvents())
-            .hasSize(circuitBreakerEventsBefore.size() + 2);
+            .hasSize(circuitBreakerEventsBefore + 2);
         assertThat(getCircuitBreakerEvents("backendA"))
-            .hasSize(circuitBreakerEventsForABefore.size() + 2);
+            .hasSize(circuitBreakerEventsForABefore + 2);
 
         // expect no health indicator for backendB, as it is disabled via properties
         ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
