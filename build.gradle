@@ -33,7 +33,6 @@ nexusPublishing {
         }
     }
 }
-
 configure(project.coreProjects) {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -41,6 +40,14 @@ configure(project.coreProjects) {
     apply plugin: 'signing'
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: "org.gradle.test-retry"
+
+    tasks.withType(Test).all {
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+            jvmArgs += [
+                    "-XX:+AllowRedefinitionToAddDeleteMethods"
+            ]
+        }
+    }
 
     dependencies {
         api (libraries.vavr)
