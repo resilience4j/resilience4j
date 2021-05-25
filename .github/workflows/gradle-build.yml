@@ -53,6 +53,11 @@ jobs:
               repo: context.repo.repo,
               body: '❌ ${{ github.workflow }} failed: ${{ steps.gradle.outputs.build-scan-url }}'
             })
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          files: test-results/**/*.xml
       - name: Analyze with SonarCloud
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         uses: eskatos/gradle-command-action@v1
