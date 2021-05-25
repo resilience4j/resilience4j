@@ -19,12 +19,8 @@ jar {
                 'Specification-Title': projectArtifactId,
                 'Specification-Version': project.version,
                 'Implementation-Title': projectArtifactId,
-                'Implementation-Version': project.version
+                'Implementation-Version': project.version,
         )
-        instruction 'Export-Package', '!io.github.resilience4j.*.internal,!io.github.resilience4j.core.lang,*'
-        instruction 'Import-Package', "!${project.osgiManifest().symbolicName}.*,!io.github.resilience4j.core.lang,!javax.annotation,!javax.annotation.meta,*"
-        instruction 'Bundle-Description', 'A lightweight fault tolerance library'
-        instruction 'Bundle-DocURL', 'https://github.com/resilience4j/resilience4j'
     }
 }
 
@@ -43,41 +39,9 @@ artifacts {
     archives javadocJar
 }
 
-bintray {
-    user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''
-    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
-    dryRun = false //Whether to run this as dry-run, without deploying
-    publish = true //If version should be auto published after an upload
-    publications = ['resilience4j']
-    pkg {
-        repo = 'Maven'
-        name = "${projectArtifactId}"
-        userOrg = "${projectArtifactId}"
-        websiteUrl = "${url}"
-        issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
-        vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
-        desc = project.description
-        licenses = ['Apache-2.0']
-        version {
-            name = project.version
-            vcsTag = "v${project.version}"
-            gpg {
-                sign = true //Determines whether to GPG sign the files. The default is false
-                //Optional. The passphrase for GPG signing'
-                passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
-            }
-            mavenCentralSync {
-                sync = true
-                //Optional (true by default). Determines whether to sync the version to Maven Central.
-                user = project.hasProperty('ossUser') ? project.property('ossUser') : ''
-                //OSS user token
-                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : ''
-                //OSS user password
-            }
-        }
-    }
+signing {
+    sign configurations.archives
 }
-
 publishing {
     publications {
         resilience4j(MavenPublication) {
@@ -90,14 +54,6 @@ publishing {
                             'Hexmind': 'Tomasz Skowroński',
                             'drmaas': 'Dan Maas']
                 def root = asNode()
-
-                root.dependencies.'*'.findAll() {
-                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
-                        dep.name == it.artifactId.text()
-                    }
-                }.each() {
-                    it.scope*.value = 'compile'
-                }
 
                 root.appendNode('name', "${projectArtifactId}")
                 root.appendNode('packaging', 'jar')

@@ -38,7 +38,7 @@ import java.util.function.Function
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@IgnoreIf({ env.TRAVIS || env.AZURE })
+@IgnoreIf({ env.TRAVIS || env.AZURE || env.GITHUB_ACTIONS })
 @Unroll
 class BulkheadSpec extends Specification {
 
