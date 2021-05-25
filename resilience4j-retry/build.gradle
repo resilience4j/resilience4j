@@ -1,7 +1,7 @@
 dependencies {
-    compile project(':resilience4j-core')
-    testCompile project(':resilience4j-test')
-    testCompile project(':resilience4j-rxjava2')
-    testCompile(libraries.rxjava2)
+    api project(':resilience4j-core')
+    testImplementation project(':resilience4j-test')
+    testImplementation project(':resilience4j-rxjava2')
+    testImplementation(libraries.rxjava2)
 }
 ext.moduleName = 'io.github.resilience4j.retry'

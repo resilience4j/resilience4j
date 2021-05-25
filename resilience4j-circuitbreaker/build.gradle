@@ -1,7 +1,6 @@
 dependencies {
-    compile project(':resilience4j-core')
-    testCompile project(':resilience4j-test')
-    jmh project(':resilience4j-rxjava2')
-    testCompile(libraries.mock_clock)
+    api project(':resilience4j-core')
+    testImplementation project(':resilience4j-test')
+    testImplementation(libraries.mock_clock)
 }
 ext.moduleName = 'io.github.resilience4j.circuitbreaker'

@@ -1,8 +1,6 @@
 plugins {
     id 'java-platform'
     id 'maven-publish'
-    id 'com.jfrog.bintray'
-    id 'com.jfrog.artifactory'
 }
 
 def projectArtifactId = 'resilience4j'
@@ -38,41 +36,6 @@ publishing {
                     d.appendNode('id', it.key)
                     d.appendNode('name', it.value)
                 }
-            }
-        }
-    }
-}
-
-bintray {
-    user = project.hasProperty('bintrayUsername') ? project.property('bintrayUsername') : ''
-    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : ''
-    dryRun = false //Whether to run this as dry-run, without deploying
-    publish = true //If version should be auto published after an upload
-    publications = ['resilience4j']
-    pkg {
-        repo = 'Maven'
-        name = "${projectArtifactId}"
-        userOrg = "${projectArtifactId}"
-        websiteUrl = "${url}"
-        issueTrackerUrl = 'https://github.com/resilience4j/resilience4j/issues'
-        vcsUrl = 'https://github.com/resilience4j/resilience4j.git'
-        desc = project.description
-        licenses = ['Apache-2.0']
-        version {
-            name = project.version
-            vcsTag = "v${project.version}"
-            gpg {
-                sign = true //Determines whether to GPG sign the files. The default is false
-                //Optional. The passphrase for GPG signing'
-                passphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : ''
-            }
-            mavenCentralSync {
-                sync = true
-                //Optional (true by default). Determines whether to sync the version to Maven Central.
-                user = project.hasProperty('ossUser') ? project.property('ossUser') : ''
-                //OSS user token
-                password = project.hasProperty('ossPassword') ? project.property('ossPassword') : ''
-                //OSS user password
             }
         }
     }
