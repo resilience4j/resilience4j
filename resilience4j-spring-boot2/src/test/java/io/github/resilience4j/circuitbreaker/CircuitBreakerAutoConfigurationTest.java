@@ -254,6 +254,7 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultWaitDuration);
     }
 
+    /*
     @Test
     public void testCircuitBreakerRegistryAutoConfiguration() throws IOException {
         CircuitBreaker circuitBreakerA = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
@@ -272,6 +273,8 @@ public class CircuitBreakerAutoConfigurationTest {
             circuitBreakerRegistry.replace(DummyService.BACKEND, circuitBreakerA);
         }
     }
+    */
+
 
 
     /**
