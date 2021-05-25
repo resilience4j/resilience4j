@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnClass({CircuitBreaker.class, HealthIndicator.class})
+@ConditionalOnClass({CircuitBreaker.class, HealthIndicator.class, StatusAggregator.class})
 @AutoConfigureAfter(CircuitBreakerAutoConfiguration.class)
 @AutoConfigureBefore(HealthContributorAutoConfiguration.class)
 public class CircuitBreakersHealthIndicatorAutoConfiguration {
