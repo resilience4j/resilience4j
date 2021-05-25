@@ -15,34 +15,26 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerUpdateStateResponse;
-import io.github.resilience4j.service.test.DummyFeignClient;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,83 +57,6 @@ public class CircuitBreakerAutoConfigurationTest {
     private TestRestTemplate restTemplate;
     @Autowired
     private ReactiveDummyService reactiveDummyService;
-    @Autowired
-    private DummyFeignClient dummyFeignClient;
-
-
-    /**
-     * This test verifies that the combination of @FeignClient and @CircuitBreaker annotation works
-     * as same as @CircuitBreaker alone works with any normal service class
-     */
-    @Test
-    public void testFeignClient() {
-
-        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/sample/"))
-            .willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call")));
-        WireMock.stubFor(WireMock.get(WireMock.urlMatching("^.*\\/sample\\/error.*$"))
-            .willReturn(WireMock.aResponse().withStatus(400).withBody("This is error")));
-
-        try {
-            dummyFeignClient.doSomething("error");
-        } catch (Exception e) {
-            // Ignore the error, we want to increase the error counts
-        }
-        try {
-            dummyFeignClient.doSomething("errorAgain");
-        } catch (Exception e) {
-            // Ignore the error, we want to increase the error counts
-        }
-        dummyFeignClient.doSomething(StringUtils.EMPTY);
-        dummyFeignClient.doSomething(StringUtils.EMPTY);
-
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("dummyFeignClient");
-        assertThat(circuitBreaker).isNotNull();
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(18);
-        assertThat(
-            circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-            .isEqualTo(6);
-    }
-
-    @Test
-    public void testCircuitBreakerActuatorEndpoint() {
-        // given
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        // when
-        HttpEntity<String> forceOpenRequest = new HttpEntity<>("{\"updateState\":\"FORCE_OPEN\"}", headers);
-        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAState = restTemplate
-            .postForEntity("/actuator/circuitbreakers/backendA", forceOpenRequest, CircuitBreakerUpdateStateResponse.class);
-        // then
-        assertThat(backendAState.getBody()).isNotNull();
-        assertThat(backendAState.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN.toString());
-        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.FORCED_OPEN);
-
-        // when sending non valid state change
-        HttpEntity<String> nonValid = new HttpEntity<>("{\"updateState\":\"BLA_BLA\"}", headers);
-        final ResponseEntity<CircuitBreakerUpdateStateResponse> nonValidResponse = restTemplate
-            .postForEntity("/actuator/circuitbreakers/backendA", nonValid, CircuitBreakerUpdateStateResponse.class);
-        // then
-        assertThat(nonValidResponse.getBody()).isNotNull();
-        assertThat(nonValidResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-
-        // when
-        HttpEntity<String> disableRequest = new HttpEntity<>("{\"updateState\":\"DISABLE\"}", headers);
-        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAStateDisabled = restTemplate
-            .postForEntity("/actuator/circuitbreakers/backendA", disableRequest, CircuitBreakerUpdateStateResponse.class);
-        // then
-        assertThat(backendAStateDisabled.getBody()).isNotNull();
-        assertThat(backendAStateDisabled.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.DISABLED.toString());
-        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.DISABLED);
-
-        // when
-        HttpEntity<String> closeRequest = new HttpEntity<>("{\"updateState\":\"CLOSE\"}", headers);
-        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAStateClosed = restTemplate
-            .postForEntity("/actuator/circuitbreakers/backendA", closeRequest, CircuitBreakerUpdateStateResponse.class);
-        // then
-        assertThat(backendAStateClosed.getBody()).isNotNull();
-        assertThat(backendAStateClosed.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.CLOSED.toString());
-        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-    }
 
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the
@@ -254,78 +169,6 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultWaitDuration);
     }
 
-    /*
-    @Test
-    public void testCircuitBreakerRegistryAutoConfiguration() throws IOException {
-        CircuitBreaker circuitBreakerA = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
-        try {
-            CircuitBreaker circuitBreakerA2 = CircuitBreaker.of(DummyService.BACKEND,
-                CircuitBreakerConfig.ofDefaults(),
-                circuitBreakerA.getTags());
-
-            circuitBreakerRegistry.replace(DummyService.BACKEND, circuitBreakerA2);
-            dummyService.doSomething(false);
-
-            assertThat(getCircuitBreakersEvents()).hasSize(1);
-            assertThat(getCircuitBreakerEvents(DummyService.BACKEND)).hasSize(1);
-        } finally {
-            // clean up
-            circuitBreakerRegistry.replace(DummyService.BACKEND, circuitBreakerA);
-        }
-    }
-    */
-
-
-
-    /**
-     * The test verifies that a CircuitBreaker instance is created and configured properly when the
-     * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
-     */
-    @Test
-    public void testCircuitBreakerAutoConfigurationAsync()
-        throws IOException, ExecutionException, InterruptedException {
-        assertThat(circuitBreakerRegistry).isNotNull();
-        assertThat(circuitBreakerProperties).isNotNull();
-        List<CircuitBreakerEventDTO> circuitBreakerEventsBefore = getCircuitBreakersEvents();
-        List<CircuitBreakerEventDTO> circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA");
-
-        try {
-            dummyService.doSomethingAsync(true);
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        final CompletableFuture<String> stringCompletionStage = dummyService
-            .doSomethingAsync(false);
-        assertThat(stringCompletionStage.get()).isEqualTo("Test result");
-
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
-        assertThat(circuitBreaker).isNotNull();
-
-        // expect circuitbreakers actuator endpoint contains both circuit breakers
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
-            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB",
-                "dummyFeignClient");
-
-        // expect circuitbreaker-event actuator endpoint recorded both events
-        assertThat(getCircuitBreakersEvents())
-            .hasSize(circuitBreakerEventsBefore.size() + 2);
-        assertThat(getCircuitBreakerEvents("backendA"))
-            .hasSize(circuitBreakerEventsForABefore.size() + 2);
-
-        // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
-            .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
-        assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendSharedA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendSharedB")).isNotNull();
-    }
-
-
     @Test
     public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
         //when
@@ -343,65 +186,6 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualByComparingTo(Duration.ofSeconds(1L));
     }
 
-    /**
-     * The test verifies that a CircuitBreaker instance is created and configured properly when the
-     * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
-     */
-    @Test
-    public void testCircuitBreakerAutoConfigurationReactive() throws IOException {
-        assertThat(circuitBreakerRegistry).isNotNull();
-        assertThat(circuitBreakerProperties).isNotNull();
-
-        List<CircuitBreakerEventDTO> circuitBreakerEventsBefore = getCircuitBreakersEvents();
-        List<CircuitBreakerEventDTO> circuitBreakerEventsForBBefore = getCircuitBreakerEvents("backendB");
-
-        try {
-            reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase,
-                throwable -> System.out.println("Exception received:" + throwable.getMessage()));
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase,
-            throwable -> System.out.println("Exception received:" + throwable.getMessage()));
-
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(ReactiveDummyService.BACKEND);
-        assertThat(circuitBreaker).isNotNull();
-
-        // expect CircuitBreaker is configured as defined in application.yml
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(10);
-        assertThat(
-            circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-            .isEqualTo(5);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-            .isEqualTo(50f);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(5L));
-
-        // expect circuitbreakers actuator endpoint contains all circuitbreakers
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
-            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB",
-                "dummyFeignClient");
-
-        // expect circuitbreaker-event actuator endpoint recorded both events
-        assertThat(getCircuitBreakersEvents())
-            .hasSize(circuitBreakerEventsBefore.size() + 2);
-        assertThat(getCircuitBreakerEvents("backendB"))
-            .hasSize(circuitBreakerEventsForBBefore.size() + 2);
-
-        // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
-            .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
-        assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
-
-        assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
-    }
-
     private List<CircuitBreakerEventDTO> getCircuitBreakersEvents() {
         return getEventsFrom("/actuator/circuitbreakerevents");
     }
@@ -413,50 +197,5 @@ public class CircuitBreakerAutoConfigurationTest {
     private List<CircuitBreakerEventDTO> getEventsFrom(String path) {
         return restTemplate.getForEntity(path, CircuitBreakerEventsEndpointResponse.class)
             .getBody().getCircuitBreakerEvents();
-    }
-
-    private static final class CompositeHealthResponse {
-
-        private String status;
-        private Map<String, HealthResponse> details;
-
-        public Map<String, HealthResponse> getDetails() {
-            return details;
-        }
-
-        public void setDetails(Map<String, HealthResponse> details) {
-            this.details = details;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-    }
-
-    private static final class HealthResponse {
-
-        private String status;
-
-        private Map<String, Object> details;
-
-        public Map<String, Object> getDetails() {
-            return details;
-        }
-
-        public void setDetails(Map<String, Object> details) {
-            this.details = details;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
     }
 }

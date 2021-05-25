@@ -32,7 +32,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -157,31 +156,5 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 
     private CircuitBreakerEventsEndpointResponse circuitBreakerEvents(String s) {
         return restTemplate.getForEntity(s, CircuitBreakerEventsEndpointResponse.class).getBody();
-    }
-
-    private static final class CompositeHealthResponse {
-
-        private Map<String, HealthResponse> details;
-
-        public Map<String, HealthResponse> getDetails() {
-            return details;
-        }
-
-        public void setDetails(Map<String, HealthResponse> details) {
-            this.details = details;
-        }
-    }
-
-    private static final class HealthResponse {
-
-        private Map<String, Object> details;
-
-        public Map<String, Object> getDetails() {
-            return details;
-        }
-
-        public void setDetails(Map<String, Object> details) {
-            this.details = details;
-        }
     }
 }
