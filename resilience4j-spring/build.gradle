@@ -2,7 +2,6 @@ dependencies {
     api project(':resilience4j-annotations')
     api project(':resilience4j-consumer')
     api project(':resilience4j-framework-common')
-
     compileOnly(libraries.aspectj)
     compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_core,libraries.spring_context)
