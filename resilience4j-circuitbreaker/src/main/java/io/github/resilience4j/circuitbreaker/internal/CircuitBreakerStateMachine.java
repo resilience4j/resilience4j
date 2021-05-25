@@ -877,11 +877,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             }
 
             if (shouldPublishFailureRateExceededEvent(result)) {
-                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+                publishCircuitFailureRateExceededEvent(getName(), circuitBreakerMetrics.getFailureRate());
             }
 
             if (shouldPublishSlowCallRateExceededEvent(result)) {
-                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+                publishCircuitSlowCallRateExceededEvent(getName(), circuitBreakerMetrics.getSlowCallRate());
             }
         }
 
