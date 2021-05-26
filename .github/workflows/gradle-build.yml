@@ -42,7 +42,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
       - name: Comment build scan URL
-        uses: actions/github-script@v3
+        uses: actions/github-script@v4.0.2
         if: github.event_name == 'pull_request' && steps.gradle.outputs.build-scan-url != '' && failure()
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
