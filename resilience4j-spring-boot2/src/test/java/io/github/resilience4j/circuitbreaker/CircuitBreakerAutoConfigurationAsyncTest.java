@@ -63,7 +63,7 @@ public class CircuitBreakerAutoConfigurationAsyncTest {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
         List<CircuitBreakerEventDTO> circuitBreakerEventsBefore = getCircuitBreakersEvents();
-        List<CircuitBreakerEventDTO> circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA");
+        List<CircuitBreakerEventDTO> circuitBreakerEventsForABefore = getCircuitBreakerEvents(DummyService.BACKEND);
 
         try {
             dummyService.doSomethingAsync(true);
@@ -75,13 +75,10 @@ public class CircuitBreakerAutoConfigurationAsyncTest {
             .doSomethingAsync(false);
         assertThat(stringCompletionStage.get()).isEqualTo("Test result");
 
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
-        assertThat(circuitBreaker).isNotNull();
-
         // expect circuitbreaker-event actuator endpoint recorded both events
         assertThat(getCircuitBreakersEvents())
             .hasSize(circuitBreakerEventsBefore.size() + 2);
-        assertThat(getCircuitBreakerEvents("backendA"))
+        assertThat(getCircuitBreakerEvents(DummyService.BACKEND))
             .hasSize(circuitBreakerEventsForABefore.size() + 2);
     }
 

@@ -48,6 +48,7 @@ import static org.hamcrest.Matchers.equalTo;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class CircuitBreakerAutoConfigurationTest {
 
     @Rule
@@ -73,14 +74,12 @@ public class CircuitBreakerAutoConfigurationTest {
      * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
      */
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     public void testCircuitBreakerAutoConfiguration() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
+        assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
-        assertThat(circuitBreaker).isNotNull();
-
         verifyCircuitBreakerAutoConfiguration(circuitBreaker);
 
         AtomicInteger eventCounter = new AtomicInteger(0);;
@@ -89,7 +88,7 @@ public class CircuitBreakerAutoConfigurationTest {
             .onError(event -> eventCounter.incrementAndGet());
 
         int circuitBreakerEventsBefore = getCircuitBreakersEvents().size();
-        int circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA").size();
+        int circuitBreakerEventsForABefore = getCircuitBreakerEvents(DummyService.BACKEND).size();
 
         try {
             dummyService.doSomething(true);
@@ -101,27 +100,19 @@ public class CircuitBreakerAutoConfigurationTest {
 
         await().atMost(5, SECONDS).untilAtomic(eventCounter, equalTo(2));
 
-        // Create CircuitBreaker dynamically with default config
-        CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry
-            .circuitBreaker("dynamicBackend");
-
         // expect circuitbreaker-event actuator endpoint recorded all events
         assertThat(getCircuitBreakersEvents())
             .hasSize(circuitBreakerEventsBefore + 2);
-        assertThat(getCircuitBreakerEvents("backendA"))
+        assertThat(getCircuitBreakerEvents(DummyService.BACKEND))
             .hasSize(circuitBreakerEventsForABefore + 2);
+
+        // Create CircuitBreaker dynamically with default config
+        CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry.circuitBreaker("dynamicBackend");
 
         // expect no health indicator for backendB, as it is disabled via properties
         ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
             .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
-        assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendSharedA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendSharedB")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("dynamicBackend")).isNotNull();
-
-        assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
+        verifyHealthIndicatorResponse(healthResponse);
 
         // expect all shared configs share the same values and are from the application.yml file
         CircuitBreaker sharedA = circuitBreakerRegistry.circuitBreaker("backendSharedA");
@@ -129,6 +120,10 @@ public class CircuitBreakerAutoConfigurationTest {
         CircuitBreaker backendB = circuitBreakerRegistry.circuitBreaker("backendB");
         CircuitBreaker backendC = circuitBreakerRegistry.circuitBreaker("backendC");
 
+        verifyCircuitBreakerAutoConfiguration(dynamicCircuitBreaker, sharedA, sharedB, backendB, backendC);
+    }
+
+    private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker dynamicCircuitBreaker, CircuitBreaker sharedA, CircuitBreaker sharedB, CircuitBreaker backendB, CircuitBreaker backendC) {
         Duration defaultWaitDuration = Duration.ofSeconds(10);
         float defaultFailureRate = 60f;
         int defaultPermittedNumberOfCallsInHalfOpenState = 10;
@@ -169,7 +164,17 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultWaitDuration);
     }
 
+    private void verifyHealthIndicatorResponse(ResponseEntity<CompositeHealthResponse> healthResponse) {
+        assertThat(healthResponse.getBody().getDetails()).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("backendA")).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
+        assertThat(healthResponse.getBody().getDetails().get("backendSharedA")).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("backendSharedB")).isNotNull();
+        assertThat(healthResponse.getBody().getDetails().get("dynamicBackend")).isNotNull();
+    }
+
     private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker circuitBreaker) {
+        assertThat(circuitBreaker).isNotNull();
         // expect CircuitBreaker is configured as defined in application.yml
         assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
         assertThat(

@@ -17,6 +17,7 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
@@ -29,6 +30,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,10 +66,9 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
     public void testCircuitBreakerAutoConfigurationReactiveRxJava2() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
-        CircuitBreakerEventsEndpointResponse circuitBreakerEventListBefore = circuitBreakerEvents(
-            "/actuator/circuitbreakerevents");
-        CircuitBreakerEventsEndpointResponse circuitBreakerEventListForBBefore = circuitBreakerEvents(
-            "/actuator/circuitbreakerevents/backendB");
+
+        List<CircuitBreakerEventDTO> circuitBreakerEventsBefore = getCircuitBreakersEvents();
+        List<CircuitBreakerEventDTO> circuitBreakerEventsForBBefore = getCircuitBreakerEvents(ReactiveDummyService.BACKEND);
 
         try {
             reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
@@ -79,20 +80,11 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
         reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase,
             throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(ReactiveDummyService.BACKEND);
-
-        assertThat(circuitBreaker).isNotNull();
-
         // expect circuitbreaker-event actuator endpoint recorded both events
-        CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents(
-            "/actuator/circuitbreakerevents");
-        assertThat(circuitBreakerEventList.getCircuitBreakerEvents())
-            .hasSize(circuitBreakerEventListBefore.getCircuitBreakerEvents().size() + 2);
-
-        circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents/backendB");
-        assertThat(circuitBreakerEventList.getCircuitBreakerEvents())
-            .hasSize(circuitBreakerEventListForBBefore.getCircuitBreakerEvents().size() + 2);
+        assertThat(getCircuitBreakersEvents())
+            .hasSize(circuitBreakerEventsBefore.size() + 2);
+        assertThat(getCircuitBreakerEvents(ReactiveDummyService.BACKEND))
+            .hasSize(circuitBreakerEventsForBBefore.size() + 2);
 
         // Observable test
         try {
@@ -134,7 +126,16 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
         reactiveDummyService.doSomethingCompletable(false).blockingAwait();
     }
 
-    private CircuitBreakerEventsEndpointResponse circuitBreakerEvents(String s) {
-        return restTemplate.getForEntity(s, CircuitBreakerEventsEndpointResponse.class).getBody();
+    private List<CircuitBreakerEventDTO> getCircuitBreakersEvents() {
+        return getEventsFrom("/actuator/circuitbreakerevents");
+    }
+
+    private List<CircuitBreakerEventDTO> getCircuitBreakerEvents(String name) {
+        return getEventsFrom("/actuator/circuitbreakerevents/" + name);
+    }
+
+    private List<CircuitBreakerEventDTO> getEventsFrom(String path) {
+        return restTemplate.getForEntity(path, CircuitBreakerEventsEndpointResponse.class)
+            .getBody().getCircuitBreakerEvents();
     }
 }

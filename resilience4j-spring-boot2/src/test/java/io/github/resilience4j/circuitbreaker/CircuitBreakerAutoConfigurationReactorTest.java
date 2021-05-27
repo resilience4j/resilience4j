@@ -66,7 +66,7 @@ public class CircuitBreakerAutoConfigurationReactorTest {
         assertThat(circuitBreakerProperties).isNotNull();
 
         List<CircuitBreakerEventDTO> circuitBreakerEventsBefore = getCircuitBreakersEvents();
-        List<CircuitBreakerEventDTO> circuitBreakerEventsForBBefore = getCircuitBreakerEvents("backendB");
+        List<CircuitBreakerEventDTO> circuitBreakerEventsForBBefore = getCircuitBreakerEvents(ReactiveDummyService.BACKEND);
 
         try {
             reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase,
@@ -78,14 +78,10 @@ public class CircuitBreakerAutoConfigurationReactorTest {
         reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase,
             throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(ReactiveDummyService.BACKEND);
-        assertThat(circuitBreaker).isNotNull();
-
         // expect circuitbreaker-event actuator endpoint recorded both events
         assertThat(getCircuitBreakersEvents())
             .hasSize(circuitBreakerEventsBefore.size() + 2);
-        assertThat(getCircuitBreakerEvents("backendB"))
+        assertThat(getCircuitBreakerEvents(ReactiveDummyService.BACKEND))
             .hasSize(circuitBreakerEventsForBBefore.size() + 2);
     }
 
