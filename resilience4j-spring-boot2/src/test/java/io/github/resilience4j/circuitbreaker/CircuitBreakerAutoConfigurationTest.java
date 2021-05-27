@@ -23,7 +23,6 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.service.test.DummyService;
-import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,8 +62,6 @@ public class CircuitBreakerAutoConfigurationTest {
     DummyService dummyService;
     @Autowired
     private TestRestTemplate restTemplate;
-    @Autowired
-    private ReactiveDummyService reactiveDummyService;
 
     @Autowired
     private EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
@@ -194,23 +191,6 @@ public class CircuitBreakerAutoConfigurationTest {
         // setRecordExceptions evaluates to false.
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
             .test(new Exception())).isFalse();
-    }
-
-    @Test
-    public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
-        //when
-        final CircuitBreaker backendC = circuitBreakerRegistry.getAllCircuitBreakers()
-            .filter(circuitBreaker -> circuitBreaker.getName().equalsIgnoreCase("backendC"))
-            .get();
-        //then
-        assertThat(backendC).isNotNull();
-        CircuitBreakerConfig backendConfig = backendC.getCircuitBreakerConfig();
-
-        assertThat(backendConfig.getWaitIntervalFunctionInOpenState()).isNotNull();
-        assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000);
-        assertThat(backendConfig.getWaitIntervalFunctionInOpenState().apply(2)).isEqualTo(1111);
-        assertThat(backendConfig.getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(1L));
     }
 
     private List<CircuitBreakerEventDTO> getCircuitBreakersEvents() {
