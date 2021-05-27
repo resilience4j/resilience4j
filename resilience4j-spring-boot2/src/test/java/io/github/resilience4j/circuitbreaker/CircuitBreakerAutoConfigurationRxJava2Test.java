@@ -17,7 +17,6 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
@@ -27,11 +26,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
-import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -68,11 +65,9 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
         CircuitBreakerEventsEndpointResponse circuitBreakerEventListBefore = circuitBreakerEvents(
-            "/actuator" +
-                "/circuitbreakerevents");
+            "/actuator/circuitbreakerevents");
         CircuitBreakerEventsEndpointResponse circuitBreakerEventListForBBefore = circuitBreakerEvents(
-            "/actuator" +
-                "/circuitbreakerevents/backendB");
+            "/actuator/circuitbreakerevents/backendB");
 
         try {
             reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
@@ -86,14 +81,8 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker(ReactiveDummyService.BACKEND);
-        assertThat(circuitBreaker).isNotNull();
 
-        // expect circuitbreakers actuator endpoint contains both circuitbreakers
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
-            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(new HashSet<>(circuitBreakerList.getBody().getCircuitBreakers())).contains(
-            "backendA", "backendB", "backendSharedA", "backendSharedB", "dummyFeignClient"
-        );
+        assertThat(circuitBreaker).isNotNull();
 
         // expect circuitbreaker-event actuator endpoint recorded both events
         CircuitBreakerEventsEndpointResponse circuitBreakerEventList = circuitBreakerEvents(
@@ -104,15 +93,6 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
         circuitBreakerEventList = circuitBreakerEvents("/actuator/circuitbreakerevents/backendB");
         assertThat(circuitBreakerEventList.getCircuitBreakerEvents())
             .hasSize(circuitBreakerEventListForBBefore.getCircuitBreakerEvents().size() + 2);
-
-        // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
-            .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
-        assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails()
-            .get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails()
-            .get("backendB")).isNull();
 
         // Observable test
         try {

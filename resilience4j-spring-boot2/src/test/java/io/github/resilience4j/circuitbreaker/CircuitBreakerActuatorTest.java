@@ -43,7 +43,7 @@ public class CircuitBreakerActuatorTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    public void testCircuitBreakerActuatorEndpoint() {
+    public void testUpdateCircuitBreakerState() {
         // given
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -82,4 +82,5 @@ public class CircuitBreakerActuatorTest {
         assertThat(backendAStateClosed.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.CLOSED.toString());
         assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
+
 }

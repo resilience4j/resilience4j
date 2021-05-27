@@ -18,8 +18,10 @@ package io.github.resilience4j.circuitbreaker;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -62,11 +65,15 @@ public class CircuitBreakerAutoConfigurationTest {
     @Autowired
     private ReactiveDummyService reactiveDummyService;
 
+    @Autowired
+    private EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
+
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the
      * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
      */
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     public void testCircuitBreakerAutoConfiguration() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
@@ -74,15 +81,7 @@ public class CircuitBreakerAutoConfigurationTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
         assertThat(circuitBreaker).isNotNull();
 
-        // expect CircuitBreaker is configured as defined in application.yml
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
-        assertThat(
-            circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-            .isEqualTo(2);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-            .isEqualTo(70f);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(5L));
+        verifyCircuitBreakerAutoConfiguration(circuitBreaker);
 
         AtomicInteger eventCounter = new AtomicInteger(0);;
         circuitBreaker.getEventPublisher()
@@ -121,16 +120,6 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(healthResponse.getBody().getDetails().get("backendSharedA")).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("backendSharedB")).isNotNull();
         assertThat(healthResponse.getBody().getDetails().get("dynamicBackend")).isNotNull();
-
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
-            .test(new RecordedException())).isTrue();
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate()
-            .test(new IgnoredException())).isTrue();
-
-        // Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
-        // setRecordExceptions evaluates to false.
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
-            .test(new Exception())).isFalse();
 
         assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
 
@@ -178,6 +167,28 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(defaultFailureRate);
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
             .isEqualTo(defaultWaitDuration);
+    }
+
+    private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker circuitBreaker) {
+        // expect CircuitBreaker is configured as defined in application.yml
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
+        assertThat(
+            circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
+            .isEqualTo(2);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
+            .isEqualTo(70f);
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
+            .isEqualByComparingTo(Duration.ofSeconds(5L));
+
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
+            .test(new RecordedException())).isTrue();
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate()
+            .test(new IgnoredException())).isTrue();
+
+        // Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
+        // setRecordExceptions evaluates to false.
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
+            .test(new Exception())).isFalse();
     }
 
     @Test

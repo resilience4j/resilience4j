@@ -18,7 +18,6 @@ package io.github.resilience4j.circuitbreaker;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
@@ -30,11 +29,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,37 +82,11 @@ public class CircuitBreakerAutoConfigurationReactorTest {
             .circuitBreaker(ReactiveDummyService.BACKEND);
         assertThat(circuitBreaker).isNotNull();
 
-        // expect CircuitBreaker is configured as defined in application.yml
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(10);
-        assertThat(
-            circuitBreaker.getCircuitBreakerConfig().getPermittedNumberOfCallsInHalfOpenState())
-            .isEqualTo(5);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getFailureRateThreshold())
-            .isEqualTo(50f);
-        assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
-            .isEqualByComparingTo(Duration.ofSeconds(5L));
-
-        // expect circuitbreakers actuator endpoint contains all circuitbreakers
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
-            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB",
-                "dummyFeignClient");
-
         // expect circuitbreaker-event actuator endpoint recorded both events
         assertThat(getCircuitBreakersEvents())
             .hasSize(circuitBreakerEventsBefore.size() + 2);
         assertThat(getCircuitBreakerEvents("backendB"))
             .hasSize(circuitBreakerEventsForBBefore.size() + 2);
-
-        // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
-            .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
-        assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
-
-        assertThat(circuitBreakerAspect.getOrder()).isEqualTo(400);
     }
 
     private List<CircuitBreakerEventDTO> getCircuitBreakersEvents() {

@@ -17,7 +17,6 @@ package io.github.resilience4j.circuitbreaker;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.service.test.DummyService;
@@ -28,7 +27,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
@@ -80,27 +78,11 @@ public class CircuitBreakerAutoConfigurationAsyncTest {
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
         assertThat(circuitBreaker).isNotNull();
 
-        // expect circuitbreakers actuator endpoint contains both circuit breakers
-        ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakerList = restTemplate
-            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
-        assertThat(circuitBreakerList.getBody().getCircuitBreakers()).hasSize(6)
-            .containsExactly("backendA", "backendB", "backendC", "backendSharedA", "backendSharedB",
-                "dummyFeignClient");
-
         // expect circuitbreaker-event actuator endpoint recorded both events
         assertThat(getCircuitBreakersEvents())
             .hasSize(circuitBreakerEventsBefore.size() + 2);
         assertThat(getCircuitBreakerEvents("backendA"))
             .hasSize(circuitBreakerEventsForABefore.size() + 2);
-
-        // expect no health indicator for backendB, as it is disabled via properties
-        ResponseEntity<CompositeHealthResponse> healthResponse = restTemplate
-            .getForEntity("/actuator/health/circuitBreakers", CompositeHealthResponse.class);
-        assertThat(healthResponse.getBody().getDetails()).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendB")).isNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendSharedA")).isNotNull();
-        assertThat(healthResponse.getBody().getDetails().get("backendSharedB")).isNotNull();
     }
 
     private List<CircuitBreakerEventDTO> getCircuitBreakersEvents() {
