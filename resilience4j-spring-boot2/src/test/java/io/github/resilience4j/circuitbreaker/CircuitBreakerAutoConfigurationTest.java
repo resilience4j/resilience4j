@@ -29,12 +29,18 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -60,22 +66,10 @@ public class CircuitBreakerAutoConfigurationTest {
      * The test verifies that a CircuitBreaker instance is created and configured properly when the
      * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
      */
-    /*
     @Test
     public void testCircuitBreakerAutoConfiguration() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
-
-        int circuitBreakerEventsBefore = getCircuitBreakersEvents().size();
-        int circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA").size();
-
-        try {
-            dummyService.doSomething(true);
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        dummyService.doSomething(false);
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(DummyService.BACKEND);
         assertThat(circuitBreaker).isNotNull();
@@ -89,6 +83,24 @@ public class CircuitBreakerAutoConfigurationTest {
             .isEqualTo(70f);
         assertThat(circuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
             .isEqualByComparingTo(Duration.ofSeconds(5L));
+
+        AtomicInteger eventCounter = new AtomicInteger(0);;
+        circuitBreaker.getEventPublisher()
+            .onSuccess(event -> eventCounter.incrementAndGet())
+            .onError(event -> eventCounter.incrementAndGet());
+
+        int circuitBreakerEventsBefore = getCircuitBreakersEvents().size();
+        int circuitBreakerEventsForABefore = getCircuitBreakerEvents("backendA").size();
+
+        try {
+            dummyService.doSomething(true);
+        } catch (IOException ex) {
+            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the recordFailurePredicate as a failure.
+        }
+        // The invocation is recorded by the CircuitBreaker as a success.
+        dummyService.doSomething(false);
+
+        await().atMost(5, SECONDS).untilAtomic(eventCounter, equalTo(2));
 
         // Create CircuitBreaker dynamically with default config
         CircuitBreaker dynamicCircuitBreaker = circuitBreakerRegistry
@@ -167,8 +179,6 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(dynamicCircuitBreaker.getCircuitBreakerConfig().getWaitDurationInOpenState())
             .isEqualTo(defaultWaitDuration);
     }
-
-     */
 
     @Test
     public void shouldDefineWaitIntervalFunctionInOpenStateForCircuitBreakerAutoConfiguration() {
