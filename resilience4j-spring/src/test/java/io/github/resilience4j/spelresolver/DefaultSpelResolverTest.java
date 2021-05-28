@@ -15,14 +15,17 @@
  */
 package io.github.resilience4j.spelresolver;
 
+import io.github.resilience4j.DummySpelBean;
 import io.github.resilience4j.TestApplication;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.config.EmbeddedValueResolver;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -30,18 +33,24 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = TestApplication.class, properties = "property=backend")
-public class SpelResolverTest {
-    private SpelResolver sut;
+public class DefaultSpelResolverTest {
+    private DefaultSpelResolver sut;
 
     @Autowired
     private ConfigurableBeanFactory configurableBeanFactory;
 
+    @MockBean(name="dummySpelBean")
+    DummySpelBean dummySpelBean;
+
     @Before
     public void setUp() {
-        sut = new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer());
+        sut = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), configurableBeanFactory);
         sut.setEmbeddedValueResolver(new EmbeddedValueResolver(configurableBeanFactory));
     }
 
@@ -49,7 +58,7 @@ public class SpelResolverTest {
     public void givenNonSpelExpression_whenParse_returnsItself() throws Exception {
         String testExpression = "backendA";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, testExpression);
@@ -65,7 +74,7 @@ public class SpelResolverTest {
         String testExpression = "#root.args[0]";
         String firstArgument = "test";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{firstArgument}, testExpression);
@@ -80,7 +89,7 @@ public class SpelResolverTest {
     public void testRootMethodName() throws Exception {
         String testExpression = "#root.methodName";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, testExpression);
@@ -96,7 +105,7 @@ public class SpelResolverTest {
         String testExpression = "#p0";
         String firstArgument = "test";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{firstArgument}, testExpression);
@@ -112,7 +121,7 @@ public class SpelResolverTest {
         String testExpression = "#a0";
         String firstArgument = "test";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{firstArgument}, testExpression);
@@ -127,7 +136,7 @@ public class SpelResolverTest {
     public void stringSpelTest() throws Exception {
         String testExpression = "#{'recover'}";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, testExpression);
@@ -142,7 +151,7 @@ public class SpelResolverTest {
     public void placeholderSpelTest() throws Exception {
         String testExpression = "${missingProperty:default}";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, testExpression);
@@ -157,7 +166,7 @@ public class SpelResolverTest {
     public void placeholderSpelTest2() throws Exception {
         String testExpression = "${property:default}";
 
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, testExpression);
@@ -166,8 +175,34 @@ public class SpelResolverTest {
     }
 
     @Test
+    public void beanMethodSpelTest() throws Exception {
+        String testExpression = "@dummySpelBean.getBulkheadName(#parameter)";
+        String testMethodArg = "argg";
+        String bulkheadName = "sgt. bulko";
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        given(dummySpelBean.getBulkheadName(testMethodArg)).willReturn(bulkheadName);
+
+        String result = sut.resolve(testMethod, new Object[]{testMethodArg}, testExpression);
+
+        then(dummySpelBean).should(times(1)).getBulkheadName(testMethodArg);
+        assertThat(result).isEqualTo(bulkheadName);
+    }
+
+    @Test
+    public void atTest() throws Exception {
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{}, "@");
+
+        assertThat(result).isEqualTo("@");
+    }
+
+    @Test
     public void nullTest() throws Exception {
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, null);
@@ -177,7 +212,7 @@ public class SpelResolverTest {
 
     @Test
     public void emptyStringTest() throws Exception {
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, "");
@@ -187,7 +222,7 @@ public class SpelResolverTest {
 
     @Test
     public void dollarTest() throws Exception {
-        SpelResolverTest target = new SpelResolverTest();
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         String result = sut.resolve(testMethod, new Object[]{}, "$");

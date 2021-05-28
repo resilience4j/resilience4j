@@ -15,7 +15,9 @@
  */
 package io.github.resilience4j.spelresolver.configure;
 
+import io.github.resilience4j.spelresolver.DefaultSpelResolver;
 import io.github.resilience4j.spelresolver.SpelResolver;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -28,8 +30,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 @Configuration
 public class SpelResolverConfiguration {
     @Bean
-    public SpelResolver spelResolver(SpelExpressionParser spelExpressionParser, ParameterNameDiscoverer parameterNameDiscoverer) {
-        return new SpelResolver(spelExpressionParser, parameterNameDiscoverer);
+    public SpelResolver spelResolver(SpelExpressionParser spelExpressionParser, ParameterNameDiscoverer parameterNameDiscoverer, BeanFactory beanFactory) {
+        return new DefaultSpelResolver(spelExpressionParser, parameterNameDiscoverer, beanFactory);
     }
 
     @Bean

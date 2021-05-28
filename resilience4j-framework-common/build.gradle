@@ -1,11 +1,10 @@
 dependencies {
-    compile project(':resilience4j-core')
-    compile project(':resilience4j-circuitbreaker')
-    compile project(':resilience4j-ratelimiter')
-    compile project(':resilience4j-retry')
-    compile project(':resilience4j-bulkhead')
-    compile project(':resilience4j-timelimiter')
-    testCompile project(':resilience4j-test')
+    api project(':resilience4j-circuitbreaker')
+    api project(':resilience4j-ratelimiter')
+    api project(':resilience4j-retry')
+    api project(':resilience4j-bulkhead')
+    api project(':resilience4j-timelimiter')
+    testImplementation project(':resilience4j-test')
 }
 
 ext.moduleName = 'io.github.resilience4j.frameworkcommon'

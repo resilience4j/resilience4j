@@ -11,8 +11,9 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
-image:https://travis-ci.org/resilience4j/resilience4j.svg?branch=master["Build Status", link="https://travis-ci.org/resilience4j/resilience4j"]
-image:https://api.bintray.com/packages/resilience4j/Maven/resilience4j/images/download.svg[link="https://bintray.com/resilience4j/Maven/resilience4j/_latestVersion"]
+image:https://github.com/resilience4j/resilience4j/actions/workflows/gradle-build.yml/badge.svg["Build Status"]
+image:https://img.shields.io/nexus/r/io.github.resilience4j/resilience4j-circuitbreaker?nexusVersion=3&server=https%3A%2F%2Fnexus.pentaho.org["Release"]
+image:https://img.shields.io/nexus/s/io.github.resilience4j/resilience4j-circuitbreaker?server=https%3A%2F%2Foss.sonatype.org["Snapshot"]
 image:http://img.shields.io/badge/license-ASF2-blue.svg["Apache License 2", link="http://www.apache.org/licenses/LICENSE-2.0.txt"]
 
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=coverage["Coverage", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]

@@ -676,7 +676,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // Thread-safe
             if (clock.instant().isAfter(retryAfterWaitDuration)) {
                 toHalfOpenState();
-                return true;
+                // Check if the call is allowed to run in HALF_OPEN state after state transition
+                // super.tryAcquirePermission() doesn't work right that's why the code is copied
+                boolean callPermitted = stateReference.get().tryAcquirePermission();
+                if (!callPermitted) {
+                    publishCallNotPermittedEvent();
+                    circuitBreakerMetrics.onCallNotPermitted();
+                }
+                return callPermitted;
             }
             circuitBreakerMetrics.onCallNotPermitted();
             return false;
@@ -740,7 +747,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             cancelAutomaticTransitionToHalfOpen();
         }
 
-        private void toHalfOpenState() {
+        private synchronized void toHalfOpenState() {
             if (isOpen.compareAndSet(true, false)) {
                 transitionToHalfOpenState();
             }
@@ -870,11 +877,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             }
 
             if (shouldPublishFailureRateExceededEvent(result)) {
-                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+                publishCircuitFailureRateExceededEvent(getName(), circuitBreakerMetrics.getFailureRate());
             }
 
             if (shouldPublishSlowCallRateExceededEvent(result)) {
-                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+                publishCircuitSlowCallRateExceededEvent(getName(), circuitBreakerMetrics.getSlowCallRate());
             }
         }
 
