@@ -14,10 +14,9 @@
  *  limitations under the License.
  *
  */
-package io.github.resilience4j.grpc.circuitbreaker.server;
+package io.github.resilience4j.grpc.circuitbreaker.server.interceptor;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.grpc.circuitbreaker.server.interceptor.ServerCircuitBreakerInterceptors;
 import io.grpc.BindableService;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -34,7 +33,7 @@ import java.util.function.Predicate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class ServerCircuitBreakerTests {
+public class ServerCircuitBreakerInterceptorsTests {
 
     @Rule
     public GrpcServerRule serverRule = new GrpcServerRule();
@@ -167,19 +166,19 @@ public class ServerCircuitBreakerTests {
 
     }
 
-    public void recordFaliureOnNotPermittedServiceCalls() {
+    public void recordFailureOnNotPermittedServiceCalls() {
 
     }
 
-    public void recordFaliureOnNotPermittedMethodCalls() {
+    public void recordFailureOnNotPermittedMethodCalls() {
 
     }
 
-    public void shouldNotRecordFaliureWhenMethodCallCancelled() {
+    public void shouldNotRecordFailureWhenMethodCallCancelled() {
 
     }
 
-    public void shouldNotRecordFaliureWhenServiceCallCancelled() {
+    public void shouldNotRecordFailureWhenServiceCallCancelled() {
 
     }
 }

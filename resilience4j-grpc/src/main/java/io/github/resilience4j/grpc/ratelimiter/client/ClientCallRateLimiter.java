@@ -23,7 +23,7 @@ import io.grpc.Metadata;
 import io.grpc.Status;
 import io.grpc.StatusException;
 
-public class ClientCallRateLimiter <ReqT, RespT>
+public class ClientCallRateLimiter<ReqT, RespT>
     extends ClientInterceptors.CheckedForwardingClientCall<ReqT, RespT> {
 
     private final RateLimiter rateLimiter;

@@ -52,7 +52,6 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
         return new ServerCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
-
     @Override
     public void close(Status status, Metadata trailers) {
         if (delegate().isCancelled()) {
