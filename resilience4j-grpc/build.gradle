@@ -1,10 +1,10 @@
 dependencies {
     compileOnly(libraries.grpc_stub)
-    compile project(':resilience4j-circuitbreaker')
-    compile project(':resilience4j-ratelimiter')
+    implementation project(':resilience4j-circuitbreaker')
+    implementation project(':resilience4j-ratelimiter')
 
-    testCompile(libraries.grpc_api)
-    testCompile(libraries.grpc_testing)
-    testCompile(libraries.grpc_testing_proto)
+    testImplementation(libraries.grpc_api)
+    testImplementation(libraries.grpc_testing)
+    testImplementation(libraries.grpc_testing_proto)
 }
 ext.moduleName = 'io.github.resilience4j.grpc'
