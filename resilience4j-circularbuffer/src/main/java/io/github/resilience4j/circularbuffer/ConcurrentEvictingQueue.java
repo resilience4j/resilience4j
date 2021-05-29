@@ -255,7 +255,11 @@ public class ConcurrentEvictingQueue<E> extends AbstractQueue<E> {
     }
 
     private int nextIndex(final int ringIndex) {
-        return (ringIndex + 1) % maxSize;
+        int nextIdx = ringIndex + 1;
+        if (nextIdx == maxSize) {
+            return 0;
+        }
+        return nextIdx;
     }
 
     private <T> T readConcurrently(final Supplier<T> readSupplier) {
