@@ -35,16 +35,18 @@ import java.util.function.Supplier;
 public class CircuitBreakerBenchmark {
 
     private static final int ITERATION_COUNT = 10;
-    private static final int WARMUP_COUNT = 10;
+    private static final int WARMUP_COUNT = 3;
     private static final int THREAD_COUNT = 2;
     private static final int FORK_COUNT = 2;
 
     private Supplier<String> protectedSupplier;
-    private Supplier<String> protectedSupplierWithSb;
+    private Supplier<String> protectedSupplierWithOneConsumer;
+    private Supplier<String> protectedSupplierWithDiffConsumer;
     private Supplier<String> stringSupplier;
 
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
+            .include(CircuitBreakerBenchmark.class.getName())
             .addProfiler(GCProfiler.class)
             .build();
         new Runner(options).run();
@@ -59,6 +61,18 @@ public class CircuitBreakerBenchmark {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testCircuitBreaker");
         protectedSupplier = circuitBreaker.decorateSupplier(stringSupplier);
+
+        CircuitBreaker withOneConsumer = CircuitBreaker.ofDefaults("testCircuitBreakerWithSb");
+        withOneConsumer.getEventPublisher().onEvent(event -> {});
+        protectedSupplierWithOneConsumer = CircuitBreaker.decorateSupplier(withOneConsumer, stringSupplier);
+
+        CircuitBreaker withDiffConsumer = CircuitBreaker.ofDefaults("testCircuitBreakerWithDiffSb");
+        withDiffConsumer.getEventPublisher()
+            .onIgnoredError(event ->{})
+            .onCallNotPermitted(event ->{})
+            .onSuccess(event -> {})
+            .onError(event -> {});
+        protectedSupplierWithDiffConsumer = CircuitBreaker.decorateSupplier(withDiffConsumer, stringSupplier);
     }
 
     @Benchmark
@@ -77,5 +91,23 @@ public class CircuitBreakerBenchmark {
     @Measurement(iterations = ITERATION_COUNT)
     public String protectedSupplier() {
         return protectedSupplier.get();
+    }
+
+    @Benchmark
+    @Fork(value = FORK_COUNT)
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String protectedSupplierWithOneConsumer() {
+        return protectedSupplierWithOneConsumer.get();
+    }
+
+    @Benchmark
+    @Fork(value = FORK_COUNT)
+    @Threads(value = THREAD_COUNT)
+    @Warmup(iterations = WARMUP_COUNT)
+    @Measurement(iterations = ITERATION_COUNT)
+    public String protectedSupplierWithDiffConsumer() {
+        return protectedSupplierWithDiffConsumer.get();
     }
 }

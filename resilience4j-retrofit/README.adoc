@@ -2,7 +2,7 @@
 
 https://square.github.io/retrofit/[Retrofit] client circuit breaking & rate limiting.
 
-NOTE: For detailed documentation look at our *http://resilience4j.github.io/resilience4j/#_retrofit[Usage Guide]*
+NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/retrofit[Usage Guide]*
 
 == License
 

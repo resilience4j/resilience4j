@@ -27,7 +27,7 @@ import java.util.function.*;
 /**
  * A Decorator builder which can be used to apply multiple decorators to a Supplier, Callable
  * Function, Runnable, CompletionStage or Consumer.
- * <p></p>
+ * <p>
  * Decorators are applied in the order of the builder chain. For example, consider:
  *
  * <pre>{@code

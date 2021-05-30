@@ -40,7 +40,7 @@ import java.lang.annotation.*;
  * @see Nullable
  */
 @Target({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 @Nonnull
 @TypeQualifierNickname

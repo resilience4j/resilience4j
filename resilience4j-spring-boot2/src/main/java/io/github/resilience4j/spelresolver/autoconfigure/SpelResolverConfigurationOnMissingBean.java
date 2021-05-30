@@ -15,8 +15,10 @@
  */
 package io.github.resilience4j.spelresolver.autoconfigure;
 
+import io.github.resilience4j.spelresolver.DefaultSpelResolver;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,7 +50,7 @@ public class SpelResolverConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean
-    public SpelResolver spelResolver(SpelExpressionParser spelExpressionParser, ParameterNameDiscoverer parameterNameDiscoverer) {
-        return configuration.spelResolver(spelExpressionParser, parameterNameDiscoverer);
+    public SpelResolver spelResolver(SpelExpressionParser spelExpressionParser, ParameterNameDiscoverer parameterNameDiscoverer, BeanFactory beanFactory) {
+        return configuration.spelResolver(spelExpressionParser, parameterNameDiscoverer, beanFactory);
     }
 }

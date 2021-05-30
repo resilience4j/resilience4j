@@ -759,6 +759,23 @@ public class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    public void shouldPublishEachEventOnceInMetricOnlyState() {
+        circuitBreaker.transitionToMetricsOnlyState();
+        circuitBreaker.getEventPublisher().onFailureRateExceeded(mockOnFailureRateExceededEventConsumer);
+        circuitBreaker.getEventPublisher().onSlowCallRateExceeded(mockOnSlowCallRateExceededEventConsumer);
+
+        // trigger FailureRateExceededEvent and SlowCallRateExceededEvent
+        for(int times = 0; times<5; times++) {
+            circuitBreaker.onError(5, TimeUnit.SECONDS, new RuntimeException());
+        }
+
+        verify(mockOnFailureRateExceededEventConsumer, times(1))
+            .consumeEvent(any(CircuitBreakerOnFailureRateExceededEvent.class));
+        verify(mockOnSlowCallRateExceededEventConsumer, times(1))
+            .consumeEvent(any(CircuitBreakerOnSlowCallRateExceededEvent.class));
+    }
+
+    @Test
     public void allCircuitBreakerStatesAllowTransitionToMetricsOnlyMode() {
         for (final CircuitBreaker.State state : CircuitBreaker.State.values()) {
             CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, CircuitBreaker.State.METRICS_ONLY);

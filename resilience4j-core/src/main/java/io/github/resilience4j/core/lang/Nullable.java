@@ -42,7 +42,7 @@ import java.lang.annotation.*;
  * @see NonNull
  */
 @Target({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 @Nonnull(when = When.MAYBE)
 @TypeQualifierNickname
