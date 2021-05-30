@@ -22,6 +22,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import java.io.IOException;
+
 /**
  * Decorates a Retrofit {@link Call} to inform a Retry when an retryOnResults matches and retryExceptions are thrown.
  * All exceptions are marked as errors or responses not matching the supplied predicate.
@@ -48,25 +50,27 @@ public interface RetrofitRetry {
 
         private final Call<T> call;
         private final Retry retry;
-        private int retryCount = 0;
+        private final Retry.Context<Response<T>> context;
 
         public RetryCall(Call<T> call, Retry retry) {
             super(call);
             this.call = call;
             this.retry = retry;
+            this.context = retry.context();
         }
 
-        private final Callback retriedCallback(Callback callback) {
-            return new Callback() {
+        private Callback<T> retriedCallback(Callback<T> callback) {
+            return new Callback<T>() {
 
                 /**
                  * Invoked for a received HTTP response.
                  */
                 @Override
-                public void onResponse(Call call, Response response) {
-                    if (retry.context().onResult(response) && ++retryCount < retry.getRetryConfig().getMaxAttempts()) {
+                public void onResponse(Call<T> call, Response<T> response) {
+                    if (context.onResult(response)) {
                         executableCall().enqueue(retriedCallback(callback));
                     } else {
+                        context.onComplete();
                         callback.onResponse(call, response);
                     }
                 }
@@ -76,23 +80,19 @@ public interface RetrofitRetry {
                  * exception occurred creating the request or processing the response.
                  */
                 @Override
-                public void onFailure(Call call, Throwable throwable) {
-                    if (retry.getRetryConfig().getExceptionPredicate().test(throwable) && ++retryCount < retry.getRetryConfig().getMaxAttempts()) {
-                        try {
-                            retry.context().onError(asException(throwable));
-                            executableCall().enqueue(retriedCallback(callback));
-                        } catch (Throwable throwable1) {
-                            callback.onFailure(call, throwable);
-                        }
-                    } else {
-                        callback.onFailure(call, throwable);
+                public void onFailure(Call<T> call, Throwable throwable) {
+                    try {
+                        context.onError(asException(throwable));
+                        executableCall().enqueue(retriedCallback(callback));
+                    } catch (Exception exception) {
+                        callback.onFailure(call, exception);
                     }
                 }
 
                 /**
                  * resilience4j accepts exceptions only
                  */
-                private final Exception asException(Throwable throwable) {
+                private Exception asException(Throwable throwable) {
                     return throwable instanceof Exception ?
                         (Exception) throwable :
                         new RuntimeException("Throwable", throwable);
@@ -105,7 +105,7 @@ public interface RetrofitRetry {
          * occurred talking to the server, creating the request, or processing the response.
          */
         @Override
-        public void enqueue(final Callback callback) {
+        public void enqueue(final Callback<T> callback) {
             call.enqueue(retriedCallback(callback));
         }
 
@@ -113,13 +113,15 @@ public interface RetrofitRetry {
          * Synchronously send the request and return its response
          */
         @Override
-        public Response<T> execute() {
+        public Response<T> execute() throws IOException {
             Response<T> response = null;
 
             try {
                 response = retry.executeCallable(() -> executableCall().execute());
-            } catch (Exception e) {
-                throw new RuntimeException();
+            } catch (IOException ioe) {
+                throw ioe;
+            } catch (Throwable t) {
+                throw new RuntimeException("Exception executing call", t);
             }
             return response;
         }
