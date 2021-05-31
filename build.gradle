@@ -49,6 +49,7 @@ configure(project.coreProjects) {
         }
     }
 
+
     dependencies {
         api (libraries.vavr)
         implementation (libraries.slf4j)
@@ -103,6 +104,8 @@ def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report
 
 sonarqube {
     properties {
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.organization", "resilience4j"
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
         property "sonar.links.homepage", "https://github.com/resilience4j/resilience4j"

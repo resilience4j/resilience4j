@@ -26,7 +26,7 @@ jobs:
           java-version: '8'
           distribution: 'adopt'
       - name: Cache SonarCloud packages
-        uses: actions/cache@v2.1.3
+        uses: actions/cache@v2.1.5
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -41,18 +41,11 @@ jobs:
           arguments: check
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
-      - name: Comment build scan URL
-        uses: actions/github-script@v3
-        if: github.event_name == 'pull_request' && steps.gradle.outputs.build-scan-url != '' && failure()
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ ${{ github.workflow }} failed: ${{ steps.gradle.outputs.build-scan-url }}'
-            })
+          files: '**/test-results/**/*.xml'
       - name: Analyze with SonarCloud
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         uses: eskatos/gradle-command-action@v1
@@ -61,5 +54,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           arguments: sonarqube -Psonar.organization=resilience4j
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+      - name: Publish to Sonatype
+        uses: eskatos/gradle-command-action@v1
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        with:
+          arguments: publishToSonatype -Psonar.organization=resilience4j
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
