@@ -39,6 +39,10 @@ artifacts {
     archives javadocJar
 }
 
+tasks.withType(Sign) {
+    onlyIf { !version.endsWith("SNAPSHOT") }
+}
+
 signing {
     sign configurations.archives
 }
