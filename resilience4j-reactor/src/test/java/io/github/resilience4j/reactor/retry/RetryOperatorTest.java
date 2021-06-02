@@ -24,8 +24,6 @@ import io.github.resilience4j.test.HelloWorldService;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import reactor.blockhound.BlockHound;
-import reactor.blockhound.integration.ReactorIntegration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -45,7 +43,7 @@ public class RetryOperatorTest {
 
     @BeforeClass
     public static void beforeClass() {
-        BlockHound.install(new ReactorIntegration());
+        //BlockHound.install(new ReactorIntegration());
     }
 
     @Before
