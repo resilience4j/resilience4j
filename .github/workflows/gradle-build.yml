@@ -60,8 +60,8 @@ jobs:
       - name: Publish to Sonatype
         uses: eskatos/gradle-command-action@v1
         env:
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USER }}
+          ORG_GRADLE_PROJECT_sonatypePassword : ${{ secrets.SONATYPE_PASSWORD }}
         with:
           arguments: publishToSonatype -Psonar.organization=resilience4j
           dependencies-cache-enabled: true
