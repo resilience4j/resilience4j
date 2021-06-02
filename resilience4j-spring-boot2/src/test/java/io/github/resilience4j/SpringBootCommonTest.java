@@ -38,11 +38,12 @@ import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProp
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.autoconfigure.AbstractRetryConfigurationOnMissingBean;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
-import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.DefaultSpelResolver;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.autoconfigure.AbstractTimeLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
 import org.junit.Test;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -79,7 +80,7 @@ public class SpringBootCommonTest {
                 ThreadPoolBulkheadRegistry.ofDefaults(), BulkheadRegistry.ofDefaults(),
                 Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-            new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
+            new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()))).isNotNull();
         assertThat(
             bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty())).isNotNull();
     }
@@ -96,7 +97,7 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-            new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
+            new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()))).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -113,7 +114,7 @@ public class SpringBootCommonTest {
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()), null)).isNotNull();
+                new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()), null)).isNotNull();
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -131,7 +132,7 @@ public class SpringBootCommonTest {
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()))).isNotNull();
+                new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()))).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }
@@ -152,7 +153,7 @@ public class SpringBootCommonTest {
             .timeLimiterAspect(new TimeLimiterConfigurationProperties(),
                 TimeLimiterRegistry.ofDefaults(), Collections.emptyList(),
                 new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new SpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer()),
+                new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()),
                 null)).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterRegistryEventConsumer(Optional.empty())).isNotNull();

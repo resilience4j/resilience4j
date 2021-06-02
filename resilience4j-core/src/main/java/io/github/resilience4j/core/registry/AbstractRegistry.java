@@ -184,22 +184,21 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
         @Override
         public EventPublisher<E> onEntryAdded(
             EventConsumer<EntryAddedEvent<E>> onSuccessEventConsumer) {
-            registerConsumer(EntryAddedEvent.class.getSimpleName(), onSuccessEventConsumer);
+            registerConsumer(EntryAddedEvent.class.getName(), onSuccessEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher<E> onEntryRemoved(
             EventConsumer<EntryRemovedEvent<E>> onErrorEventConsumer) {
-            registerConsumer(EntryRemovedEvent.class.getSimpleName(), onErrorEventConsumer);
+            registerConsumer(EntryRemovedEvent.class.getName(), onErrorEventConsumer);
             return this;
         }
 
         @Override
         public EventPublisher<E> onEntryReplaced(
             EventConsumer<EntryReplacedEvent<E>> onStateTransitionEventConsumer) {
-            registerConsumer(EntryReplacedEvent.class.getSimpleName(),
-                onStateTransitionEventConsumer);
+            registerConsumer(EntryReplacedEvent.class.getName(), onStateTransitionEventConsumer);
             return this;
         }
 

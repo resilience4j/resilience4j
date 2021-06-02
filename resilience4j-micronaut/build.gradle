@@ -23,6 +23,7 @@ dependencies {
     compileOnly project(':resilience4j-rxjava2')
     compileOnly project(':resilience4j-bulkhead')
     compileOnly project(':resilience4j-consumer')
+    compileOnly project(':resilience4j-core')
     implementation project(':resilience4j-framework-common')
 
     testImplementation project(':resilience4j-circuitbreaker')

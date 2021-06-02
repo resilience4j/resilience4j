@@ -23,6 +23,7 @@ import io.github.resilience4j.timelimiter.TimeLimiter
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.Test
@@ -98,6 +99,31 @@ class CoroutineTimeLimiterTest {
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
             Assertions.assertThat(timeoutEvents).hasSize(1)
+        }
+    }
+
+    @Test
+    fun `should ignore non-timeout cancellations`() {
+        runBlocking {
+            val timelimiter = TimeLimiter.ofDefaults()
+            val helloWorldService = CoroutineHelloWorldService()
+            val timeoutEvents = mutableListOf<TimeLimiterOnTimeoutEvent>()
+            timelimiter.eventPublisher.onTimeout(timeoutEvents::add)
+            val successfulEvents = mutableListOf<TimeLimiterOnSuccessEvent>()
+            timelimiter.eventPublisher.onSuccess(successfulEvents::add)
+
+            //When
+            try {
+                timelimiter.executeSuspendFunction {
+                    throw CancellationException("result not required")
+                }
+            } catch (e: CancellationException) {
+                // nothing - proceed
+            }
+
+            //Then
+            Assertions.assertThat(timeoutEvents).hasSize(0)
+            Assertions.assertThat(successfulEvents).hasSize(0)
         }
     }
 

@@ -47,12 +47,15 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
         }
     } catch (t: Throwable) {
         if (isCancellation(coroutineContext, t)) {
-            val timeoutException = TimeLimiter.createdTimeoutExceptionWithName(name, t)
-            onError(timeoutException)
-            throw timeoutException
+            if (t is TimeoutCancellationException) {
+                val timeoutException = TimeLimiter.createdTimeoutExceptionWithName(name, t)
+                onError(timeoutException)
+                throw timeoutException
+            }
+            // if not a timeout, then do not record success or error on cancellation
+        } else {
+            onError(t)
         }
-
-        onError(t)
         throw t
     }
 

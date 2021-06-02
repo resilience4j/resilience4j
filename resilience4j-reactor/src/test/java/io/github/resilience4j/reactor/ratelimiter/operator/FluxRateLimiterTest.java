@@ -62,7 +62,6 @@ public class FluxRateLimiterTest {
 
         StepVerifier.create(
             Flux.error(new IOException("BAM!"))
-                .log()
                 .transformDeferred(RateLimiterOperator.of(rateLimiter)))
             .expectSubscription()
             .expectError(IOException.class)

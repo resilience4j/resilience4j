@@ -1,10 +1,10 @@
 dependencies {
-    compile project(':resilience4j-ratelimiter')
-    compile project(':resilience4j-circuitbreaker')
-    compile project(':resilience4j-bulkhead')
-    compile project(':resilience4j-retry')
-    compile project(':resilience4j-cache')
-    compile project(':resilience4j-timelimiter')
-    testCompile project(':resilience4j-test')
+    implementation project(':resilience4j-ratelimiter')
+    implementation project(':resilience4j-circuitbreaker')
+    implementation project(':resilience4j-bulkhead')
+    implementation project(':resilience4j-retry')
+    implementation project(':resilience4j-cache')
+    implementation project(':resilience4j-timelimiter')
+    testImplementation project(':resilience4j-test')
 }
 ext.moduleName = 'io.github.resilience4j.all'
