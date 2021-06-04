@@ -39,8 +39,20 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           arguments: check
+          wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
+      - name: "Comment build scan url"
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ ${{ github.workflow }} failed: ${{ steps.gradle.outputs.build-scan-url }}'
+            })
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
         if: always()
