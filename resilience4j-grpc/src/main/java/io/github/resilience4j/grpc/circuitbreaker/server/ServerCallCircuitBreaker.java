@@ -49,28 +49,9 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
         return new ServerCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
     }
 
-    private void acquirePermissionOrThrowStatus() {
-        try {
-            circuitBreaker.acquirePermission();
-        } catch (Exception exception) {
-            throw Status.UNAVAILABLE
-                .withDescription(exception.getMessage())
-                .withCause(exception)
-                .asRuntimeException();
-        }
-    }
-
-    @Override
-    public void sendMessage(RespT message) {
-        acquirePermissionOrThrowStatus();
-        super.sendMessage(message);
-    }
-
     @Override
     public void close(Status status, Metadata trailers) {
-        if (delegate().isCancelled()) {
-            circuitBreaker.releasePermission();
-        } else if (successStatusPredicate.test(status)) {
+        if (successStatusPredicate.test(status)) {
             circuitBreaker.onSuccess(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
         } else {
             circuitBreaker.onError(

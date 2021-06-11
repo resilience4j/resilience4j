@@ -18,12 +18,8 @@ package io.github.resilience4j.grpc.circuitbreaker.server.interceptor;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.grpc.circuitbreaker.server.ServerCallCircuitBreaker;
-import io.grpc.Metadata;
-import io.grpc.MethodDescriptor;
-import io.grpc.ServerCall;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
-import io.grpc.Status;
+import io.github.resilience4j.grpc.circuitbreaker.server.ServerCircuitBreakerCallListener;
+import io.grpc.*;
 
 import java.util.function.Predicate;
 
@@ -49,17 +45,28 @@ public class ServiceMethodCircuitBreakerInterceptor implements ServerInterceptor
         return new ServiceMethodCircuitBreakerInterceptor(methodDescriptor, circuitBreaker, successStatusPredicate);
     }
 
+    private void acquirePermissionOrThrowStatus() {
+        try {
+            circuitBreaker.acquirePermission();
+        } catch (Exception exception) {
+            throw Status.UNAVAILABLE
+                .withDescription(exception.getMessage())
+                .withCause(exception)
+                .asRuntimeException();
+        }
+    }
+
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
         ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
-        ServerCall<ReqT, RespT> callToExecute = call;
-
-        if (call.getMethodDescriptor().getFullMethodName()
-            .equals(methodDescriptor.getFullMethodName())) {
-            callToExecute = ServerCallCircuitBreaker.decorate(call, circuitBreaker, successStatusPredicate);
+        if (call.getMethodDescriptor().getFullMethodName().equals(methodDescriptor.getFullMethodName())) {
+            acquirePermissionOrThrowStatus();
+            ServerCall<ReqT, RespT> callToExecute = ServerCallCircuitBreaker.decorate(call, circuitBreaker, successStatusPredicate);
+            return new ServerCircuitBreakerCallListener<>(next.startCall(callToExecute, headers), circuitBreaker);
         }
 
-        return next.startCall(callToExecute, headers);
+        return next.startCall(call, headers);
     }
+
 }

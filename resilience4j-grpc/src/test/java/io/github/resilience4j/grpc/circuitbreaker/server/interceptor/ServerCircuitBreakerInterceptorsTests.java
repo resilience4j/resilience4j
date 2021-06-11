@@ -16,6 +16,7 @@
  */
 package io.github.resilience4j.grpc.circuitbreaker.server.interceptor;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.grpc.BindableService;
 import io.grpc.Status;
@@ -49,6 +50,8 @@ public class ServerCircuitBreakerInterceptorsTests {
                     .setResponseMessage("response: " + request.getRequestMessage())
                     .build());
                 responseObserver.onCompleted();
+            } else if (status.equals(Status.CANCELLED)) {
+                // purposely caused the response to hang so that the client can force cancel the call
             } else {
                 responseObserver.onError(status.asRuntimeException());
             }
@@ -253,11 +256,45 @@ public class ServerCircuitBreakerInterceptorsTests {
         assertThat(serviceMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
     }
 
-    public void shouldNotRecordFailureWhenMethodCallCancelled() {
+    @Test
+    public void shouldNotRecordFailureWhenServiceCallCancelled() throws InterruptedException {
+        CircuitBreaker methodCircuitBreaker = CircuitBreaker.ofDefaults("testMethodCircuitBreaker");
+        CircuitBreaker serviceCircuitBreaker = CircuitBreaker.ofDefaults("testServiceCircuitBreaker");
 
-    }
+        serverRule.getServiceRegistry().addService(
+            ServerCircuitBreakerInterceptors.decoratorFor(service)
+                .interceptAll(serviceCircuitBreaker)
+                .interceptMethod(
+                    SimpleServiceGrpc.getUnaryRpcMethod(),
+                    methodCircuitBreaker,
+                    status -> status.getCode() != Status.INVALID_ARGUMENT.getCode())
+                .build()
+        );
 
-    public void shouldNotRecordFailureWhenServiceCallCancelled() {
+        SimpleServiceGrpc.SimpleServiceFutureStub stub = SimpleServiceGrpc
+            .newFutureStub(serverRule.getChannel());
 
+        // Service CB: Record cancelled
+        // Method CB: Record cancelled
+        ListenableFuture<SimpleResponse> future = stub.unaryRpc(SimpleRequest.newBuilder()
+            .setRequestMessage(Status.Code.CANCELLED.name())
+            .build());
+
+        Thread.sleep(10);
+        future.cancel(true);
+
+        // Assert the expected calls to the method level circuit breaker
+        final CircuitBreaker.Metrics methodMetrics = methodCircuitBreaker.getMetrics();
+        assertThat(methodMetrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        // Assert the expected calls to the service level circuit breaker
+        final CircuitBreaker.Metrics serviceMetrics = serviceCircuitBreaker.getMetrics();
+        assertThat(serviceMetrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
     }
 }

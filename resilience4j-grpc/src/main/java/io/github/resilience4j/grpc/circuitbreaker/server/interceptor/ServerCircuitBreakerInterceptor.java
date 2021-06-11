@@ -18,11 +18,8 @@ package io.github.resilience4j.grpc.circuitbreaker.server.interceptor;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.grpc.circuitbreaker.server.ServerCallCircuitBreaker;
-import io.grpc.Metadata;
-import io.grpc.ServerCall;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
-import io.grpc.Status;
+import io.github.resilience4j.grpc.circuitbreaker.server.ServerCircuitBreakerCallListener;
+import io.grpc.*;
 
 import java.util.function.Predicate;
 
@@ -43,6 +40,17 @@ public class ServerCircuitBreakerInterceptor implements ServerInterceptor {
         return new ServerCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
     }
 
+    private void acquirePermissionOrThrowStatus() {
+        try {
+            circuitBreaker.acquirePermission();
+        } catch (Exception exception) {
+            throw Status.UNAVAILABLE
+                .withDescription(exception.getMessage())
+                .withCause(exception)
+                .asRuntimeException();
+        }
+    }
+
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
         ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
@@ -50,6 +58,8 @@ public class ServerCircuitBreakerInterceptor implements ServerInterceptor {
         ServerCall<ReqT, RespT> callToExecute = ServerCallCircuitBreaker.decorate(
             call, circuitBreaker, successStatusPredicate);
 
-        return next.startCall(callToExecute, headers);
+        acquirePermissionOrThrowStatus();
+
+        return new ServerCircuitBreakerCallListener<>(next.startCall(callToExecute, headers), circuitBreaker);
     }
 }
