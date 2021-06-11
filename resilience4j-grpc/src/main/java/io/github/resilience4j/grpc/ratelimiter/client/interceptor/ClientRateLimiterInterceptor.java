@@ -16,13 +16,8 @@
  */
 package io.github.resilience4j.grpc.ratelimiter.client.interceptor;
 
-import io.github.resilience4j.grpc.ratelimiter.client.ClientCallRateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.grpc.CallOptions;
-import io.grpc.Channel;
-import io.grpc.ClientCall;
-import io.grpc.ClientInterceptor;
-import io.grpc.MethodDescriptor;
+import io.grpc.*;
 
 public class ClientRateLimiterInterceptor implements ClientInterceptor {
 
@@ -36,11 +31,21 @@ public class ClientRateLimiterInterceptor implements ClientInterceptor {
         return new ClientRateLimiterInterceptor(rateLimiter);
     }
 
-    @Override
-    public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-        MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+    private void acquirePermissionOrThrowStatus() {
+        try {
+            RateLimiter.waitForPermission(rateLimiter);
+        } catch (Exception exception) {
+            throw Status.UNAVAILABLE
+                .withDescription(exception.getMessage())
+                .withCause(exception)
+                .asRuntimeException();
+        }
+    }
 
-        return ClientCallRateLimiter.decorate(
-            next.newCall(method, callOptions), rateLimiter);
+    @Override
+    public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method,
+                                                               CallOptions callOptions, Channel next) {
+        acquirePermissionOrThrowStatus();
+        return next.newCall(method, callOptions);
     }
 }

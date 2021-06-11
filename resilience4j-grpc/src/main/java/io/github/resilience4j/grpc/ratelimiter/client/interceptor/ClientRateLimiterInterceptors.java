@@ -31,7 +31,6 @@ public class ClientRateLimiterInterceptors {
     }
 
     public static Channel intercept(Channel channel, RateLimiter rateLimiter) {
-        return ClientInterceptors.intercept(
-            channel, ClientRateLimiterInterceptor.of(rateLimiter));
+        return ClientInterceptors.intercept(channel, ClientRateLimiterInterceptor.of(rateLimiter));
     }
 }

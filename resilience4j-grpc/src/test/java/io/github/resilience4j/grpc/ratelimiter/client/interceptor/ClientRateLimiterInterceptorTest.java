@@ -14,9 +14,8 @@
  *  limitations under the License.
  *
  */
-package io.github.resilience4j.grpc.ratelimiter.client;
+package io.github.resilience4j.grpc.ratelimiter.client.interceptor;
 
-import io.github.resilience4j.grpc.ratelimiter.client.interceptor.ClientRateLimiterInterceptors;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.grpc.Status;
@@ -35,7 +34,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-public class ClientCallRateLimiterTest {
+public class ClientRateLimiterInterceptorTest {
 
     @Rule
     public GrpcServerRule serverRule = new GrpcServerRule();
