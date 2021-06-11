@@ -17,10 +17,7 @@
 package io.github.resilience4j.grpc.circuitbreaker.server;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.grpc.ForwardingServerCall;
-import io.grpc.Metadata;
-import io.grpc.ServerCall;
-import io.grpc.Status;
+import io.grpc.*;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -50,6 +47,23 @@ public class ServerCallCircuitBreaker<ReqT, RespT>
     public static <ReqT, RespT> ServerCallCircuitBreaker<ReqT, RespT> decorate(
         ServerCall<ReqT, RespT> call, CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ServerCallCircuitBreaker<>(call, circuitBreaker, successStatusPredicate);
+    }
+
+    private void acquirePermissionOrThrowStatus() {
+        try {
+            circuitBreaker.acquirePermission();
+        } catch (Exception exception) {
+            throw Status.UNAVAILABLE
+                .withDescription(exception.getMessage())
+                .withCause(exception)
+                .asRuntimeException();
+        }
+    }
+
+    @Override
+    public void sendMessage(RespT message) {
+        acquirePermissionOrThrowStatus();
+        super.sendMessage(message);
     }
 
     @Override

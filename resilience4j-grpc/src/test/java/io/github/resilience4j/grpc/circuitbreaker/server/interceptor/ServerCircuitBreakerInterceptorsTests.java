@@ -31,6 +31,7 @@ import org.junit.Test;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class ServerCircuitBreakerInterceptorsTests {
@@ -84,13 +85,11 @@ public class ServerCircuitBreakerInterceptorsTests {
         } catch (StatusRuntimeException ignored) {
         }
 
-
         // Service CB: Record success
         // Method CB: Record success
         stub.unaryRpc(SimpleRequest.newBuilder()
             .setRequestMessage(Status.Code.OK.name())
             .build());
-
 
         // Assert the expected calls to the method level circuit breaker
         final CircuitBreaker.Metrics methodMetrics = methodCircuitBreaker.getMetrics();
@@ -105,7 +104,6 @@ public class ServerCircuitBreakerInterceptorsTests {
         assertThat(serviceMetrics.getNumberOfFailedCalls()).isEqualTo(0);
         assertThat(serviceMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(serviceMetrics.getNumberOfBufferedCalls()).isEqualTo(2);
-
     }
 
     @Test
@@ -163,15 +161,96 @@ public class ServerCircuitBreakerInterceptorsTests {
         assertThat(serviceMetrics.getNumberOfFailedCalls()).isEqualTo(2);
         assertThat(serviceMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
         assertThat(serviceMetrics.getNumberOfBufferedCalls()).isEqualTo(3);
-
     }
 
+    @Test
     public void recordFailureOnNotPermittedServiceCalls() {
+        CircuitBreaker methodCircuitBreaker = CircuitBreaker.ofDefaults("testMethodCircuitBreaker");
+        CircuitBreaker serviceCircuitBreaker = CircuitBreaker.ofDefaults("testServiceCircuitBreaker");
 
+        serverRule.getServiceRegistry().addService(
+            ServerCircuitBreakerInterceptors.decoratorFor(service)
+                .interceptAll(serviceCircuitBreaker)
+                .interceptMethod(
+                    SimpleServiceGrpc.getUnaryRpcMethod(),
+                    methodCircuitBreaker,
+                    status -> status.getCode() != Status.INVALID_ARGUMENT.getCode())
+                .build()
+        );
+
+        SimpleServiceGrpc.SimpleServiceBlockingStub stub = SimpleServiceGrpc
+            .newBlockingStub(serverRule.getChannel());
+
+        try {
+            serviceCircuitBreaker.transitionToOpenState();
+
+            // Service CB: Record not permitted
+            // Method CB: Record not invoked
+            stub.unaryRpc(SimpleRequest.newBuilder()
+                .setRequestMessage(Status.Code.OK.name())
+                .build());
+            fail("circuit breaker should prevent success");
+        } catch (StatusRuntimeException ignored) {
+        }
+
+        // Assert the expected calls to the method level circuit breaker
+        final CircuitBreaker.Metrics methodMetrics = methodCircuitBreaker.getMetrics();
+        assertThat(methodMetrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        // Assert the expected calls to the service level circuit breaker
+        final CircuitBreaker.Metrics serviceMetrics = serviceCircuitBreaker.getMetrics();
+        assertThat(serviceMetrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        assertThat(serviceMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
     }
 
+    @Test
     public void recordFailureOnNotPermittedMethodCalls() {
+        CircuitBreaker methodCircuitBreaker = CircuitBreaker.ofDefaults("testMethodCircuitBreaker");
+        CircuitBreaker serviceCircuitBreaker = CircuitBreaker.ofDefaults("testServiceCircuitBreaker");
 
+        serverRule.getServiceRegistry().addService(
+            ServerCircuitBreakerInterceptors.decoratorFor(service)
+                .interceptAll(serviceCircuitBreaker)
+                .interceptMethod(
+                    SimpleServiceGrpc.getUnaryRpcMethod(),
+                    methodCircuitBreaker,
+                    status -> status.getCode() != Status.INVALID_ARGUMENT.getCode())
+                .build()
+        );
+
+        SimpleServiceGrpc.SimpleServiceBlockingStub stub = SimpleServiceGrpc
+            .newBlockingStub(serverRule.getChannel());
+
+        try {
+            methodCircuitBreaker.transitionToOpenState();
+
+            // Service CB: Record not invoked
+            // Method CB: Record not permitted
+            stub.unaryRpc(SimpleRequest.newBuilder()
+                .setRequestMessage(Status.Code.OK.name())
+                .build());
+            fail("circuit breaker should prevent success");
+        } catch (StatusRuntimeException ignored) {
+        }
+
+        // Assert the expected calls to the method level circuit breaker
+        final CircuitBreaker.Metrics methodMetrics = methodCircuitBreaker.getMetrics();
+        assertThat(methodMetrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(methodMetrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+        assertThat(methodMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
+
+        // Assert the expected calls to the service level circuit breaker
+        final CircuitBreaker.Metrics serviceMetrics = serviceCircuitBreaker.getMetrics();
+        assertThat(serviceMetrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(serviceMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
     }
 
     public void shouldNotRecordFailureWhenMethodCallCancelled() {

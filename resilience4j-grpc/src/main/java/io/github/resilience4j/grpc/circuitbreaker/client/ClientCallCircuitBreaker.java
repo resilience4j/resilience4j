@@ -90,7 +90,6 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
 
         @Override
         public void onClose(Status status, Metadata trailers) {
-
             if (isCancelled) {
                 circuitBreaker.releasePermission();
             } else if (successStatusPredicate.test(status)) {
@@ -103,5 +102,4 @@ public class ClientCallCircuitBreaker<ReqT, RespT>
             super.onClose(status, trailers);
         }
     }
-
 }
