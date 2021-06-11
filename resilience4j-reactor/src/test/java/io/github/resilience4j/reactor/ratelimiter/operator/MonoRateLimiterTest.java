@@ -68,7 +68,6 @@ public class MonoRateLimiterTest {
 
         StepVerifier.create(
             Mono.error(new IOException("BAM!"))
-                .log()
                 .transformDeferred(RateLimiterOperator.of(rateLimiter)))
             .expectSubscription()
             .expectError(IOException.class)

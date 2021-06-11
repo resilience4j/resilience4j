@@ -4,7 +4,7 @@ ext {
     vavrVersion = '0.10.2'
     rxJava2Version = '2.2.8'
     rxJava3Version = '3.0.0'
-    reactorVersion = '3.4.0'
+    reactorVersion = '3.4.6'
     junitVersion = '4.12'
     slf4jVersion = '1.7.30'
     assertjVersion = '3.18.1'

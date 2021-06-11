@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
@@ -22,6 +23,7 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.ReactiveDummyService;
 import io.github.resilience4j.service.test.TestApplication;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,33 +41,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = TestApplication.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class CircuitBreakerAutoConfigurationRxJava2Test {
+public class CircuitBreakerAutoConfigurationReactorTest {
 
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8090);
     @Autowired
     CircuitBreakerRegistry circuitBreakerRegistry;
-
     @Autowired
     CircuitBreakerProperties circuitBreakerProperties;
-
     @Autowired
     CircuitBreakerAspect circuitBreakerAspect;
-
     @Autowired
     DummyService dummyService;
-
     @Autowired
     private TestRestTemplate restTemplate;
-
     @Autowired
     private ReactiveDummyService reactiveDummyService;
-
 
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the
      * DummyService is invoked and that the CircuitBreaker records successful and failed calls.
      */
     @Test
-    public void testCircuitBreakerAutoConfigurationReactiveRxJava2() throws IOException {
+    public void testCircuitBreakerAutoConfigurationReactive() throws IOException {
         assertThat(circuitBreakerRegistry).isNotNull();
         assertThat(circuitBreakerProperties).isNotNull();
 
@@ -73,13 +71,13 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
         List<CircuitBreakerEventDTO> circuitBreakerEventsForBBefore = getCircuitBreakerEvents(ReactiveDummyService.BACKEND);
 
         try {
-            reactiveDummyService.doSomethingFlowable(true).blockingSubscribe(String::toUpperCase,
+            reactiveDummyService.doSomethingFlux(true).subscribe(String::toUpperCase,
                 throwable -> System.out.println("Exception received:" + throwable.getMessage()));
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingFlowable(false).blockingSubscribe(String::toUpperCase,
+        reactiveDummyService.doSomethingFlux(false).subscribe(String::toUpperCase,
             throwable -> System.out.println("Exception received:" + throwable.getMessage()));
 
         // expect circuitbreaker-event actuator endpoint recorded both events
@@ -87,45 +85,6 @@ public class CircuitBreakerAutoConfigurationRxJava2Test {
             .hasSize(circuitBreakerEventsBefore.size() + 2);
         assertThat(getCircuitBreakerEvents(ReactiveDummyService.BACKEND))
             .hasSize(circuitBreakerEventsForBBefore.size() + 2);
-
-        // Observable test
-        try {
-            reactiveDummyService.doSomethingObservable(true)
-                .blockingSubscribe(String::toUpperCase, Throwable::getCause);
-        } catch (IOException ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingObservable(false)
-            .blockingSubscribe(String::toUpperCase, Throwable::getCause);
-
-        // Maybe test
-        try {
-            reactiveDummyService.doSomethingMaybe(true).blockingGet("goo");
-        } catch (Exception ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingMaybe(false).blockingGet();
-
-        // single test
-        try {
-            reactiveDummyService.doSomethingSingle(true).blockingGet();
-        } catch (Exception ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingSingle(false).blockingGet();
-
-        // Completable test
-
-        try {
-            reactiveDummyService.doSomethingCompletable(true).blockingAwait();
-        } catch (Exception ex) {
-            // Do nothing. The IOException is recorded by the CircuitBreaker as part of the setRecordFailurePredicate as a failure.
-        }
-        // The invocation is recorded by the CircuitBreaker as a success.
-        reactiveDummyService.doSomethingCompletable(false).blockingAwait();
     }
 
     private List<CircuitBreakerEventDTO> getCircuitBreakersEvents() {

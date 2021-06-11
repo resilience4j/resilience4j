@@ -3,6 +3,7 @@ plugins {
     id 'org.asciidoctor.convert' version '1.6.0'
     id "org.gradle.test-retry" version "1.2.1"
     id "io.github.gradle-nexus.publish-plugin"  version "1.1.0"
+    id "me.champeau.jmh" version "0.6.5"
     id 'idea'
 }
 
@@ -33,6 +34,7 @@ nexusPublishing {
         }
     }
 }
+
 configure(project.coreProjects) {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -40,6 +42,7 @@ configure(project.coreProjects) {
     apply plugin: 'signing'
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: "org.gradle.test-retry"
+    apply plugin: 'me.champeau.jmh'
 
     tasks.withType(Test).all {
         if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
@@ -48,6 +51,7 @@ configure(project.coreProjects) {
             ]
         }
     }
+
 
     dependencies {
         api (libraries.vavr)
@@ -103,6 +107,8 @@ def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report
 
 sonarqube {
     properties {
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.organization", "resilience4j"
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
         property "sonar.links.homepage", "https://github.com/resilience4j/resilience4j"

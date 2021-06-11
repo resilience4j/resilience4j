@@ -19,6 +19,7 @@
 package io.github.resilience4j.retrofit;
 
 import io.reactivex.Single;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 
@@ -29,4 +30,7 @@ public interface RetrofitService {
 
     @GET("delegated")
     Single<String> delegated();
+
+    @GET("greetingsResponse")
+    Call<ResponseBody> greetingsResponse();
 }
