@@ -35,7 +35,7 @@ public class ServerCircuitBreakerInterceptors {
 
     public static ServerCircuitBreakerInterceptor from(
         CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
-        return ServerCircuitBreakerInterceptor.from(circuitBreaker, successStatusPredicate);
+        return ServerCircuitBreakerInterceptor.of(circuitBreaker, successStatusPredicate);
     }
 
     public static ServiceMethodCircuitBreakerInterceptor forMethod(
@@ -47,7 +47,7 @@ public class ServerCircuitBreakerInterceptors {
         MethodDescriptor<?, ?> methodDescriptor,
         CircuitBreaker circuitBreaker,
         Predicate<Status> successStatusPredicate) {
-        return ServiceMethodCircuitBreakerInterceptor.from(methodDescriptor, circuitBreaker, successStatusPredicate);
+        return ServiceMethodCircuitBreakerInterceptor.of(methodDescriptor, circuitBreaker, successStatusPredicate);
     }
 
     public static ServerCircuitBreakerDecorator decoratorFor(ServerServiceDefinition serviceDef) {

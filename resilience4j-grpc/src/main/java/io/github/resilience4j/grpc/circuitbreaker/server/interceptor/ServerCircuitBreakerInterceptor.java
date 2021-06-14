@@ -35,7 +35,7 @@ public class ServerCircuitBreakerInterceptor implements ServerInterceptor {
         this.successStatusPredicate = successStatusPredicate;
     }
 
-    public static ServerCircuitBreakerInterceptor from(
+    public static ServerCircuitBreakerInterceptor of(
         CircuitBreaker circuitBreaker, Predicate<Status> successStatusPredicate) {
         return new ServerCircuitBreakerInterceptor(circuitBreaker, successStatusPredicate);
     }

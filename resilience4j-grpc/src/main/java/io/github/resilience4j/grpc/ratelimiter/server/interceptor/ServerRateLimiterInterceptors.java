@@ -27,12 +27,12 @@ public class ServerRateLimiterInterceptors {
     }
 
     public static ServerRateLimiterInterceptor from(RateLimiter rateLimiter) {
-        return ServerRateLimiterInterceptor.from(rateLimiter);
+        return ServerRateLimiterInterceptor.of(rateLimiter);
     }
 
     public static ServiceMethodRateLimiterInterceptor forMethod(MethodDescriptor<?, ?> methodDescriptor,
                                                                 RateLimiter rateLimiter) {
-        return ServiceMethodRateLimiterInterceptor.from(methodDescriptor, rateLimiter);
+        return ServiceMethodRateLimiterInterceptor.of(methodDescriptor, rateLimiter);
     }
 
     public static ServerRateLimiterDecorator decoratorFor(ServerServiceDefinition serviceDef) {

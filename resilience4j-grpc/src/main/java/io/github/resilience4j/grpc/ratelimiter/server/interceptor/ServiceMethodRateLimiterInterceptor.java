@@ -29,9 +29,8 @@ public class ServiceMethodRateLimiterInterceptor implements ServerInterceptor {
         this.rateLimiter = rateLimiter;
     }
 
-    public static ServiceMethodRateLimiterInterceptor from(MethodDescriptor<?, ?> methodDescriptor,
-                                                           RateLimiter rateLimiter) {
-
+    public static ServiceMethodRateLimiterInterceptor of(MethodDescriptor<?, ?> methodDescriptor,
+                                                         RateLimiter rateLimiter) {
         return new ServiceMethodRateLimiterInterceptor(methodDescriptor, rateLimiter);
     }
 

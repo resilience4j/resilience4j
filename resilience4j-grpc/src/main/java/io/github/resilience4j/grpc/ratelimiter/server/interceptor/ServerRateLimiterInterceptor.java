@@ -27,7 +27,7 @@ public class ServerRateLimiterInterceptor implements ServerInterceptor {
         this.rateLimiter = rateLimiter;
     }
 
-    public static ServerRateLimiterInterceptor from(RateLimiter rateLimiter) {
+    public static ServerRateLimiterInterceptor of(RateLimiter rateLimiter) {
         return new ServerRateLimiterInterceptor(rateLimiter);
     }
 
