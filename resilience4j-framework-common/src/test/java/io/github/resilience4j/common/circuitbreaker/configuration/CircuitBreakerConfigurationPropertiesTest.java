@@ -326,15 +326,16 @@ public class CircuitBreakerConfigurationPropertiesTest {
     public void testRecordExceptionWithBaseConfig() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 
-        CircuitBreakerConfigurationProperties.InstanceProperties instanceConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        instanceConfig.setBaseConfig("defaultConfig");
-        instanceConfig.setRecordExceptions(new Class[] {IllegalArgumentException.class});
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        instanceProperties.setBaseConfig("defaultConfig");
+        instanceProperties.setRecordExceptions(new Class[] {IllegalArgumentException.class});
 
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
         circuitBreakerConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
 
 
-        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties.createCircuitBreakerConfig("instanceConfig", instanceConfig, compositeCircuitBreakerCustomizer());
+        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
+            .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
 
         assertThat(circuitBreakerConfig.getRecordExceptionPredicate().test(new IllegalArgumentException())).isTrue();
         assertThat(circuitBreakerConfig.getRecordExceptionPredicate().test(new NullPointerException())).isFalse();
@@ -344,15 +345,16 @@ public class CircuitBreakerConfigurationPropertiesTest {
     public void testIgnoreExceptionWithBaseConfig() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 
-        CircuitBreakerConfigurationProperties.InstanceProperties instanceConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
-        instanceConfig.setBaseConfig("defaultConfig");
-        instanceConfig.setIgnoreExceptions(new Class[] {IllegalArgumentException.class});
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        instanceProperties.setBaseConfig("defaultConfig");
+        instanceProperties.setIgnoreExceptions(new Class[] {IllegalArgumentException.class});
 
         CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
         circuitBreakerConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
 
 
-        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties.createCircuitBreakerConfig("instanceConfig", instanceConfig, compositeCircuitBreakerCustomizer());
+        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
+            .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
 
         assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new IllegalArgumentException())).isTrue();
         assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
