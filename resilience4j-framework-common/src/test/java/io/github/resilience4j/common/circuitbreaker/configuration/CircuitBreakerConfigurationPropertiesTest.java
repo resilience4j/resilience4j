@@ -322,6 +322,44 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(instance.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000L);
     }
 
+    @Test
+    public void testRecordExceptionWithBaseConfig() {
+        CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        instanceProperties.setBaseConfig("defaultConfig");
+        instanceProperties.setRecordExceptions(new Class[] {IllegalArgumentException.class});
+
+        CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+        circuitBreakerConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+
+
+        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
+            .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
+
+        assertThat(circuitBreakerConfig.getRecordExceptionPredicate().test(new IllegalArgumentException())).isTrue();
+        assertThat(circuitBreakerConfig.getRecordExceptionPredicate().test(new NullPointerException())).isFalse();
+    }
+
+    @Test
+    public void testIgnoreExceptionWithBaseConfig() {
+        CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        instanceProperties.setBaseConfig("defaultConfig");
+        instanceProperties.setIgnoreExceptions(new Class[] {IllegalArgumentException.class});
+
+        CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+        circuitBreakerConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+
+
+        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
+            .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
+
+        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new IllegalArgumentException())).isTrue();
+        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
+    }
+
     private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
