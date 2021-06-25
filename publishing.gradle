@@ -44,7 +44,7 @@ tasks.withType(Sign) {
 }
 
 signing {
-    sign configurations.archives
+    sign publishing.publications
 }
 publishing {
     publications {
