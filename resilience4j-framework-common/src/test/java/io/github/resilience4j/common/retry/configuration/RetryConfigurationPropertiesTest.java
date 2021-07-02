@@ -46,6 +46,7 @@ public class RetryConfigurationPropertiesTest {
         instanceProperties1.setRetryExceptions(new Class[]{IllegalStateException.class});
         instanceProperties1.setIgnoreExceptions(new Class[]{IllegalArgumentException.class});
         instanceProperties1.setRetryExceptionPredicate(RecordFailurePredicate.class);
+        instanceProperties1.setFailAfterMaxAttempts(true);
 
         RetryConfigurationProperties.InstanceProperties instanceProperties2 = new RetryConfigurationProperties.InstanceProperties();
         instanceProperties2.setMaxAttempts(2);
@@ -72,11 +73,13 @@ public class RetryConfigurationPropertiesTest {
             .getInstances().get("backend1");
         assertThat(instancePropertiesForRetry1.getWaitDuration()).isEqualTo(Duration.ofMillis(1000));
         assertThat(retry1).isNotNull();
+        assertThat(retry1.isFailAfterMaxAttempts()).isEqualTo(true);
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
         assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(99L) ;
         assertThat(retry2.getIntervalFunction().apply(2)).isEqualTo(99L);
+        assertThat(retry2.isFailAfterMaxAttempts()).isEqualTo(false);
     }
 
     @Test
