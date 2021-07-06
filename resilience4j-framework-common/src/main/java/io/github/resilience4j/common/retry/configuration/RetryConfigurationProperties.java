@@ -156,6 +156,9 @@ public class RetryConfigurationProperties extends CommonProperties {
                 .instantiateIntervalBiFunctionClass(properties.getIntervalBiFunction());
             builder.intervalBiFunction(intervalBiFunction);
         }
+        if(properties.getFailAfterMaxAttempts() != null) {
+            builder.failAfterMaxAttempts(properties.getFailAfterMaxAttempts());
+        }
 
         compositeRetryCustomizer.getCustomizer(backend)
             .ifPresent(customizer -> customizer.customize(builder));
@@ -325,6 +328,12 @@ public class RetryConfigurationProperties extends CommonProperties {
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
+
+        /**
+         * flag to enable explicit MaxRetriesExceededException to be thrown when max retries are exceeded
+         */
+        @Nullable
+        private Boolean failAfterMaxAttempts;
 
         @Nullable
         private String baseConfig;
@@ -500,6 +509,14 @@ public class RetryConfigurationProperties extends CommonProperties {
 
         public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
             this.randomizedWaitFactor = randomizedWaitFactor;
+            return this;
+        }
+
+        @Nullable
+        public Boolean getFailAfterMaxAttempts() { return failAfterMaxAttempts; }
+
+        public InstanceProperties setFailAfterMaxAttempts(Boolean failAfterMaxAttempts) {
+            this.failAfterMaxAttempts = failAfterMaxAttempts;
             return this;
         }
 
