@@ -56,6 +56,7 @@ ext {
             awaitility: "com.jayway.awaitility:awaitility:${awaitilityVersion}",
             reactor_test: "io.projectreactor:reactor-test:${reactorVersion}",
             reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
+            reactive_streams: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
             mock_clock: "com.statemachinesystems:mock-clock:1.0",
             blockhound: "io.projectreactor.tools:blockhound:${blockhoundVersion}",
 

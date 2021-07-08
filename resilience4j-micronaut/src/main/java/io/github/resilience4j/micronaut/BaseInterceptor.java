@@ -22,6 +22,8 @@ import io.micronaut.inject.MethodExecutionHandle;
 import io.micronaut.retry.exception.FallbackException;
 import io.reactivex.Flowable;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,27 +112,55 @@ public abstract class BaseInterceptor {
     }
 
     public <T> Publisher<T> fallbackReactiveTypes(Publisher<T> flowable, MethodInvocationContext<Object, Object> context) {
-        return Flowable.fromPublisher(flowable).onErrorResumeNext(throwable -> {
-            Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
-            if (fallbackMethod.isPresent()) {
-                MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
-                }
-                Object fallbackResult;
-                try {
-                    fallbackResult = fallbackHandle.invoke(context.getParameterValues());
-                } catch (Exception e) {
-                    return Flowable.error(throwable);
-                }
-                if (fallbackResult == null) {
-                    return Flowable.error(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
-                } else {
-                    return ConversionService.SHARED.convert(fallbackResult, Publisher.class)
-                        .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + fallbackResult));
-                }
+        Optional<? extends MethodExecutionHandle<?, Object>> fallbackMethod = findFallbackMethod(context);
+
+        return new Publisher() {
+            @Override
+            public void subscribe(Subscriber s) {
+                flowable.subscribe(new Subscriber<T>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+
+                    }
+
+                    @Override
+                    public void onNext(T t) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        if (fallbackMethod.isPresent()) {
+                            MethodExecutionHandle<?, Object> fallbackHandle = fallbackMethod.get();
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Type [{}] resolved fallback: {}", context.getTarget().getClass(), fallbackHandle);
+                            }
+                            Object fallbackResult;
+                            try {
+                                fallbackResult = fallbackHandle.invoke(context.getParameterValues());
+                            } catch (Exception e) {
+                                s.onError(throwable);
+                                return;
+                            }
+                            if (fallbackResult == null) {
+                                s.onError(new FallbackException("Fallback handler [" + fallbackHandle + "] returned null value"));
+                                return;
+                            } else {
+                                s.onNext(ConversionService.SHARED.convert(fallbackResult, Publisher.class)
+                                    .orElseThrow(() -> new FallbackException("Unsupported Reactive type: " + fallbackResult)));
+                                return;
+                            }
+                        }
+                        s.onError(throwable);
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
             }
-            return Flowable.error(throwable);
-        });
+        };
     }
 }

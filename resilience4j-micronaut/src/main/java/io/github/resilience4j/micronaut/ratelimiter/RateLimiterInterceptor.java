@@ -30,6 +30,7 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.reactivex.Flowable;
+import org.reactivestreams.Subscriber;
 
 import javax.inject.Singleton;
 import java.util.Optional;
@@ -80,6 +81,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         try {
             switch (interceptedMethod.resultType()) {
                 case PUBLISHER:
+
                     return interceptedMethod.handleResult(fallbackReactiveTypes(
                         Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(RateLimiterOperator.of(rateLimiter)),
                         context));
