@@ -105,9 +105,12 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
             try {
                 switch (interceptedMethod.resultType()) {
                     case PUBLISHER:
-                        return interceptedMethod.handleResult(fallbackReactiveTypes(
-                            Flowable.fromPublisher(interceptedMethod.interceptResultAsPublisher()).compose(BulkheadOperator.of(bulkhead)),
-                            context));
+                        return interceptedMethod.handleResult(
+                            extension.fallbackPublisher(
+                                extension.bulkhead(interceptedMethod.interceptResultAsPublisher(), bulkhead),
+                                context,
+                                this::findFallbackMethod));
+
                     case COMPLETION_STAGE:
                         return interceptedMethod.handleResult(
                             fallbackForFuture(
