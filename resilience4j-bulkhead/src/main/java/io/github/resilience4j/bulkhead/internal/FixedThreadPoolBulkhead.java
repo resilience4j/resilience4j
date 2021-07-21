@@ -330,5 +330,10 @@ public class FixedThreadPoolBulkhead implements ThreadPoolBulkhead {
         public int getActiveThreadCount() {
             return executorService.getActiveCount();
         }
+
+        @Override
+        public int getAvailableThreadCount() {
+            return getMaximumThreadPoolSize() - getActiveThreadCount();
+        }
     }
 }
