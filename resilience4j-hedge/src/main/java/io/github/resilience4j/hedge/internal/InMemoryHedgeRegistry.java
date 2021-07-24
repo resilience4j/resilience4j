@@ -127,17 +127,11 @@ public class InMemoryHedgeRegistry extends
         super(defaultConfig, registryEventConsumers, tags);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Seq<Hedge> getAllHedges() {
         return Array.ofAll(entryMap.values());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Hedge hedge(final String name) {
         return hedge(name, getDefaultConfig(), HashMap.empty());
@@ -149,9 +143,6 @@ public class InMemoryHedgeRegistry extends
         return hedge(name, getDefaultConfig(), tags);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Hedge hedge(final String name, final HedgeConfig config) {
         return hedge(name, config, HashMap.empty());
@@ -165,9 +156,6 @@ public class InMemoryHedgeRegistry extends
             Objects.requireNonNull(hedgeConfig, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Hedge hedge(final String name,
         final Supplier<HedgeConfig> hedgeConfigSupplier) {
@@ -183,9 +171,6 @@ public class InMemoryHedgeRegistry extends
             CONFIG_MUST_NOT_BE_NULL), getAllTags(tags)));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Hedge hedge(String name, String configName) {
         return hedge(name, configName, HashMap.empty());

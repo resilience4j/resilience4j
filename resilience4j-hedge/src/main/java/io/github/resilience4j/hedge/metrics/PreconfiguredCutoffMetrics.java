@@ -23,12 +23,18 @@ import io.github.resilience4j.hedge.event.HedgeEvent;
 
 import java.time.Duration;
 
-//this class is dangerous if we dont have some % limit that we don't go over in hedging - like %.
-//but that means that it can't be as easy as hoped for because will have to track everything anyway.
+/**
+ * Handles preconfigured metrics advice. When initialized with a duration, the hedge always waits that duration before
+ * beginning of the hedged execution
+ */
 public class PreconfiguredCutoffMetrics implements HedgeMetrics {
 
     private final Duration cutoff;
 
+    /**
+     * Creates a metrics that will wait a preconfigured amount of time before hedging
+     * @param cutoff the Duration of the wait before executing hedges.
+     */
     public PreconfiguredCutoffMetrics(Duration cutoff) {
         this.cutoff = cutoff;
     }

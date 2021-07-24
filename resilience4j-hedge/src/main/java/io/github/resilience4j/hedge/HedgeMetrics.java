@@ -24,18 +24,48 @@ import io.github.resilience4j.hedge.metrics.PreconfiguredCutoffMetrics;
 
 import java.time.Duration;
 
+/**
+ * HedgeMetrics can both track the aggregate status of previous calls and makes recommendations about how long to wait
+ * before hedging the next request.
+ */
 public interface HedgeMetrics {
 
+    /**
+     * @return the duration that the hedge should wait before executing the call.
+     */
     Duration getResponseTimeCutoff();
 
+    /**
+     * adds the events to the aggregated metrics
+     * @param event the configured HedgeMetrics
+     */
     void accept(HedgeEvent event);
 
+    /**
+     * an optimization that can eliminate computation if the hedge metric does not rely on observation - for example a
+     * fixed duration metric
+     * @return the configured HedgeMetrics
+     */
     boolean requiresInput();
 
+    /**
+     * Creates a metric which tracks average response time and uses some increment over it for computing when to hedge.
+     * @param shouldUseFactorAsPercentage whether to use factor as an integer percent of average or an absolute number
+     *                                    of milliseconds to add to the average ot determine hedge start time
+     * @param factor                      the factor either as percentage or milliseconds
+     * @param shouldMeasureErrors         whether or not to count errors in the averaging metrics
+     * @param windowSize                  only supports fixed size window, not time-based
+     * @return the configured HedgeMetrics
+     */
     static HedgeMetrics ofAveragePlus(boolean shouldUseFactorAsPercentage, int factor, boolean shouldMeasureErrors, int windowSize) {
         return new AveragePlusMetrics(shouldUseFactorAsPercentage, factor, shouldMeasureErrors, windowSize);
     }
 
+    /**
+     * Creates a simple metric that returns a pre-defined hedging time
+     * @param cutoff the preconfigured cutoff time in milliseconds
+     * @return the configured HedgeMetrics
+     */
     static HedgeMetrics ofPreconfigured(Duration cutoff) {
         return new PreconfiguredCutoffMetrics(cutoff);
     }

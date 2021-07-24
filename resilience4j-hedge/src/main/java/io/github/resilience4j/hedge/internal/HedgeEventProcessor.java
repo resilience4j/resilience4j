@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.hedge.internal;
 
-
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.lang.NonNull;

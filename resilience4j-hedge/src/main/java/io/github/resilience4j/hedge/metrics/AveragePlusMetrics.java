@@ -26,6 +26,9 @@ import io.github.resilience4j.hedge.event.HedgeEvent;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Supports metrics based on average response time plus a factor
+ */
 public class AveragePlusMetrics implements HedgeMetrics {
 
     final boolean shouldUseFactorAsPercentage;
@@ -33,6 +36,13 @@ public class AveragePlusMetrics implements HedgeMetrics {
     final int factor;
     final FixedSizeSlidingWindowMetrics metrics;
 
+    /**
+     *
+     * @param shouldUseFactorAsPercentage whether to use factor as a percentage
+     * @param factor                      factor either in integer percentage or millis over average
+     * @param shouldMeasureErrors         whether to measure errors in the average
+     * @param windowSize                  only fixed size window is supported.
+     */
     public AveragePlusMetrics(boolean shouldUseFactorAsPercentage, int factor, boolean shouldMeasureErrors, int windowSize) {
         this.shouldUseFactorAsPercentage = shouldUseFactorAsPercentage;
         this.factor = factor;

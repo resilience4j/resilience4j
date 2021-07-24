@@ -33,7 +33,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
 
-public class HedgeImplFutureBehaviorsTest {
+public class HedgeImplFutureSchedulerBehaviorsTest {
 
     private static final Duration HEDGE_ACTIVATION_TIME = Duration.ofMillis(50);
     private static final String PRIMARY = "Primary";
@@ -53,14 +53,15 @@ public class HedgeImplFutureBehaviorsTest {
     private static final HedgeBehavior SLOW_HEDGE_SUCCESS = new HedgeBehavior(SLOW_SPEED, HEDGED, null);
     private static final HedgeBehavior SLOW_HEDGE_FAILURE = new HedgeBehavior(SLOW_SPEED, HEDGED, HEDGE_RUNTIME_EXCEPTION);
     private final Logger logger = mock(Logger.class);
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(15);
+    private final ScheduledExecutorService hedgeExecutor = Executors.newScheduledThreadPool(15);
+    private final ExecutorService primaryExecutor = Executors.newFixedThreadPool(15);
 
     @Test
     public void slowPrimarySuccessFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onHedgeSuccess(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
 
         assertThat(hedged.get()).isEqualTo(HEDGED);
         then(logger).should().info(HedgeEvent.Type.HEDGE_SUCCESS.toString());
@@ -72,13 +73,16 @@ public class HedgeImplFutureBehaviorsTest {
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onHedgeFailure(event -> logger.info(event.getEventType().toString()));
         System.out.println(System.currentTimeMillis());
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         try {
+            System.out.println(System.currentTimeMillis() + " before hedge");
             String result = hedged.get();
             fail("call should not succeed. instead returned " + result);
         } catch (ExecutionException e) {
+            System.out.println(System.currentTimeMillis() + " after hedge");
             assertThat(e.getCause().getCause().getMessage()).isEqualTo(HEDGE_EXCEPTION_MESSAGE);
             then(logger).should().info(HedgeEvent.Type.HEDGE_FAILURE.toString());
+            System.out.println(System.currentTimeMillis() + " way after hedge");
         }
     }
 
@@ -87,7 +91,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onHedgeSuccess(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         assertThat(hedged.get()).isEqualTo(HEDGED);
         then(logger).should().info(HedgeEvent.Type.HEDGE_SUCCESS.toString());
     }
@@ -97,7 +101,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_FAILURE, FAST_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onHedgeFailure(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         try {
             hedged.get();
             fail("call should not succeed");
@@ -112,7 +116,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_SUCCESS, SLOW_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         assertThat(hedged.get()).isEqualTo(PRIMARY);
         then(logger).should().info(HedgeEvent.Type.PRIMARY_SUCCESS.toString());
     }
@@ -122,7 +126,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_SUCCESS, SLOW_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         assertThat(hedged.get()).isEqualTo(PRIMARY);
         then(logger).should().info(HedgeEvent.Type.PRIMARY_SUCCESS.toString());
     }
@@ -132,7 +136,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_FAILURE, SLOW_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimaryFailure(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         try {
             hedged.get();
             fail("call should not succeed");
@@ -147,7 +151,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_FAILURE, SLOW_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimaryFailure(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         try {
             hedged.get();
             fail("call should not succeed");
@@ -162,7 +166,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {FAST_PRIMARY_FAILURE, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimaryFailure(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         try {
             hedged.get();
             fail("call should not succeed");
@@ -177,7 +181,7 @@ public class HedgeImplFutureBehaviorsTest {
         HedgeBehavior[] hedgeBehaviors = {FAST_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));
-        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), executor);
+        Future<String> hedged = hedge.submit(configuredCallable(hedgeBehaviors), primaryExecutor, hedgeExecutor);
         assertThat(hedged.get()).isEqualTo(PRIMARY);
         then(logger).should().info(HedgeEvent.Type.PRIMARY_SUCCESS.toString());
     }

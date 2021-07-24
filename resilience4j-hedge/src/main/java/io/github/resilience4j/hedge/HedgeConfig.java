@@ -23,6 +23,9 @@ import java.time.Duration;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * HedgeConfig manages the configuration of Hedges
+ */
 public class HedgeConfig implements Serializable {
 
     private static final long serialVersionUID = 2203981592465761602L;
@@ -41,6 +44,15 @@ public class HedgeConfig implements Serializable {
     //fixed only
     private final Duration cutoff;
 
+    /**
+     *
+     * @param metricsType
+     * @param shouldUseFactorAsPercentage
+     * @param hedgeTimeFactor
+     * @param shouldMeasureErrors
+     * @param windowSize
+     * @param cutoff
+     */
     private HedgeConfig(MetricsType metricsType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff) {
         this.metricsType = metricsType;
         this.shouldUseFactorAsPercentage = shouldUseFactorAsPercentage;
@@ -88,16 +100,13 @@ public class HedgeConfig implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-            .append("HedgeConfig{")
-            .append(shouldUseFactorAsPercentage).append(",")
-            .append(hedgeTimeFactor).append(",")
-            .append(shouldMeasureErrors).append(",")
-            .append(windowSize).append(",")
-            .append(cutoff)
-            .append("}");
-        return stringBuilder.toString();
+        return "HedgeConfig{" +
+            shouldUseFactorAsPercentage + "," +
+            hedgeTimeFactor + "," +
+            shouldMeasureErrors + "," +
+            windowSize + "," +
+            cutoff +
+            "}";
     }
 
     public static class Builder {
