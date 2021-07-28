@@ -96,7 +96,7 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
             return ThreadPoolBulkheadConfig.custom().build();
         }
 
-        if (properties.getQueueCapacity() > 0) {
+        if (properties.getQueueCapacity() >= 0) {
             builder.queueCapacity(properties.getQueueCapacity());
         }
         if (properties.getCoreThreadPoolSize() > 0) {
@@ -137,7 +137,7 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
         private int maxThreadPoolSize;
         private int coreThreadPoolSize;
-        private int queueCapacity;
+        private int queueCapacity = -1;
         private Duration keepAliveDuration;
 
         @Nullable
