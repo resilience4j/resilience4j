@@ -41,8 +41,8 @@ public class HedgeResult<T> {
      * Create a Hedge result
      *
      * @param value       the return value of the call. Undefined for errors.
-     * @param fromPrimary whether or not the return value came from the primary call
-     * @param failed      whether or not the call failed
+     * @param fromPrimary whether the return value came from the primary call
+     * @param failed      whether the call failed
      * @param throwable   the failure that occurred. Undefined for successful calls
      * @param <T>         the type of the underlying return value
      * @return a HedgeResult representing the outcome of the hedging

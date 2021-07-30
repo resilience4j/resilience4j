@@ -28,14 +28,11 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
- * A Hedge executes extra requests if the main execution does not return in time. If used without a scheduled thread
- * pool executor, it will consume a thread which will sit idle for the associated timeout. With a scheduled thread pool
- * executor, it will queue hedging executions in the executor's priority queue and process them when there are threads
- * available to execute them.
+ * A Hedge executes extra requests if the main execution does not return in time. Hedges rely on a scheduled thread pool
+ * executor, which will queue hedging executions in its priority queue and process them when there are threads available.
  * <p>
- * If not using a scheduled thread pool executor, it is recommended to double your normal executor pool to allow for the
- * hedge timing requests. Set the size limit on your scheduled thread pool executor to limit the number of hedges
- * actively running at the same time. Adjust your rejected execution handler to the desired behavior, such as
+ * Set the size limit on your scheduled thread pool executor to limit the number of hedged requests actively running at
+ * the same time. You can adjust your rejected execution handler to the desired behavior, such as
  * ThreadPoolExecutor.AbortPolicy.
  * <p>
  * Hedge metrics do not include metrics on calls rejected by the executor. These situations are expected to result in
@@ -49,7 +46,7 @@ public interface Hedge {
     String DEFAULT_NAME = "UNDEFINED";
 
     /**
-     * Creates a Hedge decorator with a default HedgeConfig configuration.
+     * Creates a Hedge with a default HedgeConfig configuration.
      *
      * @return The Hedge
      */
@@ -58,7 +55,7 @@ public interface Hedge {
     }
 
     /**
-     * Creates a Hedge decorator with a default HedgeConfig configuration.
+     * Creates a Hedge with a default HedgeConfig configuration.
      *
      * @param name the name of the Hedge
      * @return The Hedge
@@ -68,7 +65,7 @@ public interface Hedge {
     }
 
     /**
-     * Creates a Hedge decorator with a HedgeConfig configuration.
+     * Creates a Hedge with a HedgeConfig configuration.
      *
      * @param HedgeConfig the HedgeConfig
      * @return The Hedge
@@ -78,7 +75,7 @@ public interface Hedge {
     }
 
     /**
-     * Creates a Hedge decorator with a HedgeConfig configuration.
+     * Creates a Hedge with a HedgeConfig configuration.
      *
      * @param name        the name of the Hedge
      * @param HedgeConfig the HedgeConfig
@@ -119,7 +116,7 @@ public interface Hedge {
     }
 
     /**
-     * Creates a Future that is resolved by a Hedge.
+     * Creates a Future that is enhanced by a Hedge.
      *
      * @param callable        the callable to submit
      * @param executorService the executor service to which you are submitting the callable and hedges.
@@ -129,13 +126,13 @@ public interface Hedge {
     <T> Future<T> submit(Callable<T> callable, ExecutorService executorService);
 
     /**
-     * Creates a Callback that is resolved by a Hedge.
+     * Creates a Future that is enhanced by a Hedge.
      *
      * @param callable        the Hedge
      * @param primaryExecutor the original future supplier
      * @param hedgedExecutor  the original future supplier
      * @param <T>             the type of results supplied by the supplier
-     * @return a future supplier which is resolved by a Hedge
+     * @return a future supplier which is enhanced by a Hedge
      */
     <T> Future<T> submit(Callable<T> callable, ExecutorService primaryExecutor, ScheduledExecutorService hedgedExecutor);
 
@@ -156,7 +153,7 @@ public interface Hedge {
     HedgeConfig getHedgeConfig();
 
     /**
-     * Creates a CompletionStage supplier which is guarded by a Hedge
+     * Creates a CompletionStage supplier which is enhanced by a Hedge
      *
      * @param <T>            the type of the returned CompletionStage's result
      * @param <F>            the CompletionStage type supplied
@@ -168,7 +165,7 @@ public interface Hedge {
         Supplier<F> supplier, ScheduledExecutorService hedgedExecutor);
 
     /**
-     * Creates a CompletionStage supplier which is guarded by a Hedge
+     * Creates a CompletionStage supplier which is enhanced by a Hedge
      *
      * @param <T>      the type of the returned CompletionStage's result
      * @param <F>      the CompletionStage type supplied

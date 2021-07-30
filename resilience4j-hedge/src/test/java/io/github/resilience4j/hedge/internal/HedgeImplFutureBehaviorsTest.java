@@ -56,7 +56,7 @@ public class HedgeImplFutureBehaviorsTest {
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(15);
 
     @Test
-    public void shouldReturnValuewhenSuppliedExecutor() throws Exception {
+    public void shouldReturnValueWhenSuppliedExecutor() throws Exception {
         HedgeBehavior[] hedgeBehaviors = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onHedgeSuccess(event -> logger.info(event.getEventType().toString()));

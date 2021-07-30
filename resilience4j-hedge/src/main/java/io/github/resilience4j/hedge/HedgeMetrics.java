@@ -36,7 +36,7 @@ public interface HedgeMetrics {
      * @param shouldUseFactorAsPercentage whether to use factor as an integer percent of average or an absolute number
      *                                    of milliseconds to add to the average ot determine hedge start time
      * @param factor                      the factor either as percentage or milliseconds
-     * @param shouldMeasureErrors         whether or not to count errors in the averaging metrics
+     * @param shouldMeasureErrors         whether to count errors in the averaging metrics
      * @param windowSize                  only supports fixed size window, not time-based
      * @return the configured HedgeMetrics
      */
