@@ -17,12 +17,15 @@ public class ThreadPoolBulkheadMetricNames {
         DEFAULT_PREFIX + ".core.thread.pool.size";
     public static final String DEFAULT_BULKHEAD_ACTIVE_THREAD_COUNT_METRIC_NAME =
         DEFAULT_PREFIX + ".active.thread.count";
+    public static final String DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME =
+        DEFAULT_PREFIX + ".available.thread.count";
     private String queueDepthMetricName = DEFAULT_BULKHEAD_QUEUE_DEPTH_METRIC_NAME;
     private String threadPoolSizeMetricName = DEFAULT_THREAD_POOL_SIZE_METRIC_NAME;
     private String maxThreadPoolSizeMetricName = DEFAULT_MAX_THREAD_POOL_SIZE_METRIC_NAME;
     private String coreThreadPoolSizeMetricName = DEFAULT_CORE_THREAD_POOL_SIZE_METRIC_NAME;
     private String queueCapacityMetricName = DEFAULT_BULKHEAD_QUEUE_CAPACITY_METRIC_NAME;
     private String activeThreadCountMetricName = DEFAULT_BULKHEAD_ACTIVE_THREAD_COUNT_METRIC_NAME;
+    private String availableThreadCountMetricName = DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME;
 
     protected ThreadPoolBulkheadMetricNames() {
     }
@@ -107,6 +110,16 @@ public class ThreadPoolBulkheadMetricNames {
     }
 
     /**
+     * Returns the metric name for bulkhead available thread count,
+     * defaults to {@value DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME}.
+     *
+     * @return The available thread count metric name.
+     */
+    public String getAvailableThreadCountMetricName() {
+        return availableThreadCountMetricName;
+    }
+
+    /**
      * Helps building custom instance of {@link ThreadPoolBulkheadMetricNames}.
      */
     public static class Builder {
@@ -186,6 +199,20 @@ public class ThreadPoolBulkheadMetricNames {
             String activeThreadCountMetricName) {
             metricNames.activeThreadCountMetricName = requireNonNull(
                 activeThreadCountMetricName);
+            return this;
+        }
+
+        /**
+         * Overrides the default metric name {@value ThreadPoolBulkheadMetricNames#DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME}
+         * with a given one.
+         *
+         * @param availableThreadCountMetricName The active thread count metric name.
+         * @return The builder.
+         */
+        public Builder availableThreadCountMetricName(
+            String availableThreadCountMetricName) {
+            metricNames.availableThreadCountMetricName = requireNonNull(
+                availableThreadCountMetricName);
             return this;
         }
 

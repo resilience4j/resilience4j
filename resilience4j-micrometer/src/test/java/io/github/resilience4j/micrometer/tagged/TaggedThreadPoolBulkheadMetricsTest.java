@@ -40,7 +40,8 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         "resilience4j.bulkhead.queue.depth",
         "resilience4j.bulkhead.queue.capacity",
         "resilience4j.bulkhead.thread.pool.size",
-        "resilience4j.bulkhead.active.thread.count"
+        "resilience4j.bulkhead.active.thread.count",
+        "resilience4j.bulkhead.available.thread.count"
     );
     private static final int EXPECTED_METER_COUNT = EXPECTED_METERS.size();
     private MeterRegistry meterRegistry;
@@ -177,6 +178,15 @@ public class TaggedThreadPoolBulkheadMetricsTest {
         assertThat(maxAllowed).isNotNull();
         assertThat(maxAllowed.value()).isEqualTo(bulkhead.getMetrics().getThreadPoolSize());
         assertThat(maxAllowed.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
+    }
+
+    @Test
+    public void availableThreadCountIsRegistered() {
+        Gauge availableThreadCount = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME).gauge();
+
+        assertThat(availableThreadCount).isNotNull();
+        assertThat(availableThreadCount.value()).isEqualTo(bulkhead.getMetrics().getAvailableThreadCount());
+        assertThat(availableThreadCount.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
     }
 
     @Test
