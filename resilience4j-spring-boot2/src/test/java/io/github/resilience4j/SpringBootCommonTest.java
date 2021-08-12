@@ -32,6 +32,7 @@ import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.fallback.CompletionStageFallbackDecorator;
 import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.autoconfigure.AbstractRateLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
@@ -75,12 +76,14 @@ public class SpringBootCommonTest {
                     ThreadPoolBulkheadConfigCustomizer.of("backend", builder -> builder.coreThreadPoolSize(10)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
+        final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
+        final FallbackDecorators fallbackDecorators = new FallbackDecorators(Collections.singletonList(new CompletionStageFallbackDecorator()));
         assertThat(bulkheadConfigurationOnMissingBean
             .bulkheadAspect(new BulkheadConfigurationProperties(),
                 ThreadPoolBulkheadRegistry.ofDefaults(), BulkheadRegistry.ofDefaults(),
                 Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-            new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()))).isNotNull();
+                new FallbackExecutor(spelResolver, fallbackDecorators),
+                spelResolver)).isNotNull();
         assertThat(
             bulkheadConfigurationOnMissingBean.bulkheadRegistryEventConsumer(Optional.empty())).isNotNull();
     }
@@ -94,10 +97,12 @@ public class SpringBootCommonTest {
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
             new CompositeRegistryEventConsumer<>(Collections.emptyList()),
             new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer())))).isNotNull();
+        final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
+        final FallbackDecorators fallbackDecorators = new FallbackDecorators(Collections.singletonList(new CompletionStageFallbackDecorator()));
         assertThat(circuitBreakerConfig
             .circuitBreakerAspect(CircuitBreakerRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-            new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()))).isNotNull();
+                new FallbackExecutor(spelResolver, fallbackDecorators),
+                spelResolver)).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -110,11 +115,13 @@ public class SpringBootCommonTest {
             .retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
+        final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
+        final FallbackDecorators fallbackDecorators = new FallbackDecorators(Collections.singletonList(new CompletionStageFallbackDecorator()));
         assertThat(retryConfigurationOnMissingBean
             .retryAspect(new RetryConfigurationProperties(), RetryRegistry.ofDefaults(),
                 Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()), null)).isNotNull();
+                new FallbackExecutor(spelResolver, fallbackDecorators),
+                spelResolver, null)).isNotNull();
         assertThat(retryConfigurationOnMissingBean.retryRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
@@ -128,11 +135,13 @@ public class SpringBootCommonTest {
                 new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
+        final FallbackDecorators fallbackDecorators = new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()));
+        final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterAspect(new RateLimiterConfigurationProperties(),
                 RateLimiterRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()))).isNotNull();
+                new FallbackExecutor(spelResolver, fallbackDecorators),
+                spelResolver)).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }
@@ -149,11 +158,13 @@ public class SpringBootCommonTest {
                 new CompositeCustomizer<>(Collections.singletonList(
                     TimeLimiterConfigCustomizer.of("backend", builder -> builder.timeoutDuration(
                         Duration.ofSeconds(10))))))).isNotNull();
+        final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
+        final FallbackDecorators fallbackDecorators = new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator()));
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterAspect(new TimeLimiterConfigurationProperties(),
                 TimeLimiterRegistry.ofDefaults(), Collections.emptyList(),
-                new FallbackDecorators(Arrays.asList(new CompletionStageFallbackDecorator())),
-                new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext()),
+                new FallbackExecutor(spelResolver, fallbackDecorators),
+                spelResolver,
                 null)).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
