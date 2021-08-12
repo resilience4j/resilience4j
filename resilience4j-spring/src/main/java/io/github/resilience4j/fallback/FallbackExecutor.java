@@ -3,11 +3,16 @@ package io.github.resilience4j.fallback;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 
 public class FallbackExecutor {
+
+    private static final Logger logger = LoggerFactory.getLogger(FallbackExecutor.class);
+
     private final SpelResolver spelResolver;
     private final FallbackDecorators fallbackDecorators;
 
@@ -18,11 +23,20 @@ public class FallbackExecutor {
 
     public Object execute(ProceedingJoinPoint proceedingJoinPoint, Method method, String fallbackMethodValue, CheckedFunction0<Object> primaryFunction) throws Throwable {
         String fallbackMethodName = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue);
+
+        FallbackMethod fallbackMethod = null;
         if (StringUtils.isEmpty(fallbackMethodName)) {
-            return primaryFunction.apply();
+            try {
+                fallbackMethod = FallbackMethod
+                    .create(fallbackMethodName, method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+            } catch (NoSuchMethodException ex) {
+                logger.warn("No fallback method match found", ex);
+            }
         }
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallbackMethodName, method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod, primaryFunction).apply();
+        if (fallbackMethod == null) {
+            return primaryFunction.apply();
+        } else {
+            return fallbackDecorators.decorate(fallbackMethod, primaryFunction).apply();
+        }
     }
 }
