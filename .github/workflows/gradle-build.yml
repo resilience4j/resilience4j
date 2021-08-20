@@ -43,7 +43,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
       - name: "Comment build scan url"
-        uses: actions/github-script@v4.0.2
+        uses: actions/github-script@v4.1
         if: github.event_name == 'pull_request' && failure()
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
