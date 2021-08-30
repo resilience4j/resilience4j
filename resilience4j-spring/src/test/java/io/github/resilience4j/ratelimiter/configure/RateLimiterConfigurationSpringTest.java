@@ -17,7 +17,7 @@ package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.spelresolver.SpelResolver;
@@ -76,11 +76,11 @@ public class RateLimiterConfigurationSpringTest {
         public RateLimiterAspect rateLimiterAspect(
             RateLimiterRegistry rateLimiterRegistry,
             @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExts,
-            FallbackDecorators recoveryDecorators,
+            FallbackExecutor fallbackExecutor,
             SpelResolver spelResolver
         ) {
             rateLimiterAspect = new RateLimiterAspect(rateLimiterRegistry,
-                rateLimiterConfigurationProperties(), rateLimiterAspectExts, recoveryDecorators, spelResolver);
+                rateLimiterConfigurationProperties(), rateLimiterAspectExts, fallbackExecutor, spelResolver);
             return rateLimiterAspect;
         }
 

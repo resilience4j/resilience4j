@@ -17,12 +17,12 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -70,26 +69,26 @@ public class RetryAspect implements Ordered, AutoCloseable {
     private final RetryRegistry retryRegistry;
     private final @Nullable
     List<RetryAspectExt> retryAspectExtList;
-    private final FallbackDecorators fallbackDecorators;
+    private final FallbackExecutor fallbackExecutor;
     private final SpelResolver spelResolver;
 
     /**
      * @param retryConfigurationProperties spring retry config properties
      * @param retryRegistry                retry definition registry
      * @param retryAspectExtList           a list of retry aspect extensions
-     * @param fallbackDecorators           the fallback decorators
+     * @param fallbackExecutor             the fallback executor
      * @param spelResolver                 spel expression parser
      */
     public RetryAspect(RetryConfigurationProperties retryConfigurationProperties,
                        RetryRegistry retryRegistry,
                        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-                       FallbackDecorators fallbackDecorators,
+                       FallbackExecutor fallbackExecutor,
                        SpelResolver spelResolver,
                        @Nullable ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
         this.retryConfigurationProperties = retryConfigurationProperties;
         this.retryRegistry = retryRegistry;
         this.retryAspectExtList = retryAspectExtList;
-        this.fallbackDecorators = fallbackDecorators;
+        this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
         this.retryExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
             contextAwareScheduledThreadPoolExecutor :
@@ -114,16 +113,8 @@ public class RetryAspect implements Ordered, AutoCloseable {
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), retryAnnotation.name());
         io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
         Class<?> returnType = method.getReturnType();
-
-        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), retryAnnotation.fallbackMethod());
-        if (StringUtils.isEmpty(fallbackMethodValue)) {
-            return proceed(proceedingJoinPoint, methodName, retry, returnType);
-        }
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
-                proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, retry, returnType)).apply();
+        final CheckedFunction0<Object> retryExecution = () -> proceed(proceedingJoinPoint, methodName, retry, returnType);
+        return fallbackExecutor.execute(proceedingJoinPoint, method, retryAnnotation.fallbackMethod(), retryExecution);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,

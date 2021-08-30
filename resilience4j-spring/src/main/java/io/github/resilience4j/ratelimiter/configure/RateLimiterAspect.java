@@ -16,13 +16,13 @@
 package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -73,18 +72,18 @@ public class RateLimiterAspect implements Ordered {
     private final RateLimiterConfigurationProperties properties;
     private final @Nullable
     List<RateLimiterAspectExt> rateLimiterAspectExtList;
-    private final FallbackDecorators fallbackDecorators;
+    private final FallbackExecutor fallbackExecutor;
     private final SpelResolver spelResolver;
 
     public RateLimiterAspect(RateLimiterRegistry rateLimiterRegistry,
                              RateLimiterConfigurationProperties properties,
                              @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-                             FallbackDecorators fallbackDecorators,
+                             FallbackExecutor fallbackExecutor,
                              SpelResolver spelResolver) {
         this.rateLimiterRegistry = rateLimiterRegistry;
         this.properties = properties;
         this.rateLimiterAspectExtList = rateLimiterAspectExtList;
-        this.fallbackDecorators = fallbackDecorators;
+        this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
     }
 
@@ -113,16 +112,8 @@ public class RateLimiterAspect implements Ordered {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
             methodName, name);
         Class<?> returnType = method.getReturnType();
-
-        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.fallbackMethod());
-        if (StringUtils.isEmpty(fallbackMethodValue)) {
-            return proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
-        }
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallbackMethodValue, method, proceedingJoinPoint.getArgs(),
-                proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter)).apply();
+        final CheckedFunction0<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
+        return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,

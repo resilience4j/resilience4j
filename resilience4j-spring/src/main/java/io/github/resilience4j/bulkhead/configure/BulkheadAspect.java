@@ -21,8 +21,7 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
 import io.vavr.CheckedFunction0;
@@ -35,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -77,18 +75,18 @@ public class BulkheadAspect implements Ordered {
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
     private final @Nullable
     List<BulkheadAspectExt> bulkheadAspectExts;
-    private final FallbackDecorators fallbackDecorators;
+    private final FallbackExecutor fallbackExecutor;
     private final SpelResolver spelResolver;
 
     public BulkheadAspect(BulkheadConfigurationProperties backendMonitorPropertiesRegistry,
                           ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, BulkheadRegistry bulkheadRegistry,
                           @Autowired(required = false) List<BulkheadAspectExt> bulkheadAspectExts,
-                          FallbackDecorators fallbackDecorators,
+                          FallbackExecutor fallbackExecutor,
                           SpelResolver spelResolver) {
         this.bulkheadConfigurationProperties = backendMonitorPropertiesRegistry;
         this.bulkheadRegistry = bulkheadRegistry;
         this.bulkheadAspectExts = bulkheadAspectExts;
-        this.fallbackDecorators = fallbackDecorators;
+        this.fallbackExecutor = fallbackExecutor;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
         this.spelResolver = spelResolver;
     }
@@ -110,33 +108,16 @@ public class BulkheadAspect implements Ordered {
         }
         Class<?> returnType = method.getReturnType();
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), bulkheadAnnotation.name());
-        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), bulkheadAnnotation.fallbackMethod());
         if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
-            if (StringUtils.isEmpty(fallbackMethodValue)) {
-                return proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
-                    backend);
-            }
-            return executeFallBack(proceedingJoinPoint, fallbackMethodValue, method,
-                () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType,
-                    backend));
+            final CheckedFunction0<Object> bulkheadExecution =
+                () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType, backend);
+            return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         } else {
             io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName,
                 backend);
-            if (StringUtils.isEmpty(fallbackMethodValue)) {
-                return proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
-            }
-            return executeFallBack(proceedingJoinPoint, fallbackMethodValue, method,
-                () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType));
+            final CheckedFunction0<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
+            return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         }
-
-    }
-
-    private Object executeFallBack(ProceedingJoinPoint proceedingJoinPoint, String fallBackMethod,
-        Method method, CheckedFunction0<Object> bulkhead) throws Throwable {
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallBackMethod, method, proceedingJoinPoint.getArgs(),
-                proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod, bulkhead).apply();
     }
 
     /**

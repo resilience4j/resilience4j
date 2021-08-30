@@ -3,7 +3,7 @@ package io.github.resilience4j.timelimiter.configure;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
@@ -67,10 +67,10 @@ public class TimeLimiterConfigurationSpringTest {
         public TimeLimiterAspect timeLimiterAspect(
             TimeLimiterRegistry timeLimiterRegistry,
             @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators,
+            FallbackExecutor fallbackExecutor,
             SpelResolver spelResolver
         ) {
-            timeLimiterAspect = new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties(), timeLimiterAspectExtList, fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
+            timeLimiterAspect = new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties(), timeLimiterAspectExtList, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
             return timeLimiterAspect;
         }
 

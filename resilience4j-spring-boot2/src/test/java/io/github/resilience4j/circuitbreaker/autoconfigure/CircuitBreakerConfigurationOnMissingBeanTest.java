@@ -8,7 +8,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,10 +81,10 @@ public class CircuitBreakerConfigurationOnMissingBeanTest {
         public CircuitBreakerAspect circuitBreakerAspect(
             CircuitBreakerRegistry circuitBreakerRegistry,
             @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-            FallbackDecorators recoveryDecorators,
+            FallbackExecutor fallbackExecutor,
             SpelResolver spelResolver) {
             circuitBreakerAspect = new CircuitBreakerAspect(new CircuitBreakerProperties(),
-                circuitBreakerRegistry, circuitBreakerAspectExtList, recoveryDecorators, spelResolver);
+                circuitBreakerRegistry, circuitBreakerAspectExtList, fallbackExecutor, spelResolver);
             return circuitBreakerAspect;
         }
 
