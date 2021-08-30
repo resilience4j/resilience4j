@@ -23,21 +23,20 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
+import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +48,7 @@ import java.util.stream.Collectors;
  * {@link Configuration Configuration} for resilience4j-retry.
  */
 @Configuration
+@Import({FallbackConfiguration.class, SpelResolverConfiguration.class})
 public class RetryConfiguration {
 
 
@@ -145,12 +145,12 @@ public class RetryConfiguration {
         RetryConfigurationProperties retryConfigurationProperties,
         RetryRegistry retryRegistry,
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
-        FallbackDecorators fallbackDecorators,
+        FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
         @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-            fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
+            fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean

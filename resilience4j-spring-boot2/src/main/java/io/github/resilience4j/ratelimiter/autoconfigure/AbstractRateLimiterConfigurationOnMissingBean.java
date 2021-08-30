@@ -19,7 +19,7 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -83,12 +83,12 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
         RateLimiterConfigurationProperties rateLimiterProperties,
         RateLimiterRegistry rateLimiterRegistry,
         @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators,
+        FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver
     ) {
         return rateLimiterConfiguration
             .rateLimiterAspect(rateLimiterProperties, rateLimiterRegistry, rateLimiterAspectExtList,
-                fallbackDecorators, spelResolver);
+                fallbackExecutor, spelResolver);
     }
 
     @Bean

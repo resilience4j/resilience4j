@@ -3,7 +3,7 @@ package io.github.resilience4j.ratelimiter.autoconfigure;
 import io.github.resilience4j.TestUtils;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
@@ -83,14 +83,14 @@ public class RateLimiterConfigurationOnMissingBeanTest {
         public RateLimiterAspect rateLimiterAspect(
             RateLimiterRegistry rateLimiterRegistry,
             @Autowired(required = false) List<RateLimiterAspectExt> rateLimiterAspectExtList,
-            FallbackDecorators fallbackDecorators,
+            FallbackExecutor fallbackExecutor,
             SpelResolver spelResolver
         ) {
             rateLimiterAspect = new RateLimiterAspect(
                 rateLimiterRegistry,
                 new RateLimiterConfigurationProperties(),
                 rateLimiterAspectExtList,
-                fallbackDecorators,
+                fallbackExecutor,
                 spelResolver
             );
             return rateLimiterAspect;

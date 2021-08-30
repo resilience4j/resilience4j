@@ -23,7 +23,7 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
@@ -85,12 +85,12 @@ public abstract class AbstractCircuitBreakerConfigurationOnMissingBean {
     public CircuitBreakerAspect circuitBreakerAspect(
         CircuitBreakerRegistry circuitBreakerRegistry,
         @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-        FallbackDecorators fallbackDecorators,
+        FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver
     ) {
         return circuitBreakerConfiguration
             .circuitBreakerAspect(circuitBreakerRegistry, circuitBreakerAspectExtList,
-                fallbackDecorators, spelResolver);
+                fallbackExecutor, spelResolver);
     }
 
     @Bean

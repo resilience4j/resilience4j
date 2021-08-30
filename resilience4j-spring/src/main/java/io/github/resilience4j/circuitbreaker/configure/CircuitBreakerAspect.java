@@ -18,10 +18,10 @@ package io.github.resilience4j.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackDecorators;
-import io.github.resilience4j.fallback.FallbackMethod;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
+import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -72,18 +71,18 @@ public class CircuitBreakerAspect implements Ordered {
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final @Nullable
     List<CircuitBreakerAspectExt> circuitBreakerAspectExtList;
-    private final FallbackDecorators fallbackDecorators;
+    private final FallbackExecutor fallbackExecutor;
     private final SpelResolver spelResolver;
 
     public CircuitBreakerAspect(CircuitBreakerConfigurationProperties circuitBreakerProperties,
                                 CircuitBreakerRegistry circuitBreakerRegistry,
                                 @Autowired(required = false) List<CircuitBreakerAspectExt> circuitBreakerAspectExtList,
-                                FallbackDecorators fallbackDecorators,
+                                FallbackExecutor fallbackExecutor,
                                 SpelResolver spelResolver) {
         this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.circuitBreakerAspectExtList = circuitBreakerAspectExtList;
-        this.fallbackDecorators = fallbackDecorators;
+        this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
     }
 
@@ -106,16 +105,8 @@ public class CircuitBreakerAspect implements Ordered {
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
             methodName, backend);
         Class<?> returnType = method.getReturnType();
-
-        String fallbackMethodValue = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), circuitBreakerAnnotation.fallbackMethod());
-        if (StringUtils.isEmpty(fallbackMethodValue)) {
-            return proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
-        }
-        FallbackMethod fallbackMethod = FallbackMethod
-            .create(fallbackMethodValue, method,
-                proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
-        return fallbackDecorators.decorate(fallbackMethod,
-            () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType)).apply();
+        final CheckedFunction0<Object> circuitBreakerExecution = () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
+        return fallbackExecutor.execute(proceedingJoinPoint, method, circuitBreakerAnnotation.fallbackMethod(), circuitBreakerExecution);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
