@@ -12,7 +12,7 @@ apply from: "${rootDir}/libraries.gradle"
 allprojects {
     apply plugin: 'jacoco'
 
-    version = '1.7.1-SNAPSHOT'
+    version = '1.8.0-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
@@ -30,7 +30,7 @@ ext {
 nexusPublishing {
     repositories {
         sonatype {
-            stagingProfileId = 'io.github.resilience4j'
+            stagingProfileId = '64e8d6879f4e95'
         }
     }
 }

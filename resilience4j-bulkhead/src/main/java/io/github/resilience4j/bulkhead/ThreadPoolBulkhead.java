@@ -312,6 +312,21 @@ public interface ThreadPoolBulkhead extends AutoCloseable {
          * @return the queue capacity
          */
         int getQueueCapacity();
+
+        /**
+         * Returns the number of actively executing tasks.
+         *
+         * @return the number of executing tasks
+         */
+        int getActiveThreadCount();
+
+        /**
+         * Returns the maximum number of available threads.
+         * Equivalent to <code>getMaximumThreadPoolSize() - getActiveThreadCount()</code>
+         *
+         * @return the number of executing tasks
+         */
+        int getAvailableThreadCount();
     }
 
     /**

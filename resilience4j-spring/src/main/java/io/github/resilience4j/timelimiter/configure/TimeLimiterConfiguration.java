@@ -24,8 +24,10 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
+import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -36,10 +38,7 @@ import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import io.vavr.collection.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +50,7 @@ import java.util.stream.Collectors;
  * {@link Configuration} for resilience4j-timelimiter.
  */
 @Configuration
+@Import({FallbackConfiguration.class, SpelResolverConfiguration.class})
 public class TimeLimiterConfiguration {
 
     @Bean
@@ -88,11 +88,11 @@ public class TimeLimiterConfiguration {
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
         TimeLimiterRegistry timeLimiterRegistry,
         @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators,
+        FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
         @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
-        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
+        return new TimeLimiterAspect(timeLimiterRegistry, timeLimiterConfigurationProperties, timeLimiterAspectExtList, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean

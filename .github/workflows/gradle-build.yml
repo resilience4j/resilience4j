@@ -77,6 +77,6 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USER }}
           ORG_GRADLE_PROJECT_sonatypePassword : ${{ secrets.SONATYPE_PASSWORD }}
         with:
-          arguments: publishToSonatype -Psonar.organization=resilience4j
+          arguments: publishToSonatype
           dependencies-cache-enabled: true
           configuration-cache-enabled: true

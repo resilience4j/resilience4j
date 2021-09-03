@@ -86,6 +86,20 @@ abstract class AbstractThreadPoolBulkheadMetrics extends AbstractMetrics {
             .tags(customTags)
             .register(meterRegistry).getId());
 
+        idSet.add(Gauge.builder(names.getActiveThreadCountMetricName(), bulkhead,
+            bh -> bh.getMetrics().getActiveThreadCount())
+            .description("The number of active threads")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+
+        idSet.add(Gauge.builder(names.getAvailableThreadCountMetricName(), bulkhead,
+            bh -> bh.getMetrics().getAvailableThreadCount())
+            .description("The number of available threads")
+            .tag(TagNames.NAME, bulkhead.getName())
+            .tags(customTags)
+            .register(meterRegistry).getId());
+
         meterIdMap.put(bulkhead.getName(), idSet);
     }
 

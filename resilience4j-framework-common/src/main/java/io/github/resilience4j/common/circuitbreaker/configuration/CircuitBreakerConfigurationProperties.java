@@ -139,16 +139,19 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
                 properties.getPermittedNumberOfCallsInHalfOpenState());
         }
 
+        if (properties.recordExceptions != null) {
+            builder.recordExceptions(properties.recordExceptions);
+            // if instance config has set recordExceptions, then base config's recordExceptionPredicate is useless.
+            builder.recordException(null);
+        }
+
         if (properties.recordFailurePredicate != null) {
             buildRecordFailurePredicate(properties, builder);
         }
 
-        if (properties.recordExceptions != null) {
-            builder.recordExceptions(properties.recordExceptions);
-        }
-
         if (properties.ignoreExceptions != null) {
             builder.ignoreExceptions(properties.ignoreExceptions);
+            builder.ignoreException(null);
         }
 
         if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {

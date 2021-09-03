@@ -28,7 +28,7 @@ import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
@@ -141,11 +141,11 @@ public class BulkheadConfiguration {
         ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
         BulkheadRegistry bulkheadRegistry,
         @Autowired(required = false) List<BulkheadAspectExt> bulkHeadAspectExtList,
-        FallbackDecorators fallbackDecorators,
+        FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver
     ) {
         return new BulkheadAspect(bulkheadConfigurationProperties, threadPoolBulkheadRegistry,
-            bulkheadRegistry, bulkHeadAspectExtList, fallbackDecorators, spelResolver);
+            bulkheadRegistry, bulkHeadAspectExtList, fallbackExecutor, spelResolver);
     }
 
     @Bean

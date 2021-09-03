@@ -371,3 +371,15 @@ NOTE: Breaking changes:
 === Bugs
 - NullPointerException requesting actuator metrics for retries using retryOnResult [#1205](https://github.com/resilience4j/resilience4j/issues/1205)
 - CircuitBreakers events endpoint doesn't work after replacing instances at runtime  [#1116](https://github.com/resilience4j/resilience4j/issues/1116)
+
+=== Version 1.7.1
+
+==== Enhancements
+Issue #1414: SpEL expressions support passing runtime method arguments to bean methods
+
+==== Bugs
+
+* Issue #1268: Stream events from springboot2 stopped SSE after the 1st message.
+* Issue #1372: Kotlin Timelimiter executeSuspendFunction throws TimeoutException after coroutine is canceled
+* Issue #1432: CircuitBreaker permits more calls then expected when switching from OPEN to HALF_OPEN state
+* Issue #1437: Event can be published twice when CircuitBreaker in MetricsOnlyState

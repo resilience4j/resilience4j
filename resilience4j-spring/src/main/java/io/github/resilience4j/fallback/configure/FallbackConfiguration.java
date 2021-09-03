@@ -16,12 +16,15 @@
 package io.github.resilience4j.fallback.configure;
 
 import io.github.resilience4j.fallback.*;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
@@ -29,6 +32,7 @@ import java.util.List;
  * {@link Configuration} for {@link FallbackDecorators}.
  */
 @Configuration
+@Import(SpelResolverConfiguration.class)
 public class FallbackConfiguration {
 
     @Bean
@@ -51,5 +55,10 @@ public class FallbackConfiguration {
     @Bean
     public FallbackDecorators fallbackDecorators(@Autowired(required = false) List<FallbackDecorator> fallbackDecorator) {
         return new FallbackDecorators(fallbackDecorator);
+    }
+
+    @Bean
+    public FallbackExecutor fallbackExecutor(SpelResolver spelResolver, FallbackDecorators fallbackDecorators) {
+        return new FallbackExecutor(spelResolver, fallbackDecorators);
     }
 }

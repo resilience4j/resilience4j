@@ -169,6 +169,29 @@ public class RetryConfig implements Serializable {
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
+        @Override
+        public String toString() {
+            StringBuilder retryConfig = new StringBuilder("RetryConfig {");
+            retryConfig.append("maxAttempts=");
+            retryConfig.append(maxAttempts);
+            retryConfig.append(", failAfterMaxAttempts=");
+            retryConfig.append(failAfterMaxAttempts);
+            retryConfig.append(", writableStackTraceEnabled=");
+            retryConfig.append(writableStackTraceEnabled);
+            retryConfig.append(", intervalFunction=");
+            retryConfig.append(intervalFunction);
+            retryConfig.append(", retryOnExceptionPredicate=");
+            retryConfig.append(retryOnExceptionPredicate);
+            retryConfig.append(", retryOnResultPredicate=");
+            retryConfig.append(retryOnResultPredicate);
+            retryConfig.append(", intervalBiFunction=");
+            retryConfig.append(intervalBiFunction);
+            retryConfig.append(", retryExceptions=");
+            retryConfig.append(retryExceptions);
+            retryConfig.append(", ignoreExceptions=");
+            retryConfig.append(ignoreExceptions);
+            return retryConfig.toString();
+        }
 
         public Builder() {
         }

@@ -21,7 +21,7 @@ import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfig
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.github.resilience4j.fallback.FallbackDecorators;
+import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
@@ -83,12 +83,12 @@ public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
         TimeLimiterConfigurationProperties timeLimiterProperties,
         TimeLimiterRegistry timeLimiterRegistry,
         @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
-        FallbackDecorators fallbackDecorators,
+        FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
         @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
         return timeLimiterConfiguration.timeLimiterAspect(
-            timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackDecorators, spelResolver, contextAwareScheduledThreadPoolExecutor);
+            timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean
