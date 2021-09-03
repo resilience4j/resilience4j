@@ -3,7 +3,7 @@ plugins {
     id 'org.asciidoctor.convert' version '1.6.0'
     id "org.gradle.test-retry" version "1.2.1"
     id "io.github.gradle-nexus.publish-plugin"  version "1.1.0"
-    id "me.champeau.jmh" version "0.6.5"
+    id "me.champeau.jmh" version "0.6.6"
     id 'idea'
 }
 
