@@ -41,7 +41,8 @@ public class CircuitBreakerMetricsCollector extends AbstractCircuitBreakerMetric
             addMetrics(circuitBreaker);
         }
         circuitBreakerRegistry.getEventPublisher()
-            .onEntryAdded(event -> addMetrics(event.getAddedEntry()));
+            .onEntryAdded(event -> addMetrics(event.getAddedEntry()))
+            .onEntryReplaced(event -> addMetrics(event.getNewEntry()));
     }
 
     /**
