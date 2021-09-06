@@ -25,17 +25,21 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
         ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties2 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties2.setCoreThreadPoolSize(2);
 
+        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties3 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        backendProperties3.setQueueCapacity(0);
+
         ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
         bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
+        bulkheadConfigurationProperties.getBackends().put("backend3", backendProperties3);
         Map<String, String> tags = new HashMap<>();
         tags.put("testKey1", "testKet2");
         bulkheadConfigurationProperties.setTags(tags);
 
         //Then
         assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
-        assertThat(bulkheadConfigurationProperties.getBackends().size()).isEqualTo(2);
-        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getBackends()).hasSize(3);
+        assertThat(bulkheadConfigurationProperties.getInstances()).hasSize(3);
         ThreadPoolBulkheadConfig bulkhead1 = bulkheadConfigurationProperties
             .createThreadPoolBulkheadConfig("backend1", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead1).isNotNull();
@@ -45,6 +49,11 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
             .createThreadPoolBulkheadConfig("backend2", compositeThreadPoolBulkheadCustomizer());
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getCoreThreadPoolSize()).isEqualTo(2);
+
+        ThreadPoolBulkheadConfig bulkhead3 = bulkheadConfigurationProperties
+            .createThreadPoolBulkheadConfig("backend3", compositeThreadPoolBulkheadCustomizer());
+        assertThat(bulkhead3).isNotNull();
+        assertThat(bulkhead3.getQueueCapacity()).isZero();
 
     }
 

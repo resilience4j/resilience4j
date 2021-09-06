@@ -20,11 +20,13 @@ package io.github.resilience4j.bulkhead;
 
 import com.jayway.awaitility.Awaitility;
 import io.github.resilience4j.test.HelloWorldService;
+import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -205,6 +207,31 @@ public class ThreadPoolBulkheadTest {
         CompletionStage<String> result = bulkhead.executeSupplier(getThreadName);
 
         assertThat(result.toCompletableFuture().get()).isEqualTo("bulkhead-TEST-1");
+    }
+
+    @Test
+    public void testWithSynchronousQueue() {
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead
+            .of("test", ThreadPoolBulkheadConfig.custom()
+                .maxThreadPoolSize(2)
+                .coreThreadPoolSize(1)
+                .queueCapacity(0)
+                .build());
+        given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
+        CountDownLatch latch = new CountDownLatch(1);
+
+        bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
+        bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
+
+        assertThatThrownBy(() -> bulkhead.executeCallable(helloWorldService::returnHelloWorld))
+            .isInstanceOf(BulkheadFullException.class);
+        assertThat(bulkhead.getMetrics().getQueueDepth()).isZero();
+        assertThat(bulkhead.getMetrics().getRemainingQueueCapacity()).isZero();
+        assertThat(bulkhead.getMetrics().getQueueCapacity()).isZero();
+        assertThat(bulkhead.getMetrics().getActiveThreadCount()).isEqualTo(2);
+        assertThat(bulkhead.getMetrics().getThreadPoolSize()).isEqualTo(2);
+
+        latch.countDown();
     }
 
 }
