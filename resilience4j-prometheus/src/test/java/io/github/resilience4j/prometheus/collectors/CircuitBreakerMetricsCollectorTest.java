@@ -108,6 +108,27 @@ public class CircuitBreakerMetricsCollectorTest {
     }
 
     @Test
+    public void shouldReportReplacedCircuitBreaker() {
+        double successfulCallsBeforeReplace = registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+            new String[]{"name", "kind", "le"},
+            new String[]{circuitBreaker.getName(), "successful", "0.1"}
+        );
+
+        CircuitBreaker replacedCircuitBreaker = CircuitBreaker.of(circuitBreaker.getName(), CircuitBreakerConfig.ofDefaults());
+        circuitBreakerRegistry.replace(circuitBreaker.getName(), replacedCircuitBreaker);
+        replacedCircuitBreaker.onSuccess(100, TimeUnit.MILLISECONDS);
+
+        double successfulCallsAfterReplace = registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+            new String[]{"name", "kind", "le"},
+            new String[]{circuitBreaker.getName(), "successful", "0.1"}
+        );
+
+        assertThat(successfulCallsAfterReplace).isGreaterThan(successfulCallsBeforeReplace);
+    }
+
+    @Test
     public void successfulBufferedCallsReportsCorrespondingValue() {
         double successfulCalls = registry.getSampleValue(
             DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
