@@ -27,7 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static java.util.Arrays.stream;
@@ -190,14 +192,15 @@ public class ThreadPoolBulkheadConfig {
 
         /**
          * Configures the capacity of the queue.
+         * Use {@link SynchronousQueue} when {@code queueCapacity == 0} or {@link ArrayBlockingQueue} when {@code queueCapacity > 0}.
          *
          * @param queueCapacity max concurrent calls
          * @return the BulkheadConfig.Builder
          */
         public Builder queueCapacity(int queueCapacity) {
-            if (queueCapacity < 1) {
+            if (queueCapacity < 0) {
                 throw new IllegalArgumentException(
-                    "queueCapacity must be a positive integer value >= 1");
+                    "queueCapacity must be a positive integer value >= 0");
             }
             config.queueCapacity = queueCapacity;
             return this;
