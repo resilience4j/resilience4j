@@ -369,7 +369,7 @@ public class BulkheadAutoConfigurationTest {
      * calls.
      */
     @Test
-    public void testBulkheadAutoConfigurationRxJava2() {
+    public void testBulkheadAutoConfigurationRxJava2() throws InterruptedException {
         ExecutorService es = Executors.newFixedThreadPool(5);
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
@@ -377,18 +377,21 @@ public class BulkheadAutoConfigurationTest {
         Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadReactiveDummyService.BACKEND);
         assertThat(bulkhead).isNotNull();
 
-        for (int i = 0; i < 5; i++) {
-            es.submit(new Thread(() -> reactiveDummyService.doSomethingFlowable()
-                .subscribe(String::toUpperCase, throwable -> System.out
-                    .println("Bulkhead Exception received: " + throwable.getMessage()))));
-        }
-        await()
-            .atMost(1200, TimeUnit.MILLISECONDS)
-            .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+        CountDownLatch latch = new CountDownLatch(5);
 
-        await()
-            .atMost(1000, TimeUnit.MILLISECONDS)
-            .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
+        for (int i = 0; i < 5; i++) {
+            es.submit(new Thread(() -> {
+                try {
+                    reactiveDummyService.doSomethingFlowable()
+                        .subscribe(String::toUpperCase, throwable -> System.out
+                            .println("Bulkhead Exception received: " + throwable.getMessage()));
+                } finally {
+                    latch.countDown();
+                }
+            }));
+        }
+
+        latch.await();
 
         for (int i = 0; i < 5; i++) {
             es.submit(new Thread(() -> reactiveDummyService.doSomethingFlowable()
@@ -468,14 +471,14 @@ public class BulkheadAutoConfigurationTest {
         List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
 
         assertThat(bulkheadEvents).isNotEmpty();
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 2).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 3).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 4).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
+        assertThat(bulkheadEvents.subList(bulkheadEvents.size() - 4, bulkheadEvents.size()))
+            .extracting(BulkheadEventDTO::getType)
+            .containsExactlyInAnyOrder(
+                BulkheadEvent.Type.CALL_REJECTED,
+                BulkheadEvent.Type.CALL_REJECTED,
+                BulkheadEvent.Type.CALL_FINISHED,
+                BulkheadEvent.Type.CALL_FINISHED
+            );
 
         bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents/backendB");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody()
