@@ -20,20 +20,10 @@ package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.InMemoryRegistryStore;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import io.vavr.Tuple;
+import io.github.resilience4j.core.registry.*;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.assertThat;
@@ -55,9 +45,9 @@ public class CircuitBreakerRegistryTest {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
             .singletonMap("default", circuitBreakerConfig);
-        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(circuitBreakerConfigs,new NoOpCircuitBreakerEventConsumer(),io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(circuitBreakerConfigs,new NoOpCircuitBreakerEventConsumer(),Map.of("Tag1Key","Tag1Value"));
         assertThat(registry.getTags()).isNotEmpty();
-        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).containsOnly(Map.entry("Tag1Key","Tag1Value"));
     }
 
     @Test
@@ -99,41 +89,37 @@ public class CircuitBreakerRegistryTest {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
             .singletonMap("default", circuitBreakerConfig);
-        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> circuitBreakerTags = Map.of("key1", "value1", "key2", "value2");
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
             .of(circuitBreakerConfigs, circuitBreakerTags);
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
-        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(circuitBreakerTags);
+        assertThat(circuitBreaker.getTags()).containsAllEntriesOf(circuitBreakerTags);
     }
 
     @Test
     public void tagsAddedToInstance() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
-        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("testName", retryTags);
 
-        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(retryTags);
+        assertThat(circuitBreaker.getTags()).containsAllEntriesOf(retryTags);
     }
 
     @Test
     public void tagsOfRetriesShouldNotBeMixed() {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
-        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> circuitBreakerTags = Map.of("key1", "value1", "key2", "value2");
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("testName", circuitBreakerConfig, circuitBreakerTags);
-        io.vavr.collection.Map<String, String> circuitBreakerTags2 = io.vavr.collection.HashMap
-            .of("key3", "value3", "key4", "value4");
+        Map<String, String> circuitBreakerTags2 = Map.of("key3", "value3", "key4", "value4");
         CircuitBreaker circuitBreaker2 = circuitBreakerRegistry
             .circuitBreaker("otherTestName", circuitBreakerConfig, circuitBreakerTags2);
 
-        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(circuitBreakerTags);
-        assertThat(circuitBreaker2.getTags()).containsOnlyElementsOf(circuitBreakerTags2);
+        assertThat(circuitBreaker.getTags()).containsAllEntriesOf(circuitBreakerTags);
+        assertThat(circuitBreaker2.getTags()).containsAllEntriesOf(circuitBreakerTags2);
     }
 
     @Test
@@ -141,18 +127,15 @@ public class CircuitBreakerRegistryTest {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.ofDefaults();
         Map<String, CircuitBreakerConfig> circuitBreakerConfigs = Collections
             .singletonMap("default", circuitBreakerConfig);
-        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
-        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key4", "value4");
+        Map<String, String> circuitBreakerTags = Map.of("key1", "value1", "key2", "value2");
+        Map<String, String> instanceTags = Map.of("key1", "value3", "key4", "value4");
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry
             .of(circuitBreakerConfigs, circuitBreakerTags);
         CircuitBreaker circuitBreaker = circuitBreakerRegistry
             .circuitBreaker("testName", circuitBreakerConfig, instanceTags);
 
-        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key2", "value2", "key4", "value4");
-        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(expectedTags);
+        Map<String, String> expectedTags = Map.of("key1", "value3", "key2", "value2", "key4", "value4");
+        assertThat(circuitBreaker.getTags()).containsAllEntriesOf(expectedTags);
     }
 
     @Test
@@ -389,15 +372,14 @@ public class CircuitBreakerRegistryTest {
 
     @Test
     public void testCreateUsingBuilderWithRegistryTags() {
-        io.vavr.collection.Map<String, String> circuitBreakerTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> circuitBreakerTags = Map.of("key1", "value1", "key2", "value2");
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.custom()
             .withCircuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
             .withTags(circuitBreakerTags)
             .build();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
 
-        assertThat(circuitBreaker.getTags()).containsOnlyElementsOf(circuitBreakerTags);
+        assertThat(circuitBreaker.getTags()).containsAllEntriesOf(circuitBreakerTags);
     }
 
     @Test

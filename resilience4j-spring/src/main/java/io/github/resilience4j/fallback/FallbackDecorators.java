@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.fallback;
 
-import io.vavr.CheckedFunction0;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 
 import java.util.List;
 
@@ -39,8 +39,8 @@ public class FallbackDecorators {
      * @param supplier       original function
      * @return a function which is decorated by a {@link FallbackMethod}
      */
-    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-        CheckedFunction0<Object> supplier) {
+    public CheckedSupplier<Object> decorate(FallbackMethod fallbackMethod,
+                                            CheckedSupplier<Object> supplier) {
         return get(fallbackMethod.getReturnType())
             .decorate(fallbackMethod, supplier);
     }

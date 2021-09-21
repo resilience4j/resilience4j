@@ -40,13 +40,8 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    @Deprecated
-    protected AbstractTimeLimiterMetrics(MetricNames names) {
-        this.names = requireNonNull(names);
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, TimeLimiter timeLimiter) {
-        List<Tag> customTags = mapToTagsList(timeLimiter.getTags().toJavaMap());
+        List<Tag> customTags = mapToTagsList(timeLimiter.getTags());
         registerMetrics(meterRegistry, timeLimiter, customTags);
     }
 
@@ -82,7 +77,4 @@ abstract class AbstractTimeLimiterMetrics extends AbstractMetrics {
         meterIdMap.put(timeLimiter.getName(), new HashSet<>(ids));
     }
 
-    @Deprecated
-    public static class MetricNames extends TimeLimiterMetricNames {
-    }
 }

@@ -1,7 +1,7 @@
 package io.github.resilience4j.fallback;
 
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.spelresolver.SpelResolver;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ public class FallbackExecutorTest {
     @Test
     public void testPrimaryMethodExecutionWithFallback() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
-        final CheckedFunction0<Object> primaryFunction = () -> getName("Name");
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "getNameValidFallback";
 
         when(proceedingJoinPoint.getArgs()).thenReturn(new Object[]{});
@@ -42,7 +42,7 @@ public class FallbackExecutorTest {
     @Test
     public void testPrimaryMethodExecutionWithoutFallback() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
-        final CheckedFunction0<Object> primaryFunction = () -> getName("Name");
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "";
 
         when(proceedingJoinPoint.getArgs()).thenReturn(new Object[]{});
@@ -60,7 +60,7 @@ public class FallbackExecutorTest {
     @Test
     public void testPrimaryMethodExecutionWithFallbackNotFound() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
-        final CheckedFunction0<Object> primaryFunction = () -> getName("Name");
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "incorrectFallbackMethodName";
 
         when(proceedingJoinPoint.getArgs()).thenReturn(new Object[]{});
@@ -78,7 +78,7 @@ public class FallbackExecutorTest {
     @Test
     public void testPrimaryMethodExecutionWithFallbackWithIncorrectSignature() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
-        final CheckedFunction0<Object> primaryFunction = () -> getName("Name");
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "getNameInvalidFallback";
 
         when(proceedingJoinPoint.getArgs()).thenReturn(new Object[]{});

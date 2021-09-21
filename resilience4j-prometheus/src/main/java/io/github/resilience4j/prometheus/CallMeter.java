@@ -1,11 +1,11 @@
 package io.github.resilience4j.prometheus;
 
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
@@ -57,12 +57,12 @@ public interface CallMeter extends CallMeterBase {
      * @param supplier the original supplier
      * @return a timed supplier
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(CallMeterBase meter,
-        CheckedFunction0<T> supplier) {
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(CallMeterBase meter,
+                                                          CheckedSupplier<T> supplier) {
         return () -> {
             final Timer timer = meter.startTimer();
             try {
-                final T returnValue = supplier.apply();
+                final T returnValue = supplier.get();
                 timer.onSuccess();
                 return returnValue;
             } catch (Throwable e) {
@@ -182,8 +182,8 @@ public interface CallMeter extends CallMeterBase {
      * @param function the original function
      * @return a timed function
      */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(CallMeterBase meter,
-        CheckedFunction1<T, R> function) {
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(CallMeterBase meter,
+                                                                CheckedFunction<T, R> function) {
         return (T t) -> {
             final Timer timer = meter.startTimer();
             try {

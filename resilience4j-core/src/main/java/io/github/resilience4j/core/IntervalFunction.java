@@ -1,9 +1,8 @@
 package io.github.resilience4j.core;
 
-import io.vavr.collection.Stream;
-
 import java.time.Duration;
 import java.util.function.Function;
+import java.util.stream.LongStream;
 
 import static io.github.resilience4j.core.IntervalFunctionCompanion.*;
 import static java.util.Objects.requireNonNull;
@@ -35,7 +34,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
         return (attempt) -> {
             checkAttempt(attempt);
-            return Stream.iterate(intervalMillis, backoffFunction).get(attempt - 1);
+            return LongStream.iterate(intervalMillis, n -> backoffFunction.apply(n)).skip(attempt - 1).findFirst().getAsLong();
         };
     }
 

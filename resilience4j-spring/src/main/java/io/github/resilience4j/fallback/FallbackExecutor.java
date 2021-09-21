@@ -1,7 +1,7 @@
 package io.github.resilience4j.fallback;
 
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.spelresolver.SpelResolver;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class FallbackExecutor {
         this.fallbackDecorators = fallbackDecorators;
     }
 
-    public Object execute(ProceedingJoinPoint proceedingJoinPoint, Method method, String fallbackMethodValue, CheckedFunction0<Object> primaryFunction) throws Throwable {
+    public Object execute(ProceedingJoinPoint proceedingJoinPoint, Method method, String fallbackMethodValue, CheckedSupplier<Object> primaryFunction) throws Throwable {
         String fallbackMethodName = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue);
 
         FallbackMethod fallbackMethod = null;
@@ -34,9 +34,9 @@ public class FallbackExecutor {
             }
         }
         if (fallbackMethod == null) {
-            return primaryFunction.apply();
+            return primaryFunction.get();
         } else {
-            return fallbackDecorators.decorate(fallbackMethod, primaryFunction).apply();
+            return fallbackDecorators.decorate(fallbackMethod, primaryFunction).get();
         }
     }
 }

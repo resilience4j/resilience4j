@@ -18,11 +18,11 @@ package io.github.resilience4j.ratpack.retry.monitoring.endpoint
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse
+import io.github.resilience4j.core.functions.CheckedSupplier
 import io.github.resilience4j.ratpack.Resilience4jModule
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryRegistry
 import io.github.resilience4j.retry.event.RetryEvent
-import io.vavr.CheckedFunction0
 import io.vavr.control.Try
 import ratpack.http.client.HttpClient
 import ratpack.test.embed.EmbeddedApp
@@ -56,9 +56,9 @@ class RetryChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }
                 }
             }
@@ -88,9 +88,11 @@ class RetryChainSpec extends Specification {
         when: "we get all retry events"
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, {
-                throw new Exception('derek olk'); 'unreachable'
-            } as CheckedFunction0<String>)).recover { "recovered" }.get()
+            Try.of({ ->
+                Retry.decorateCheckedSupplier(r, {
+                    throw new Exception('derek olk'); 'unreachable'
+                } as CheckedSupplier<String>).get()
+            }).recover { "recovered" }.get()
         }
         actual = client.get('retry/events')
         def dto = mapper.readValue(actual.body.text, RetryEventsEndpointResponse)
@@ -139,9 +141,9 @@ class RetryChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }
                 }
             }
@@ -158,9 +160,11 @@ class RetryChainSpec extends Specification {
         def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, {
-                throw new Exception('derek olk'); 'unreachable'
-            } as CheckedFunction0<String>)).recover { "recovered" }.get()
+            Try.of({ ->
+                Retry.decorateCheckedSupplier(r, {
+                    throw new Exception('derek olk'); 'unreachable'
+                } as CheckedSupplier<String>)
+            }).recover { "recovered" }.get()
         }
         def actual = ExecHarness.yieldSingle {
             streamer.requestStream(new URI("http://$app.server.bindHost:$app.server.bindPort/retry/stream/events")) {
@@ -211,9 +215,9 @@ class RetryChainSpec extends Specification {
             bindings {
                 module(Resilience4jModule) {
                     it.retry('test1') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.retry('test2') {
-                        it.setMaxRetryAttempts(3).setWaitDuration(Duration.ofMillis(100))
+                        it.setMaxAttempts(3).setWaitDuration(Duration.ofMillis(100))
                     }.endpoints {
                         it.retries {
                             it.enabled(false)
@@ -229,9 +233,11 @@ class RetryChainSpec extends Specification {
         def retryRegistry = app.server.registry.get().get(RetryRegistry)
         ['test1', 'test2'].each {
             def r = retryRegistry.retry(it)
-            Try.of(Retry.decorateCheckedSupplier(r, {
-                throw new Exception('derek olk'); 'unreachable'
-            } as CheckedFunction0<String>)).recover { "recovered" }.get()
+            Try.of({ ->
+                Retry.decorateCheckedSupplier(r, {
+                    throw new Exception('derek olk'); 'unreachable'
+                } as CheckedSupplier<String>)
+            }).recover { "recovered" }.get()
         }
         def actual = client.get('retry/events')
 

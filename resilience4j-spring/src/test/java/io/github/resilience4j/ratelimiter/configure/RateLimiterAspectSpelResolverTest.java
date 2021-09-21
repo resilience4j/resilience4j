@@ -39,8 +39,8 @@ public class RateLimiterAspectSpelResolverTest {
 
     @Test
     public void testSpel() {
-        assertThat(registry.getAllRateLimiters().exists(it -> it.getName().equals("SPEL_BACKEND"))).isFalse();
+        assertThat(registry.getAllRateLimiters().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isFalse();
         assertThat(testDummyService.spelSync("SPEL_BACKEND")).isEqualTo("recovered");
-        assertThat(registry.getAllRateLimiters().exists(it -> it.getName().equals("SPEL_BACKEND"))).isTrue();
+        assertThat(registry.getAllRateLimiters().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isTrue();
     }
 }

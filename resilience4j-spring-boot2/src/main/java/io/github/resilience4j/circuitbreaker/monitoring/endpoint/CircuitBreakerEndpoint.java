@@ -28,6 +28,7 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Endpoint(id = "circuitbreakers")
@@ -41,8 +42,8 @@ public class CircuitBreakerEndpoint {
 
     @ReadOperation
     public CircuitBreakerEndpointResponse getAllCircuitBreakers() {
-        List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers()
-            .map(CircuitBreaker::getName).sorted().toJavaList();
+        List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers().stream()
+            .map(CircuitBreaker::getName).sorted().collect(Collectors.toList());
         return new CircuitBreakerEndpointResponse(circuitBreakers);
     }
 

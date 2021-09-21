@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.fallback;
 
-import io.vavr.CheckedFunction0;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,8 +40,8 @@ public class ReactorFallbackDecorator implements FallbackDecorator {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-        CheckedFunction0<Object> supplier) {
+    public CheckedSupplier<Object> decorate(FallbackMethod fallbackMethod,
+                                            CheckedSupplier<Object> supplier) {
         return supplier.andThen(returnValue -> {
             if (Flux.class.isAssignableFrom(returnValue.getClass())) {
                 Flux fluxReturnValue = (Flux) returnValue;

@@ -20,8 +20,6 @@ package io.github.resilience4j.kotlin.bulkhead
 
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
-import io.vavr.Tuple2 as VavrTuple2
-import io.vavr.collection.HashMap as VavrHashMap
 
 /**
  * Creates new custom [ThreadPoolBulkheadRegistry].
@@ -141,7 +139,7 @@ inline fun ThreadPoolBulkheadRegistry.Builder.addThreadPoolBulkheadConfig(
  * @param tags default tags to add to the registry.
  */
 fun ThreadPoolBulkheadRegistry.Builder.withTags(tags: Map<String, String>) {
-    withTags(VavrHashMap.ofAll(tags))
+    withTags(tags)
 }
 
 /**
@@ -152,5 +150,5 @@ fun ThreadPoolBulkheadRegistry.Builder.withTags(tags: Map<String, String>) {
  * @param tags default tags to add to the registry.
  */
 fun ThreadPoolBulkheadRegistry.Builder.withTags(vararg tags: Pair<String, String>) {
-    withTags(VavrHashMap.ofEntries(tags.map { VavrTuple2(it.first, it.second) }))
+    withTags(HashMap(tags.toMap()))
 }

@@ -39,8 +39,8 @@ public class TimeLimiterAspectSpelResolverTest {
 
     @Test
     public void testSpel() {
-        assertThat(registry.getAllTimeLimiters().exists(it -> it.getName().equals("SPEL_BACKEND"))).isFalse();
+        assertThat(registry.getAllTimeLimiters().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isFalse();
         assertThat(testDummyService.spelMono("SPEL_BACKEND").block()).isEqualTo("SPEL_BACKEND");
-        assertThat(registry.getAllTimeLimiters().exists(it -> it.getName().equals("SPEL_BACKEND"))).isTrue();
+        assertThat(registry.getAllTimeLimiters().stream().filter(it -> it.getName().equals("SPEL_BACKEND")).findAny().isPresent()).isTrue();
     }
 }

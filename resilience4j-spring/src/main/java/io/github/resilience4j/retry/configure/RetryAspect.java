@@ -16,13 +16,13 @@
 package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -113,7 +113,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), retryAnnotation.name());
         io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
         Class<?> returnType = method.getReturnType();
-        final CheckedFunction0<Object> retryExecution = () -> proceed(proceedingJoinPoint, methodName, retry, returnType);
+        final CheckedSupplier<Object> retryExecution = () -> proceed(proceedingJoinPoint, methodName, retry, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, retryAnnotation.fallbackMethod(), retryExecution);
     }
 

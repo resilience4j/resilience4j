@@ -22,11 +22,11 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.ratelimiter.internal.InMemoryRateLimiterRegistry;
-import io.vavr.collection.Seq;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -101,8 +101,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param tags    default tags to add to the registry
      * @return a ThreadPoolBulkheadRegistry with a Map of shared RateLimiter configurations.
      */
-    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+    static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs, Map<String, String> tags) {
         return new InMemoryRateLimiterRegistry(configs, tags);
     }
 
@@ -131,8 +130,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * RateLimiter registry event consumer.
      */
     static RateLimiterRegistry of(Map<String, RateLimiterConfig> configs,
-        RegistryEventConsumer<RateLimiter> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        RegistryEventConsumer<RateLimiter> registryEventConsumer, Map<String, String> tags) {
         return new InMemoryRateLimiterRegistry(configs, registryEventConsumer, tags);
     }
 
@@ -155,7 +153,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      *
      * @return all managed {@link RateLimiter} instances.
      */
-    Seq<RateLimiter> getAllRateLimiters();
+    Set<RateLimiter> getAllRateLimiters();
 
     /**
      * Returns a managed {@link RateLimiter} or creates a new one with the default RateLimiter
@@ -178,7 +176,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param tags tags added to the RateLimiter
      * @return The {@link RateLimiter}
      */
-    RateLimiter rateLimiter(String name, io.vavr.collection.Map<String, String> tags);
+    RateLimiter rateLimiter(String name, Map<String, String> tags);
 
     /**
      * Returns a managed {@link RateLimiter} or creates a new one with a custom RateLimiter
@@ -203,8 +201,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param tags              tags added to the RateLimiter
      * @return The {@link RateLimiter}
      */
-    RateLimiter rateLimiter(String name, RateLimiterConfig rateLimiterConfig,
-        io.vavr.collection.Map<String, String> tags);
+    RateLimiter rateLimiter(String name, RateLimiterConfig rateLimiterConfig, Map<String, String> tags);
 
     /**
      * Returns a managed {@link RateLimiterConfig} or creates a new one with a custom
@@ -229,8 +226,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param tags                      tags added to the RateLimiter
      * @return The {@link RateLimiterConfig}
      */
-    RateLimiter rateLimiter(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier,
-        io.vavr.collection.Map<String, String> tags);
+    RateLimiter rateLimiter(String name, Supplier<RateLimiterConfig> rateLimiterConfigSupplier, Map<String, String> tags);
 
     /**
      * Returns a managed {@link RateLimiter} or creates a new one.
@@ -250,8 +246,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
      * @param configName the name of the shared configuration
      * @return The {@link RateLimiter}
      */
-    RateLimiter rateLimiter(String name, String configName,
-        io.vavr.collection.Map<String, String> tags);
+    RateLimiter rateLimiter(String name, String configName, Map<String, String> tags);
 
     /**
      * Returns a builder to create a custom RateLimiterRegistry.
@@ -268,7 +263,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
         private RegistryStore<RateLimiter> registryStore;
         private Map<String, RateLimiterConfig> rateLimiterConfigsMap;
         private List<RegistryEventConsumer<RateLimiter>> registryEventConsumers;
-        private io.vavr.collection.Map<String, String> tags;
+        private Map<String, String> tags;
 
         public Builder() {
             this.rateLimiterConfigsMap = new java.util.HashMap<>();
@@ -327,7 +322,7 @@ public interface RateLimiterRegistry extends Registry<RateLimiter, RateLimiterCo
          * @param tags default tags to add to the registry.
          * @return a {@link RateLimiterRegistry.Builder}
          */
-        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+        public Builder withTags(Map<String, String> tags) {
             this.tags = tags;
             return this;
         }

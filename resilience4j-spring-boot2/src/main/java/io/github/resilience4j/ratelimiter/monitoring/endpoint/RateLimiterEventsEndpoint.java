@@ -20,12 +20,14 @@ import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiter
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
-import io.vavr.collection.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Endpoint(id = "ratelimiterevents")
 public class RateLimiterEventsEndpoint {
@@ -39,17 +41,19 @@ public class RateLimiterEventsEndpoint {
 
     @ReadOperation
     public RateLimiterEventsEndpointResponse getAllRateLimiterEvents() {
-        return new RateLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer()
-            .flatMap(CircularEventConsumer::getBufferedEvents)
+        return new RateLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer().stream()
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
-            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+            .collect(Collectors.toList()));
     }
 
     @ReadOperation
     public RateLimiterEventsEndpointResponse getEventsFilteredByRateLimiterName(
         @Selector String name) {
-        return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name)
-            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+        return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name).stream()
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+            .collect(Collectors.toList()));
     }
 
     @ReadOperation
@@ -57,19 +61,21 @@ public class RateLimiterEventsEndpoint {
         @Selector String name,
         @Selector String eventType) {
         RateLimiterEvent.Type targetType = RateLimiterEvent.Type.valueOf(eventType.toUpperCase());
-        return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name)
+        return new RateLimiterEventsEndpointResponse(getRateLimiterEvents(name).stream()
             .filter(event -> event.getEventType() == targetType)
-            .map(RateLimiterEventDTO::createRateLimiterEventDTO).toJavaList());
+            .map(RateLimiterEventDTO::createRateLimiterEventDTO)
+            .collect(Collectors.toList()));
     }
 
     private List<RateLimiterEvent> getRateLimiterEvents(String name) {
         CircularEventConsumer<RateLimiterEvent> eventConsumer = eventsConsumerRegistry
             .getEventConsumer(name);
         if (eventConsumer != null) {
-            return eventConsumer.getBufferedEvents()
-                .filter(event -> event.getRateLimiterName().equals(name));
+            return eventConsumer.getBufferedEventsStream()
+                .filter(event -> event.getRateLimiterName().equals(name))
+                .collect(Collectors.toList());
         } else {
-            return List.empty();
+            return Collections.emptyList();
         }
     }
 }

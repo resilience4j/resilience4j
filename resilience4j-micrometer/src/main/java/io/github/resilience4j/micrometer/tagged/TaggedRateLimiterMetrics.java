@@ -58,21 +58,6 @@ public class TaggedRateLimiterMetrics extends AbstractRateLimiterMetrics impleme
         return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
     }
 
-    /**
-     * Creates a new binder that uses given {@code registry} as source of rate limiters.
-     *
-     * @deprecated Use {@link TaggedRateLimiterMetrics#ofRateLimiterRegistry(RateLimiterMetricNames, RateLimiterRegistry)} instead
-     *
-     * @param names               custom metric names
-     * @param rateLimiterRegistry the source of rate limiters
-     * @return The {@link TaggedRateLimiterMetrics} instance.
-     */
-    @Deprecated
-    public static TaggedRateLimiterMetrics ofRateLimiterRegistry(MetricNames names,
-                                                                 RateLimiterRegistry rateLimiterRegistry) {
-        return new TaggedRateLimiterMetrics(names, rateLimiterRegistry);
-    }
-
     @Override
     public void bindTo(MeterRegistry registry) {
         for (RateLimiter rateLimiter : rateLimiterRegistry.getAllRateLimiters()) {

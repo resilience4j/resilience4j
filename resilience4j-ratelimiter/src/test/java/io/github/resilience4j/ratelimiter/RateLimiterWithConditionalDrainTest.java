@@ -18,8 +18,8 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.vavr.CheckedFunction0;
-import io.vavr.control.Either;
+import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.core.functions.Either;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,12 +63,12 @@ public class RateLimiterWithConditionalDrainTest {
 
     @Test
     public void decorateCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
-        CheckedFunction0<?> supplier = mock(CheckedFunction0.class);
-        CheckedFunction0<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedSupplier<?> supplier = mock(CheckedSupplier.class);
+        CheckedSupplier<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
         given(drainConditionChecker.test(any())).willReturn(false);
 
-        Try<?> result = Try.of(decorated);
+        Try<?> result = Try.of(() -> decorated.get());
 
         assertThat(result.isSuccess()).isTrue();
         verify(drainConditionChecker).test(argThat(Either::isRight));
@@ -77,13 +77,13 @@ public class RateLimiterWithConditionalDrainTest {
 
     @Test
     public void decorateFailingCheckedSupplierAndApplyWithDrainConditionNotMet() throws Throwable {
-        CheckedFunction0<?> supplier = mock(CheckedFunction0.class);
-        when(supplier.apply()).thenThrow(RuntimeException.class);
-        CheckedFunction0<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedSupplier<?> supplier = mock(CheckedSupplier.class);
+        when(supplier.get()).thenThrow(RuntimeException.class);
+        CheckedSupplier<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
         given(drainConditionChecker.test(any())).willReturn(false);
 
-        Try<?> result = Try.of(decorated);
+        final Try<?> result = Try.of(() -> decorated.get());
 
         assertThat(result.isFailure()).isTrue();
         verify(drainConditionChecker).test(argThat(Either::isLeft));
@@ -92,12 +92,12 @@ public class RateLimiterWithConditionalDrainTest {
 
     @Test
     public void decorateCheckedSupplierAndApplyWithDrainConditionMet() throws Throwable {
-        CheckedFunction0<?> supplier = mock(CheckedFunction0.class);
-        CheckedFunction0<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
+        CheckedSupplier<?> supplier = mock(CheckedSupplier.class);
+        CheckedSupplier<?> decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(true);
         given(drainConditionChecker.test(any())).willReturn(true);
 
-        Try<?> result = Try.of(decorated);
+        Try<?> result = Try.of(() -> decorated.get());
 
         assertThat(result.isSuccess()).isTrue();
         verify(drainConditionChecker).test(argThat(Either::isRight));

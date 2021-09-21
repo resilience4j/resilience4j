@@ -137,7 +137,7 @@ public class TaggedBulkheadMetricsTest {
 
     @Test
     public void customTagsShouldBeAdded() {
-        Bulkhead bulkheadC = bulkheadRegistry.bulkhead("backendC", io.vavr.collection.HashMap.of("key1", "value1"));
+        Bulkhead bulkheadC = bulkheadRegistry.bulkhead("backendC", Map.of("key1", "value1"));
         // record some basic stats
         bulkheadC.tryAcquirePermission();
         bulkheadC.tryAcquirePermission();

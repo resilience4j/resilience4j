@@ -20,12 +20,8 @@ import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.retry.internal.InMemoryRetryRegistry;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Seq;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -88,7 +84,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @return a RetryRegistry with a Map of shared Retry configurations.
      */
     static RetryRegistry of(Map<String, RetryConfig> configs) {
-        return of(configs, HashMap.empty());
+        return of(configs, Collections.emptyMap());
     }
 
     /**
@@ -101,7 +97,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @return a RetryRegistry with a Map of shared Retry configurations.
      */
     static RetryRegistry of(Map<String, RetryConfig> configs,
-        io.vavr.collection.Map<String, String> tags) {
+        Map<String, String> tags) {
         return new InMemoryRetryRegistry(configs, tags);
     }
 
@@ -131,7 +127,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      */
     static RetryRegistry of(Map<String, RetryConfig> configs,
         RegistryEventConsumer<Retry> registryEventConsumer,
-        io.vavr.collection.Map<String, String> tags) {
+        Map<String, String> tags) {
         return new InMemoryRetryRegistry(configs, registryEventConsumer, tags);
     }
 
@@ -154,7 +150,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      *
      * @return all managed {@link Retry} instances.
      */
-    Seq<Retry> getAllRetries();
+    Set<Retry> getAllRetries();
 
     /**
      * Returns a managed {@link Retry} or creates a new one with the default Retry configuration.
@@ -175,7 +171,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @param tags tags added to the Retry
      * @return The {@link Retry}
      */
-    Retry retry(String name, io.vavr.collection.Map<String, String> tags);
+    Retry retry(String name, Map<String, String> tags);
 
     /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
@@ -198,7 +194,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @param tags   tags added to the Retry
      * @return The {@link Retry}
      */
-    Retry retry(String name, RetryConfig config, io.vavr.collection.Map<String, String> tags);
+    Retry retry(String name, RetryConfig config, Map<String, String> tags);
 
     /**
      * Returns a managed {@link Retry} or creates a new one with a custom Retry configuration.
@@ -222,7 +218,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @return The {@link Retry}
      */
     Retry retry(String name, Supplier<RetryConfig> retryConfigSupplier,
-        io.vavr.collection.Map<String, String> tags);
+        Map<String, String> tags);
 
     /**
      * Returns a managed {@link Retry} or creates a new one.
@@ -247,7 +243,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
      * @param tags       tags added to the Retry
      * @return The {@link Retry}
      */
-    Retry retry(String name, String configName, io.vavr.collection.Map<String, String> tags);
+    Retry retry(String name, String configName, Map<String, String> tags);
 
     /**
      * Returns a builder to create a custom RetryRegistry.
@@ -264,7 +260,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
         private RegistryStore<Retry> registryStore;
         private Map<String, RetryConfig> retryConfigsMap;
         private List<RegistryEventConsumer<Retry>> registryEventConsumers;
-        private io.vavr.collection.Map<String, String> tags;
+        private Map<String, String> tags;
 
         public Builder() {
             this.retryConfigsMap = new java.util.HashMap<>();
@@ -323,7 +319,7 @@ public interface RetryRegistry extends Registry<Retry, RetryConfig> {
          * @param tags default tags to add to the registry.
          * @return a {@link RetryRegistry.Builder}
          */
-        public Builder withTags(io.vavr.collection.Map<String, String> tags) {
+        public Builder withTags(Map<String, String> tags) {
             this.tags = tags;
             return this;
         }

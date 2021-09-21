@@ -6,14 +6,15 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptyMap;
 
 public class TimeLimiterImpl implements TimeLimiter {
 
@@ -25,12 +26,11 @@ public class TimeLimiterImpl implements TimeLimiter {
     private final TimeLimiterEventProcessor eventProcessor;
 
     public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig) {
-        this(name, timeLimiterConfig, HashMap.empty());
+        this(name, timeLimiterConfig, emptyMap());
 
     }
 
-    public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig,
-        io.vavr.collection.Map<String, String> tags) {
+    public TimeLimiterImpl(String name, TimeLimiterConfig timeLimiterConfig, Map<String, String> tags) {
         this.name = name;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.timeLimiterConfig = timeLimiterConfig;

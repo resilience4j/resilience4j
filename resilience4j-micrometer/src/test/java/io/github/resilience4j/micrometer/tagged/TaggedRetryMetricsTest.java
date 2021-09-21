@@ -28,8 +28,8 @@ import org.junit.Test;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByKindAndNameTags;
+import static io.github.resilience4j.micrometer.tagged.RetryMetricNames.DEFAULT_RETRY_CALLS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaggedRetryMetricsTest {
@@ -76,7 +76,7 @@ public class TaggedRetryMetricsTest {
 
     @Test
     public void shouldAddCustomTags() {
-        retryRegistry.retry("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        retryRegistry.retry("backendF", Map.of("key1", "value1"));
         assertThat(taggedRetryMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedRetryMetrics.meterIdMap.get("backendA")).hasSize(4);
         assertThat(taggedRetryMetrics.meterIdMap.get("backendF")).hasSize(4);

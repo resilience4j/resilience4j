@@ -156,7 +156,7 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         throws Throwable {
         try {
             return io.github.resilience4j.retry.Retry
-                .decorateCheckedSupplier(retry, invocation::proceed).apply();
+                .decorateCheckedSupplier(retry, invocation::proceed).get();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }

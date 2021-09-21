@@ -18,10 +18,9 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import io.vavr.collection.List;
-import io.vavr.control.Option;
-
-import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Thread safe implementation of {@link CircularFifoBuffer} on top of {@link
@@ -71,10 +70,16 @@ public class ConcurrentCircularFifoBuffer<T> implements CircularFifoBuffer<T> {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<T> toList() {
-        T[] elementsArray = (T[]) queue.toArray();
-        return List.ofAll(Arrays.asList(elementsArray));
+        return List.copyOf(queue);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Stream<T> toStream() {
+        return queue.stream();
     }
 
     /**
@@ -89,7 +94,7 @@ public class ConcurrentCircularFifoBuffer<T> implements CircularFifoBuffer<T> {
      * {@inheritDoc}
      */
     @Override
-    public Option<T> take() {
-        return Option.of(queue.poll());
+    public Optional<T> take() {
+        return Optional.ofNullable(queue.poll());
     }
 }

@@ -18,7 +18,7 @@ package io.github.resilience4j.feign;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
-import io.vavr.CheckedFunction1;
+import io.github.resilience4j.core.functions.CheckedFunction;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -35,7 +35,7 @@ import static feign.Util.checkNotNull;
 class DecoratorInvocationHandler implements InvocationHandler {
 
     private final Target<?> target;
-    private final Map<Method, CheckedFunction1<Object[], Object>> decoratedDispatch;
+    private final Map<Method, CheckedFunction<Object[], Object>> decoratedDispatch;
 
     public DecoratorInvocationHandler(Target<?> target,
         Map<Method, MethodHandler> dispatch,
@@ -47,7 +47,7 @@ class DecoratorInvocationHandler implements InvocationHandler {
 
     /**
      * Applies the specified {@link FeignDecorator} to all specified {@link MethodHandler}s and
-     * returns the result as a map of {@link CheckedFunction1}s. Invoking a {@link CheckedFunction1}
+     * returns the result as a map of {@link CheckedFunction}s. Invoking a {@link CheckedFunction}
      * will therefore invoke the decorator which, in turn, may invoke the corresponding {@link
      * MethodHandler}.
      *
@@ -59,15 +59,15 @@ class DecoratorInvocationHandler implements InvocationHandler {
      * @return a new map where the {@link MethodHandler}s are decorated with the {@link
      * FeignDecorator}.
      */
-    private Map<Method, CheckedFunction1<Object[], Object>> decorateMethodHandlers(
+    private Map<Method, CheckedFunction<Object[], Object>> decorateMethodHandlers(
         Map<Method, MethodHandler> dispatch,
         FeignDecorator invocationDecorator, Target<?> target) {
-        final Map<Method, CheckedFunction1<Object[], Object>> map = new HashMap<>();
+        final Map<Method, CheckedFunction<Object[], Object>> map = new HashMap<>();
         for (final Map.Entry<Method, MethodHandler> entry : dispatch.entrySet()) {
             final Method method = entry.getKey();
             final MethodHandler methodHandler = entry.getValue();
             if (methodHandler != null) {
-                CheckedFunction1<Object[], Object> decorated = invocationDecorator
+                CheckedFunction<Object[], Object> decorated = invocationDecorator
                     .decorate(methodHandler::invoke, method, methodHandler, target);
                 map.put(method, decorated);
             }

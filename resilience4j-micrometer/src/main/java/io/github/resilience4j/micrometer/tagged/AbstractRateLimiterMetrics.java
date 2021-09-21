@@ -36,14 +36,8 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         this.names = requireNonNull(names);
     }
 
-    @Deprecated
-    protected AbstractRateLimiterMetrics(MetricNames names) {
-        this.names = requireNonNull(names);
-    }
-
     protected void addMetrics(MeterRegistry meterRegistry, RateLimiter rateLimiter) {
-        List<Tag> customTags = mapToTagsList(rateLimiter.getTags()
-            .toJavaMap());
+        List<Tag> customTags = mapToTagsList(rateLimiter.getTags());
         registerMetrics(meterRegistry, rateLimiter, customTags);
     }
 
@@ -68,7 +62,4 @@ abstract class AbstractRateLimiterMetrics extends AbstractMetrics {
         meterIdMap.put(rateLimiter.getName(), idSet);
     }
 
-    @Deprecated
-    public static class MetricNames extends RateLimiterMetricNames {
-    }
 }

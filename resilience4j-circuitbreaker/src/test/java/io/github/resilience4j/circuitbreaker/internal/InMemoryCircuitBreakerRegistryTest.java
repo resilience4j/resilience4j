@@ -4,11 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.InMemoryRegistryStore;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.core.registry.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -115,7 +111,7 @@ public class InMemoryCircuitBreakerRegistryTest {
         configs.put("default", defaultConfig);
         final InMemoryCircuitBreakerRegistry inMemoryCircuitBreakerRegistry =
             new InMemoryCircuitBreakerRegistry(configs, registryEventConsumers,
-                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
+                Map.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         assertThat(inMemoryCircuitBreakerRegistry).isNotNull();
         assertThat(inMemoryCircuitBreakerRegistry.getDefaultConfig()).isEqualTo(defaultConfig);

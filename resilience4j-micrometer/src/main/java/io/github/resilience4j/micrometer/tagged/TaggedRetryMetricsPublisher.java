@@ -37,12 +37,6 @@ public class TaggedRetryMetricsPublisher
         this.meterRegistry = requireNonNull(meterRegistry);
     }
 
-    @Deprecated
-    public TaggedRetryMetricsPublisher(MetricNames names, MeterRegistry meterRegistry) {
-        super(names);
-        this.meterRegistry = requireNonNull(meterRegistry);
-    }
-
     @Override
     public void publishMetrics(Retry entry) {
         addMetrics(meterRegistry, entry);

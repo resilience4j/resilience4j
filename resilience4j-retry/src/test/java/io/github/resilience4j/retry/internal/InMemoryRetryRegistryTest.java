@@ -42,7 +42,7 @@ public class InMemoryRetryRegistryTest {
         configs.put("default", defaultConfig);
         final InMemoryRetryRegistry inMemoryRetryRegistry =
             new InMemoryRetryRegistry(configs, registryEventConsumers,
-                io.vavr.collection.HashMap.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
+                Map.of("Tag1", "Tag1Value"), new InMemoryRegistryStore<>());
 
         assertThat(inMemoryRetryRegistry).isNotNull();
         assertThat(inMemoryRetryRegistry.getDefaultConfig()).isEqualTo(defaultConfig);

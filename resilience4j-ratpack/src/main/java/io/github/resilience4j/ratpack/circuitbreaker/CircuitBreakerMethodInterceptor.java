@@ -173,8 +173,7 @@ public class CircuitBreakerMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.circuitbreaker.CircuitBreaker breaker,
         RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            return io.github.resilience4j.circuitbreaker.CircuitBreaker
-                .decorateCheckedSupplier(breaker, invocation::proceed).apply();
+            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateCheckedSupplier(breaker, invocation::proceed).get();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

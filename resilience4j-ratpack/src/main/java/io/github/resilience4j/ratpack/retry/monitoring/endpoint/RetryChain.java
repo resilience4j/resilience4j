@@ -26,7 +26,6 @@ import io.github.resilience4j.reactor.adapter.ReactorAdapter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
-import io.vavr.collection.Seq;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
 import ratpack.func.Function;
@@ -38,6 +37,7 @@ import reactor.core.publisher.Flux;
 import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Provides event and stream event endpoints for circuitbreaker events.
@@ -61,21 +61,22 @@ public class RetryChain implements Action<Chain> {
         chain.prefix(prefix, chain1 -> {
             chain1.get("events", ctx ->
                 Promise.<RetryEventsEndpointResponse>async(d -> {
-                    List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer()
-                        .flatMap(CircularEventConsumer::getBufferedEvents)
+                    List<RetryEventDTO> eventsList = eventConsumerRegistry.getAllEventConsumer().stream()
+                        .flatMap(CircularEventConsumer::getBufferedEventsStream)
                         .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-                        .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList();
+                        .map(RetryEventDTOFactory::createRetryEventDTO)
+                        .collect(Collectors.toList());
                     d.success(new RetryEventsEndpointResponse(eventsList));
                 }).then(r -> ctx.render(Jackson.json(r)))
             );
             chain1.get("stream/events", ctx -> {
-                Seq<Flux<RetryEvent>> eventStreams = retryRegistry.getAllRetries()
-                    .map(retry -> ReactorAdapter.toFlux(retry.getEventPublisher()));
+                Flux<RetryEvent> eventStreams = Flux.fromIterable(retryRegistry.getAllRetries())
+                    .flatMap(retry -> ReactorAdapter.toFlux(retry.getEventPublisher()));
                 Function<RetryEvent, String> data = r -> Jackson
                     .getObjectWriter(chain1.getRegistry())
                     .writeValueAsString(RetryEventDTOFactory.createRetryEventDTO(r));
                 ServerSentEvents events = ServerSentEvents
-                    .serverSentEvents(Flux.merge(eventStreams),
+                    .serverSentEvents(eventStreams,
                         e -> e.id(RetryEvent::getName).event(c -> c.getEventType().name())
                             .data(data));
                 ctx.render(events);
@@ -85,18 +86,20 @@ public class RetryChain implements Action<Chain> {
                     Promise.<RetryEventsEndpointResponse>async(d -> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(retryName)
-                            .getBufferedEvents()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
-                            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList();
+                            .map(RetryEventDTOFactory::createRetryEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new RetryEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }
             );
             chain1.get("stream/events/:name", ctx -> {
                 String rateLimiterName = ctx.getPathTokens().get("name");
-                Retry retry = retryRegistry.getAllRetries()
-                    .find(rL -> rL.getName().equals(rateLimiterName))
-                    .getOrElseThrow(() ->
+                Retry retry = retryRegistry.getAllRetries().stream()
+                    .filter(rL -> rL.getName().equals(rateLimiterName))
+                    .findAny()
+                    .orElseThrow(() ->
                         new IllegalArgumentException(
                             String.format("rate limiter with name %s not found", rateLimiterName)));
                 Function<RetryEvent, String> data = r -> Jackson
@@ -114,11 +117,12 @@ public class RetryChain implements Action<Chain> {
                     Promise.<RetryEventsEndpointResponse>async(d -> {
                         List<RetryEventDTO> eventsList = eventConsumerRegistry
                             .getEventConsumer(retryName)
-                            .getBufferedEvents()
+                            .getBufferedEventsStream()
                             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
                             .filter(event -> event.getEventType() == RetryEvent.Type
                                 .valueOf(eventType.toUpperCase()))
-                            .map(RetryEventDTOFactory::createRetryEventDTO).toJavaList();
+                            .map(RetryEventDTOFactory::createRetryEventDTO)
+                            .collect(Collectors.toList());
                         d.success(new RetryEventsEndpointResponse(eventsList));
                     }).then(r -> ctx.render(Jackson.json(r)));
                 }
@@ -126,9 +130,10 @@ public class RetryChain implements Action<Chain> {
             chain1.get("stream/events/:name/:type", ctx -> {
                 String retryName = ctx.getPathTokens().get("name");
                 String eventType = ctx.getPathTokens().get("type");
-                Retry retry = retryRegistry.getAllRetries()
-                    .find(rL -> rL.getName().equals(retryName))
-                    .getOrElseThrow(() ->
+                Retry retry = retryRegistry.getAllRetries().stream()
+                    .filter(rL -> rL.getName().equals(retryName))
+                    .findAny()
+                    .orElseThrow(() ->
                         new IllegalArgumentException(
                             String.format("rate limiter with name %s not found", retryName)));
                 Flux<RetryEvent> eventStream = ReactorAdapter.toFlux(retry.getEventPublisher())
