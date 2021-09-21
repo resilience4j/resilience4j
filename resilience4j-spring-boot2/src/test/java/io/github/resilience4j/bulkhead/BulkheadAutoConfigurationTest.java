@@ -213,9 +213,9 @@ public class BulkheadAutoConfigurationTest {
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(8)
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(9)
             .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD", "backendD",
-                "dummyFeignClient");
+                "dummyFeignClient", "backendE");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomethingAsync);
@@ -257,7 +257,7 @@ public class BulkheadAutoConfigurationTest {
         TestThreadLocalContextHolder.put("SurviveThreadBoundary");
 
         ThreadPoolBulkhead bulkhead = threadPoolBulkheadRegistry
-            .bulkhead(BulkheadDummyService.BACKEND_D);
+            .bulkhead(BulkheadDummyService.BACKEND_E);
 
         assertThat(bulkhead).isNotNull();
         assertThat(bulkhead.getBulkheadConfig()).isNotNull();
@@ -277,7 +277,7 @@ public class BulkheadAutoConfigurationTest {
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody()
             .getBulkheadEvents().stream()
-            .filter(b -> "backendD".equals(b.getBulkheadName()))
+            .filter(b -> "backendE".equals(b.getBulkheadName()))
             .collect(Collectors.toList());
 
         assertThat(bulkheadEventsByBackend).isNotNull();
@@ -323,9 +323,9 @@ public class BulkheadAutoConfigurationTest {
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(8)
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(9)
             .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer",
-                "dummyFeignClient", "backendD", "backendD");
+                "dummyFeignClient", "backendD", "backendD", "backendE");
 
         for (int i = 0; i < 5; i++) {
             es.submit(dummyService::doSomething);
@@ -369,7 +369,7 @@ public class BulkheadAutoConfigurationTest {
      * calls.
      */
     @Test
-    public void testBulkheadAutoConfigurationRxJava2() {
+    public void testBulkheadAutoConfigurationRxJava2() throws InterruptedException {
         ExecutorService es = Executors.newFixedThreadPool(5);
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
@@ -377,18 +377,21 @@ public class BulkheadAutoConfigurationTest {
         Bulkhead bulkhead = bulkheadRegistry.bulkhead(BulkheadReactiveDummyService.BACKEND);
         assertThat(bulkhead).isNotNull();
 
-        for (int i = 0; i < 5; i++) {
-            es.submit(new Thread(() -> reactiveDummyService.doSomethingFlowable()
-                .subscribe(String::toUpperCase, throwable -> System.out
-                    .println("Bulkhead Exception received: " + throwable.getMessage()))));
-        }
-        await()
-            .atMost(1200, TimeUnit.MILLISECONDS)
-            .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
+        CountDownLatch latch = new CountDownLatch(5);
 
-        await()
-            .atMost(1000, TimeUnit.MILLISECONDS)
-            .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 2);
+        for (int i = 0; i < 5; i++) {
+            es.submit(new Thread(() -> {
+                try {
+                    reactiveDummyService.doSomethingFlowable()
+                        .subscribe(String::toUpperCase, throwable -> System.out
+                            .println("Bulkhead Exception received: " + throwable.getMessage()));
+                } finally {
+                    latch.countDown();
+                }
+            }));
+        }
+
+        latch.await();
 
         for (int i = 0; i < 5; i++) {
             es.submit(new Thread(() -> reactiveDummyService.doSomethingFlowable()
@@ -459,23 +462,23 @@ public class BulkheadAutoConfigurationTest {
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);
-        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(8)
+        assertThat(bulkheadList.getBody().getBulkheads()).hasSize(9)
             .containsExactlyInAnyOrder("backendA", "backendB", "backendB", "backendC", "backendCustomizer", "backendD", "backendD",
-                "dummyFeignClient");
+                "dummyFeignClient", "backendE");
 
         ResponseEntity<BulkheadEventsEndpointResponse> bulkheadEventList = getBulkheadEvents(
             "/actuator/bulkheadevents");
         List<BulkheadEventDTO> bulkheadEvents = bulkheadEventList.getBody().getBulkheadEvents();
 
         assertThat(bulkheadEvents).isNotEmpty();
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 1).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 2).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_FINISHED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 3).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
-        assertThat(bulkheadEvents.get(bulkheadEvents.size() - 4).getType())
-            .isEqualTo(BulkheadEvent.Type.CALL_REJECTED);
+        assertThat(bulkheadEvents.subList(bulkheadEvents.size() - 4, bulkheadEvents.size()))
+            .extracting(BulkheadEventDTO::getType)
+            .containsExactlyInAnyOrder(
+                BulkheadEvent.Type.CALL_REJECTED,
+                BulkheadEvent.Type.CALL_REJECTED,
+                BulkheadEvent.Type.CALL_FINISHED,
+                BulkheadEvent.Type.CALL_FINISHED
+            );
 
         bulkheadEventList = getBulkheadEvents("/actuator/bulkheadevents/backendB");
         List<BulkheadEventDTO> bulkheadEventsByBackend = bulkheadEventList.getBody()
