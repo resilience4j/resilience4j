@@ -129,8 +129,7 @@ public class RateLimiterMethodInterceptor extends AbstractMethodInterceptor {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter,
         RecoveryFunction<?> recoveryFunction) throws Throwable {
         try {
-            return io.github.resilience4j.ratelimiter.RateLimiter
-                .decorateCheckedSupplier(rateLimiter, invocation::proceed).apply();
+            return io.github.resilience4j.ratelimiter.RateLimiter.decorateCheckedSupplier(rateLimiter, invocation::proceed).get();
         } catch (Throwable t) {
             return recoveryFunction.apply(t);
         }

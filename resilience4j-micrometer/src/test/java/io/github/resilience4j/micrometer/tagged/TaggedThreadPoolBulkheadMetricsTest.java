@@ -86,7 +86,7 @@ public class TaggedThreadPoolBulkheadMetricsTest {
 
     @Test
     public void shouldAddCustomTags() {
-        bulkheadRegistry.bulkhead("backendF", io.vavr.collection.HashMap.of("key1", "value1"));
+        bulkheadRegistry.bulkhead("backendF", Map.of("key1", "value1"));
         assertThat(taggedBulkheadMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedBulkheadMetrics.meterIdMap.get("backendA")).hasSize(EXPECTED_METER_COUNT);
         assertThat(taggedBulkheadMetrics.meterIdMap.get("backendF")).hasSize(EXPECTED_METER_COUNT);

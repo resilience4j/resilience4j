@@ -17,7 +17,6 @@ package io.github.resilience4j.reactor.ratelimiter.operator;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.reactor.AbstractSubscriber;
-import io.vavr.control.Either;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 

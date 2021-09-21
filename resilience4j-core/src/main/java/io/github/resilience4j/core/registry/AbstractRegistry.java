@@ -22,8 +22,6 @@ import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.RegistryStore;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +52,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     private final RegistryEventProcessor eventProcessor;
 
     public AbstractRegistry(C defaultConfig) {
-        this(defaultConfig, HashMap.empty());
+        this(defaultConfig, Collections.emptyMap());
     }
 
     public AbstractRegistry(C defaultConfig, Map<String, String> registryTags) {
@@ -62,7 +60,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     }
 
     public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer) {
-        this(defaultConfig, registryEventConsumer, HashMap.empty());
+        this(defaultConfig, registryEventConsumer, Collections.emptyMap());
     }
 
     public AbstractRegistry(C defaultConfig, RegistryEventConsumer<E> registryEventConsumer,
@@ -73,7 +71,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     public AbstractRegistry(C defaultConfig,
         List<RegistryEventConsumer<E>> registryEventConsumers) {
-        this(defaultConfig, registryEventConsumers, HashMap.empty());
+        this(defaultConfig, registryEventConsumers, Collections.emptyMap());
     }
 
     public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers,
@@ -163,8 +161,10 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
      * @param tags Tags of the instance.
      * @return Map containing all tags
      */
-    protected io.vavr.collection.Map<String, String> getAllTags(io.vavr.collection.Map<String, String> tags) {
-        return Objects.requireNonNull(tags, TAGS_MUST_NOT_BE_NULL).merge(registryTags);
+    protected Map<String, String> getAllTags(Map<String, String> tags) {
+        final HashMap<String, String> allTags = new HashMap<>(Objects.requireNonNull(registryTags, TAGS_MUST_NOT_BE_NULL));
+        allTags.putAll(tags);
+        return allTags;
     }
 
     private class RegistryEventProcessor extends EventProcessor<RegistryEvent> implements

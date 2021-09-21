@@ -1,12 +1,11 @@
 package io.github.resilience4j.core.registry;
 
 import io.github.resilience4j.core.RegistryStore;
-import io.vavr.Tuple;
-import io.vavr.collection.Map;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static io.github.resilience4j.core.registry.RegistryEvent.Type;
@@ -19,9 +18,9 @@ public class AbstractRegistryTest {
 
     @Test
     public void shouldInitRegistryTags(){
-        TestRegistry testRegistry = new TestRegistry(io.vavr.collection.HashMap.of("Tag1","Tag1Value"));
+        TestRegistry testRegistry = new TestRegistry(Map.of("Tag1","Tag1Value"));
         assertThat(testRegistry.getTags()).isNotEmpty();
-        assertThat(testRegistry.getTags()).containsOnly(Tuple.of("Tag1","Tag1Value"));
+        assertThat(testRegistry.getTags()).containsOnly(Map.entry("Tag1","Tag1Value"));
     }
 
 
@@ -198,12 +197,12 @@ public class AbstractRegistryTest {
         List<RegistryEventConsumer<String>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);
         TestRegistry testRegistry  = new TestRegistry(
-            registryEventConsumers, io.vavr.collection.HashMap.of("Tag1","Tag1Value"), new InMemoryRegistryStore<>());
+            registryEventConsumers, Map.of("Tag1","Tag1Value"), new InMemoryRegistryStore<>());
 
         assertEquals("Wrong Value", "default", testRegistry.getDefaultConfig());
         assertThat(testRegistry.getDefaultConfig()).isEqualTo("default");
         assertThat(testRegistry.getTags()).isNotEmpty();
-        assertThat(testRegistry.getTags()).containsOnly(Tuple.of("Tag1","Tag1Value"));
+        assertThat(testRegistry.getTags()).containsOnly(Map.entry("Tag1","Tag1Value"));
 
         String addedEntry1 = testRegistry.computeIfAbsent("name", () -> "entry1");
         assertThat(addedEntry1).isEqualTo("entry1");

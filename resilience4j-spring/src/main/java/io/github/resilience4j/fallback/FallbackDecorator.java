@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.fallback;
 
-import io.vavr.CheckedFunction0;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 
 /**
  * interface of FallbackDecorator
@@ -29,6 +29,6 @@ public interface FallbackDecorator {
      * @param supplier       target function should be decorated.
      * @return decorated function
      */
-    CheckedFunction0<Object> decorate(FallbackMethod fallbackMethod,
-        CheckedFunction0<Object> supplier);
+    CheckedSupplier<Object> decorate(FallbackMethod fallbackMethod,
+                                     CheckedSupplier<Object> supplier);
 }

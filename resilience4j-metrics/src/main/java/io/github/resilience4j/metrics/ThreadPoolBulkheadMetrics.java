@@ -23,8 +23,8 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import io.vavr.collection.Array;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -137,7 +137,7 @@ public class ThreadPoolBulkheadMetrics implements MetricSet {
      * @param bulkhead the circuit breaker
      */
     public static ThreadPoolBulkheadMetrics ofBulkhead(ThreadPoolBulkhead bulkhead) {
-        return new ThreadPoolBulkheadMetrics(Array.of(bulkhead));
+        return new ThreadPoolBulkheadMetrics(List.of(bulkhead));
     }
 
     @Override

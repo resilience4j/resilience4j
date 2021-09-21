@@ -50,7 +50,7 @@ public class RateLimitersHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        Map<String, Health> healths = rateLimiterRegistry.getAllRateLimiters().toJavaStream()
+        Map<String, Health> healths = rateLimiterRegistry.getAllRateLimiters().stream()
             .filter(this::isRegisterHealthIndicator)
             .collect(Collectors.toMap(RateLimiter::getName, this::mapRateLimiterHealth));
 

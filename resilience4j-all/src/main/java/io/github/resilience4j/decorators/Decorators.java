@@ -6,16 +6,16 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.CallableUtils;
-import io.github.resilience4j.core.CheckFunctionUtils;
+import io.github.resilience4j.core.CheckedFunctionUtils;
 import io.github.resilience4j.core.CompletionStageUtils;
 import io.github.resilience4j.core.SupplierUtils;
+import io.github.resilience4j.core.functions.CheckedBiFunction;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedFunction2;
-import io.vavr.CheckedRunnable;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -63,11 +63,11 @@ public interface Decorators {
         return new DecorateCallable<>(callable);
     }
 
-    static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(CheckedFunction0<T> supplier) {
+    static <T> DecorateCheckedSupplier<T> ofCheckedSupplier(CheckedSupplier<T> supplier) {
         return new DecorateCheckedSupplier<>(supplier);
     }
 
-    static <T, R> DecorateCheckedFunction<T, R> ofCheckedFunction(CheckedFunction1<T, R> function) {
+    static <T, R> DecorateCheckedFunction<T, R> ofCheckedFunction(CheckedFunction<T, R> function) {
         return new DecorateCheckedFunction<>(function);
     }
 
@@ -358,9 +358,9 @@ public interface Decorators {
 
     class DecorateCheckedSupplier<T> {
 
-        private CheckedFunction0<T> supplier;
+        private CheckedSupplier<T> supplier;
 
-        private DecorateCheckedSupplier(CheckedFunction0<T> supplier) {
+        private DecorateCheckedSupplier(CheckedSupplier<T> supplier) {
             this.supplier = supplier;
         }
 
@@ -393,45 +393,45 @@ public interface Decorators {
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(CheckedFunction2<T, Throwable, T> handler) {
-            supplier = CheckFunctionUtils.andThen(supplier, handler);
+        public DecorateCheckedSupplier<T> withFallback(CheckedBiFunction<T, Throwable, T> handler) {
+            supplier = CheckedFunctionUtils.andThen(supplier, handler);
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, CheckedFunction1<T, T> resultHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, resultPredicate, resultHandler);
+        public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, CheckedFunction<T, T> resultHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, resultPredicate, resultHandler);
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction1<Throwable, T> exceptionHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
+        public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction<Throwable, T> exceptionHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
             return this;
         }
 
-        public DecorateCheckedSupplier<T> withFallback(CheckedFunction1<Throwable, T> exceptionHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, exceptionHandler);
+        public DecorateCheckedSupplier<T> withFallback(CheckedFunction<Throwable, T> exceptionHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, exceptionHandler);
             return this;
         }
 
-        public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, CheckedFunction1<Throwable, T> exceptionHandler) {
-            supplier = CheckFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
+        public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, CheckedFunction<Throwable, T> exceptionHandler) {
+            supplier = CheckedFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
             return this;
         }
 
-        public CheckedFunction0<T> decorate() {
+        public CheckedSupplier<T> decorate() {
             return supplier;
         }
 
         public T get() throws Throwable {
-            return supplier.apply();
+            return supplier.get();
         }
     }
 
     class DecorateCheckedFunction<T, R> {
 
-        private CheckedFunction1<T, R> function;
+        private CheckedFunction<T, R> function;
 
-        private DecorateCheckedFunction(CheckedFunction1<T, R> function) {
+        private DecorateCheckedFunction(CheckedFunction<T, R> function) {
             this.function = function;
         }
 
@@ -455,7 +455,7 @@ public interface Decorators {
         }
 
         public DecorateCheckedFunction<T, R> withRateLimiter(RateLimiter rateLimiter,
-            Function<T, Integer> permitsCalculator) {
+                                                             Function<T, Integer> permitsCalculator) {
             function = RateLimiter
                 .decorateCheckedFunction(rateLimiter, permitsCalculator, function);
             return this;
@@ -466,7 +466,7 @@ public interface Decorators {
             return this;
         }
 
-        public CheckedFunction1<T, R> decorate() {
+        public CheckedFunction<T, R> decorate() {
             return function;
         }
 

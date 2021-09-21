@@ -138,7 +138,7 @@ public class BulkheadMethodInterceptor extends AbstractMethodInterceptor {
         throws Throwable {
         try {
             return io.github.resilience4j.bulkhead.Bulkhead
-                .decorateCheckedSupplier(bulkhead, invocation::proceed).apply();
+                .decorateCheckedSupplier(bulkhead, invocation::proceed).get();
         } catch (Throwable throwable) {
             return recoveryFunction.apply(throwable);
         }

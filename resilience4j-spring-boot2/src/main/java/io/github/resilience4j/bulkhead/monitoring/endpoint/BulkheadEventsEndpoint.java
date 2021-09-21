@@ -22,12 +22,14 @@ import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventD
 import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
 import io.github.resilience4j.consumer.CircularEventConsumer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.vavr.collection.List;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Endpoint(id = "bulkheadevents")
 public class BulkheadEventsEndpoint {
@@ -40,21 +42,20 @@ public class BulkheadEventsEndpoint {
 
     @ReadOperation
     public BulkheadEventsEndpointResponse getAllBulkheadEvents() {
-        java.util.List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer()
-            .flatMap(CircularEventConsumer::getBufferedEvents)
+        List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer().stream()
+            .flatMap(CircularEventConsumer::getBufferedEventsStream)
             .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-            .toJavaList();
-
+            .collect(Collectors.toList());
         return new BulkheadEventsEndpointResponse(response);
     }
 
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadName(
         @Selector String bulkheadName) {
-        java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
+        List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-            .toJavaList();
+            .collect(Collectors.toList());
 
         return new BulkheadEventsEndpointResponse(response);
     }
@@ -62,11 +63,11 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getEventsFilteredByBulkheadNameAndEventType(
         @Selector String bulkheadName, @Selector String eventType) {
-        java.util.List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName)
+        List<BulkheadEventDTO> response = getBulkheadEvent(bulkheadName).stream()
             .filter(event -> event.getEventType() == BulkheadEvent.Type
                 .valueOf(eventType.toUpperCase()))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
-            .toJavaList();
+            .collect(Collectors.toList());
 
         return new BulkheadEventsEndpointResponse(response);
     }
@@ -79,14 +80,16 @@ public class BulkheadEventsEndpoint {
                 .getEventConsumer(
                     String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkheadName));
             if (threadPoolEventConsumer != null) {
-                return threadPoolEventConsumer.getBufferedEvents()
-                    .filter(event -> event.getBulkheadName().equals(bulkheadName));
+                return threadPoolEventConsumer.getBufferedEventsStream()
+                    .filter(event -> event.getBulkheadName().equals(bulkheadName))
+                    .collect(Collectors.toList());
             } else {
-                return List.empty();
+                return Collections.emptyList();
             }
         } else {
-            return eventConsumer.getBufferedEvents()
-                .filter(event -> event.getBulkheadName().equals(bulkheadName));
+            return eventConsumer.getBufferedEventsStream()
+                .filter(event -> event.getBulkheadName().equals(bulkheadName))
+                .collect(Collectors.toList());
         }
     }
 }

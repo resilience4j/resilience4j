@@ -19,8 +19,8 @@
 package io.github.resilience4j.cache;
 
 import io.github.resilience4j.cache.event.CacheEvent;
+import io.github.resilience4j.core.functions.CheckedFunction;
 import io.reactivex.subscribers.TestSubscriber;
-import io.vavr.CheckedFunction1;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +49,7 @@ public class CacheTest {
             toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
-        CheckedFunction1<String, String> cachedFunction = Cache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
@@ -93,7 +93,7 @@ public class CacheTest {
             toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
-        CheckedFunction1<String, String> cachedFunction = Cache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCallable(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
@@ -117,7 +117,7 @@ public class CacheTest {
             toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
-        CheckedFunction1<String, String> cachedFunction = Cache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
@@ -138,7 +138,7 @@ public class CacheTest {
             toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
-        CheckedFunction1<String, String> cachedFunction = Cache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");
@@ -159,7 +159,7 @@ public class CacheTest {
             toFlowable(cacheContext.getEventPublisher())
                 .map(CacheEvent::getEventType)
                 .test();
-        CheckedFunction1<String, String> cachedFunction = Cache
+        CheckedFunction<String, String> cachedFunction = Cache
             .decorateCheckedSupplier(cacheContext, () -> "Hello world");
 
         String value = cachedFunction.apply("testKey");

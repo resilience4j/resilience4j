@@ -2,10 +2,10 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Snapshot;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.metrics.internal.TimerImpl;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
@@ -42,12 +42,12 @@ public interface Timer {
      * @param supplier the original supplier
      * @return a timed supplier
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(Timer timer,
-        CheckedFunction0<T> supplier) {
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(Timer timer,
+                                                          CheckedSupplier<T> supplier) {
         return () -> {
             final Timer.Context context = timer.context();
             try {
-                T returnValue = supplier.apply();
+                T returnValue = supplier.get();
                 context.onSuccess();
                 return returnValue;
             } catch (Throwable e) {
@@ -167,8 +167,8 @@ public interface Timer {
      * @param function the original function
      * @return a timed function
      */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Timer timer,
-        CheckedFunction1<T, R> function) {
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(Timer timer,
+                                                                CheckedFunction<T, R> function) {
         return (T t) -> {
             final Timer.Context context = timer.context();
             try {

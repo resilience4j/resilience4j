@@ -24,6 +24,9 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -36,9 +39,6 @@ import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContext
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -245,13 +245,13 @@ public class DecoratorsTest {
     public void testDecorateCheckedSupplierWithFallbackFromResult() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        CheckedFunction0<String> decoratedSupplier = Decorators
+        CheckedSupplier<String> decoratedSupplier = Decorators
             .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
             .withFallback((result) -> result.equals("Hello world"), (result) -> "Bla")
             .withCircuitBreaker(circuitBreaker)
             .decorate();
 
-        String result = decoratedSupplier.apply();
+        String result = decoratedSupplier.get();
 
         assertThat(result).isEqualTo("Bla");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -369,7 +369,7 @@ public class DecoratorsTest {
     public void testDecorateCheckedSupplier() throws IOException {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        CheckedFunction0<String> decoratedSupplier = Decorators
+        CheckedSupplier<String> decoratedSupplier = Decorators
             .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
@@ -377,7 +377,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        String result = Try.of(decoratedSupplier).get();
+        String result = Try.of(() -> decoratedSupplier.get()).get();
 
         assertThat(result).isEqualTo("Hello world");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -391,13 +391,13 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         circuitBreaker.transitionToOpenState();
 
-        CheckedFunction0<String> checkedSupplier = Decorators
+        CheckedSupplier<String> checkedSupplier = Decorators
             .ofCheckedSupplier(() -> helloWorldService.returnHelloWorldWithException())
             .withCircuitBreaker(circuitBreaker)
             .withFallback(CallNotPermittedException.class, e -> "Fallback")
             .decorate();
 
-        String result = checkedSupplier.apply();
+        String result = checkedSupplier.get();
 
         assertThat(result).isEqualTo("Fallback");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -553,7 +553,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        Try.run(decoratedRunnable);
+        Try.run(() -> decoratedRunnable.run());
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -713,7 +713,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorldWithNameWithException("Name"))
             .willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
-        CheckedFunction1<String, String> decoratedFunction = Decorators
+        CheckedFunction<String, String> decoratedFunction = Decorators
             .ofCheckedFunction(helloWorldService::returnHelloWorldWithNameWithException)
             .withCircuitBreaker(circuitBreaker)
             .withRetry(Retry.ofDefaults("id"))
@@ -757,14 +757,14 @@ public class DecoratorsTest {
             .limitForPeriod(1)
             .build();
         RateLimiter rateLimiter = RateLimiter.of("backendName", config);
-        CheckedFunction0<String> restrictedSupplier = Decorators
+        CheckedSupplier<String> restrictedSupplier = Decorators
             .ofCheckedSupplier(() -> helloWorldService.returnHelloWorld())
             .withRateLimiter(rateLimiter)
             .decorate();
         alignTime(rateLimiter);
 
-        Try<String> firstTry = Try.of(restrictedSupplier);
-        Try<String> secondTry = Try.of(restrictedSupplier);
+        Try<String> firstTry = Try.of(() -> restrictedSupplier.get());
+        Try<String> secondTry = Try.of(() -> restrictedSupplier.get());
 
         assertThat(firstTry.isSuccess()).isTrue();
         assertThat(secondTry.isFailure()).isTrue();
@@ -790,7 +790,7 @@ public class DecoratorsTest {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
         given(cache.containsKey("testKey")).willReturn(true);
         given(cache.get("testKey")).willReturn("Hello from cache");
-        CheckedFunction1<String, String> cachedFunction = Decorators
+        CheckedFunction<String, String> cachedFunction = Decorators
             .ofCheckedSupplier(() -> "Hello world")
             .withCache(Cache.of(cache))
             .decorate();

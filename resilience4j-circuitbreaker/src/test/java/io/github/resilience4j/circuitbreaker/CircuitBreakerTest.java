@@ -18,13 +18,12 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.core.functions.CheckedConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +41,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 public class CircuitBreakerTest {
 
@@ -87,7 +87,6 @@ public class CircuitBreakerTest {
         then(helloWorldService).should().returnHelloWorld();
     }
 
-
     @Test
     public void shouldDecorateSupplierAndReturnWithException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
@@ -114,10 +113,10 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
-        CheckedFunction0<String> checkedSupplier = circuitBreaker
+        CheckedSupplier<String> checkedSupplier = circuitBreaker
             .decorateCheckedSupplier(helloWorldService::returnHelloWorldWithException);
 
-        String result = checkedSupplier.apply();
+        String result = checkedSupplier.get();
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -135,10 +134,10 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
-        CheckedFunction0<String> checkedSupplier = circuitBreaker
+        CheckedSupplier<String> checkedSupplier = circuitBreaker
             .decorateCheckedSupplier(helloWorldService::returnHelloWorldWithException);
 
-        Try<String> result = Try.of(checkedSupplier);
+        Try<String> result = Try.of(() -> checkedSupplier.get());
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -232,7 +231,7 @@ public class CircuitBreakerTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try<Void> result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -271,7 +270,6 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorld();
     }
-
 
     @Test
     public void shouldDecorateRunnableAndReturnWithException() throws Throwable {
@@ -413,7 +411,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
-        CheckedFunction1<String, String> function = CircuitBreaker
+        CheckedFunction<String, String> function = CircuitBreaker
             .decorateCheckedFunction(circuitBreaker,
                 helloWorldService::returnHelloWorldWithNameWithException);
 
@@ -435,7 +433,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willThrow(new RuntimeException("BAM!"));
-        CheckedFunction1<String, String> function = CircuitBreaker
+        CheckedFunction<String, String> function = CircuitBreaker
             .decorateCheckedFunction(circuitBreaker,
                 helloWorldService::returnHelloWorldWithNameWithException);
 
@@ -473,7 +471,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
         // When
-        Try result = Try.run(checkedRunnable);
+        Try result = Try.run(() -> checkedRunnable.run());
 
         // Then
         assertThat(result.isFailure()).isTrue();
@@ -491,7 +489,7 @@ public class CircuitBreakerTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(checkedRunnable);
+        Try result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -517,7 +515,7 @@ public class CircuitBreakerTest {
             throw new SocketTimeoutException("BAM!");
         });
 
-        Try result = Try.run(checkedRunnable);
+        Try result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         // CircuitBreaker is still CLOSED, because SocketTimeoutException has not been recorded as a failure
@@ -534,11 +532,11 @@ public class CircuitBreakerTest {
         // tag::shouldInvokeRecoverFunction[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         // When I decorate my function and invoke the decorated function
-        CheckedFunction0<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(() -> {
+        CheckedSupplier<String> checkedSupplier = circuitBreaker.decorateCheckedSupplier(() -> {
             throw new RuntimeException("BAM!");
         });
 
-        Try<String> result = Try.of(checkedSupplier)
+        Try<String> result = Try.of(() -> checkedSupplier.get())
             .recover(throwable -> "Hello Recovery");
 
         // Then the function should be a success, because the exception could be recovered
@@ -553,12 +551,12 @@ public class CircuitBreakerTest {
         // tag::shouldInvokeMap[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         // When I decorate my function
-        CheckedFunction0<String> decoratedSupplier = CircuitBreaker
+        CheckedSupplier<String> decoratedSupplier = CircuitBreaker
             .decorateCheckedSupplier(circuitBreaker,
                 () -> "This can be any method which returns: 'Hello");
 
         // and chain an other function with map
-        Try<String> result = Try.of(decoratedSupplier)
+        Try<String> result = Try.of(() -> decoratedSupplier.get())
             .map(value -> value + " world'");
 
         // Then the Try Monad returns a Success<String>, if all functions ran successfully.
@@ -585,7 +583,7 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         // When I decorate my function and invoke the decorated function
-        Try<String> result = Try.of(circuitBreaker.decorateCheckedSupplier(() -> "Hello"))
+        Try<String> result = Try.of(() -> circuitBreaker.decorateCheckedSupplier(() -> "Hello").get())
             .map(value -> value + " world");
 
         // Then the call fails, because CircuitBreaker is OPEN
@@ -745,14 +743,14 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker anotherCircuitBreaker = CircuitBreaker.ofDefaults("anotherTestName");
         // When I create a Supplier and a Function which are decorated by different CircuitBreakers
-        CheckedFunction0<String> decoratedSupplier = CircuitBreaker
+        CheckedSupplier<String> decoratedSupplier = CircuitBreaker
             .decorateCheckedSupplier(circuitBreaker, () -> "Hello");
-        CheckedFunction1<String, String> decoratedFunction = CircuitBreaker
+        CheckedFunction<String, String> decoratedFunction = CircuitBreaker
             .decorateCheckedFunction(anotherCircuitBreaker, (input) -> input + " world");
 
         // and I chain a function with map
-        Try<String> result = Try.of(decoratedSupplier)
-            .mapTry(decoratedFunction);
+        Try<String> result = Try.of(() -> decoratedSupplier.get())
+            .mapTry(value -> decoratedFunction.apply(value));
 
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("Hello world");
@@ -785,108 +783,6 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
         then(helloWorldService).should().returnHelloWorld();
 
-    }
-
-    @Test
-    public void shouldExecuteTrySupplierAndReturnWithSuccess() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
-
-        Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
-
-        assertThat(result).contains("Hello world");
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        then(helloWorldService).should().returnTry();
-    }
-
-    @Test
-    public void shouldExecuteEitherSupplierAndReturnWithSuccess() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
-
-        Either<Exception, String> result = circuitBreaker
-            .executeEitherSupplier(helloWorldService::returnEither);
-
-        assertThat(result).contains("Hello world");
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        then(helloWorldService).should().returnEither();
-    }
-
-    @Test
-    public void shouldExecuteTrySupplierAndReturnWithFailure() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnTry()).willReturn(Try.failure(new RuntimeException("BAM!")));
-
-        Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
-
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
-        then(helloWorldService).should().returnTry();
-    }
-
-    @Test
-    public void shouldExecuteTrySupplierAndReturnWithCallNotPermittedException() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        circuitBreaker.transitionToOpenState();
-
-        Try<String> result = circuitBreaker.executeTrySupplier(helloWorldService::returnTry);
-
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
-        then(helloWorldService).should(never()).returnTry();
-    }
-
-
-    @Test
-    public void shouldExecuteEitherSupplierAndReturnWithFailure() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
-
-        Either<Exception, String> result = circuitBreaker
-            .executeEitherSupplier(helloWorldService::returnEither);
-
-        assertThat(result.isLeft()).isTrue();
-        assertThat(result.getLeft()).isInstanceOf(RuntimeException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
-        then(helloWorldService).should().returnEither();
-    }
-
-    @Test
-    public void shouldExecuteEitherSupplierAndReturnWithCallNotPermittedException() {
-        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
-        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        circuitBreaker.transitionToOpenState();
-
-        Either<Exception, String> result = circuitBreaker
-            .executeEitherSupplier(helloWorldService::returnEither);
-
-        assertThat(result.isLeft()).isTrue();
-        assertThat(result.getLeft()).isInstanceOf(CallNotPermittedException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
-        then(helloWorldService).should(never()).returnEither();
     }
 
     @Test

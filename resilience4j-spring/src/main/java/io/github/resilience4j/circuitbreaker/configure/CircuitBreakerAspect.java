@@ -17,11 +17,11 @@ package io.github.resilience4j.circuitbreaker.configure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.utils.AnnotationExtractor;
-import io.vavr.CheckedFunction0;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -105,7 +105,7 @@ public class CircuitBreakerAspect implements Ordered {
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
             methodName, backend);
         Class<?> returnType = method.getReturnType();
-        final CheckedFunction0<Object> circuitBreakerExecution = () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
+        final CheckedSupplier<Object> circuitBreakerExecution = () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, circuitBreakerAnnotation.fallbackMethod(), circuitBreakerExecution);
     }
 

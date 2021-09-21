@@ -21,8 +21,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.vavr.collection.Array;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -133,7 +133,7 @@ public class BulkheadMetrics implements MetricSet {
      * @param bulkhead the circuit breaker
      */
     public static BulkheadMetrics ofBulkhead(Bulkhead bulkhead) {
-        return new BulkheadMetrics(Array.of(bulkhead));
+        return new BulkheadMetrics(List.of(bulkhead));
     }
 
     @Override

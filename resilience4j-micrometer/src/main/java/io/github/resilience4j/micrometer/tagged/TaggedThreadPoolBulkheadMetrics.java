@@ -62,22 +62,6 @@ public class TaggedThreadPoolBulkheadMetrics extends AbstractThreadPoolBulkheadM
         return new TaggedThreadPoolBulkheadMetrics(names, bulkheadRegistry);
     }
 
-    /**
-     * Creates a new binder defining custom metric names and using given {@code registry} as source
-     * of bulkheads.
-     *
-     * @deprecated Use {@link TaggedThreadPoolBulkheadMetrics#ofThreadPoolBulkheadRegistry(ThreadPoolBulkheadMetricNames, ThreadPoolBulkheadRegistry)} instead
-     *
-     * @param names            custom names of the metrics
-     * @param bulkheadRegistry the source of bulkheads
-     * @return The {@link TaggedThreadPoolBulkheadMetrics} instance.
-     */
-    @Deprecated
-    public static TaggedThreadPoolBulkheadMetrics ofThreadPoolBulkheadRegistry(MetricNames names,
-                                                                               ThreadPoolBulkheadRegistry bulkheadRegistry) {
-        return new TaggedThreadPoolBulkheadMetrics(names, bulkheadRegistry);
-    }
-
     @Override
     public void bindTo(MeterRegistry registry) {
         for (ThreadPoolBulkhead bulkhead : bulkheadRegistry.getAllBulkheads()) {

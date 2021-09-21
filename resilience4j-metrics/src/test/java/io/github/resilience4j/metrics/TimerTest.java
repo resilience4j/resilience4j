@@ -19,11 +19,11 @@
 package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import io.vavr.collection.Stream;
 import io.vavr.control.Try;
 import org.junit.Before;
@@ -63,10 +63,10 @@ public class TimerTest {
     @Test
     public void shouldDecorateCheckedSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
-        CheckedFunction0<String> timedSupplier = Timer
+        CheckedSupplier<String> timedSupplier = Timer
             .decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
 
-        String value = timedSupplier.apply();
+        String value = timedSupplier.get();
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -264,7 +264,7 @@ public class TimerTest {
     public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
-        CheckedFunction1<String, String> function = Timer.decorateCheckedFunction(timer,
+        CheckedFunction<String, String> function = Timer.decorateCheckedFunction(timer,
             helloWorldService::returnHelloWorldWithNameWithException);
 
         String result = function.apply("Tom");

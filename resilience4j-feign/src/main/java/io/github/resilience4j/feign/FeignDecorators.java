@@ -20,9 +20,9 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
-import io.vavr.CheckedFunction1;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -68,9 +68,9 @@ public class FeignDecorators implements FeignDecorator {
     }
 
     @Override
-    public CheckedFunction1<Object[], Object> decorate(CheckedFunction1<Object[], Object> fn,
-        Method method, MethodHandler methodHandler, Target<?> target) {
-        CheckedFunction1<Object[], Object> decoratedFn = fn;
+    public CheckedFunction<Object[], Object> decorate(CheckedFunction<Object[], Object> fn,
+                                                      Method method, MethodHandler methodHandler, Target<?> target) {
+        CheckedFunction<Object[], Object> decoratedFn = fn;
         for (final FeignDecorator decorator : decorators) {
             decoratedFn = decorator.decorate(decoratedFn, method, methodHandler, target);
         }
@@ -217,7 +217,7 @@ public class FeignDecorators implements FeignDecorator {
             return this;
         }
 
-        private void addFeignDecorator(UnaryOperator<CheckedFunction1<Object[], Object>> decorator) {
+        private void addFeignDecorator(UnaryOperator<CheckedFunction<Object[], Object>> decorator) {
             decorators
                 .add((fn, m, mh, t) -> {
                     // prevent default methods from being decorated

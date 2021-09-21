@@ -19,16 +19,14 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.retry.event.*;
 import io.github.resilience4j.retry.internal.RetryImpl;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
-import io.vavr.collection.HashMap;
-import io.vavr.collection.Map;
-import io.vavr.control.Either;
-import io.vavr.control.Try;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -46,7 +44,7 @@ public interface Retry {
      * @return a Retry with a custom Retry configuration.
      */
     static Retry of(String name, RetryConfig retryConfig) {
-        return of(name, retryConfig, HashMap.empty());
+        return of(name, retryConfig, Collections.emptyMap());
     }
 
     /**
@@ -69,7 +67,7 @@ public interface Retry {
      * @return a Retry with a custom Retry configuration.
      */
     static Retry of(String name, Supplier<RetryConfig> retryConfigSupplier) {
-        return of(name, retryConfigSupplier.get(), HashMap.empty());
+        return of(name, retryConfigSupplier.get(), Collections.emptyMap());
     }
 
     /**
@@ -92,7 +90,7 @@ public interface Retry {
      * @return a Retry with default configuration
      */
     static Retry ofDefaults(String name) {
-        return of(name, RetryConfig.ofDefaults(), HashMap.empty());
+        return of(name, RetryConfig.ofDefaults(), Collections.emptyMap());
     }
 
     /**
@@ -128,13 +126,13 @@ public interface Retry {
      * @param <T>      the type of results supplied by this supplier
      * @return a retryable function
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(Retry retry,
-                                                           CheckedFunction0<T> supplier) {
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(Retry retry,
+                                                          CheckedSupplier<T> supplier) {
         return () -> {
             Retry.Context<T> context = retry.context();
             do {
                 try {
-                    T result = supplier.apply();
+                    T result = supplier.get();
                     final boolean validationOfResult = context.onResult(result);
                     if (!validationOfResult) {
                         context.onComplete();
@@ -178,8 +176,8 @@ public interface Retry {
      * @param <R>      the result type of the function
      * @return a retryable function
      */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(Retry retry,
-                                                                 CheckedFunction1<T, R> function) {
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(Retry retry,
+                                                                CheckedFunction<T, R> function) {
         return (T t) -> {
             Retry.Context<R> context = retry.context();
             do {
@@ -218,73 +216,6 @@ public interface Retry {
                     }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
-                }
-            } while (true);
-        };
-    }
-
-    /**
-     * Creates a retryable supplier.
-     *
-     * @param retry    the retry context
-     * @param supplier the original function
-     * @param <T>      the type of results supplied by this supplier
-     * @return a retryable function
-     */
-    static <E extends Exception, T> Supplier<Either<E, T>> decorateEitherSupplier(Retry retry,
-                                                                                  Supplier<Either<E, T>> supplier) {
-        return () -> {
-            Retry.Context<T> context = retry.context();
-            do {
-                Either<E, T> result = supplier.get();
-                if (result.isRight()) {
-                    final boolean validationOfResult = context.onResult(result.get());
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
-                    }
-                } else {
-                    E exception = result.getLeft();
-                    try {
-                        context.onError(result.getLeft());
-                    } catch (Exception e) {
-                        return Either.left(exception);
-                    }
-                }
-            } while (true);
-        };
-    }
-
-    /**
-     * Creates a retryable supplier.
-     *
-     * @param retry    the retry context
-     * @param supplier the original function
-     * @param <T>      the type of results supplied by this supplier
-     * @return a retryable function
-     */
-    static <T> Supplier<Try<T>> decorateTrySupplier(Retry retry, Supplier<Try<T>> supplier) {
-        return () -> {
-            Retry.Context<T> context = retry.context();
-            do {
-                Try<T> result = supplier.get();
-                if (result.isSuccess()) {
-                    final boolean validationOfResult = context.onResult(result.get());
-                    if (!validationOfResult) {
-                        context.onComplete();
-                        return result;
-                    }
-                } else {
-                    Throwable cause = result.getCause();
-                    if (cause instanceof Exception) {
-                        try {
-                            context.onError((Exception) result.getCause());
-                        } catch (Exception e) {
-                            return result;
-                        }
-                    } else {
-                        return result;
-                    }
                 }
             } while (true);
         };
@@ -415,8 +346,8 @@ public interface Retry {
      * @return the result of the decorated Supplier.
      * @throws Throwable if something goes wrong applying this function to the given arguments
      */
-    default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
-        return decorateCheckedSupplier(this, checkedSupplier).apply();
+    default <T> T executeCheckedSupplier(CheckedSupplier<T> checkedSupplier) throws Throwable {
+        return decorateCheckedSupplier(this, checkedSupplier).get();
     }
 
     /**
@@ -428,29 +359,6 @@ public interface Retry {
      */
     default <T> T executeSupplier(Supplier<T> supplier) {
         return decorateSupplier(this, supplier).get();
-    }
-
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <E extends Exception, T> Either<E, T> executeEitherSupplier(
-        Supplier<Either<E, T>> supplier) {
-        return decorateEitherSupplier(this, supplier).get();
-    }
-
-    /**
-     * Decorates and executes the decorated Supplier.
-     *
-     * @param supplier the original Supplier
-     * @param <T>      the type of results supplied by this supplier
-     * @return the result of the decorated Supplier.
-     */
-    default <T> Try<T> executeTrySupplier(Supplier<Try<T>> supplier) {
-        return decorateTrySupplier(this, supplier).get();
     }
 
     /**
@@ -528,14 +436,6 @@ public interface Retry {
     interface AsyncContext<T> {
 
         /**
-         * Records a successful call.
-         *
-         * @deprecated since 1.2.0
-         */
-        @Deprecated
-        void onSuccess();
-
-        /**
          * Records a successful call or retryable call with the needed generated retry events. When
          * there is a successful retry before reaching the max retries limit, it will generate
          * {@link RetryOnSuccessEvent}. When the retry reach the max retries limit, it will generate
@@ -568,15 +468,6 @@ public interface Retry {
      * @param <T> the result type
      */
     interface Context<T> {
-
-        /**
-         * Records a successful call.
-         *
-         * @deprecated since 1.2.0
-         */
-        @Deprecated
-        void onSuccess();
-
 
         /**
          * Records a successful call or retryable call with the needed generated retry events. When

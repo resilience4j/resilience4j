@@ -20,7 +20,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import org.springframework.boot.actuate.health.*;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.health.StatusAggregator;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -102,7 +105,7 @@ public class CircuitBreakersHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().toJavaStream()
+        Map<String, Health> healths = circuitBreakerRegistry.getAllCircuitBreakers().stream()
             .filter(this::isRegisterHealthIndicator)
             .collect(Collectors.toMap(CircuitBreaker::getName,
                 this::mapBackendMonitorState));

@@ -19,7 +19,6 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
 import io.github.resilience4j.core.registry.*;
-import io.vavr.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,9 +54,9 @@ public class RetryRegistryTest {
     public void shouldInitRegistryTags() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
         Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
-        RetryRegistry registry = RetryRegistry.of(retryConfigs,new NoOpRetryEventConsumer(),io.vavr.collection.HashMap.of("Tag1Key","Tag1Value"));
+        RetryRegistry registry = RetryRegistry.of(retryConfigs,new NoOpRetryEventConsumer(), Map.of("Tag1Key","Tag1Value"));
         assertThat(registry.getTags()).isNotEmpty();
-        assertThat(registry.getTags()).containsOnly(Tuple.of("Tag1Key","Tag1Value"));
+        assertThat(registry.getTags()).containsOnly(Map.entry("Tag1Key","Tag1Value"));
     }
 
     @Test
@@ -96,51 +95,44 @@ public class RetryRegistryTest {
     public void tagsOfRegistryAddedToInstance() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
         Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
-        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, retryTags);
         Retry retry = retryRegistry.retry("testName");
 
-        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+        assertThat(retry.getTags()).containsAllEntriesOf(retryTags);
     }
 
     @Test
     public void tagsAddedToInstance() {
-        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         Retry retry = retryRegistry.retry("testName", retryTags);
 
-        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+        assertThat(retry.getTags()).containsAllEntriesOf(retryTags);
     }
 
     @Test
     public void tagsOfRetriesShouldNotBeMixed() {
         RetryConfig config = RetryConfig.ofDefaults();
-        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         Retry retry = retryRegistry.retry("testName", config, retryTags);
-        io.vavr.collection.Map<String, String> retryTags2 = io.vavr.collection.HashMap
-            .of("key3", "value3", "key4", "value4");
+        Map<String, String> retryTags2 = Map.of("key3", "value3", "key4", "value4");
         Retry retry2 = retryRegistry.retry("otherTestName", config, retryTags2);
 
-        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
-        assertThat(retry2.getTags()).containsOnlyElementsOf(retryTags2);
+        assertThat(retry.getTags()).containsAllEntriesOf(retryTags);
+        assertThat(retry2.getTags()).containsAllEntriesOf(retryTags2);
     }
 
     @Test
     public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
         RetryConfig retryConfig = RetryConfig.ofDefaults();
         Map<String, RetryConfig> retryConfigs = Collections.singletonMap("default", retryConfig);
-        io.vavr.collection.Map<String, String> registryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
-        io.vavr.collection.Map<String, String> instanceTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key4", "value4");
+        Map<String, String> registryTags = Map.of("key1", "value1", "key2", "value2");
+        Map<String, String> instanceTags = Map.of("key1", "value3", "key4", "value4");
         RetryRegistry retryRegistry = RetryRegistry.of(retryConfigs, registryTags);
         Retry retry = retryRegistry.retry("testName", retryConfig, instanceTags);
 
-        io.vavr.collection.Map<String, String> expectedTags = io.vavr.collection.HashMap
-            .of("key1", "value3", "key2", "value2", "key4", "value4");
-        assertThat(retry.getTags()).containsOnlyElementsOf(expectedTags);
+        Map<String, String> expectedTags = Map.of("key1", "value3", "key2", "value2", "key4", "value4");
+        assertThat(retry.getTags()).containsAllEntriesOf(expectedTags);
     }
 
     @Test
@@ -368,15 +360,14 @@ public class RetryRegistryTest {
 
     @Test
     public void testCreateUsingBuilderWithRegistryTags() {
-        io.vavr.collection.Map<String, String> retryTags = io.vavr.collection.HashMap
-            .of("key1", "value1", "key2", "value2");
+        Map<String, String> retryTags = Map.of("key1", "value1", "key2", "value2");
         RetryRegistry retryRegistry = RetryRegistry.custom()
             .withRetryConfig(RetryConfig.ofDefaults())
             .withTags(retryTags)
             .build();
         Retry retry = retryRegistry.retry("testName");
 
-        assertThat(retry.getTags()).containsOnlyElementsOf(retryTags);
+        assertThat(retry.getTags()).containsAllEntriesOf(retryTags);
     }
 
     @Test

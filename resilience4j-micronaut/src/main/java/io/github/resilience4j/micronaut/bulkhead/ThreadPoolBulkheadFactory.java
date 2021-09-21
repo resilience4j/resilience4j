@@ -104,8 +104,7 @@ public class ThreadPoolBulkheadFactory {
                 entry -> threadPoolBulkheadConfigurationProperties
                     .createThreadPoolBulkheadConfig(entry.getValue(),
                         compositeThreadPoolBulkheadCustomizer, entry.getKey())));
-        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer,
-            io.vavr.collection.HashMap.ofAll(threadPoolBulkheadConfigurationProperties.getTags()));
+        return ThreadPoolBulkheadRegistry.of(configs, threadPoolBulkheadRegistryEventConsumer, threadPoolBulkheadConfigurationProperties.getTags());
     }
 
     /**
