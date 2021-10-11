@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
-          distribution: 'adopt'
+          distribution: 'temurin'
       - name: Cache SonarCloud packages
         uses: actions/cache@v2.1.6
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
