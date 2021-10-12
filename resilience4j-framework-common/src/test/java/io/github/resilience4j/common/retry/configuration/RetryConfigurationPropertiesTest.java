@@ -59,7 +59,7 @@ public class RetryConfigurationPropertiesTest {
         retryConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         retryConfigurationProperties.getInstances().put("backend2", instanceProperties2);
         Map<String, String> globalTagsForRetries = new HashMap<>();
-        globalTagsForRetries.put("testKey1","testKet2");
+        globalTagsForRetries.put("testKey1", "testKet2");
         retryConfigurationProperties.setTags(globalTagsForRetries);
 
         assertThat(retryConfigurationProperties.getTags()).hasSize(1);
@@ -77,7 +77,7 @@ public class RetryConfigurationPropertiesTest {
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
-        assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(99L) ;
+        assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(99L);
         assertThat(retry2.getIntervalFunction().apply(2)).isEqualTo(99L);
         assertThat(retry2.isFailAfterMaxAttempts()).isEqualTo(false);
     }
@@ -163,6 +163,19 @@ public class RetryConfigurationPropertiesTest {
         assertThatThrownBy(() -> retryConfigurationProperties.createRetryConfig("backend", customizer))
             .isInstanceOf(ConfigurationNotFoundException.class)
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
+    }
+
+    @Test
+    public void testCreateRetryPropertiesWithWaitDurationSetToZero() {
+        RetryConfigurationProperties retryConfigurationProperties = new RetryConfigurationProperties();
+        RetryConfigurationProperties.InstanceProperties instanceProperties = new RetryConfigurationProperties.InstanceProperties();
+        instanceProperties.setWaitDuration(Duration.ZERO);
+        retryConfigurationProperties.getInstances().put("backend", instanceProperties);
+
+        RetryConfig retry = retryConfigurationProperties
+            .createRetryConfig("backend", compositeRetryCustomizer());
+
+        assertThat(retry.getIntervalBiFunction().apply(1, null)).isEqualTo(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
