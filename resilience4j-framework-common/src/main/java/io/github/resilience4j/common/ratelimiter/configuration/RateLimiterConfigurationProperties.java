@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
@@ -24,20 +25,22 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 
 public class RateLimiterConfigurationProperties extends CommonProperties {
 
+    private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
     public Optional<InstanceProperties> findRateLimiterProperties(String name) {
         InstanceProperties instanceProperties = instances.get(name);
         if (instanceProperties == null) {
-            instanceProperties = configs.get("default");
+            instanceProperties = configs.get(DEFAULT);
+        } else if (configs.get(DEFAULT) != null) {
+            ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
         }
         return Optional.ofNullable(instanceProperties);
     }
@@ -47,18 +50,26 @@ public class RateLimiterConfigurationProperties extends CommonProperties {
         CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
         String instanceName) {
         if (instanceProperties == null) {
-            return RateLimiterConfig.ofDefaults();
-        }
-        if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+            return buildDefaultConfig();
+        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.baseConfig);
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
             return buildConfigFromBaseConfig(baseProperties, instanceProperties,
                 compositeRateLimiterCustomizer, instanceName);
+        } else if (configs.get(DEFAULT) != null) {
+            return buildRateLimiterConfig(RateLimiterConfig.from(buildDefaultConfig()), instanceProperties,
+                compositeRateLimiterCustomizer,
+                instanceName);
         }
         return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties,
             compositeRateLimiterCustomizer, instanceName);
+    }
+
+    private RateLimiterConfig buildDefaultConfig() {
+        return buildRateLimiterConfig(RateLimiterConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
+            DEFAULT);
     }
 
     private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
