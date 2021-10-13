@@ -32,6 +32,7 @@ import java.util.Objects;
 
 public class TimeLimiterConfigurationProperties extends CommonProperties {
 
+    private static final String DEFAULT = "default";
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private final Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -49,14 +50,20 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
      */
     @Nullable
     public InstanceProperties getInstanceProperties(String backend) {
-        return instances.get(backend);
+        InstanceProperties instanceProperties = instances.get(backend);
+        if (instanceProperties == null) {
+            instanceProperties = configs.get(DEFAULT);
+        } else if (configs.get(DEFAULT) != null) {
+            ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+        }
+        return instanceProperties;
     }
 
     public TimeLimiterConfig createTimeLimiterConfig(String backendName,
         @Nullable InstanceProperties instanceProperties,
         CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
         if (instanceProperties == null) {
-            return TimeLimiterConfig.ofDefaults();
+            return buildDefaultConfig();
         }
         if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
@@ -65,9 +72,18 @@ public class TimeLimiterConfigurationProperties extends CommonProperties {
             }
             return buildConfigFromBaseConfig(baseProperties, instanceProperties,
                 compositeTimeLimiterCustomizer, backendName);
+        } else if (configs.get(DEFAULT) != null) {
+            return buildTimeLimiterConfig(TimeLimiterConfig.from(buildDefaultConfig()), instanceProperties,
+                compositeTimeLimiterCustomizer,
+                backendName);
         }
         return buildTimeLimiterConfig(TimeLimiterConfig.custom(), instanceProperties,
             compositeTimeLimiterCustomizer, backendName);
+    }
+
+    private TimeLimiterConfig buildDefaultConfig() {
+        return buildTimeLimiterConfig(TimeLimiterConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
+            DEFAULT);
     }
 
     private TimeLimiterConfig buildConfigFromBaseConfig(
