@@ -170,7 +170,7 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
         // these take precedence over deprecated properties. Setting one or the other will still work.
-        if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
+        if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() >= 0) {
             if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
                 Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 configureExponentialBackoffAndRandomizedWait(properties, builder);
