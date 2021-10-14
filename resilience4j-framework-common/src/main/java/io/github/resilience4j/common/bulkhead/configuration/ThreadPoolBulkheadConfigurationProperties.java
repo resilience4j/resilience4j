@@ -25,12 +25,14 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
+    private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -51,7 +53,11 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
 
     @Nullable
     public InstanceProperties getBackendProperties(String backend) {
-        return instances.get(backend);
+        InstanceProperties instanceProperties = instances.get(backend);
+        if (instanceProperties == null) {
+            instanceProperties = configs.get(DEFAULT);
+        }
+        return instanceProperties;
     }
 
     // Thread pool bulkhead section
@@ -65,17 +71,27 @@ public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties 
         InstanceProperties instanceProperties,
         CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
         String instanceName) {
-        if (instanceProperties != null && StringUtils
-            .isNotEmpty(instanceProperties.getBaseConfig())) {
+        if (instanceProperties == null) {
+            return buildDefaultConfig();
+        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
             return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties,
                 compositeThreadPoolBulkheadCustomizer, instanceName);
+        } else if (configs.get(DEFAULT) != null) {
+            return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(buildDefaultConfig()), instanceProperties,
+                compositeThreadPoolBulkheadCustomizer,
+                instanceName);
         }
         return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties,
             compositeThreadPoolBulkheadCustomizer, instanceName);
+    }
+
+    private ThreadPoolBulkheadConfig buildDefaultConfig() {
+        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
+            DEFAULT);
     }
 
     private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
