@@ -228,6 +228,10 @@ public class CircuitBreakerConfig implements Serializable {
         return circuitBreakerConfig.toString();
     }
 
+    /**
+     * Result of the {@link #getTransitionOnResult()} function with which one can tell the circuit
+     * breaker to transition to a different state if the result of a call meet the desired criteria.
+     */
     public static class TransitionCheckResult {
 
         private final boolean transitionToOpen;
@@ -238,25 +242,29 @@ public class CircuitBreakerConfig implements Serializable {
         @Nullable
         private final Instant waitUntil;
 
-        public TransitionCheckResult(boolean transitionToOpen, @Nullable Duration waitDuration,
-                                     @Nullable Instant waitUntil) {
+        private TransitionCheckResult(boolean transitionToOpen, @Nullable Duration waitDuration,
+                                      @Nullable Instant waitUntil) {
             this.transitionToOpen = transitionToOpen;
             this.waitDuration = waitDuration;
             this.waitUntil = waitUntil;
         }
 
+        /** Return this result if you do not want any transition to happen. */
         public static TransitionCheckResult noTransition() {
             return new TransitionCheckResult(false, null, null);
         }
 
+        /** This will make the circuit breaker call {@link CircuitBreaker#transitionToOpenState()}  */
         public static TransitionCheckResult transitionToOpen() {
             return new TransitionCheckResult(true, null, null);
         }
 
+        /** This will make the circuit breaker call {@link CircuitBreaker#transitionToOpenStateFor(Duration)}  */
         public static TransitionCheckResult transitionToOpenAndWaitFor(Duration waitDuration) {
             return new TransitionCheckResult(true, waitDuration, null);
         }
 
+        /** This will make the circuit breaker call {@link CircuitBreaker#transitionToOpenStateUntil(Instant)}  */
         public static TransitionCheckResult transitionToOpenAndWaitUntil(Instant waitUntil) {
             return new TransitionCheckResult(true, null, waitUntil);
         }
@@ -447,6 +455,14 @@ public class CircuitBreakerConfig implements Serializable {
             return this;
         }
 
+        /**
+         * Configures an function which can decide if the circuit breaker should transition to a different
+         * state base on the result of the protected function.
+         *
+         * @param transitionOnResult function which instructs the circuit breaker if it should transition
+         *                           to a different state
+         * @return the CircuitBreakerConfig.Builder
+         */
         public Builder transitionOnResult(
             Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult) {
             this.transitionOnResult = transitionOnResult;

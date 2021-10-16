@@ -526,8 +526,20 @@ public interface CircuitBreaker {
      */
     void transitionToOpenState();
 
+    /**
+     * Same as {@link #transitionToOpenState()} but waits in open state for the given amount of time
+     * instead of relaying on configurations to determine it.
+     *
+     * @param waitDuration how long should we wait in open state
+     */
     void transitionToOpenStateFor(Duration waitDuration);
 
+    /**
+     * Same as {@link #transitionToOpenState()} but waits in open state until the given in time
+     * instead of relaying on configurations to determine it.
+     *
+     * @param waitUntil how long should we wait in open state
+     */
     void transitionToOpenStateUntil(Instant waitUntil);
 
     /**
