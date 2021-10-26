@@ -19,6 +19,7 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.functions.Either;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -30,6 +31,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.*;
+import static io.github.resilience4j.circuitbreaker.utils.CircuitBreakerResultUtils.ifFailedWith;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
@@ -343,6 +345,21 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
+    public void shouldCreateTransitionCheckFunction() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .transitionOnResult(ifFailedWith(AccessBanException.class)
+                .thenOpenUntil(AccessBanException::getBannedUntil))
+            .build();
+        Function<Either<Object, Throwable>, TransitionCheckResult> transitionCheck =
+            circuitBreakerConfig.getTransitionOnResult();
+        then(transitionCheck).isNotNull();
+        then(transitionCheck
+            .apply(Either.right(new AccessBanException(Instant.parse("2007-12-03T10:15:30.00Z"))))
+            .getWaitUntil())
+            .isEqualTo("2007-12-03T10:15:30.00Z");
+    }
+
+    @Test
     public void shouldCreateCurrentTimeFunction() {
         Instant instant = Instant.now();
         Clock fixedClock = Clock.fixed(instant, ZoneId.systemDefault());
@@ -487,6 +504,19 @@ public class CircuitBreakerConfigTest {
 
     private static class BusinessException extends Exception {
 
+    }
+
+    private static class AccessBanException extends Exception {
+
+        private final Instant bannedUntil;
+
+        public AccessBanException(Instant bannedUntil) {
+            this.bannedUntil = bannedUntil;
+        }
+
+        public Instant getBannedUntil() {
+            return bannedUntil;
+        }
     }
 
     private static class ExtendsError extends Error {
