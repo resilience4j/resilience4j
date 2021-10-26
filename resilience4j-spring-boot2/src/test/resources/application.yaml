@@ -8,7 +8,7 @@ resilience4j.retry:
     tag1: tag1Value
     tag2: tag2Value
   configs:
-    default:
+    sharedConfig:
       maxAttempts: 4
       waitDuration: 100ms
       retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
@@ -19,9 +19,9 @@ resilience4j.retry:
         - io.github.resilience4j.circuitbreaker.IgnoredException
   backends:
     retryBackendA:
-      baseConfig: default
+      baseConfig: sharedConfig
     retryBackendB:
-      baseConfig: default
+      baseConfig: sharedConfig
     retryBackendC:
       maxAttempts: 3
       waitDuration: 100ms
@@ -34,9 +34,9 @@ resilience4j.retry:
       ignoreExceptions:
         - io.github.resilience4j.circuitbreaker.IgnoredException
     retryDummyFeignClient:
-      baseConfig: default
+      baseConfig: sharedConfig
     retryBackendD:
-      baseConfig: default
+      baseConfig: sharedConfig
 
 resilience4j.circuitbreaker:
   circuitBreakerAspectOrder: 400

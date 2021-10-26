@@ -1,6 +1,7 @@
 package io.github.resilience4j.common.timelimiter.configuration;
 
 import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.Test;
@@ -65,7 +66,7 @@ public class TimeLimiterConfigurationPropertiesTest {
         sharedProperties.setEventConsumerBufferSize(500);
 
         TimeLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
-        backendWithDefaultConfig.setBaseConfig("default");
+        backendWithDefaultConfig.setBaseConfig("defaultConfig");
         backendWithDefaultConfig.setTimeoutDuration(Duration.ofMillis(200L));
 
         TimeLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
@@ -73,7 +74,7 @@ public class TimeLimiterConfigurationPropertiesTest {
         backendWithSharedConfig.setTimeoutDuration(Duration.ofMillis(300L));
 
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
-        timeLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
+        timeLimiterConfigurationProperties.getConfigs().put("defaultConfig", defaultProperties);
         timeLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         timeLimiterConfigurationProperties.getInstances().put("backendWithDefaultConfig", backendWithDefaultConfig);
@@ -169,6 +170,79 @@ public class TimeLimiterConfigurationPropertiesTest {
         assertThat(instance).isNotNull();
         assertThat(instance.getTimeoutDuration()).isEqualTo(Duration.ofMillis(4000L));
         assertThat(instance.shouldCancelRunningFuture()).isEqualTo(true);
+    }
+
+    @Test
+    public void testTimeLimiterConfigWithDefaultConfig() {
+        TimeLimiterConfigurationProperties.InstanceProperties defaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+        defaultConfig.setTimeoutDuration(Duration.ofMillis(4000L));
+        defaultConfig.setCancelRunningFuture(false);
+
+        TimeLimiterConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+        sharedConfigWithDefaultConfig.setTimeoutDuration(Duration.ofMillis(3000L));
+        sharedConfigWithDefaultConfig.setCancelRunningFuture(true);
+
+        TimeLimiterConfigurationProperties.InstanceProperties instanceWithSharedConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+        instanceWithSharedConfig.setBaseConfig("sharedConfig");
+
+        TimeLimiterConfigurationProperties.InstanceProperties instanceWithDefaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
+        timeLimiterConfigurationProperties.getConfigs().put("default", defaultConfig);
+        timeLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
+        timeLimiterConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);
+
+        TimeLimiterConfig instance1 = timeLimiterConfigurationProperties
+            .createTimeLimiterConfig("instanceWithSharedConfig", instanceWithSharedConfig, compositeTimeLimiterCustomizer());
+        assertThat(instance1).isNotNull();
+        assertThat(instance1.getTimeoutDuration()).isEqualTo(Duration.ofMillis(3000L));
+        assertThat(instance1.shouldCancelRunningFuture()).isEqualTo(true);
+
+        TimeLimiterConfig instance2 = timeLimiterConfigurationProperties
+            .createTimeLimiterConfig("unknown", instanceWithDefaultConfig, compositeTimeLimiterCustomizer());
+        assertThat(instance2).isNotNull();
+        assertThat(instance2.getTimeoutDuration()).isEqualTo(Duration.ofMillis(4000L));
+        assertThat(instance2.shouldCancelRunningFuture()).isEqualTo(false);
+    }
+
+    @Test
+    public void testGetInstancePropertiesPropertiesWithoutDefaultConfig() {
+        //Given
+        TimeLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
+        timeLimiterConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
+
+        //Then
+        assertThat(timeLimiterConfigurationProperties.getInstances().size()).isEqualTo(1);
+
+        // Should get defaults
+        TimeLimiterConfigurationProperties.InstanceProperties timeLimiterProperties =
+            timeLimiterConfigurationProperties.getInstanceProperties("backendWithoutBaseConfig");
+        assertThat(timeLimiterProperties).isNotNull();
+        assertThat(timeLimiterProperties.getEventConsumerBufferSize()).isNull();
+    }
+
+    @Test
+    public void testGetIstancePropertiesPropertiesWithDefaultConfig() {
+        //Given
+        TimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new TimeLimiterConfigurationProperties.InstanceProperties();
+        defaultProperties.setEventConsumerBufferSize(99);
+
+        TimeLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+
+        TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
+        timeLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
+        timeLimiterConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
+
+        //Then
+        assertThat(timeLimiterConfigurationProperties.getInstances().size()).isEqualTo(1);
+
+        // Should get default config and overwrite enableExponentialBackoff but not enableRandomizedWait
+        TimeLimiterConfigurationProperties.InstanceProperties timeLimiterProperties =
+            timeLimiterConfigurationProperties.getInstanceProperties("backendWithoutBaseConfig");
+        assertThat(timeLimiterProperties).isNotNull();
+        assertThat(timeLimiterProperties.getEventConsumerBufferSize()).isEqualTo(99);
     }
 
     private CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer() {
