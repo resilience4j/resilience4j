@@ -19,12 +19,14 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
 import java.io.Serializable;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -53,6 +55,8 @@ public class CircuitBreakerConfig implements Serializable {
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
     private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
+    private static final Function<Either<Object, Throwable>, TransitionCheckResult> DEFAULT_TRANSITION_ON_RESULT
+        = any -> TransitionCheckResult.noTransition();
     // The default exception predicate counts all exceptions as failures.
     private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
@@ -76,6 +80,8 @@ public class CircuitBreakerConfig implements Serializable {
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
     private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
         .of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));
+    private Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult
+        = DEFAULT_TRANSITION_ON_RESULT;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
@@ -125,6 +131,10 @@ public class CircuitBreakerConfig implements Serializable {
      */
     public IntervalFunction getWaitIntervalFunctionInOpenState() {
         return waitIntervalFunctionInOpenState;
+    }
+
+    public Function<Either<Object, Throwable>, TransitionCheckResult> getTransitionOnResult() {
+        return transitionOnResult;
     }
 
     public int getSlidingWindowSize() {
@@ -218,6 +228,62 @@ public class CircuitBreakerConfig implements Serializable {
         return circuitBreakerConfig.toString();
     }
 
+    /**
+     * Result of the {@link #getTransitionOnResult()} function with which one can tell the circuit
+     * breaker to transition to a different state if the result of a call meet the desired criteria.
+     */
+    public static class TransitionCheckResult {
+
+        private final boolean transitionToOpen;
+
+        @Nullable
+        private final Duration waitDuration;
+
+        @Nullable
+        private final Instant waitUntil;
+
+        private TransitionCheckResult(boolean transitionToOpen, @Nullable Duration waitDuration,
+                                      @Nullable Instant waitUntil) {
+            this.transitionToOpen = transitionToOpen;
+            this.waitDuration = waitDuration;
+            this.waitUntil = waitUntil;
+        }
+
+        /** Return this result if you do not want any transition to happen. */
+        public static TransitionCheckResult noTransition() {
+            return new TransitionCheckResult(false, null, null);
+        }
+
+        /** This will make the circuit breaker call {@link CircuitBreaker#transitionToOpenState()}  */
+        public static TransitionCheckResult transitionToOpen() {
+            return new TransitionCheckResult(true, null, null);
+        }
+
+        /** This will make the circuit breaker call {@link CircuitBreaker#transitionToOpenStateFor(Duration)}  */
+        public static TransitionCheckResult transitionToOpenAndWaitFor(Duration waitDuration) {
+            return new TransitionCheckResult(true, waitDuration, null);
+        }
+
+        /** This will make the circuit breaker call {@link CircuitBreaker#transitionToOpenStateUntil(Instant)}  */
+        public static TransitionCheckResult transitionToOpenAndWaitUntil(Instant waitUntil) {
+            return new TransitionCheckResult(true, null, waitUntil);
+        }
+
+        public boolean isTransitionToOpen() {
+            return transitionToOpen;
+        }
+
+        @Nullable
+        public Duration getWaitDuration() {
+            return waitDuration;
+        }
+
+        @Nullable
+        public Instant getWaitUntil() {
+            return waitUntil;
+        }
+    }
+
 	public static class Builder {
 
         @Nullable
@@ -242,6 +308,9 @@ public class CircuitBreakerConfig implements Serializable {
         private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
             .of(Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD));
 
+        private Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult
+            = DEFAULT_TRANSITION_ON_RESULT;
+
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
@@ -254,6 +323,7 @@ public class CircuitBreakerConfig implements Serializable {
 
         public Builder(CircuitBreakerConfig baseConfig) {
             this.waitIntervalFunctionInOpenState = baseConfig.waitIntervalFunctionInOpenState;
+            this.transitionOnResult = baseConfig.transitionOnResult;
             this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
             this.slidingWindowSize = baseConfig.slidingWindowSize;
             this.slidingWindowType = baseConfig.slidingWindowType;
@@ -382,6 +452,20 @@ public class CircuitBreakerConfig implements Serializable {
             IntervalFunction waitIntervalFunctionInOpenState) {
             this.waitIntervalFunctionInOpenState = waitIntervalFunctionInOpenState;
             createWaitIntervalFunctionCounter++;
+            return this;
+        }
+
+        /**
+         * Configures an function which can decide if the circuit breaker should transition to a different
+         * state base on the result of the protected function.
+         *
+         * @param transitionOnResult function which instructs the circuit breaker if it should transition
+         *                           to a different state
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder transitionOnResult(
+            Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult) {
+            this.transitionOnResult = transitionOnResult;
             return this;
         }
 
@@ -706,6 +790,7 @@ public class CircuitBreakerConfig implements Serializable {
         public CircuitBreakerConfig build() {
             CircuitBreakerConfig config = new CircuitBreakerConfig();
             config.waitIntervalFunctionInOpenState = validateWaitIntervalFunctionInOpenState();
+            config.transitionOnResult = transitionOnResult;
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;

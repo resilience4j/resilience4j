@@ -25,6 +25,7 @@ import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
+import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -226,7 +227,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             LOG.debug("CircuitBreaker '{}' ignored an exception:", name, throwable);
             releasePermission();
             publishCircuitIgnoredErrorEvent(name, duration, durationUnit, throwable);
-        } else if (circuitBreakerConfig.getRecordExceptionPredicate().test(throwable)) {
+            return;
+        }
+        if (circuitBreakerConfig.getRecordExceptionPredicate().test(throwable)) {
             LOG.debug("CircuitBreaker '{}' recorded an exception as failure:", name, throwable);
             publishCircuitErrorEvent(name, duration, durationUnit, throwable);
             stateReference.get().onError(duration, durationUnit, throwable);
@@ -235,6 +238,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             publishSuccessEvent(duration, durationUnit);
             stateReference.get().onSuccess(duration, durationUnit);
         }
+        handlePossibleTransition(Either.right(throwable));
     }
 
     @Override
@@ -253,7 +257,16 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             stateReference.get().onError(duration, durationUnit, failure);
         } else {
             onSuccess(duration, durationUnit);
+            if (result != null) {
+                handlePossibleTransition(Either.left(result));
+            }
         }
+    }
+
+    private void handlePossibleTransition(Either<Object, Throwable> result) {
+        CircuitBreakerConfig.TransitionCheckResult transitionCheckResult = circuitBreakerConfig.getTransitionOnResult()
+            .apply(result);
+        stateReference.get().handlePossibleTransition(transitionCheckResult);
     }
 
     /**
@@ -351,6 +364,18 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     public void transitionToOpenState() {
         stateTransition(OPEN,
             currentState -> new OpenState(currentState.attempts() + 1, currentState.getMetrics()));
+    }
+
+    @Override
+    public void transitionToOpenStateFor(Duration waitDuration) {
+        stateTransition(OPEN,
+            currentState -> new OpenState(currentState.attempts(), waitDuration, currentState.getMetrics()));
+    }
+
+    @Override
+    public void transitionToOpenStateUntil(Instant waitUntil) {
+        stateTransition(OPEN,
+            currentState -> new OpenState(currentState.attempts(), waitUntil, currentState.getMetrics()));
     }
 
     @Override
@@ -457,6 +482,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         void onError(long duration, TimeUnit durationUnit, Throwable throwable);
 
         void onSuccess(long duration, TimeUnit durationUnit);
+
+        void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result);
 
         int attempts();
 
@@ -601,6 +628,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
+            if (result.isTransitionToOpen()) {
+                if (isClosed.compareAndSet(true, false)) {
+                    if (result.getWaitDuration() != null) {
+                        transitionToOpenStateFor(result.getWaitDuration());
+                    } else if (result.getWaitUntil() != null) {
+                        transitionToOpenStateUntil(result.getWaitUntil());
+                    } else {
+                        throw new IllegalArgumentException("Transition check resulted in open request but now wait " +
+                            "attribute was set? This should never happen");
+                    }
+                }
+            }
+        }
+
+        @Override
         public int attempts() {
             return 0;
         }
@@ -647,10 +690,28 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final ScheduledFuture<?> transitionToHalfOpenFuture;
 
         OpenState(final int attempts, CircuitBreakerMetrics circuitBreakerMetrics) {
+            this(attempts, circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(attempts),
+                circuitBreakerMetrics);
+        }
+
+        OpenState(final int attempts, final Duration waitDuration, CircuitBreakerMetrics circuitBreakerMetrics) {
+            this(attempts, waitDuration.toMillis(), circuitBreakerMetrics);
+        }
+
+        OpenState(final int attempts, final long waitDurationInMillis, CircuitBreakerMetrics circuitBreakerMetrics) {
+            this(attempts, waitDurationInMillis, clock.instant().plus(waitDurationInMillis, MILLIS),
+                circuitBreakerMetrics);
+        }
+
+        OpenState(final int attempts, final Instant waitUntil, CircuitBreakerMetrics circuitBreakerMetrics) {
+            this(attempts, Duration.between(clock.instant(), waitUntil).toMillis(), waitUntil,
+                circuitBreakerMetrics);
+        }
+
+        OpenState(final int attempts, final long waitDurationInMillis, final Instant retryAfterWaitDuration,
+                  CircuitBreakerMetrics circuitBreakerMetrics) {
             this.attempts = attempts;
-            final long waitDurationInMillis = circuitBreakerConfig
-                .getWaitIntervalFunctionInOpenState().apply(attempts);
-            this.retryAfterWaitDuration = clock.instant().plus(waitDurationInMillis, MILLIS);
+            this.retryAfterWaitDuration = retryAfterWaitDuration;
             this.circuitBreakerMetrics = circuitBreakerMetrics;
 
             if (circuitBreakerConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()) {
@@ -721,6 +782,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             // Thread 2 calls onError and the state changes from CLOSED to OPEN before Thread 1 calls onSuccess.
             // But the onSuccess event should still be recorded, even if it happened after the state transition.
             circuitBreakerMetrics.onSuccess(duration, durationUnit);
+        }
+
+        @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
+            // noOp
         }
 
         @Override
@@ -803,6 +869,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
+            // noOp
+        }
+
+        @Override
         public int attempts() {
             return 0;
         }
@@ -868,6 +939,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public void onSuccess(long duration, TimeUnit durationUnit) {
             checkIfThresholdsExceeded(circuitBreakerMetrics.onSuccess(duration, durationUnit));
+        }
+
+        @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
+            // noOp
         }
 
         private void checkIfThresholdsExceeded(Result result) {
@@ -962,6 +1038,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          */
         @Override
         public void onSuccess(long duration, TimeUnit durationUnit) {
+            // noOp
+        }
+
+        @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
             // noOp
         }
 
@@ -1070,6 +1151,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         public void onSuccess(long duration, TimeUnit durationUnit) {
             // CircuitBreakerMetrics is thread-safe
             checkIfThresholdsExceeded(circuitBreakerMetrics.onSuccess(duration, durationUnit));
+        }
+
+        @Override
+        public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
+            // noOp
         }
 
         @Override

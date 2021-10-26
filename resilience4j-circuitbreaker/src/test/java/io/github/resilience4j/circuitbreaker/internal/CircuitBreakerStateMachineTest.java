@@ -30,7 +30,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -339,6 +341,67 @@ public class CircuitBreakerStateMachineTest {
         mockClock.advanceBySeconds(3);
 
         // The CircuitBreaker switches to half open, because the wait duration of 5 seconds is elapsed.
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(
+            CircuitBreaker.State.HALF_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (9)
+        // Metrics are reset
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 0L);
+    }
+
+    @Test
+    public void shouldTransitionToHalfOpenAfterPassedWaitDuration() {
+        // Initially the CircuitBreaker is open
+        circuitBreaker.transitionToOpenStateFor(Duration.ofHours(2));
+        assertThatMetricsAreReset();
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.tryAcquirePermission())
+            .isEqualTo(false); // Should create a CircuitBreakerOnCallNotPermittedEvent
+
+        mockClock.advanceByHours(1);
+
+        // The CircuitBreaker is still open, because the wait duration of 2 hours is not elapsed.
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.tryAcquirePermission())
+            .isEqualTo(false); // Should create a CircuitBreakerOnCallNotPermittedEvent
+
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 2L);
+
+        mockClock.advanceByHours(1);
+        mockClock.advanceBySeconds(1);
+
+        // The CircuitBreaker switches to half open, because the wait duration of 2 hours is elapsed.
+        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(
+            CircuitBreaker.State.HALF_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (9)
+        // Metrics are reset
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 0L);
+    }
+
+    @Test
+    public void shouldTransitionToHalfOpenAfterPassedWaitUntil() {
+        // Initially the CircuitBreaker is open
+        Instant waitUntil = mockClock.instant().plus(30, ChronoUnit.MINUTES);
+        circuitBreaker.transitionToOpenStateUntil(waitUntil);
+        assertThatMetricsAreReset();
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.tryAcquirePermission())
+            .isEqualTo(false); // Should create a CircuitBreakerOnCallNotPermittedEvent
+
+        mockClock.advanceByMinutes(15);
+
+        // The CircuitBreaker is still open, because we did not pass the given point in time
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.tryAcquirePermission())
+            .isEqualTo(false); // Should create a CircuitBreakerOnCallNotPermittedEvent
+
+        assertCircuitBreakerMetricsEqualTo(-1f, 0, 0, 0, 2L);
+
+        mockClock.set(waitUntil);
+        mockClock.advanceBySeconds(1);
+
+        // The CircuitBreaker switches to half open, because we passed the given point in time
         assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
         assertThat(circuitBreaker.getState()).isEqualTo(
             CircuitBreaker.State.HALF_OPEN); // Should create a CircuitBreakerOnStateTransitionEvent (9)
