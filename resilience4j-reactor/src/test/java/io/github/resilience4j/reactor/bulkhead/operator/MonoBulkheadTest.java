@@ -105,4 +105,18 @@ public class MonoBulkheadTest {
         verify(bulkhead, times(1)).releasePermission();
     }
 
+    @Test
+    public void shouldOnceEmitCompleteWhenErrorInCompleteEvent() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        doThrow(new RuntimeException("BAM!")).when(bulkhead).onComplete();
+
+        StepVerifier.create(
+            Mono.just("Event")
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectSubscription()
+            .expectError(RuntimeException.class)
+            .verify(Duration.ofSeconds(1));
+
+        verify(bulkhead, times(1)).onComplete();
+    }
 }
