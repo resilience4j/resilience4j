@@ -24,28 +24,41 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class BulkheadConfigurationProperties extends CommonProperties {
 
+    private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
     public BulkheadConfig createBulkheadConfig(InstanceProperties instanceProperties,
         CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer,
         String instanceName) {
-        if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+        if (instanceProperties == null) {
+            return buildDefaultConfig();
+        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
             return buildConfigFromBaseConfig(baseProperties, instanceProperties,
                 compositeBulkheadCustomizer, instanceName);
+        } else if (configs.get(DEFAULT) != null) {
+            return buildBulkheadConfig(BulkheadConfig.from(buildDefaultConfig()), instanceProperties,
+                compositeBulkheadCustomizer,
+                instanceName);
         }
         return buildBulkheadConfig(BulkheadConfig.custom(), instanceProperties,
             compositeBulkheadCustomizer, instanceName);
+    }
+
+    private BulkheadConfig buildDefaultConfig() {
+        return buildBulkheadConfig(BulkheadConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
+            DEFAULT);
     }
 
     private BulkheadConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
@@ -79,7 +92,13 @@ public class BulkheadConfigurationProperties extends CommonProperties {
 
     @Nullable
     public InstanceProperties getBackendProperties(String backend) {
-        return instances.get(backend);
+        InstanceProperties instanceProperties = instances.get(backend);
+        if (instanceProperties == null) {
+            instanceProperties = configs.get(DEFAULT);
+        } else if (configs.get(DEFAULT) != null) {
+            ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+        }
+        return instanceProperties;
     }
 
     public Map<String, InstanceProperties> getInstances() {

@@ -29,10 +29,7 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
@@ -40,13 +37,16 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
 
 public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
+    private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
     public Optional<InstanceProperties> findCircuitBreakerProperties(String name) {
         InstanceProperties instanceProperties = instances.get(name);
         if (instanceProperties == null) {
-            instanceProperties = configs.get("default");
+            instanceProperties = configs.get(DEFAULT);
+        } else if (configs.get(DEFAULT) != null) {
+            ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(DEFAULT));
         }
         return Optional.ofNullable(instanceProperties);
     }
@@ -62,9 +62,18 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             return buildConfigFromBaseConfig(instanceProperties, baseProperties,
                 compositeCircuitBreakerCustomizer,
                 backendName);
+        } else if (configs.get(DEFAULT) != null) {
+            return buildConfig(from(buildDefaultConfig()), instanceProperties,
+                compositeCircuitBreakerCustomizer,
+                backendName);
         }
         return buildConfig(custom(), instanceProperties, compositeCircuitBreakerCustomizer,
             backendName);
+    }
+
+    private CircuitBreakerConfig buildDefaultConfig() {
+        return buildConfig(custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
+            DEFAULT);
     }
 
     private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
