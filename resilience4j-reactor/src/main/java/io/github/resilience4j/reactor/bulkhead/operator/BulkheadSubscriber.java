@@ -35,7 +35,7 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
     private final boolean singleProducer;
 
     private final AtomicBoolean eventWasEmitted = new AtomicBoolean(false);
-    private final AtomicBoolean successSignaled = new AtomicBoolean(false);
+    private final AtomicBoolean completedSignaled = new AtomicBoolean(false);
 
     BulkheadSubscriber(Bulkhead bulkhead,
         CoreSubscriber<? super T> downstreamSubscriber,
@@ -48,7 +48,7 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
     @Override
     public void hookOnNext(T t) {
         if (!isDisposed()) {
-            if (singleProducer && successSignaled.compareAndSet(false, true)) {
+            if (singleProducer && completedSignaled.compareAndSet(false, true)) {
                 bulkhead.onComplete();
             }
             eventWasEmitted.set(true);
@@ -58,25 +58,26 @@ class BulkheadSubscriber<T> extends AbstractSubscriber<T> {
 
     @Override
     public void hookOnCancel() {
-        if (!successSignaled.get()) {
+        if (completedSignaled.compareAndSet(false, true)) {
             if (eventWasEmitted.get()) {
                 bulkhead.onComplete();
             } else {
                 bulkhead.releasePermission();
             }
         }
-
     }
 
     @Override
     public void hookOnError(Throwable t) {
-        bulkhead.onComplete();
+        if (!completedSignaled.get()) {
+            bulkhead.onComplete();
+        }
         downstreamSubscriber.onError(t);
     }
 
     @Override
     public void hookOnComplete() {
-        if (successSignaled.compareAndSet(false, true)) {
+        if (completedSignaled.compareAndSet(false, true)) {
             bulkhead.onComplete();
         }
         downstreamSubscriber.onComplete();
