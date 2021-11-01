@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
 import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
@@ -31,11 +32,13 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.github.resilience4j.circuitbreaker.utils.CircuitBreakerResultUtils.ifFailedWith;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -476,6 +479,48 @@ public class CircuitBreakerTest {
         // Then
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
+    }
+
+    @Test
+    public void shouldReturnFailureWithCircuitBreakerOpenIfCheckRequestedTransition() {
+        // Given
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+            .transitionOnResult(ifFailedWith(AccessBanException.class)
+                .thenOpenFor(AccessBanException::getBanDuration))
+            .build();
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
+            throw new AccessBanException(Duration.ofHours(2));
+        });
+
+        // When
+        Try result = Try.run(() -> checkedRunnable.run());
+
+        // Then
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(AccessBanException.class);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
+    @Test
+    public void shouldReturnFailureWithCircuitBreakerClosedIfCheckDidNotRequestTransition() {
+        // Given
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+            .transitionOnResult(ifFailedWith(AccessBanException.class)
+                .thenOpenFor(AccessBanException::getBanDuration))
+            .build();
+        CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
+        CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
+            throw new RuntimeException();
+        });
+
+        // When
+        Try result = Try.run(() -> checkedRunnable.run());
+
+        // Then
+        assertThat(result.isFailure()).isTrue();
+        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 
     @Test
@@ -1130,4 +1175,16 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
     }
 
+    private static class AccessBanException extends Exception {
+
+        private final Duration banDuration;
+
+        public AccessBanException(Duration banDuration) {
+            this.banDuration = banDuration;
+        }
+
+        public Duration getBanDuration() {
+            return banDuration;
+        }
+    }
 }

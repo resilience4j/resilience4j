@@ -27,6 +27,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -37,6 +38,7 @@ import java.util.function.Predicate;
  */
 public class RetryConfigurationProperties extends CommonProperties {
 
+    private static final String DEFAULT = "default";
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
 
@@ -55,7 +57,13 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     @Nullable
     public InstanceProperties getBackendProperties(String backend) {
-        return instances.get(backend);
+        InstanceProperties instanceProperties = instances.get(backend);
+        if (instanceProperties == null) {
+            instanceProperties = configs.get(DEFAULT);
+        } else if (configs.get(DEFAULT) != null) {
+            ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+        }
+        return instanceProperties;
     }
 
     /**
@@ -85,17 +93,27 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     public RetryConfig createRetryConfig(InstanceProperties instanceProperties,
         CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer, String backend) {
-        if (instanceProperties != null && StringUtils
-            .isNotEmpty(instanceProperties.getBaseConfig())) {
+        if (instanceProperties == null) {
+            return buildDefaultConfig();
+        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
             return buildConfigFromBaseConfig(baseProperties, instanceProperties,
                 compositeRetryCustomizer, backend);
+        } else if (configs.get(DEFAULT) != null) {
+            return buildRetryConfig(RetryConfig.from(buildDefaultConfig()), instanceProperties,
+                compositeRetryCustomizer,
+                backend);
         }
         return buildRetryConfig(RetryConfig.custom(), instanceProperties, compositeRetryCustomizer,
             backend);
+    }
+
+    private RetryConfig buildDefaultConfig() {
+        return buildRetryConfig(RetryConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
+            DEFAULT);
     }
 
     private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
@@ -170,7 +188,7 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
         // these take precedence over deprecated properties. Setting one or the other will still work.
-        if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() > 0) {
+        if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() >= 0) {
             if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
                 Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 configureExponentialBackoffAndRandomizedWait(properties, builder);

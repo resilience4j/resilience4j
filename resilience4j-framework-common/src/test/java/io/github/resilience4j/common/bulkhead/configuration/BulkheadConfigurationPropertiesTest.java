@@ -16,7 +16,6 @@
 package io.github.resilience4j.common.bulkhead.configuration;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
@@ -87,7 +86,7 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(sharedProperties.getEventConsumerBufferSize()).isNull();
 
         BulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new BulkheadConfigurationProperties.InstanceProperties();
-        backendWithDefaultConfig.setBaseConfig("default");
+        backendWithDefaultConfig.setBaseConfig("defaultConfig");
         backendWithDefaultConfig.setMaxWaitDuration(Duration.ofMillis(200L));
         backendWithDefaultConfig.setWritableStackTraceEnabled(true);
         assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
@@ -99,7 +98,7 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(backendWithSharedConfig.getEventConsumerBufferSize()).isNull();
 
         BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
-        bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
+        bulkheadConfigurationProperties.getConfigs().put("defaultConfig", defaultProperties);
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
         bulkheadConfigurationProperties.getInstances()
@@ -134,6 +133,72 @@ public class BulkheadConfigurationPropertiesTest {
                 compositeBulkheadCustomizer(), "unknown");
         assertThat(bulkhead3).isNotNull();
         assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(0L);
+        assertThat(bulkhead3.isWritableStackTraceEnabled()).isTrue();
+
+    }
+
+    @Test
+    public void testCreateBulkHeadPropertiesWithDefaultConfig() {
+        //Given
+        BulkheadConfigurationProperties.InstanceProperties defaultProperties = new BulkheadConfigurationProperties.InstanceProperties();
+        defaultProperties.setMaxConcurrentCalls(3);
+        defaultProperties.setMaxWaitDuration(Duration.ofMillis(50));
+        defaultProperties.setWritableStackTraceEnabled(true);
+        assertThat(defaultProperties.getEventConsumerBufferSize()).isNull();
+
+        BulkheadConfigurationProperties.InstanceProperties sharedProperties = new BulkheadConfigurationProperties.InstanceProperties();
+        sharedProperties.setMaxConcurrentCalls(2);
+        sharedProperties.setMaxWaitDuration(Duration.ofMillis(100L));
+        sharedProperties.setWritableStackTraceEnabled(false);
+        assertThat(sharedProperties.getEventConsumerBufferSize()).isNull();
+
+        BulkheadConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new BulkheadConfigurationProperties.InstanceProperties();
+        backendWithoutBaseConfig.setMaxWaitDuration(Duration.ofMillis(200L));
+        backendWithoutBaseConfig.setWritableStackTraceEnabled(true);
+        assertThat(backendWithoutBaseConfig.getEventConsumerBufferSize()).isNull();
+
+        BulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new BulkheadConfigurationProperties.InstanceProperties();
+        backendWithSharedConfig.setBaseConfig("sharedConfig");
+        backendWithSharedConfig.setMaxWaitDuration(Duration.ofMillis(300L));
+        backendWithSharedConfig.setWritableStackTraceEnabled(false);
+        assertThat(backendWithSharedConfig.getEventConsumerBufferSize()).isNull();
+
+        BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
+        bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
+        bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
+
+        bulkheadConfigurationProperties.getInstances()
+            .put("backendWithoutBaseConfig", backendWithoutBaseConfig);
+        bulkheadConfigurationProperties.getInstances()
+            .put("backendWithSharedConfig", backendWithSharedConfig);
+
+        //Then
+        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+
+        // Should get default config and overwrite max calls and wait time
+        BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
+            .createBulkheadConfig(backendWithoutBaseConfig, compositeBulkheadCustomizer(),
+                "backendWithoutBaseConfig");
+        assertThat(bulkhead1).isNotNull();
+        assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
+        assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
+        assertThat(bulkhead1.isWritableStackTraceEnabled()).isTrue();
+
+        // Should get shared config and overwrite wait time
+        BulkheadConfig bulkhead2 = bulkheadConfigurationProperties
+            .createBulkheadConfig(backendWithSharedConfig, compositeBulkheadCustomizer(),
+                "backendWithSharedConfig");
+        assertThat(bulkhead2).isNotNull();
+        assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
+        assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
+        assertThat(bulkhead2.isWritableStackTraceEnabled()).isFalse();
+
+        // Unknown backend should get default config of Registry
+        BulkheadConfig bulkhead3 = bulkheadConfigurationProperties
+            .createBulkheadConfig(new BulkheadConfigurationProperties.InstanceProperties(),
+                compositeBulkheadCustomizer(), "unknown");
+        assertThat(bulkhead3).isNotNull();
+        assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(50L);
         assertThat(bulkhead3.isWritableStackTraceEnabled()).isTrue();
 
     }
@@ -197,6 +262,46 @@ public class BulkheadConfigurationPropertiesTest {
         assertThat(instance).isNotNull();
         assertThat(instance.getMaxConcurrentCalls()).isEqualTo(2000);
         assertThat(instance.getMaxWaitDuration()).isEqualTo(Duration.ofMillis(1000L));
+    }
+
+    @Test
+    public void testGetBackendPropertiesPropertiesWithoutDefaultConfig() {
+        //Given
+        BulkheadConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new BulkheadConfigurationProperties.InstanceProperties();
+
+        BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
+        bulkheadConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
+
+        //Then
+        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(1);
+
+        // Should get defaults
+        BulkheadConfigurationProperties.InstanceProperties bulkheadProperties =
+            bulkheadConfigurationProperties.getBackendProperties("backendWithoutBaseConfig");
+        assertThat(bulkheadProperties).isNotNull();
+        assertThat(bulkheadProperties.getEventConsumerBufferSize()).isNull();
+    }
+
+    @Test
+    public void testGetBackendPropertiesPropertiesWithDefaultConfig() {
+        //Given
+        BulkheadConfigurationProperties.InstanceProperties defaultProperties = new BulkheadConfigurationProperties.InstanceProperties();
+        defaultProperties.setEventConsumerBufferSize(99);
+
+        BulkheadConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new BulkheadConfigurationProperties.InstanceProperties();
+
+        BulkheadConfigurationProperties bulkheadConfigurationProperties = new BulkheadConfigurationProperties();
+        bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
+        bulkheadConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
+
+        //Then
+        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(1);
+
+        // Should get default config and overwrite enableExponentialBackoff but not enableRandomizedWait
+        BulkheadConfigurationProperties.InstanceProperties bulkheadProperties =
+            bulkheadConfigurationProperties.getBackendProperties("backendWithoutBaseConfig");
+        assertThat(bulkheadProperties).isNotNull();
+        assertThat(bulkheadProperties.getEventConsumerBufferSize()).isEqualTo(99);
     }
 
     private CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer() {

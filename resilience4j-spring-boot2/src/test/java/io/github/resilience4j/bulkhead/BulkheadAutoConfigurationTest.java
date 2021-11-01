@@ -313,7 +313,7 @@ public class BulkheadAutoConfigurationTest {
             .atMost(1, TimeUnit.SECONDS)
             .until(() -> bulkhead.getMetrics().getAvailableConcurrentCalls() == 0);
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(0);
+        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(10);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
         await()

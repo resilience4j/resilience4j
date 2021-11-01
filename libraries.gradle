@@ -29,7 +29,7 @@ ext {
     hibernateValidatorVersion = '6.0.18.Final'
     wiremockVersion = '2.26.0'
     validationApiVersion = '2.0.1.Final'
-    kotlinCoroutinesVersion = '1.4.2'
+    kotlinCoroutinesVersion = '1.5.2'
     springBootOpenFeignVersion = '2.2.6.RELEASE'
     blockhoundVersion = '1.0.6.RELEASE'
     micronautVersion = '2.1.0'

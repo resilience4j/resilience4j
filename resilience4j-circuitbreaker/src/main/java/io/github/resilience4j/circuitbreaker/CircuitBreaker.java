@@ -23,6 +23,8 @@ import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.functions.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -523,6 +525,22 @@ public interface CircuitBreaker {
      * done internally.
      */
     void transitionToOpenState();
+
+    /**
+     * Same as {@link #transitionToOpenState()} but waits in open state for the given amount of time
+     * instead of relaying on configurations to determine it.
+     *
+     * @param waitDuration how long should we wait in open state
+     */
+    void transitionToOpenStateFor(Duration waitDuration);
+
+    /**
+     * Same as {@link #transitionToOpenState()} but waits in open state until the given in time
+     * instead of relaying on configurations to determine it.
+     *
+     * @param waitUntil how long should we wait in open state
+     */
+    void transitionToOpenStateUntil(Instant waitUntil);
 
     /**
      * Transitions the state machine to HALF_OPEN state. This call is idempotent and will not have

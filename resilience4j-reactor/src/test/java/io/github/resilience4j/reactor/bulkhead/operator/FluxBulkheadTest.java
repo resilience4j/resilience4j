@@ -139,4 +139,21 @@ public class FluxBulkheadTest {
         verify(bulkhead, never()).releasePermission();
         verify(bulkhead, times(1)).onComplete();
     }
+
+    @Test
+    public void shouldOnceEmitCompleteWhenErrorInCompleteEvent() {
+        given(bulkhead.tryAcquirePermission()).willReturn(true);
+        doThrow(new RuntimeException("BAM!")).when(bulkhead).onComplete();
+
+        StepVerifier.create(
+            Flux.just("Event1", "Event2", "Event3")
+                .transformDeferred(BulkheadOperator.of(bulkhead)))
+            .expectNext("Event1")
+            .expectNext("Event2")
+            .expectNext("Event3")
+            .expectError(RuntimeException.class)
+            .verify(Duration.ofSeconds(1));
+
+        verify(bulkhead, times(1)).onComplete();
+    }
 }
