@@ -151,7 +151,7 @@ public class HedgeImpl implements Hedge {
     public void onPrimarySuccess(Duration duration) {
         metrics.accept(HedgeEvent.Type.PRIMARY_SUCCESS, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new PrimarySuccessEvent(name, duration));
+            publishEvent(new PrimaryOnSuccessEvent(name, duration));
         }
     }
 
@@ -159,7 +159,7 @@ public class HedgeImpl implements Hedge {
     public void onHedgedSuccess(Duration duration) {
         metrics.accept(HedgeEvent.Type.HEDGE_SUCCESS, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new HedgeSuccessEvent(name, duration));
+            publishEvent(new HedgeOnSuccessEvent(name, duration));
         }
     }
 
@@ -167,7 +167,7 @@ public class HedgeImpl implements Hedge {
     public void onPrimaryFailure(Duration duration, Throwable throwable) {
         metrics.accept(HedgeEvent.Type.PRIMARY_FAILURE, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new PrimaryFailureEvent(name, duration, throwable));
+            publishEvent(new PrimaryOnFailureEvent(name, duration, throwable));
         }
     }
 
@@ -175,7 +175,7 @@ public class HedgeImpl implements Hedge {
     public void onHedgedFailure(Duration duration, Throwable throwable) {
         metrics.accept(HedgeEvent.Type.HEDGE_FAILURE, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new HedgeFailureEvent(name, duration, throwable));
+            publishEvent(new HedgeOnFailureEvent(name, duration, throwable));
         }
     }
 

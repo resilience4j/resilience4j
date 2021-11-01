@@ -230,12 +230,12 @@ public interface Hedge {
      */
     interface EventPublisher extends io.github.resilience4j.core.EventPublisher<HedgeEvent> {
 
-        EventPublisher onPrimarySuccess(EventConsumer<PrimarySuccessEvent> eventConsumer);
+        EventPublisher onPrimarySuccess(EventConsumer<PrimaryOnSuccessEvent> eventConsumer);
 
-        EventPublisher onPrimaryFailure(EventConsumer<PrimaryFailureEvent> eventConsumer);
+        EventPublisher onPrimaryFailure(EventConsumer<PrimaryOnFailureEvent> eventConsumer);
 
-        EventPublisher onHedgeSuccess(EventConsumer<HedgeSuccessEvent> eventConsumer);
+        EventPublisher onHedgeSuccess(EventConsumer<HedgeOnSuccessEvent> eventConsumer);
 
-        EventPublisher onHedgeFailure(EventConsumer<HedgeFailureEvent> eventConsumer);
+        EventPublisher onHedgeFailure(EventConsumer<HedgeOnFailureEvent> eventConsumer);
     }
 }

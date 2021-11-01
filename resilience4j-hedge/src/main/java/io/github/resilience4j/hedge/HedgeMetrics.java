@@ -47,7 +47,7 @@ public interface HedgeMetrics {
     /**
      * Creates a simple metric that returns a pre-defined hedging time
      *
-     * @param cutoff the preconfigured cutoff time in milliseconds
+     * @param cutoff the preconfigured cutoff time as a Duration
      * @return the configured HedgeMetrics
      */
     static HedgeMetrics ofPreconfigured(Duration cutoff) {

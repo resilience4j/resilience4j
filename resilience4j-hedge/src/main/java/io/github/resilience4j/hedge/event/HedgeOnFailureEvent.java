@@ -20,18 +20,25 @@ package io.github.resilience4j.hedge.event;
 
 import java.time.Duration;
 
-public class PrimarySuccessEvent extends AbstractHedgeEvent {
+public class HedgeOnFailureEvent extends AbstractHedgeEvent {
 
-    public PrimarySuccessEvent(String hedgeName, Duration duration) {
-        super(hedgeName, Type.PRIMARY_SUCCESS, duration);
+    private final Throwable throwable;
+
+    public HedgeOnFailureEvent(String hedgeName, Duration duration, Throwable throwable) {
+        super(hedgeName, Type.HEDGE_FAILURE, duration);
+        this.throwable = throwable;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
     }
 
     @Override
     public String toString() {
-        return String.format("%s: Hedge '%s' recorded a successful call in %dms",
+        return String.format("%s: Hedge '%s' recorded an error: '%s' in %dms",
             getCreationTime(),
             getHedgeName(),
+            getThrowable(),
             getDuration().toMillis());
     }
-
 }
