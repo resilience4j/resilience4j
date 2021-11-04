@@ -16,6 +16,8 @@
 package io.github.resilience4j.circuitbreaker;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerDetails;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerUpdateStateResponse;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Rule;
@@ -81,6 +83,44 @@ public class CircuitBreakerActuatorTest {
         assertThat(backendAStateClosed.getBody()).isNotNull();
         assertThat(backendAStateClosed.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.CLOSED.toString());
         assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    public void testCircuitBreakerDetails() {
+        // given
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // when
+        HttpEntity<String> forceOpenRequest = new HttpEntity<>("{\"updateState\":\"CLOSE\"}", headers);
+        final ResponseEntity<CircuitBreakerUpdateStateResponse> backendAState = restTemplate
+            .postForEntity("/actuator/circuitbreakers/backendA", forceOpenRequest, CircuitBreakerUpdateStateResponse.class);
+        // then
+        assertThat(backendAState.getBody()).isNotNull();
+        assertThat(backendAState.getBody().getCurrentState()).isEqualTo(CircuitBreaker.State.CLOSED.toString());
+        assertThat(circuitBreakerRegistry.circuitBreaker("backendA").getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // when get circuit breakers
+        final ResponseEntity<CircuitBreakerEndpointResponse> circuitBreakersResponse = restTemplate
+            .getForEntity("/actuator/circuitbreakers", CircuitBreakerEndpointResponse.class);
+        // then
+        assertThat(circuitBreakersResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(circuitBreakersResponse.getBody()).isNotNull();
+        assertThat(circuitBreakersResponse.getBody().getCircuitBreakers()).isNotNull();
+        assertThat(circuitBreakersResponse.getBody().getCircuitBreakers()).hasSize(6);
+        final CircuitBreakerDetails cbDetailsA = circuitBreakersResponse.getBody().getCircuitBreakers().get("backendA");
+        final CircuitBreaker cbA = circuitBreakerRegistry.circuitBreaker("backendA");
+        final CircuitBreaker.Metrics metrics = cbA.getMetrics();
+        final CircuitBreakerConfig config = cbA.getCircuitBreakerConfig();
+        assertThat(cbDetailsA.getFailureRate()).isEqualTo(metrics.getFailureRate() + "%");
+        assertThat(cbDetailsA.getFailureRateThreshold()).isEqualTo(config.getFailureRateThreshold() + "%");
+        assertThat(cbDetailsA.getSlowCallRate()).isEqualTo(metrics.getSlowCallRate() + "%");
+        assertThat(cbDetailsA.getSlowCallRateThreshold()).isEqualTo(config.getSlowCallRateThreshold() + "%");
+        assertThat(cbDetailsA.getBufferedCalls()).isEqualTo(metrics.getNumberOfBufferedCalls());
+        assertThat(cbDetailsA.getSlowCalls()).isEqualTo(metrics.getNumberOfSlowCalls());
+        assertThat(cbDetailsA.getSlowFailedCalls()).isEqualTo(metrics.getNumberOfSlowFailedCalls());
+        assertThat(cbDetailsA.getFailedCalls()).isEqualTo(metrics.getNumberOfFailedCalls());
+        assertThat(cbDetailsA.getNotPermittedCalls()).isEqualTo(metrics.getNumberOfNotPermittedCalls());
+        assertThat(cbDetailsA.getState()).isEqualTo(cbA.getState());
     }
 
 }
