@@ -18,12 +18,21 @@
  */
 package io.github.resilience4j.hedge;
 
-
-import io.github.resilience4j.hedge.internal.NamingThreadFactory;
+import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.ContextPropagator;
+import io.github.resilience4j.core.lang.Nullable;
 
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 
 /**
  * HedgeConfig manages the configuration of Hedges
@@ -33,22 +42,24 @@ public class HedgeConfig implements Serializable {
     private static final long serialVersionUID = 2203981592465761602L;
 
     private static final String HEDGE_DURATION_MUST_NOT_BE_NULL = "HedgeDuration must not be null";
-    private final MetricsType metricsType;
+    private final int concurrentHedges;
+    private final HedgeDurationSupplierType durationSupplierType;
     private final boolean shouldUseFactorAsPercentage;
     private final int hedgeTimeFactor;
     private final boolean shouldMeasureErrors;
     private final int windowSize;
     private final Duration cutoff;
-    private final ScheduledExecutorService hedgeExecutor;
+    private final ContextPropagator[] contextPropagators;
 
-    private HedgeConfig(MetricsType metricsType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff, ScheduledExecutorService executor) {
-        this.metricsType = metricsType;
+    private HedgeConfig(int concurrentHedges, HedgeDurationSupplierType durationSupplierType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff, ContextPropagator[] propagators) {
+        this.concurrentHedges = concurrentHedges;
+        this.durationSupplierType = durationSupplierType;
         this.shouldUseFactorAsPercentage = shouldUseFactorAsPercentage;
         this.hedgeTimeFactor = hedgeTimeFactor;
         this.shouldMeasureErrors = shouldMeasureErrors;
         this.windowSize = windowSize;
         this.cutoff = cutoff;
-        this.hedgeExecutor = executor;
+        this.contextPropagators = propagators;
     }
 
     /**
@@ -73,17 +84,12 @@ public class HedgeConfig implements Serializable {
         return new Builder().build();
     }
 
-    public HedgeMetrics newMetrics() {
-        if (metricsType == MetricsType.PRECONFIGURED) {
-            return HedgeMetrics.ofPreconfigured(cutoff);
-        } else {
-            return HedgeMetrics.ofAveragePlus(shouldUseFactorAsPercentage, hedgeTimeFactor,
-                shouldMeasureErrors, windowSize);
-        }
+    public ContextPropagator[] getContextPropagators() {
+        return contextPropagators;
     }
 
-    public ScheduledExecutorService getHedgeExecutor() {
-        return hedgeExecutor;
+    public int getConcurrentHedges() {
+        return concurrentHedges;
     }
 
     @Override
@@ -97,35 +103,56 @@ public class HedgeConfig implements Serializable {
             "}";
     }
 
+    public HedgeDurationSupplierType getDurationSupplier() {
+        return durationSupplierType;
+    }
 
-    public enum MetricsType {
+    public boolean isShouldUseFactorAsPercentage() {
+        return shouldUseFactorAsPercentage;
+    }
+
+    public int getHedgeTimeFactor() {
+        return hedgeTimeFactor;
+    }
+
+    public boolean isShouldMeasureErrors() {
+        return shouldMeasureErrors;
+    }
+
+    public int getWindowSize() {
+        return windowSize;
+    }
+
+    public Duration getCutoff() {
+        return cutoff;
+    }
+
+    public enum HedgeDurationSupplierType {
         PRECONFIGURED, AVERAGE_PLUS
     }
 
     public static class Builder {
 
-        private MetricsType metricsType = MetricsType.PRECONFIGURED;
+        private HedgeDurationSupplierType hedgeDurationSupplierType = HedgeDurationSupplierType.PRECONFIGURED;
         private boolean shouldUseFactorAsPercentage = false;
         private int hedgeTimeFactor = 0;
         private boolean shouldMeasureErrors = true;
         private int windowSize = 100;
         private Duration cutoff;
-        private RejectedExecutionHandler rejectionHandler = new ThreadPoolExecutor.DiscardOldestPolicy();
         private int concurrentHedges = 10;
-        private String threadsNamed = "HedgeThreadPool";
-        private ScheduledExecutorService providedExecutor;
+        private Class<? extends ContextPropagator>[] contextPropagatorClasses = new Class[0];
+        private List<? extends ContextPropagator> contextPropagators = new ArrayList<>();
 
         public Builder() {
         }
 
         public Builder(HedgeConfig baseConfig) {
-            this.metricsType = baseConfig.metricsType;
             this.shouldUseFactorAsPercentage = baseConfig.shouldUseFactorAsPercentage;
             this.hedgeTimeFactor = baseConfig.hedgeTimeFactor;
             this.shouldMeasureErrors = baseConfig.shouldMeasureErrors;
             this.windowSize = baseConfig.windowSize;
             this.cutoff = baseConfig.cutoff;
-            this.providedExecutor = baseConfig.hedgeExecutor;
+            this.concurrentHedges = baseConfig.concurrentHedges;
         }
 
         public static Builder fromConfig(HedgeConfig baseConfig) {
@@ -138,34 +165,41 @@ public class HedgeConfig implements Serializable {
          * @return the HedgeConfig
          */
         public HedgeConfig build() {
-            if (providedExecutor == null) {
-                providedExecutor = new ScheduledThreadPoolExecutor(
-                    concurrentHedges,
-                    new NamingThreadFactory(threadsNamed),
-                    rejectionHandler);
-            }
+            final List<ContextPropagator> propagators = new ArrayList<>();
 
+            if (contextPropagatorClasses.length > 0) {
+                propagators.addAll(stream(contextPropagatorClasses)
+                    .map(ClassUtils::instantiateClassDefConstructor)
+                    .collect(toList()));
+            }
+            //setting bean of type context propagator overrides the class type.
+            if (!contextPropagators.isEmpty()) {
+                propagators.addAll(this.contextPropagators);
+            }
+            ContextPropagator[] propArray = new ContextPropagator[propagators.size()];
+            propagators.toArray(propArray);
             return new HedgeConfig(
-                metricsType,
+                concurrentHedges,
+                hedgeDurationSupplierType,
                 shouldUseFactorAsPercentage,
                 hedgeTimeFactor,
                 shouldMeasureErrors,
                 windowSize,
                 cutoff,
-                providedExecutor
+                propArray
             );
         }
 
-        public Builder averagePlusPercentMetrics(int hedgeTimeFactor, boolean shouldMeasureErrors) {
-            this.metricsType = MetricsType.AVERAGE_PLUS;
+        public Builder averagePlusPercentageDuration(int percentageAsInteger, boolean shouldMeasureErrors) {
+            this.hedgeDurationSupplierType = HedgeDurationSupplierType.AVERAGE_PLUS;
             this.shouldUseFactorAsPercentage = true;
-            this.hedgeTimeFactor = hedgeTimeFactor;
+            this.hedgeTimeFactor = percentageAsInteger;
             this.shouldMeasureErrors = shouldMeasureErrors;
             return this;
         }
 
-        public Builder averagePlusAmountMetrics(int amount, boolean shouldMeasureErrors, int windowSize) {
-            this.metricsType = MetricsType.AVERAGE_PLUS;
+        public Builder averagePlusAmountDuration(int amount, boolean shouldMeasureErrors, int windowSize) {
+            this.hedgeDurationSupplierType = HedgeDurationSupplierType.AVERAGE_PLUS;
             this.shouldUseFactorAsPercentage = false;
             this.hedgeTimeFactor = amount;
             this.shouldMeasureErrors = shouldMeasureErrors;
@@ -173,24 +207,38 @@ public class HedgeConfig implements Serializable {
             return this;
         }
 
-        public Builder preconfiguredMetrics(Duration cutoff) {
+        public Builder preconfiguredDuration(Duration cutoff) {
             if (cutoff == null) {
                 throw new NullPointerException(HEDGE_DURATION_MUST_NOT_BE_NULL);
             }
-            this.metricsType = MetricsType.PRECONFIGURED;
+            this.hedgeDurationSupplierType = HedgeDurationSupplierType.PRECONFIGURED;
             this.cutoff = cutoff;
             return this;
         }
 
-        public Builder withProvidedExecutor(ScheduledExecutorService executor) {
-            this.providedExecutor = executor;
+        /**
+         * Configures the context propagator classes.
+         *
+         * @param contextPropagatorClasses the context propagators to pass to the {@link io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor}
+         * @return the HedgeConfig.Builder
+         */
+        public final Builder withContextPropagators(
+            @Nullable Class<? extends ContextPropagator>... contextPropagatorClasses) {
+            this.contextPropagatorClasses = contextPropagatorClasses != null
+                ? contextPropagatorClasses
+                : new Class[0];
             return this;
         }
 
-        public Builder withConfiguredExecutor(int concurrentHedges, String threadsNamed, RejectedExecutionHandler rejectionHandler) {
+        public final Builder withContextPropagators(ContextPropagator... contextPropagators) {
+            this.contextPropagators = contextPropagators != null ?
+                Arrays.stream(contextPropagators).collect(toList()) :
+                new ArrayList<>();
+            return this;
+        }
+
+        public Builder withMaxConcurrency(int concurrentHedges) {
             this.concurrentHedges = concurrentHedges;
-            this.threadsNamed = threadsNamed;
-            this.rejectionHandler = rejectionHandler;
             return this;
         }
     }

@@ -16,20 +16,20 @@
  *
  *
  */
-package io.github.resilience4j.hedge.metrics;
+package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
 import io.github.resilience4j.core.metrics.Metrics;
-import io.github.resilience4j.hedge.HedgeMetrics;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Supports metrics based on average response time plus a factor
+ * Listens to incoming durations, computes an average and supplies the average as a  Duration on demand,
+ * using a sliding window.
  */
-public class AveragePlusMetrics implements HedgeMetrics {
+public class AverageDurationSupplier implements HedgeDurationSupplier {
 
     final boolean shouldUseFactorAsPercentage;
     final boolean shouldMeasureErrors;
@@ -42,7 +42,7 @@ public class AveragePlusMetrics implements HedgeMetrics {
      * @param shouldMeasureErrors         whether to measure errors in the average
      * @param windowSize                  only fixed size window is supported.
      */
-    public AveragePlusMetrics(boolean shouldUseFactorAsPercentage, int factor, boolean shouldMeasureErrors, int windowSize) {
+    public AverageDurationSupplier(boolean shouldUseFactorAsPercentage, int factor, boolean shouldMeasureErrors, int windowSize) {
         this.shouldUseFactorAsPercentage = shouldUseFactorAsPercentage;
         this.factor = factor;
         this.shouldMeasureErrors = shouldMeasureErrors;
@@ -50,7 +50,7 @@ public class AveragePlusMetrics implements HedgeMetrics {
     }
 
     @Override
-    public Duration getResponseTimeCutoff() {
+    public Duration get() {
         final Duration result;
         if (factor == 0) {
             result = getAverageResponseTime();

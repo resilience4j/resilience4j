@@ -16,32 +16,31 @@
  *
  *
  */
-package io.github.resilience4j.hedge.metrics;
+package io.github.resilience4j.hedge.internal;
 
-import io.github.resilience4j.hedge.HedgeMetrics;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 
 import java.time.Duration;
 
 /**
- * Handles preconfigured metrics advice. When initialized with a duration, the hedge always waits that duration before
+ * Returns a fixed Duration based on the initializing Duration. When initialized with a duration, the hedge always waits that duration before
  * beginning of the hedged execution
  */
-public class PreconfiguredCutoffMetrics implements HedgeMetrics {
+public class PreconfiguredDurationSupplier implements HedgeDurationSupplier {
 
     private final Duration cutoff;
 
     /**
-     * Creates a metrics that will wait a preconfigured amount of time before hedging
+     * Creates a Duration Supplier that always returns the passed duration.
      *
      * @param cutoff the Duration of the wait before executing hedges.
      */
-    public PreconfiguredCutoffMetrics(Duration cutoff) {
+    public PreconfiguredDurationSupplier(Duration cutoff) {
         this.cutoff = cutoff;
     }
 
     @Override
-    public Duration getResponseTimeCutoff() {
+    public Duration get() {
         return cutoff;
     }
 

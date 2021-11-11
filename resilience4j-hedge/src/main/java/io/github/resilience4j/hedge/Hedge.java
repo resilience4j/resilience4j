@@ -20,6 +20,7 @@ package io.github.resilience4j.hedge;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.hedge.event.*;
+import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 import io.github.resilience4j.hedge.internal.HedgeImpl;
 
 import java.time.Duration;
@@ -34,9 +35,6 @@ import java.util.function.Supplier;
  * Set the size limit on your scheduled thread pool executor to limit the number of hedged requests actively running at
  * the same time. You can adjust your rejected execution handler to the desired behavior, such as
  * ThreadPoolExecutor.AbortPolicy.
- * <p>
- * Hedge metrics do not include metrics on calls rejected by the executor. These situations are expected to result in
- * completion of the primary call.
  * <p>
  * Good candidates for Hedged calls include side-effect-free calls, calls which may have a long response time tail. Do
  * not hedge non-idempotent inserts or other similar calls.
@@ -110,7 +108,7 @@ public interface Hedge {
      */
     static Hedge of(Duration hedgeDuration) {
         HedgeConfig hedgeConfig = new HedgeConfig.Builder()
-            .preconfiguredMetrics(hedgeDuration)
+            .preconfiguredDuration(hedgeDuration)
             .build();
         return new HedgeImpl(DEFAULT_NAME, hedgeConfig);
     }
@@ -124,17 +122,6 @@ public interface Hedge {
      * @return a CompletableFuture which is resolved by the Hedge
      */
     <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService executorService);
-
-    /**
-     * Creates a CompletableFuture that is enhanced by a Hedge.
-     *
-     * @param callable        the Hedge
-     * @param primaryExecutor the original future supplier
-     * @param hedgedExecutor  the original future supplier
-     * @param <T>             the type of results supplied by the supplier
-     * @return a CompletableFuture which is enhanced by the Hedge
-     */
-    <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService primaryExecutor, ScheduledExecutorService hedgedExecutor);
 
     String getName();
 
@@ -155,18 +142,6 @@ public interface Hedge {
     /**
      * Creates a CompletionStage supplier which is enhanced by a Hedge
      *
-     * @param <T>            the type of the returned CompletionStage's result
-     * @param <F>            the CompletionStage type supplied
-     * @param supplier       the original CompletionStage supplier
-     * @param hedgedExecutor the ScheduledExecutorService used to attempt the hedged requests
-     * @return a CompletionStage supplier which is decorated by a Hedge
-     */
-    <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
-        Supplier<F> supplier, ScheduledExecutorService hedgedExecutor);
-
-    /**
-     * Creates a CompletionStage supplier which is enhanced by a Hedge
-     *
      * @param <T>      the type of the returned CompletionStage's result
      * @param <F>      the CompletionStage type supplied
      * @param supplier the original CompletionStage supplier
@@ -176,6 +151,30 @@ public interface Hedge {
         Supplier<F> supplier);
 
     /**
+     * Get the Metrics of this Hedge.
+     *
+     * @return the Metrics of this Hedge
+     */
+    Metrics getMetrics();
+
+
+    interface Metrics {
+
+        /**
+         * Returns the number of parallel executions this bulkhead can support at this point in
+         * time.
+         *
+         * @return remaining bulkhead depth
+         */
+        Duration getCurrentHedgeDelay();
+        long getPrimarySuccessCount();
+        long getSecondarySuccessCount();
+        long getPrimaryFailureCount();
+        long getSecondaryFailureCount();
+        int getSecondaryPoolActiveCount();
+    }
+
+    /**
      * Returns an EventPublisher which can be used to register event consumers.
      *
      * @return an EventPublisher
@@ -183,11 +182,18 @@ public interface Hedge {
     EventPublisher getEventPublisher();
 
     /**
-     * Returns HedgeMetrics which are used to determine whether to hedge
+     * Returns HedgeDurationSupplier which are used to determine whether to hedge.
      *
-     * @return current Hedge's metrics
+     * @return current Hedge's Duration Supplier
      */
-    HedgeMetrics getMetrics();
+    HedgeDurationSupplier getDurationSupplier();
+
+    /**
+     * Returns the current duration that the next hedged call would be expected to wait before hedging.
+     *
+     * @return current Hedge's Duration
+     */
+    Duration getDuration();
 
     /**
      * Records a successful call.
@@ -205,7 +211,7 @@ public interface Hedge {
      * @param duration the duration the hedge took to succeed
      *                 This method must be invoked when a hedged call was successful.
      */
-    void onHedgedSuccess(Duration duration);
+    void onSecondarySuccess(Duration duration);
 
     /**
      * Records a failed call. This method must be invoked when a call failed.
@@ -214,7 +220,7 @@ public interface Hedge {
      * @param throwable The throwable which must be recorded
      */
 
-    //make configurable to include errors in metrics (same with hedged)
+    //make configurable to include errors in calculations (same with hedged)
     void onPrimaryFailure(Duration duration, Throwable throwable);
 
     /**
@@ -223,19 +229,19 @@ public interface Hedge {
      * @param duration  the duration the hedge took to fail
      * @param throwable The throwable which must be recorded
      */
-    void onHedgedFailure(Duration duration, Throwable throwable);
+    void onSecondaryFailure(Duration duration, Throwable throwable);
 
     /**
      * An EventPublisher which can be used to register event consumers.
      */
     interface EventPublisher extends io.github.resilience4j.core.EventPublisher<HedgeEvent> {
 
-        EventPublisher onPrimarySuccess(EventConsumer<PrimaryOnSuccessEvent> eventConsumer);
+        EventPublisher onPrimarySuccess(EventConsumer<HedgeOnPrimarySuccessEvent> eventConsumer);
 
-        EventPublisher onPrimaryFailure(EventConsumer<PrimaryOnFailureEvent> eventConsumer);
+        EventPublisher onPrimaryFailure(EventConsumer<HedgeOnPrimaryFailureEvent> eventConsumer);
 
-        EventPublisher onHedgeSuccess(EventConsumer<HedgeOnSuccessEvent> eventConsumer);
+        EventPublisher onSecondarySuccess(EventConsumer<HedgeOnSecondarySuccessEvent> eventConsumer);
 
-        EventPublisher onHedgeFailure(EventConsumer<HedgeOnFailureEvent> eventConsumer);
+        EventPublisher onSecondaryFailure(EventConsumer<HedgeOnSecondaryFailureEvent> eventConsumer);
     }
 }

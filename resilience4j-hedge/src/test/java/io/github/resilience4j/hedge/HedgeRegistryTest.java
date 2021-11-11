@@ -49,7 +49,7 @@ public class HedgeRegistryTest {
     @Test
     public void testCreateWithCustomConfig() {
         HedgeConfig config = HedgeConfig.custom()
-            .preconfiguredMetrics(Duration.ofMillis(500))
+            .preconfiguredDuration(Duration.ofMillis(500))
             .build();
 
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().withDefaultConfig(config).build();

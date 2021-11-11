@@ -20,7 +20,6 @@ package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
-import io.github.resilience4j.hedge.metrics.PreconfiguredCutoffMetrics;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -37,7 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 public class HedgeImplTest {
 
     private static final String NAME = "name";
-    private final HedgeConfig hedgeConfig = HedgeConfig.custom().preconfiguredMetrics(Duration.ZERO).build();
+    private final HedgeConfig hedgeConfig = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
     @Mock
     private final HedgeEventProcessor eventProcessor = new HedgeEventProcessor();
     @InjectMocks
@@ -65,8 +64,8 @@ public class HedgeImplTest {
     }
 
     @Test
-    public void shouldDefaultMetrics() {
-        then(hedge.getMetrics()).isOfAnyClassIn(PreconfiguredCutoffMetrics.class);
+    public void shouldDefaultToPreconfiguredSupplier() {
+        then(hedge.getDurationSupplier()).isOfAnyClassIn(PreconfiguredDurationSupplier.class);
     }
 
     @Test
@@ -81,8 +80,8 @@ public class HedgeImplTest {
     public void shouldNotPublishWithoutConsumers() {
         Mockito.doThrow(new RuntimeException("fail")).when(eventProcessor).consumeEvent(any());
         hedge.onPrimarySuccess(Duration.ofMillis(1000));
-        hedge.onHedgedSuccess(Duration.ofMillis(1000));
+        hedge.onSecondarySuccess(Duration.ofMillis(1000));
         hedge.onPrimaryFailure(Duration.ofMillis(1000), new Throwable());
-        hedge.onHedgedFailure(Duration.ofMillis(1000), new Throwable());
+        hedge.onSecondaryFailure(Duration.ofMillis(1000), new Throwable());
     }
 }

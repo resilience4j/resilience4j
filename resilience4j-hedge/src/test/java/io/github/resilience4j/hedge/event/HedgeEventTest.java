@@ -35,9 +35,9 @@ public class HedgeEventTest {
 
     @Test
     public void shouldCreateCorrectHedgeSuccess() {
-        HedgeOnSuccessEvent event = new HedgeOnSuccessEvent(HEDGE_NAME, ONE_SECOND);
+        HedgeOnSecondarySuccessEvent event = new HedgeOnSecondarySuccessEvent(HEDGE_NAME, ONE_SECOND);
 
-        then(event.getEventType()).isEqualTo(HedgeEvent.Type.HEDGE_SUCCESS);
+        then(event.getEventType()).isEqualTo(HedgeEvent.Type.SECONDARY_SUCCESS);
         then(event.getHedgeName()).isEqualTo(HEDGE_NAME);
         then(event.getDuration()).isEqualTo(ONE_SECOND);
         then(event.toString()).contains(SUCCESSFUL_HEDGE_TEXT);
@@ -45,9 +45,9 @@ public class HedgeEventTest {
 
     @Test
     public void shouldCreateCorrectHedgeFailure() {
-        HedgeOnFailureEvent event = new HedgeOnFailureEvent(HEDGE_NAME, ONE_SECOND, THROWABLE);
+        HedgeOnSecondaryFailureEvent event = new HedgeOnSecondaryFailureEvent(HEDGE_NAME, ONE_SECOND, THROWABLE);
 
-        then(event.getEventType()).isEqualTo(HedgeEvent.Type.HEDGE_FAILURE);
+        then(event.getEventType()).isEqualTo(HedgeEvent.Type.SECONDARY_FAILURE);
         then(event.getHedgeName()).isEqualTo(HEDGE_NAME);
         then(event.getDuration()).isEqualTo(ONE_SECOND);
         then(event.getThrowable()).isEqualTo(THROWABLE);
@@ -56,7 +56,7 @@ public class HedgeEventTest {
 
     @Test
     public void shouldCreateCorrectPrimarySuccess() {
-        PrimaryOnSuccessEvent event = new PrimaryOnSuccessEvent(HEDGE_NAME, ONE_SECOND);
+        HedgeOnPrimarySuccessEvent event = new HedgeOnPrimarySuccessEvent(HEDGE_NAME, ONE_SECOND);
 
         then(event.getEventType()).isEqualTo(HedgeEvent.Type.PRIMARY_SUCCESS);
         then(event.getHedgeName()).isEqualTo(HEDGE_NAME);
@@ -66,7 +66,7 @@ public class HedgeEventTest {
 
     @Test
     public void shouldCreateCorrectPrimaryFailure() {
-        PrimaryOnFailureEvent event = new PrimaryOnFailureEvent(HEDGE_NAME, ONE_SECOND, THROWABLE);
+        HedgeOnPrimaryFailureEvent event = new HedgeOnPrimaryFailureEvent(HEDGE_NAME, ONE_SECOND, THROWABLE);
 
         then(event.getEventType()).isEqualTo(HedgeEvent.Type.PRIMARY_FAILURE);
         then(event.getHedgeName()).isEqualTo(HEDGE_NAME);

@@ -37,7 +37,7 @@ public interface HedgeEvent {
     enum Type {
         PRIMARY_SUCCESS,
         PRIMARY_FAILURE,
-        HEDGE_SUCCESS,
-        HEDGE_FAILURE
+        SECONDARY_SUCCESS,
+        SECONDARY_FAILURE
     }
 }

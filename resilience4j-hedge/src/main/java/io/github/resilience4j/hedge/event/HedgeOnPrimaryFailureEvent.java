@@ -20,11 +20,11 @@ package io.github.resilience4j.hedge.event;
 
 import java.time.Duration;
 
-public class PrimaryOnFailureEvent extends AbstractHedgeEvent {
+public class HedgeOnPrimaryFailureEvent extends AbstractHedgeEvent {
 
     private final Throwable throwable;
 
-    public PrimaryOnFailureEvent(String hedgeName, Duration duration, Throwable throwable) {
+    public HedgeOnPrimaryFailureEvent(String hedgeName, Duration duration, Throwable throwable) {
         super(hedgeName, Type.PRIMARY_FAILURE, duration);
         this.throwable = throwable;
     }

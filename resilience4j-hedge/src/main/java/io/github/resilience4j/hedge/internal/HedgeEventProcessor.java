@@ -34,29 +34,29 @@ public class HedgeEventProcessor extends EventProcessor<HedgeEvent> implements
 
     @Override
     public Hedge.EventPublisher onPrimarySuccess(
-        EventConsumer<PrimaryOnSuccessEvent> onSuccessEventConsumer) {
-        registerConsumer(PrimaryOnSuccessEvent.class.getName(), onSuccessEventConsumer);
+        EventConsumer<HedgeOnPrimarySuccessEvent> onSuccessEventConsumer) {
+        registerConsumer(HedgeOnPrimarySuccessEvent.class.getName(), onSuccessEventConsumer);
         return this;
     }
 
     @Override
     public Hedge.EventPublisher onPrimaryFailure(
-        EventConsumer<PrimaryOnFailureEvent> onFailureEventConsumer) {
-        registerConsumer(PrimaryOnFailureEvent.class.getName(), onFailureEventConsumer);
+        EventConsumer<HedgeOnPrimaryFailureEvent> onFailureEventConsumer) {
+        registerConsumer(HedgeOnPrimaryFailureEvent.class.getName(), onFailureEventConsumer);
         return this;
     }
 
     @Override
-    public Hedge.EventPublisher onHedgeSuccess(
-        EventConsumer<HedgeOnSuccessEvent> onHedgeSuccessEventConsumer) {
-        registerConsumer(HedgeOnSuccessEvent.class.getName(), onHedgeSuccessEventConsumer);
+    public Hedge.EventPublisher onSecondarySuccess(
+        EventConsumer<HedgeOnSecondarySuccessEvent> onHedgeSuccessEventConsumer) {
+        registerConsumer(HedgeOnSecondarySuccessEvent.class.getName(), onHedgeSuccessEventConsumer);
         return this;
     }
 
     @Override
-    public Hedge.EventPublisher onHedgeFailure(
-        EventConsumer<HedgeOnFailureEvent> onFailureEventConsumer) {
-        registerConsumer(HedgeOnFailureEvent.class.getName(), onFailureEventConsumer);
+    public Hedge.EventPublisher onSecondaryFailure(
+        EventConsumer<HedgeOnSecondaryFailureEvent> onFailureEventConsumer) {
+        registerConsumer(HedgeOnSecondaryFailureEvent.class.getName(), onFailureEventConsumer);
         return this;
     }
 }

@@ -20,9 +20,9 @@ package io.github.resilience4j.hedge.event;
 
 import java.time.Duration;
 
-public class PrimaryOnSuccessEvent extends AbstractHedgeEvent {
+public class HedgeOnPrimarySuccessEvent extends AbstractHedgeEvent {
 
-    public PrimaryOnSuccessEvent(String hedgeName, Duration duration) {
+    public HedgeOnPrimarySuccessEvent(String hedgeName, Duration duration) {
         super(hedgeName, Type.PRIMARY_SUCCESS, duration);
     }
 

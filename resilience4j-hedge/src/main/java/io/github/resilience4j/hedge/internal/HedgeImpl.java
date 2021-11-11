@@ -18,9 +18,9 @@
  */
 package io.github.resilience4j.hedge.internal;
 
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
-import io.github.resilience4j.hedge.HedgeMetrics;
 import io.github.resilience4j.hedge.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
@@ -41,7 +43,9 @@ public class HedgeImpl implements Hedge {
     private final Map<String, String> tags;
     private final HedgeConfig hedgeConfig;
     private final HedgeEventProcessor eventProcessor;
+    private final HedgeDurationSupplier durationSupplier;
     private final HedgeMetrics metrics;
+    private final ContextAwareScheduledThreadPoolExecutor configuredHedgeExecutor;
 
     public HedgeImpl(String name, HedgeConfig hedgeConfig) {
         this(name, hedgeConfig, emptyMap());
@@ -53,15 +57,27 @@ public class HedgeImpl implements Hedge {
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.hedgeConfig = hedgeConfig;
         this.eventProcessor = new HedgeEventProcessor();
-        this.metrics = hedgeConfig.newMetrics();
+        this.durationSupplier = HedgeDurationSupplier.fromConfig(hedgeConfig);
+        this.metrics = new HedgeMetrics();
+        this.configuredHedgeExecutor =
+            ContextAwareScheduledThreadPoolExecutor
+                .newScheduledThreadPool()
+                .corePoolSize(hedgeConfig.getConcurrentHedges())
+                .contextPropagators(hedgeConfig.getContextPropagators())
+                .build();
     }
 
     @Override
-    public HedgeMetrics getMetrics() {
-        return metrics;
+    public HedgeDurationSupplier getDurationSupplier() {
+        return durationSupplier;
     }
 
-    private <T> CompletableFuture<T> callableFuture(Callable<T> callable, ExecutorService executorService) {
+    @Override
+    public Duration getDuration() {
+        return durationSupplier.get();
+    }
+
+    private static <T> CompletableFuture<T> callableFuture(Callable<T> callable, ExecutorService executorService) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return callable.call();
@@ -73,33 +89,23 @@ public class HedgeImpl implements Hedge {
 
     @Override
     public <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService primaryExecutor) {
-        return decorateCompletionStage(() -> callableFuture(callable, primaryExecutor)).get().toCompletableFuture();
-    }
-
-    @Override
-    public <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService primaryExecutor, ScheduledExecutorService hedgedExecutor) {
-        return decorateCompletionStage(() -> callableFuture(callable, primaryExecutor), hedgedExecutor).get().toCompletableFuture();
-    }
-
-    @Override
-    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
-        Supplier<F> supplier) {
-        return decorateCompletionStage(supplier, hedgeConfig.getHedgeExecutor());
+        return decorateCompletionStage(() -> callableFuture(callable, primaryExecutor))
+            .get()
+            .toCompletableFuture();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(
-        Supplier<F> supplier, ScheduledExecutorService hedgeExecutor) {
+    public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier) {
         return () -> {
             long start = System.nanoTime();
             CompletableFuture<HedgeResult<T>> supplied = supplier.get().toCompletableFuture()
-                .handle((t, throwable) -> HedgeResult.of(t, true, throwable != null, throwable));
+                .handle((t, throwable) -> HedgeResult.of(t, true, Optional.ofNullable(throwable)));
             CompletableFuture<T> timedCompletable = new CompletableFuture<>();
-            ScheduledFuture<Boolean> sf = hedgeExecutor.schedule(() -> timedCompletable.complete(null), metrics.getResponseTimeCutoff().toMillis(), TimeUnit.MILLISECONDS);
             CompletableFuture<HedgeResult<T>> hedged = timedCompletable
                 .thenCompose(t -> supplier.get())
-                .handle((t, throwable) -> HedgeResult.of(t, false, throwable != null, throwable));
+                .handle((t, throwable) -> HedgeResult.of(t, false, Optional.ofNullable(throwable)));
+            ScheduledFuture<Boolean> sf = configuredHedgeExecutor.schedule(() -> timedCompletable.complete(null), durationSupplier.get().toNanos(), TimeUnit.NANOSECONDS);
             return CompletableFuture.anyOf(hedged, supplied)
                 .thenApply(s -> {
                     HedgeResult<T> t = (HedgeResult<T>) s;
@@ -107,19 +113,19 @@ public class HedgeImpl implements Hedge {
                     if (t.fromPrimary) {
                         sf.cancel(true);
                         hedged.cancel(false);
-                        if (t.failed) {
-                            onPrimaryFailure(Duration.ofNanos(duration), t.throwable);
-                            throw (RuntimeException) t.throwable;
+                        if (t.throwable.isPresent()) {
+                            onPrimaryFailure(Duration.ofNanos(duration), t.throwable.get());
+                            throw (RuntimeException) t.throwable.get();
                         } else {
                             onPrimarySuccess(Duration.ofNanos(duration));
                         }
                     } else {
                         supplied.cancel(false);
-                        if (t.failed) {
-                            onHedgedFailure(Duration.ofNanos(duration), t.throwable);
-                            throw (RuntimeException) t.throwable;
+                        if (t.throwable.isPresent()) {
+                            onSecondaryFailure(Duration.ofNanos(duration), t.throwable.get());
+                            throw (RuntimeException) t.throwable.get();
                         } else {
-                            onHedgedSuccess(Duration.ofNanos(duration));
+                            onSecondarySuccess(Duration.ofNanos(duration));
                         }
                     }
                     return t.value;
@@ -130,6 +136,49 @@ public class HedgeImpl implements Hedge {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public Metrics getMetrics() {
+        return metrics;
+    }
+
+    private final class HedgeMetrics implements Metrics {
+
+        private AtomicLong primarySuccess = new AtomicLong(0);
+        private AtomicLong primaryFailure = new AtomicLong(0);
+        private AtomicLong secondarySuccess = new AtomicLong(0);
+        private AtomicLong secondaryFailure = new AtomicLong(0);
+
+        @Override
+        public Duration getCurrentHedgeDelay() {
+            return getDuration();
+        }
+
+        @Override
+        public long getPrimarySuccessCount() {
+            return primarySuccess.get();
+        }
+
+        @Override
+        public long getSecondarySuccessCount() {
+            return secondarySuccess.get();
+        }
+
+        @Override
+        public long getPrimaryFailureCount() {
+            return primaryFailure.get();
+        }
+
+        @Override
+        public long getSecondaryFailureCount() {
+            return secondaryFailure.get();
+        }
+
+        @Override
+        public int getSecondaryPoolActiveCount() {
+            return configuredHedgeExecutor.getActiveCount();
+        }
     }
 
     @Override
@@ -149,33 +198,37 @@ public class HedgeImpl implements Hedge {
 
     @Override
     public void onPrimarySuccess(Duration duration) {
-        metrics.accept(HedgeEvent.Type.PRIMARY_SUCCESS, duration);
+        metrics.primarySuccess.incrementAndGet();
+        durationSupplier.accept(HedgeEvent.Type.PRIMARY_SUCCESS, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new PrimaryOnSuccessEvent(name, duration));
+            publishEvent(new HedgeOnPrimarySuccessEvent(name, duration));
         }
     }
 
     @Override
-    public void onHedgedSuccess(Duration duration) {
-        metrics.accept(HedgeEvent.Type.HEDGE_SUCCESS, duration);
+    public void onSecondarySuccess(Duration duration) {
+        metrics.secondarySuccess.incrementAndGet();
+        durationSupplier.accept(HedgeEvent.Type.SECONDARY_SUCCESS, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new HedgeOnSuccessEvent(name, duration));
+            publishEvent(new HedgeOnSecondarySuccessEvent(name, duration));
         }
     }
 
     @Override
     public void onPrimaryFailure(Duration duration, Throwable throwable) {
-        metrics.accept(HedgeEvent.Type.PRIMARY_FAILURE, duration);
+        metrics.primaryFailure.incrementAndGet();
+        durationSupplier.accept(HedgeEvent.Type.PRIMARY_FAILURE, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new PrimaryOnFailureEvent(name, duration, throwable));
+            publishEvent(new HedgeOnPrimaryFailureEvent(name, duration, throwable));
         }
     }
 
     @Override
-    public void onHedgedFailure(Duration duration, Throwable throwable) {
-        metrics.accept(HedgeEvent.Type.HEDGE_FAILURE, duration);
+    public void onSecondaryFailure(Duration duration, Throwable throwable) {
+        metrics.secondaryFailure.incrementAndGet();
+        durationSupplier.accept(HedgeEvent.Type.SECONDARY_FAILURE, duration);
         if (eventProcessor.hasConsumers()) {
-            publishEvent(new HedgeOnFailureEvent(name, duration, throwable));
+            publishEvent(new HedgeOnSecondaryFailureEvent(name, duration, throwable));
         }
     }
 

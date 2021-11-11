@@ -18,7 +18,8 @@
  */
 package io.github.resilience4j.hedge;
 
-import io.github.resilience4j.hedge.metrics.AveragePlusMetrics;
+import io.github.resilience4j.hedge.internal.AverageDurationSupplier;
+import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -44,7 +45,7 @@ public class HedgeConfigTest {
         exception.expectMessage(HEDGE_DURATION_MUST_NOT_BE_NULL);
 
         HedgeConfig.Builder.fromConfig(HedgeConfig.ofDefaults())
-            .preconfiguredMetrics(null);
+            .preconfiguredDuration(null);
     }
 
     @Test
@@ -61,49 +62,48 @@ public class HedgeConfigTest {
     }
 
     @Test
-    public void testBuilderCreatesPercentMetrics() {
+    public void shouldCreatePercentCutoff() {
         HedgeConfig config = HedgeConfig.custom()
-            .averagePlusPercentMetrics(100, false).build();
+            .averagePlusPercentageDuration(100, false).build();
 
-        then(((AveragePlusMetrics) config.newMetrics())).isInstanceOf(AveragePlusMetrics.class);
+        then(HedgeDurationSupplier.fromConfig(config)).isInstanceOf(AverageDurationSupplier.class);
     }
 
     @Test
-    public void shouldCreateAmountMetrics() {
+    public void shouldCreateAmountCutoff() {
         HedgeConfig config = HedgeConfig.custom()
-            .averagePlusAmountMetrics(200, false, 100).build();
+            .averagePlusAmountDuration(200, false, 100).build();
 
-        HedgeMetrics metrics = config.newMetrics();
+        HedgeDurationSupplier supplier = HedgeDurationSupplier.fromConfig(config);
 
-        then(((AveragePlusMetrics) metrics)).isInstanceOf(AveragePlusMetrics.class);
-        then(((AveragePlusMetrics) metrics).getFactor()).isEqualTo(200);
-        then(((AveragePlusMetrics) metrics).shouldMeasureErrors()).isEqualTo(false);
-        then(((AveragePlusMetrics) metrics).shouldUseFactorAsPercentage()).isEqualTo(false);
+        then(((AverageDurationSupplier) supplier)).isInstanceOf(AverageDurationSupplier.class);
+        then(((AverageDurationSupplier) supplier).getFactor()).isEqualTo(200);
+        then(((AverageDurationSupplier) supplier).shouldMeasureErrors()).isEqualTo(false);
+        then(((AverageDurationSupplier) supplier).shouldUseFactorAsPercentage()).isEqualTo(false);
     }
 
+//    @Test
+//    public void shouldUseProvidedExecutor() {
+//        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+//        HedgeConfig config = HedgeConfig.custom()
+//            .withProvidedExecutor(service)
+//            .build();
+//
+//        then(config.getHedgeExecutor()).isEqualTo(service);
+//    }
 
-    @Test
-    public void shouldUseProvidedExecutor() {
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-        HedgeConfig config = HedgeConfig.custom()
-            .withProvidedExecutor(service)
-            .build();
-
-        then(config.getHedgeExecutor()).isEqualTo(service);
-    }
-
-    @Test
-    public void shouldUseConfiguredExecutor() {
-        HedgeConfig config = HedgeConfig.custom()
-            .withConfiguredExecutor(10, "TEST", new ThreadPoolExecutor.DiscardPolicy())
-            .build();
-
-        then(((ScheduledThreadPoolExecutor) config
-            .getHedgeExecutor())
-            .getThreadFactory()
-            .newThread(() -> {
-            })
-            .getName())
-            .isEqualTo("hedge-TEST-1");
-    }
+//    @Test
+//    public void shouldUseConfiguredExecutor() {
+//        HedgeConfig config = HedgeConfig.custom()
+//            .withConfiguredExecutor(10, "TEST", new ThreadPoolExecutor.DiscardPolicy())
+//            .build();
+//
+//        then(((ScheduledThreadPoolExecutor) config
+//            .getHedgeExecutor())
+//            .getThreadFactory()
+//            .newThread(() -> {
+//            })
+//            .getName())
+//            .isEqualTo("hedge-TEST-1");
+//    }
 }

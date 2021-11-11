@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.hedge.internal;
 
+import java.util.Optional;
+
 /**
  * Encapsulates results from hedging. Hedged calls can be overall successful or failed, and can be provided by either
  * one of the hedged calls or the primary call.
@@ -25,15 +27,13 @@ package io.github.resilience4j.hedge.internal;
  * @param <T> the parameterized type of the underlying object to which this result applies
  */
 public class HedgeResult<T> {
-    public final Throwable throwable;
-    public final boolean failed;
+    public final Optional<Throwable> throwable;
     public final boolean fromPrimary;
     public final T value;
 
-    private HedgeResult(T value, boolean fromPrimary, boolean failed, Throwable throwable) {
+    private HedgeResult(T value, boolean fromPrimary, Optional<Throwable> throwable) {
         this.fromPrimary = fromPrimary;
         this.value = value;
-        this.failed = failed;
         this.throwable = throwable;
     }
 
@@ -42,12 +42,11 @@ public class HedgeResult<T> {
      *
      * @param value       the return value of the call. Undefined for errors.
      * @param fromPrimary whether the return value came from the primary call
-     * @param failed      whether the call failed
-     * @param throwable   the failure that occurred. Undefined for successful calls
+     * @param throwable   an Optional containing any failure that occurred.
      * @param <T>         the type of the underlying return value
      * @return a HedgeResult representing the outcome of the hedging
      */
-    public static <T> io.github.resilience4j.hedge.internal.HedgeResult<T> of(T value, boolean fromPrimary, boolean failed, Throwable throwable) {
-        return new io.github.resilience4j.hedge.internal.HedgeResult<>(value, fromPrimary, failed, throwable);
+    public static <T> HedgeResult<T> of(T value, boolean fromPrimary, Optional<Throwable> throwable) {
+        return new HedgeResult<>(value, fromPrimary, throwable);
     }
 }
