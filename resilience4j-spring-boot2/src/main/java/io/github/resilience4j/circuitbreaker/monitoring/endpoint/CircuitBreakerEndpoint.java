@@ -17,7 +17,9 @@ package io.github.resilience4j.circuitbreaker.monitoring.endpoint;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerDetails;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpointResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerUpdateStateResponse;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.UpdateState;
@@ -27,7 +29,9 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -42,8 +46,9 @@ public class CircuitBreakerEndpoint {
 
     @ReadOperation
     public CircuitBreakerEndpointResponse getAllCircuitBreakers() {
-        List<String> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers().stream()
-            .map(CircuitBreaker::getName).sorted().collect(Collectors.toList());
+        Map<String, CircuitBreakerDetails> circuitBreakers = circuitBreakerRegistry.getAllCircuitBreakers().stream()
+            .sorted(Comparator.comparing(CircuitBreaker::getName))
+            .collect(Collectors.toMap(CircuitBreaker::getName, this::createCircuitBreakerDetails, (v1,v2) -> v1, LinkedHashMap::new));
         return new CircuitBreakerEndpointResponse(circuitBreakers);
     }
 
@@ -75,4 +80,22 @@ public class CircuitBreakerEndpoint {
 
         return circuitBreakerUpdateStateResponse;
     }
+
+    private CircuitBreakerDetails createCircuitBreakerDetails(CircuitBreaker circuitBreaker) {
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        CircuitBreakerConfig config = circuitBreaker.getCircuitBreakerConfig();
+        CircuitBreakerDetails circuitBreakerDetails = new CircuitBreakerDetails();
+        circuitBreakerDetails.setFailureRate(metrics.getFailureRate() + "%");
+        circuitBreakerDetails.setFailureRateThreshold(config.getFailureRateThreshold() + "%");
+        circuitBreakerDetails.setSlowCallRate(metrics.getSlowCallRate() + "%");
+        circuitBreakerDetails.setSlowCallRateThreshold(config.getSlowCallRateThreshold() + "%");
+        circuitBreakerDetails.setBufferedCalls(metrics.getNumberOfBufferedCalls());
+        circuitBreakerDetails.setSlowCalls(metrics.getNumberOfSlowCalls());
+        circuitBreakerDetails.setSlowFailedCalls(metrics.getNumberOfSlowFailedCalls());
+        circuitBreakerDetails.setFailedCalls(metrics.getNumberOfFailedCalls());
+        circuitBreakerDetails.setNotPermittedCalls(metrics.getNumberOfNotPermittedCalls());
+        circuitBreakerDetails.setState(circuitBreaker.getState());
+        return circuitBreakerDetails;
+    }
+
 }
