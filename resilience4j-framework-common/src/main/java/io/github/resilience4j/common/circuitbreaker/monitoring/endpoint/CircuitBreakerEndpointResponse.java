@@ -2,26 +2,26 @@ package io.github.resilience4j.common.circuitbreaker.monitoring.endpoint;
 
 import io.github.resilience4j.core.lang.Nullable;
 
-import java.util.List;
+import java.util.Map;
 
 public class CircuitBreakerEndpointResponse {
 
     @Nullable
-    private List<String> circuitBreakers;
+    private Map<String, CircuitBreakerDetails> circuitBreakers;
 
     public CircuitBreakerEndpointResponse() {
     }
 
-    public CircuitBreakerEndpointResponse(List<String> circuitBreakers) {
+    public CircuitBreakerEndpointResponse(Map<String, CircuitBreakerDetails> circuitBreakers) {
         this.circuitBreakers = circuitBreakers;
     }
 
     @Nullable
-    public List<String> getCircuitBreakers() {
+    public Map<String, CircuitBreakerDetails> getCircuitBreakers() {
         return circuitBreakers;
     }
 
-    public void setCircuitBreakers(List<String> circuitBreakers) {
+    public void setCircuitBreakers(@Nullable Map<String, CircuitBreakerDetails> circuitBreakers) {
         this.circuitBreakers = circuitBreakers;
     }
 }
