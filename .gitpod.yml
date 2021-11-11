@@ -1,9 +1,6 @@
 tasks:
-- init: ./gradlew compileJava
+- init: ./gradlew compileTestJava compileJava
 
 vscode:
   extensions:
-    - redhat.java
-    - vscjava.vscode-java-debug
-    - vscjava.vscode-java-test
-    - pivotal.vscode-spring-boot
+    - vscjava.vscode-java-pack
