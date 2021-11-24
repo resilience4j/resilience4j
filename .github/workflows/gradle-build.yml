@@ -26,7 +26,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Cache SonarCloud packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
