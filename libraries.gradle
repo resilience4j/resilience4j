@@ -14,7 +14,7 @@ ext {
     jcacheVersion = '1.1.0'
     awaitilityVersion = '1.7.0'
     metricsVersion = '4.1.16'
-    vertxVersion = '3.7.0'
+    vertxVersion = '4.2.1'
     aspectjVersion = '1.9.2'
     springVersion = '5.3.2'
     springBoot2Version = '2.4.1'

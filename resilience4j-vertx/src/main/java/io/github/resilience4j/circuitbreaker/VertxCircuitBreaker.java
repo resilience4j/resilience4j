@@ -19,6 +19,7 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -54,32 +55,32 @@ public interface VertxCircuitBreaker {
     static <T> Supplier<Future<T>> decorateFuture(CircuitBreaker circuitBreaker,
         Supplier<Future<T>> supplier) {
         return () -> {
-            final Future<T> future = Future.future();
+            final Promise<T> promise = Promise.promise();
 
             if (!circuitBreaker.tryAcquirePermission()) {
-                future.fail(createCallNotPermittedException(circuitBreaker));
+                promise.fail(createCallNotPermittedException(circuitBreaker));
 
             } else {
                 long start = System.nanoTime();
                 try {
-                    supplier.get().setHandler(result -> {
+                    supplier.get().onComplete(result -> {
                         long durationInNanos = System.nanoTime() - start;
                         if (result.failed()) {
                             circuitBreaker
                                 .onError(durationInNanos, TimeUnit.NANOSECONDS, result.cause());
-                            future.fail(result.cause());
+                            promise.fail(result.cause());
                         } else {
                             circuitBreaker.onResult(durationInNanos, TimeUnit.NANOSECONDS, result);
-                            future.complete(result.result());
+                            promise.complete(result.result());
                         }
                     });
                 } catch (Exception exception) {
                     long durationInNanos = System.nanoTime() - start;
                     circuitBreaker.onError(durationInNanos, TimeUnit.NANOSECONDS, exception);
-                    future.fail(exception);
+                    promise.fail(exception);
                 }
             }
-            return future;
+            return promise.future();
         };
     }
 }
