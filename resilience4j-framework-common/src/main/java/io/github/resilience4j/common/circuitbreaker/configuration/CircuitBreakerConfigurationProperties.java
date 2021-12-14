@@ -154,6 +154,10 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.ignoreException(null);
         }
 
+        if (properties.ignoreExceptionPredicate != null) {
+            buildIgnoreExceptionPredicate(properties, builder);
+        }
+
         if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
                 properties.automaticTransitionFromOpenToHalfOpenEnabled);
@@ -220,6 +224,15 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
             if (predicate != null) {
                 builder.recordException(predicate);
+            }
+        }
+    }
+
+    private void buildIgnoreExceptionPredicate(InstanceProperties properties, Builder builder) {
+        if (properties.getIgnoreExceptionPredicate() != null) {
+            Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getIgnoreExceptionPredicate());
+            if (predicate != null) {
+                builder.ignoreException(predicate);
             }
         }
     }
@@ -297,6 +310,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Class<? extends Throwable>[] recordExceptions;
+
+        @Nullable
+        private Class<Predicate<Throwable>> ignoreExceptionPredicate;
 
         @Nullable
         private Class<? extends Throwable>[] ignoreExceptions;
@@ -500,6 +516,18 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             this.recordExceptions = recordExceptions;
             return this;
         }
+
+        @Nullable
+        public Class<Predicate<Throwable>> getIgnoreExceptionPredicate() {
+            return ignoreExceptionPredicate;
+        }
+
+        public InstanceProperties setIgnoreExceptionPredicate(
+            Class<Predicate<Throwable>> ignoreExceptionPredicate) {
+            this.ignoreExceptionPredicate = ignoreExceptionPredicate;
+            return this;
+        }
+
 
         @Nullable
         public Class<? extends Throwable>[] getIgnoreExceptions() {
