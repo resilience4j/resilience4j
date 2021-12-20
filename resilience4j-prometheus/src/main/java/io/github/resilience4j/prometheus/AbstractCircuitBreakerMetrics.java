@@ -22,10 +22,16 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
 import io.prometheus.client.Histogram;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static io.github.resilience4j.prometheus.LabelNames.NAME;
+import static io.github.resilience4j.prometheus.LabelNames.NAME_AND_KIND;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractCircuitBreakerMetrics extends Collector {
@@ -65,53 +71,70 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
     }
 
     protected List<MetricFamilySamples> collectGaugeSamples(List<CircuitBreaker> circuitBreakers) {
+        Set<String> customTags = circuitBreakers.stream().findFirst().map(circuitBreaker -> circuitBreaker.getTags().keySet()).orElse(emptySet());
+
         GaugeMetricFamily stateFamily = new GaugeMetricFamily(
             names.getStateMetricName(),
             "The state of the circuit breaker:",
-            NAME_AND_STATE
+            Stream.of(NAME_AND_STATE, customTags).flatMap(Collection::stream).collect(Collectors.toList())
         );
         GaugeMetricFamily bufferedCallsFamily = new GaugeMetricFamily(
             names.getBufferedCallsMetricName(),
             "The number of buffered calls",
-            LabelNames.NAME_AND_KIND
+            Stream.of(NAME_AND_KIND, customTags).flatMap(Collection::stream).collect(Collectors.toList())
         );
         GaugeMetricFamily slowCallsFamily = new GaugeMetricFamily(
             names.getSlowCallsMetricName(),
             "The number of slow calls",
-            LabelNames.NAME_AND_KIND
+            Stream.of(NAME_AND_KIND, customTags).flatMap(Collection::stream).collect(Collectors.toList())
         );
 
         GaugeMetricFamily failureRateFamily = new GaugeMetricFamily(
             names.getFailureRateMetricName(),
             "The failure rate",
-            LabelNames.NAME
+            Stream.of(NAME, customTags).flatMap(Collection::stream).collect(Collectors.toList())
         );
 
         GaugeMetricFamily slowCallRateFamily = new GaugeMetricFamily(
             names.getSlowCallRateMetricName(),
             "The slow call rate",
-            LabelNames.NAME
+            Stream.of(NAME, customTags).flatMap(Collection::stream).collect(Collectors.toList())
         );
 
         for (CircuitBreaker circuitBreaker : circuitBreakers) {
             final CircuitBreaker.State[] states = CircuitBreaker.State.values();
             for (CircuitBreaker.State state : states) {
-                stateFamily.addMetric(asList(circuitBreaker.getName(), state.name().toLowerCase()),
+                stateFamily.addMetric(
+                    Stream.concat(
+                        Stream.of(circuitBreaker.getName(), state.name().toLowerCase()), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
                     circuitBreaker.getState() == state ? 1 : 0);
             }
 
-            List<String> nameLabel = Collections.singletonList(circuitBreaker.getName());
             CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL),
+            bufferedCallsFamily.addMetric(
+                Stream.concat(
+                    Stream.of(circuitBreaker.getName(), KIND_SUCCESSFUL), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
                 metrics.getNumberOfSuccessfulCalls());
-            bufferedCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED),
+            bufferedCallsFamily.addMetric(
+                Stream.concat(
+                    Stream.of(circuitBreaker.getName(), KIND_FAILED), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
                 metrics.getNumberOfFailedCalls());
-            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_SUCCESSFUL),
+            slowCallsFamily.addMetric(
+                Stream.concat(
+                    Stream.of(circuitBreaker.getName(), KIND_SUCCESSFUL), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
                 metrics.getNumberOfSlowSuccessfulCalls());
-            slowCallsFamily.addMetric(asList(circuitBreaker.getName(), KIND_FAILED),
+            slowCallsFamily.addMetric(
+                Stream.concat(
+                    Stream.of(circuitBreaker.getName(), KIND_FAILED), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
                 metrics.getNumberOfSlowFailedCalls());
-            failureRateFamily.addMetric(nameLabel, metrics.getFailureRate());
-            slowCallRateFamily.addMetric(nameLabel, metrics.getSlowCallRate());
+            failureRateFamily.addMetric(
+                Stream.concat(
+                    Stream.of(circuitBreaker.getName()), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
+                metrics.getFailureRate());
+            slowCallRateFamily.addMetric(
+                Stream.concat(
+                    Stream.of(circuitBreaker.getName()), circuitBreaker.getTags().values().stream()).collect(Collectors.toList()),
+                metrics.getSlowCallRate());
         }
         return asList(stateFamily, bufferedCallsFamily, slowCallsFamily, failureRateFamily,
             slowCallRateFamily);
