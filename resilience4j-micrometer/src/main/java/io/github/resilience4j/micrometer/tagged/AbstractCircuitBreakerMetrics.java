@@ -93,6 +93,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
             cb -> cb.getMetrics().getFailureRate())
             .description("The failure rate of the circuit breaker")
             .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_FAILED)
             .tags(customTags)
             .register(meterRegistry).getId());
 
@@ -100,6 +101,7 @@ abstract class AbstractCircuitBreakerMetrics extends AbstractMetrics {
             cb -> cb.getMetrics().getSlowCallRate())
             .description("The slow call of the circuit breaker")
             .tag(TagNames.NAME, circuitBreaker.getName())
+            .tag(TagNames.KIND, KIND_FAILED)
             .tags(customTags)
             .register(meterRegistry).getId());
 
