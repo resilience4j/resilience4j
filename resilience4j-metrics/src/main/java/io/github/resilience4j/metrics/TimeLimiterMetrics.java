@@ -25,7 +25,7 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -139,7 +139,7 @@ public class TimeLimiterMetrics implements MetricSet {
      * @param timeLimiter the time limiter
      */
     public static TimeLimiterMetrics ofTimeLimiter(TimeLimiter timeLimiter) {
-        return new TimeLimiterMetrics(List.of(timeLimiter));
+        return new TimeLimiterMetrics(Collections.singletonList(timeLimiter));
     }
 
     @Override

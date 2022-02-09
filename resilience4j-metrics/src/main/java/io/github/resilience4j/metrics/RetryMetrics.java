@@ -7,7 +7,7 @@ import com.codahale.metrics.MetricSet;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -72,7 +72,7 @@ public class RetryMetrics implements MetricSet {
     }
 
     public static RetryMetrics ofRetry(Retry retry) {
-        return new RetryMetrics(List.of(retry));
+        return new RetryMetrics(Collections.singletonList(retry));
     }
 
     @Override
