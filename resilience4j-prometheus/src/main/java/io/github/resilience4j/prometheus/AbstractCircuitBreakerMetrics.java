@@ -22,15 +22,13 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.GaugeMetricFamily;
 import io.prometheus.client.Histogram;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.github.resilience4j.prometheus.LabelNames.NAME;
-import static io.github.resilience4j.prometheus.LabelNames.NAME_AND_KIND;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 
@@ -42,17 +40,21 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
     protected static final String KIND_NOT_PERMITTED = "not_permitted";
 
     protected static final List<String> NAME_AND_STATE = asList("name", "state");
+    protected static final List<String> NAME_AND_KIND = asList("name", "kind");
 
     protected final MetricNames names;
     protected final CollectorRegistry collectorRegistry = new CollectorRegistry(true);
     protected final Histogram callsHistogram;
+    protected final List<String> labelValues;
 
     protected AbstractCircuitBreakerMetrics(MetricNames names, MetricOptions options) {
         this.names = requireNonNull(names);
         requireNonNull(options);
+        String[] labelsKeys = Stream.of(NAME_AND_KIND, options.labels.keySet()).flatMap(Collection::stream).toArray((String[]::new));
+        labelValues = new ArrayList<>(options.labels.values());
         callsHistogram = Histogram
             .build(names.getCallsMetricName(), "Total number of calls by kind")
-            .labelNames("name", "kind")
+            .labelNames(labelsKeys)
             .buckets(options.getBuckets())
             .create().register(collectorRegistry);
     }
@@ -60,13 +62,16 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
     protected void addMetrics(CircuitBreaker circuitBreaker) {
         circuitBreaker.getEventPublisher()
             .onCallNotPermitted(
-                event -> callsHistogram.labels(circuitBreaker.getName(), KIND_NOT_PERMITTED)
+                event -> callsHistogram.labels(Stream.concat(Stream.of(circuitBreaker.getName(), KIND_NOT_PERMITTED), labelValues.stream()).toArray((String[]::new)))
                     .observe(0))
-            .onIgnoredError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_IGNORED)
+            .onIgnoredError(event -> callsHistogram.
+                labels(Stream.concat(Stream.of(circuitBreaker.getName(), KIND_IGNORED), labelValues.stream()).toArray((String[]::new)))
                 .observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
-            .onSuccess(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_SUCCESSFUL)
+            .onSuccess(event -> callsHistogram.
+                labels(Stream.concat(Stream.of(circuitBreaker.getName(), KIND_SUCCESSFUL), labelValues.stream()).toArray((String[]::new)))
                 .observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND))
-            .onError(event -> callsHistogram.labels(circuitBreaker.getName(), KIND_FAILED)
+            .onError(event -> callsHistogram.
+                labels(Stream.concat(Stream.of(circuitBreaker.getName(), KIND_FAILED), labelValues.stream()).toArray((String[]::new)))
                 .observe(event.getElapsedDuration().toNanos() / Collector.NANOSECONDS_PER_SECOND));
     }
 
@@ -157,6 +162,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         private String slowCallsMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS;
         private String failureRateMetricName = DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE;
         private String slowCallRateMetricName = DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE;
+
         private MetricNames() {
         }
 
@@ -300,6 +306,7 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         private static final double[] DEFAULT_BUCKETS = new double[]{.005, .01, .025, .05, .075, .1,
             .25, .5, .75, 1, 2.5, 5, 7.5, 10};
         private double[] buckets = DEFAULT_BUCKETS;
+        private Map<String, String> labels = emptyMap();
 
         private MetricOptions() {
         }
@@ -327,6 +334,13 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
         }
 
         /**
+         * Returns the Histogram labels, defaults to emptyMap.
+         */
+        public Map<String, String> getLabels() {
+            return labels;
+        }
+
+        /**
          * Helps building custom instance of {@link MetricOptions}.
          */
         public static class Builder {
@@ -339,6 +353,14 @@ public abstract class AbstractCircuitBreakerMetrics extends Collector {
              */
             public Builder buckets(double[] buckets) {
                 metricOptions.buckets = requireNonNull(buckets);
+                return this;
+            }
+
+            /**
+             * Overrides the default Histogram labels with a given one.
+             */
+            public Builder labels(Map<String, String> labels) {
+                metricOptions.labels = requireNonNull(labels);
                 return this;
             }
 
