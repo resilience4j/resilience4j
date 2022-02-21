@@ -292,6 +292,7 @@ public class CircuitBreakerMetricsCollectorTest {
     @Test
     public void customLabels() {
         CollectorRegistry registry = new CollectorRegistry();
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         Map<String, String> tags = Map.of("key1", "value1");
 
         CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(
@@ -299,6 +300,7 @@ public class CircuitBreakerMetricsCollectorTest {
             MetricOptions.custom().labels(tags).build(),
             circuitBreakerRegistry).register(registry);
 
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA", tags);
         circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
 
         assertThat(registry.getSampleValue(
