@@ -18,8 +18,12 @@
  */
 package io.github.resilience4j.kotlin
 
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
+import java.util.concurrent.CancellationException
+import kotlin.coroutines.coroutineContext
 
 class CoroutineHelloWorldService {
     var invocationCounter = 0
@@ -39,6 +43,12 @@ class CoroutineHelloWorldService {
         error("test exception")
     }
 
+    suspend fun cancel() {
+        invocationCounter++
+        coroutineContext.cancel(CancellationException("test cancel"))
+        yield() //so CancellationException is thrown
+    }
+
     /**
      * Suspend until a matching [proceed] call.
      */
@@ -51,4 +61,5 @@ class CoroutineHelloWorldService {
      * Allow a call into [wait] to proceed.
      */
     fun proceed() = sync.offer(Unit)
+
 }
