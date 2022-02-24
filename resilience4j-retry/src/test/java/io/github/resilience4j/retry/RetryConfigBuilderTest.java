@@ -23,6 +23,7 @@ import io.github.resilience4j.core.IntervalFunction;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,6 +104,17 @@ public class RetryConfigBuilderTest {
         assertThat(retryConfig).isNotNull();
         assertThat(retryConfig.getIntervalBiFunction()).isNotNull();
         assertThat(retryConfig.getIntervalFunction().apply(1)).isEqualTo(100L);
+    }
+
+    @Test
+    public void testConsumeResultBeforeRetryAttemptCanBeConfigured(){
+        BiConsumer<Integer, String> biConsumer = (attempt, resultObject) -> {};
+        RetryConfig.Builder<String> builder = RetryConfig.custom();
+        RetryConfig retryConfig = builder.consumeResultBeforeRetryAttempt(biConsumer).build();
+
+        assertThat(retryConfig).isNotNull();
+        assertThat(retryConfig.getConsumeResultBeforeRetryAttempt()).isNotNull();
+        assertThat(retryConfig.getConsumeResultBeforeRetryAttempt()).isEqualTo(biConsumer);
     }
 
     @Test

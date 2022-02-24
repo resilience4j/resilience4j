@@ -2,6 +2,7 @@ package io.github.resilience4j.core;
 
 import org.junit.Test;
 
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +19,19 @@ public class ClassUtilsTest {
     public void shouldFailToInstantiatePredicateClass() {
         assertThatThrownBy(
             () -> ClassUtils.instantiatePredicateClass(NoDefaultConstructorPredicate.class))
+            .isInstanceOf(InstantiationException.class)
+            .hasCauseInstanceOf(NoSuchMethodException.class);
+    }
+
+    @Test
+    public void shouldInstantiateBiConsumerClass(){
+        assertThat(ClassUtils.instantiateBiConsumer(PublicBiConsumer.class)).isNotNull();
+    }
+
+    @Test
+    public void shouldFailToInstantiateBiConsumerClassWithoutDefaultConstructor(){
+        assertThatThrownBy(
+            () -> ClassUtils.instantiateBiConsumer(NoDefaultConstructorBiConsumer.class))
             .isInstanceOf(InstantiationException.class)
             .hasCauseInstanceOf(NoSuchMethodException.class);
     }
@@ -54,6 +68,20 @@ public class ClassUtilsTest {
         @Override
         public boolean test(String o) {
             return o.equals(bla);
+        }
+    }
+
+    public static class PublicBiConsumer implements BiConsumer<Integer, String>{
+
+        @Override
+        public void accept(Integer integer, String s) {
+
+        }
+    }
+
+    public static class NoDefaultConstructorBiConsumer extends PublicBiConsumer {
+
+        public NoDefaultConstructorBiConsumer(String foo) {
         }
     }
 

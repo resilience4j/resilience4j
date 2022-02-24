@@ -30,13 +30,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
 import io.github.resilience4j.common.TestIntervalBiFunction;
+import io.github.resilience4j.common.utils.ConsumeResultBeforeRetryAttempt;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RetryConfigurationPropertiesTest {
 
-    @Test    
+    @Test
     @SuppressWarnings("unchecked")
     public void testRetryProperties() {
         CommonRetryConfigurationProperties.InstanceProperties instanceProperties1 = new CommonRetryConfigurationProperties.InstanceProperties();
@@ -47,6 +51,7 @@ public class RetryConfigurationPropertiesTest {
         instanceProperties1.setEventConsumerBufferSize(100);
         instanceProperties1.setRetryExceptions(new Class[]{IllegalStateException.class});
         instanceProperties1.setIgnoreExceptions(new Class[]{IllegalArgumentException.class});
+        instanceProperties1.setConsumeResultBeforeRetryAttempt(ConsumeResultBeforeRetryAttempt.class);
         instanceProperties1.setRetryExceptionPredicate(RecordFailurePredicate.class);
         instanceProperties1.setFailAfterMaxAttempts(true);
 
@@ -77,11 +82,13 @@ public class RetryConfigurationPropertiesTest {
         assertThat(retry1).isNotNull();
         assertThat(retry1.isFailAfterMaxAttempts()).isTrue();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
+        assertThat(retry1.getConsumeResultBeforeRetryAttempt().getClass()).isEqualTo(ConsumeResultBeforeRetryAttempt.class);
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
         assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(99L);
         assertThat(retry2.getIntervalFunction().apply(2)).isEqualTo(99L);
         assertThat(retry2.isFailAfterMaxAttempts()).isFalse();
+        assertThat(retry2.getConsumeResultBeforeRetryAttempt()).isNull();
     }
 
     @Test

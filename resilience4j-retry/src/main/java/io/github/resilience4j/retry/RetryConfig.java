@@ -27,6 +27,7 @@ import io.github.resilience4j.core.predicate.PredicateCreator;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -40,6 +41,7 @@ public class RetryConfig implements Serializable {
     private static final IntervalBiFunction DEFAULT_INTERVAL_BI_FUNCTION = IntervalBiFunction.ofIntervalFunction(DEFAULT_INTERVAL_FUNCTION);
     private static final Predicate<Throwable> DEFAULT_RECORD_FAILURE_PREDICATE = throwable -> true;
 
+
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] retryExceptions = new Class[0];
     @SuppressWarnings("unchecked")
@@ -50,6 +52,9 @@ public class RetryConfig implements Serializable {
 
     @Nullable
     private transient Predicate retryOnResultPredicate;
+
+    @Nullable
+    private BiConsumer consumeResultBeforeRetryAttempt;
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
     private boolean failAfterMaxAttempts = false;
@@ -147,6 +152,16 @@ public class RetryConfig implements Serializable {
         return retryOnResultPredicate;
     }
 
+    /**
+     * Return the BiConsumer which performs post actions if the result should be retried.
+     *
+     * @param <T> The type of result.
+     * @return the onFailureBiConsumer
+     */
+    public <T> BiConsumer<Integer, T> getConsumeResultBeforeRetryAttempt(){
+        return consumeResultBeforeRetryAttempt;
+    }
+
     public static class Builder<T> {
 
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
@@ -163,6 +178,9 @@ public class RetryConfig implements Serializable {
 
         @Nullable
         private IntervalBiFunction<T> intervalBiFunction;
+
+        @Nullable
+        BiConsumer<Integer, T> consumeResultBeforeRetryAttempt;
 
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] retryExceptions = new Class[0];
@@ -186,6 +204,8 @@ public class RetryConfig implements Serializable {
             retryConfig.append(retryOnResultPredicate);
             retryConfig.append(", intervalBiFunction=");
             retryConfig.append(intervalBiFunction);
+            retryConfig.append(", consumeResultBeforeRetryAttempt=");
+            retryConfig.append(consumeResultBeforeRetryAttempt);
             retryConfig.append(", retryExceptions=");
             retryConfig.append(retryExceptions);
             retryConfig.append(", ignoreExceptions=");
@@ -201,6 +221,7 @@ public class RetryConfig implements Serializable {
             this.maxAttempts = baseConfig.maxAttempts;
             this.retryOnExceptionPredicate = baseConfig.retryOnExceptionPredicate;
             this.retryOnResultPredicate = baseConfig.retryOnResultPredicate;
+            this.consumeResultBeforeRetryAttempt = baseConfig.consumeResultBeforeRetryAttempt;
             this.failAfterMaxAttempts = baseConfig.failAfterMaxAttempts;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.retryExceptions = baseConfig.retryExceptions;
@@ -240,6 +261,17 @@ public class RetryConfig implements Serializable {
          */
         public Builder<T> retryOnResult(Predicate<T> predicate) {
             this.retryOnResultPredicate = predicate;
+            return this;
+        }
+
+        /**
+         * Configure a BiConsumer which performs post actions if a result should be retried.
+         *
+         * @param consumeResultBeforeRetryAttempt the BiConsumer which performs post actions if a result should be retried.
+         * @return the RetryConfig.Builder
+         */
+        public Builder<T> consumeResultBeforeRetryAttempt(BiConsumer<Integer, T> consumeResultBeforeRetryAttempt){
+            this.consumeResultBeforeRetryAttempt = consumeResultBeforeRetryAttempt;
             return this;
         }
 
@@ -366,6 +398,7 @@ public class RetryConfig implements Serializable {
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.retryOnExceptionPredicate = retryOnExceptionPredicate;
             config.retryOnResultPredicate = retryOnResultPredicate;
+            config.consumeResultBeforeRetryAttempt = consumeResultBeforeRetryAttempt;
             config.retryExceptions = retryExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.exceptionPredicate = createExceptionPredicate();
