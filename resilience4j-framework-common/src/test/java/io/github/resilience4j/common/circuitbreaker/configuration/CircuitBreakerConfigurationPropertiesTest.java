@@ -18,10 +18,10 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
-import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -407,6 +407,25 @@ public class CircuitBreakerConfigurationPropertiesTest {
             .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
 
         assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new IllegalArgumentException())).isTrue();
+        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
+    }
+
+    @Test
+    public void testIgnoreExceptionPredicateWithBaseConfig() {
+        CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+
+        CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        instanceProperties.setBaseConfig("defaultConfig");
+        instanceProperties.setIgnoreExceptionPredicate((Class)RecordFailurePredicate.class);
+
+        CircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CircuitBreakerConfigurationProperties();
+        circuitBreakerConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
+
+
+        CircuitBreakerConfig circuitBreakerConfig = circuitBreakerConfigurationProperties
+            .createCircuitBreakerConfig("instanceWithDefaultConfig", instanceProperties, compositeCircuitBreakerCustomizer());
+
+        assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new IOException())).isTrue();
         assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
     }
 
