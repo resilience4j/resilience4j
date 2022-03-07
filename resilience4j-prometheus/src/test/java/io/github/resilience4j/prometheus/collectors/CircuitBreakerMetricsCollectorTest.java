@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.util.Optional;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.prometheus.AbstractCircuitBreakerMetrics.MetricNames;
@@ -287,5 +287,57 @@ public class CircuitBreakerMetricsCollectorTest {
             new String[]{"name", "kind", "le"},
             new String[]{circuitBreaker.getName(), "successful", "0.025"}
         )).isNull();
+    }
+
+    @Test
+    public void customLabels() {
+        CollectorRegistry registry = new CollectorRegistry();
+        CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+        Map<String, String> tags = Map.of("key1", "value1");
+
+        CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(
+            MetricNames.ofDefaults(),
+            MetricOptions.custom().labels(tags).build(),
+            circuitBreakerRegistry).register(registry);
+
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("backendA", tags);
+        circuitBreaker.onSuccess(2000, TimeUnit.NANOSECONDS);
+
+        assertThat(registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_STATE,
+            new String[]{"name", "state", "key1"},
+            new String[]{circuitBreaker.getName(), circuitBreaker.getState().name().toLowerCase(), "value1"}
+        )).isNotNull();
+
+        assertThat(registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_CALLS + "_bucket",
+            new String[]{"name", "kind", "key1", "le"},
+            new String[]{circuitBreaker.getName(), "successful", "value1", "0.025"}
+        )).isNotNull();
+
+        assertThat(registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_BUFFERED_CALLS,
+            new String[]{"name", "kind", "key1"},
+            new String[]{circuitBreaker.getName(), "successful", "value1"}
+        )).isNotNull();
+
+        assertThat(registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_SLOW_CALLS,
+            new String[]{"name", "kind", "key1"},
+            new String[]{circuitBreaker.getName(), "successful", "value1"}
+        )).isNotNull();
+
+        assertThat(registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_FAILURE_RATE,
+            new String[]{"name", "key1"},
+            new String[]{circuitBreaker.getName(), "value1"}
+        )).isNotNull();
+
+        assertThat(registry.getSampleValue(
+            DEFAULT_CIRCUIT_BREAKER_SLOW_CALL_RATE,
+            new String[]{"name", "key1"},
+            new String[]{circuitBreaker.getName(), "value1"}
+        )).isNotNull();
+
     }
 }
