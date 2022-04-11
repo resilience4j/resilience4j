@@ -61,7 +61,6 @@ public class TimeLimiterOperator<T> implements UnaryOperator<Publisher<T>> {
 
     private Publisher<T> withTimeout(Mono<T> upstream) {
         return upstream.timeout(getTimeout())
-            .doOnNext(t -> timeLimiter.onSuccess())
             .doOnSuccess(t -> timeLimiter.onSuccess())
             .doOnError(timeLimiter::onError);
     }
