@@ -47,7 +47,8 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * <p>All {@link AtomicRateLimiter} updates are atomic and state is encapsulated in {@link
  * AtomicReference} to {@link AtomicRateLimiter.State}
  */
-public class AtomicRateLimiter implements RateLimiter {
+public class AtomicRateLimiter implements RateLimiter, Serializable {
+     private static final long serialVersionUID = -6488598223501770671L;
 
     private final long nanoTimeStart;
     private final String name;
