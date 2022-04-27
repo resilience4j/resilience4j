@@ -4,4 +4,9 @@ tasks:
 vscode:
   extensions:
     - vscjava.vscode-java-pack
-    - vscjava.vscode-gradle
+    - redhat.java
+    - vscjava.vscode-java-debug
+    - vscjava.vscode-java-dependency
+    - vscjava.vscode-java-test
+    - richardwillis.vscode-gradle
+    - vscjava.vscode-maven
