@@ -53,7 +53,7 @@ public class TimeLimiterOperatorTest {
         StepVerifier.create(mono)
             .expectNextCount(1)
             .verifyComplete();
-        then(timeLimiter).should(times(2))
+        then(timeLimiter).should(times(1))
             .onSuccess();
     }
 
