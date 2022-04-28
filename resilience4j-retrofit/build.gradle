@@ -1,5 +1,5 @@
 dependencies {
-    compileOnly(libraries.retrofit)
+    api(libraries.retrofit)
     implementation project(':resilience4j-circuitbreaker')
     implementation project(':resilience4j-ratelimiter')
     implementation project(':resilience4j-retry')

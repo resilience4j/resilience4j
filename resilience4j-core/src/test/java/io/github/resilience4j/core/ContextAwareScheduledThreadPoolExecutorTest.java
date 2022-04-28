@@ -18,19 +18,23 @@
  */
 package io.github.resilience4j.core;
 
-import io.github.resilience4j.test.TestContextPropagators;
-import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.MDC;
+import static com.jayway.awaitility.Awaitility.await;
+import static com.jayway.awaitility.Awaitility.matches;
+import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.jayway.awaitility.Awaitility.*;
-import static org.assertj.core.api.Assertions.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.MDC;
+
+import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 
 public class ContextAwareScheduledThreadPoolExecutorTest {
 

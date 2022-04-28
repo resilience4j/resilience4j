@@ -1,16 +1,11 @@
 dependencies {
-    compileOnly project(':resilience4j-circuitbreaker')
-    compileOnly project(':resilience4j-ratelimiter')
-    compileOnly project(':resilience4j-timelimiter')
-    compileOnly project(':resilience4j-bulkhead')
-    compileOnly project(':resilience4j-retry')
-    compileOnly(libraries.rxjava3)
-    testImplementation project(':resilience4j-test')
-    testImplementation project(':resilience4j-circuitbreaker')
-    testImplementation project(':resilience4j-ratelimiter')
-    testImplementation project(':resilience4j-timelimiter')
-    testImplementation project(':resilience4j-bulkhead')
-    testImplementation project(':resilience4j-retry')
+    api (libraries.rxjava3)
+    implementation project(':resilience4j-circuitbreaker')
+    implementation project(':resilience4j-ratelimiter')
+    implementation project(':resilience4j-timelimiter')
+    implementation project(':resilience4j-bulkhead')
+    implementation project(':resilience4j-retry')    
     testImplementation(libraries.rxjava3)
+    testImplementation project(':resilience4j-test')
 }
 ext.moduleName = 'io.github.resilience4j.rxjava3'
