@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Helper class to test and assert circuit breakers.
  */
-abstract class BaseCircuitBreakerTest {
+public abstract class BaseCircuitBreakerTest {
 
     CircuitBreaker circuitBreaker;
     HelloWorldService helloWorldService;

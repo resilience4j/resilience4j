@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import io.github.resilience4j.adapter.RxJava2Adapter;
+import io.github.resilience4j.test.RxJava2Adapter;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.profile.GCProfiler;
