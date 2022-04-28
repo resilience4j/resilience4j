@@ -19,7 +19,7 @@ public class IntervalFunctionTest {
         final long zeroInterval = 0;
         final long positiveInterval = 100;
 
-        List<Try> tries = List.of(
+        List<Try<IntervalFunction>> tries = List.of(
             Try.of(() -> IntervalFunction.of(negativeDuration)),
             Try.of(() -> IntervalFunction.of(zeroDuration)),
 

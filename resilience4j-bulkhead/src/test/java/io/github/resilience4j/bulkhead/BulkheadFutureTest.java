@@ -23,8 +23,9 @@ public class BulkheadFutureTest {
     private BulkheadConfig config;
 
     @Before
+    @SuppressWarnings("unchecked") 
     public void setUp() {
-        helloWorldService = mock(HelloWorldService.class);
+        helloWorldService = mock(HelloWorldService.class);        
         future = mock(Future.class);
         config = BulkheadConfig.custom()
                 .maxConcurrentCalls(1)
