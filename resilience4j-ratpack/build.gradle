@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 
 dependencies {
-    compileOnly(libraries.ratpack)
+    api(libraries.ratpack)
     implementation project(':resilience4j-annotations')
     implementation project(':resilience4j-framework-common')
     implementation project(':resilience4j-consumer')

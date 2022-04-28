@@ -1,15 +1,13 @@
 dependencies {
+    api(libraries.vavr )
     implementation project(':resilience4j-retry')
     implementation project(':resilience4j-circuitbreaker')
     implementation project(':resilience4j-cache')
     implementation project(':resilience4j-bulkhead')
     implementation project(':resilience4j-ratelimiter')
     implementation project(':resilience4j-metrics')
-    implementation project(':resilience4j-prometheus')
-    implementation(libraries.vavr )
+    implementation project(':resilience4j-prometheus')    
     testImplementation project(':resilience4j-test')
-    testImplementation project(':resilience4j-rxjava2')
-    testImplementation(libraries.rxjava2)
     testImplementation(libraries.metrics)
 }
 

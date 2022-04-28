@@ -18,8 +18,9 @@
  */
 package io.github.resilience4j.core;
 
-import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagator;
-import org.junit.Test;
+import static com.jayway.awaitility.Awaitility.matches;
+import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,9 +31,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+
+import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagator;
 
 public class ContextPropagatorTest {
 

@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
+import static io.github.resilience4j.test.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
