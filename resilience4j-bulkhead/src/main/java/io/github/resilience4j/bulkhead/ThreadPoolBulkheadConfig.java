@@ -53,7 +53,7 @@ public class ThreadPoolBulkheadConfig {
     private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
     private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
     private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
-    private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;    
     private List<ContextPropagator> contextPropagators = new ArrayList<>();
     private RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.AbortPolicy();
 

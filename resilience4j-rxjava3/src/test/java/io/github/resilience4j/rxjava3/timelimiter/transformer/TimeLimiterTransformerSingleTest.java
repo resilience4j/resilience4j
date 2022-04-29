@@ -16,24 +16,24 @@
 
 package io.github.resilience4j.rxjava3.timelimiter.transformer;
 
-import io.github.resilience4j.rxjava3.TestSchedulerRule;
-import io.github.resilience4j.rxjava3.timelimiter.transformer.TimeLimiterTransformer;
-import io.github.resilience4j.timelimiter.TimeLimiter;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.observers.TestObserver;
-import io.reactivex.rxjava3.schedulers.TestScheduler;
-import org.junit.Rule;
-import org.junit.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
+import org.junit.Rule;
+import org.junit.Test;
+
+import io.github.resilience4j.rxjava3.TestSchedulerRule;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
+import io.reactivex.rxjava3.schedulers.TestScheduler;
 
 public class TimeLimiterTransformerSingleTest {
 

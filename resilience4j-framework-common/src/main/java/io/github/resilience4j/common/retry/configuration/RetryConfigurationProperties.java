@@ -290,14 +290,12 @@ public class RetryConfigurationProperties extends CommonProperties {
         /**
          * list of retry exception classes
          */
-        @SuppressWarnings("unchecked")
         @Nullable
         private Class<? extends Throwable>[] retryExceptions;
 
         /**
          * list of retry ignored exception classes
          */
-        @SuppressWarnings("unchecked")
         @Nullable
         private Class<? extends Throwable>[] ignoreExceptions;
 

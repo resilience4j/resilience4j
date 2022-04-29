@@ -41,7 +41,7 @@ public class FallbackMethodTest {
         FallbackMethodTest target = new FallbackMethodTest();
         Method testMethod = target.getClass().getMethod("testFutureMethod", String.class);
         FallbackMethod fallbackMethod = FallbackMethod
-            .create("futureFallbackMethod", testMethod, new Object[]{"test"}, target);
+            .create("futureFallbackMethod", testMethod, new Object[]{"test"}, target);        
         CompletableFuture future = (CompletableFuture) fallbackMethod.fallback(new IllegalStateException("err"));
         assertThat(future.get()).isEqualTo("recovered-IllegalStateException");
     }

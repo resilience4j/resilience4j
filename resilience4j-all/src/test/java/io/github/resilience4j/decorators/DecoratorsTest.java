@@ -103,7 +103,7 @@ public class DecoratorsTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
 
-        TestThreadLocalContextPropagatorWithHolder propagator = new TestThreadLocalContextPropagatorWithHolder();
+        TestThreadLocalContextPropagatorWithHolder<String> propagator = new TestThreadLocalContextPropagatorWithHolder<>();
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         ContextAwareScheduledThreadPoolExecutor scheduledThreadPool = ContextAwareScheduledThreadPoolExecutor
             .newScheduledThreadPool()
@@ -425,9 +425,11 @@ public class DecoratorsTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testDecorateSupplierWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
+        
         given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
 
         CompletionStage<String> completionStage = Decorators
@@ -442,6 +444,7 @@ public class DecoratorsTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testDecorateCallableWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
@@ -459,6 +462,7 @@ public class DecoratorsTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testDecorateRunnableWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
@@ -589,7 +593,7 @@ public class DecoratorsTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
 
-        TestThreadLocalContextPropagatorWithHolder propagator = new TestThreadLocalContextPropagatorWithHolder();
+        TestThreadLocalContextPropagatorWithHolder<String> propagator = new TestThreadLocalContextPropagatorWithHolder<>();
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         ContextAwareScheduledThreadPoolExecutor scheduledThreadPool = ContextAwareScheduledThreadPoolExecutor
             .newScheduledThreadPool()

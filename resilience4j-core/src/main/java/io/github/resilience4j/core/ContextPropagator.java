@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.toMap;
  *
  * @param <T> value type that is copied across thread boundary.
  */
-public interface ContextPropagator<T> {
+public interface  ContextPropagator<T> {
 
     /**
      * Retrieves value from the currently executing thread. This method should produce values (as

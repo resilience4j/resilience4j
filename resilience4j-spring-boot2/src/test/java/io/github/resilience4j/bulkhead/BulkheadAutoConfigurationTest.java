@@ -15,23 +15,20 @@
  */
 package io.github.resilience4j.bulkhead;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.util.ReflectionTestUtils.getField;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import io.github.resilience4j.TestThreadLocalContextPropagator;
-import io.github.resilience4j.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
-import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
-import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
-import io.github.resilience4j.bulkhead.configure.BulkheadAspect;
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEventsEndpointResponse;
-import io.github.resilience4j.service.test.BeanContextPropagator;
-import io.github.resilience4j.service.test.DummyFeignClient;
-import io.github.resilience4j.service.test.TestApplication;
-import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
-import io.github.resilience4j.service.test.bulkhead.BulkheadReactiveDummyService;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,13 +39,19 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.util.ReflectionTestUtils.getField;
+import io.github.resilience4j.TestThreadLocalContextPropagator;
+import io.github.resilience4j.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
+import io.github.resilience4j.bulkhead.autoconfigure.BulkheadProperties;
+import io.github.resilience4j.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
+import io.github.resilience4j.service.test.BeanContextPropagator;
+import io.github.resilience4j.service.test.DummyFeignClient;
+import io.github.resilience4j.service.test.TestApplication;
+import io.github.resilience4j.service.test.bulkhead.BulkheadDummyService;
+import io.github.resilience4j.service.test.bulkhead.BulkheadReactiveDummyService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -65,8 +68,6 @@ public class BulkheadAutoConfigurationTest {
     private BulkheadProperties bulkheadProperties;
     @Autowired
     private ThreadPoolBulkheadProperties threadPoolBulkheadProperties;
-    @Autowired
-    private BulkheadAspect bulkheadAspect;
     @Autowired
     private BulkheadDummyService dummyService;
     @Autowired
@@ -132,8 +133,6 @@ public class BulkheadAutoConfigurationTest {
      */
     @Test
     public void testFeignClient() throws InterruptedException {
-        BulkheadEventsEndpointResponse eventsBefore = getBulkheadEvents("/actuator/bulkheadevents")
-            .getBody();
         WireMock.stubFor(WireMock
             .get(WireMock.urlEqualTo("/sample/"))
             .willReturn(WireMock.aResponse().withStatus(200).withBody("This is successful call"))
@@ -164,7 +163,6 @@ public class BulkheadAutoConfigurationTest {
      */
     @Test
     public void testBulkheadAutoConfigurationThreadPool() throws InterruptedException, ExecutionException {
-        ExecutorService es = Executors.newFixedThreadPool(5);
 
         assertThat(threadPoolBulkheadRegistry).isNotNull();
         assertThat(threadPoolBulkheadProperties).isNotNull();
@@ -229,7 +227,6 @@ public class BulkheadAutoConfigurationTest {
      */
     @Test
     public void testBulkheadAutoConfiguration() {
-        ExecutorService es = Executors.newFixedThreadPool(5);
 
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
@@ -263,7 +260,6 @@ public class BulkheadAutoConfigurationTest {
      */
     @Test
     public void testBulkheadAutoConfigurationRxJava2() throws InterruptedException {
-        ExecutorService es = Executors.newFixedThreadPool(5);
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
 
@@ -297,7 +293,6 @@ public class BulkheadAutoConfigurationTest {
      */
     @Test
     public void testBulkheadAutoConfigurationReactor() {
-        ExecutorService es = Executors.newFixedThreadPool(5);
         assertThat(bulkheadRegistry).isNotNull();
         assertThat(bulkheadProperties).isNotNull();
 
@@ -321,9 +316,5 @@ public class BulkheadAutoConfigurationTest {
         assertThat(finished).hasValue(1);
         assertThat(permitted).hasValue(1);
         assertThat(rejected).hasValue(0);
-    }
-
-    private ResponseEntity<BulkheadEventsEndpointResponse> getBulkheadEvents(String s) {
-        return restTemplate.getForEntity(s, BulkheadEventsEndpointResponse.class);
     }
 }

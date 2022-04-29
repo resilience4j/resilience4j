@@ -15,29 +15,29 @@
  */
 package io.github.resilience4j.common.retry.configuration;
 
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.RecordFailurePredicate;
-import io.github.resilience4j.common.TestIntervalBiFunction;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.retry.RetryConfig;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.RecordFailurePredicate;
+import io.github.resilience4j.common.TestIntervalBiFunction;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.retry.RetryConfig;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RetryConfigurationPropertiesTest {
 
-    @Test
+    @Test    
+    @SuppressWarnings("unchecked")
     public void testRetryProperties() {
         RetryConfigurationProperties.InstanceProperties instanceProperties1 = new RetryConfigurationProperties.InstanceProperties();
         instanceProperties1.setMaxAttempts(3);

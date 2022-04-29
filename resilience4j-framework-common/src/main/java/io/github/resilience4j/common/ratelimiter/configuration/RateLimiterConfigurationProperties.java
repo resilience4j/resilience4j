@@ -15,7 +15,13 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
@@ -23,11 +29,6 @@ import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-
-import java.time.Duration;
-import java.util.*;
-
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 
 public class RateLimiterConfigurationProperties extends CommonProperties {
 

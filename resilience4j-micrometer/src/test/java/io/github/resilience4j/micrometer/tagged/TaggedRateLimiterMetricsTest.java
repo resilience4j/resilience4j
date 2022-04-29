@@ -73,7 +73,6 @@ public class TaggedRateLimiterMetricsTest {
 
     @Test
     public void shouldAddCustomTags() {
-        RateLimiter newRateLimiter = rateLimiterRegistry.rateLimiter("backendF", Map.of("key1", "value1"));
         assertThat(taggedRateLimiterMetrics.meterIdMap).containsKeys("backendA", "backendF");
         assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendA")).hasSize(2);
         assertThat(taggedRateLimiterMetrics.meterIdMap.get("backendF")).hasSize(2);

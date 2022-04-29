@@ -18,24 +18,23 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
-import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.UnaryOperator;
-
 import static java.lang.Long.min;
 import static java.lang.System.nanoTime;
 import static java.lang.Thread.currentThread;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
+
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
+import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 
 /**
  * {@link AtomicRateLimiter} splits all nanoseconds from the start of epoch into cycles.

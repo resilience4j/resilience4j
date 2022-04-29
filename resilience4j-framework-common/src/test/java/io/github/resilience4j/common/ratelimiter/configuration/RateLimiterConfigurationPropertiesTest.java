@@ -15,11 +15,8 @@
  */
 package io.github.resilience4j.common.ratelimiter.configuration;
 
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -27,8 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
+
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
 /**
  * test custom init of rate limiter properties

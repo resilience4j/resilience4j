@@ -15,15 +15,17 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
-import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
-import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.service.test.DummyService;
-import io.github.resilience4j.service.test.TestApplication;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,14 +36,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import io.github.resilience4j.circuitbreaker.autoconfigure.CircuitBreakerProperties;
+import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
+import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.service.test.DummyService;
+import io.github.resilience4j.service.test.TestApplication;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -62,8 +62,6 @@ public class CircuitBreakerAutoConfigurationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @Autowired
-    private EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry;
 
     /**
      * The test verifies that a CircuitBreaker instance is created and configured properly when the

@@ -30,8 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class CircuitBreakerMetricsTest {
 
-//    TODO: add tests here for record Result
-
     @Test
     public void testCircuitBreakerMetrics() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()

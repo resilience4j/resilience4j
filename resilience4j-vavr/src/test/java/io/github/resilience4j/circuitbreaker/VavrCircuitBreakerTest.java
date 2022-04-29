@@ -230,7 +230,7 @@ public class VavrCircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
         // When
-        Try result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable);
 
         // Then
         assertThat(result.isFailure()).isTrue();
@@ -248,7 +248,7 @@ public class VavrCircuitBreakerTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -274,7 +274,7 @@ public class VavrCircuitBreakerTest {
             throw new SocketTimeoutException("BAM!");
         });
 
-        Try result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable);
 
         assertThat(result.isFailure()).isTrue();
         // CircuitBreaker is still CLOSED, because SocketTimeoutException has not been recorded as a failure
