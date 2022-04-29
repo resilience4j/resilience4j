@@ -77,8 +77,8 @@ public class RetryOperatorTest {
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
 
@@ -113,8 +113,8 @@ public class RetryOperatorTest {
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
 
@@ -141,7 +141,7 @@ public class RetryOperatorTest {
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -163,7 +163,7 @@ public class RetryOperatorTest {
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -186,7 +186,7 @@ public class RetryOperatorTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
@@ -244,10 +244,10 @@ public class RetryOperatorTest {
             .verify(Duration.ofSeconds(1));
 
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -267,7 +267,7 @@ public class RetryOperatorTest {
             .verify(Duration.ofMillis(100));
 
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
     }
 
@@ -287,7 +287,7 @@ public class RetryOperatorTest {
             .verify(Duration.ofSeconds(1));
 
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
     }
 
@@ -309,7 +309,7 @@ public class RetryOperatorTest {
             .verify(Duration.ofSeconds(1));
 
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
     }
 

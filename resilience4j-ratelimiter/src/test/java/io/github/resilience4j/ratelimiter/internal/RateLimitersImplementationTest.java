@@ -111,7 +111,7 @@ public abstract class RateLimitersImplementationTest {
         limiter.drainPermissions();
         Object event = eventAfterDrainCatcher.get();
         then(event).isInstanceOf(RateLimiterOnDrainedEvent.class);
-        then(((RateLimiterOnDrainedEvent) event).getNumberOfPermits()).isEqualTo(0);
+        then(((RateLimiterOnDrainedEvent) event).getNumberOfPermits()).isZero();
     }
 
     protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,

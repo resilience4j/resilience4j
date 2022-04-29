@@ -53,7 +53,7 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CheckedFunction0<String> checkedSupplier = VavrCircuitBreaker
             .decorateCheckedSupplier(circuitBreaker, helloWorldService::returnHelloWorldWithException);
@@ -62,7 +62,7 @@ public class VavrCircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithException();
     }
@@ -72,7 +72,7 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
         CheckedFunction0<String> checkedSupplier = VavrCircuitBreaker
@@ -84,7 +84,7 @@ public class VavrCircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithException();
     }
 
@@ -93,14 +93,14 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         CheckedRunnable checkedRunnable = VavrCircuitBreaker
             .decorateCheckedRunnable(circuitBreaker, helloWorldService::sayHelloWorldWithException);
 
         checkedRunnable.run();
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorldWithException();
     }
@@ -110,7 +110,7 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         CheckedRunnable checkedRunnable = VavrCircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
         });
@@ -121,7 +121,7 @@ public class VavrCircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -129,14 +129,14 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         CheckedConsumer<String> checkedConsumer = VavrCircuitBreaker
             .decorateCheckedConsumer(circuitBreaker, helloWorldService::sayHelloWorldWithNameWithException);
 
         checkedConsumer.accept("Tom");
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorldWithNameWithException("Tom");
     }
@@ -156,10 +156,10 @@ public class VavrCircuitBreakerTest {
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(numberOfBufferedCallsBefore).isEqualTo(0);
+        assertThat(numberOfBufferedCallsBefore).isZero();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -167,7 +167,7 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
         CheckedFunction1<String, String> function = VavrCircuitBreaker
@@ -178,7 +178,7 @@ public class VavrCircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
@@ -189,7 +189,7 @@ public class VavrCircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willThrow(new RuntimeException("BAM!"));
         CheckedFunction1<String, String> function = VavrCircuitBreaker
@@ -202,7 +202,7 @@ public class VavrCircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -242,8 +242,8 @@ public class VavrCircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         CheckedRunnable checkedRunnable = VavrCircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> {
             throw new RuntimeException("BAM!");
         });
@@ -375,24 +375,24 @@ public class VavrCircuitBreakerTest {
         // end::shouldChainDecoratedFunctions[]
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         CircuitBreaker.Metrics metrics2 = anotherCircuitBreaker.getMetrics();
         assertThat(metrics2.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics2.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics2.getNumberOfFailedCalls()).isZero();
     }
 
     @Test
     public void shouldExecuteTrySupplierAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnTry()).willReturn(Try.success("Hello world"));
 
         Try<String> result = VavrCircuitBreaker.executeTrySupplier(circuitBreaker, helloWorldService::returnTry);
 
         assertThat(result).contains("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnTry();
     }
@@ -401,7 +401,7 @@ public class VavrCircuitBreakerTest {
     public void shouldExecuteEitherSupplierAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnEither()).willReturn(Either.right("Hello world"));
 
         Either<Exception, String> result = VavrCircuitBreaker
@@ -409,7 +409,7 @@ public class VavrCircuitBreakerTest {
 
         assertThat(result).contains("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnEither();
     }
@@ -418,7 +418,7 @@ public class VavrCircuitBreakerTest {
     public void shouldExecuteTrySupplierAndReturnWithFailure() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnTry()).willReturn(Try.failure(new RuntimeException("BAM!")));
 
         Try<String> result = VavrCircuitBreaker.executeTrySupplier(circuitBreaker, helloWorldService::returnTry);
@@ -427,7 +427,7 @@ public class VavrCircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnTry();
     }
 
@@ -435,14 +435,14 @@ public class VavrCircuitBreakerTest {
     public void shouldExecuteTrySupplierAndReturnWithCallNotPermittedException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         circuitBreaker.transitionToOpenState();
 
         Try<String> result = VavrCircuitBreaker.executeTrySupplier(circuitBreaker, helloWorldService::returnTry);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(CallNotPermittedException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
         then(helloWorldService).should(never()).returnTry();
     }
@@ -452,7 +452,7 @@ public class VavrCircuitBreakerTest {
     public void shouldExecuteEitherSupplierAndReturnWithFailure() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnEither()).willReturn(Either.left(new HelloWorldException()));
 
         Either<Exception, String> result = VavrCircuitBreaker
@@ -462,7 +462,7 @@ public class VavrCircuitBreakerTest {
         assertThat(result.getLeft()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnEither();
     }
 
@@ -470,7 +470,7 @@ public class VavrCircuitBreakerTest {
     public void shouldExecuteEitherSupplierAndReturnWithCallNotPermittedException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         circuitBreaker.transitionToOpenState();
 
         Either<Exception, String> result = VavrCircuitBreaker
@@ -478,7 +478,7 @@ public class VavrCircuitBreakerTest {
 
         assertThat(result.isLeft()).isTrue();
         assertThat(result.getLeft()).isInstanceOf(CallNotPermittedException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
         then(helloWorldService).should(never()).returnEither();
     }

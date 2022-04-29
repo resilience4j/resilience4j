@@ -69,7 +69,7 @@ public class CircuitBreakerTest {
     public void shouldDecorateSupplierAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<String> supplier = circuitBreaker
             .decorateSupplier(helloWorldService::returnHelloWorld);
@@ -78,7 +78,7 @@ public class CircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorld();
     }
@@ -87,14 +87,14 @@ public class CircuitBreakerTest {
     public void shouldExecuteSupplierAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
         String result = circuitBreaker.executeSupplier(helloWorldService::returnHelloWorld);
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorld();
     }
@@ -103,7 +103,7 @@ public class CircuitBreakerTest {
     public void shouldDecorateSupplierAndReturnWithException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
         Supplier<String> supplier = circuitBreaker
             .decorateSupplier(helloWorldService::returnHelloWorld);
@@ -114,7 +114,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorld();
     }
 
@@ -123,7 +123,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CheckedSupplier<String> checkedSupplier = circuitBreaker
             .decorateCheckedSupplier(helloWorldService::returnHelloWorldWithException);
@@ -132,7 +132,7 @@ public class CircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithException();
     }
@@ -143,7 +143,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
         CheckedSupplier<String> checkedSupplier = circuitBreaker
@@ -155,7 +155,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithException();
     }
 
@@ -164,7 +164,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         Callable<String> callable = circuitBreaker
             .decorateCallable(helloWorldService::returnHelloWorldWithException);
@@ -173,7 +173,7 @@ public class CircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithException();
     }
@@ -182,7 +182,7 @@ public class CircuitBreakerTest {
     public void shouldExecuteCallableAndReturnWithSuccess() throws Throwable {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         String result = circuitBreaker
@@ -190,7 +190,7 @@ public class CircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithException();
     }
@@ -200,7 +200,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
         Callable<String> callable = circuitBreaker
@@ -212,7 +212,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithException();
     }
 
@@ -221,14 +221,14 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         CheckedRunnable checkedRunnable = circuitBreaker
             .decorateCheckedRunnable(helloWorldService::sayHelloWorldWithException);
 
         checkedRunnable.run();
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorldWithException();
     }
@@ -238,7 +238,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
@@ -249,7 +249,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -257,13 +257,13 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         Runnable runnable = circuitBreaker.decorateRunnable(helloWorldService::sayHelloWorld);
 
         runnable.run();
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorld();
     }
@@ -273,12 +273,12 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         circuitBreaker.executeRunnable(helloWorldService::sayHelloWorld);
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorld();
     }
@@ -288,7 +288,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         Runnable runnable = circuitBreaker.decorateRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
@@ -299,7 +299,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -307,14 +307,14 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         Consumer<String> consumer = circuitBreaker
             .decorateConsumer(helloWorldService::sayHelloWorldWithName);
 
         consumer.accept("Tom");
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorldWithName("Tom");
     }
@@ -324,7 +324,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         Consumer<String> consumer = circuitBreaker.decorateConsumer((value) -> {
             throw new RuntimeException("BAM!");
         });
@@ -335,7 +335,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -343,14 +343,14 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         CheckedConsumer<String> checkedConsumer = circuitBreaker
             .decorateCheckedConsumer(helloWorldService::sayHelloWorldWithNameWithException);
 
         checkedConsumer.accept("Tom");
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().sayHelloWorldWithNameWithException("Tom");
     }
@@ -370,10 +370,10 @@ public class CircuitBreakerTest {
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(numberOfBufferedCallsBefore).isEqualTo(0);
+        assertThat(numberOfBufferedCallsBefore).isZero();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -381,7 +381,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithName("Tom")).willReturn("Hello world Tom");
         Function<String, String> function = CircuitBreaker
             .decorateFunction(circuitBreaker, helloWorldService::returnHelloWorldWithName);
@@ -390,7 +390,7 @@ public class CircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithName("Tom");
     }
@@ -400,7 +400,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithName("Tom"))
             .willThrow(new RuntimeException("BAM!"));
         Function<String, String> function = CircuitBreaker
@@ -412,7 +412,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -420,7 +420,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
         CheckedFunction<String, String> function = CircuitBreaker
@@ -431,7 +431,7 @@ public class CircuitBreakerTest {
 
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
@@ -442,7 +442,7 @@ public class CircuitBreakerTest {
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willThrow(new RuntimeException("BAM!"));
         CheckedFunction<String, String> function = CircuitBreaker
@@ -455,7 +455,7 @@ public class CircuitBreakerTest {
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -537,8 +537,8 @@ public class CircuitBreakerTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         CheckedRunnable checkedRunnable = circuitBreaker.decorateCheckedRunnable(() -> {
             throw new RuntimeException("BAM!");
         });
@@ -665,7 +665,7 @@ public class CircuitBreakerTest {
         // end::shouldInvokeAsyncApply[]
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
     }
 
     @Test
@@ -687,7 +687,7 @@ public class CircuitBreakerTest {
         then(helloWorldService).should().returnHelloWorld();
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
     }
 
 
@@ -707,7 +707,7 @@ public class CircuitBreakerTest {
         then(helloWorldService).should().returnHelloWorld();
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
     }
 
     @Test
@@ -724,7 +724,7 @@ public class CircuitBreakerTest {
         then(helloWorldService).should().sayHelloWorld();
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
     }
 
     @Test
@@ -787,8 +787,8 @@ public class CircuitBreakerTest {
             .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
         then(helloWorldService).should().returnHelloWorld();
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
     }
 
     @Test
@@ -811,10 +811,10 @@ public class CircuitBreakerTest {
         // end::shouldChainDecoratedFunctions[]
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         CircuitBreaker.Metrics metrics2 = anotherCircuitBreaker.getMetrics();
         assertThat(metrics2.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics2.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics2.getNumberOfFailedCalls()).isZero();
     }
 
     @Test
@@ -832,9 +832,9 @@ public class CircuitBreakerTest {
             .decorateSupplier(helloWorldService::returnHelloWorld);
 
         assertThatThrownBy(supplier::get).isInstanceOf(StackOverflowError.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorld();
 
     }
@@ -844,7 +844,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -858,7 +858,7 @@ public class CircuitBreakerTest {
 
         assertThat(value).isEqualTo("Hello World");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should().get();
@@ -869,7 +869,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -886,7 +886,7 @@ public class CircuitBreakerTest {
         decoratedFuture.get();
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should(times(3)).get();
@@ -897,7 +897,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         //create a Future
         @SuppressWarnings("unchecked")
@@ -922,7 +922,7 @@ public class CircuitBreakerTest {
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should(times(3)).get();
     }
@@ -931,7 +931,7 @@ public class CircuitBreakerTest {
     public void shouldDecorateFutureSupplierAndReturnWithExceptionEvenBeforeFutureIsCreated() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         given(helloWorldService.returnHelloWorldFuture()).willThrow(new RuntimeException("BAM!"));
 
@@ -945,7 +945,7 @@ public class CircuitBreakerTest {
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldFuture();
     }
 
@@ -954,7 +954,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         //create a Future
         @SuppressWarnings("unchecked")
@@ -973,7 +973,7 @@ public class CircuitBreakerTest {
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should().get();
     }
@@ -983,7 +983,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -996,9 +996,9 @@ public class CircuitBreakerTest {
         Throwable thrown = catchThrowable(() -> supplier.get().get());
 
         assertThat(thrown).isInstanceOf(CancellationException.class);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should().get();
     }
@@ -1008,7 +1008,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -1028,7 +1028,7 @@ public class CircuitBreakerTest {
 
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should().get();
     }
@@ -1038,7 +1038,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -1051,10 +1051,10 @@ public class CircuitBreakerTest {
         Throwable thrown = catchThrowable(() -> decoratedFuture.get().get());
 
         assertThat(thrown).isInstanceOf(InterruptedException.class);
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should().get();
@@ -1065,7 +1065,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
 
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -1081,7 +1081,7 @@ public class CircuitBreakerTest {
         assertThat(thrown).isInstanceOf(TimeoutException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldFuture();
         then(future).should().get(anyLong(), any(TimeUnit.class));
     }
@@ -1176,7 +1176,7 @@ public class CircuitBreakerTest {
 
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         circuitBreaker.transitionToOpenState();
 
         //If interrupt is called on the Task thread than InterruptedException is thrown wrapped in
@@ -1190,7 +1190,7 @@ public class CircuitBreakerTest {
             .isInstanceOf(ExecutionException.class)
             .hasCauseInstanceOf(CallNotPermittedException.class);
 
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
     }
 

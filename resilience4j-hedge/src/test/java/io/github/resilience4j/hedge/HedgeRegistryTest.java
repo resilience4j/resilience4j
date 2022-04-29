@@ -76,7 +76,7 @@ public class HedgeRegistryTest {
     public void noTagsByDefault() {
         Hedge Hedge = HedgeRegistry.builder().build()
             .hedge("testName");
-        assertThat(Hedge.getTags()).hasSize(0);
+        assertThat(Hedge.getTags()).isEmpty();
     }
 
     @Test

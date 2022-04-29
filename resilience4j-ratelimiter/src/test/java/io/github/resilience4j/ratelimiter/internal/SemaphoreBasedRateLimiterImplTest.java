@@ -141,7 +141,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
             .until(detailedMetrics::getAvailablePermissions, equalTo(0));
         awaitImpatiently()
             .atMost(2, TimeUnit.SECONDS).until(thread::getState, equalTo(TIMED_WAITING));
-        then(detailedMetrics.getAvailablePermissions()).isEqualTo(0);
+        then(detailedMetrics.getAvailablePermissions()).isZero();
 
         limit.refreshLimit();
         awaitImpatiently()
@@ -234,7 +234,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         RateLimiter.Metrics metrics = limit.getMetrics();
-        then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        then(metrics.getNumberOfWaitingThreads()).isZero();
     }
 
     @Test
@@ -259,7 +259,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
         ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", config, scheduler);
         RateLimiter.Metrics metrics = limit.getMetrics();
-        then(metrics.getNumberOfWaitingThreads()).isEqualTo(0);
+        then(metrics.getNumberOfWaitingThreads()).isZero();
         then(metrics.getAvailablePermissions()).isEqualTo(2);
     }
 

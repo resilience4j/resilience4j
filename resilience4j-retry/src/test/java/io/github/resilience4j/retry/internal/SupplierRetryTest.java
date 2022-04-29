@@ -75,7 +75,7 @@ public class SupplierRetryTest {
 
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result).isEqualTo("Hello world");
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -91,7 +91,7 @@ public class SupplierRetryTest {
         String result = supplier.get();
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result).isEqualTo("Hello world");
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -107,7 +107,7 @@ public class SupplierRetryTest {
         String result = supplier.get();
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result).isEqualTo("Hello world");
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     private <T> Supplier<T> decorateSupplierWithOnComplete(Retry retry, Supplier<T> supplier) {
@@ -305,7 +305,7 @@ public class SupplierRetryTest {
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -326,7 +326,7 @@ public class SupplierRetryTest {
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test

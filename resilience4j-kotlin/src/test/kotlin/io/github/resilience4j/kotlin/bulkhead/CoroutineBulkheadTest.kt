@@ -58,7 +58,7 @@ class CoroutineBulkheadTest {
             //Then
             assertThat(result).isEqualTo("Hello world")
             assertThat(permittedEvents).isEqualTo(1)
-            assertThat(rejectedEvents).isEqualTo(0)
+            assertThat(rejectedEvents).isZero()
             assertThat(finishedEvents).isEqualTo(1)
             // Then the helloWorldService should be invoked 1 time
             assertThat(helloWorldService.invocationCounter).isEqualTo(1)
@@ -87,8 +87,8 @@ class CoroutineBulkheadTest {
             sync.send(Unit)
 
             assertThat(permittedEvents).isEqualTo(1)
-            assertThat(rejectedEvents).isEqualTo(0)
-            assertThat(finishedEvents).isEqualTo(0)
+            assertThat(rejectedEvents).isZero()
+            assertThat(finishedEvents).isZero()
 
             val helloWorldService = CoroutineHelloWorldService()
 
@@ -104,7 +104,7 @@ class CoroutineBulkheadTest {
 
             assertThat(permittedEvents).isEqualTo(1)
             assertThat(rejectedEvents).isEqualTo(1)
-            assertThat(finishedEvents).isEqualTo(0)
+            assertThat(finishedEvents).isZero()
 
             // allow our first call to complete, and then wait for it
             sync.send(Unit)
@@ -115,7 +115,7 @@ class CoroutineBulkheadTest {
             assertThat(rejectedEvents).isEqualTo(1)
             assertThat(finishedEvents).isEqualTo(1)
             // Then the helloWorldService should not be invoked
-            assertThat(helloWorldService.invocationCounter).isEqualTo(0)
+            assertThat(helloWorldService.invocationCounter).isZero()
         }
     }
 
@@ -137,7 +137,7 @@ class CoroutineBulkheadTest {
 
             //Then
             assertThat(permittedEvents).isEqualTo(1)
-            assertThat(rejectedEvents).isEqualTo(0)
+            assertThat(rejectedEvents).isZero()
             assertThat(finishedEvents).isEqualTo(1)
             // Then the helloWorldService should be invoked 1 time
             assertThat(helloWorldService.invocationCounter).isEqualTo(1)
@@ -158,7 +158,7 @@ class CoroutineBulkheadTest {
             //Then
             assertThat(function()).isEqualTo("Hello world")
             assertThat(permittedEvents).isEqualTo(1)
-            assertThat(rejectedEvents).isEqualTo(0)
+            assertThat(rejectedEvents).isZero()
             assertThat(finishedEvents).isEqualTo(1)
             // Then the helloWorldService should be invoked 1 time
             assertThat(helloWorldService.invocationCounter).isEqualTo(1)

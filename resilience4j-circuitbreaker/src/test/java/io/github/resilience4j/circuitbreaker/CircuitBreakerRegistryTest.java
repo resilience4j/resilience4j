@@ -81,7 +81,7 @@ public class CircuitBreakerRegistryTest {
     public void noTagsByDefault() {
         CircuitBreaker circuitBreaker = CircuitBreakerRegistry.ofDefaults()
             .circuitBreaker("testName");
-        assertThat(circuitBreaker.getTags()).hasSize(0);
+        assertThat(circuitBreaker.getTags()).isEmpty();
     }
 
     @Test

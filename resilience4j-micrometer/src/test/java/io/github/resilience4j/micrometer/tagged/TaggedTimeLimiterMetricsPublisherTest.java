@@ -99,14 +99,14 @@ public class TaggedTimeLimiterMetricsPublisherTest {
     public void shouldReplaceMetrics() {
         Counter before = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counter();
         assertThat(before).isNotNull();
-        assertThat(before.count()).isEqualTo(0);
+        assertThat(before.count()).isZero();
         assertThat(before.getId().getTag(TagNames.NAME)).isEqualTo(timeLimiter.getName());
 
         timeLimiterRegistry.replace(timeLimiter.getName(), TimeLimiter.ofDefaults());
 
         Counter after = meterRegistry.get(DEFAULT_TIME_LIMITER_CALLS).counter();
         assertThat(after).isNotNull();
-        assertThat(after.count()).isEqualTo(0);
+        assertThat(after.count()).isZero();
         assertThat(after.getId().getTag(TagNames.NAME))
             .isEqualTo(TimeLimiter.ofDefaults().getName());
     }

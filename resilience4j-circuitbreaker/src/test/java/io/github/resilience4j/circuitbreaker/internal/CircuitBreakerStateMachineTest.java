@@ -746,7 +746,7 @@ public class CircuitBreakerStateMachineTest {
 
         circuitBreaker.reset();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test
@@ -757,7 +757,7 @@ public class CircuitBreakerStateMachineTest {
 
         circuitBreaker.transitionToMetricsOnlyState();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test

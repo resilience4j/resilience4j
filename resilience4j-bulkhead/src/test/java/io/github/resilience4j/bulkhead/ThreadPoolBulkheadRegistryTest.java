@@ -101,7 +101,7 @@ public class ThreadPoolBulkheadRegistryTest {
     @Test
     public void noTagsByDefault() {
         ThreadPoolBulkhead bulkhead = registry.bulkhead("testName");
-        assertThat(bulkhead.getTags()).hasSize(0);
+        assertThat(bulkhead.getTags()).isEmpty();
     }
 
     @Test

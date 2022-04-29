@@ -55,7 +55,7 @@ public class VavrTimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(metricRegistry.getCounters().size()).isEqualTo(2);
         assertThat(metricRegistry.getTimers().size()).isEqualTo(1);
         assertThat(value).isEqualTo("Hello world");
@@ -71,7 +71,7 @@ public class VavrTimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().sayHelloWorldWithException();
     }
 
@@ -87,7 +87,7 @@ public class VavrTimerTest {
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
 }

@@ -56,7 +56,7 @@ class BulkheadTest {
         //Then
         assertThat(result).isEqualTo("Hello world")
         assertThat(permittedEvents).isEqualTo(1)
-        assertThat(rejectedEvents).isEqualTo(0)
+        assertThat(rejectedEvents).isZero()
         assertThat(finishedEvents).isEqualTo(1)
         // Then the helloWorldService should be invoked 1 time
         assertThat(helloWorldService.invocationCounter).isEqualTo(1)
@@ -119,7 +119,7 @@ class BulkheadTest {
 
         //Then
         assertThat(permittedEvents).isEqualTo(1)
-        assertThat(rejectedEvents).isEqualTo(0)
+        assertThat(rejectedEvents).isZero()
         assertThat(finishedEvents).isEqualTo(1)
         // Then the helloWorldService should be invoked 1 time
         assertThat(helloWorldService.invocationCounter).isEqualTo(1)
@@ -138,7 +138,7 @@ class BulkheadTest {
         //Then
         assertThat(function()).isEqualTo("Hello world")
         assertThat(permittedEvents).isEqualTo(1)
-        assertThat(rejectedEvents).isEqualTo(0)
+        assertThat(rejectedEvents).isZero()
         assertThat(finishedEvents).isEqualTo(1)
         // Then the helloWorldService should be invoked 1 time
         assertThat(helloWorldService.invocationCounter).isEqualTo(1)

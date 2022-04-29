@@ -101,7 +101,7 @@ public class SupplierVavrRetryTest {
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -122,7 +122,7 @@ public class SupplierVavrRetryTest {
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test

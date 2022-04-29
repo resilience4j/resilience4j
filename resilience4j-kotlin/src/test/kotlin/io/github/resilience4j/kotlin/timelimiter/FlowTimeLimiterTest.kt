@@ -76,7 +76,7 @@ class FlowTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(resultList.size).isEqualTo(0)
+            Assertions.assertThat(resultList.size).isZero()
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
@@ -101,7 +101,7 @@ class FlowTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(resultList.size).isEqualTo(0)
+            Assertions.assertThat(resultList.size).isZero()
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }

@@ -47,7 +47,7 @@ public class RetryEventDTOFactoryTest {
         RetryEventDTO retryEventDTO = RetryEventDTOFactory.createRetryEventDTO(event);
 
         assertThat(retryEventDTO.getRetryName()).isEqualTo("name");
-        assertThat(retryEventDTO.getNumberOfAttempts()).isEqualTo(0);
+        assertThat(retryEventDTO.getNumberOfAttempts()).isZero();
         assertThat(retryEventDTO.getType()).isEqualTo(RetryEvent.Type.IGNORED_ERROR);
         assertThat(retryEventDTO.getErrorMessage()).isEqualTo("java.io.IOException: Error Message");
         assertThat(retryEventDTO.getCreationTime()).isNotNull();

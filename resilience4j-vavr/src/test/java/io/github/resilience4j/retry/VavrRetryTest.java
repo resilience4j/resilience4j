@@ -76,7 +76,7 @@ public class VavrRetryTest {
         then(helloWorldService).should().sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -97,7 +97,7 @@ public class VavrRetryTest {
         then(helloWorldService).should().sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test

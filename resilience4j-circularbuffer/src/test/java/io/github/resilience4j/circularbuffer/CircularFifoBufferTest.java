@@ -33,7 +33,7 @@ public class CircularFifoBufferTest {
     public void testCircularFifoBuffer() {
         CircularFifoBuffer<Exception> exceptionBuffer = new ConcurrentCircularFifoBuffer<>(4);
 
-        assertThat(exceptionBuffer.size()).isEqualTo(0);
+        assertThat(exceptionBuffer.size()).isZero();
         assertThat(exceptionBuffer.isEmpty()).isTrue();
         assertThat(exceptionBuffer.isFull()).isFalse();
         exceptionBuffer.add(new IllegalArgumentException("bla bla"));

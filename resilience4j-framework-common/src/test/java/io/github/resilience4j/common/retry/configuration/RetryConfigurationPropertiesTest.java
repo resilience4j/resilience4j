@@ -221,7 +221,7 @@ public class RetryConfigurationPropertiesTest {
         RetryConfig retry = retryConfigurationProperties
             .createRetryConfig("backend", compositeRetryCustomizer());
 
-        assertThat(retry.getIntervalBiFunction().apply(1, null)).isEqualTo(0);
+        assertThat(retry.getIntervalBiFunction().apply(1, null)).isZero();
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -45,7 +45,7 @@ public class VavrCacheTest {
         String value = cachedFunction.apply("testKey");
 
         assertThat(value).isEqualTo("Hello world");
-        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
         then(cache).should().put("testKey", "Hello world");
     }
@@ -60,7 +60,7 @@ public class VavrCacheTest {
         String value = cachedFunction.apply("testKey");
 
         assertThat(value).isEqualTo("Hello world");
-        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
         then(cache).should().put("testKey", "Hello world");
     }
@@ -77,7 +77,7 @@ public class VavrCacheTest {
         String value = cachedFunction.apply("testKey");
 
         assertThat(value).isEqualTo("Hello world");
-        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
     }
 
@@ -92,7 +92,7 @@ public class VavrCacheTest {
 
         assertThat(value).isEqualTo("Hello from cache");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(1);
-        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isZero();
     }
 
     @Test
@@ -105,7 +105,7 @@ public class VavrCacheTest {
         String value = cachedFunction.apply("testKey");
 
         assertThat(value).isEqualTo("Hello world");
-        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(0);
-        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(0);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isZero();
     }
 }

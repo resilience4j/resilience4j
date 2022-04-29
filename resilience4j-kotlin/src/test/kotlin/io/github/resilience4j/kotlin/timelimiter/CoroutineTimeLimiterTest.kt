@@ -122,8 +122,8 @@ class CoroutineTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(timeoutEvents).hasSize(0)
-            Assertions.assertThat(successfulEvents).hasSize(0)
+            Assertions.assertThat(timeoutEvents).isEmpty()
+            Assertions.assertThat(successfulEvents).isEmpty()
         }
     }
 

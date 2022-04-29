@@ -116,7 +116,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     @Test
     public void poll() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
-        assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.size()).isZero();
 
         queue.add(1);
         assertThat(queue.size()).isEqualTo(1);
@@ -137,11 +137,11 @@ public class ConcurrentEvictingQueueGeneralTest {
 
         Integer secondPoll = queue.poll();
         assertThat(secondPoll).isEqualTo(5);
-        assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.size()).isZero();
 
         Integer emptyPoll = queue.poll();
         assertThat(emptyPoll).isNull();
-        assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.size()).isZero();
 
         queue.add(1);
         assertThat(queue.size()).isEqualTo(1);
@@ -173,7 +173,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     @Test
     public void offerWithOneLength() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(1);
-        assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.size()).isZero();
 
         queue.offer(1);
         assertThat(queue.toArray()).containsExactly(1);
@@ -221,7 +221,7 @@ public class ConcurrentEvictingQueueGeneralTest {
 
         queue.clear();
         assertThat(queue).isEmpty();
-        assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.size()).isZero();
 
         queue.offer(3);
         assertThat(queue.toArray()).containsExactly(3);
@@ -231,7 +231,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     public void toArray() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(5);
         Object[] objects = queue.toArray();
-        assertThat(objects.length).isEqualTo(0);
+        assertThat(objects.length).isZero();
 
         queue.add(1);
         assertThat(queue.toArray()).containsExactly(1);
@@ -253,7 +253,7 @@ public class ConcurrentEvictingQueueGeneralTest {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(5);
 
         Integer[] emptyArray = queue.toArray(new Integer[]{});
-        assertThat(emptyArray.length).isEqualTo(0);
+        assertThat(emptyArray.length).isZero();
 
         queue.add(1);
         assertThat(queue.toArray()).containsExactly(1);

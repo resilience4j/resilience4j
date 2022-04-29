@@ -39,7 +39,7 @@ class FlowCircuitBreakerTest {
         runBlocking {
             val circuitBreaker = CircuitBreaker.ofDefaults("testName")
             val metrics = circuitBreaker.metrics
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
             val resultList = mutableListOf<Int>()
 
             //When
@@ -56,7 +56,7 @@ class FlowCircuitBreakerTest {
                 assertThat(resultList[it]).isEqualTo(it)
             }
             assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
-            assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfFailedCalls).isZero()
             assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(1)
         }
     }
@@ -68,7 +68,7 @@ class FlowCircuitBreakerTest {
             val circuitBreaker = CircuitBreaker.ofDefaults("testName")
             circuitBreaker.transitionToOpenState()
             val metrics = circuitBreaker.metrics
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
 
             //When
             val resultList = mutableListOf<Int>()
@@ -87,9 +87,9 @@ class FlowCircuitBreakerTest {
 
             //Then
             assertThat(resultList).isEmpty()
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
+            assertThat(metrics.numberOfFailedCalls).isZero()
+            assertThat(metrics.numberOfSuccessfulCalls).isZero()
             assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(1)
         }
     }
@@ -103,7 +103,7 @@ class FlowCircuitBreakerTest {
             val circuitBreaker = CircuitBreaker.ofDefaults("testName")
             circuitBreaker.transitionToOpenState()
             val metrics = circuitBreaker.metrics
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
 
             //When
             try {
@@ -124,9 +124,9 @@ class FlowCircuitBreakerTest {
             //Then
             assertThat(wasStarted).isFalse()
             assertThat(resultList).isEmpty()
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
+            assertThat(metrics.numberOfFailedCalls).isZero()
+            assertThat(metrics.numberOfSuccessfulCalls).isZero()
             assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(1)
         }
     }
@@ -137,7 +137,7 @@ class FlowCircuitBreakerTest {
             val resultList = mutableListOf<Int>()
             val circuitBreaker = CircuitBreaker.ofDefaults("testName")
             val metrics = circuitBreaker.metrics
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
 
             //When
             try {
@@ -159,8 +159,8 @@ class FlowCircuitBreakerTest {
             assertThat(resultList.size).isEqualTo(4)
             assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
             assertThat(metrics.numberOfFailedCalls).isEqualTo(1)
-            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
-            assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfSuccessfulCalls).isZero()
+            assertThat(metrics.numberOfNotPermittedCalls).isZero()
         }
     }
 
@@ -172,7 +172,7 @@ class FlowCircuitBreakerTest {
             var flowCompleted = false
             val circuitBreaker = CircuitBreaker.ofDefaults("testName")
             val metrics = circuitBreaker.metrics
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
 
             //When
             val job = launch(start = CoroutineStart.ATOMIC) {
@@ -193,10 +193,10 @@ class FlowCircuitBreakerTest {
             assertThat(job.isCompleted).isTrue()
             assertThat(job.isCancelled).isTrue()
             assertThat(flowCompleted).isFalse()
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
-            assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
+            assertThat(metrics.numberOfFailedCalls).isZero()
+            assertThat(metrics.numberOfSuccessfulCalls).isZero()
+            assertThat(metrics.numberOfNotPermittedCalls).isZero()
         }
     }
 
@@ -209,7 +209,7 @@ class FlowCircuitBreakerTest {
             val parentJob = Job()
             val circuitBreaker = CircuitBreaker.ofDefaults("testName")
             val metrics = circuitBreaker.metrics
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
 
             //When
             val job = launch(parentJob) {
@@ -233,10 +233,10 @@ class FlowCircuitBreakerTest {
             assertThat(job.isCompleted).isTrue()
             assertThat(job.isCancelled).isTrue()
             assertThat(flowCompleted).isFalse()
-            assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
-            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
-            assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(0)
+            assertThat(metrics.numberOfBufferedCalls).isZero()
+            assertThat(metrics.numberOfFailedCalls).isZero()
+            assertThat(metrics.numberOfSuccessfulCalls).isZero()
+            assertThat(metrics.numberOfNotPermittedCalls).isZero()
         }
     }
 }

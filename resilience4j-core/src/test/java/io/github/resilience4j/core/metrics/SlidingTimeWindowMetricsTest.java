@@ -43,15 +43,15 @@ public class SlidingTimeWindowMetricsTest {
 
         Snapshot snapshot = metrics.getSnapshot();
 
-        assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(0);
-        assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(0);
-        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+        assertThat(snapshot.getTotalNumberOfCalls()).isZero();
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
+        assertThat(snapshot.getTotalNumberOfSlowCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
+        assertThat(snapshot.getTotalDuration().toMillis()).isZero();
+        assertThat(snapshot.getAverageDuration().toMillis()).isZero();
+        assertThat(snapshot.getFailureRate()).isZero();
     }
 
     @Test
@@ -62,13 +62,13 @@ public class SlidingTimeWindowMetricsTest {
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
+        assertThat(snapshot.getTotalNumberOfSlowCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+        assertThat(snapshot.getFailureRate()).isZero();
     }
 
     @Test
@@ -78,11 +78,11 @@ public class SlidingTimeWindowMetricsTest {
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isZero();
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getTotalNumberOfSlowCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getFailureRate()).isEqualTo(100);
@@ -97,13 +97,13 @@ public class SlidingTimeWindowMetricsTest {
             .record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SLOW_SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
         assertThat(snapshot.getTotalNumberOfSlowCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+        assertThat(snapshot.getFailureRate()).isZero();
     }
 
     @Test
@@ -134,7 +134,7 @@ public class SlidingTimeWindowMetricsTest {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         SlidingTimeWindowMetrics metrics = new SlidingTimeWindowMetrics(3, clock);
 
-        assertThat(metrics.headIndex).isEqualTo(0);
+        assertThat(metrics.headIndex).isZero();
 
         metrics.moveHeadIndexByOne();
 
@@ -146,7 +146,7 @@ public class SlidingTimeWindowMetricsTest {
 
         metrics.moveHeadIndexByOne();
 
-        assertThat(metrics.headIndex).isEqualTo(0);
+        assertThat(metrics.headIndex).isZero();
 
         metrics.moveHeadIndexByOne();
 
@@ -161,7 +161,7 @@ public class SlidingTimeWindowMetricsTest {
 
         Snapshot snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isZero();
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
@@ -201,35 +201,35 @@ public class SlidingTimeWindowMetricsTest {
 
         snapshot = metrics.getSnapshot();
 
-        assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(0);
-        assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(0);
-        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+        assertThat(snapshot.getTotalNumberOfCalls()).isZero();
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
+        assertThat(snapshot.getTotalDuration().toMillis()).isZero();
+        assertThat(snapshot.getAverageDuration().toMillis()).isZero();
+        assertThat(snapshot.getFailureRate()).isZero();
 
         clock.advanceByMillis(100);
 
         snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+        assertThat(snapshot.getFailureRate()).isZero();
 
         clock.advanceBySeconds(5);
 
         snapshot = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(snapshot.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration().toMillis()).isEqualTo(100);
         assertThat(snapshot.getAverageDuration().toMillis()).isEqualTo(100);
-        assertThat(snapshot.getFailureRate()).isEqualTo(0);
+        assertThat(snapshot.getFailureRate()).isZero();
     }
 
     @Test
@@ -240,7 +240,7 @@ public class SlidingTimeWindowMetricsTest {
         Snapshot result = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.ERROR);
 
         assertThat(result.getTotalNumberOfCalls()).isEqualTo(1);
-        assertThat(result.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(result.getNumberOfSuccessfulCalls()).isZero();
         assertThat(result.getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(result.getTotalDuration().toMillis()).isEqualTo(100);
 
@@ -313,7 +313,7 @@ public class SlidingTimeWindowMetricsTest {
         result = metrics.record(100, TimeUnit.MILLISECONDS, Metrics.Outcome.SUCCESS);
         assertThat(result.getTotalNumberOfCalls()).isEqualTo(1);
         assertThat(result.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(result.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(result.getNumberOfFailedCalls()).isZero();
         assertThat(result.getTotalDuration().toMillis()).isEqualTo(100);
     }
 }

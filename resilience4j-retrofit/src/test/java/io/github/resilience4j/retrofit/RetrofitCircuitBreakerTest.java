@@ -162,7 +162,7 @@ public class RetrofitCircuitBreakerTest {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls())
             .describedAs("Failed calls")
-            .isEqualTo(0);
+            .isZero();
 
         // Circuit breaker should still be closed, not hit open threshold
         assertThat(circuitBreaker.getState())
@@ -206,7 +206,7 @@ public class RetrofitCircuitBreakerTest {
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfFailedCalls())
             .describedAs("Failed calls")
-            .isEqualTo(0);
+            .isZero();
 
         // Circuit breaker should still be closed, not hit open threshold
         assertThat(circuitBreaker.getState())
@@ -381,10 +381,10 @@ public class RetrofitCircuitBreakerTest {
 
         // No metrics should exist because circuit breaker wasn't used
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(0);
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
+        assertThat(metrics.getNumberOfNotPermittedCalls()).isZero();
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
     }
 
     private void ensureAllRequestsAreExecuted(Duration timeout) throws InterruptedException {

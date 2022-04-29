@@ -41,9 +41,9 @@ class CoroutineRetryTest {
             //Then
             Assertions.assertThat(result).isEqualTo("Hello world")
             Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
@@ -68,10 +68,10 @@ class CoroutineRetryTest {
 
             //Then
             Assertions.assertThat(result).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
             Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked twice
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
         }
@@ -96,10 +96,10 @@ class CoroutineRetryTest {
 
             //Then
             Assertions.assertThat(result).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
             Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked twice
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
         }
@@ -125,9 +125,9 @@ class CoroutineRetryTest {
             }
 
             //Then
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
             Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
             // Then the helloWorldService should be invoked the maximum number of times
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
@@ -149,9 +149,9 @@ class CoroutineRetryTest {
             //Then
             Assertions.assertThat(function()).isEqualTo("Hello world")
             Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isEqualTo(0)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(0)
+            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked 1 time
             Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }

@@ -139,7 +139,7 @@ public class RateLimiterRegistryTest {
     @Test
     public void noTagsByDefault() {
         RateLimiter rateLimiter = RateLimiterRegistry.ofDefaults().rateLimiter("testName");
-        assertThat(rateLimiter.getTags()).hasSize(0);
+        assertThat(rateLimiter.getTags()).isEmpty();
     }
 
     @Test
