@@ -75,13 +75,13 @@ public class RetryConfigurationPropertiesTest {
             .getInstances().get("backend1");
         assertThat(instancePropertiesForRetry1.getWaitDuration()).isEqualTo(Duration.ofMillis(1000));
         assertThat(retry1).isNotNull();
-        assertThat(retry1.isFailAfterMaxAttempts()).isEqualTo(true);
+        assertThat(retry1.isFailAfterMaxAttempts()).isTrue();
         assertThat(retry1.getMaxAttempts()).isEqualTo(3);
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
         assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(99L);
         assertThat(retry2.getIntervalFunction().apply(2)).isEqualTo(99L);
-        assertThat(retry2.isFailAfterMaxAttempts()).isEqualTo(false);
+        assertThat(retry2.isFailAfterMaxAttempts()).isFalse();
     }
 
     @Test

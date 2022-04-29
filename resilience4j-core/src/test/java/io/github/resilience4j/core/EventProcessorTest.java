@@ -53,7 +53,7 @@ public class EventProcessorTest {
         assertThat(eventProcessor.onEventConsumers).hasSize(2);
         boolean consumed = eventProcessor.processEvent(1);
         then(logger).should(times(2)).info("1");
-        assertThat(consumed).isEqualTo(true);
+        assertThat(consumed).isTrue();
     }
 
     @Test
@@ -68,7 +68,7 @@ public class EventProcessorTest {
         assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(2);
         boolean consumed = eventProcessor.processEvent(1);
         then(logger).should(times(2)).info("1");
-        assertThat(consumed).isEqualTo(true);
+        assertThat(consumed).isTrue();
     }
 
     @Test
@@ -84,9 +84,9 @@ public class EventProcessorTest {
         assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(1);
         assertThat(eventProcessor.eventConsumerMap.get(Float.class.getName())).hasSize(1);
         boolean consumed = eventProcessor.processEvent(1);
-        assertThat(consumed).isEqualTo(true);
+        assertThat(consumed).isTrue();
         consumed = eventProcessor.processEvent(1.0f);
-        assertThat(consumed).isEqualTo(true);
+        assertThat(consumed).isTrue();
         then(logger).should(times(1)).info("1");
         then(logger).should(times(1)).info("1.0");
     }
@@ -101,7 +101,7 @@ public class EventProcessorTest {
 
         boolean consumed = eventProcessor.processEvent(1);
         then(logger).should(times(2)).info("1");
-        assertThat(consumed).isEqualTo(true);
+        assertThat(consumed).isTrue();
     }
 
     @Test
@@ -110,7 +110,7 @@ public class EventProcessorTest {
 
         boolean consumed = eventProcessor.processEvent(1);
 
-        assertThat(consumed).isEqualTo(false);
+        assertThat(consumed).isFalse();
     }
 
 

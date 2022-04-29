@@ -74,8 +74,8 @@ public class HedgeConfigTest {
 
         then(((AverageDurationSupplier) supplier)).isInstanceOf(AverageDurationSupplier.class);
         then(((AverageDurationSupplier) supplier).getFactor()).isEqualTo(200);
-        then(((AverageDurationSupplier) supplier).shouldMeasureErrors()).isEqualTo(false);
-        then(((AverageDurationSupplier) supplier).shouldUseFactorAsPercentage()).isEqualTo(false);
+        then(((AverageDurationSupplier) supplier).shouldMeasureErrors()).isFalse();
+        then(((AverageDurationSupplier) supplier).shouldUseFactorAsPercentage()).isFalse();
     }
 
 //    @Test

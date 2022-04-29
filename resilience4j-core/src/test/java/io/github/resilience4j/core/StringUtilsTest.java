@@ -8,16 +8,16 @@ public class StringUtilsTest {
 
     @Test
     public void testString() {
-        assertThat(StringUtils.isNotEmpty("bla")).isEqualTo(true);
+        assertThat(StringUtils.isNotEmpty("bla")).isTrue();
     }
 
     @Test
     public void testEmptyString() {
-        assertThat(StringUtils.isNotEmpty("")).isEqualTo(false);
+        assertThat(StringUtils.isNotEmpty("")).isFalse();
     }
 
     @Test
     public void testNull() {
-        assertThat(StringUtils.isNotEmpty(null)).isEqualTo(false);
+        assertThat(StringUtils.isNotEmpty(null)).isFalse();
     }
 }

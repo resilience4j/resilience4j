@@ -97,13 +97,13 @@ public class TimeLimiterConfigurationTest {
         TimeLimiter timeLimiter1 = timeLimiterRegistry.timeLimiter("backendWithDefaultConfig");
         assertThat(timeLimiter1).isNotNull();
         assertThat(timeLimiter1.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(Duration.ofSeconds(5));
-        assertThat(timeLimiter1.getTimeLimiterConfig().shouldCancelRunningFuture()).isEqualTo(true);
+        assertThat(timeLimiter1.getTimeLimiterConfig().shouldCancelRunningFuture()).isTrue();
 
         // Should get shared config and overwrite cancelRunningFuture
         TimeLimiter timeLimiter2 = timeLimiterRegistry.timeLimiter("backendWithSharedConfig");
         assertThat(timeLimiter2).isNotNull();
         assertThat(timeLimiter2.getTimeLimiterConfig().getTimeoutDuration()).isEqualTo(Duration.ofSeconds(2));
-        assertThat(timeLimiter2.getTimeLimiterConfig().shouldCancelRunningFuture()).isEqualTo(true);
+        assertThat(timeLimiter2.getTimeLimiterConfig().shouldCancelRunningFuture()).isTrue();
 
         // Unknown backend should get default config of Registry
         TimeLimiter timeLimiter3 = timeLimiterRegistry.timeLimiter("unknownBackend");

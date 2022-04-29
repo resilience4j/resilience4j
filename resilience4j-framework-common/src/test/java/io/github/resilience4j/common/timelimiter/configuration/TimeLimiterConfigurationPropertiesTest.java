@@ -46,7 +46,7 @@ public class TimeLimiterConfigurationPropertiesTest {
 
         assertThat(instancePropertiesForTimeLimiter1.getTimeoutDuration().toMillis()).isEqualTo(3000);
         assertThat(timeLimiter1).isNotNull();
-        assertThat(timeLimiter1.shouldCancelRunningFuture()).isEqualTo(true);
+        assertThat(timeLimiter1.shouldCancelRunningFuture()).isTrue();
 
         assertThat(timeLimiter2).isNotNull();
         assertThat(timeLimiter2.getTimeoutDuration().toMillis()).isEqualTo(5000);
@@ -89,13 +89,13 @@ public class TimeLimiterConfigurationPropertiesTest {
         // Should get default config and overwrite max attempt and wait time
         TimeLimiterConfig timeLimiter1 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backendWithDefaultConfig");
         assertThat(timeLimiter1).isNotNull();
-        assertThat(timeLimiter1.shouldCancelRunningFuture()).isEqualTo(true);
+        assertThat(timeLimiter1.shouldCancelRunningFuture()).isTrue();
         assertThat(timeLimiter1.getTimeoutDuration().toMillis()).isEqualTo(200);
 
         // Should get shared config and overwrite wait time
         TimeLimiterConfig timeLimiter2 = timeLimiterConfigurationProperties.createTimeLimiterConfig("backendWithSharedConfig");
         assertThat(timeLimiter2).isNotNull();
-        assertThat(timeLimiter2.shouldCancelRunningFuture()).isEqualTo(false);
+        assertThat(timeLimiter2.shouldCancelRunningFuture()).isFalse();
         assertThat(timeLimiter2.getTimeoutDuration().toMillis()).isEqualTo(300);
 
         // Unknown backend should get default config of Registry
@@ -169,7 +169,7 @@ public class TimeLimiterConfigurationPropertiesTest {
             .createTimeLimiterConfig("instanceWithSharedConfig", instanceWithSharedConfig, compositeTimeLimiterCustomizer());
         assertThat(instance).isNotNull();
         assertThat(instance.getTimeoutDuration()).isEqualTo(Duration.ofMillis(4000L));
-        assertThat(instance.shouldCancelRunningFuture()).isEqualTo(true);
+        assertThat(instance.shouldCancelRunningFuture()).isTrue();
     }
 
     @Test
@@ -196,13 +196,13 @@ public class TimeLimiterConfigurationPropertiesTest {
             .createTimeLimiterConfig("instanceWithSharedConfig", instanceWithSharedConfig, compositeTimeLimiterCustomizer());
         assertThat(instance1).isNotNull();
         assertThat(instance1.getTimeoutDuration()).isEqualTo(Duration.ofMillis(3000L));
-        assertThat(instance1.shouldCancelRunningFuture()).isEqualTo(true);
+        assertThat(instance1.shouldCancelRunningFuture()).isTrue();
 
         TimeLimiterConfig instance2 = timeLimiterConfigurationProperties
             .createTimeLimiterConfig("unknown", instanceWithDefaultConfig, compositeTimeLimiterCustomizer());
         assertThat(instance2).isNotNull();
         assertThat(instance2.getTimeoutDuration()).isEqualTo(Duration.ofMillis(4000L));
-        assertThat(instance2.shouldCancelRunningFuture()).isEqualTo(false);
+        assertThat(instance2.shouldCancelRunningFuture()).isFalse();
     }
 
     @Test
