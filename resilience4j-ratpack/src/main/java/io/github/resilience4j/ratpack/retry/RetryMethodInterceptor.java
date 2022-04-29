@@ -65,7 +65,6 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
     @Nullable
     private RetryRegistry registry;
 
-    @SuppressWarnings("unchecked")
     @Nullable
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -84,19 +83,19 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         if (Promise.class.isAssignableFrom(returnType)) {
             Promise<?> result = (Promise<?>) proceed(invocation);
             if (result != null) {
-                RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
+                RetryTransformer<Object> transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 result = result.transform(transformer);
             }
             return result;
         } else if (Flux.class.isAssignableFrom(returnType)) {
             Flux<?> result = (Flux<?>) proceed(invocation);
             if (result != null) {
-                RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
+                RetryTransformer<Object> transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Flux<?> temp = result;
                 Promise<?> promise = Promise
                     .async(f -> temp.collectList().subscribe(f::success, f::error))
                     .transform(transformer);
-                Flux next = Flux.create(subscriber ->
+                Flux<Object> next = Flux.create(subscriber ->
                     promise.onError(subscriber::error).then(value -> {
                         subscriber.next(value);
                         subscriber.complete();
@@ -108,11 +107,11 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         } else if (Mono.class.isAssignableFrom(returnType)) {
             Mono<?> result = (Mono<?>) proceed(invocation);
             if (result != null) {
-                RetryTransformer transformer = RetryTransformer.of(retry).recover(fallbackMethod);
+                RetryTransformer<Object> transformer = RetryTransformer.of(retry).recover(fallbackMethod);
                 final Mono<?> temp = result;
                 Promise<?> promise = Promise.async(f -> temp.subscribe(f::success, f::error))
                     .transform(transformer);
-                Mono next = Mono.create(subscriber ->
+                Mono<Object> next = Mono.create(subscriber ->
                     promise.onError(subscriber::error).then(subscriber::success)
                 );
                 result = fallbackMethod.onErrorResume(next);
@@ -126,11 +125,10 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private CompletionStage<?> executeCompletionStage(MethodInvocation invocation,
         CompletionStage<?> stage, io.github.resilience4j.retry.Retry.Context context,
         RecoveryFunction<?> recoveryFunction) {
-        final CompletableFuture promise = new CompletableFuture();
+        final CompletableFuture<Object> promise = new CompletableFuture<>();
         stage.whenComplete((v, t) -> {
             if (t != null) {
                 try {

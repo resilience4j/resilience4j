@@ -41,6 +41,7 @@ public class RetryConfigurationProperties extends CommonProperties {
     private static final String DEFAULT = "default";
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
+    private Duration waitDuration;
 
     /**
      * @param backend backend name
@@ -188,7 +189,8 @@ public class RetryConfigurationProperties extends CommonProperties {
      */
     private void configureRetryIntervalFunction(InstanceProperties properties, RetryConfig.Builder<Object> builder) {
         // these take precedence over deprecated properties. Setting one or the other will still work.
-        if (properties.getWaitDuration() != null && properties.getWaitDuration().toMillis() >= 0) {
+        Duration waitDuration = properties.getWaitDuration();
+        if (waitDuration != null && waitDuration.toMillis() >= 0) {
             if (Boolean.TRUE.equals(properties.getEnableExponentialBackoff()) &&
                 Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 configureExponentialBackoffAndRandomizedWait(properties, builder);
@@ -197,7 +199,7 @@ public class RetryConfigurationProperties extends CommonProperties {
             } else if (Boolean.TRUE.equals(properties.getEnableRandomizedWait())) {
                 configureRandomizedWait(properties, builder);
             } else {
-                builder.waitDuration(properties.getWaitDuration());
+                builder.waitDuration(waitDuration);
             }
         }
     }

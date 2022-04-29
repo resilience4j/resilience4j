@@ -177,8 +177,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
      */
     private void configureCircuitBreakerOpenStateIntervalFunction(InstanceProperties properties,
         CircuitBreakerConfig.Builder builder) {
-        if (properties.getWaitDurationInOpenState() != null
-            && properties.getWaitDurationInOpenState().toMillis() > 0) {
+        Duration waitDurationInOpenState = properties.getWaitDurationInOpenState();
+        if (waitDurationInOpenState != null
+            && waitDurationInOpenState.toMillis() > 0) {
             if (properties.getEnableExponentialBackoff() != null
                 && properties.getEnableExponentialBackoff()) {
                 configureEnableExponentialBackoff(properties, builder);
@@ -186,7 +187,7 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
                 && properties.getEnableRandomizedWait()) {
                 configureEnableRandomizedWait(properties, builder);
             } else {
-                builder.waitDurationInOpenState(properties.getWaitDurationInOpenState());
+                builder.waitDurationInOpenState(waitDurationInOpenState);
             }
         }
     }

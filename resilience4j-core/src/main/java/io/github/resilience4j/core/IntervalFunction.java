@@ -34,7 +34,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
 
         return (attempt) -> {
             checkAttempt(attempt);
-            return LongStream.iterate(intervalMillis, n -> backoffFunction.apply(n)).skip(attempt - 1).findFirst().getAsLong();
+            return LongStream.iterate(intervalMillis, n -> backoffFunction.apply(n)).skip(attempt - 1L).findFirst().getAsLong();
         };
     }
 

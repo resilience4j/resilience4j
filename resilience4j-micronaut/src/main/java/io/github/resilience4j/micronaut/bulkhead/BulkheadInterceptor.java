@@ -33,6 +33,7 @@ import io.reactivex.Flowable;
 
 import javax.inject.Singleton;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -143,6 +144,8 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
                         return ((CompletableFuture<?>) context.proceed()).get();
                     } catch (ExecutionException e) {
                         throw new CompletionException(e.getCause());
+                    } catch (CancellationException e) {
+                        throw e;
                     } catch (Throwable e) {
                         throw new CompletionException(e);
                     }
