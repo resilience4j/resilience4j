@@ -139,11 +139,13 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
         if (interceptedMethod.resultType() == InterceptedMethod.ResultType.COMPLETION_STAGE) {
             try {
-                return this.fallbackForFuture(bulkhead.executeSupplier(() -> {
+                return this.fallbackForFuture(bulkhead.executeCallable(() -> {
                     try {
                         return ((CompletableFuture<?>) context.proceed()).get();
                     } catch (ExecutionException e) {
                         throw new CompletionException(e.getCause());
+                    } catch (InterruptedException e) {
+                        throw e;
                     } catch (CancellationException e) {
                         throw e;
                     } catch (Throwable e) {
