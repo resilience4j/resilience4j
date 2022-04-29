@@ -43,6 +43,7 @@ public interface CheckedSupplier<T> {
         };
     }
 
+    @SuppressWarnings("unchecked")
     static <T extends Throwable, R> R sneakyThrow(Throwable t) throws T {
         throw (T) t;
     }

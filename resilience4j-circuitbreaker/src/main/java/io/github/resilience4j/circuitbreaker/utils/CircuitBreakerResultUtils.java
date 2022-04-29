@@ -17,7 +17,7 @@ public final class CircuitBreakerResultUtils {
     }
 
     public static <T extends Throwable> TransitionCheckThrowableBuilder<T> ifFailedWith(Class<T> exceptionClass) {
-        return new TransitionCheckThrowableBuilder(exceptionClass);
+        return new TransitionCheckThrowableBuilder<>(exceptionClass);
     }
 
     public static class TransitionCheckThrowableBuilder<T extends Throwable> {

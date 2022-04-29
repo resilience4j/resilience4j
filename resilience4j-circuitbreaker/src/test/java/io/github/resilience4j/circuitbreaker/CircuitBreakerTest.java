@@ -900,6 +900,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //create a Future
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willThrow(new ExecutionException(new RuntimeException("BAM!")));
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -1009,6 +1010,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willThrow(new ExecutionException(new InterruptedException()));
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -1065,6 +1067,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get(anyLong(), any(TimeUnit.class))).willThrow(new TimeoutException());
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -1094,6 +1097,7 @@ public class CircuitBreakerTest {
             .build();
         CircuitBreaker circuitBreaker = CircuitBreaker.of("testName", circuitBreakerConfig);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willReturn("Hello World");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);

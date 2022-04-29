@@ -62,6 +62,7 @@ public class TestContextPropagators {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static class TestThreadLocalContextPropagatorWithHolder<T> implements ContextPropagator<T> {
 
         @Override

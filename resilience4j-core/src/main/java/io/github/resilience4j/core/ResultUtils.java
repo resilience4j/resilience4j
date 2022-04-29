@@ -24,6 +24,7 @@ import java.util.function.Function;
 
 public class ResultUtils {
 
+    @SuppressWarnings("unchecked")
     public static <T> boolean isSuccessfulAndReturned(
         Either<? extends Throwable, ?> callsResult,
         Class<T> expectedClass,
@@ -47,6 +48,7 @@ public class ResultUtils {
         return isFailedAndThrown(callsResult, expectedClass, thrown -> true);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends Throwable>  boolean isFailedAndThrown(
         Either<? extends Throwable, ?> callsResult,
         Class<T> expectedClass,
