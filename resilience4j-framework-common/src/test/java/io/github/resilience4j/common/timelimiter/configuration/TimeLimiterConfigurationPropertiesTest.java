@@ -1,18 +1,18 @@
 package io.github.resilience4j.common.timelimiter.configuration;
 
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
+
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 
 public class TimeLimiterConfigurationPropertiesTest {
 

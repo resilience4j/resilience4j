@@ -18,18 +18,14 @@
  */
 package io.github.resilience4j.hedge;
 
-import io.github.resilience4j.hedge.internal.AverageDurationSupplier;
-import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import static org.assertj.core.api.BDDAssertions.then;
+import io.github.resilience4j.hedge.internal.AverageDurationSupplier;
+import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 
 public class HedgeConfigTest {
 

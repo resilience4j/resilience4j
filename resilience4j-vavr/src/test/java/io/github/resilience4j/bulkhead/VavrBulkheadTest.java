@@ -171,7 +171,7 @@ public class VavrBulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(BulkheadFullException.class);
@@ -187,7 +187,7 @@ public class VavrBulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);

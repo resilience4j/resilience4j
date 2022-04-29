@@ -353,7 +353,7 @@ public class BulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(BulkheadFullException.class);
@@ -369,7 +369,7 @@ public class BulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);

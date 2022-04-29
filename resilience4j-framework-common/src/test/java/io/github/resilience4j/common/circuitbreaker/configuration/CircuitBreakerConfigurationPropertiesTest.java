@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class CircuitBreakerConfigurationPropertiesTest {
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testCreateCircuitBreakerRegistry() {
         //Given
         CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties1 = new CircuitBreakerConfigurationProperties.InstanceProperties();
@@ -373,6 +374,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testRecordExceptionWithBaseConfig() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 
@@ -411,6 +413,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testIgnoreExceptionPredicateWithBaseConfig() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 

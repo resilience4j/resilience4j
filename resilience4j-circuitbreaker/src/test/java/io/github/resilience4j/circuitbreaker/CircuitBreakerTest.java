@@ -18,7 +18,36 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine;
+import static io.github.resilience4j.circuitbreaker.utils.CircuitBreakerResultUtils.ifFailedWith;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
@@ -26,26 +55,6 @@ import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static io.github.resilience4j.circuitbreaker.utils.CircuitBreakerResultUtils.ifFailedWith;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class CircuitBreakerTest {
 
@@ -474,7 +483,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
 
         // When
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         // Then
         assertThat(result.isFailure()).isTrue();
@@ -494,7 +503,7 @@ public class CircuitBreakerTest {
         });
 
         // When
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         // Then
         assertThat(result.isFailure()).isTrue();
@@ -515,7 +524,7 @@ public class CircuitBreakerTest {
         });
 
         // When
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         // Then
         assertThat(result.isFailure()).isTrue();
@@ -534,7 +543,7 @@ public class CircuitBreakerTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -560,7 +569,7 @@ public class CircuitBreakerTest {
             throw new SocketTimeoutException("BAM!");
         });
 
-        Try result = Try.run(() -> checkedRunnable.run());
+        Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
         // CircuitBreaker is still CLOSED, because SocketTimeoutException has not been recorded as a failure
@@ -837,6 +846,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willReturn("Hello World");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -861,6 +871,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willReturn("Hello World");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -945,6 +956,7 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
         //create a Future
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willThrow(new ExecutionException(new RuntimeException("BAM!")));
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -972,6 +984,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willThrow(new CancellationException());
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -1025,6 +1038,7 @@ public class CircuitBreakerTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willThrow(new InterruptedException());
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
@@ -1127,6 +1141,7 @@ public class CircuitBreakerTest {
         // CircuitBreaker is still CLOSED, because 1 failure is allowed
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
+        @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         given(future.get()).willThrow(new ExecutionException(new SocketTimeoutException("BAM!")));
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);

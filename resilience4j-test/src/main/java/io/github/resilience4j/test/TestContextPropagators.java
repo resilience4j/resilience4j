@@ -66,6 +66,7 @@ public class TestContextPropagators {
     public static class TestThreadLocalContextPropagatorWithHolder<T> implements ContextPropagator<T> {
 
         @Override
+        @SuppressWarnings("unchecked")
         public Supplier<Optional<T>> retrieve() {
             return () -> (Optional<T>) TestThreadLocalContextHolder.get();
         }

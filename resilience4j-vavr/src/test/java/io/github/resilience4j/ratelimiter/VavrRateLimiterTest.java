@@ -147,6 +147,7 @@ public class VavrRateLimiterTest {
 
     @Test
     public void shouldExecuteEitherSupplierAndReturnRequestNotPermitted() {
+        
         Supplier<Either<RuntimeException, String>> supplier = mock(Supplier.class);
         given(limit.acquirePermission(1)).willReturn(false);
 

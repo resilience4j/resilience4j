@@ -21,6 +21,7 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndReturnSuccess() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get()).thenReturn("Hello World");
 
@@ -44,6 +45,7 @@ public class CircuitBreakerFutureTest {
         throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get()).thenReturn("Hello World");
 
@@ -67,6 +69,7 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndThrowExecutionException() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get()).thenThrow(new ExecutionException(new RuntimeException("BAM!")));
 
@@ -91,6 +94,7 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndThrowTimeoutException() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get(anyLong(), any(TimeUnit.class))).thenThrow(new TimeoutException());
 
@@ -114,6 +118,7 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndCallerRequestCancelled() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get()).thenThrow(new CancellationException());
 
@@ -136,6 +141,7 @@ public class CircuitBreakerFutureTest {
     public void shouldDecorateFutureAndInterruptedExceptionThrownByTaskThread() throws Exception {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get(anyLong(), any(TimeUnit.class)))
             .thenThrow(new ExecutionException(new InterruptedException()));
@@ -165,6 +171,7 @@ public class CircuitBreakerFutureTest {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
 
         //long running task
+        @SuppressWarnings("unchecked")
         final Future<String> future = mock(Future.class);
         when(future.get()).thenThrow(new InterruptedException());
 

@@ -50,11 +50,4 @@ public class CircuitBreakerResultHandlingTest {
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
     }
-
-    private static class BusinessException extends Exception {
-
-        public BusinessException(String message) {
-            super(message);
-        }
-    }
 }

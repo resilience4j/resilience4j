@@ -18,21 +18,18 @@
  */
 package io.github.resilience4j.hedge;
 
-import io.github.resilience4j.core.ClassUtils;
-import io.github.resilience4j.core.ContextPropagator;
-import io.github.resilience4j.core.lang.Nullable;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
+import io.github.resilience4j.core.ClassUtils;
+import io.github.resilience4j.core.ContextPropagator;
+import io.github.resilience4j.core.lang.Nullable;
 
 /**
  * HedgeConfig manages the configuration of Hedges

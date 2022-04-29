@@ -15,15 +15,15 @@
  */
 package io.github.resilience4j.spelresolver.autoconfigure;
 
-import io.github.resilience4j.spelresolver.DefaultSpelResolver;
-import io.github.resilience4j.spelresolver.SpelResolver;
-import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 
 /**
  * {@link Configuration} for {@link SpelResolver}.

@@ -68,7 +68,6 @@ public class CircuitBreakerHystrixServerSideEvent {
             .flatMap(
                 circuitBreaker -> toFlux(circuitBreaker.getEventPublisher())
             );
-        BiFunction<CircuitBreakerEvent, CircuitBreaker, String> data = getCircuitBreakerEventStringFunction();
         return Flux.merge(publishEvents(eventStreams), getHeartbeatStream());
     }
 
