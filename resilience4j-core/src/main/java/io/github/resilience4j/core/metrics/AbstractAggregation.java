@@ -45,6 +45,9 @@ class AbstractAggregation {
             case ERROR:
                 numberOfFailedCalls++;
                 break;
+
+            default:
+                break;
         }
     }
 }

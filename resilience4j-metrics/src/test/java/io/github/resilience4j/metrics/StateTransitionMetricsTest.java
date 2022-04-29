@@ -37,6 +37,7 @@ import static org.junit.Assert.assertThat;
 
 public class StateTransitionMetricsTest {
 
+    @SuppressWarnings("rawtypes")
     private static void circuitBreakerMetricsUsesFirstStateObjectInstance(
         CircuitBreaker circuitBreaker, MetricRegistry metricRegistry) throws Exception {
         SortedMap<String, Gauge> gauges = metricRegistry.getGauges();

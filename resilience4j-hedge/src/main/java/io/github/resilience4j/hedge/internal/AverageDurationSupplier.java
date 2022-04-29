@@ -79,6 +79,8 @@ public class AverageDurationSupplier implements HedgeDurationSupplier {
                     metrics.record(duration.toNanos(), TimeUnit.NANOSECONDS, Metrics.Outcome.ERROR);
                 }
                 break;
+            default:
+                break;
         }
     }
 

@@ -51,11 +51,6 @@ public class ClassUtilsTest {
 
         private String bla;
 
-        public NoDefaultConstructorPredicate(String bla) {
-
-            this.bla = bla;
-        }
-
         @Override
         public boolean test(String o) {
             return o.equals(bla);

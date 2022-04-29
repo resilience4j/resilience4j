@@ -394,6 +394,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testIgnoreExceptionWithBaseConfig() {
         CircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
 

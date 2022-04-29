@@ -56,7 +56,7 @@ public class CacheRegistryStore<E> implements RegistryStore<E> {
         return values;
     }
 
-    static class AtomicComputeProcessor<String, E> implements EntryProcessor<String, E, E> {
+    static class AtomicComputeProcessor<E> implements EntryProcessor<String, E, E> {
 
         @Override
         public E process(MutableEntry<String, E> entry, Object... arguments) throws EntryProcessorException {
