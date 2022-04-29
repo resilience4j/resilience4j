@@ -88,7 +88,7 @@ public class RetryRegistryTest {
     @Test
     public void noTagsByDefault() {
         Retry retry = retryRegistry.retry("testName");
-        assertThat(retry.getTags()).hasSize(0);
+        assertThat(retry.getTags()).isEmpty();
     }
 
     @Test

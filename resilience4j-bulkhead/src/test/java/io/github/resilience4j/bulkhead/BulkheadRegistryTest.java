@@ -99,7 +99,7 @@ public class BulkheadRegistryTest {
     @Test
     public void noTagsByDefault() {
         Bulkhead retry = registry.bulkhead("testName");
-        assertThat(retry.getTags()).hasSize(0);
+        assertThat(retry.getTags()).isEmpty();
     }
 
     @Test

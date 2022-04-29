@@ -116,7 +116,7 @@ public class RetrofitRetryTest {
         final Retry.Metrics metrics = retry.getMetrics();
         verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test(expected = IOException.class)
@@ -139,7 +139,7 @@ public class RetrofitRetryTest {
         verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
         final Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt())
-            .isEqualTo(0);
+            .isZero();
     }
 
     @Test(expected = IOException.class)
@@ -161,7 +161,7 @@ public class RetrofitRetryTest {
 
         final Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt())
-            .isEqualTo(0);
+            .isZero();
 
         verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
     }
@@ -183,7 +183,7 @@ public class RetrofitRetryTest {
 
         final Retry.Metrics metrics = retry.getMetrics();
         verify(3, getRequestedFor(urlPathEqualTo("/greetingsResponse")));
-        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isZero();
     }
 
     @Test

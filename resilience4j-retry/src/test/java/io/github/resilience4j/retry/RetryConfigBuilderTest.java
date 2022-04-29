@@ -40,7 +40,7 @@ public class RetryConfigBuilderTest {
     @Test
     public void zeroWaitInterval() {
         final RetryConfig config = RetryConfig.custom().waitDuration(Duration.ofMillis(0)).build();
-        assertThat(config.getIntervalBiFunction().apply(1, null)).isEqualTo(0);
+        assertThat(config.getIntervalBiFunction().apply(1, null)).isZero();
     }
 
     @Test
@@ -195,7 +195,7 @@ public class RetryConfigBuilderTest {
 
     @Test()
     public void shouldBuilderCreateConfigEveryTime() {
-        final RetryConfig.Builder builder = RetryConfig.custom();
+        final RetryConfig.Builder<Object> builder = RetryConfig.custom();
         builder.maxAttempts(5);
         final RetryConfig config1 = builder.build();
         builder.maxAttempts(3);

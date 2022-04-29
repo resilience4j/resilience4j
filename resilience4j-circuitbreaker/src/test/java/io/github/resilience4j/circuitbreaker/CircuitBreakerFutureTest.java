@@ -32,9 +32,9 @@ public class CircuitBreakerFutureTest {
         assertThat(value).isEqualTo("Hello World");
 
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should().get();
@@ -57,9 +57,9 @@ public class CircuitBreakerFutureTest {
         decoratedFuture.get();
 
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should(times(2)).get();
@@ -83,8 +83,8 @@ public class CircuitBreakerFutureTest {
 
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should().get();
@@ -107,8 +107,8 @@ public class CircuitBreakerFutureTest {
 
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should().get(anyLong(), any(TimeUnit.class));
@@ -128,10 +128,10 @@ public class CircuitBreakerFutureTest {
 
         assertThat(thrown).isInstanceOf(CancellationException.class);
 
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should().get();
@@ -158,8 +158,8 @@ public class CircuitBreakerFutureTest {
 
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should().get(anyLong(), any(TimeUnit.class));
@@ -184,10 +184,10 @@ public class CircuitBreakerFutureTest {
         // InterruptedException directly.
         assertThat(thrown).isInstanceOf(InterruptedException.class);
 
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
-        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfNotPermittedCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
 
         then(future).should().get();

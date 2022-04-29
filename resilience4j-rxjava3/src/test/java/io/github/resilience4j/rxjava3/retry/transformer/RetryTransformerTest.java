@@ -71,8 +71,8 @@ public class RetryTransformerTest {
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
 
@@ -89,8 +89,8 @@ public class RetryTransformerTest {
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -108,8 +108,8 @@ public class RetryTransformerTest {
 
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
 
@@ -136,7 +136,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -158,7 +158,7 @@ public class RetryTransformerTest {
         Retry.Metrics metrics = retry.getMetrics();
 
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -182,7 +182,7 @@ public class RetryTransformerTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
@@ -236,8 +236,8 @@ public class RetryTransformerTest {
 
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -263,7 +263,7 @@ public class RetryTransformerTest {
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -286,7 +286,7 @@ public class RetryTransformerTest {
 
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -310,7 +310,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(2)).returnHelloWorld();
 
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
@@ -363,8 +363,8 @@ public class RetryTransformerTest {
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -390,7 +390,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(6)).sayHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -411,7 +411,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should().sayHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -438,7 +438,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -465,7 +465,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -487,7 +487,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -511,7 +511,7 @@ public class RetryTransformerTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 
@@ -561,7 +561,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -588,7 +588,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should(times(6)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
     }
 
     @Test
@@ -610,7 +610,7 @@ public class RetryTransformerTest {
         then(helloWorldService).should().returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isZero();
     }
 
     @Test
@@ -634,7 +634,7 @@ public class RetryTransformerTest {
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
         Retry.Metrics metrics = retry.getMetrics();
-        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(1);
     }
 

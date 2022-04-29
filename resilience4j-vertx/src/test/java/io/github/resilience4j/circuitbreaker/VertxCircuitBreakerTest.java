@@ -53,7 +53,7 @@ public class VertxCircuitBreakerTest {
     public void shouldDecorateFutureAndReturnWithSuccess(TestContext context) {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorld())
             .willReturn(Future.succeededFuture("Hello world"));
         Supplier<Future<String>> supplier = VertxCircuitBreaker
@@ -64,7 +64,7 @@ public class VertxCircuitBreakerTest {
         assertThat(future.succeeded()).isTrue();
         assertThat(future.result()).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorld();
     }
@@ -73,7 +73,7 @@ public class VertxCircuitBreakerTest {
     public void shouldExecuteFutureAndReturnWithSuccess() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorld())
             .willReturn(Future.succeededFuture("Hello world"));
 
@@ -83,7 +83,7 @@ public class VertxCircuitBreakerTest {
         assertThat(future.succeeded()).isTrue();
         assertThat(future.result()).isEqualTo("Hello world");
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfFailedCalls()).isZero();
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorld();
     }
@@ -92,7 +92,7 @@ public class VertxCircuitBreakerTest {
     public void shouldExecuteFutureAndReturnWithException() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         given(helloWorldService.returnHelloWorld())
             .willReturn(Future.failedFuture(new RuntimeException("BAM!")));
 
@@ -103,7 +103,7 @@ public class VertxCircuitBreakerTest {
         assertThat(future.cause()).isInstanceOf(RuntimeException.class);
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isZero();
         then(helloWorldService).should().returnHelloWorld();
     }
 

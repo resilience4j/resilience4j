@@ -86,7 +86,7 @@ public class CircuitBreakerExceptionHandlingTest {
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
         assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(1);
     }
 

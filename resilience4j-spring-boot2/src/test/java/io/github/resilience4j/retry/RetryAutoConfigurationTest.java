@@ -101,10 +101,10 @@ public class RetryAutoConfigurationTest {
         assertThat(retry.getName()).isEqualTo(RETRY_DUMMY_FEIGN_CLIENT_NAME);
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
         assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isZero();
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate
@@ -157,10 +157,10 @@ public class RetryAutoConfigurationTest {
         assertThat(retry.getName()).isEqualTo(RETRY_BACKEND_A);
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IOException())).isTrue();
 
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isEqualTo(0);
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
         assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt()).isEqualTo(1);
-        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isEqualTo(0);
+        assertThat(retry.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt()).isZero();
 
         // expect retry actuator endpoint contains both retries
         ResponseEntity<RetryEndpointResponse> retriesList = restTemplate

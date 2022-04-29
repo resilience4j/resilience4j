@@ -75,8 +75,8 @@ public class CircularEventConsumerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
         circuitBreaker.reset();
         CircuitBreaker.Metrics resetMetrics = circuitBreaker.getMetrics();
-        assertThat(resetMetrics.getNumberOfBufferedCalls()).isEqualTo(0);
-        assertThat(resetMetrics.getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(resetMetrics.getNumberOfBufferedCalls()).isZero();
+        assertThat(resetMetrics.getNumberOfFailedCalls()).isZero();
         //Because circuit emits 2 error events and one state transition event
         assertThat(ringBuffer.getBufferedEvents()).hasSize(8);
         assertThat(ringBuffer.getBufferedEventsStream()).hasSize(8);
@@ -107,7 +107,7 @@ public class CircularEventConsumerTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(3);
         //Because Subscription was too late
-        assertThat(ringBuffer.getBufferedEvents()).hasSize(0);
-        assertThat(ringBuffer.getBufferedEventsStream()).hasSize(0);
+        assertThat(ringBuffer.getBufferedEvents()).isEmpty();
+        assertThat(ringBuffer.getBufferedEventsStream()).isEmpty();
     }
 }

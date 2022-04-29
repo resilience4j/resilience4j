@@ -72,7 +72,7 @@ public class SemaphoreBulkheadTest {
     public void testBulkhead() throws InterruptedException {
         bulkhead.tryAcquirePermission();
         bulkhead.tryAcquirePermission();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         bulkhead.tryAcquirePermission();
         bulkhead.onComplete();
@@ -339,7 +339,7 @@ public class SemaphoreBulkheadTest {
         await().atMost(1, SECONDS)
             .until(() -> bulkheadThread.getState().equals(RUNNABLE));
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
         assertThat(bulkhead.tryEnterBulkhead()).isFalse();
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
@@ -349,11 +349,11 @@ public class SemaphoreBulkheadTest {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(0);
+        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isZero();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         assertThat(bulkhead.tryEnterBulkhead()).isTrue();
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
         assertThat(bulkhead.tryEnterBulkhead()).isFalse();
 
         Thread changerThread = new Thread(() -> {
@@ -376,7 +376,7 @@ public class SemaphoreBulkheadTest {
         await().atMost(1, SECONDS)
             .until(() -> changerThread.getState().equals(TERMINATED));
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
 
         bulkhead.onComplete();
@@ -393,7 +393,7 @@ public class SemaphoreBulkheadTest {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         bulkhead.tryAcquirePermission();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
         Thread bulkheadThread = new Thread(() -> {
@@ -406,7 +406,7 @@ public class SemaphoreBulkheadTest {
         await().atMost(1, SECONDS)
             .until(() -> bulkheadThread.getState().equals(TIMED_WAITING));
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(2)
@@ -429,7 +429,7 @@ public class SemaphoreBulkheadTest {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         bulkhead.tryAcquirePermission();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
         Thread bulkheadThread = new Thread(() -> {
@@ -441,7 +441,7 @@ public class SemaphoreBulkheadTest {
 
         await().atMost(1, SECONDS)
             .until(() -> bulkheadThread.getState().equals(TIMED_WAITING));
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)

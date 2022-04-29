@@ -54,7 +54,7 @@ public class TimeLimiterRegistryTest {
     public void noTagsByDefault() {
         TimeLimiter TimeLimiter = TimeLimiterRegistry.ofDefaults()
             .timeLimiter("testName");
-        assertThat(TimeLimiter.getTags()).hasSize(0);
+        assertThat(TimeLimiter.getTags()).isEmpty();
     }
 
     @Test

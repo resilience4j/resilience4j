@@ -88,7 +88,7 @@ public class BulkheadBuilderCustomizerTest {
         assertThat(bulkheadC).isNotNull();
         assertThat(bulkheadC.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(2);
         assertThat(bulkheadC.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(4);
-        assertThat(bulkheadC.getBulkheadConfig().getContextPropagator()).hasSize(0);
+        assertThat(bulkheadC.getBulkheadConfig().getContextPropagator()).isEmpty();
 
         //This test context propagator bean set to config using Customizer interface via SpringContext
         ThreadPoolBulkhead bulkheadD = threadPoolBulkheadRegistry.bulkhead("bulkheadD", "backendD");

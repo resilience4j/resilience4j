@@ -96,7 +96,7 @@ public class RateLimiterAutoConfigurationTest {
         rateLimiterDummyFeignClient.doSomething(EMPTY);
 
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(8);
-        assertThat(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isEqualTo(0);
+        assertThat(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isZero();
 
         assertThat(rateLimiter.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(10);
         assertThat(rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod())
@@ -161,7 +161,7 @@ public class RateLimiterAutoConfigurationTest {
         dummyService.doSomething(false);
 
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(8);
-        assertThat(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isEqualTo(0);
+        assertThat(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isZero();
 
         assertThat(rateLimiter.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(10);
         assertThat(rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod())

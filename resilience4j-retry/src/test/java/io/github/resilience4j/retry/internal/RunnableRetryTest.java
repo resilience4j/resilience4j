@@ -57,7 +57,7 @@ public class RunnableRetryTest {
         runnable.run();
 
         then(helloWorldService).should().sayHelloWorld();
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -81,7 +81,7 @@ public class RunnableRetryTest {
         retry.executeRunnable(helloWorldService::sayHelloWorld);
 
         then(helloWorldService).should().sayHelloWorld();
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -112,7 +112,7 @@ public class RunnableRetryTest {
         then(helloWorldService).should().sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test
@@ -133,7 +133,7 @@ public class RunnableRetryTest {
         then(helloWorldService).should().sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
     }
 
     @Test

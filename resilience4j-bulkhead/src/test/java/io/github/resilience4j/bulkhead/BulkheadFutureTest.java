@@ -156,7 +156,7 @@ public class BulkheadFutureTest {
         Bulkhead bulkhead = Bulkhead.of("test", config);
         bulkhead.tryAcquirePermission();
         bulkhead.tryAcquirePermission();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         given(future.get()).willReturn("Hello world");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);

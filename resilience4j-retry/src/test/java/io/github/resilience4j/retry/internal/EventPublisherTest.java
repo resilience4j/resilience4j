@@ -107,7 +107,7 @@ public class EventPublisherTest {
 
         then(helloWorldService).should().sayHelloWorld();
         assertThat(result.isFailure()).isTrue();
-        assertThat(sleptTime).isEqualTo(0);
+        assertThat(sleptTime).isZero();
         testSubscriber.assertValueCount(1).assertValues(RetryEvent.Type.IGNORED_ERROR);
     }
 }

@@ -73,7 +73,7 @@ public class RetryEventTest {
         RetryOnIgnoredErrorEvent retryOnIgnoredErrorEvent = new RetryOnIgnoredErrorEvent("test",
             new IOException("Bla"));
         assertThat(retryOnIgnoredErrorEvent.getName()).isEqualTo("test");
-        assertThat(retryOnIgnoredErrorEvent.getNumberOfRetryAttempts()).isEqualTo(0);
+        assertThat(retryOnIgnoredErrorEvent.getNumberOfRetryAttempts()).isZero();
         assertThat(retryOnIgnoredErrorEvent.getEventType()).isEqualTo(Type.IGNORED_ERROR);
         assertThat(retryOnIgnoredErrorEvent.getLastThrowable()).isInstanceOf(IOException.class);
         assertThat(retryOnIgnoredErrorEvent.toString()).contains(

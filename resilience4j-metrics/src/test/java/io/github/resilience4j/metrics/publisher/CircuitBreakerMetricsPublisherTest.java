@@ -59,6 +59,6 @@ public class CircuitBreakerMetricsPublisherTest extends AbstractCircuitBreakerMe
         assertThat(metricRegistry.getMetrics()).hasSize(10);
 
         circuitBreakerRegistry.remove(circuitBreaker.getName());
-        assertThat(metricRegistry.getMetrics()).hasSize(0);
+        assertThat(metricRegistry.getMetrics()).isEmpty();
     }
 }

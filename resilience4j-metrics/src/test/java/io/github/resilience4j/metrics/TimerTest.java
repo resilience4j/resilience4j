@@ -70,7 +70,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(metricRegistry.getCounters().size()).isEqualTo(2);
         assertThat(metricRegistry.getTimers().size()).isEqualTo(1);
         assertThat(value).isEqualTo("Hello world");
@@ -87,7 +87,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
@@ -101,7 +101,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
@@ -115,7 +115,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
@@ -125,7 +125,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
@@ -143,7 +143,7 @@ public class TimerTest {
             .until(() -> {
                 assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
                 assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-                assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+                assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
             });
         then(helloWorldService).should(times(1)).returnHelloWorld();
     }
@@ -158,7 +158,7 @@ public class TimerTest {
             .isInstanceOf(HelloWorldException.class);
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
     }
 
@@ -175,7 +175,7 @@ public class TimerTest {
             .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         then(helloWorldService).should().returnHelloWorld();
     }
@@ -190,7 +190,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().sayHelloWorldWithException();
     }
 
@@ -205,7 +205,7 @@ public class TimerTest {
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorld();
 
@@ -221,7 +221,7 @@ public class TimerTest {
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(2);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should(times(2)).returnHelloWorld();
     }
 
@@ -256,7 +256,7 @@ public class TimerTest {
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithName("Tom");
     }
 
@@ -272,7 +272,7 @@ public class TimerTest {
         assertThat(result).isEqualTo("Hello world Tom");
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(0);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
 }

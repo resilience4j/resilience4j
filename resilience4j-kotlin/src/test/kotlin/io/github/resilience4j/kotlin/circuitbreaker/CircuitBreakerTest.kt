@@ -31,7 +31,7 @@ class CircuitBreakerTest {
     fun `should execute successful function`() {
         val circuitBreaker = CircuitBreaker.ofDefaults("testName")
         val metrics = circuitBreaker.metrics
-        assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+        assertThat(metrics.numberOfBufferedCalls).isZero()
         val helloWorldService = HelloWorldService()
 
         //When
@@ -42,7 +42,7 @@ class CircuitBreakerTest {
         //Then
         assertThat(result).isEqualTo("Hello world")
         assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
-        assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
+        assertThat(metrics.numberOfFailedCalls).isZero()
         assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(1)
         // Then the helloWorldService should be invoked 1 time
         assertThat(helloWorldService.invocationCounter).isEqualTo(1)
@@ -53,7 +53,7 @@ class CircuitBreakerTest {
         val circuitBreaker = CircuitBreaker.ofDefaults("testName")
         circuitBreaker.transitionToOpenState()
         val metrics = circuitBreaker.metrics
-        assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+        assertThat(metrics.numberOfBufferedCalls).isZero()
         val helloWorldService = HelloWorldService()
 
         //When
@@ -67,12 +67,12 @@ class CircuitBreakerTest {
         }
 
         //Then
-        assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
-        assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
-        assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
+        assertThat(metrics.numberOfBufferedCalls).isZero()
+        assertThat(metrics.numberOfFailedCalls).isZero()
+        assertThat(metrics.numberOfSuccessfulCalls).isZero()
         assertThat(metrics.numberOfNotPermittedCalls).isEqualTo(1)
         // Then the helloWorldService should not be invoked
-        assertThat(helloWorldService.invocationCounter).isEqualTo(0)
+        assertThat(helloWorldService.invocationCounter).isZero()
     }
 
     @Test
@@ -80,7 +80,7 @@ class CircuitBreakerTest {
         // Given
         val circuitBreaker = CircuitBreaker.ofDefaults("testName")
         val metrics = circuitBreaker.metrics
-        assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+        assertThat(metrics.numberOfBufferedCalls).isZero()
         val helloWorldService = HelloWorldService()
 
         //When
@@ -91,7 +91,7 @@ class CircuitBreakerTest {
         //Then
         assertThat(function()).isEqualTo("Hello world")
         assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
-        assertThat(metrics.numberOfFailedCalls).isEqualTo(0)
+        assertThat(metrics.numberOfFailedCalls).isZero()
         assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(1)
         // Then the helloWorldService should be invoked 1 time
         assertThat(helloWorldService.invocationCounter).isEqualTo(1)
@@ -102,7 +102,7 @@ class CircuitBreakerTest {
         // Given
         val circuitBreaker = CircuitBreaker.ofDefaults("testName")
         val metrics = circuitBreaker.metrics
-        assertThat(metrics.numberOfBufferedCalls).isEqualTo(0)
+        assertThat(metrics.numberOfBufferedCalls).isZero()
         val helloWorldService = HelloWorldService()
 
         //When
@@ -119,7 +119,7 @@ class CircuitBreakerTest {
         }
         assertThat(metrics.numberOfBufferedCalls).isEqualTo(1)
         assertThat(metrics.numberOfFailedCalls).isEqualTo(1)
-        assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
+        assertThat(metrics.numberOfSuccessfulCalls).isZero()
         // Then the helloWorldService should be invoked 1 time
         assertThat(helloWorldService.invocationCounter).isEqualTo(1)
     }
