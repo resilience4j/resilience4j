@@ -17,11 +17,11 @@ public class PredicateCreatorTest {
 
         then(optionalPredicate).isNotEmpty();
         Predicate<Throwable> predicate = optionalPredicate.get();
-        then(predicate.test(new RuntimeException())).isEqualTo(true);
-        then(predicate.test(new IllegalArgumentException())).isEqualTo(true);
-        then(predicate.test(new Throwable())).isEqualTo(false);
-        then(predicate.test(new Exception())).isEqualTo(false);
-        then(predicate.test(new IOException())).isEqualTo(true);
+        then(predicate.test(new RuntimeException())).isTrue();
+        then(predicate.test(new IllegalArgumentException())).isTrue();
+        then(predicate.test(new Throwable())).isFalse();
+        then(predicate.test(new Exception())).isFalse();
+        then(predicate.test(new IOException())).isTrue();
 
     }
 
@@ -32,12 +32,12 @@ public class PredicateCreatorTest {
 
         then(optionalPredicate).isNotEmpty();
         Predicate<Throwable> predicate = optionalPredicate.get();
-        then(predicate.test(new RuntimeException())).isEqualTo(false);
-        then(predicate.test(new IllegalArgumentException())).isEqualTo(false);
-        then(predicate.test(new Throwable())).isEqualTo(true);
-        then(predicate.test(new Exception())).isEqualTo(true);
-        then(predicate.test(new IOException())).isEqualTo(true);
-        then(predicate.test(new BusinessException())).isEqualTo(false);
+        then(predicate.test(new RuntimeException())).isFalse();
+        then(predicate.test(new IllegalArgumentException())).isFalse();
+        then(predicate.test(new Throwable())).isTrue();
+        then(predicate.test(new Exception())).isTrue();
+        then(predicate.test(new IOException())).isTrue();
+        then(predicate.test(new BusinessException())).isFalse();
     }
 
     private class BusinessException extends Exception {

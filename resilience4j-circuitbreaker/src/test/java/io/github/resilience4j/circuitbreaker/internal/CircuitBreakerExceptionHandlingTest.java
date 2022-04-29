@@ -19,11 +19,11 @@ public class CircuitBreakerExceptionHandlingTest {
             .recordException(ex -> !(ex instanceof BusinessException))
             .build());
 
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
 
         // Call 2 is a failure
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("test"));
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
@@ -38,11 +38,11 @@ public class CircuitBreakerExceptionHandlingTest {
             .recordExceptions(IOException.class)
             .build());
 
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new IOException());
 
         // Call 2 is a failure
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("test"));
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
@@ -57,11 +57,11 @@ public class CircuitBreakerExceptionHandlingTest {
             .recordException(ex -> "record".equals(ex.getMessage()))
             .build());
 
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("record"));
 
         // Call 2 is a failure
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new BusinessException("bla"));
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
@@ -78,11 +78,11 @@ public class CircuitBreakerExceptionHandlingTest {
             .ignoreExceptions(NumberFormatException.class)
             .build());
 
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
 
         // Call 2 is a failure
-        assertThat(circuitBreaker.tryAcquirePermission()).isEqualTo(true);
+        assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new NumberFormatException());
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);

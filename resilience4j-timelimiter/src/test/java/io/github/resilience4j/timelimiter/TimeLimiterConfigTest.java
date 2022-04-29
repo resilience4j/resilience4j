@@ -63,7 +63,7 @@ public class TimeLimiterConfigTest {
                 .build();
 
         then(extendedConfig.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(20));
-        then(extendedConfig.shouldCancelRunningFuture()).isEqualTo(false);
+        then(extendedConfig.shouldCancelRunningFuture()).isFalse();
     }
 
 }

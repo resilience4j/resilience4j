@@ -160,7 +160,7 @@ public class CircuitBreakerConfigTest {
     public void shouldSetWritableStackTraces() {
         CircuitBreakerConfig circuitBreakerConfig = custom().writableStackTraceEnabled(false)
             .build();
-        then(circuitBreakerConfig.isWritableStackTraceEnabled()).isEqualTo(false);
+        then(circuitBreakerConfig.isWritableStackTraceEnabled()).isFalse();
     }
 
     @Test
@@ -239,11 +239,11 @@ public class CircuitBreakerConfigTest {
             .recordException(e -> "test".equals(e.getMessage())).build();
         Predicate<Throwable> recordExceptionPredicate = circuitBreakerConfig
             .getRecordExceptionPredicate();
-        then(recordExceptionPredicate.test(new Error("test"))).isEqualTo(true);
-        then(recordExceptionPredicate.test(new Error("fail"))).isEqualTo(false);
-        then(recordExceptionPredicate.test(new RuntimeException("test"))).isEqualTo(true);
-        then(recordExceptionPredicate.test(new Error())).isEqualTo(false);
-        then(recordExceptionPredicate.test(new RuntimeException())).isEqualTo(false);
+        then(recordExceptionPredicate.test(new Error("test"))).isTrue();
+        then(recordExceptionPredicate.test(new Error("fail"))).isFalse();
+        then(recordExceptionPredicate.test(new RuntimeException("test"))).isTrue();
+        then(recordExceptionPredicate.test(new Error())).isFalse();
+        then(recordExceptionPredicate.test(new RuntimeException())).isFalse();
     }
 
     @Test
@@ -252,11 +252,11 @@ public class CircuitBreakerConfigTest {
             .ignoreException(e -> "ignore".equals(e.getMessage())).build();
         Predicate<Throwable> ignoreExceptionPredicate = circuitBreakerConfig
             .getIgnoreExceptionPredicate();
-        then(ignoreExceptionPredicate.test(new Error("ignore"))).isEqualTo(true);
-        then(ignoreExceptionPredicate.test(new Error("fail"))).isEqualTo(false);
-        then(ignoreExceptionPredicate.test(new RuntimeException("ignore"))).isEqualTo(true);
-        then(ignoreExceptionPredicate.test(new Error())).isEqualTo(false);
-        then(ignoreExceptionPredicate.test(new RuntimeException())).isEqualTo(false);
+        then(ignoreExceptionPredicate.test(new Error("ignore"))).isTrue();
+        then(ignoreExceptionPredicate.test(new Error("fail"))).isFalse();
+        then(ignoreExceptionPredicate.test(new RuntimeException("ignore"))).isTrue();
+        then(ignoreExceptionPredicate.test(new Error())).isFalse();
+        then(ignoreExceptionPredicate.test(new RuntimeException())).isFalse();
     }
 
     @Test
@@ -267,19 +267,19 @@ public class CircuitBreakerConfigTest {
         final Predicate<? super Throwable> ignoreExceptionPredicate = circuitBreakerConfig
             .getIgnoreExceptionPredicate();
         then(ignoreExceptionPredicate.test(new Exception()))
-            .isEqualTo(false); // not explicitly ignored
+            .isFalse(); // not explicitly ignored
         then(ignoreExceptionPredicate.test(new ExtendsError()))
-            .isEqualTo(false); // not explicitly ignored
+            .isFalse(); // not explicitly ignored
         then(ignoreExceptionPredicate.test(new ExtendsException()))
-            .isEqualTo(false); // not explicitly ignored
+            .isFalse(); // not explicitly ignored
         then(ignoreExceptionPredicate.test(new BusinessException()))
-            .isEqualTo(true); // explicitly ignored
+            .isTrue(); // explicitly ignored
         then(ignoreExceptionPredicate.test(new RuntimeException()))
-            .isEqualTo(true); // explicitly ignored
+            .isTrue(); // explicitly ignored
         then(ignoreExceptionPredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(true); // inherits ignored because of RuntimeException is ignored
+            .isTrue(); // inherits ignored because of RuntimeException is ignored
         then(ignoreExceptionPredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(true); // explicitly ignored
+            .isTrue(); // explicitly ignored
     }
 
     @Test
@@ -288,17 +288,17 @@ public class CircuitBreakerConfigTest {
             .recordExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = circuitBreakerConfig
             .getRecordExceptionPredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly record
-        then(failurePredicate.test(new ExtendsError())).isEqualTo(false); // not explicitly included
+        then(failurePredicate.test(new Exception())).isFalse(); // not explicitly record
+        then(failurePredicate.test(new ExtendsError())).isFalse(); // not explicitly included
         then(failurePredicate.test(new ExtendsException()))
-            .isEqualTo(false); // not explicitly included
+            .isFalse(); // not explicitly included
         then(failurePredicate.test(new BusinessException()))
-            .isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included
+            .isFalse(); // not explicitly included
+        then(failurePredicate.test(new RuntimeException())).isTrue(); // explicitly included
         then(failurePredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(true); // inherits included because RuntimeException is included
+            .isTrue(); // inherits included because RuntimeException is included
         then(failurePredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(true); // explicitly included
+            .isTrue(); // explicitly included
     }
 
     @Test
@@ -310,23 +310,23 @@ public class CircuitBreakerConfigTest {
         final Predicate<? super Throwable> recordExceptionPredicate = circuitBreakerConfig
             .getRecordExceptionPredicate();
         then(recordExceptionPredicate.test(new Exception()))
-            .isEqualTo(false); // not explicitly included
+            .isFalse(); // not explicitly included
         then(recordExceptionPredicate.test(new Exception("test")))
-            .isEqualTo(true); // explicitly included by 1
+            .isTrue(); // explicitly included by 1
         then(recordExceptionPredicate.test(new ExtendsError()))
-            .isEqualTo(false); // not explicitly included
+            .isFalse(); // not explicitly included
         then(recordExceptionPredicate.test(new ExtendsException()))
-            .isEqualTo(false);  // explicitly excluded by 3
+            .isFalse();  // explicitly excluded by 3
         then(recordExceptionPredicate.test(new ExtendsException("test")))
-            .isEqualTo(true);  // explicitly included by 1
+            .isTrue();  // explicitly included by 1
         then(recordExceptionPredicate.test(new BusinessException()))
-            .isEqualTo(false); // not explicitly included
+            .isFalse(); // not explicitly included
         then(recordExceptionPredicate.test(new RuntimeException()))
-            .isEqualTo(true); // explicitly included by 2
+            .isTrue(); // explicitly included by 2
         then(recordExceptionPredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(true); // implicitly included by RuntimeException
+            .isTrue(); // implicitly included by RuntimeException
         then(recordExceptionPredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(true); // explicitly included
+            .isTrue(); // explicitly included
     }
 
     @Test
@@ -379,23 +379,23 @@ public class CircuitBreakerConfigTest {
         final Predicate<? super Throwable> ignoreExceptionPredicate = circuitBreakerConfig
             .getIgnoreExceptionPredicate();
         then(ignoreExceptionPredicate.test(new Exception()))
-            .isEqualTo(false); // not explicitly ignored
+            .isFalse(); // not explicitly ignored
         then(ignoreExceptionPredicate.test(new Exception("ignore")))
-            .isEqualTo(true); // explicitly ignored by 1
+            .isTrue(); // explicitly ignored by 1
         then(ignoreExceptionPredicate.test(new ExtendsError()))
-            .isEqualTo(false); // not explicitly ignored
+            .isFalse(); // not explicitly ignored
         then(ignoreExceptionPredicate.test(new ExtendsException()))
-            .isEqualTo(false);  // not explicitly ignored
+            .isFalse();  // not explicitly ignored
         then(ignoreExceptionPredicate.test(new ExtendsException("ignore")))
-            .isEqualTo(true);  // explicitly ignored 1
+            .isTrue();  // explicitly ignored 1
         then(ignoreExceptionPredicate.test(new BusinessException()))
-            .isEqualTo(true); // explicitly ignored 2
+            .isTrue(); // explicitly ignored 2
         then(ignoreExceptionPredicate.test(new RuntimeException()))
-            .isEqualTo(false); // not explicitly ignored
+            .isFalse(); // not explicitly ignored
         then(ignoreExceptionPredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(true); // explicitly ignored 2
+            .isTrue(); // explicitly ignored 2
         then(ignoreExceptionPredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(true); // implicitly ignored by ExtendsRuntimeException
+            .isTrue(); // implicitly ignored by ExtendsRuntimeException
     }
 
     @Test
@@ -424,7 +424,7 @@ public class CircuitBreakerConfigTest {
             .build();
 
         then(extendedConfig.getFailureRateThreshold()).isEqualTo(20f);
-        then(extendedConfig.isWritableStackTraceEnabled()).isEqualTo(false);
+        then(extendedConfig.isWritableStackTraceEnabled()).isFalse();
         then(extendedConfig.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(20_000);
         then(extendedConfig.getSlidingWindowSize()).isEqualTo(1000);
         then(extendedConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);

@@ -72,7 +72,7 @@ public class CircuitBreakerMetricsTest {
         assertThat(circuitBreakerMetrics.getNumberOfFailedCalls()).isEqualTo(6);
         assertThat(circuitBreakerMetrics.getNumberOfSuccessfulCalls()).isEqualTo(4);
         assertThat(circuitBreakerMetrics.getFailureRate()).isEqualTo(60);
-        assertThat(Result.hasExceededThresholds(result)).isEqualTo(true);
+        assertThat(Result.hasExceededThresholds(result)).isTrue();
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);

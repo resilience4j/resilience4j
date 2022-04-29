@@ -116,17 +116,17 @@ public class RetryConfigBuilderTest {
         RetryConfig retryConfig = RetryConfig.custom()
             .ignoreExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(true); // not explicitly excluded
-        then(failurePredicate.test(new ExtendsError())).isEqualTo(true); // not explicitly excluded
+        then(failurePredicate.test(new Exception())).isTrue(); // not explicitly excluded
+        then(failurePredicate.test(new ExtendsError())).isTrue(); // not explicitly excluded
         then(failurePredicate.test(new ExtendsException()))
-            .isEqualTo(true); // not explicitly excluded
+            .isTrue(); // not explicitly excluded
         then(failurePredicate.test(new ExtendsException2()))
-            .isEqualTo(true); // not explicitly excluded
-        then(failurePredicate.test(new RuntimeException())).isEqualTo(false); // explicitly excluded
+            .isTrue(); // not explicitly excluded
+        then(failurePredicate.test(new RuntimeException())).isFalse(); // explicitly excluded
         then(failurePredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(false); // inherits excluded from ExtendsException
+            .isFalse(); // inherits excluded from ExtendsException
         then(failurePredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(false); // explicitly excluded
+            .isFalse(); // explicitly excluded
     }
 
     @Test()
@@ -134,17 +134,17 @@ public class RetryConfigBuilderTest {
         RetryConfig retryConfig = RetryConfig.custom()
             .retryExceptions(RuntimeException.class, ExtendsExtendsException.class).build();
         final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new ExtendsError())).isEqualTo(false); // not explicitly included
+        then(failurePredicate.test(new Exception())).isFalse(); // not explicitly included
+        then(failurePredicate.test(new ExtendsError())).isFalse(); // not explicitly included
         then(failurePredicate.test(new ExtendsException()))
-            .isEqualTo(false); // not explicitly included
+            .isFalse(); // not explicitly included
         then(failurePredicate.test(new ExtendsException2()))
-            .isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included
+            .isFalse(); // not explicitly included
+        then(failurePredicate.test(new RuntimeException())).isTrue(); // explicitly included
         then(failurePredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(true); // inherits included from ExtendsException
+            .isTrue(); // inherits included from ExtendsException
         then(failurePredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(true); // explicitly included
+            .isTrue(); // explicitly included
     }
 
     @Test()
@@ -154,17 +154,17 @@ public class RetryConfigBuilderTest {
             .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class)
             .build();
         final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new ExtendsError())).isEqualTo(false); // not explicitly included
+        then(failurePredicate.test(new Exception())).isFalse(); // not explicitly included
+        then(failurePredicate.test(new ExtendsError())).isFalse(); // not explicitly included
         then(failurePredicate.test(new ExtendsException()))
-            .isEqualTo(false);  // explicitly excluded
+            .isFalse();  // explicitly excluded
         then(failurePredicate.test(new ExtendsException2()))
-            .isEqualTo(false); // not explicitly included
-        then(failurePredicate.test(new RuntimeException())).isEqualTo(true); // explicitly included
+            .isFalse(); // not explicitly included
+        then(failurePredicate.test(new RuntimeException())).isTrue(); // explicitly included
         then(failurePredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(false); // explicitly excluded
+            .isFalse(); // explicitly excluded
         then(failurePredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(false); // inherits excluded from ExtendsException
+            .isFalse(); // inherits excluded from ExtendsException
     }
 
     @Test()
@@ -175,22 +175,22 @@ public class RetryConfigBuilderTest {
             .ignoreExceptions(ExtendsException.class, ExtendsRuntimeException.class) //3
             .build();
         final Predicate<? super Throwable> failurePredicate = retryConfig.getExceptionPredicate();
-        then(failurePredicate.test(new Exception())).isEqualTo(false); // not explicitly included
+        then(failurePredicate.test(new Exception())).isFalse(); // not explicitly included
         then(failurePredicate.test(new Exception("test")))
-            .isEqualTo(true); // explicitly included by 1
-        then(failurePredicate.test(new ExtendsError())).isEqualTo(false); // ot explicitly included
+            .isTrue(); // explicitly included by 1
+        then(failurePredicate.test(new ExtendsError())).isFalse(); // ot explicitly included
         then(failurePredicate.test(new ExtendsException()))
-            .isEqualTo(false);  // explicitly excluded by 3
+            .isFalse();  // explicitly excluded by 3
         then(failurePredicate.test(new ExtendsException("test")))
-            .isEqualTo(false);  // explicitly excluded by 3 even if included by 1
+            .isFalse();  // explicitly excluded by 3 even if included by 1
         then(failurePredicate.test(new ExtendsException2()))
-            .isEqualTo(false); // not explicitly included
+            .isFalse(); // not explicitly included
         then(failurePredicate.test(new RuntimeException()))
-            .isEqualTo(true); // explicitly included by 2
+            .isTrue(); // explicitly included by 2
         then(failurePredicate.test(new ExtendsRuntimeException()))
-            .isEqualTo(false); // explicitly excluded by 3
+            .isFalse(); // explicitly excluded by 3
         then(failurePredicate.test(new ExtendsExtendsException()))
-            .isEqualTo(false); // inherits excluded from ExtendsException by 3
+            .isFalse(); // inherits excluded from ExtendsException by 3
     }
 
     @Test()
