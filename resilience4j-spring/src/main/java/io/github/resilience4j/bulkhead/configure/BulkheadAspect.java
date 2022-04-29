@@ -15,13 +15,15 @@
  */
 package io.github.resilience4j.bulkhead.configure;
 
-import io.github.resilience4j.bulkhead.*;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.core.lang.Nullable;
-import io.github.resilience4j.fallback.FallbackExecutor;
-import io.github.resilience4j.spelresolver.SpelResolver;
-import io.github.resilience4j.utils.AnnotationExtractor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,13 +34,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.fallback.FallbackExecutor;
+import io.github.resilience4j.spelresolver.SpelResolver;
+import io.github.resilience4j.utils.AnnotationExtractor;
 
 /**
  * This Spring AOP aspect intercepts all methods which are annotated with a {@link Bulkhead}
@@ -235,6 +240,8 @@ public class BulkheadAspect implements Ordered {
                             .toCompletableFuture().get();
                     } catch (ExecutionException e) {
                         throw new CompletionException(e.getCause());
+                    } catch (CancellationException e) {
+                        throw e;
                     } catch (Throwable e) {
                         throw new CompletionException(e);
                     }
