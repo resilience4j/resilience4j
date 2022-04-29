@@ -119,7 +119,10 @@ public class RetryMethodInterceptor extends AbstractMethodInterceptor {
             return result;
         } else if (CompletionStage.class.isAssignableFrom(returnType)) {
             CompletionStage stage = (CompletionStage) proceed(invocation);
-            return executeCompletionStage(invocation, stage, retry.context(), fallbackMethod);
+            if (stage != null) {
+                return executeCompletionStage(invocation, stage, retry.context(), fallbackMethod);
+            }
+            return stage;
         } else {
             return handleProceedWithException(invocation, retry, fallbackMethod);
         }

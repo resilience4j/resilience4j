@@ -234,12 +234,14 @@ public class BulkheadAspect implements Ordered {
             // threadPoolBulkhead.executeSupplier throws a BulkheadFullException, if the Bulkhead is full.
             // The RuntimeException is converted into an exceptionally completed future
             try {
-                return threadPoolBulkhead.executeSupplier(() -> {
+                return threadPoolBulkhead.executeCallable(() -> {
                     try {
                         return ((CompletionStage<?>) proceedingJoinPoint.proceed())
                             .toCompletableFuture().get();
                     } catch (ExecutionException e) {
                         throw new CompletionException(e.getCause());
+                    } catch (InterruptedException e) {
+                        throw e;
                     } catch (CancellationException e) {
                         throw e;
                     } catch (Throwable e) {
