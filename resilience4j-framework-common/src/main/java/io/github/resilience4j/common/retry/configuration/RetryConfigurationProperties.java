@@ -41,7 +41,6 @@ public class RetryConfigurationProperties extends CommonProperties {
     private static final String DEFAULT = "default";
     private final Map<String, InstanceProperties> instances = new HashMap<>();
     private Map<String, InstanceProperties> configs = new HashMap<>();
-    private Duration waitDuration;
 
     /**
      * @param backend backend name
