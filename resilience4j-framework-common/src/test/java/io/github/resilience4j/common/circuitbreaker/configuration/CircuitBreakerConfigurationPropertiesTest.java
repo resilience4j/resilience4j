@@ -72,7 +72,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
         //Then
         assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
-        assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(2);
 
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
             .createCircuitBreakerConfig("backend1", instanceProperties1,
@@ -131,7 +131,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         globalTagsForCircuitBreakers.put("testKey1", "testKet2");
         circuitBreakerConfigurationProperties.setTags(globalTagsForCircuitBreakers);
         //Then
-        assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(2);
         assertThat(circuitBreakerConfigurationProperties.getTags()).isNotEmpty();
         assertThat(circuitBreakerConfigurationProperties.getBackends().size()).isEqualTo(2);
         final CircuitBreakerConfig circuitBreakerConfig1 = circuitBreakerConfigurationProperties
@@ -182,7 +182,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
             .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
-        assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(2);
 
         // Should get default config and overwrite setPermittedNumberOfCallsInHalfOpenState
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
@@ -244,7 +244,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
             .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
-        assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(2);
 
         // Should get default config and overwrite setPermittedNumberOfCallsInHalfOpenState
         CircuitBreakerConfig circuitBreaker1 = circuitBreakerConfigurationProperties
@@ -442,7 +442,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         circuitBreakerConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get default config and overwrite registerHealthIndicator, allowHealthIndicatorToFail and eventConsumerBufferSize
         Optional<CircuitBreakerConfigurationProperties.InstanceProperties> circuitBreakerProperties =
@@ -467,7 +467,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         circuitBreakerConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(circuitBreakerConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(circuitBreakerConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get default config and overwrite registerHealthIndicator and eventConsumerBufferSize but not allowHealthIndicatorToFail
         Optional<CircuitBreakerConfigurationProperties.InstanceProperties> circuitBreakerProperties =

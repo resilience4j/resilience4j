@@ -65,22 +65,22 @@ public interface Hedge {
     /**
      * Creates a Hedge with a HedgeConfig configuration.
      *
-     * @param HedgeConfig the HedgeConfig
+     * @param hedgeConfig the HedgeConfig
      * @return The Hedge
      */
-    static Hedge of(HedgeConfig HedgeConfig) {
-        return of(DEFAULT_NAME, HedgeConfig);
+    static Hedge of(HedgeConfig hedgeConfig) {
+        return of(DEFAULT_NAME, hedgeConfig);
     }
 
     /**
      * Creates a Hedge with a HedgeConfig configuration.
      *
      * @param name        the name of the Hedge
-     * @param HedgeConfig the HedgeConfig
+     * @param hedgeConfig the HedgeConfig
      * @return The Hedge
      */
-    static Hedge of(String name, HedgeConfig HedgeConfig) {
-        return new HedgeImpl(name, HedgeConfig);
+    static Hedge of(String name, HedgeConfig hedgeConfig) {
+        return new HedgeImpl(name, hedgeConfig);
     }
 
     /**
@@ -91,13 +91,13 @@ public interface Hedge {
      * of the registry.
      *
      * @param name        the name of the Hedge
-     * @param HedgeConfig a custom Hedge configuration
+     * @param hedgeConfig a custom Hedge configuration
      * @param tags        tags added to the Hedge
      * @return a Hedge with a custom Hedge configuration.
      */
-    static Hedge of(String name, HedgeConfig HedgeConfig,
+    static Hedge of(String name, HedgeConfig hedgeConfig,
                     Map<String, String> tags) {
-        return new HedgeImpl(name, HedgeConfig, tags);
+        return new HedgeImpl(name, hedgeConfig, tags);
     }
 
     /**
