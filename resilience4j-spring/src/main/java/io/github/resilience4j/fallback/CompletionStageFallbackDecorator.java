@@ -17,6 +17,7 @@ package io.github.resilience4j.fallback;
 
 import io.github.resilience4j.core.functions.CheckedSupplier;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -37,8 +38,8 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
     public CheckedSupplier<Object> decorate(FallbackMethod fallbackMethod,
                                             CheckedSupplier<Object> supplier) {
         return supplier.andThen(request -> {
-            CompletionStage<Object> completionStage = (CompletionStage) request;
-            CompletableFuture promise = new CompletableFuture();
+            CompletionStage<Object> completionStage = (CompletionStage<Object>) request;
+            CompletableFuture<Object> promise = new CompletableFuture<>();
             completionStage.whenComplete((result, throwable) -> {
                 if (throwable != null){
                     if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
@@ -56,11 +57,11 @@ public class CompletionStageFallbackDecorator implements FallbackDecorator {
     }
 
     @SuppressWarnings("unchecked")
-    private void tryRecover(FallbackMethod fallbackMethod, CompletableFuture promise,
+    private void tryRecover(FallbackMethod fallbackMethod, CompletableFuture<Object> promise,
         Throwable throwable) {
         try {
-            CompletionStage<Object> completionStage = (CompletionStage) fallbackMethod.fallback(throwable);
-            completionStage.whenComplete((fallbackResult, fallbackThrowable) -> {
+            CompletionStage<Object> completionStage = (CompletionStage<Object>) fallbackMethod.fallback(throwable);
+            Objects.requireNonNull(completionStage).whenComplete((fallbackResult, fallbackThrowable) -> {
                     if (fallbackThrowable != null) {
                         promise.completeExceptionally(fallbackThrowable);
                     } else {

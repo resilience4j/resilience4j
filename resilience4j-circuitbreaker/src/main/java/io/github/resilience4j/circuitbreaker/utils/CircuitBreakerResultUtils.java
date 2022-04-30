@@ -12,6 +12,9 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Transit
 @SuppressWarnings("unchecked")
 public final class CircuitBreakerResultUtils {
 
+    private CircuitBreakerResultUtils() {
+    }
+
     public static boolean isFailedWith(Either<Object, Throwable> result, Class<? extends Throwable> exceptionClass) {
         return result.isRight() && exceptionClass.isAssignableFrom(result.get().getClass());
     }

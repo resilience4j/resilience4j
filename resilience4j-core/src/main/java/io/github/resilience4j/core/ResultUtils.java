@@ -24,6 +24,9 @@ import java.util.function.Function;
 
 public class ResultUtils {
 
+    private ResultUtils() {
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> boolean isSuccessfulAndReturned(
         Either<? extends Throwable, ?> callsResult,

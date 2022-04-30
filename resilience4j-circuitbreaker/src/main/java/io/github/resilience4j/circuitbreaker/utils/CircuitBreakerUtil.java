@@ -7,6 +7,9 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 
 public final class CircuitBreakerUtil {
 
+    private CircuitBreakerUtil() {
+    }
+
     /**
      * Indicates whether Circuit Breaker allows any calls or not.
      *

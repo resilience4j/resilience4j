@@ -29,7 +29,7 @@ public interface CheckedFunction<T, R> {
     R apply(T t) throws Throwable;
 
     default Function<T, R> unchecked() {
-        return (t1) -> {
+        return t1 -> {
             try {
                 return apply(t1);
             } catch(Throwable t) {
