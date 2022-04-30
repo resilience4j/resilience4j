@@ -22,6 +22,9 @@ import io.github.resilience4j.core.lang.Nullable;
 
 public class StringUtils {
 
+    private StringUtils() {
+    }
+
     public static boolean isNotEmpty(@Nullable String string) {
         return string != null && !string.isEmpty();
     }
