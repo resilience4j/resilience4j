@@ -11,10 +11,8 @@ dependencies {
 
     compileOnly project(':resilience4j-reactor')
     compileOnly project(':resilience4j-rxjava2')
-    compileOnly project(':resilience4j-prometheus')
     compileOnly project(':resilience4j-metrics')
 
-    testImplementation project(':resilience4j-prometheus')
     testImplementation project(':resilience4j-metrics')
     testImplementation(libraries.aspectj)
     testImplementation(libraries.rxjava2)
