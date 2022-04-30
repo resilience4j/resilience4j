@@ -66,7 +66,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
      */
     @Override
     public Optional<? extends MethodExecutionHandle<?, Object>> findFallbackMethod(MethodInvocationContext<Object, Object> context) {
-        ExecutableMethod executableMethod = context.getExecutableMethod();
+        ExecutableMethod<Object, Object> executableMethod = context.getExecutableMethod();
         final String fallbackMethod = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.TimeLimiter.class, "fallbackMethod").orElse("");
         Class<?> declaringType = context.getDeclaringType();
         return executionHandleLocator.findExecutionHandle(declaringType, fallbackMethod, context.getArgumentTypes());
@@ -79,7 +79,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
             return context.proceed();
         }
 
-        ExecutableMethod executableMethod = context.getExecutableMethod();
+        ExecutableMethod<Object, Object> executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.TimeLimiter.class).orElse("default");
         TimeLimiter timeLimiter = this.timeLimiterRegistry.timeLimiter(name);
 

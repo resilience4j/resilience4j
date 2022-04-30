@@ -52,10 +52,9 @@ public class EventProcessor<T> implements EventPublisher<T> {
 
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
-        final List<EventConsumer<T>> onEventConsumers = this.onEventConsumers;
         if (!onEventConsumers.isEmpty()) {
-            for (int i = 0, size = onEventConsumers.size(); i < size; i++) {
-                onEventConsumers.get(i).consumeEvent(event);
+            for (EventConsumer<T> onEventConsumer : onEventConsumers) {
+                onEventConsumer.consumeEvent(event);
             }
             consumed = true;
         }
@@ -63,8 +62,8 @@ public class EventProcessor<T> implements EventPublisher<T> {
         if (!eventConsumerMap.isEmpty()) {
             final List<EventConsumer<T>> consumers = this.eventConsumerMap.get(event.getClass().getName());
             if (consumers != null && !consumers.isEmpty()) {
-                for (int i = 0, size = consumers.size(); i < size; i++) {
-                    consumers.get(i).consumeEvent(event);
+                for (EventConsumer<T> consumer : consumers) {
+                    consumer.consumeEvent(event);
                 }
                 consumed = true;
             }

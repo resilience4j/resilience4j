@@ -1,5 +1,3 @@
-package io.github.resilience4j.core;
-
 /*
  *
  *  Copyright 2017: Robert Winkler
@@ -18,6 +16,9 @@ package io.github.resilience4j.core;
  *
  *
  */
+
+package io.github.resilience4j.core;
+
 public interface EventPublisher<T> {
 
     void onEvent(EventConsumer<T> onEventConsumer);

@@ -629,16 +629,14 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void handlePossibleTransition(CircuitBreakerConfig.TransitionCheckResult result) {
-            if (result.isTransitionToOpen()) {
-                if (isClosed.compareAndSet(true, false)) {
-                    if (result.getWaitDuration() != null) {
-                        transitionToOpenStateFor(result.getWaitDuration());
-                    } else if (result.getWaitUntil() != null) {
-                        transitionToOpenStateUntil(result.getWaitUntil());
-                    } else {
-                        throw new IllegalArgumentException("Transition check resulted in open request but now wait " +
-                            "attribute was set? This should never happen");
-                    }
+            if (result.isTransitionToOpen() && isClosed.compareAndSet(true, false)) {
+                if (result.getWaitDuration() != null) {
+                    transitionToOpenStateFor(result.getWaitDuration());
+                } else if (result.getWaitUntil() != null) {
+                    transitionToOpenStateUntil(result.getWaitUntil());
+                } else {
+                    throw new IllegalArgumentException("Transition check resulted in open request but now wait " +
+                        "attribute was set? This should never happen");
                 }
             }
         }
@@ -654,11 +652,9 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @param result the Result
          */
         private void checkIfThresholdsExceeded(Result result) {
-            if (Result.hasExceededThresholds(result)) {
-                if (isClosed.compareAndSet(true, false)) {
-                    publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
-                    transitionToOpenState();
-                }
+            if (Result.hasExceededThresholds(result) && isClosed.compareAndSet(true, false)) {
+                publishCircuitThresholdsExceededEvent(result, circuitBreakerMetrics);
+                transitionToOpenState();
             }
         }
 
@@ -1170,15 +1166,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
          * @param result the result
          */
         private void checkIfThresholdsExceeded(Result result) {
-            if (Result.hasExceededThresholds(result)) {
-                if (isHalfOpen.compareAndSet(true, false)) {
-                    transitionToOpenState();
-                }
+            if (Result.hasExceededThresholds(result) && isHalfOpen.compareAndSet(true, false)) {
+                transitionToOpenState();
             }
-            if (result == BELOW_THRESHOLDS) {
-                if (isHalfOpen.compareAndSet(true, false)) {
-                    transitionToClosedState();
-                }
+            if (result == BELOW_THRESHOLDS && isHalfOpen.compareAndSet(true, false)) {
+                transitionToClosedState();
             }
         }
 
