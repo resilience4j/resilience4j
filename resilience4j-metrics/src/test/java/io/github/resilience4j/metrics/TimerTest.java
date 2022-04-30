@@ -71,7 +71,7 @@ public class TimerTest {
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
-        assertThat(metricRegistry.getCounters().size()).isEqualTo(2);
+        assertThat(metricRegistry.getCounters()).hasSize(2);
         assertThat(metricRegistry.getTimers().size()).isEqualTo(1);
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();

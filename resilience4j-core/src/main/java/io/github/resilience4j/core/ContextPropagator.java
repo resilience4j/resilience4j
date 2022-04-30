@@ -230,18 +230,18 @@ public interface  ContextPropagator<T> {
 
         @Override
         public Supplier<Optional<T>> retrieve() {
-            return () -> Optional.empty();
+            return Optional::empty;
         }
 
         @Override
         public Consumer<Optional<T>> copy() {
-            return (t) -> {
+            return t -> {
             };
         }
 
         @Override
         public Consumer<Optional<T>> clear() {
-            return (t) -> {
+            return t -> {
             };
         }
     }

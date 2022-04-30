@@ -53,7 +53,7 @@ public class BulkheadConfigurationPropertiesTest {
         globalTags.put("testKey1", "testKet2");
         bulkheadConfigurationProperties.setTags(globalTags);
         //Then
-        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getInstances()).hasSize(2);
         assertThat(bulkheadConfigurationProperties.getTags()).isNotEmpty();
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
             .createBulkheadConfig(instanceProperties1, compositeBulkheadCustomizer(), "backend1");
@@ -107,7 +107,7 @@ public class BulkheadConfigurationPropertiesTest {
             .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
-        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getInstances()).hasSize(2);
 
         // Should get default config and overwrite max calls and wait time
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
@@ -173,7 +173,7 @@ public class BulkheadConfigurationPropertiesTest {
             .put("backendWithSharedConfig", backendWithSharedConfig);
 
         //Then
-        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(2);
+        assertThat(bulkheadConfigurationProperties.getInstances()).hasSize(2);
 
         // Should get default config and overwrite max calls and wait time
         BulkheadConfig bulkhead1 = bulkheadConfigurationProperties
@@ -273,7 +273,7 @@ public class BulkheadConfigurationPropertiesTest {
         bulkheadConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(bulkheadConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get defaults
         BulkheadConfigurationProperties.InstanceProperties bulkheadProperties =
@@ -295,7 +295,7 @@ public class BulkheadConfigurationPropertiesTest {
         bulkheadConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(bulkheadConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(bulkheadConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get default config and overwrite enableExponentialBackoff but not enableRandomizedWait
         BulkheadConfigurationProperties.InstanceProperties bulkheadProperties =

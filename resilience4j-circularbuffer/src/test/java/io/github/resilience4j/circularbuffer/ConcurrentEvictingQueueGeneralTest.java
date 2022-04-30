@@ -122,14 +122,14 @@ public class ConcurrentEvictingQueueGeneralTest {
         assertThat(queue).hasSize(1);
 
         queue.add(2);
-        assertThat(queue.size()).isEqualTo(2);
+        assertThat(queue).hasSize(2);
 
         queue.addAll(asList(3, 4, 5));
-        assertThat(queue.size()).isEqualTo(2);
+        assertThat(queue).hasSize(2);
 
         Integer peek = queue.peek();
         assertThat(peek).isEqualTo(4);
-        assertThat(queue.size()).isEqualTo(2);
+        assertThat(queue).hasSize(2);
 
         Integer poll = queue.poll();
         assertThat(poll).isEqualTo(4);
@@ -159,15 +159,15 @@ public class ConcurrentEvictingQueueGeneralTest {
 
         queue.offer(2);
         assertThat(queue.toArray()).containsExactly(1, 2);
-        assertThat(queue.size()).isEqualTo(2);
+        assertThat(queue).hasSize(2);
 
         queue.offer(3);
         assertThat(queue.toArray()).containsExactly(1, 2, 3);
-        assertThat(queue.size()).isEqualTo(3);
+        assertThat(queue).hasSize(3);
 
         queue.offer(4);
         assertThat(queue.toArray()).containsExactly(2, 3, 4);
-        assertThat(queue.size()).isEqualTo(3);
+        assertThat(queue).hasSize(3);
     }
 
     @Test
