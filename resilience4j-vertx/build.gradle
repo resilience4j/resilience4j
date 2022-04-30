@@ -1,7 +1,0 @@
-dependencies {
-    compileOnly(libraries.vertx)
-    implementation project(':resilience4j-circuitbreaker')
-    testImplementation(libraries.vertx_unit)
-    testImplementation(libraries.vertx)
-}
-ext.moduleName = 'io.github.resilience4j.vertx'
