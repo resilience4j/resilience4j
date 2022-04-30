@@ -50,7 +50,7 @@ public class CircularFifoBufferTest {
 
         List<Exception> bufferedExceptions = exceptionBuffer.toList();
 
-        assertThat(bufferedExceptions.size()).isEqualTo(4);
+        assertThat(bufferedExceptions).hasSize(4);
         assertThat(bufferedExceptions.get(0)).isInstanceOf(IllegalArgumentException.class);
         assertThat(bufferedExceptions.get(1)).isInstanceOf(IOException.class);
         assertThat(bufferedExceptions.get(2)).isInstanceOf(IllegalStateException.class);
@@ -74,6 +74,6 @@ public class CircularFifoBufferTest {
         assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
         assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
         assertThat(exceptionBuffer.take().get()).isInstanceOf(IOException.class);
-        assertThat(exceptionBuffer.take().isEmpty()).isTrue();
+        assertThat(exceptionBuffer.take()).isEmpty();
     }
 }

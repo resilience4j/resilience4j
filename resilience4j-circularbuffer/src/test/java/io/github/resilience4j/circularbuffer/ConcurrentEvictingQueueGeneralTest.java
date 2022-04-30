@@ -116,10 +116,10 @@ public class ConcurrentEvictingQueueGeneralTest {
     @Test
     public void poll() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
-        assertThat(queue.size()).isZero();
+        assertThat(queue).isEmpty();
 
         queue.add(1);
-        assertThat(queue.size()).isEqualTo(1);
+        assertThat(queue).hasSize(1);
 
         queue.add(2);
         assertThat(queue.size()).isEqualTo(2);
@@ -133,29 +133,29 @@ public class ConcurrentEvictingQueueGeneralTest {
 
         Integer poll = queue.poll();
         assertThat(poll).isEqualTo(4);
-        assertThat(queue.size()).isEqualTo(1);
+        assertThat(queue).hasSize(1);
 
         Integer secondPoll = queue.poll();
         assertThat(secondPoll).isEqualTo(5);
-        assertThat(queue.size()).isZero();
+        assertThat(queue).isEmpty();
 
         Integer emptyPoll = queue.poll();
         assertThat(emptyPoll).isNull();
-        assertThat(queue.size()).isZero();
+        assertThat(queue).isEmpty();
 
         queue.add(1);
-        assertThat(queue.size()).isEqualTo(1);
+        assertThat(queue).hasSize(1);
     }
 
     @Test
     public void offer() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(3);
-        assertThat(queue.isEmpty()).isTrue();
+        assertThat(queue).isEmpty();
 
         boolean offer = queue.offer(1);
         assertThat(offer).isTrue();
         assertThat(queue.toArray()).containsExactly(1);
-        assertThat(queue.size()).isEqualTo(1);
+        assertThat(queue).hasSize(1);
 
         queue.offer(2);
         assertThat(queue.toArray()).containsExactly(1, 2);
@@ -173,15 +173,15 @@ public class ConcurrentEvictingQueueGeneralTest {
     @Test
     public void offerWithOneLength() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(1);
-        assertThat(queue.size()).isZero();
+        assertThat(queue).isEmpty();
 
         queue.offer(1);
         assertThat(queue.toArray()).containsExactly(1);
-        assertThat(queue.size()).isEqualTo(1);
+        assertThat(queue).hasSize(1);
 
         queue.offer(2);
         assertThat(queue.toArray()).containsExactly(2);
-        assertThat(queue.size()).isEqualTo(1);
+        assertThat(queue).hasSize(1);
     }
 
     @Test
@@ -221,7 +221,7 @@ public class ConcurrentEvictingQueueGeneralTest {
 
         queue.clear();
         assertThat(queue).isEmpty();
-        assertThat(queue.size()).isZero();
+        assertThat(queue).isEmpty();
 
         queue.offer(3);
         assertThat(queue.toArray()).containsExactly(3);

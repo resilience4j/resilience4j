@@ -1046,9 +1046,9 @@ public interface CircuitBreaker {
      */
     final class CircuitBreakerFuture<T> implements Future<T> {
 
-        final private Future<T> future;
-        final private OnceConsumer<CircuitBreaker> onceToCircuitbreaker;
-        final private long start;
+        private final Future<T> future;
+        private final OnceConsumer<CircuitBreaker> onceToCircuitbreaker;
+        private final long start;
 
         CircuitBreakerFuture(CircuitBreaker circuitBreaker, Future<T> future) {
             this(circuitBreaker, future, circuitBreaker.getCurrentTimestamp());
