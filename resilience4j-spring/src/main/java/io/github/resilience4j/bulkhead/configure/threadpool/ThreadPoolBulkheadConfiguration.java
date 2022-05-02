@@ -21,8 +21,8 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
@@ -60,7 +60,7 @@ public class ThreadPoolBulkheadConfiguration {
      */
     @Bean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
+        CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
         @Qualifier("compositeThreadPoolBulkheadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
@@ -91,7 +91,7 @@ public class ThreadPoolBulkheadConfiguration {
      * @return a ThreadPoolBulkheadRegistry
      */
     private ThreadPoolBulkheadRegistry createBulkheadRegistry(
-        ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+        CommonThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
         CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
         Map<String, ThreadPoolBulkheadConfig> configs = threadPoolBulkheadConfigurationProperties
@@ -114,7 +114,7 @@ public class ThreadPoolBulkheadConfiguration {
      */
     private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,
         EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
-        ThreadPoolBulkheadConfigurationProperties properties) {
+        CommonThreadPoolBulkheadConfigurationProperties properties) {
         bulkheadRegistry.getEventPublisher()
             .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
             .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
@@ -122,7 +122,7 @@ public class ThreadPoolBulkheadConfiguration {
 
     private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
         ThreadPoolBulkhead bulkHead,
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
+        CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
         int eventConsumerBufferSize = ofNullable(bulkheadConfigurationProperties.getBackendProperties(bulkHead.getName()))
             .map(InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);

@@ -17,7 +17,7 @@ package io.github.resilience4j.micronaut.retry;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
-import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
+import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.lang.Nullable;
@@ -51,9 +51,9 @@ public class RetryRegistryFactory {
     }
 
     @Singleton
-    @Requires(beans = RetryConfigurationProperties.class)
+    @Requires(beans = CommonRetryConfigurationProperties.class)
     public RetryRegistry createRetryRegistry(
-        RetryConfigurationProperties retryConfigurationProperties,
+        CommonRetryConfigurationProperties retryConfigurationProperties,
         @RetryQualifier EventConsumerRegistry<RetryEvent> retryEventConsumerRegistry,
         @RetryQualifier RegistryEventConsumer<Retry> retryRegistryEventConsumer,
         @RetryQualifier CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
@@ -95,7 +95,7 @@ public class RetryRegistryFactory {
      */
     private void registerEventConsumer(RetryRegistry retryRegistry,
                                        EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
-                                       RetryConfigurationProperties rateLimiterConfigurationProperties) {
+                                       CommonRetryConfigurationProperties rateLimiterConfigurationProperties) {
         retryRegistry.getEventPublisher().onEntryAdded(
             event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
                 rateLimiterConfigurationProperties));
@@ -103,9 +103,9 @@ public class RetryRegistryFactory {
 
     private void registerEventConsumer(
         EventConsumerRegistry<RetryEvent> eventConsumerRegistry, Retry retry,
-        RetryConfigurationProperties retryConfigurationProperties) {
+        CommonRetryConfigurationProperties retryConfigurationProperties) {
         int eventConsumerBufferSize = Optional.ofNullable(retryConfigurationProperties.getBackendProperties(retry.getName()))
-            .map(RetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
+            .map(CommonRetryConfigurationProperties.InstanceProperties::getEventConsumerBufferSize)
             .orElse(100);
         retry.getEventPublisher().onEvent(eventConsumerRegistry.createEventConsumer(retry.getName(), eventConsumerBufferSize));
     }
@@ -119,7 +119,7 @@ public class RetryRegistryFactory {
      * @return a RateLimiterRegistry
      */
     private RetryRegistry createRetryRegistry(
-        RetryConfigurationProperties retryProperties,
+        CommonRetryConfigurationProperties retryProperties,
         RegistryEventConsumer<Retry> rateLimiterRegistryEventConsumer,
         CompositeCustomizer<RetryConfigCustomizer> compositeRateLimiterCustomizer) {
         Map<String, RetryConfig> configs = retryProperties.getConfigs()

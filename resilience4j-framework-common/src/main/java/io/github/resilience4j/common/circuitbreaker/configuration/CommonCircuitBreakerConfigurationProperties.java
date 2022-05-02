@@ -35,7 +35,7 @@ import java.util.function.Predicate;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.from;
 
-public class CircuitBreakerConfigurationProperties extends CommonProperties {
+public class CommonCircuitBreakerConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();

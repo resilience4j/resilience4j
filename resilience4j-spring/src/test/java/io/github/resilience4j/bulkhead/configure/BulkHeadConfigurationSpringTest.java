@@ -19,7 +19,7 @@ import io.github.resilience4j.TestThreadLocalContextPropagator;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.fallback.FallbackExecutor;
@@ -76,7 +76,7 @@ public class BulkHeadConfigurationSpringTest {
 
         private BulkheadConfigurationProperties bulkheadConfigurationProperties;
 
-        private ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties;
+        private CommonThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties;
 
         @Bean
         public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry() {
@@ -117,7 +117,7 @@ public class BulkHeadConfigurationSpringTest {
         }
 
         @Bean
-        public ThreadPoolBulkheadConfigurationProperties threadpoolBulkheadConfigurationProperties() {
+        public CommonThreadPoolBulkheadConfigurationProperties threadpoolBulkheadConfigurationProperties() {
             threadPoolBulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationPropertiesTest();
             return threadPoolBulkheadConfigurationProperties;
         }
@@ -133,7 +133,7 @@ public class BulkHeadConfigurationSpringTest {
 
         }
 
-        private class ThreadPoolBulkheadConfigurationPropertiesTest extends ThreadPoolBulkheadConfigurationProperties {
+        private class ThreadPoolBulkheadConfigurationPropertiesTest extends CommonThreadPoolBulkheadConfigurationProperties {
 
             ThreadPoolBulkheadConfigurationPropertiesTest() {
                 InstanceProperties instanceProperties = new InstanceProperties();

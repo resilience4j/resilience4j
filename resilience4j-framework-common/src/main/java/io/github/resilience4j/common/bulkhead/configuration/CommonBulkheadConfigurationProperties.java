@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class BulkheadConfigurationProperties extends CommonProperties {
+public class CommonBulkheadConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();

@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class ThreadPoolBulkheadConfigurationProperties extends CommonProperties {
+public class CommonThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();

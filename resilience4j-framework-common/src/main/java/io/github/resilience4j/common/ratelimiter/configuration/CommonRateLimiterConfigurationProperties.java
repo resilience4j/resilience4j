@@ -30,7 +30,7 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
-public class RateLimiterConfigurationProperties extends CommonProperties {
+public class CommonRateLimiterConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
     private Map<String, InstanceProperties> instances = new HashMap<>();

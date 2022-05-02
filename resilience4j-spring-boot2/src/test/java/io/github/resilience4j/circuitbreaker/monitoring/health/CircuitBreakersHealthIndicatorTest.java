@@ -158,7 +158,7 @@ public class CircuitBreakersHealthIndicatorTest {
 
     private void setCircuitBreakerWhen(CircuitBreaker.State givenState, CircuitBreaker circuitBreaker,
                                        CircuitBreakerConfig config, CircuitBreaker.Metrics metrics,
-                                       io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
+                                       io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties,
                                        CircuitBreakerConfigurationProperties circuitBreakerProperties,
                                        boolean allowHealthIndicatorToFail) {
 

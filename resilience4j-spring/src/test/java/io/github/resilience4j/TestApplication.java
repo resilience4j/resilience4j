@@ -17,7 +17,7 @@ package io.github.resilience4j;
 
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.retry.configure.RetryConfigurationProperties;
 import io.github.resilience4j.timelimiter.configure.TimeLimiterConfigurationProperties;
@@ -40,8 +40,8 @@ public class TestApplication {
     }
 
     @Bean
-    public ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties() {
-        return new ThreadPoolBulkheadConfigurationProperties();
+    public CommonThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties() {
+        return new CommonThreadPoolBulkheadConfigurationProperties();
     }
 
     @Bean

@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-
 /**
  * A {@link CircuitBreakerConfig} configures a {@link CircuitBreaker}
  */
@@ -58,10 +57,11 @@ public class CircuitBreakerConfig implements Serializable {
     private static final Function<Either<Object, Throwable>, TransitionCheckResult> DEFAULT_TRANSITION_ON_RESULT
         = any -> TransitionCheckResult.noTransition();
     // The default exception predicate counts all exceptions as failures.
-    private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
+
+    private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
     // The default exception predicate ignores no exceptions.
-    private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
-    private Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
+    private transient Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
+    private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
     private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
@@ -78,9 +78,9 @@ public class CircuitBreakerConfig implements Serializable {
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
-    private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
+    private transient IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
         .of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));
-    private Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult
+    private transient Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult
         = DEFAULT_TRANSITION_ON_RESULT;
     private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
     private Duration slowCallDurationThreshold = Duration

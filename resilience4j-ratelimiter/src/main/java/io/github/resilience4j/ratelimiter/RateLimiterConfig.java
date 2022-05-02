@@ -38,7 +38,7 @@ public class RateLimiterConfig implements Serializable {
     private final Duration timeoutDuration;
     private final Duration limitRefreshPeriod;
     private final int limitForPeriod;
-    private final Predicate<Either<? extends Throwable, ?>> drainPermissionsOnResult;
+    private final transient Predicate<Either<? extends Throwable, ?>> drainPermissionsOnResult;
     private final boolean writableStackTraceEnabled;
 
     private RateLimiterConfig(Duration timeoutDuration,

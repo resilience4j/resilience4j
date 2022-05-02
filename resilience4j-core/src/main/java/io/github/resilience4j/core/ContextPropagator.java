@@ -33,6 +33,8 @@ import static java.util.stream.Collectors.toMap;
  */
 public interface  ContextPropagator<T> {
 
+    public static final String CONTEXT_PROPAGATOR_LIST_SHOULD_BE_NON_NULL = "ContextPropagator list should be non null";
+
     /**
      * Retrieves value from the currently executing thread. This method should produce values (as
      * Supplier) that needs to be propagated to new thread.
@@ -89,7 +91,7 @@ public interface  ContextPropagator<T> {
     static <T> Supplier<T> decorateSupplier(List<? extends ContextPropagator> propagators,
                                             Supplier<T> supplier) {
 
-        Objects.requireNonNull(propagators, "ContextPropagator list should be non null");
+        Objects.requireNonNull(propagators, CONTEXT_PROPAGATOR_LIST_SHOULD_BE_NON_NULL);
 
         //Create identity map of <ContextPropagator,Optional Supplier value>, if we have duplicate ContextPropagators then last one wins.
         final Map<? extends ContextPropagator, Object> values = propagators.stream()
@@ -140,7 +142,7 @@ public interface  ContextPropagator<T> {
     static <T> Callable<T> decorateCallable(List<? extends ContextPropagator> propagators,
                                             Callable<T> callable) {
 
-        Objects.requireNonNull(propagators, "ContextPropagator list should be non null");
+        Objects.requireNonNull(propagators, CONTEXT_PROPAGATOR_LIST_SHOULD_BE_NON_NULL);
 
         //Create identity map of <ContextPropagator,Optional Supplier value>, if we have duplicate ContextPropagators then last one wins.
         final Map<? extends ContextPropagator, Object> values = propagators.stream()
@@ -170,7 +172,7 @@ public interface  ContextPropagator<T> {
      */
     static <T> Runnable decorateRunnable(List<? extends ContextPropagator> propagators,
                                          Runnable runnable) {
-        Objects.requireNonNull(propagators, "ContextPropagator list should be non null");
+        Objects.requireNonNull(propagators, CONTEXT_PROPAGATOR_LIST_SHOULD_BE_NON_NULL);
 
         //Create identity map of <ContextPropagator,Optional Supplier value>, if we have duplicate ContextPropagators then last one wins.
         final Map<? extends ContextPropagator, Object> values = propagators.stream()

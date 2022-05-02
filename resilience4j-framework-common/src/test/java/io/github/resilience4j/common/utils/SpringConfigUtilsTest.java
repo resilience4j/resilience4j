@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.common.utils;
 
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
-import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
-import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties;
+import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties;
+import io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -33,12 +33,12 @@ public class SpringConfigUtilsTest {
 
     @Test
     public void testBulkHeadMergeSpringProperties() {
-        BulkheadConfigurationProperties.InstanceProperties shared = new BulkheadConfigurationProperties.InstanceProperties();
+        CommonBulkheadConfigurationProperties.InstanceProperties shared = new CommonBulkheadConfigurationProperties.InstanceProperties();
         shared.setMaxConcurrentCalls(3);
         shared.setEventConsumerBufferSize(200);
         assertThat(shared.getEventConsumerBufferSize()).isEqualTo(200);
 
-        BulkheadConfigurationProperties.InstanceProperties instanceProperties = new BulkheadConfigurationProperties.InstanceProperties();
+        CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
         instanceProperties.setMaxConcurrentCalls(3);
         assertThat(instanceProperties.getEventConsumerBufferSize()).isNull();
 
@@ -50,14 +50,14 @@ public class SpringConfigUtilsTest {
     @Test
     public void testCircuitBreakerMergeSpringProperties() {
 
-        CircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         sharedProperties.setSlidingWindowSize(1337);
         sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
         sharedProperties.setRegisterHealthIndicator(true);
         sharedProperties.setAllowHealthIndicatorToFail(true);
         sharedProperties.setEventConsumerBufferSize(200);
 
-        CircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CircuitBreakerConfigurationProperties.InstanceProperties();
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setPermittedNumberOfCallsInHalfOpenState(99);
         assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
         assertThat(backendWithDefaultConfig.getAllowHealthIndicatorToFail()).isNull();
@@ -71,7 +71,7 @@ public class SpringConfigUtilsTest {
 
     @Test
     public void testRetrySpringProperties() {
-        RetryConfigurationProperties.InstanceProperties sharedProperties = new RetryConfigurationProperties.InstanceProperties();
+        CommonRetryConfigurationProperties.InstanceProperties sharedProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         sharedProperties.setMaxAttempts(2);
         sharedProperties.setWaitDuration(Duration.ofMillis(100));
         sharedProperties.setEnableRandomizedWait(true);
@@ -79,7 +79,7 @@ public class SpringConfigUtilsTest {
         sharedProperties.setExponentialMaxWaitDuration(Duration.ofMinutes(2));
         sharedProperties.setEnableExponentialBackoff(false);
 
-        RetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RetryConfigurationProperties.InstanceProperties();
+        CommonRetryConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonRetryConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("default");
         backendWithDefaultConfig.setWaitDuration(Duration.ofMillis(200L));
         assertThat(backendWithDefaultConfig.getEnableExponentialBackoff()).isNull();
@@ -97,14 +97,14 @@ public class SpringConfigUtilsTest {
     @Test
     public void testRateLimiterSpringProperties() {
 
-        RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties sharedProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         sharedProperties.setLimitForPeriod(2);
         sharedProperties.setLimitRefreshPeriod(Duration.ofMillis(6000000));
         sharedProperties.setSubscribeForEvents(true);
         sharedProperties.setRegisterHealthIndicator(true);
         sharedProperties.setEventConsumerBufferSize(200);
 
-        RateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("default");
         backendWithDefaultConfig.setLimitForPeriod(200);
         assertThat(backendWithDefaultConfig.getRegisterHealthIndicator()).isNull();
@@ -121,12 +121,12 @@ public class SpringConfigUtilsTest {
 	@Test
 	public void testTimeLimiterSpringProperties() {
 
-		TimeLimiterConfigurationProperties.InstanceProperties sharedProperties = new TimeLimiterConfigurationProperties.InstanceProperties();
+		CommonTimeLimiterConfigurationProperties.InstanceProperties sharedProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setTimeoutDuration(Duration.ofSeconds(20));
 		sharedProperties.setCancelRunningFuture(false);
 		sharedProperties.setEventConsumerBufferSize(200);
 
-		TimeLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new TimeLimiterConfigurationProperties.InstanceProperties();
+		CommonTimeLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setCancelRunningFuture(true);
 		assertThat(backendWithDefaultConfig.getEventConsumerBufferSize()).isNull();
 

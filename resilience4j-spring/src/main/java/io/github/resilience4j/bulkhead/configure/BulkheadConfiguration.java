@@ -23,7 +23,7 @@ import io.github.resilience4j.bulkhead.configure.threadpool.ThreadPoolBulkheadCo
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;

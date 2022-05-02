@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.bulkhead;
 
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.context.annotation.EachProperty;
 import io.micronaut.context.annotation.Parameter;
@@ -28,7 +28,7 @@ import java.util.List;
  * Configuration for the bulkhead registry
  */
 @ConfigurationProperties("resilience4j.bulkhead")
-public class BulkheadProperties extends BulkheadConfigurationProperties implements Toggleable {
+public class BulkheadProperties extends CommonBulkheadConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public BulkheadProperties(
@@ -52,7 +52,7 @@ public class BulkheadProperties extends BulkheadConfigurationProperties implemen
     }
 
     @EachProperty(value = "configs", primary = "default")
-    public static class InstancePropertiesConfigs extends BulkheadConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesConfigs extends CommonBulkheadConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesConfigs(@Parameter String name) {
@@ -66,7 +66,7 @@ public class BulkheadProperties extends BulkheadConfigurationProperties implemen
     }
 
     @EachProperty(value = "instances", primary = "default")
-    public static class InstancePropertiesInstances extends BulkheadConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesInstances extends CommonBulkheadConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesInstances(@Parameter String name) {

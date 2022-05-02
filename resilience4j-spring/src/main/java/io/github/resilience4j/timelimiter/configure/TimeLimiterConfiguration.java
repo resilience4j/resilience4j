@@ -18,7 +18,7 @@ package io.github.resilience4j.timelimiter.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
-import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;

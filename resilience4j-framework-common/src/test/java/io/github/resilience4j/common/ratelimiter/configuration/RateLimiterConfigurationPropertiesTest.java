@@ -38,7 +38,7 @@ public class RateLimiterConfigurationPropertiesTest {
     @Test
     public void testRateLimiterRegistry() {
         //Given
-        RateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceProperties1.setLimitForPeriod(2);
         instanceProperties1.setWritableStackTraceEnabled(false);
         instanceProperties1.setSubscribeForEvents(true);
@@ -46,12 +46,12 @@ public class RateLimiterConfigurationPropertiesTest {
         instanceProperties1.setLimitRefreshPeriod(Duration.ofMillis(100));
         instanceProperties1.setTimeoutDuration(Duration.ofMillis(100));
 
-        RateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceProperties2.setLimitForPeriod(4);
         instanceProperties2.setSubscribeForEvents(true);
         instanceProperties2.setWritableStackTraceEnabled(true);
 
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getInstances().put("backend1", instanceProperties1);
         rateLimiterConfigurationProperties.getInstances().put("backend2", instanceProperties2);
         Map<String,String> globalTagsForRateLimiters=new HashMap<>();
@@ -79,30 +79,30 @@ public class RateLimiterConfigurationPropertiesTest {
     @Test
     public void testCreateRateLimiterRegistryWithSharedConfigs() {
         //Given
-        RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setLimitForPeriod(3);
         defaultProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
         defaultProperties.setSubscribeForEvents(true);
         defaultProperties.setWritableStackTraceEnabled(false);
 
-        RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties sharedProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         sharedProperties.setLimitForPeriod(2);
         sharedProperties.setLimitRefreshPeriod(Duration.ofNanos(6000000));
         sharedProperties.setSubscribeForEvents(true);
 
-        RateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("defaultConfig");
         backendWithDefaultConfig.setLimitForPeriod(200);
         backendWithDefaultConfig.setSubscribeForEvents(true);
         backendWithDefaultConfig.setWritableStackTraceEnabled(true);
 
-        RateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         backendWithSharedConfig.setBaseConfig("sharedConfig");
         backendWithSharedConfig.setLimitForPeriod(300);
         backendWithSharedConfig.setSubscribeForEvents(true);
         backendWithSharedConfig.setWritableStackTraceEnabled(true);
 
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getConfigs().put("defaultConfig", defaultProperties);
         rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
@@ -143,29 +143,29 @@ public class RateLimiterConfigurationPropertiesTest {
     @Test
     public void testCreateRateLimiterRegistryWithDefaultConfig() {
         //Given
-        RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setLimitForPeriod(3);
         defaultProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
         defaultProperties.setSubscribeForEvents(true);
         defaultProperties.setWritableStackTraceEnabled(false);
 
-        RateLimiterConfigurationProperties.InstanceProperties sharedProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties sharedProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         sharedProperties.setLimitForPeriod(2);
         sharedProperties.setLimitRefreshPeriod(Duration.ofNanos(6000000));
         sharedProperties.setSubscribeForEvents(true);
 
-        RateLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         backendWithoutBaseConfig.setLimitForPeriod(200);
         backendWithoutBaseConfig.setSubscribeForEvents(true);
         backendWithoutBaseConfig.setWritableStackTraceEnabled(true);
 
-        RateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         backendWithSharedConfig.setBaseConfig("sharedConfig");
         backendWithSharedConfig.setLimitForPeriod(300);
         backendWithSharedConfig.setSubscribeForEvents(true);
         backendWithSharedConfig.setWritableStackTraceEnabled(true);
 
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
         rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
@@ -203,9 +203,9 @@ public class RateLimiterConfigurationPropertiesTest {
 
     @Test
     public void testCreateRateLimiterRegistryWithUnknownConfig() {
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
 
-        RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceProperties.setBaseConfig("unknownConfig");
         rateLimiterConfigurationProperties.getInstances().put("backend", instanceProperties);
 
@@ -219,8 +219,8 @@ public class RateLimiterConfigurationPropertiesTest {
 
     @Test
     public void testFindRateLimiterProperties() {
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
-        RateLimiterConfigurationProperties.InstanceProperties instanceProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceProperties.setLimitForPeriod(3);
         instanceProperties.setLimitRefreshPeriod(Duration.ofNanos(5000000));
         instanceProperties.setSubscribeForEvents(true);
@@ -237,19 +237,19 @@ public class RateLimiterConfigurationPropertiesTest {
 
     @Test
     public void testRateLimiterConfigWithBaseConfig() {
-        RateLimiterConfigurationProperties.InstanceProperties defaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties defaultConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         defaultConfig.setLimitForPeriod(2000);
         defaultConfig.setLimitRefreshPeriod(Duration.ofMillis(100L));
 
-        RateLimiterConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         sharedConfigWithDefaultConfig.setLimitRefreshPeriod(Duration.ofMillis(1000L));
         sharedConfigWithDefaultConfig.setBaseConfig("defaultConfig");
 
-        RateLimiterConfigurationProperties.InstanceProperties instanceWithSharedConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties instanceWithSharedConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         instanceWithSharedConfig.setBaseConfig("sharedConfig");
 
 
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
         rateLimiterConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
         rateLimiterConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);
@@ -264,23 +264,23 @@ public class RateLimiterConfigurationPropertiesTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnEventConsumerBufferSize() {
-        RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setEventConsumerBufferSize(-1);
     }
 
     @Test
     public void testFindRateLimiterPropertiesWithoutDefaultConfig() {
         //Given
-        RateLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
 
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
         assertThat(rateLimiterConfigurationProperties.getInstances().size()).isEqualTo(1);
 
         // Should get default config and overwrite registerHealthIndicator, allowHealthIndicatorToFail and eventConsumerBufferSize
-        Optional<RateLimiterConfigurationProperties.InstanceProperties> rateLimiterProperties =
+        Optional<CommonRateLimiterConfigurationProperties.InstanceProperties> rateLimiterProperties =
             rateLimiterConfigurationProperties.findRateLimiterProperties("backendWithoutBaseConfig");
         assertThat(rateLimiterProperties).isPresent();
         assertThat(rateLimiterProperties.get().getRegisterHealthIndicator()).isNull();
@@ -291,13 +291,13 @@ public class RateLimiterConfigurationPropertiesTest {
     @Test
     public void testFindCircuitBreakerPropertiesWithDefaultConfig() {
         //Given
-        RateLimiterConfigurationProperties.InstanceProperties defaultProperties = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setRegisterHealthIndicator(true);
         defaultProperties.setEventConsumerBufferSize(99);
 
-        RateLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new RateLimiterConfigurationProperties.InstanceProperties();
+        CommonRateLimiterConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonRateLimiterConfigurationProperties.InstanceProperties();
 
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties = new RateLimiterConfigurationProperties();
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties = new CommonRateLimiterConfigurationProperties();
         rateLimiterConfigurationProperties.getConfigs().put("default", defaultProperties);
         rateLimiterConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
@@ -305,7 +305,7 @@ public class RateLimiterConfigurationPropertiesTest {
         assertThat(rateLimiterConfigurationProperties.getInstances().size()).isEqualTo(1);
 
         // Should get default config and overwrite registerHealthIndicator and eventConsumerBufferSize but not allowHealthIndicatorToFail
-        Optional<RateLimiterConfigurationProperties.InstanceProperties> rateLimiterProperties =
+        Optional<CommonRateLimiterConfigurationProperties.InstanceProperties> rateLimiterProperties =
             rateLimiterConfigurationProperties.findRateLimiterProperties("backendWithoutBaseConfig");
         assertThat(rateLimiterProperties).isPresent();
         assertThat(rateLimiterProperties.get().getRegisterHealthIndicator()).isTrue();

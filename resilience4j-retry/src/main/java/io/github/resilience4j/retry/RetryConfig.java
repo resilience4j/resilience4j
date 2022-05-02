@@ -46,22 +46,22 @@ public class RetryConfig implements Serializable {
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
     @Nullable
-    private Predicate<Throwable> retryOnExceptionPredicate;
+    private transient Predicate<Throwable> retryOnExceptionPredicate;
 
     @Nullable
-    private Predicate retryOnResultPredicate;
+    private transient Predicate retryOnResultPredicate;
 
     private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
     private boolean failAfterMaxAttempts = false;
     private boolean writableStackTraceEnabled = true;
 
     @Nullable
-    private IntervalFunction intervalFunction;
+    private transient IntervalFunction intervalFunction;
 
-    private IntervalBiFunction intervalBiFunction = DEFAULT_INTERVAL_BI_FUNCTION;
+    private transient IntervalBiFunction intervalBiFunction = DEFAULT_INTERVAL_BI_FUNCTION;
 
     // The final exception predicate
-    private Predicate<Throwable> exceptionPredicate;
+    private transient Predicate<Throwable> exceptionPredicate;
 
     private RetryConfig() {
     }

@@ -46,7 +46,7 @@ public class HedgeConfig implements Serializable {
     private final boolean shouldMeasureErrors;
     private final int windowSize;
     private final Duration cutoff;
-    private final ContextPropagator[] contextPropagators;
+    private final transient ContextPropagator[] contextPropagators;
 
     private HedgeConfig(int concurrentHedges, HedgeDurationSupplierType durationSupplierType, boolean shouldUseFactorAsPercentage, int hedgeTimeFactor, boolean shouldMeasureErrors, int windowSize, Duration cutoff, ContextPropagator[] propagators) {
         this.concurrentHedges = concurrentHedges;
