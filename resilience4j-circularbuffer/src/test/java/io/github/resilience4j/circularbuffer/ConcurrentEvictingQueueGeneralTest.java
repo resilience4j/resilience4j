@@ -231,7 +231,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     public void toArray() throws Exception {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(5);
         Object[] objects = queue.toArray();
-        assertThat(objects.length).isZero();
+        assertThat(objects).isEmpty();
 
         queue.add(1);
         assertThat(queue.toArray()).containsExactly(1);
@@ -253,7 +253,7 @@ public class ConcurrentEvictingQueueGeneralTest {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(5);
 
         Integer[] emptyArray = queue.toArray(new Integer[]{});
-        assertThat(emptyArray.length).isZero();
+        assertThat(emptyArray).isEmpty();
 
         queue.add(1);
         assertThat(queue.toArray()).containsExactly(1);

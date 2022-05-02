@@ -10,3 +10,4 @@ vscode:
     - vscjava.vscode-java-test
     - richardwillis.vscode-gradle
     - vscjava.vscode-maven
+    - EditorConfig.EditorConfig

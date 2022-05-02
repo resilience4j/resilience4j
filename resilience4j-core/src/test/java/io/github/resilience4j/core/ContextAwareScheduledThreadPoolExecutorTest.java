@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.MDC;
@@ -79,7 +80,12 @@ public class ContextAwareScheduledThreadPoolExecutorTest {
         final ScheduledFuture<?> schedule = schedulerService.schedule(() -> {
             TestThreadLocalContextHolder.get().orElseThrow(() -> new RuntimeException("Found No Context"));
         }, 100, TimeUnit.MILLISECONDS);
-        await().atMost(200, TimeUnit.MILLISECONDS).until(matches(() -> schedule.get()));
+        try{
+            await().atMost(200, TimeUnit.MILLISECONDS).until(matches(() -> schedule.get()));
+        } catch (Exception exception) {
+            Assertions.fail("Must not throw an exception");
+        }
+        
     }
 
     @Test
