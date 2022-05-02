@@ -20,14 +20,26 @@ package io.github.resilience4j.kotlin.circuitbreaker
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.kotlin.isCancellation
-import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
 /**
  * Decorates and executes the given suspend function [block].
+ * Cancellation errors are ignored.
  */
-suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T {
+suspend fun <T> CircuitBreaker.executeSuspendFunction(
+    block: suspend () -> T
+): T = executeSuspendFunction({ t, c -> isCancellation(c, t) }, block)
+
+/**
+ * Decorates and executes the given suspend function [block].
+ * Release permission without recording error if [ignoreThrowablePredicate] is true.
+ */
+suspend fun <T> CircuitBreaker.executeSuspendFunction(
+    ignoreThrowablePredicate: (Throwable, CoroutineContext) -> Boolean,
+    block: suspend () -> T
+): T {
     acquirePermission()
     val start = System.nanoTime()
     try {
@@ -36,7 +48,7 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
         onResult(durationInNanos, TimeUnit.NANOSECONDS, result)
         return result
     } catch (exception: Throwable) {
-        if (isCancellation(coroutineContext, exception)) {
+        if (ignoreThrowablePredicate(exception, coroutineContext)) {
             releasePermission()
         } else {
             val durationInNanos = System.nanoTime() - start
@@ -45,6 +57,14 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(block: suspend () -> T): T
         throw exception
     }
 }
+
+/**
+ * Decorates and executes the given suspend function [block].
+ * All types of throwable including cancellation exceptions are recorded with [CircuitBreaker.onError]
+ */
+suspend fun <T> CircuitBreaker.executeSuspendFunctionAndRecordCancellationError(block: suspend () -> T): T =
+    executeSuspendFunction({ _, _ -> false }, block)
+
 
 /**
  * Decorates the given *suspend* function [block] and returns it.
