@@ -2,7 +2,7 @@ package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
-import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;

@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.timelimiter;
 
-import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties;
+import io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.context.annotation.EachProperty;
 import io.micronaut.context.annotation.Parameter;
@@ -28,7 +28,7 @@ import java.util.List;
  *
  */
 @ConfigurationProperties("resilience4j.timelimiter")
-public class TimeLimiterProperties extends TimeLimiterConfigurationProperties implements Toggleable {
+public class TimeLimiterProperties extends CommonTimeLimiterConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public TimeLimiterProperties(
@@ -52,7 +52,7 @@ public class TimeLimiterProperties extends TimeLimiterConfigurationProperties im
     }
 
     @EachProperty(value = "configs", primary = "default")
-    public static class InstancePropertiesConfigs extends TimeLimiterConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesConfigs extends CommonTimeLimiterConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesConfigs(@Parameter String name) {
@@ -66,7 +66,7 @@ public class TimeLimiterProperties extends TimeLimiterConfigurationProperties im
     }
 
     @EachProperty(value = "instances", primary = "default")
-    public static class InstancePropertiesInstances extends TimeLimiterConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesInstances extends CommonTimeLimiterConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesInstances(@Parameter String name) {

@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.retry;
 
-import io.github.resilience4j.common.retry.configuration.RetryConfigurationProperties;
+import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.context.annotation.EachProperty;
 import io.micronaut.context.annotation.Parameter;
@@ -29,7 +29,7 @@ import java.util.List;
  *
  */
 @ConfigurationProperties("resilience4j.retry")
-public class RetryProperties extends RetryConfigurationProperties implements Toggleable {
+public class RetryProperties extends CommonRetryConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public RetryProperties(
@@ -53,7 +53,7 @@ public class RetryProperties extends RetryConfigurationProperties implements Tog
     }
 
     @EachProperty(value = "configs", primary = "default")
-    public static class InstancePropertiesConfigs extends RetryConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesConfigs extends CommonRetryConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesConfigs(@Parameter String name) {
@@ -67,7 +67,7 @@ public class RetryProperties extends RetryConfigurationProperties implements Tog
     }
 
     @EachProperty(value = "instances", primary = "default")
-    public static class InstancePropertiesInstances extends RetryConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesInstances extends CommonRetryConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesInstances(@Parameter String name) {

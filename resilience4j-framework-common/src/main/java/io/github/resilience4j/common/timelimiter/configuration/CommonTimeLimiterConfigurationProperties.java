@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class TimeLimiterConfigurationProperties extends CommonProperties {
+public class CommonTimeLimiterConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
     private final Map<String, InstanceProperties> instances = new HashMap<>();

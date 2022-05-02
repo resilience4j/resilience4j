@@ -17,7 +17,7 @@ package io.github.resilience4j.micronaut.ratelimiter;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
-import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
+import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
@@ -94,7 +94,7 @@ public class RateLimiterRegistryFactory {
      */
     private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,
                                        EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
-                                       RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+                                       CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
         rateLimiterRegistry.getEventPublisher().onEntryAdded(
             event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
                 rateLimiterConfigurationProperties));
@@ -102,8 +102,8 @@ public class RateLimiterRegistryFactory {
 
     private void registerEventConsumer(
         EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter,
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-        final io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
+        final io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties limiterProperties = rateLimiterConfigurationProperties
             .getInstances().get(rateLimiter.getName());
         if (limiterProperties != null && limiterProperties.getSubscribeForEvents() != null
             && limiterProperties.getSubscribeForEvents()) {
@@ -124,7 +124,7 @@ public class RateLimiterRegistryFactory {
      * @return a RateLimiterRegistry
      */
     private RateLimiterRegistry createRateLimiterRegistry(
-        RateLimiterConfigurationProperties rateLimiterConfigurationProperties,
+        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties,
         RegistryEventConsumer<RateLimiter> rateLimiterRegistryEventConsumer,
         CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer) {
 

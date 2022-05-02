@@ -20,6 +20,7 @@ package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -30,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -73,15 +75,16 @@ public class HedgeImplTest {
         hedge.getEventPublisher().onEvent(event -> {
             throw new RuntimeException("BAD_CONSUMER");
         });
-        hedge.onPrimarySuccess(Duration.ofMillis(1000));
+        assertThatNoException().isThrownBy(() -> hedge.onPrimarySuccess(Duration.ofMillis(1000)));
     }
 
     @Test
     public void shouldNotPublishWithoutConsumers() {
         Mockito.doThrow(new RuntimeException("fail")).when(eventProcessor).consumeEvent(any());
-        hedge.onPrimarySuccess(Duration.ofMillis(1000));
-        hedge.onSecondarySuccess(Duration.ofMillis(1000));
-        hedge.onPrimaryFailure(Duration.ofMillis(1000), new Throwable());
-        hedge.onSecondaryFailure(Duration.ofMillis(1000), new Throwable());
+
+        assertThatNoException().isThrownBy(() -> hedge.onPrimarySuccess(Duration.ofMillis(1000)));
+        assertThatNoException().isThrownBy(() -> hedge.onSecondarySuccess(Duration.ofMillis(1000)));
+        assertThatNoException().isThrownBy(() -> hedge.onPrimaryFailure(Duration.ofMillis(1000), new Throwable()));
+        assertThatNoException().isThrownBy(() -> hedge.onSecondaryFailure(Duration.ofMillis(1000), new Throwable()));
     }
 }

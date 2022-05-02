@@ -31,9 +31,9 @@ public class RateLimitersHealthIndicatorTest {
             AtomicRateLimiter.AtomicRateLimiterMetrics.class);
         AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
         RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
-        io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties =
+        io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties =
             mock(
-                io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
+                io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties.class);
         RateLimiterConfigurationProperties rateLimiterProperties = mock(
             RateLimiterConfigurationProperties.class);
 
@@ -85,8 +85,8 @@ public class RateLimitersHealthIndicatorTest {
         AtomicRateLimiter.AtomicRateLimiterMetrics metrics = mock(AtomicRateLimiter.AtomicRateLimiterMetrics.class);
         AtomicRateLimiter rateLimiter = mock(AtomicRateLimiter.class);
         RateLimiterRegistry rateLimiterRegistry = mock(RateLimiterRegistry.class);
-        io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties instanceProperties =
-                mock(io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties.class);
+        io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties instanceProperties =
+                mock(io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties.class);
         RateLimiterConfigurationProperties rateLimiterProperties = mock(RateLimiterConfigurationProperties.class);
 
         //when

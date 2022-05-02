@@ -11,7 +11,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -66,7 +66,7 @@ public class RefreshScopedBulkheadAutoConfiguration {
     @org.springframework.cloud.context.config.annotation.RefreshScope
     @ConditionalOnMissingBean
     public ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry(
-        ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
+        CommonThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
         @Qualifier("compositeThreadPoolBulkheadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {

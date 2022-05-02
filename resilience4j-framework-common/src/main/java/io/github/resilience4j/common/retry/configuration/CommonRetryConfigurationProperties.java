@@ -36,7 +36,7 @@ import java.util.function.Predicate;
 /**
  * Main spring properties for retry configuration
  */
-public class RetryConfigurationProperties extends CommonProperties {
+public class CommonRetryConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
     private final Map<String, InstanceProperties> instances = new HashMap<>();

@@ -15,11 +15,11 @@
  */
 package io.github.resilience4j.bulkhead.autoconfigure;
 
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 
 @ConfigurationProperties(prefix = "resilience4j.thread-pool-bulkhead")
-public class ThreadPoolBulkheadProperties extends ThreadPoolBulkheadConfigurationProperties {
+public class ThreadPoolBulkheadProperties extends CommonThreadPoolBulkheadConfigurationProperties {
 
 }

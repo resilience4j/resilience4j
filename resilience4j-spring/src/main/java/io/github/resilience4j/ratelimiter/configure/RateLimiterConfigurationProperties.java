@@ -18,7 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 import org.springframework.core.Ordered;
 
 public class RateLimiterConfigurationProperties extends
-    io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties {
+    io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties {
 
     private int rateLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 2;
 

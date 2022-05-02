@@ -18,7 +18,7 @@ package io.github.resilience4j.ratelimiter.configure;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
-import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties.InstanceProperties;
+import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;

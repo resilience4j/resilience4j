@@ -7,7 +7,7 @@ import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextPropagator;
@@ -169,7 +169,7 @@ public class BulkheadBuilderCustomizerTest {
         }
 
         @Bean
-        public ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties() {
+        public CommonThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties() {
             return new ThreadPoolBulkheadConfigurationPropertiesTest();
         }
 
@@ -179,7 +179,7 @@ public class BulkheadBuilderCustomizerTest {
         }
 
         private class ThreadPoolBulkheadConfigurationPropertiesTest extends
-            ThreadPoolBulkheadConfigurationProperties {
+            CommonThreadPoolBulkheadConfigurationProperties {
 
             ThreadPoolBulkheadConfigurationPropertiesTest() {
                 InstanceProperties properties1 = new InstanceProperties();

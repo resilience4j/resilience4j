@@ -19,16 +19,16 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
     @Test
     public void tesFixedThreadPoolBulkHeadProperties() {
         //Given
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties1 = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties1.setCoreThreadPoolSize(1);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties2 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties2 = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties2.setCoreThreadPoolSize(2);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties3 = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendProperties3 = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendProperties3.setQueueCapacity(0);
 
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
+        CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new CommonThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getBackends().put("backend1", backendProperties1);
         bulkheadConfigurationProperties.getBackends().put("backend2", backendProperties2);
         bulkheadConfigurationProperties.getBackends().put("backend3", backendProperties3);
@@ -60,26 +60,26 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
     @Test
     public void testCreateThreadPoolBulkHeadPropertiesWithSharedConfigs() {
         //Given
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setCoreThreadPoolSize(1);
         defaultProperties.setQueueCapacity(1);
         defaultProperties.setKeepAliveDuration(Duration.ofMillis(5));
         defaultProperties.setMaxThreadPoolSize(10);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         sharedProperties.setCoreThreadPoolSize(2);
         sharedProperties.setMaxThreadPoolSize(20);
         sharedProperties.setQueueCapacity(2);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("defaultConfig");
         backendWithDefaultConfig.setCoreThreadPoolSize(3);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendWithSharedConfig.setBaseConfig("sharedConfig");
         backendWithSharedConfig.setCoreThreadPoolSize(4);
 
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
+        CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new CommonThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getConfigs().put("defaultConfig", defaultProperties);
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
@@ -120,25 +120,25 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
     @Test
     public void testCreateThreadPoolBulkHeadPropertiesWithDefaultConfig() {
         //Given
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setCoreThreadPoolSize(1);
         defaultProperties.setQueueCapacity(1);
         defaultProperties.setKeepAliveDuration(Duration.ofMillis(5));
         defaultProperties.setMaxThreadPoolSize(10);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         sharedProperties.setCoreThreadPoolSize(2);
         sharedProperties.setMaxThreadPoolSize(20);
         sharedProperties.setQueueCapacity(2);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendWithoutBaseConfig.setCoreThreadPoolSize(3);
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties backendWithSharedConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         backendWithSharedConfig.setBaseConfig("sharedConfig");
         backendWithSharedConfig.setCoreThreadPoolSize(4);
 
-        ThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
+        CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties = new CommonThreadPoolBulkheadConfigurationProperties();
         bulkheadConfigurationProperties.getConfigs().put("default", defaultProperties);
         bulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedProperties);
 
@@ -176,25 +176,25 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
 
     @Test(expected = IllegalArgumentException.class)
     public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSize() {
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setEventConsumerBufferSize(-1);
     }
 
     @Test
     public void testThreadPoolBulkheadConfigWithBaseConfig() {
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         defaultConfig.setMaxThreadPoolSize(2000);
         defaultConfig.setKeepAliveDuration(Duration.ofMillis(100L));
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties sharedConfigWithDefaultConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         sharedConfigWithDefaultConfig.setKeepAliveDuration(Duration.ofMillis(1000L));
         sharedConfigWithDefaultConfig.setBaseConfig("defaultConfig");
 
-        ThreadPoolBulkheadConfigurationProperties.InstanceProperties instanceWithSharedConfig = new ThreadPoolBulkheadConfigurationProperties.InstanceProperties();
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties instanceWithSharedConfig = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
         instanceWithSharedConfig.setBaseConfig("sharedConfig");
 
 
-        ThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties = new ThreadPoolBulkheadConfigurationProperties();
+        CommonThreadPoolBulkheadConfigurationProperties threadPoolBulkheadConfigurationProperties = new CommonThreadPoolBulkheadConfigurationProperties();
         threadPoolBulkheadConfigurationProperties.getConfigs().put("defaultConfig", defaultConfig);
         threadPoolBulkheadConfigurationProperties.getConfigs().put("sharedConfig", sharedConfigWithDefaultConfig);
         threadPoolBulkheadConfigurationProperties.getInstances().put("instanceWithSharedConfig", instanceWithSharedConfig);

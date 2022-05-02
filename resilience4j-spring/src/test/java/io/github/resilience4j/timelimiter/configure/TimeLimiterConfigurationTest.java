@@ -27,10 +27,10 @@ public class TimeLimiterConfigurationTest {
     public void testTimeLimiterRegistry() {
 
         // Given
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties1 = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         instanceProperties1.setTimeoutDuration(Duration.ofSeconds(3));
 
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties2 = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         instanceProperties2.setTimeoutDuration(Duration.ofSeconds(2));
 
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
@@ -61,19 +61,19 @@ public class TimeLimiterConfigurationTest {
     @Test
     public void testCreateTimeLimiterRegistryWithSharedConfigs() {
         // Given
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         defaultProperties.setTimeoutDuration(Duration.ofSeconds(3));
         defaultProperties.setCancelRunningFuture(true);
 
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties sharedProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         sharedProperties.setTimeoutDuration(Duration.ofSeconds(2));
         sharedProperties.setCancelRunningFuture(false);
 
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties backendWithDefaultConfig = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         backendWithDefaultConfig.setBaseConfig("default");
         backendWithDefaultConfig.setTimeoutDuration(Duration.ofSeconds(5));
 
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties backendWithSharedConfig = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         backendWithSharedConfig.setBaseConfig("sharedConfig");
         backendWithSharedConfig.setCancelRunningFuture(true);
 
@@ -117,7 +117,7 @@ public class TimeLimiterConfigurationTest {
     public void testCreateTimeLimiterRegistryWithUnknownConfig() {
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties = new TimeLimiterConfigurationProperties();
 
-        io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties.InstanceProperties();
+        io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties instanceProperties = new io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties.InstanceProperties();
         instanceProperties.setBaseConfig("unknownConfig");
         timeLimiterConfigurationProperties.getInstances().put("backend", instanceProperties);
 

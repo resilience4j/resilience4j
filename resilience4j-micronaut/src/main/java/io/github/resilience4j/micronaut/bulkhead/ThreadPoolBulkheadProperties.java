@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.bulkhead;
 
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.micronaut.context.annotation.*;
 import io.micronaut.core.naming.Named;
 import io.micronaut.core.util.Toggleable;
@@ -29,7 +29,7 @@ import java.util.List;
  * @author Michael Pollend
  */
 @ConfigurationProperties("resilience4j.thread-pool-bulkhead")
-public class ThreadPoolBulkheadProperties extends ThreadPoolBulkheadConfigurationProperties implements Toggleable {
+public class ThreadPoolBulkheadProperties extends CommonThreadPoolBulkheadConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public ThreadPoolBulkheadProperties(
@@ -57,7 +57,7 @@ public class ThreadPoolBulkheadProperties extends ThreadPoolBulkheadConfiguratio
     }
 
     @EachProperty(value = "configs", primary = "default")
-    public static class InstancePropertiesConfigs extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesConfigs extends CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesConfigs(@Parameter String name) {
@@ -71,7 +71,7 @@ public class ThreadPoolBulkheadProperties extends ThreadPoolBulkheadConfiguratio
     }
 
     @EachProperty(value = "instances", primary = "default")
-    public static class InstancePropertiesInstances extends ThreadPoolBulkheadConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesInstances extends CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesInstances(@Parameter String name) {

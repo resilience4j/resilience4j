@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.ratelimiter;
 
-import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigurationProperties;
+import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.context.annotation.EachProperty;
 import io.micronaut.context.annotation.Parameter;
@@ -29,7 +29,7 @@ import java.util.List;
  *
  */
 @ConfigurationProperties("resilience4j.ratelimiter")
-public class RateLimiterProperties extends RateLimiterConfigurationProperties implements Toggleable {
+public class RateLimiterProperties extends CommonRateLimiterConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public RateLimiterProperties(
@@ -53,7 +53,7 @@ public class RateLimiterProperties extends RateLimiterConfigurationProperties im
     }
 
     @EachProperty(value = "configs", primary = "default")
-    public static class InstancePropertiesConfigs extends RateLimiterConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesConfigs extends CommonRateLimiterConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesConfigs(@Parameter String name) {
@@ -67,7 +67,7 @@ public class RateLimiterProperties extends RateLimiterConfigurationProperties im
     }
 
     @EachProperty(value = "instances", primary = "default")
-    public static class InstancePropertiesInstances extends RateLimiterConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesInstances extends CommonRateLimiterConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesInstances(@Parameter String name) {

@@ -25,7 +25,7 @@ import io.github.resilience4j.circuitbreaker.configure.CircuitBreakerConfigurati
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
@@ -69,7 +69,7 @@ public class SpringBootCommonTest {
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.singletonList(BulkheadConfigCustomizer.of("backend", builder -> builder.maxConcurrentCalls(10)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean
-            .threadPoolBulkheadRegistry(new ThreadPoolBulkheadConfigurationProperties(),
+            .threadPoolBulkheadRegistry(new CommonThreadPoolBulkheadConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.singletonList(

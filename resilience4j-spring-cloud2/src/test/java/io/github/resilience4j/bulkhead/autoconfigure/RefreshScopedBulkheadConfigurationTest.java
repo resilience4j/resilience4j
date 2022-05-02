@@ -18,7 +18,7 @@ package io.github.resilience4j.bulkhead.autoconfigure;
 
 import io.github.resilience4j.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class RefreshScopedBulkheadConfigurationTest {
             new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
 
         assertThat(bulkheadConfig.threadPoolBulkheadRegistry(
-            new ThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
+            new CommonThreadPoolBulkheadConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
             new CompositeRegistryEventConsumer<>(emptyList()),
             new CompositeCustomizer<>(Collections.emptyList()))).isNotNull();
     }

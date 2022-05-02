@@ -15,7 +15,7 @@
  */
 package io.github.resilience4j.micronaut.circuitbreaker;
 
-import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigurationProperties;
+import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.context.annotation.EachProperty;
 import io.micronaut.context.annotation.Parameter;
@@ -27,7 +27,7 @@ import java.util.List;
  * Configuration for the circuit breaker registry
  */
 @ConfigurationProperties("resilience4j.circuitbreaker")
-public class CircuitBreakerProperties extends CircuitBreakerConfigurationProperties implements Toggleable {
+public class CircuitBreakerProperties extends CommonCircuitBreakerConfigurationProperties implements Toggleable {
     private boolean enabled;
 
     public CircuitBreakerProperties(
@@ -51,7 +51,7 @@ public class CircuitBreakerProperties extends CircuitBreakerConfigurationPropert
     }
 
     @EachProperty(value = "configs", primary = "default")
-    public static class InstancePropertiesConfigs extends CircuitBreakerConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesConfigs extends CommonCircuitBreakerConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesConfigs(@Parameter String name) {
@@ -65,7 +65,7 @@ public class CircuitBreakerProperties extends CircuitBreakerConfigurationPropert
     }
 
     @EachProperty(value = "instances", primary = "default")
-    public static class InstancePropertiesInstances extends CircuitBreakerConfigurationProperties.InstanceProperties implements Named {
+    public static class InstancePropertiesInstances extends CommonCircuitBreakerConfigurationProperties.InstanceProperties implements Named {
         private final String name;
 
         public InstancePropertiesInstances(@Parameter String name) {

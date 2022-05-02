@@ -20,7 +20,7 @@ import org.springframework.core.Ordered;
 
 @SuppressWarnings("squid:S2176")
 public class TimeLimiterConfigurationProperties extends
-    io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigurationProperties {
+    io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties {
 
     private int timeLimiterAspectOrder = Ordered.LOWEST_PRECEDENCE - 1;
 
