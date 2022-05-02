@@ -18,16 +18,16 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import com.statemachinesystems.mockclock.MockClock;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.IllegalStateTransitionException;
-import io.github.resilience4j.circuitbreaker.event.*;
-import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.IntervalFunction;
-import org.junit.Before;
-import org.junit.Test;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -36,13 +36,23 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.BDDAssertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.statemachinesystems.mockclock.MockClock;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
+import io.github.resilience4j.circuitbreaker.IllegalStateTransitionException;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnErrorEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnFailureRateExceededEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSlowCallRateExceededEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSuccessEvent;
+import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.IntervalFunction;
 
 public class CircuitBreakerStateMachineTest {
 
@@ -840,14 +850,14 @@ public class CircuitBreakerStateMachineTest {
     @Test
     public void allCircuitBreakerStatesAllowTransitionToMetricsOnlyMode() {
         for (final CircuitBreaker.State state : CircuitBreaker.State.values()) {
-            CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, CircuitBreaker.State.METRICS_ONLY);
+            assertThatNoException().isThrownBy(() -> CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, CircuitBreaker.State.METRICS_ONLY));
         }
     }
 
     @Test
     public void allCircuitBreakerStatesAllowTransitionToItsOwnState() {
         for (final CircuitBreaker.State state : CircuitBreaker.State.values()) {
-            CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, state);
+            assertThatNoException().isThrownBy(() -> CircuitBreaker.StateTransition.transitionBetween(circuitBreaker.getName(), state, state));
         }
     }
 

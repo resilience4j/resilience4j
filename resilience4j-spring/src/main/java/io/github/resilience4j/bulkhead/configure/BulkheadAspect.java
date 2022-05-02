@@ -240,9 +240,7 @@ public class BulkheadAspect implements Ordered {
                             .toCompletableFuture().get();
                     } catch (ExecutionException e) {
                         throw new CompletionException(e.getCause());
-                    } catch (InterruptedException e) {
-                        throw e;
-                    } catch (CancellationException e) {
+                    } catch (InterruptedException | CancellationException e) {
                         throw e;
                     } catch (Throwable e) {
                         throw new CompletionException(e);
