@@ -29,6 +29,7 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -49,7 +50,7 @@ import static java.util.Collections.emptyMap;
  * necessary until a permit is available, and then takes it. Once acquired, permits need not be
  * released.
  */
-public interface RateLimiter {
+public interface RateLimiter extends Closeable {
 
     /**
      * Creates a RateLimiter with a custom RateLimiter configuration.

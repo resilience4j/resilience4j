@@ -25,13 +25,11 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Collections.emptyMap;
@@ -54,6 +52,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final SemaphoreBasedRateLimiterMetrics metrics;
     private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
+    private final ScheduledFuture<?> scheduledFuture;
 
     /**
      * Creates a RateLimiter.
@@ -109,7 +108,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
         this.eventProcessor = new RateLimiterEventProcessor();
 
-        scheduleLimitRefresh();
+        this.scheduledFuture = scheduleLimitRefresh();
     }
 
     private ScheduledExecutorService configureScheduler() {
@@ -121,13 +120,17 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return newSingleThreadScheduledExecutor(threadFactory);
     }
 
-    private void scheduleLimitRefresh() {
-        scheduler.scheduleAtFixedRate(
+    private ScheduledFuture<?> scheduleLimitRefresh() {
+        return scheduler.scheduleAtFixedRate(
             this::refreshLimit,
             this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
             this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
             TimeUnit.NANOSECONDS
         );
+    }
+
+    public ScheduledFuture<?> getScheduledFuture() {
+        return scheduledFuture;
     }
 
     void refreshLimit() {
@@ -258,6 +261,13 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
             return;
         }
         eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (this.scheduledFuture != null && !this.scheduledFuture.isCancelled()) {
+            this.scheduledFuture.cancel(true);
+        }
     }
 
     /**
