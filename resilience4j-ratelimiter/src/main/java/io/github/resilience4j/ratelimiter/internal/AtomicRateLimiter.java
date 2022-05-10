@@ -24,6 +24,7 @@ import static java.lang.Thread.currentThread;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -411,6 +412,11 @@ public class AtomicRateLimiter implements RateLimiter {
             return;
         }
         eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 
     /**
