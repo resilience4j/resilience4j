@@ -130,6 +130,7 @@ task jacocoMergeTest(type: JacocoMerge) {
 }
 
 task jacocoRootTestReport(type: JacocoReport) {
+    dependsOn test
 
     coreProjects.each { dependsOn("${it.name}:test") }
     coreProjects.each { dependsOn("${it.name}:jacocoTestReport") }
