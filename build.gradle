@@ -25,6 +25,10 @@ allprojects {
     }
 }
 
+asciidoctorj {
+    noDefaultRepositories = true
+}
+
 ext {
     coreProjects = subprojects.findAll {
         p -> !p.name.endsWith("-bom")
