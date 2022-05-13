@@ -97,7 +97,7 @@ configure(project.coreProjects) {
 
     jacocoTestReport {
         reports {
-            xml.enabled true
+            xml.required.set(true)
         }
     }
 
@@ -149,10 +149,10 @@ task jacocoRootTestReport(type: JacocoReport) {
     }
 
     reports {
-        xml.enabled true
+        xml.required.set(true)
         xml.destination file(allTestCoverageFile)
-        html.enabled true
-        csv.enabled false
+        html.required.set(true)
+        csv.required.set(false)
     }
 }
 
