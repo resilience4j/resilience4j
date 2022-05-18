@@ -25,11 +25,14 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnDrainedEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Collections.emptyMap;
@@ -127,10 +130,6 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
             this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
             TimeUnit.NANOSECONDS
         );
-    }
-
-    public ScheduledFuture<?> getScheduledFuture() {
-        return scheduledFuture;
     }
 
     void refreshLimit() {
@@ -263,9 +262,14 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 
-    @Override
-    public void close() throws IOException {
-        if (this.scheduledFuture != null && !this.scheduledFuture.isCancelled()) {
+    /**
+     *  Close the scheduled task that refresh permissions if you don't use the {@link  SemaphoreBasedRateLimiter} anymore.
+     *  Otherwise, the {@link SemaphoreBasedRateLimiter} instance will not be garbage collected even if you hold the reference,
+     *  meaning if you create millions of instance, there could be a memory leak.
+     *  (https://github.com/resilience4j/resilience4j/issues/1683)
+     */
+    public void shutdown()  {
+        if (!this.scheduledFuture.isCancelled()) {
             this.scheduledFuture.cancel(true);
         }
     }
