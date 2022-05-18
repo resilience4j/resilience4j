@@ -29,7 +29,6 @@ import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 
-import java.io.Closeable;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.Callable;
