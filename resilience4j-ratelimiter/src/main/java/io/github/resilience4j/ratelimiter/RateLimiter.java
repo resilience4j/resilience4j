@@ -50,7 +50,7 @@ import static java.util.Collections.emptyMap;
  * necessary until a permit is available, and then takes it. Once acquired, permits need not be
  * released.
  */
-public interface RateLimiter extends Closeable {
+public interface RateLimiter {
 
     /**
      * Creates a RateLimiter with a custom RateLimiter configuration.

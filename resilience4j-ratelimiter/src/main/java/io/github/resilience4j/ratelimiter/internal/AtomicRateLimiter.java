@@ -414,11 +414,6 @@ public class AtomicRateLimiter implements RateLimiter {
         eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
     }
 
-    @Override
-    public void close() throws IOException {
-
-    }
-
     /**
      * <p>{@link AtomicRateLimiter.State} represents immutable state of {@link AtomicRateLimiter}
      * where:
