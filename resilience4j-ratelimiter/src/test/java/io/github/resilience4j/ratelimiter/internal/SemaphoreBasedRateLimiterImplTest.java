@@ -30,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -275,5 +276,28 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
         exception.expect(NullPointerException.class);
         exception.expectMessage(CONFIG_MUST_NOT_BE_NULL);
         new SemaphoreBasedRateLimiter("test", null, (ScheduledExecutorService) null);
+    }
+
+    @Test
+    public void shutdownRateLimiter() throws InterruptedException {
+        ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
+        RateLimiterConfig configSpy = spy(config);
+
+        ScheduledFuture<?> future = mock(ScheduledFuture.class);
+
+        doReturn(future).when(scheduledExecutorService).scheduleAtFixedRate(any(Runnable.class), any(Long.class), any(Long.class),
+            any(TimeUnit.class));
+
+        SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,
+            scheduledExecutorService);
+
+        then(limit.acquirePermission(1)).isTrue();
+        then(limit.acquirePermission(1)).isTrue();
+        then(limit.acquirePermission(1)).isFalse();
+
+        limit.shutdown();
+        Thread.sleep(REFRESH_PERIOD.toMillis() * 2);
+        verify(future, times(1)).isCancelled();
+        then(limit.acquirePermission(1)).isFalse();
     }
 }

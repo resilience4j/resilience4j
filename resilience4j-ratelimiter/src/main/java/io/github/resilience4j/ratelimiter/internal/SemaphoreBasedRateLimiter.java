@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,8 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore} and scheduler that will refresh
- * permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
+ * permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}, you can invoke
+ * {@link SemaphoreBasedRateLimiter#shutdown()} to close the limiter.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
@@ -54,6 +56,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     private final SemaphoreBasedRateLimiterMetrics metrics;
     private final Map<String, String> tags;
     private final RateLimiterEventProcessor eventProcessor;
+    private final ScheduledFuture<?> scheduledFuture;
 
     /**
      * Creates a RateLimiter.
@@ -109,7 +112,7 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
         this.eventProcessor = new RateLimiterEventProcessor();
 
-        scheduleLimitRefresh();
+        this.scheduledFuture = scheduleLimitRefresh();
     }
 
     private ScheduledExecutorService configureScheduler() {
@@ -121,8 +124,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
         return newSingleThreadScheduledExecutor(threadFactory);
     }
 
-    private void scheduleLimitRefresh() {
-        scheduler.scheduleAtFixedRate(
+    private ScheduledFuture<?> scheduleLimitRefresh() {
+        return scheduler.scheduleAtFixedRate(
             this::refreshLimit,
             this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
             this.rateLimiterConfig.get().getLimitRefreshPeriod().toNanos(),
@@ -258,6 +261,18 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
             return;
         }
         eventProcessor.consumeEvent(new RateLimiterOnFailureEvent(name, permits));
+    }
+
+    /**
+     *  Close the scheduled task that refresh permissions if you don't use the {@link  SemaphoreBasedRateLimiter} anymore.
+     *  Otherwise, the {@link SemaphoreBasedRateLimiter} instance will not be garbage collected even if you hold the reference,
+     *  meaning if you create millions of instance, there could be a memory leak.
+     *  (https://github.com/resilience4j/resilience4j/issues/1683)
+     */
+    public void shutdown()  {
+        if (!this.scheduledFuture.isCancelled()) {
+            this.scheduledFuture.cancel(true);
+        }
     }
 
     /**
