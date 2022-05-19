@@ -41,7 +41,8 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore} and scheduler that will refresh
- * permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}.
+ * permissions after each {@link RateLimiterConfig#getLimitRefreshPeriod()}, you can invoke
+ * {@link SemaphoreBasedRateLimiter#shutdown()} to close the limiter.
  */
 public class SemaphoreBasedRateLimiter implements RateLimiter {
 
