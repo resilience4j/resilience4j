@@ -23,6 +23,8 @@ image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resi
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=vulnerabilities["Vulnerabilities", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 image:https://sonarcloud.io/api/project_badges/measure?project=resilience4j_resilience4j&metric=bugs["Bugs", link="https://sonarcloud.io/dashboard?id=resilience4j_resilience4j"]
 
+image:https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg["SWUbanner",link="https://vshymanskyy.github.io/StandWithUkraine"]
+
 toc::[]
 
 == Introduction
