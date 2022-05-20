@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -49,6 +50,10 @@ public class RetryImpl<T> implements Retry {
     private final RetryEventProcessor eventProcessor;
     @Nullable
     private final Predicate<T> resultPredicate;
+
+    @Nullable
+    private final BiConsumer<Integer, T> consumeResultBeforeRetryAttempt;
+
     private final String name;
     private final RetryConfig config;
     private final Map<String, String> tags;
@@ -75,6 +80,7 @@ public class RetryImpl<T> implements Retry {
         this.intervalBiFunction = config.getIntervalBiFunction();
         this.exceptionPredicate = config.getExceptionPredicate();
         this.resultPredicate = config.getResultPredicate();
+        this.consumeResultBeforeRetryAttempt = config.getConsumeResultBeforeRetryAttempt();
         this.metrics = this.new RetryMetrics();
         this.eventProcessor = new RetryEventProcessor();
         succeededAfterRetryCounter = new LongAdder();
@@ -180,6 +186,9 @@ public class RetryImpl<T> implements Retry {
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
                 } else {
+                    if(consumeResultBeforeRetryAttempt != null){
+                        consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
+                    }
                     waitIntervalAfterFailure(currentNumOfAttempts, Either.right(result));
                     return true;
                 }
@@ -327,6 +336,9 @@ public class RetryImpl<T> implements Retry {
             if (null != resultPredicate && resultPredicate.test(result)) {
                 int attempt = numOfAttempts.incrementAndGet();
                 if (attempt >= maxAttempts) {
+                    if(consumeResultBeforeRetryAttempt != null){
+                        consumeResultBeforeRetryAttempt.accept(attempt, result);
+                    }
                     return -1;
                 }
                 return intervalBiFunction.apply(attempt, Either.right(result));

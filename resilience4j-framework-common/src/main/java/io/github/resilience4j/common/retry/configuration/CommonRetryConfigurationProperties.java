@@ -18,11 +18,7 @@ package io.github.resilience4j.common.retry.configuration;
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.utils.ConfigUtils;
-import io.github.resilience4j.core.ClassUtils;
-import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.core.IntervalBiFunction;
-import io.github.resilience4j.core.StringUtils;
+import io.github.resilience4j.core.*;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
 
@@ -31,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 /**
@@ -165,6 +162,12 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
                 .instantiatePredicateClass(properties.getResultPredicate());
             builder.retryOnResult(predicate);
         }
+
+        if(properties.getConsumeResultBeforeRetryAttempt() != null){
+            BiConsumer<Integer, Object> biConsumer = ClassUtils.instantiateBiConsumer(properties.getConsumeResultBeforeRetryAttempt());
+            builder.consumeResultBeforeRetryAttempt(biConsumer);
+        }
+
         if (properties.getIntervalBiFunction() != null) {
             IntervalBiFunction<Object> intervalBiFunction = ClassUtils
                 .instantiateIntervalBiFunctionClass(properties.getIntervalBiFunction());
@@ -289,6 +292,12 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         private Class<? extends Predicate<Object>> resultPredicate;
 
         /**
+         * class to be used to perform post actions on the object if it needs to be retried
+         */
+        @Nullable
+        private Class<? extends BiConsumer<Integer, Object>> consumeResultBeforeRetryAttempt;
+
+        /**
          * list of retry exception classes
          */
         @Nullable
@@ -406,6 +415,16 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         }
 
         @Nullable
+        Class<? extends BiConsumer<Integer, Object>> getConsumeResultBeforeRetryAttempt(){
+            return consumeResultBeforeRetryAttempt;
+        }
+
+        public InstanceProperties setConsumeResultBeforeRetryAttempt(Class<? extends BiConsumer<Integer, Object>> consumer){
+            this.consumeResultBeforeRetryAttempt = consumer;
+            return this;
+        }
+
+        @Nullable
         public Class<? extends Throwable>[] getRetryExceptions() {
             return retryExceptions;
         }
@@ -519,7 +538,6 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
             this.baseConfig = baseConfig;
             return this;
         }
-
     }
 
 }

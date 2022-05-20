@@ -21,6 +21,7 @@ package io.github.resilience4j.core;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 public final class ClassUtils {
@@ -48,6 +49,19 @@ public final class ClassUtils {
     public static <T> Predicate<T> instantiatePredicateClass(Class<? extends Predicate<T>> clazz) {
         try {
             Constructor<? extends Predicate<T>> c = clazz.getConstructor();
+            if (c != null) {
+                return c.newInstance();
+            } else {
+                throw new InstantiationException(INSTANTIATION_ERROR_PREFIX + clazz.getName());
+            }
+        } catch (Exception e) {
+            throw new InstantiationException(INSTANTIATION_ERROR_PREFIX + clazz.getName(), e);
+        }
+    }
+
+    public static <T> BiConsumer<Integer, T> instantiateBiConsumer(Class<? extends BiConsumer<Integer, T>> clazz) {
+        try {
+            Constructor<? extends BiConsumer<Integer, T>> c = clazz.getConstructor();
             if (c != null) {
                 return c.newInstance();
             } else {

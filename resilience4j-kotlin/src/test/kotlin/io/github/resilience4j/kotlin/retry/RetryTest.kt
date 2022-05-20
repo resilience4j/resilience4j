@@ -23,6 +23,9 @@ import io.github.resilience4j.retry.Retry
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.BiConsumer
+import java.util.function.Predicate
 
 class RetryTest {
 
@@ -145,5 +148,33 @@ class RetryTest {
         Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
         // Then the helloWorldService should be invoked 1 time
         Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+    }
+
+    @Test
+    fun `should perform consumeResultBeforeRetryAttempt on retry`() {
+        val helloWorldService = HelloWorldService()
+        val helloWorldServiceReturnValue = "Hello world"
+
+        val shouldRetry = Predicate { s: String? -> helloWorldServiceReturnValue == s }
+
+        val consumerInvocations = AtomicInteger(0)
+        val consumeResultBeforeRetryAttempt = BiConsumer { currentAttempt: Int?, value: String ->
+                if (helloWorldServiceReturnValue == value) {
+                    consumerInvocations.set(currentAttempt!!)
+                }
+            }
+
+        val config = io.github.resilience4j.retry.RetryConfig.Builder<String>()
+            .retryOnResult(shouldRetry)
+            .consumeResultBeforeRetryAttempt(consumeResultBeforeRetryAttempt)
+            .build()
+
+        val retry = Retry.of("id", config)
+        val supplier = Retry.decorateSupplier(retry) { helloWorldService.returnHelloWorld() }
+        val result = supplier.get()
+
+        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(3)
+        Assertions.assertThat(result).isEqualTo(helloWorldServiceReturnValue)
+        Assertions.assertThat(consumerInvocations.get()).isEqualTo(2)
     }
 }

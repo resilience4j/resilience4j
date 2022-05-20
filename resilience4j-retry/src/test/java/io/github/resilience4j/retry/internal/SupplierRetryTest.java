@@ -18,9 +18,9 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -37,7 +37,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
@@ -476,4 +479,33 @@ public class SupplierRetryTest {
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
+
+    @Test
+    public void shouldPerformConsumeResultBeforeRetryAttemptOnRetry(){
+        String helloWorldServiceReturnValue = "Hello World!";
+        given(helloWorldService.returnHelloWorld()).willReturn(helloWorldServiceReturnValue);
+
+        Predicate<String> shouldRetry = helloWorldServiceReturnValue::equals;
+        AtomicInteger consumerInvocations = new AtomicInteger(0);
+        BiConsumer<Integer, String> consumeResultBeforeRetryAttempt = (currentAttempt, value) -> {
+            if(helloWorldServiceReturnValue.equals(value)){
+                consumerInvocations.set(currentAttempt);
+            }
+        };
+
+        RetryConfig config = new RetryConfig.Builder<String>()
+            .retryOnResult(shouldRetry)
+            .consumeResultBeforeRetryAttempt(consumeResultBeforeRetryAttempt)
+            .build();
+
+        Retry retry = Retry.of("id", config);
+        Supplier<String> supplier = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld);
+
+        String result = supplier.get();
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+        assertThat(result).isEqualTo(helloWorldServiceReturnValue);
+        assertThat(consumerInvocations.get()).isEqualTo(2);
+    }
+
 }
