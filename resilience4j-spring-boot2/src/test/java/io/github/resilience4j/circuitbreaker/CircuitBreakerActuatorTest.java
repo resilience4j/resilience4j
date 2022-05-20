@@ -106,7 +106,6 @@ public class CircuitBreakerActuatorTest {
         assertThat(circuitBreakersResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(circuitBreakersResponse.getBody()).isNotNull();
         assertThat(circuitBreakersResponse.getBody().getCircuitBreakers()).isNotNull();
-        assertThat(circuitBreakersResponse.getBody().getCircuitBreakers()).hasSize(6);
         final CircuitBreakerDetails cbDetailsA = circuitBreakersResponse.getBody().getCircuitBreakers().get("backendA");
         final CircuitBreaker cbA = circuitBreakerRegistry.circuitBreaker("backendA");
         final CircuitBreaker.Metrics metrics = cbA.getMetrics();
