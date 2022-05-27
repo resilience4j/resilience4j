@@ -9,6 +9,15 @@ ext {
 def projectArtifactId = 'resilience4j'
 def url = "https://resilience4j.readme.io"
 
+normalization {
+    runtimeClasspath {
+        metaInf {
+            ignoreAttribute("Build-Time")
+            ignoreAttribute("Build-Date")
+        }
+    }
+}
+
 jar {
     manifest {
         attributes(
