@@ -36,7 +36,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: Build
         id: gradle
-        uses: eskatos/gradle-command-action@v2.1.6
+        uses: eskatos/gradle-command-action@v2.2.0
         with:
           arguments: check
           wrapper-cache-enabled: true
@@ -62,7 +62,7 @@ jobs:
       - name: Analyze with SonarCloud
         continue-on-error: true
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
-        uses: eskatos/gradle-command-action@v2.1.6
+        uses: eskatos/gradle-command-action@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -72,7 +72,7 @@ jobs:
           configuration-cache-enabled: true
       - name: Publish to Sonatype
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        uses: eskatos/gradle-command-action@v2.1.6
+        uses: eskatos/gradle-command-action@v2.2.0
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USER }}
           ORG_GRADLE_PROJECT_sonatypePassword : ${{ secrets.SONATYPE_PASSWORD }}
