@@ -5,6 +5,8 @@ plugins {
     id "io.github.gradle-nexus.publish-plugin"  version "1.1.0"
     id "me.champeau.jmh" version "0.6.5"
     id 'idea'
+    id 'jacoco-report-aggregation'
+    id 'jvm-test-suite'
 }
 
 apply from: "${rootDir}/libraries.gradle"
@@ -21,7 +23,7 @@ allprojects {
     }
 
     jacoco {
-        toolVersion = "0.8.7"
+        toolVersion = "0.8.8"
     }
 }
 
@@ -33,6 +35,19 @@ ext {
     coreProjects = subprojects.findAll {
         p -> !p.name.endsWith("-bom")
     }
+}
+
+normalization {
+    runtimeClasspath {
+        metaInf {
+            ignoreAttribute("Build-Time")
+            ignoreAttribute("Build-Date")
+        }
+    }
+}
+
+dependencies {
+    coreProjects.each { jacocoAggregation project(":${it.name}") }
 }
 
 nexusPublishing {
@@ -111,7 +126,7 @@ configure(project.coreProjects) {
     }
 }
 
-def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/report.xml"
+def allTestCoverageFile = "${rootProject.projectDir}/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml"
 
 sonarqube {
     properties {
@@ -128,34 +143,4 @@ sonarqube {
     }
 }
 
-task jacocoMergeTest(type: JacocoMerge) {
-    destinationFile = file(allTestCoverageFile)
-    executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
-}
-
-task jacocoRootTestReport(type: JacocoReport) {
-    dependsOn test
-
-    coreProjects.each { dependsOn("${it.name}:test") }
-    coreProjects.each { dependsOn("${it.name}:jacocoTestReport") }
-
-    additionalSourceDirs.from = coreProjects.sourceSets.main.allSource.srcDirs
-    sourceDirectories.from = coreProjects.sourceSets.main.allSource.srcDirs
-    classDirectories.from = coreProjects.sourceSets.main.output
-    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
-
-    onlyIf {
-        true
-    }
-
-    reports {
-        xml.required.set(true)
-        xml.destination file(allTestCoverageFile)
-        html.required.set(true)
-        csv.required.set(false)
-    }
-}
-
 tasks.check.dependsOn tasks.jacocoRootTestReport
-//tasks.jacocoRootTestReport.dependsOn tasks.test
-
