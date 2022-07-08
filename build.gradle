@@ -143,4 +143,4 @@ sonarqube {
     }
 }
 
-tasks.check.dependsOn tasks.jacocoRootTestReport
+tasks.check.dependsOn tasks.testCodeCoverageReport
