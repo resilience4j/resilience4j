@@ -37,6 +37,7 @@ public class ReactorOperatorFallbackDecoratorTest {
 
     private CircuitBreaker circuitBreaker;
 
+    private final TimeLimiter timeLimiter = mock(TimeLimiter.class);
 
     @Before
     public void setUp() {
@@ -105,8 +106,6 @@ public class ReactorOperatorFallbackDecoratorTest {
         assertThat(metrics.getNumberOfFailedCallsWithoutRetryAttempt()).isZero();
         assertThat(metrics.getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
     }
-
-    private final TimeLimiter timeLimiter = mock(TimeLimiter.class);
 
     @Test
     public void shouldFallbackOntimeoutUsingMono() {
