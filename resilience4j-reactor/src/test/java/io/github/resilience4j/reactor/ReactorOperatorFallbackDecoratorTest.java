@@ -57,8 +57,7 @@ public class ReactorOperatorFallbackDecoratorTest {
         RetryOperator<String> retryOperator = RetryOperator.of(retry);
         Function<Publisher<String>, Publisher<String>> decorate =
                 ReactorOperatorFallbackDecorator.decorateRetry(retryOperator, Mono.just("Fallback"));
-//                ReactorOperatorFallbackDecorator.of(MaxRetriesExceededException.class, Mono.just("Fallback"))
-//                        .decorate(retryOperator);
+
         given(helloWorldService.returnHelloWorld())
                 .willReturn("Hello world")
                 .willThrow(new HelloWorldException())
