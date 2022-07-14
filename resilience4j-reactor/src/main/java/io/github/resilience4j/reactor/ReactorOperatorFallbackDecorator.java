@@ -38,7 +38,10 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
      * @param fallback      the publisher to subscribe to when a Throwable of type throwableClass is thrown
      * @return the function to apply to the stream (typically by calling {{@link Mono#transformDeferred(Function)}} or {@link Flux#transformDeferred(Function)}
      */
-    public ReactorOperatorFallbackDecorator<T> withFallback(Class<? extends Throwable> throwableType, Publisher<T> fallback) {
+    public ReactorOperatorFallbackDecorator<T> withFallback(
+        Class<? extends Throwable> throwableType,
+        Publisher<T> fallback
+    ) {
         FALLBACK_PUBLISHER_CACHE.put(throwableType, fallback);
         return this;
     }
@@ -52,7 +55,10 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
      * @return ReactorOperatorFallbackDecorator that can be used to decorate an operator with fallback
      * @see #decorate(UnaryOperator)
      */
-    public static <T> ReactorOperatorFallbackDecorator<T> of(Class<? extends Throwable> throwableType, Publisher<T> fallback) {
+    public static <T> ReactorOperatorFallbackDecorator<T> of(
+        Class<? extends Throwable> throwableType,
+        Publisher<T> fallback
+    ) {
         return new ReactorOperatorFallbackDecorator<>(throwableType, fallback);
     }
 
@@ -62,8 +68,10 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
             Mono<T> upstream = (Mono<T>) publisher;
             if (!FALLBACK_PUBLISHER_CACHE.isEmpty()) {
                 for (Map.Entry<Class<? extends Throwable>, Publisher<T>> classPublisherEntry : FALLBACK_PUBLISHER_CACHE.entrySet()) {
-                    upstream = upstream.onErrorResume(classPublisherEntry.getKey(),
-                            throwable -> (Mono<? extends T>) classPublisherEntry.getValue());
+                    upstream = upstream.onErrorResume(
+                        classPublisherEntry.getKey(),
+                        throwable -> (Mono<? extends T>) classPublisherEntry.getValue()
+                    );
                 }
             }
             return upstream;
@@ -71,12 +79,14 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
             Flux<T> upstream = (Flux<T>) publisher;
             if (!FALLBACK_PUBLISHER_CACHE.isEmpty()) {
                 for (Map.Entry<Class<? extends Throwable>, Publisher<T>> classPublisherEntry : FALLBACK_PUBLISHER_CACHE.entrySet()) {
-                    upstream = upstream.onErrorResume(classPublisherEntry.getKey(), throwable -> classPublisherEntry.getValue());
+                    upstream = upstream.onErrorResume(
+                        classPublisherEntry.getKey(),
+                        throwable -> classPublisherEntry.getValue()
+                    );
                 }
             }
             return upstream;
-        }
-        else {
+        } else {
             throw new IllegalPublisherException(publisher);
         }
     }
@@ -87,7 +97,7 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
      * @param operator the operator to decorate with this fallback
      * @return the function to apply to the stream, typically by calling {@link Mono#transformDeferred(Function)} or {@link Flux#transformDeferred(Function)}
      */
-    public Function<Publisher<T>, Publisher<T>> decorate(UnaryOperator<Publisher<T>> operator){
+    public Function<Publisher<T>, Publisher<T>> decorate(UnaryOperator<Publisher<T>> operator) {
         return compose(operator);
     }
 
@@ -100,9 +110,12 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
      * @param <T>               the value type of the upstream and downstream
      * @return the function to apply to the stream, typically by calling {@link Mono#transformDeferred(Function)} or {@link Flux#transformDeferred(Function)}
      */
-    public static<T> Function<Publisher<T>, Publisher<T>> decorateRetry(RetryOperator<T> retryOperator, Publisher<T> fallbackPublisher){
+    public static <T> Function<Publisher<T>, Publisher<T>> decorateRetry(
+        RetryOperator<T> retryOperator,
+        Publisher<T> fallbackPublisher
+    ) {
         return of(MaxRetriesExceededException.class, fallbackPublisher)
-                .decorate(retryOperator);
+            .decorate(retryOperator);
     }
 
     /**
@@ -113,9 +126,12 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
      * @param <T>                    the value type of the upstream and downstream
      * @return the function to apply to the stream, typically by calling {@link Mono#transformDeferred(Function)} or {@link Flux#transformDeferred(Function)}
      */
-    public static<T> Function<Publisher<T>, Publisher<T>> decorateCircuitBreaker(CircuitBreakerOperator<T> circuitBreakerOperator, Publisher<T> fallbackPublisher){
+    public static <T> Function<Publisher<T>, Publisher<T>> decorateCircuitBreaker(
+        CircuitBreakerOperator<T> circuitBreakerOperator,
+        Publisher<T> fallbackPublisher
+    ) {
         return of(CallNotPermittedException.class, fallbackPublisher)
-                .decorate(circuitBreakerOperator);
+            .decorate(circuitBreakerOperator);
     }
 
     /**
@@ -126,8 +142,11 @@ public class ReactorOperatorFallbackDecorator<T> implements UnaryOperator<Publis
      * @param <T>                 the value type of the upstream and downstream
      * @return the function to apply to the stream, typically by calling {@link Mono#transformDeferred(Function)} or {@link Flux#transformDeferred(Function)}
      */
-    public static<T> Function<Publisher<T>, Publisher<T>> decorateTimeLimiter(TimeLimiterOperator<T> timeLimiterOperator, Publisher<T> fallbackPublisher){
+    public static <T> Function<Publisher<T>, Publisher<T>> decorateTimeLimiter(
+        TimeLimiterOperator<T> timeLimiterOperator,
+        Publisher<T> fallbackPublisher
+    ) {
         return of(TimeoutException.class, fallbackPublisher)
-                .decorate(timeLimiterOperator);
+            .decorate(timeLimiterOperator);
     }
 }
