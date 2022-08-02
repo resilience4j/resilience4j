@@ -49,7 +49,7 @@ dependencies {
     testImplementation(libraries.micronaut_spock)
 
     testImplementation "cglib:cglib-nodep:3.3.0"
-    testImplementation "org.objenesis:objenesis:3.2"
+    testImplementation "org.objenesis:objenesis:3.3"
 
     testImplementation(libraries.spock){
         exclude module:'groovy-all'
