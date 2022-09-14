@@ -24,9 +24,9 @@ class MonoRateLimiter<T> extends MonoOperator<T, T> {
 
     private final CorePublisherRateLimiterOperator<T> operator;
 
-    MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter) {
+    MonoRateLimiter(Mono<? extends T> source, RateLimiter rateLimiter, int permits) {
         super(source);
-        this.operator = new CorePublisherRateLimiterOperator<T>(source, rateLimiter);
+        this.operator = new CorePublisherRateLimiterOperator<T>(source, rateLimiter, permits);
     }
 
     @Override

@@ -24,9 +24,9 @@ class FluxRateLimiter<T> extends FluxOperator<T, T> {
 
     private final CorePublisherRateLimiterOperator<T> operator;
 
-    FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter) {
+    FluxRateLimiter(Flux<? extends T> source, RateLimiter rateLimiter, int permits) {
         super(source);
-        this.operator = new CorePublisherRateLimiterOperator<T>(source, rateLimiter);
+        this.operator = new CorePublisherRateLimiterOperator<T>(source, rateLimiter, permits);
     }
 
     @Override
