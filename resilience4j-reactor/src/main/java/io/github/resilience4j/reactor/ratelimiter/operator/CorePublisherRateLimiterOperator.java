@@ -29,14 +29,16 @@ class CorePublisherRateLimiterOperator<T> {
 
     private final CorePublisher<? extends T> source;
     private final RateLimiter rateLimiter;
+    private final int permits;
 
-    CorePublisherRateLimiterOperator(CorePublisher<? extends T> source, RateLimiter rateLimiter) {
+    CorePublisherRateLimiterOperator(CorePublisher<? extends T> source, RateLimiter rateLimiter, int permits) {
         this.source = source;
         this.rateLimiter = rateLimiter;
+        this.permits = permits;
     }
 
     void subscribe(CoreSubscriber<? super T> actual) {
-        long waitDuration = rateLimiter.reservePermission();
+        long waitDuration = rateLimiter.reservePermission(permits);
         if (waitDuration >= 0) {
             if (waitDuration > 0) {
                 delaySubscription(actual, waitDuration);
