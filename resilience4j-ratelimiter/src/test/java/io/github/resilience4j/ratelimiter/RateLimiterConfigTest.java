@@ -19,14 +19,17 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.functions.Either;
+import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.internal.matchers.ThrowableCauseMatcher;
 import org.junit.rules.ExpectedException;
 
 import java.time.Duration;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.hamcrest.CoreMatchers.isA;
 
 
 public class RateLimiterConfigTest {
@@ -90,5 +93,20 @@ public class RateLimiterConfigTest {
         exception.expectMessage("LimitForPeriod should be greater than 0");
         RateLimiterConfig.custom()
             .limitForPeriod(0);
+    }
+    @Test
+    public void buildTimeoutDurationIsNotWithinLimits() {
+        exception.expect(ThrowableCauseMatcher.hasCause(isA(ArithmeticException.class)));
+        exception.expectMessage("TimeoutDuration too large");
+        RateLimiterConfig.custom()
+            .timeoutDuration(Duration.ofSeconds(Long.MAX_VALUE));
+    }
+
+    @Test
+    public void buildLimitRefreshPeriodIsNotWithinLimits() {
+        exception.expect(ThrowableCauseMatcher.hasCause(isA(ArithmeticException.class)));
+        exception.expectMessage("LimitRefreshPeriod too large");
+        RateLimiterConfig.custom()
+            .limitRefreshPeriod(Duration.ofSeconds(Long.MAX_VALUE));
     }
 }
