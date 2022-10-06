@@ -89,7 +89,7 @@ public class HedgeImpl implements Hedge {
 
     @Override
     public <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService primaryExecutor) {
-        return decorateCompletionStage(() -> callableFuture(callable, primaryExecutor))
+        return decorateCaller(() -> callableFuture(callable, primaryExecutor), () -> callableFuture(callable, configuredHedgeExecutor))
             .get()
             .toCompletableFuture();
     }
@@ -97,13 +97,17 @@ public class HedgeImpl implements Hedge {
     @Override
     @SuppressWarnings("unchecked")
     public <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCompletionStage(Supplier<F> supplier) {
+        return decorateCaller(supplier, supplier);
+    }
+
+    private <T, F extends CompletionStage<T>> Supplier<CompletionStage<T>> decorateCaller(Supplier<F> primarySupplier, Supplier<F> hedgedSupplier) {
         return () -> {
             long start = System.nanoTime();
-            CompletableFuture<HedgeResult<T>> supplied = supplier.get().toCompletableFuture()
+            CompletableFuture<HedgeResult<T>> supplied = primarySupplier.get().toCompletableFuture()
                 .handle((t, throwable) -> HedgeResult.of(t, true, Optional.ofNullable(throwable)));
             CompletableFuture<T> timedCompletable = new CompletableFuture<>();
             CompletableFuture<HedgeResult<T>> hedged = timedCompletable
-                .thenCompose(t -> supplier.get())
+                .thenCompose(t -> hedgedSupplier.get())
                 .handle((t, throwable) -> HedgeResult.of(t, false, Optional.ofNullable(throwable)));
             ScheduledFuture<Boolean> sf = configuredHedgeExecutor.schedule(() -> timedCompletable.complete(null), durationSupplier.get().toNanos(), TimeUnit.NANOSECONDS);
             return CompletableFuture.anyOf(hedged, supplied)
