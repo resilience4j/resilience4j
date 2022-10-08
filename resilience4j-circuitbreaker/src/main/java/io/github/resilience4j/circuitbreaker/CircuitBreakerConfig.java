@@ -497,12 +497,12 @@ public class CircuitBreakerConfig implements Serializable {
          * @param maxWaitDurationInHalfOpenState the wait duration which specifies how long the
          *                                CircuitBreaker should stay in Half Open
          * @return the CircuitBreakerConfig.Builder
-         * @throws IllegalArgumentException if {@code maxWaitDurationInHalfOpenState.toMillis() < 1}
+         * @throws IllegalArgumentException if {@code maxWaitDurationInHalfOpenState.toMillis() < 0}
          */
         public Builder maxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
-            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
+            if (maxWaitDurationInHalfOpenState.toMillis() < 0) {
                 throw new IllegalArgumentException(
-                    "maxWaitDurationInHalfOpenState must be at least 1[ms]");
+                    "maxWaitDurationInHalfOpenState must be greater than or equal to 0[ms]");
             }
             this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             return this;

@@ -651,9 +651,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         public InstanceProperties setMaxWaitDurationInHalfOpenState(Duration maxWaitDurationInHalfOpenState) {
             Objects.requireNonNull(maxWaitDurationInHalfOpenState);
-            if (maxWaitDurationInHalfOpenState.toMillis() < 1) {
+            if (maxWaitDurationInHalfOpenState.toMillis() < 0) {
                 throw new IllegalArgumentException(
-                    "maxWaitDurationInHalfOpenState must be greater than or equal to 1 ms.");
+                    "maxWaitDurationInHalfOpenState must be greater than or equal to 0 ms.");
             }
 
             this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
