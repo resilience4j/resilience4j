@@ -53,7 +53,7 @@ public class HedgeImplFutureBehaviorsTest {
     private static final HedgeBehaviorSpecification SLOW_HEDGE_SUCCESS = new HedgeBehaviorSpecification(SLOW_SPEED, HEDGED, null);
     private static final HedgeBehaviorSpecification SLOW_HEDGE_FAILURE = new HedgeBehaviorSpecification(SLOW_SPEED, HEDGED, HEDGE_RUNTIME_EXCEPTION);
     private final Logger logger = mock(Logger.class);
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(15);
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     @Test
     public void shouldReturnValueWhenSuppliedExecutor() throws Exception {
