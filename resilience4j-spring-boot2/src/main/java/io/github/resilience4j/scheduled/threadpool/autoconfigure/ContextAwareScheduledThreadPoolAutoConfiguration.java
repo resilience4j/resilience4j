@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(value = "resilience4j.scheduled.executor.corePoolSize")
+@ConditionalOnProperty(value = "resilience4j.scheduled.executor.core-pool-size")
 @EnableConfigurationProperties({ContextAwareScheduledThreadPoolProperties.class})
 public class ContextAwareScheduledThreadPoolAutoConfiguration {
 
