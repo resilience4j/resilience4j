@@ -343,7 +343,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnWaitDurationInHalfOpenState() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ZERO);
+        defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ofMillis(-1));
     }
 
     @Test
