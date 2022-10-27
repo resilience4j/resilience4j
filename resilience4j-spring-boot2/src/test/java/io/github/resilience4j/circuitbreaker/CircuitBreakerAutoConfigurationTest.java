@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
+import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -168,6 +169,7 @@ public class CircuitBreakerAutoConfigurationTest {
     }
 
     private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker circuitBreaker) {
+        int ok=HttpStatus.SC_OK;
         assertThat(circuitBreaker).isNotNull();
         // expect CircuitBreaker is configured as defined in application.yml
         assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
@@ -183,7 +185,8 @@ public class CircuitBreakerAutoConfigurationTest {
             .test(new RecordedException())).isTrue();
         assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate()
             .test(new IgnoredException())).isTrue();
-
+        assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordResultPredicate()
+            .test(ok)).isFalse();
         // Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
         // setRecordExceptions evaluates to false.
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()

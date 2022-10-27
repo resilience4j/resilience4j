@@ -63,6 +63,7 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 70
       eventConsumerBufferSize: 20
       recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      recordResultPredicate: io.github.resilience4j.circuitbreaker.RecordResultPredicate
       recordExceptions:
         - io.github.resilience4j.circuitbreaker.RecordedException
       ignoreExceptions:

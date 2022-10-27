@@ -18,6 +18,7 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
+import io.github.resilience4j.common.RecordResultPredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
@@ -62,7 +63,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         instanceProperties1.setRecordExceptions(new Class[]{IllegalStateException.class});
         //noinspection unchecked
         instanceProperties1.setRecordFailurePredicate((Class) RecordFailurePredicate.class);
-
+        instanceProperties1.setRecordResultPredicate((Class) RecordResultPredicate.class);
         CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         instanceProperties2.setSlidingWindowSize(1337);
 
