@@ -149,6 +149,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             buildRecordFailurePredicate(properties, builder);
         }
 
+        if (properties.recordResultPredicate != null) {
+            buildRecordResultPredicate(properties, builder);
+        }
+
         if (properties.ignoreExceptions != null) {
             builder.ignoreExceptions(properties.ignoreExceptions);
             builder.ignoreException(null);
@@ -225,6 +229,15 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             Predicate<Throwable> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordFailurePredicate());
             if (predicate != null) {
                 builder.recordException(predicate);
+            }
+        }
+    }
+
+    private void buildRecordResultPredicate(InstanceProperties properties, Builder builder) {
+        if (properties.getRecordResultPredicate() != null) {
+            Predicate<Object> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordResultPredicate());
+            if (predicate != null) {
+                builder.recordResult(predicate);
             }
         }
     }
@@ -311,6 +324,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         @Nullable
         private Class<? extends Throwable>[] recordExceptions;
+
+        @Nullable
+        private Class<Predicate<Object>> recordResultPredicate;
 
         @Nullable
         private Class<Predicate<Throwable>> ignoreExceptionPredicate;
@@ -504,6 +520,17 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         public InstanceProperties setRecordFailurePredicate(
             Class<Predicate<Throwable>> recordFailurePredicate) {
             this.recordFailurePredicate = recordFailurePredicate;
+            return this;
+        }
+
+        @Nullable
+        public Class<Predicate<Object>> getRecordResultPredicate() {
+            return recordResultPredicate;
+        }
+
+        public InstanceProperties setRecordResultPredicate(
+            Class<Predicate<Object>> recordResultPredicate) {
+            this.recordResultPredicate = recordResultPredicate;
             return this;
         }
 
