@@ -90,7 +90,7 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result)
-            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: [400 Bad Request] during [GET] to [http://localhost:8080/greeting] [TestService#greeting()]: [Hello, world!]");
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
@@ -122,7 +122,7 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result)
-            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: [400 Bad Request] during [GET] to [http://localhost:8080/greeting] [TestService#greeting()]: [Hello, world!]");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -142,7 +142,7 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result)
-            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: [400 Bad Request] during [GET] to [http://localhost:8080/greeting] [TestService#greeting()]: [Hello, world!]");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -163,7 +163,7 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result)
-            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: [400 Bad Request] during [GET] to [http://localhost:8080/greeting] [TestService#greeting()]: [Hello, world!]");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
@@ -183,7 +183,7 @@ public class Resilience4jFeignFallbackFactoryTest {
         String result = testService.greeting();
 
         assertThat(result)
-            .isEqualTo("Message from exception: status 400 reading TestService#greeting()");
+            .isEqualTo("Message from exception: [400 Bad Request] during [GET] to [http://localhost:8080/greeting] [TestService#greeting()]: [Hello, world!]");
         verify(uselessFallback, times(0)).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
