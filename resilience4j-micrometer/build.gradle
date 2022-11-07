@@ -1,10 +1,18 @@
 dependencies {
     api(libraries.micrometer)
+    api(libraries.micrometer_observation)
     implementation project(':resilience4j-bulkhead')
     implementation project(':resilience4j-circuitbreaker')
     implementation project(':resilience4j-retry')
     implementation project(':resilience4j-ratelimiter')
     implementation project(':resilience4j-timelimiter')
     testImplementation project(':resilience4j-test')
+    testImplementation(libraries.micrometer_observation_test)
 }
 ext.moduleName = 'io.github.resilience4j.micrometer'
+
+repositories {
+    maven {
+        url "https://repo.spring.io/snapshot"
+    }
+}

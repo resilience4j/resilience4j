@@ -22,7 +22,7 @@ ext {
     spockVersion = '1.3-groovy-2.5'
     feignVersion = '10.2.0'
     reactiveStreamsVersion = '1.0.2'
-    micrometerVersion = '1.5.1'
+    micrometerVersion = '1.10.0'
     hibernateValidatorVersion = '6.0.18.Final'
     wiremockVersion = '2.26.0'
     validationApiVersion = '2.0.1.Final'
@@ -101,6 +101,8 @@ ext {
 
             // Micrometers addon
             micrometer: "io.micrometer:micrometer-core:${micrometerVersion}",
+            micrometer_observation: "io.micrometer:micrometer-observation:${micrometerVersion}",
+            micrometer_observation_test: "io.micrometer:micrometer-observation-test:${micrometerVersion}",
             micrometer_prometheus: "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}",
             micrometer_spring_legacy: "io.micrometer:micrometer-spring-legacy:${micrometerVersion}",
 
