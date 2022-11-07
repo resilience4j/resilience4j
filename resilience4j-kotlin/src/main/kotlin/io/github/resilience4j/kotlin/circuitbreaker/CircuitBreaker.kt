@@ -36,22 +36,23 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(
  * Decorates and executes the given suspend function [block].
  * Release permission without recording error if [ignoreThrowablePredicate] is true.
  */
+@Suppress("UsePropertyAccessSyntax") // current timestamp is not a property of CB
 suspend fun <T> CircuitBreaker.executeSuspendFunction(
     ignoreThrowablePredicate: (Throwable, CoroutineContext) -> Boolean,
     block: suspend () -> T
 ): T {
     acquirePermission()
-    val start = System.nanoTime()
+    val start = getCurrentTimestamp()
     try {
         val result = block()
-        val durationInNanos = System.nanoTime() - start
+        val durationInNanos = getCurrentTimestamp() - start
         onResult(durationInNanos, TimeUnit.NANOSECONDS, result)
         return result
     } catch (exception: Throwable) {
         if (ignoreThrowablePredicate(exception, coroutineContext)) {
             releasePermission()
         } else {
-            val durationInNanos = System.nanoTime() - start
+            val durationInNanos = getCurrentTimestamp() - start
             onError(durationInNanos, TimeUnit.NANOSECONDS, exception)
         }
         throw exception
