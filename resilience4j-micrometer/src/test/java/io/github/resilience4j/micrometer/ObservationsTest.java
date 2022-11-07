@@ -147,7 +147,7 @@ public class ObservationsTest {
             .hasNameEqualTo(ObservationsTest.class.getName())
             .hasBeenStarted()
             .hasBeenStopped()
-            .assertThatThrowable()
+            .assertThatError()
             .isInstanceOf(HelloWorldException.class);
     }
 
@@ -169,7 +169,7 @@ public class ObservationsTest {
                 .hasNameEqualTo(ObservationsTest.class.getName())
                 .hasBeenStarted()
                 .hasBeenStopped()
-                .assertThatThrowable()
+                .assertThatError()
                 .isInstanceOf(CompletionException.class).hasCause(new HelloWorldException()));
         then(helloWorldService).should().returnHelloWorld();
     }
@@ -201,7 +201,7 @@ public class ObservationsTest {
             .hasNameEqualTo(ObservationsTest.class.getName())
             .hasBeenStarted()
             .hasBeenStopped()
-            .assertThatThrowable()
+            .assertThatError()
             .isInstanceOf(RuntimeException.class);
         then(helloWorldService).should(times(1)).returnHelloWorld();
 
@@ -268,7 +268,7 @@ public class ObservationsTest {
             .hasNameEqualTo(ObservationsTest.class.getName())
             .hasBeenStarted()
             .hasBeenStopped()
-            .assertThatThrowable()
+            .assertThatError()
             .isNull();
     }
 }

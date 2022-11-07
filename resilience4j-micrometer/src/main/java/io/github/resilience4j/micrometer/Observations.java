@@ -42,7 +42,7 @@ public final class Observations {
      * @param observationRegistry the ObservationRegistry
      * @return an Observation instance
      */
-    static Observation ofObservationRegistry(String name, Observation.Context context, ObservationRegistry observationRegistry) {
+    static Observation ofObservationRegistry(String name, Supplier<Observation.Context> context, ObservationRegistry observationRegistry) {
         return Observation.createNotStarted(name, context, observationRegistry);
     }
 
