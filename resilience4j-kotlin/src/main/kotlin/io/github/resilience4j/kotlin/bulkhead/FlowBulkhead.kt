@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlin.coroutines.coroutineContext
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
+
 fun <T> Flow<T>.bulkhead(bulkhead: Bulkhead): Flow<T> =
     flow {
         bulkhead.acquirePermissionSuspend()

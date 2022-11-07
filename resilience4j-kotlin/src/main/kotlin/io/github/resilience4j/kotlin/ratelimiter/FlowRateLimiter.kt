@@ -24,6 +24,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onStart
 
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
+
 fun <T> Flow<T>.rateLimiter(rateLimiter: RateLimiter): Flow<T> =
     onStart { rateLimiter.awaitPermission() }

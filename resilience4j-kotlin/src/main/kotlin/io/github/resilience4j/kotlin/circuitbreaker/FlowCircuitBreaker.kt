@@ -46,7 +46,6 @@ import kotlin.coroutines.coroutineContext
  * and the acquired permission is released.
  *
  */
-@UseExperimental(ExperimentalCoroutinesApi::class)
 fun <T> Flow<T>.circuitBreaker(circuitBreaker: CircuitBreaker): Flow<T> =
     flow {
         circuitBreaker.acquirePermission()

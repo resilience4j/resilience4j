@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
 fun <T> Flow<T>.timeLimiter(timeLimiter: TimeLimiter): Flow<T> {
     val source = this
     return channelFlow {

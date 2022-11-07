@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retryWhen
 
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
 fun <T> Flow<T>.retry(retry: Retry): Flow<T> {
 
     val retryContext = retry.asyncContext<T>()

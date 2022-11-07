@@ -383,3 +383,12 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 * Issue #1372: Kotlin Timelimiter executeSuspendFunction throws TimeoutException after coroutine is canceled
 * Issue #1432: CircuitBreaker permits more calls then expected when switching from OPEN to HALF_OPEN state
 * Issue #1437: Event can be published twice when CircuitBreaker in MetricsOnlyState
+
+== Version 2.0.0
+
+=== Enhancements
+
+* Removed Vavr as a dependency
+* Upgraded to Java 17
+* Upgraded to Kotlin 1.7.20
+* Upgraded to Spring Boot 2.7.

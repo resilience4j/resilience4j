@@ -60,6 +60,6 @@ class CoroutineHelloWorldService {
     /**
      * Allow a call into [wait] to proceed.
      */
-    fun proceed() = sync.offer(Unit)
+    fun proceed() = sync.trySend(Unit)
 
 }
