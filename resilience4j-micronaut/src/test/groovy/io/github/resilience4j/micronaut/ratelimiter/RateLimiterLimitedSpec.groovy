@@ -20,10 +20,10 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import spock.lang.Specification
 
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @MicronautTest
 @Property(name = "resilience4j.ratelimiter.enabled", value = "true")

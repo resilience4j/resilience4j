@@ -19,9 +19,8 @@ import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
+import jakarta.inject.Inject
 import spock.lang.Specification
-
-import javax.inject.Inject
 
 @MicronautTest
 @Property(name = "resilience4j.bulkhead.enabled", value = "true")

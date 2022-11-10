@@ -16,7 +16,8 @@
 
 package io.github.resilience4j.micronaut.bulkhead;
 
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 

@@ -6,10 +6,10 @@ import io.micronaut.context.annotation.Property
 import io.micronaut.retry.exception.FallbackException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import io.reactivex.Flowable
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import spock.lang.Specification
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 

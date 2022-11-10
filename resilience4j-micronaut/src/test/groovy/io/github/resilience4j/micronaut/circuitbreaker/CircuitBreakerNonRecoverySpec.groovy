@@ -4,15 +4,11 @@ import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.micronaut.annotation.CircuitBreaker
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
-import io.reactivex.Completable
-import io.reactivex.Flowable
-import io.reactivex.Maybe
-import io.reactivex.Observable
-import io.reactivex.Single
+import io.reactivex.*
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import spock.lang.Specification
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 

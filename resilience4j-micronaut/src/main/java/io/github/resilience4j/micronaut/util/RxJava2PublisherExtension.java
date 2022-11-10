@@ -17,11 +17,11 @@ import io.micronaut.core.convert.ConversionService;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.micronaut.retry.exception.FallbackException;
 import io.reactivex.Flowable;
+import jakarta.inject.Singleton;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Function;
 

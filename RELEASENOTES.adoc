@@ -392,4 +392,4 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 * Upgraded to Java 17
 * Upgraded to Kotlin 1.7.20
 * Upgraded to Spring Boot 2.7
-* Upgraded to Micronaut 3.1
+* Upgraded to Micronaut 3.7.3

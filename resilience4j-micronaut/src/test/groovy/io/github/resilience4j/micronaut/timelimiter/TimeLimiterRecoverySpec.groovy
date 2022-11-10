@@ -20,10 +20,10 @@ import io.github.resilience4j.micronaut.annotation.TimeLimiter
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import io.reactivex.*
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import spock.lang.Specification
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 
 @MicronautTest

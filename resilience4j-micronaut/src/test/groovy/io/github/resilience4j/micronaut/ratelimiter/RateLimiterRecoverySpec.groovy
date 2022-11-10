@@ -17,14 +17,13 @@ package io.github.resilience4j.micronaut.ratelimiter
 
 import io.github.resilience4j.micronaut.TestDummyService
 import io.github.resilience4j.micronaut.annotation.RateLimiter
-import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import io.reactivex.*
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import spock.lang.Specification
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import java.util.concurrent.CompletableFuture
 
 @MicronautTest

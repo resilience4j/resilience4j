@@ -5,9 +5,10 @@ import io.github.resilience4j.retry.RetryRegistry
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import spock.lang.Specification
 
-import javax.inject.Inject
 
 @MicronautTest
 @Property(name = "resilience4j.retry.enabled", value = "true")

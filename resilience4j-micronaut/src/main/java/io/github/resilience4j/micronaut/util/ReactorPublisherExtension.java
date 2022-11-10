@@ -16,12 +16,12 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.micronaut.retry.exception.FallbackException;
+import jakarta.inject.Singleton;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Function;
 

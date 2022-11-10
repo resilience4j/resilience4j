@@ -41,6 +41,9 @@ dependencies {
     testImplementation project(':resilience4j-consumer')
     testImplementation project(':resilience4j-rxjava2')
     testImplementation "io.micronaut:micronaut-aop"
+    testImplementation("io.micronaut.reactor:micronaut-reactor")
+    implementation("io.micronaut.rxjava3:micronaut-rxjava3")
+    implementation("io.micronaut.rxjava2:micronaut-rxjava2")
 
     testImplementation "io.micronaut:micronaut-http-client"
     testImplementation "io.micronaut:micronaut-http-server-netty"

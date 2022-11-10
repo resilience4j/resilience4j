@@ -15,7 +15,8 @@
  */
 package io.github.resilience4j.micronaut.retry;
 
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
