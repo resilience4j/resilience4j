@@ -9,7 +9,7 @@ ext {
     slf4jVersion = '1.7.30'
     assertjVersion = '3.18.1'
     logbackVersion = '1.2.3'
-    mockitoVersion = '2.25.1'
+    mockitoVersion = '3.12.4'
     powermockVersion = '2.0.7'
     jcacheVersion = '1.1.0'
     awaitilityVersion = '1.7.0'

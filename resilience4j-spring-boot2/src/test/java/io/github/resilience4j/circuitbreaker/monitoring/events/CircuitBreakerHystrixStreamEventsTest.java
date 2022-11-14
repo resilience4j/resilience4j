@@ -20,6 +20,7 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.service.test.DummyService;
 import io.github.resilience4j.service.test.TestApplication;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = TestApplication.class)
 @AutoConfigureWebTestClient(timeout="36000")
+@Ignore
 public class CircuitBreakerHystrixStreamEventsTest {
 
     public static final String ACTUATOR_STREAM_CIRCUITBREAKER_EVENTS = "/actuator/hystrixstreamcircuitbreakerevents";
