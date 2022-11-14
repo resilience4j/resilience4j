@@ -48,7 +48,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
     private final PublisherExtension extension;
 
     /**
-     * @param executionHandleLocator                The bean context to allow for DI of class annotated with {@link javax.inject.Inject}.
+     * @param executionHandleLocator                The bean context to allow for DI.
      * @param bulkheadRegistry           bulkhead registry used to retrieve {@link Bulkhead} by name
      * @param threadPoolBulkheadRegistry thread pool bulkhead registry used to retrieve {@link Bulkhead} by name
      */
