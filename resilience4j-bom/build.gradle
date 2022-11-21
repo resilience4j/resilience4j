@@ -1,12 +1,14 @@
 plugins {
     id 'java-platform'
     id 'maven-publish'
-    id 'signing'
+    //id 'signing'
 }
 
+/*
 signing {
     sign publishing.publications
 }
+*/
 
 def projectArtifactId = 'resilience4j'
 def url = "https://resilience4j.readme.io"
