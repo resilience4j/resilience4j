@@ -11,7 +11,7 @@ Maven's example:
 			<!-- Import dependency management from Resilience4j -->
 			<groupId>io.github.resilience4j</groupId>
 			<artifactId>resilience4j-bom</artifactId>
-			<version>0.14.0</version>
+			<version>2.0.0</version>
 			<type>pom</type>
 			<scope>import</scope>
 		</dependency>
@@ -22,7 +22,7 @@ Maven's example:
 Gradle example:
 ```
 dependencies {
-    implementation 'io.github.resilience4j:resilience4j-bom:0.14.0'
+    implementation 'io.github.resilience4j:resilience4j-bom:2.0.0'
 
     implementation 'io.github.resilience4j:resilience4j-circuitbreaker'
 }

@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.7.20'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.21'
 }
 
 dependencies {
@@ -19,21 +19,15 @@ dependencies {
     testImplementation(project(':resilience4j-timelimiter'))
 }
 
-def experimentalFlags = [
-        "-Xuse-experimental=kotlin.Experimental"
-]
-
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs += experimentalFlags
+        jvmTarget = "17"
     }
 }
 
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs += experimentalFlags
+        jvmTarget = "17"
     }
 }
 

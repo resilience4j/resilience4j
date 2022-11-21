@@ -1,6 +1,11 @@
 plugins {
     id 'java-platform'
     id 'maven-publish'
+    id 'signing'
+}
+
+signing {
+    sign publishing.publications
 }
 
 def projectArtifactId = 'resilience4j'
@@ -64,5 +69,6 @@ dependencies {
         api project(":resilience4j-reactor")
         api project(":resilience4j-micrometer")
         api project(":resilience4j-kotlin")
+        api project(":resilience4j-vavr")
     }
 }
