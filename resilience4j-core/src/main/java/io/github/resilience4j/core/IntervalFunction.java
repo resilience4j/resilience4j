@@ -108,7 +108,6 @@ public interface IntervalFunction extends Function<Integer, Long> {
     }
 
     static IntervalFunction ofExponentialBackoff(long initialIntervalMillis, double multiplier) {
-        checkMultiplier(multiplier);
         return of(initialIntervalMillis, x -> (long) (x * multiplier));
     }
 
@@ -149,7 +148,6 @@ public interface IntervalFunction extends Function<Integer, Long> {
         double randomizationFactor
     ) {
         checkInterval(initialIntervalMillis);
-        checkMultiplier(multiplier);
         checkRandomizationFactor(randomizationFactor);
         return attempt -> {
             checkAttempt(attempt);
@@ -249,12 +247,6 @@ final class IntervalFunctionCompanion {
         if (intervalMillis < 1) {
             throw new IllegalArgumentException(
                 "Illegal argument interval: " + intervalMillis + " millis is less than 1");
-        }
-    }
-
-    static void checkMultiplier(double multiplier) {
-        if (multiplier < 1.0) {
-            throw new IllegalArgumentException("Illegal argument multiplier: " + multiplier);
         }
     }
 

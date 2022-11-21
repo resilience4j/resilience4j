@@ -128,22 +128,6 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void shouldRejectOutOfBoundsMultiplier() {
-        final Duration duration = Duration.ofMillis(100);
-        final float lessThenOneMultiplier = 0.9999f;
-
-        final List<Try<IntervalFunction>> tries = List.of(
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(duration, lessThenOneMultiplier)),
-            Try.of(
-                () -> IntervalFunction.ofExponentialRandomBackoff(duration, lessThenOneMultiplier))
-        );
-
-        assertThat(tries.forAll(Try::isFailure)).isTrue();
-        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException))
-            .isTrue();
-    }
-
-    @Test
     public void shouldPassPositiveMultiplier() {
         final Duration duration = Duration.ofMillis(100);
         final float greaterThanOneMultiplier = 1.0001f;
