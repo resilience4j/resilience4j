@@ -135,7 +135,7 @@ sonarqube {
         property "sonar.projectName", "resilience4j"
         property "sonar.projectKey", "resilience4j_resilience4j"
         property "sonar.links.homepage", "https://github.com/resilience4j/resilience4j"
-        property "sonar.links.ci", "https://travis-ci.org/resilience4j/resilience4j"
+        property "sonar.links.ci", "https://github.com/resilience4j/resilience4j/actions"
         property "sonar.links.scm", "https://github.com/resilience4j/resilience4j"
         property "sonar.links.issue", "https://github.com/resilience4j/resilience4j/issues"
         property "sonar.language", "java"
