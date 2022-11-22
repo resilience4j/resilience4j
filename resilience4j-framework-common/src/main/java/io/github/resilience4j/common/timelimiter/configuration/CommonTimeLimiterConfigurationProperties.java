@@ -30,6 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static io.github.resilience4j.timelimiter.TimeLimiterConfig.custom;
+import static io.github.resilience4j.timelimiter.TimeLimiterConfig.from;
+
 public class CommonTimeLimiterConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
@@ -59,58 +62,38 @@ public class CommonTimeLimiterConfigurationProperties extends CommonProperties {
         return instanceProperties;
     }
 
-    public TimeLimiterConfig createTimeLimiterConfig(String backendName,
+    public TimeLimiterConfig createTimeLimiterConfig(String instanceName,
         @Nullable InstanceProperties instanceProperties,
         CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
-        if (instanceProperties == null) {
-            return buildDefaultConfig();
-        }
-        if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+        TimeLimiterConfig baseConfig = null;
+        if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
-                compositeTimeLimiterCustomizer, backendName);
-        } else if (configs.get(DEFAULT) != null) {
-            return buildTimeLimiterConfig(TimeLimiterConfig.from(buildDefaultConfig()), instanceProperties,
-                compositeTimeLimiterCustomizer,
-                backendName);
+            ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
+            baseConfig = createTimeLimiterConfig(instanceProperties.getBaseConfig(), baseProperties, compositeTimeLimiterCustomizer);
+        } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
+            if (instanceProperties != null) {
+                ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+            }
+            baseConfig = createTimeLimiterConfig(DEFAULT, configs.get(DEFAULT), compositeTimeLimiterCustomizer);
         }
-        return buildTimeLimiterConfig(TimeLimiterConfig.custom(), instanceProperties,
-            compositeTimeLimiterCustomizer, backendName);
+        return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, compositeTimeLimiterCustomizer, instanceName);
     }
 
-    private TimeLimiterConfig buildDefaultConfig() {
-        return buildTimeLimiterConfig(TimeLimiterConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
-            DEFAULT);
-    }
-
-    private TimeLimiterConfig buildConfigFromBaseConfig(
-        InstanceProperties baseProperties, InstanceProperties instanceProperties,
-        CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer, String backendName) {
-
-        ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        TimeLimiterConfig baseConfig = createTimeLimiterConfig(
-            backendName, baseProperties, compositeTimeLimiterCustomizer);
-        return buildTimeLimiterConfig(TimeLimiterConfig.from(baseConfig), instanceProperties,
-            compositeTimeLimiterCustomizer, backendName);
-    }
-
-    private static TimeLimiterConfig buildTimeLimiterConfig(
+    private static TimeLimiterConfig buildConfig(
         TimeLimiterConfig.Builder builder, @Nullable InstanceProperties instanceProperties,
         CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer, String backendName) {
 
-        if (instanceProperties == null) {
-            return builder.build();
-        }
+        if (instanceProperties != null) {
+            if (instanceProperties.getTimeoutDuration() != null) {
+                builder.timeoutDuration(instanceProperties.getTimeoutDuration());
+            }
 
-        if (instanceProperties.getTimeoutDuration() != null) {
-            builder.timeoutDuration(instanceProperties.getTimeoutDuration());
-        }
-
-        if (instanceProperties.getCancelRunningFuture() != null) {
-            builder.cancelRunningFuture(instanceProperties.getCancelRunningFuture());
+            if (instanceProperties.getCancelRunningFuture() != null) {
+                builder.cancelRunningFuture(instanceProperties.getCancelRunningFuture());
+            }
         }
 
         compositeTimeLimiterCustomizer.getCustomizer(backendName).ifPresent(

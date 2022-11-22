@@ -30,6 +30,9 @@ import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 
+import static io.github.resilience4j.ratelimiter.RateLimiterConfig.custom;
+import static io.github.resilience4j.ratelimiter.RateLimiterConfig.from;
+
 public class CommonRateLimiterConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
@@ -50,62 +53,43 @@ public class CommonRateLimiterConfigurationProperties extends CommonProperties {
         @Nullable InstanceProperties instanceProperties,
         CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
         String instanceName) {
-        if (instanceProperties == null) {
-            return buildDefaultConfig();
-        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
-            InstanceProperties baseProperties = configs.get(instanceProperties.baseConfig);
+        RateLimiterConfig baseConfig = null;
+        if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+            InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
-                compositeRateLimiterCustomizer, instanceName);
-        } else if (configs.get(DEFAULT) != null) {
-            return buildRateLimiterConfig(RateLimiterConfig.from(buildDefaultConfig()), instanceProperties,
-                compositeRateLimiterCustomizer,
-                instanceName);
+            ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
+            baseConfig = createRateLimiterConfig(baseProperties, compositeRateLimiterCustomizer, instanceProperties.getBaseConfig());
+        } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
+            if (instanceProperties != null) {
+                ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+            }
+            baseConfig = createRateLimiterConfig(configs.get(DEFAULT), compositeRateLimiterCustomizer, DEFAULT);
         }
-        return buildRateLimiterConfig(RateLimiterConfig.custom(), instanceProperties,
-            compositeRateLimiterCustomizer, instanceName);
+        return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, compositeRateLimiterCustomizer, instanceName);
     }
 
-    private RateLimiterConfig buildDefaultConfig() {
-        return buildRateLimiterConfig(RateLimiterConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
-            DEFAULT);
-    }
-
-    private RateLimiterConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties,
-        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
-        String instanceName) {
-        ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        RateLimiterConfig baseConfig = createRateLimiterConfig(
-            baseProperties, compositeRateLimiterCustomizer, instanceName);
-        return buildRateLimiterConfig(RateLimiterConfig.from(baseConfig), instanceProperties,
-            compositeRateLimiterCustomizer, instanceName);
-    }
-
-    private RateLimiterConfig buildRateLimiterConfig(RateLimiterConfig.Builder builder,
+    private RateLimiterConfig buildConfig(RateLimiterConfig.Builder builder,
         @Nullable InstanceProperties instanceProperties,
         CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
         String instanceName) {
-        if (instanceProperties == null) {
-            return builder.build();
-        }
+        if (instanceProperties != null) {
+            if (instanceProperties.getLimitForPeriod() != null) {
+                builder.limitForPeriod(instanceProperties.getLimitForPeriod());
+            }
 
-        if (instanceProperties.getLimitForPeriod() != null) {
-            builder.limitForPeriod(instanceProperties.getLimitForPeriod());
-        }
+            if (instanceProperties.getLimitRefreshPeriod() != null) {
+                builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
+            }
 
-        if (instanceProperties.getLimitRefreshPeriod() != null) {
-            builder.limitRefreshPeriod(instanceProperties.getLimitRefreshPeriod());
-        }
+            if (instanceProperties.getTimeoutDuration() != null) {
+                builder.timeoutDuration(instanceProperties.getTimeoutDuration());
+            }
 
-        if (instanceProperties.getTimeoutDuration() != null) {
-            builder.timeoutDuration(instanceProperties.getTimeoutDuration());
-        }
-
-        if (instanceProperties.getWritableStackTraceEnabled() != null) {
-            builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
+            if (instanceProperties.getWritableStackTraceEnabled() != null) {
+                builder.writableStackTraceEnabled(instanceProperties.getWritableStackTraceEnabled());
+            }
         }
         compositeRateLimiterCustomizer.getCustomizer(instanceName).ifPresent(
             rateLimiterConfigCustomizer -> rateLimiterConfigCustomizer.customize(builder));

@@ -30,6 +30,9 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import static io.github.resilience4j.retry.RetryConfig.custom;
+import static io.github.resilience4j.retry.RetryConfig.from;
+
 /**
  * Main spring properties for retry configuration
  */
@@ -45,7 +48,7 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
      */
     public RetryConfig createRetryConfig(String backend,
         CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer) {
-        return createRetryConfig(getBackendProperties(backend), compositeRetryCustomizer, backend);
+        return createRetryConfig(instances.get(backend), compositeRetryCustomizer, backend);
     }
 
     /**
@@ -88,40 +91,23 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
      * @param instanceProperties the retry backend spring properties
      * @return the retry configuration
      */
-    public RetryConfig createRetryConfig(InstanceProperties instanceProperties,
-        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer, String backend) {
-        if (instanceProperties == null) {
-            return buildDefaultConfig();
-        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+    public RetryConfig createRetryConfig(@Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer, String instanceName) {
+        RetryConfig baseConfig = null;
+        if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(baseProperties, instanceProperties,
-                compositeRetryCustomizer, backend);
-        } else if (configs.get(DEFAULT) != null) {
-            return buildRetryConfig(RetryConfig.from(buildDefaultConfig()), instanceProperties,
-                compositeRetryCustomizer,
-                backend);
+            ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
+            baseConfig = createRetryConfig(baseProperties, compositeRetryCustomizer, instanceProperties.getBaseConfig());
+        } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
+            if (instanceProperties != null) {
+                ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+            }
+            baseConfig = createRetryConfig(configs.get(DEFAULT), compositeRetryCustomizer, DEFAULT);
         }
-        return buildRetryConfig(RetryConfig.custom(), instanceProperties, compositeRetryCustomizer,
-            backend);
-    }
-
-    private RetryConfig buildDefaultConfig() {
-        return buildRetryConfig(RetryConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
-            DEFAULT);
-    }
-
-    private RetryConfig buildConfigFromBaseConfig(InstanceProperties baseProperties,
-        InstanceProperties instanceProperties,
-        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
-        String backend) {
-        RetryConfig baseConfig = createRetryConfig(baseProperties,
-            compositeRetryCustomizer, backend);
-        ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
-        return buildRetryConfig(RetryConfig.from(baseConfig), instanceProperties,
-            compositeRetryCustomizer, backend);
+        return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, compositeRetryCustomizer, instanceName);
     }
 
     /**
@@ -129,52 +115,50 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
      * @return retry config builder instance
      */
     @SuppressWarnings("unchecked")
-    private RetryConfig buildRetryConfig(RetryConfig.Builder builder,
-        InstanceProperties properties,
-        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
-        String backend) {
-        if (properties == null) {
-            return builder.build();
-        }
+    private RetryConfig buildConfig(RetryConfig.Builder builder,
+                                    @Nullable InstanceProperties properties,
+                                    CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer,
+                                    String backend) {
+        if (properties != null) {
+            configureRetryIntervalFunction(properties, builder);
 
-        configureRetryIntervalFunction(properties, builder);
+            if (properties.getMaxAttempts() != null && properties.getMaxAttempts() != 0) {
+                builder.maxAttempts(properties.getMaxAttempts());
+            }
 
-        if (properties.getMaxAttempts() != null && properties.getMaxAttempts() != 0) {
-            builder.maxAttempts(properties.getMaxAttempts());
-        }
+            if (properties.getRetryExceptionPredicate() != null) {
+                Predicate<Throwable> predicate = ClassUtils
+                    .instantiatePredicateClass(properties.getRetryExceptionPredicate());
+                builder.retryOnException(predicate);
+            }
 
-        if (properties.getRetryExceptionPredicate() != null) {
-            Predicate<Throwable> predicate = ClassUtils
-                .instantiatePredicateClass(properties.getRetryExceptionPredicate());
-            builder.retryOnException(predicate);
-        }
+            if (properties.getIgnoreExceptions() != null) {
+                builder.ignoreExceptions(properties.getIgnoreExceptions());
+            }
 
-        if (properties.getIgnoreExceptions() != null) {
-            builder.ignoreExceptions(properties.getIgnoreExceptions());
-        }
+            if (properties.getRetryExceptions() != null) {
+                builder.retryExceptions(properties.getRetryExceptions());
+            }
 
-        if (properties.getRetryExceptions() != null) {
-            builder.retryExceptions(properties.getRetryExceptions());
-        }
+            if (properties.getResultPredicate() != null) {
+                Predicate<Object> predicate = ClassUtils
+                    .instantiatePredicateClass(properties.getResultPredicate());
+                builder.retryOnResult(predicate);
+            }
 
-        if (properties.getResultPredicate() != null) {
-            Predicate<Object> predicate = ClassUtils
-                .instantiatePredicateClass(properties.getResultPredicate());
-            builder.retryOnResult(predicate);
-        }
+            if(properties.getConsumeResultBeforeRetryAttempt() != null){
+                BiConsumer<Integer, Object> biConsumer = ClassUtils.instantiateBiConsumer(properties.getConsumeResultBeforeRetryAttempt());
+                builder.consumeResultBeforeRetryAttempt(biConsumer);
+            }
 
-        if(properties.getConsumeResultBeforeRetryAttempt() != null){
-            BiConsumer<Integer, Object> biConsumer = ClassUtils.instantiateBiConsumer(properties.getConsumeResultBeforeRetryAttempt());
-            builder.consumeResultBeforeRetryAttempt(biConsumer);
-        }
-
-        if (properties.getIntervalBiFunction() != null) {
-            IntervalBiFunction<Object> intervalBiFunction = ClassUtils
-                .instantiateIntervalBiFunctionClass(properties.getIntervalBiFunction());
-            builder.intervalBiFunction(intervalBiFunction);
-        }
-        if(properties.getFailAfterMaxAttempts() != null) {
-            builder.failAfterMaxAttempts(properties.getFailAfterMaxAttempts());
+            if (properties.getIntervalBiFunction() != null) {
+                IntervalBiFunction<Object> intervalBiFunction = ClassUtils
+                    .instantiateIntervalBiFunctionClass(properties.getIntervalBiFunction());
+                builder.intervalBiFunction(intervalBiFunction);
+            }
+            if(properties.getFailAfterMaxAttempts() != null) {
+                builder.failAfterMaxAttempts(properties.getFailAfterMaxAttempts());
+            }
         }
 
         compositeRetryCustomizer.getCustomizer(backend)

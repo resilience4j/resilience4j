@@ -19,16 +19,19 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.ContextPropagator;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.custom;
+import static io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig.from;
 
 public class CommonThreadPoolBulkheadConfigurationProperties extends CommonProperties {
 
@@ -56,6 +59,8 @@ public class CommonThreadPoolBulkheadConfigurationProperties extends CommonPrope
         InstanceProperties instanceProperties = instances.get(backend);
         if (instanceProperties == null) {
             instanceProperties = configs.get(DEFAULT);
+        } else if (configs.get(DEFAULT) != null) {
+            ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
         }
         return instanceProperties;
     }
@@ -68,67 +73,49 @@ public class CommonThreadPoolBulkheadConfigurationProperties extends CommonPrope
     }
 
     public ThreadPoolBulkheadConfig createThreadPoolBulkheadConfig(
-        InstanceProperties instanceProperties,
+        @Nullable InstanceProperties instanceProperties,
         CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
         String instanceName) {
-        if (instanceProperties == null) {
-            return buildDefaultConfig();
-        } else if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+        ThreadPoolBulkheadConfig baseConfig = null;
+        if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildThreadPoolConfigFromBaseConfig(baseProperties, instanceProperties,
-                compositeThreadPoolBulkheadCustomizer, instanceName);
-        } else if (configs.get(DEFAULT) != null) {
-            return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(buildDefaultConfig()), instanceProperties,
-                compositeThreadPoolBulkheadCustomizer,
-                instanceName);
+            ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
+            baseConfig = createThreadPoolBulkheadConfig(baseProperties, compositeThreadPoolBulkheadCustomizer, instanceProperties.getBaseConfig());
+        } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
+            if (instanceProperties != null) {
+                ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+            }
+            baseConfig = createThreadPoolBulkheadConfig(configs.get(DEFAULT), compositeThreadPoolBulkheadCustomizer, DEFAULT);
         }
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), instanceProperties,
-            compositeThreadPoolBulkheadCustomizer, instanceName);
+        return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
     }
 
-    private ThreadPoolBulkheadConfig buildDefaultConfig() {
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
-            DEFAULT);
-    }
-
-    private ThreadPoolBulkheadConfig buildThreadPoolConfigFromBaseConfig(
-        InstanceProperties baseProperties, InstanceProperties instanceProperties,
-        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
-        String instanceName) {
-        ThreadPoolBulkheadConfig baseConfig = createThreadPoolBulkheadConfig(
-            baseProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
-        return buildThreadPoolBulkheadConfig(ThreadPoolBulkheadConfig.from(baseConfig),
-            instanceProperties, compositeThreadPoolBulkheadCustomizer, instanceName);
-    }
-
-    public ThreadPoolBulkheadConfig buildThreadPoolBulkheadConfig(
+    private ThreadPoolBulkheadConfig buildConfig(
         ThreadPoolBulkheadConfig.Builder builder, InstanceProperties properties,
         CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer,
         String instanceName) {
-        if (properties == null) {
-            return ThreadPoolBulkheadConfig.custom().build();
-        }
-
-        if (properties.getQueueCapacity() >= 0) {
-            builder.queueCapacity(properties.getQueueCapacity());
-        }
-        if (properties.getCoreThreadPoolSize() > 0) {
-            builder.coreThreadPoolSize(properties.getCoreThreadPoolSize());
-        }
-        if (properties.getMaxThreadPoolSize() > 0) {
-            builder.maxThreadPoolSize(properties.getMaxThreadPoolSize());
-        }
-        if (properties.getKeepAliveDuration() != null) {
-            builder.keepAliveDuration(properties.getKeepAliveDuration());
-        }
-        if (properties.getWritableStackTraceEnabled() != null) {
-            builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
-        }
-        if(properties.getContextPropagators() != null){
-            builder.contextPropagator(properties.getContextPropagators());
+        if (properties != null) {
+            if (properties.getQueueCapacity() >= 0) {
+                builder.queueCapacity(properties.getQueueCapacity());
+            }
+            if (properties.getCoreThreadPoolSize() > 0) {
+                builder.coreThreadPoolSize(properties.getCoreThreadPoolSize());
+            }
+            if (properties.getMaxThreadPoolSize() > 0) {
+                builder.maxThreadPoolSize(properties.getMaxThreadPoolSize());
+            }
+            if (properties.getKeepAliveDuration() != null) {
+                builder.keepAliveDuration(properties.getKeepAliveDuration());
+            }
+            if (properties.getWritableStackTraceEnabled() != null) {
+                builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
+            }
+            if (properties.getContextPropagators() != null) {
+                builder.contextPropagator(properties.getContextPropagators());
+            }
         }
         compositeThreadPoolBulkheadCustomizer.getCustomizer(instanceName).ifPresent(
             threadPoolBulkheadConfigCustomizer -> threadPoolBulkheadConfigCustomizer
