@@ -32,29 +32,27 @@ import java.util.function.Function;
 
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 
 public class CacheTest {
 
     private javax.cache.Cache<String, String> cache;
-    private MutableEntry<String, String> mockedEntry;
+    private MutableEntry<String, String> mutableEntry;
 
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         cache = mock(javax.cache.Cache.class);
-        mockedEntry = mock(MutableEntry.class);
+        mutableEntry = mock(MutableEntry.class);
         // Actual behavior of the EntryProcessor implementation is tested in ComputeIfAbsentTest
-        given(mockedEntry.exists()).willReturn(false);
+        given(mutableEntry.exists()).willReturn(false);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(cache, mockedEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -76,7 +74,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedSupplier() {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(cache, mockedEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
             cacheContext.getEventPublisher())
@@ -98,7 +96,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedCallable() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(cache, mockedEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -185,17 +183,15 @@ public class CacheTest {
 
     private static class CacheInvokeAnswer implements Answer<String> {
 
-        private final javax.cache.Cache<String, String> cache;
         private final MutableEntry<String, String> mockedEntry;
 
-        CacheInvokeAnswer(javax.cache.Cache<String, String> cache, MutableEntry<String, String> mockedEntry) {
-            this.cache = cache;
+        CacheInvokeAnswer(MutableEntry<String, String> mockedEntry) {
             this.mockedEntry = mockedEntry;
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public String answer(InvocationOnMock invocation) throws Throwable {
+        public String answer(InvocationOnMock invocation) {
             EntryProcessor<String, String, String> argument = invocation.getArgument(1, EntryProcessor.class);
             return argument.process(mockedEntry);
         }
