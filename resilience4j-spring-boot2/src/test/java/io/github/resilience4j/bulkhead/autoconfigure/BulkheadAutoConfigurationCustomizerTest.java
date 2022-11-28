@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests combinations of config properties ({@code resilience4j.bulkhead.configs.<name>.*}),
  * instance properties ({@code resilience4j.bulkhead.instances.<name>.*}) and {@link BulkheadConfigCustomizer}.
  * <p>
- * To make this test easier to follow it always uses different magnitude of values for different ways to configure a circuit breaker:
+ * To make this test easier to follow it always uses different magnitude of values for different ways to configure a bulkhead:
  * <ul>
  *     <li>config properties - N * 10</li>
  *     <li>instance properties - N * 100</li>
