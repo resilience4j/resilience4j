@@ -29,9 +29,14 @@ import io.github.resilience4j.core.functions.CheckedSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.MutableEntry;
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
+
+import static java.util.Objects.requireNonNull;
 
 public class CacheImpl<K, V> implements Cache<K, V> {
 
@@ -60,17 +65,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     public V computeIfAbsent(K cacheKey, CheckedSupplier<V> supplier) {
         return getValueFromCache(cacheKey)
-            .orElseGet(() -> computeAndPut(cacheKey, supplier));
-    }
-
-    private V computeAndPut(K cacheKey, CheckedSupplier<V> supplier) {
-        try {
-            V value = supplier.get();
-            putValueIntoCache(cacheKey, value);
-            return value;
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
+            .orElseGet(() -> invokeSupplierAndStore(cacheKey, supplier));
     }
 
     private Optional<V> getValueFromCache(K cacheKey) {
@@ -89,14 +84,19 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
     }
 
-    private void putValueIntoCache(K cacheKey, V value) {
+    private V invokeSupplierAndStore(K cacheKey, CheckedSupplier<V> supplier) {
         try {
-            if (value != null) {
-                cache.put(cacheKey, value);
-            }
+            return cache.invoke(cacheKey, new ComputeIfAbsent<>(supplier));
         } catch (Exception exception) {
             LOG.warn("Failed to put a value into Cache {}", getName(), exception);
             onError(exception);
+        }
+
+        try {
+            // fallback in case the invoke command throws an exception
+            return supplier.get();
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
         }
     }
 
@@ -178,6 +178,26 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         @Override
         public long getNumberOfCacheMisses() {
             return cacheMisses.longValue();
+        }
+    }
+
+    static final class ComputeIfAbsent<K, V> implements EntryProcessor<K, V, V>, Serializable {
+        static final long serialVersionUID = 1L;
+
+        private final CheckedSupplier<V> supplier;
+
+        ComputeIfAbsent(CheckedSupplier<V> supplier) {
+            this.supplier = requireNonNull(supplier);
+        }
+
+        @Override
+        public V process(MutableEntry<K, V> entry, Object... arguments) {
+            if (entry.exists()) {
+                return entry.getValue();
+            }
+            V value = supplier.unchecked().get();
+            entry.setValue(value);
+            return value;
         }
     }
 }
