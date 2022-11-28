@@ -39,7 +39,6 @@ import static org.mockito.Mockito.times;
 public class CacheEventPublisherTest {
 
     private javax.cache.Cache<String, String> cache;
-    private MutableEntry<String, String> mutableEntry;
     private Logger logger;
 
     @SuppressWarnings("unchecked")
@@ -47,9 +46,6 @@ public class CacheEventPublisherTest {
     public void setUp() {
         cache = mock(javax.cache.Cache.class);
         logger = mock(Logger.class);
-        mutableEntry = mock(MutableEntry.class);
-        // Actual behavior of the EntryProcessor implementation is tested in ComputeIfAbsentTest
-        given(mutableEntry.exists()).willReturn(false);
     }
 
     @Test
@@ -79,7 +75,7 @@ public class CacheEventPublisherTest {
     @Test
     public void shouldConsumeOnCacheMissEvent() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheMiss(
             event -> logger.info(event.getEventType().toString()));
@@ -95,7 +91,7 @@ public class CacheEventPublisherTest {
     @Test
     public void shouldConsumeOnGetErrorEvent() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onError(
             event -> logger.info(event.getEventType().toString()));
@@ -126,17 +122,18 @@ public class CacheEventPublisherTest {
 
     private static class CacheInvokeAnswer implements Answer<String> {
 
-        private final MutableEntry<String, String> mockedEntry;
+        private final MutableEntry<String, String> mutableEntry;
 
-        CacheInvokeAnswer(MutableEntry<String, String> mockedEntry) {
-            this.mockedEntry = mockedEntry;
+        @SuppressWarnings("unchecked")
+        CacheInvokeAnswer() {
+            mutableEntry = mock(MutableEntry.class);
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public String answer(InvocationOnMock invocation) {
             EntryProcessor<String, String, String> argument = invocation.getArgument(1, EntryProcessor.class);
-            return argument.process(mockedEntry);
+            return argument.process(mutableEntry);
         }
     }
 }

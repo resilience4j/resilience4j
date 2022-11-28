@@ -38,21 +38,17 @@ import static org.mockito.Mockito.mock;
 public class CacheTest {
 
     private javax.cache.Cache<String, String> cache;
-    private MutableEntry<String, String> mutableEntry;
 
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         cache = mock(javax.cache.Cache.class);
-        mutableEntry = mock(MutableEntry.class);
-        // Actual behavior of the EntryProcessor implementation is tested in ComputeIfAbsentTest
-        given(mutableEntry.exists()).willReturn(false);
     }
 
     @Test
     public void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -74,7 +70,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedSupplier() {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
             cacheContext.getEventPublisher())
@@ -96,7 +92,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedCallable() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
-        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer(mutableEntry));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -183,17 +179,18 @@ public class CacheTest {
 
     private static class CacheInvokeAnswer implements Answer<String> {
 
-        private final MutableEntry<String, String> mockedEntry;
+        private final MutableEntry<String, String> mutableEntry;
 
-        CacheInvokeAnswer(MutableEntry<String, String> mockedEntry) {
-            this.mockedEntry = mockedEntry;
+        @SuppressWarnings("unchecked")
+        CacheInvokeAnswer() {
+            mutableEntry = mock(MutableEntry.class);
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public String answer(InvocationOnMock invocation) {
             EntryProcessor<String, String, String> argument = invocation.getArgument(1, EntryProcessor.class);
-            return argument.process(mockedEntry);
+            return argument.process(mutableEntry);
         }
     }
 }
