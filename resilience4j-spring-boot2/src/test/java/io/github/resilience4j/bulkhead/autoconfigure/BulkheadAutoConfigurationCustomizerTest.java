@@ -131,7 +131,7 @@ public class BulkheadAutoConfigurationCustomizerTest {
 
 
                 BulkheadConfig backendWithSharedConfig = registry.bulkhead("backendWithSharedConfig").getBulkheadConfig();
-                // from shared config customzier
+                // from shared config customizer
                 assertThat(backendWithSharedConfig.getMaxWaitDuration()).isEqualTo(Duration.ofMillis(2000));
                 // from instance config
                 assertThat(backendWithSharedConfig.isWritableStackTraceEnabled()).isEqualTo(true);

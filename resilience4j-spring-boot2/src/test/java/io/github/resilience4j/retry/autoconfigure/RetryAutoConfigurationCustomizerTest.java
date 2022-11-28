@@ -131,7 +131,7 @@ public class RetryAutoConfigurationCustomizerTest {
 
 
                 RetryConfig backendWithSharedConfig = registry.retry("backendWithSharedConfig").getRetryConfig();
-                // from shared config customzier
+                // from shared config customizer
                 assertThat(backendWithSharedConfig.getIntervalBiFunction().apply(0, null)).isEqualTo(2000);
                 // from instance config
                 assertThat(backendWithSharedConfig.getMaxAttempts()).isEqualTo(200);

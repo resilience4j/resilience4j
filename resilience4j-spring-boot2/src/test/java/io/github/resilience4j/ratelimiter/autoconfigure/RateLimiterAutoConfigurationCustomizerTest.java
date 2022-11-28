@@ -131,7 +131,7 @@ public class RateLimiterAutoConfigurationCustomizerTest {
 
 
                 RateLimiterConfig backendWithSharedConfig = registry.rateLimiter("backendWithSharedConfig").getRateLimiterConfig();
-                // from shared config customzier
+                // from shared config customizer
                 assertThat(backendWithSharedConfig.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(2000));
                 // from instance config
                 assertThat(backendWithSharedConfig.getLimitForPeriod()).isEqualTo(200);

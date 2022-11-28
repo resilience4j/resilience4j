@@ -131,7 +131,7 @@ public class CircuitBreakerAutoConfigurationCustomizerTest {
 
 
                 CircuitBreakerConfig backendWithSharedConfig = registry.circuitBreaker("backendWithSharedConfig").getCircuitBreakerConfig();
-                // from shared config customzier
+                // from shared config customizer
                 assertThat(backendWithSharedConfig.getSlowCallDurationThreshold()).isEqualTo(Duration.ofMillis(2000));
                 // from instance config
                 assertThat(backendWithSharedConfig.getSlidingWindowSize()).isEqualTo(200);
