@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.spring6.fallback.configure;
 
-import io.github.resilience4j.fallback.*;
 import io.github.resilience4j.spring6.fallback.*;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.spelresolver.configure.SpelResolverConfiguration;
