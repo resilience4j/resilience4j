@@ -19,6 +19,7 @@ import io.github.resilience4j.fallback.*;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,12 +46,14 @@ public class FallbackConfigurationOnMissingBean {
 
     @Bean
     @ConditionalOnMissingBean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
     public FallbackDecorators fallbackDecorators(@Autowired(required = false) List<FallbackDecorator> fallbackDecorators) {
         return fallbackConfiguration.fallbackDecorators(fallbackDecorators);
     }
 
     @Bean
     @ConditionalOnMissingBean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
     public FallbackExecutor fallbackExecutor(SpelResolver spelResolver, FallbackDecorators fallbackDecorators) {
         return fallbackConfiguration.fallbackExecutor(spelResolver, fallbackDecorators);
     }
