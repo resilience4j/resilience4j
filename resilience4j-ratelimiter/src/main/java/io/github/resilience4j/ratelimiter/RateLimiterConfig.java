@@ -90,9 +90,7 @@ public class RateLimiterConfig implements Serializable {
 
     private static Duration validateDurationWithinRange(Duration duration, String message) {
         try {
-            //noinspection ResultOfMethodCallIgnored
-            duration.toNanos(); // make sure there is no long overflow
-            return duration;
+            return Duration.ofNanos(duration.toNanos()); // make sure there is no long overflow
         } catch (Exception e) {
             throw new RuntimeException(message, e);
         }
