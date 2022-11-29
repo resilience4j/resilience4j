@@ -23,7 +23,11 @@ import io.github.resilience4j.core.functions.CheckedFunction;
 import io.reactivex.subscribers.TestSubscriber;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.MutableEntry;
 import java.util.function.Function;
 
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
@@ -44,6 +48,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -57,7 +62,6 @@ public class CacheTest {
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
-        then(cache).should().put("testKey", "Hello world");
         testSubscriber
             .assertValueCount(1)
             .assertValues(CacheEvent.Type.CACHE_MISS);
@@ -66,6 +70,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedSupplier() {
         given(cache.get("testKey")).willReturn(null);
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber = toFlowable(
             cacheContext.getEventPublisher())
@@ -79,7 +84,6 @@ public class CacheTest {
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
-        then(cache).should().put("testKey", "Hello world");
         testSubscriber
             .assertValueCount(1)
             .assertValues(CacheEvent.Type.CACHE_MISS);
@@ -88,6 +92,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedCallable() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -101,7 +106,6 @@ public class CacheTest {
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
-        then(cache).should().put("testKey", "Hello world");
         testSubscriber
             .assertValueCount(1)
             .assertValues(CacheEvent.Type.CACHE_MISS);
@@ -111,7 +115,7 @@ public class CacheTest {
     public void shouldReturnValueOfSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         willThrow(new RuntimeException("Cache is not available")).given(cache)
-            .put("testKey", "Hello world");
+            .invoke(eq("testKey"), any());
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -154,6 +158,7 @@ public class CacheTest {
     @Test
     public void shouldReturnValueFromDecoratedCallableBecauseOfException() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
+        given(cache.invoke(eq("testKey"), any())).willThrow(new RuntimeException("Cache is not available"));
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
             toFlowable(cacheContext.getEventPublisher())
@@ -168,7 +173,24 @@ public class CacheTest {
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isZero();
         testSubscriber
-            .assertValueCount(1)
-            .assertValues(CacheEvent.Type.ERROR);
+            .assertValueCount(2)
+            .assertValues(CacheEvent.Type.ERROR, CacheEvent.Type.ERROR);
+    }
+
+    private static class CacheInvokeAnswer implements Answer<String> {
+
+        private final MutableEntry<String, String> mutableEntry;
+
+        @SuppressWarnings("unchecked")
+        CacheInvokeAnswer() {
+            mutableEntry = mock(MutableEntry.class);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public String answer(InvocationOnMock invocation) {
+            EntryProcessor<String, String, String> argument = invocation.getArgument(1, EntryProcessor.class);
+            return argument.process(mutableEntry);
+        }
     }
 }
