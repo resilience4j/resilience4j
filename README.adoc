@@ -213,7 +213,8 @@ Supplier<String> decoratedSupplier = CircuitBreaker
 decoratedSupplier = Retry
     .decorateSupplier(retry, decoratedSupplier);
 
-// Execute the decorated supplier and recover from any exception
+// Use of Vavr's Try to
+// execute the decorated supplier and recover from any exception
 String result = Try.ofSupplier(decoratedSupplier)
     .recover(throwable -> "Hello from Recovery").get();
 
