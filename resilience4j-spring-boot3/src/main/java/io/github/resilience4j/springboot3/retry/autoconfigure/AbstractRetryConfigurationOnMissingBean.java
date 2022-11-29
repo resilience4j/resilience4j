@@ -24,7 +24,6 @@ import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.github.resilience4j.retry.configure.*;
 import io.github.resilience4j.retry.event.RetryEvent;
 import io.github.resilience4j.spring6.retry.configure.*;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;

@@ -23,7 +23,6 @@ import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
-import io.github.resilience4j.ratelimiter.configure.*;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.spring6.ratelimiter.configure.*;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
