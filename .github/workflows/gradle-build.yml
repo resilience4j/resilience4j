@@ -11,22 +11,22 @@ jobs:
     name: "Gradle wrapper validation"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
-      - uses: gradle/wrapper-validation-action@v1.0.4
+      - uses: actions/checkout@v3.1.0
+      - uses: gradle/wrapper-validation-action@v1.0.5
   build:
     name: "Build and publish"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3.1.0
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
       - name: Cache SonarCloud packages
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.11
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -36,33 +36,21 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: Build
         id: gradle
-        uses: eskatos/gradle-command-action@v2.2.0
+        uses: eskatos/gradle-command-action@v2.3.3
         with:
           arguments: check
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
-      - name: "Comment build scan url"
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request' && failure()
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ ${{ github.workflow }} failed: ${{ steps.gradle.outputs.build-scan-url }}'
-            })
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
         if: always()
         with:
-          files: '**/test-results/**/*.xml'
+          junit_files: '**/test-results/**/*.xml'
       - name: Analyze with SonarCloud
         continue-on-error: true
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
-        uses: eskatos/gradle-command-action@v2.2.0
+        uses: eskatos/gradle-command-action@v2.3.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -72,7 +60,7 @@ jobs:
           configuration-cache-enabled: true
       - name: Publish to Sonatype
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        uses: eskatos/gradle-command-action@v2.2.0
+        uses: eskatos/gradle-command-action@v2.3.3
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USER }}
           ORG_GRADLE_PROJECT_sonatypePassword : ${{ secrets.SONATYPE_PASSWORD }}

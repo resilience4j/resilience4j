@@ -21,9 +21,16 @@ package io.github.resilience4j.cache;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.MutableEntry;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -68,6 +75,7 @@ public class CacheEventPublisherTest {
     @Test
     public void shouldConsumeOnCacheMissEvent() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onCacheMiss(
             event -> logger.info(event.getEventType().toString()));
@@ -81,8 +89,9 @@ public class CacheEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnErrorEvent() throws Throwable {
+    public void shouldConsumeOnGetErrorEvent() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
+        given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
         cacheContext.getEventPublisher().onError(
             event -> logger.info(event.getEventType().toString()));
@@ -95,4 +104,36 @@ public class CacheEventPublisherTest {
         then(logger).should(times(1)).info("ERROR");
     }
 
+    @Test
+    public void shouldConsumeOnGetAndInvokeErrorEvent() throws Throwable {
+        given(cache.get("testKey")).willThrow(new RuntimeException("BLA"));
+        given(cache.invoke(eq("testKey"), any())).willThrow(new RuntimeException("ALSO BLA"));
+        Cache<String, String> cacheContext = Cache.of(cache);
+        cacheContext.getEventPublisher().onError(
+            event -> logger.info(event.getEventType().toString()));
+        CheckedFunction<String, String> cachedFunction = Cache
+            .decorateCheckedSupplier(cacheContext, () -> "Hello world");
+        String value = cachedFunction.apply("testKey");
+
+        assertThat(value).isEqualTo("Hello world");
+
+        then(logger).should(times(2)).info("ERROR");
+    }
+
+    private static class CacheInvokeAnswer implements Answer<String> {
+
+        private final MutableEntry<String, String> mutableEntry;
+
+        @SuppressWarnings("unchecked")
+        CacheInvokeAnswer() {
+            mutableEntry = mock(MutableEntry.class);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public String answer(InvocationOnMock invocation) {
+            EntryProcessor<String, String, String> argument = invocation.getArgument(1, EntryProcessor.class);
+            return argument.process(mutableEntry);
+        }
+    }
 }
