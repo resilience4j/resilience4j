@@ -18,6 +18,7 @@ package io.github.resilience4j.fallback.configure;
 import io.github.resilience4j.fallback.*;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
+import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,16 +49,19 @@ public class FallbackConfiguration {
     }
 
     @Bean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
     public CompletionStageFallbackDecorator completionStageFallbackDecorator() {
         return new CompletionStageFallbackDecorator();
     }
 
     @Bean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
     public FallbackDecorators fallbackDecorators(@Autowired(required = false) List<FallbackDecorator> fallbackDecorator) {
         return new FallbackDecorators(fallbackDecorator);
     }
 
     @Bean
+    @Conditional(value = {AspectJOnClasspathCondition.class})
     public FallbackExecutor fallbackExecutor(SpelResolver spelResolver, FallbackDecorators fallbackDecorators) {
         return new FallbackExecutor(spelResolver, fallbackDecorators);
     }
