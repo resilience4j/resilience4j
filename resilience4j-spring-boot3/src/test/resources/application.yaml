@@ -172,13 +172,13 @@ resilience4j.thread-pool-bulkhead:
       coreThreadPoolSize: 1
       queueCapacity: 1
       contextPropagators:
-        - io.github.resilience4j.TestThreadLocalContextPropagator
+        - io.github.resilience4j.springboot3.TestThreadLocalContextPropagator
     backendE:
       maxThreadPoolSize: 1
       coreThreadPoolSize: 1
       queueCapacity: 1
       contextPropagators:
-        - io.github.resilience4j.TestThreadLocalContextPropagator
+        - io.github.resilience4j.springboot3.TestThreadLocalContextPropagator
 
 resilience4j.timelimiter:
   tags:
