@@ -119,7 +119,7 @@ public class FallbackMethodTest {
             .create("returnMismatchFallback", testMethod, new Object[]{"test"}, target))
             .isInstanceOf(NoSuchMethodException.class)
             .hasMessage(
-                "class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.returnMismatchFallback(class java.lang.String,class java.lang.Throwable)");
+                "class java.lang.String class io.github.resilience4j.spring6.fallback.FallbackMethodTest.returnMismatchFallback(class java.lang.String,class java.lang.Throwable)");
     }
 
     @Test
@@ -130,7 +130,7 @@ public class FallbackMethodTest {
             () -> FallbackMethod.create("noMethod", testMethod, new Object[]{"test"}, target))
             .isInstanceOf(NoSuchMethodException.class)
             .hasMessage(
-                "class java.lang.String class io.github.resilience4j.fallback.FallbackMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
+                "class java.lang.String class io.github.resilience4j.spring6.fallback.FallbackMethodTest.noMethod(class java.lang.String,class java.lang.Throwable)");
     }
 
     @Test

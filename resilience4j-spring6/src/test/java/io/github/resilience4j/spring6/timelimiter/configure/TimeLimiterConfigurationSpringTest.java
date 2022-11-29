@@ -44,7 +44,7 @@ public class TimeLimiterConfigurationSpringTest {
 
 
     @Configuration
-    @ComponentScan({"io.github.resilience4j.timelimiter","io.github.resilience4j.fallback", "io.github.resilience4j.spelresolver"})
+    @ComponentScan({"io.github.resilience4j.spring6.timelimiter","io.github.resilience4j.spring6.fallback", "io.github.resilience4j.spring6.spelresolver"})
     public static class ConfigWithOverrides {
 
         private TimeLimiterRegistry timeLimiterRegistry;
