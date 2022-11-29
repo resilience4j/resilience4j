@@ -11,12 +11,12 @@ resilience4j.retry:
     sharedConfig:
       maxAttempts: 4
       waitDuration: 100ms
-      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      retryExceptionPredicate: io.github.resilience4j.springboot3.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.io.IOException
         - feign.FeignException
       ignoreExceptions:
-        - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.springboot3.circuitbreaker.IgnoredException
   backends:
     retryBackendA:
       baseConfig: sharedConfig
@@ -28,11 +28,11 @@ resilience4j.retry:
       enableExponentialBackoff: true
       exponentialBackoffMultiplier: 2
       exponentialMaxWaitDuration: 222ms
-      retryExceptionPredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
+      retryExceptionPredicate: io.github.resilience4j.springboot3.circuitbreaker.RecordFailurePredicate
       retryExceptions:
         - java.lang.IllegalArgumentException
       ignoreExceptions:
-        - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.springboot3.circuitbreaker.IgnoredException
     retryDummyFeignClient:
       baseConfig: sharedConfig
     retryBackendD:
@@ -62,12 +62,12 @@ resilience4j.circuitbreaker:
       waitDurationInOpenState: 5s
       failureRateThreshold: 70
       eventConsumerBufferSize: 20
-      recordFailurePredicate: io.github.resilience4j.circuitbreaker.RecordFailurePredicate
-      recordResultPredicate: io.github.resilience4j.circuitbreaker.RecordResultPredicate
+      recordFailurePredicate: io.github.resilience4j.springboot3.circuitbreaker.RecordFailurePredicate
+      recordResultPredicate: io.github.resilience4j.springboot3.circuitbreaker.RecordResultPredicate
       recordExceptions:
-        - io.github.resilience4j.circuitbreaker.RecordedException
+        - io.github.resilience4j.springboot3.circuitbreaker.RecordedException
       ignoreExceptions:
-        - io.github.resilience4j.circuitbreaker.IgnoredException
+        - io.github.resilience4j.springboot3.circuitbreaker.IgnoredException
     backendB:
       slidingWindowSize: 10
       slidingWindowType: TIME_BASED
