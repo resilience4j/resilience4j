@@ -408,6 +408,7 @@ Find out more in our *https://resilience4j.readme.io/[User Guide]*.
 * *Topia* (In an HR application built with microservices architecture)
 * *Auto Trader Group plc* (The largest Britain digital automotive marketplace)
 * *PlayStation Network* (A platform backend)
+* *TUI InfoTec GmbH* (Backend applications inside of reservation booking workflow streams for accommodations)
 
 == License
 
