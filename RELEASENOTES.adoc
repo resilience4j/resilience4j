@@ -393,3 +393,14 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 * Upgraded to Kotlin 1.7.20
 * Upgraded to Spring Boot 2.7
 * Upgraded to Micronaut 3.7.3
+
+=== Version 2.0.1
+
+==== Enhancements
+* Support Spring Boot 3 by adding resilience4j-spring-boot3 and resilience4j-spring6
+* Issue #1787: Apply Spring Boot customizers even if there is no instance entry in the config file
+
+==== Bugs
+
+* Issue #1825: Aspectj must not be mandatory in Spring Boot modules
+* Issue #1809: Fixed concurrency issue in Cache module
