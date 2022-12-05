@@ -73,7 +73,7 @@ public class SpringBootCommonTest {
                 new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
                 new CompositeCustomizer<>(Collections.singletonList(
-                    ThreadPoolBulkheadConfigCustomizer.of("backend", builder -> builder.coreThreadPoolSize(10)))))).isNotNull();
+                    ThreadPoolBulkheadConfigCustomizer.of("backend", builder -> builder.maxThreadPoolSize(128)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
         final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
