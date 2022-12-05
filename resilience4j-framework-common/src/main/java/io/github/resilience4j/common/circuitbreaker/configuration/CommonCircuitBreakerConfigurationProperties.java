@@ -51,122 +51,104 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         return Optional.ofNullable(instanceProperties);
     }
 
-    public CircuitBreakerConfig createCircuitBreakerConfig(String backendName,
-        InstanceProperties instanceProperties,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
-        if (StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
+    public CircuitBreakerConfig createCircuitBreakerConfig(String instanceName,
+        @Nullable InstanceProperties instanceProperties,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+        CircuitBreakerConfig baseConfig = null;
+        if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            return buildConfigFromBaseConfig(instanceProperties, baseProperties,
-                compositeCircuitBreakerCustomizer,
-                backendName);
-        } else if (configs.get(DEFAULT) != null) {
-            return buildConfig(from(buildDefaultConfig()), instanceProperties,
-                compositeCircuitBreakerCustomizer,
-                backendName);
+            ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
+            baseConfig = createCircuitBreakerConfig(instanceProperties.getBaseConfig(), baseProperties, customizer);
+        } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
+            if (instanceProperties != null) {
+                ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(DEFAULT));
+            }
+            baseConfig = createCircuitBreakerConfig(DEFAULT, configs.get(DEFAULT), customizer);
         }
-        return buildConfig(custom(), instanceProperties, compositeCircuitBreakerCustomizer,
-            backendName);
+        return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, customizer, instanceName);
     }
 
-    private CircuitBreakerConfig buildDefaultConfig() {
-        return buildConfig(custom(), configs.get(DEFAULT), new CompositeCustomizer<>(Collections.emptyList()),
-            DEFAULT);
-    }
-
-    private CircuitBreakerConfig buildConfigFromBaseConfig(InstanceProperties instanceProperties,
-        InstanceProperties baseProperties,
+    private CircuitBreakerConfig buildConfig(Builder builder, @Nullable InstanceProperties properties,
         CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
-        String backendName) {
-        ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-        CircuitBreakerConfig baseConfig = createCircuitBreakerConfig(
-            backendName, baseProperties, compositeCircuitBreakerCustomizer);
-        return buildConfig(from(baseConfig), instanceProperties, compositeCircuitBreakerCustomizer,
-            backendName);
-    }
+        String instanceName) {
+        if (properties != null) {
+            if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
+                && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
+                throw new IllegalStateException(
+                    "you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
+            }
 
-    private CircuitBreakerConfig buildConfig(Builder builder, InstanceProperties properties,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer,
-        String backendName) {
-        if (properties == null) {
-            return builder.build();
+            configureCircuitBreakerOpenStateIntervalFunction(properties, builder);
+
+            if (properties.getFailureRateThreshold() != null) {
+                builder.failureRateThreshold(properties.getFailureRateThreshold());
+            }
+
+            if (properties.getWritableStackTraceEnabled() != null) {
+                builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
+            }
+
+            if (properties.getSlowCallRateThreshold() != null) {
+                builder.slowCallRateThreshold(properties.getSlowCallRateThreshold());
+            }
+
+            if (properties.getSlowCallDurationThreshold() != null) {
+                builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
+            }
+
+            if (properties.getMaxWaitDurationInHalfOpenState() != null) {
+                builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
+            }
+
+            if (properties.getSlidingWindowSize() != null) {
+                builder.slidingWindowSize(properties.getSlidingWindowSize());
+            }
+
+            if (properties.getMinimumNumberOfCalls() != null) {
+                builder.minimumNumberOfCalls(properties.getMinimumNumberOfCalls());
+            }
+
+            if (properties.getSlidingWindowType() != null) {
+                builder.slidingWindowType(properties.getSlidingWindowType());
+            }
+
+            if (properties.getPermittedNumberOfCallsInHalfOpenState() != null) {
+                builder.permittedNumberOfCallsInHalfOpenState(
+                    properties.getPermittedNumberOfCallsInHalfOpenState());
+            }
+
+            if (properties.recordExceptions != null) {
+                builder.recordExceptions(properties.recordExceptions);
+                // if instance config has set recordExceptions, then base config's recordExceptionPredicate is useless.
+                builder.recordException(null);
+            }
+
+            if (properties.recordFailurePredicate != null) {
+                buildRecordFailurePredicate(properties, builder);
+            }
+
+            if (properties.recordResultPredicate != null) {
+                buildRecordResultPredicate(properties, builder);
+            }
+
+            if (properties.ignoreExceptions != null) {
+                builder.ignoreExceptions(properties.ignoreExceptions);
+                builder.ignoreException(null);
+            }
+
+            if (properties.ignoreExceptionPredicate != null) {
+                buildIgnoreExceptionPredicate(properties, builder);
+            }
+
+            if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
+                builder.automaticTransitionFromOpenToHalfOpenEnabled(
+                    properties.automaticTransitionFromOpenToHalfOpenEnabled);
+            }
         }
-
-        if (properties.enableExponentialBackoff != null && properties.enableExponentialBackoff
-            && properties.enableRandomizedWait != null && properties.enableRandomizedWait) {
-            throw new IllegalStateException(
-                "you can not enable Exponential backoff policy and randomized delay at the same time , please enable only one of them");
-        }
-
-        configureCircuitBreakerOpenStateIntervalFunction(properties, builder);
-
-        if (properties.getFailureRateThreshold() != null) {
-            builder.failureRateThreshold(properties.getFailureRateThreshold());
-        }
-
-        if (properties.getWritableStackTraceEnabled() != null) {
-            builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
-        }
-
-        if (properties.getSlowCallRateThreshold() != null) {
-            builder.slowCallRateThreshold(properties.getSlowCallRateThreshold());
-        }
-
-        if (properties.getSlowCallDurationThreshold() != null) {
-            builder.slowCallDurationThreshold(properties.getSlowCallDurationThreshold());
-        }
-
-        if (properties.getMaxWaitDurationInHalfOpenState() != null) {
-            builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
-        }
-
-        if (properties.getSlidingWindowSize() != null) {
-            builder.slidingWindowSize(properties.getSlidingWindowSize());
-        }
-
-        if (properties.getMinimumNumberOfCalls() != null) {
-            builder.minimumNumberOfCalls(properties.getMinimumNumberOfCalls());
-        }
-
-        if (properties.getSlidingWindowType() != null) {
-            builder.slidingWindowType(properties.getSlidingWindowType());
-        }
-
-        if (properties.getPermittedNumberOfCallsInHalfOpenState() != null) {
-            builder.permittedNumberOfCallsInHalfOpenState(
-                properties.getPermittedNumberOfCallsInHalfOpenState());
-        }
-
-        if (properties.recordExceptions != null) {
-            builder.recordExceptions(properties.recordExceptions);
-            // if instance config has set recordExceptions, then base config's recordExceptionPredicate is useless.
-            builder.recordException(null);
-        }
-
-        if (properties.recordFailurePredicate != null) {
-            buildRecordFailurePredicate(properties, builder);
-        }
-
-        if (properties.recordResultPredicate != null) {
-            buildRecordResultPredicate(properties, builder);
-        }
-
-        if (properties.ignoreExceptions != null) {
-            builder.ignoreExceptions(properties.ignoreExceptions);
-            builder.ignoreException(null);
-        }
-
-        if (properties.ignoreExceptionPredicate != null) {
-            buildIgnoreExceptionPredicate(properties, builder);
-        }
-
-        if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
-            builder.automaticTransitionFromOpenToHalfOpenEnabled(
-                properties.automaticTransitionFromOpenToHalfOpenEnabled);
-        }
-        compositeCircuitBreakerCustomizer.getCustomizer(backendName).ifPresent(
+        compositeCircuitBreakerCustomizer.getCustomizer(instanceName).ifPresent(
             circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
         return builder.build();
     }

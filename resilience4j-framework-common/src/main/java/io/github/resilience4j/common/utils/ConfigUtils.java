@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.utils;
 
 import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties;
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties;
@@ -61,6 +62,21 @@ public class ConfigUtils {
     public static void mergePropertiesIfAny(
         CommonBulkheadConfigurationProperties.InstanceProperties baseProperties,
         CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties) {
+        if (instanceProperties.getEventConsumerBufferSize() == null &&
+            baseProperties.getEventConsumerBufferSize() != null) {
+                instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+        }
+    }
+
+    /**
+     * merge only properties that are not part of retry config if any match the conditions of merge
+     *
+     * @param baseProperties     base config properties
+     * @param instanceProperties instance properties
+     */
+    public static void mergePropertiesIfAny(
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties baseProperties,
+        CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties instanceProperties) {
         if (instanceProperties.getEventConsumerBufferSize() == null &&
             baseProperties.getEventConsumerBufferSize() != null) {
                 instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());

@@ -63,16 +63,34 @@ public class ThreadPoolBulkheadConfiguration {
         CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
         EventConsumerRegistry<BulkheadEvent> bulkheadEventConsumerRegistry,
         RegistryEventConsumer<ThreadPoolBulkhead> threadPoolBulkheadRegistryEventConsumer,
-        @Qualifier("compositeThreadPoolBulkheadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> compositeThreadPoolBulkheadCustomizer) {
+        @Qualifier("compositeThreadPoolBulkheadCustomizer") CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> bulkheadCustomizer) {
         ThreadPoolBulkheadRegistry bulkheadRegistry = createBulkheadRegistry(
             bulkheadConfigurationProperties, threadPoolBulkheadRegistryEventConsumer,
-            compositeThreadPoolBulkheadCustomizer);
+            bulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
-        bulkheadConfigurationProperties.getBackends().forEach((name, properties) -> bulkheadRegistry
-            .bulkhead(name, bulkheadConfigurationProperties
-                .createThreadPoolBulkheadConfig(name, compositeThreadPoolBulkheadCustomizer)));
+        initBulkheadRegistry(bulkheadConfigurationProperties, bulkheadCustomizer, bulkheadRegistry);
         return bulkheadRegistry;
+    }
+
+    /**
+     * Initializes the Bulkhead registry with resilience4j instances.
+     *
+     * @param bulkheadRegistry The bulkhead registry.
+     * @param bulkheadCustomizer customizers for instances and configs
+     */
+    private void initBulkheadRegistry(CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties,
+        CompositeCustomizer<ThreadPoolBulkheadConfigCustomizer> bulkheadCustomizer,
+        ThreadPoolBulkheadRegistry bulkheadRegistry) {
+        bulkheadConfigurationProperties.getInstances().forEach((name, properties) -> bulkheadRegistry
+            .bulkhead(name, bulkheadConfigurationProperties
+                .createThreadPoolBulkheadConfig(name, bulkheadCustomizer)));
+
+        bulkheadCustomizer.instanceNames()
+            .stream()
+            .filter(name -> bulkheadRegistry.getConfiguration(name).isEmpty())
+            .forEach(name -> bulkheadRegistry.bulkhead(name,
+                bulkheadConfigurationProperties.createThreadPoolBulkheadConfig(null, bulkheadCustomizer, name)));
     }
 
     @Bean

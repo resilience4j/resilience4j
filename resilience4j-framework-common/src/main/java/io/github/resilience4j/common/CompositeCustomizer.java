@@ -15,13 +15,15 @@
  */
 package io.github.resilience4j.common;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
- * the composite  of any spring resilience4j type config customizer  implementations.
+ * The composite of any spring resilience4j type config customizer implementations.
  */
 public class CompositeCustomizer<T extends CustomizerWithName> {
 
@@ -44,10 +46,17 @@ public class CompositeCustomizer<T extends CustomizerWithName> {
 
     /**
      * @param instanceName the resilience4j instance name
-     * @return the found spring customizer if any .
+     * @return the found spring customizer if any.
      */
     public Optional<T> getCustomizer(String instanceName) {
         return Optional.ofNullable(customizerMap.get(instanceName));
+    }
+
+    /**
+     * @return the resilience4j instance/config names composite customizer can be applied to.
+     */
+    public Set<String> instanceNames() {
+        return Collections.unmodifiableSet(customizerMap.keySet());
     }
 
 }
