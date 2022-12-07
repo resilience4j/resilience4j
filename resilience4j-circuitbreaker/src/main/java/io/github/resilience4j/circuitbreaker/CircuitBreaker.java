@@ -503,7 +503,7 @@ public interface CircuitBreaker {
     /**
      * Returns the circuit breaker to its original closed state, losing statistics.
      * <p>
-     * Should only be used, when you want to want to fully reset the circuit breaker without
+     * Should only be used, when you want to fully reset the circuit breaker without
      * creating a new one.
      */
     void reset();
