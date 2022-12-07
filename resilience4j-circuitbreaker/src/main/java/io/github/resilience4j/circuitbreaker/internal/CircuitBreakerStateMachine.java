@@ -213,7 +213,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
         // Handle the case if the completable future throws a CompletionException wrapping the original exception
-        // where original exception is the the one to retry not the CompletionException.
+        // where original exception is the one to retry not the CompletionException.
         if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
             Throwable cause = throwable.getCause();
             handleThrowable(duration, durationUnit, cause);
@@ -272,7 +272,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Get the state of this CircuitBreaker.
      *
-     * @return the the state of this CircuitBreaker
+     * @return the state of this CircuitBreaker
      */
     @Override
     public State getState() {
@@ -282,7 +282,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     /**
      * Get the name of this CircuitBreaker.
      *
-     * @return the the name of this CircuitBreaker
+     * @return the name of this CircuitBreaker
      */
     @Override
     public String getName() {
