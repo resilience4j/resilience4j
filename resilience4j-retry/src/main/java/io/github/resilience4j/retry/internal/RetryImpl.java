@@ -298,7 +298,7 @@ public class RetryImpl<T> implements Retry {
         @Override
         public long onError(Throwable throwable) {
             // Handle the case if the completable future throw CompletionException wrapping the original exception
-            // where original exception is the the one to retry not the CompletionException.
+            // where original exception is the one to retry not the CompletionException.
             if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
                 Throwable cause = throwable.getCause();
                 return handleThrowable(cause);

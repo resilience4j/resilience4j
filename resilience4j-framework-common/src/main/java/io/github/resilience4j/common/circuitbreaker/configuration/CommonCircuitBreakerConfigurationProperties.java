@@ -552,7 +552,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         /**
          * Gets the shared configuration name. If this is set, the configuration builder will use
-         * the the shared configuration backend over this one.
+         * the shared configuration backend over this one.
          *
          * @return The shared configuration name.
          */
@@ -563,7 +563,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         /**
          * Sets the shared configuration name. If this is set, the configuration builder will use
-         * the the shared configuration backend over this one.
+         * the shared configuration backend over this one.
          *
          * @param baseConfig The shared configuration name.
          */

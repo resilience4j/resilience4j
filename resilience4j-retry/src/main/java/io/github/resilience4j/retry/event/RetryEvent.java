@@ -35,7 +35,7 @@ public interface RetryEvent {
     /**
      * Returns the number of retry attempts.
      *
-     * @return the the number of retry attempts
+     * @return the number of retry attempts
      */
     int getNumberOfRetryAttempts();
 

@@ -503,7 +503,7 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
 
         /**
          * Gets the shared configuration name. If this is set, the configuration builder will use
-         * the the shared configuration backend over this one.
+         * the shared configuration backend over this one.
          *
          * @return The shared configuration name.
          */
@@ -514,7 +514,7 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
 
         /**
          * Sets the shared configuration name. If this is set, the configuration builder will use
-         * the the shared configuration backend over this one.
+         * the shared configuration backend over this one.
          *
          * @param baseConfig The shared configuration name.
          */
