@@ -68,10 +68,10 @@ public interface CircuitBreaker {
             circuitBreaker.acquirePermission();
             final long start = circuitBreaker.getCurrentTimestamp();
             try {
-                T returnValue = supplier.get();
+                T result = supplier.get();
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
-                return returnValue;
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
+                return result;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
@@ -320,10 +320,10 @@ public interface CircuitBreaker {
             circuitBreaker.acquirePermission();
             final long start = circuitBreaker.getCurrentTimestamp();
             try {
-                R returnValue = function.apply(t);
+                R result = function.apply(t);
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
-                circuitBreaker.onSuccess(duration, circuitBreaker.getTimestampUnit());
-                return returnValue;
+                circuitBreaker.onResult(duration, circuitBreaker.getTimestampUnit(), result);
+                return result;
             } catch (Exception exception) {
                 // Do not handle java.lang.Error
                 long duration = circuitBreaker.getCurrentTimestamp() - start;
