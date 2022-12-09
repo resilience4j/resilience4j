@@ -404,3 +404,9 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 
 * Issue #1825: Aspectj must not be mandatory in Spring Boot modules
 * Issue #1809: Fixed concurrency issue in Cache module
+
+=== Version 2.0.1
+
+==== Bugs
+
+* Issue #1835: Fixed CircuitBreaker CheckedSupplier and CheckedFunction decorator not opening on recordResultPredicate
