@@ -189,7 +189,7 @@ public class RetryImpl<T> implements Retry {
                     if(consumeResultBeforeRetryAttempt != null){
                         consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
                     }
-                    waitIntervalAfterFailure(currentNumOfAttempts, Either.right(result));
+                    waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.right(result));
                     return true;
                 }
             }
@@ -229,7 +229,7 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                waitIntervalAfterFailure(currentNumOfAttempts, Either.left(throwable));
+                waitIntervalAfterException(currentNumOfAttempts, Either.left(throwable));
             }
         }
 
@@ -242,20 +242,30 @@ public class RetryImpl<T> implements Retry {
                     () -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, throwable));
                 throw throwable;
             } else {
-                waitIntervalAfterFailure(currentNumOfAttempts, Either.left(throwable));
+                waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.left(throwable));
             }
         }
 
-        private void waitIntervalAfterFailure(int currentNumOfAttempts, Either<Throwable, T> either) {
+        private void waitIntervalAfterException(int currentNumOfAttempts, Either<Throwable, T> either) throws Exception{
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
             publishRetryEvent(
                 () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
             try {
                 sleepFunction.accept(interval);
-            } catch (Exception ex) {
-                throw lastRuntimeException.get();
-            } catch (Throwable e) {
+            } catch (Throwable ex) {
+                throw lastException.get();
+            }
+        }
+
+        private void waitIntervalAfterRuntimeException(int currentNumOfAttempts, Either<Throwable, T> either) {
+            // wait interval until the next attempt should start
+            long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
+            publishRetryEvent(
+                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+            try {
+                sleepFunction.accept(interval);
+            } catch (Throwable ex) {
                 throw lastRuntimeException.get();
             }
         }
