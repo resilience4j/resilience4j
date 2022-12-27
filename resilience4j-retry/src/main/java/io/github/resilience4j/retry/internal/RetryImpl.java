@@ -253,6 +253,9 @@ public class RetryImpl<T> implements Retry {
                 () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
             try {
                 sleepFunction.accept(interval);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw lastException.get();
             } catch (Throwable ex) {
                 throw lastException.get();
             }
