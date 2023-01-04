@@ -33,11 +33,10 @@ import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.time.Duration;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -347,6 +346,22 @@ public class SupplierRetryTest {
         assertThat(result.get()).isEqualTo("Hello world from recovery function");
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
+
+    @Test
+    public void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() {
+        RetryImpl.sleepFunction = sleep -> {
+          throw new InterruptedException("Interrpted!");
+        };
+        given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
+        Retry retry = Retry.ofDefaults("id");
+        CheckedSupplier<String> retryableSupplier = Retry
+            .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
+
+        Try<String> result = Try.of(() -> retryableSupplier.get())
+            .recover((throwable) -> "Hello world from recovery function");
+        assertThat(Thread.currentThread().isInterrupted()).isTrue();
+    }
+
 
     @Test
     public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
