@@ -81,7 +81,7 @@ public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInt
         }
 
         ExecutableMethod<Object, Object> executableMethod = context.getExecutableMethod();
-        final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.TimeLimiter.class).orElse("default");
+        final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.TimeLimiter.class, "name").orElse("default");
         TimeLimiter timeLimiter = this.timeLimiterRegistry.timeLimiter(name);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
