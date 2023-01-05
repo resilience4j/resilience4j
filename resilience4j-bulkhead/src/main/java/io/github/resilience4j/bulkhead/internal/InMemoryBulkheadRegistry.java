@@ -39,7 +39,7 @@ public final class InMemoryBulkheadRegistry extends
     AbstractRegistry<Bulkhead, BulkheadConfig> implements BulkheadRegistry {
 
     /**
-     * The constructor with default default.
+     * The constructor with default configuration.
      */
     public InMemoryBulkheadRegistry() {
         this(BulkheadConfig.ofDefaults());

@@ -456,7 +456,7 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
-         * Configures an function which can decide if the circuit breaker should transition to a different
+         * Configures a function which can decide if the circuit breaker should transition to a different
          * state base on the result of the protected function.
          *
          * @param transitionOnResult function which instructs the circuit breaker if it should transition

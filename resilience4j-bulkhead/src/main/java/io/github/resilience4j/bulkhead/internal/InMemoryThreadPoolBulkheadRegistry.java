@@ -40,7 +40,7 @@ public final class InMemoryThreadPoolBulkheadRegistry extends
     ThreadPoolBulkheadRegistry {
 
     /**
-     * The constructor with default default.
+     * The constructor with default configuration.
      */
     public InMemoryThreadPoolBulkheadRegistry() {
         this(emptyMap());
