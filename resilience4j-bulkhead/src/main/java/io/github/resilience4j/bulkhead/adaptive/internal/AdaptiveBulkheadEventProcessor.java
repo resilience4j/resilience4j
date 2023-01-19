@@ -12,40 +12,40 @@ class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEven
     @Override
     public EventPublisher<?> onLimitIncreased(
         EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
-        registerConsumer(BulkheadOnLimitIncreasedEvent.class.getSimpleName(), eventConsumer);
+        registerConsumer(BulkheadOnLimitIncreasedEvent.class.getName(), eventConsumer);
         return this;
     }
 
     @Override
     public EventPublisher<?> onLimitDecreased(
         EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
-        registerConsumer(BulkheadOnLimitDecreasedEvent.class.getSimpleName(), eventConsumer);
+        registerConsumer(BulkheadOnLimitDecreasedEvent.class.getName(), eventConsumer);
         return this;
     }
 
     @Override
     public EventPublisher<?> onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer) {
-        registerConsumer(BulkheadOnSuccessEvent.class.getSimpleName(), eventConsumer);
+        registerConsumer(BulkheadOnSuccessEvent.class.getName(), eventConsumer);
         return this;
     }
 
     @Override
     public EventPublisher<?> onError(EventConsumer<BulkheadOnErrorEvent> eventConsumer) {
-        registerConsumer(BulkheadOnErrorEvent.class.getSimpleName(), eventConsumer);
+        registerConsumer(BulkheadOnErrorEvent.class.getName(), eventConsumer);
         return this;
     }
 
     @Override
     public EventPublisher<?> onIgnoredError(
         EventConsumer<BulkheadOnIgnoreEvent> eventConsumer) {
-        registerConsumer(BulkheadOnIgnoreEvent.class.getSimpleName(), eventConsumer);
+        registerConsumer(BulkheadOnIgnoreEvent.class.getName(), eventConsumer);
         return this;
     }
 
     @Override
     public EventPublisher<?> onStateTransition(
         EventConsumer<BulkheadOnStateTransitionEvent> eventConsumer) {
-        registerConsumer(BulkheadOnStateTransitionEvent.class.getSimpleName(), eventConsumer);
+        registerConsumer(BulkheadOnStateTransitionEvent.class.getName(), eventConsumer);
         return this;
     }
 

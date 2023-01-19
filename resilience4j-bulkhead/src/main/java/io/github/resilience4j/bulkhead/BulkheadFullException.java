@@ -45,8 +45,7 @@ public class BulkheadFullException extends RuntimeException {
         if (Thread.currentThread().isInterrupted()) {
             message = String.format(ERROR_PERMISSION_WAIT, bulkhead.getName());
         } else {
-            message = String.format(NOT_PERMIT_FURTHER_CALLS,
-                bulkhead.getName());
+            message = String.format(ERROR_FURTHER_CALLS, bulkhead.getName());
         }
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
@@ -82,7 +81,7 @@ public class BulkheadFullException extends RuntimeException {
     public static BulkheadFullException createBulkheadFullException(AdaptiveBulkhead bulkhead) {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig().isWritableStackTraceEnabled();
 
-        String message = String.format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        String message = String.format(ERROR_FURTHER_CALLS, bulkhead.getName());
 
         return new BulkheadFullException(message, writableStackTraceEnabled);
     }

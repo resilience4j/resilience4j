@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
+import java.time.Duration;
 import java.util.function.Predicate;
 
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMachine;
@@ -145,10 +146,6 @@ public class AdaptiveBulkheadConfig {
     public enum SlidingWindowType {
         TIME_BASED, COUNT_BASED
     }
-
-	public boolean isWritableStackTraceEnabled() {
-		return writableStackTraceEnabled;
-	}
 
 	/**
 	 * Returns a builder to create a custom AdaptiveBulkheadConfig.

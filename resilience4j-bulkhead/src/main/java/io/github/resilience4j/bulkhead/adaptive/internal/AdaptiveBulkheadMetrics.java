@@ -27,6 +27,7 @@ import io.github.resilience4j.core.metrics.Metrics;
 import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
 import io.github.resilience4j.core.metrics.Snapshot;
 
+import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.core.metrics.Metrics.Outcome;
@@ -41,15 +42,16 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     private final Bulkhead.Metrics internalBulkheadMetrics;
 
     private AdaptiveBulkheadMetrics(int slidingWindowSize,
-        AdaptiveBulkheadConfig.SlidingWindowType slidingWindowType,
-        AdaptiveBulkheadConfig adaptiveBulkheadConfig,
-        Bulkhead.Metrics internalBulkheadMetrics) {
+                                    AdaptiveBulkheadConfig.SlidingWindowType slidingWindowType,
+                                    AdaptiveBulkheadConfig adaptiveBulkheadConfig,
+                                    Bulkhead.Metrics internalBulkheadMetrics,
+                                    Clock clock) {
         if (slidingWindowType == AdaptiveBulkheadConfig.SlidingWindowType.COUNT_BASED) {
             this.slidingWindowMetrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = Math
                 .min(adaptiveBulkheadConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         } else {
-            this.slidingWindowMetrics = new SlidingTimeWindowMetrics(slidingWindowSize);
+            this.slidingWindowMetrics = new SlidingTimeWindowMetrics(slidingWindowSize, clock);
             this.minimumNumberOfCalls = adaptiveBulkheadConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = adaptiveBulkheadConfig.getFailureRateThreshold();
@@ -60,11 +62,13 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     }
 
     public AdaptiveBulkheadMetrics(AdaptiveBulkheadConfig adaptiveBulkheadConfig,
-        Bulkhead.Metrics internalBulkheadMetrics) {
+        Bulkhead.Metrics internalBulkheadMetrics,
+        Clock clock) {
         this(adaptiveBulkheadConfig.getSlidingWindowSize(),
             adaptiveBulkheadConfig.getSlidingWindowType(),
             adaptiveBulkheadConfig,
-            internalBulkheadMetrics);
+            internalBulkheadMetrics, 
+            clock);
     }
 
     /**

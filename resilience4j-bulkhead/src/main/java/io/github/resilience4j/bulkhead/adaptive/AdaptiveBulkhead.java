@@ -24,11 +24,11 @@ import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMa
 import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
+import io.github.resilience4j.core.functions.CheckedConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.OnceConsumer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -109,7 +109,7 @@ public interface AdaptiveBulkhead {
     /**
      * Get the Metrics of this Bulkhead.
      *
-     * @return the Metrics of this Bul`khead
+     * @return the Metrics of this Bulkhead
      */
     Metrics getMetrics();
 
@@ -161,8 +161,8 @@ public interface AdaptiveBulkhead {
      * @return the result of the decorated Supplier.
      * @throws Throwable if something goes wrong applying this function to the given arguments
      */
-    default <T> T executeCheckedSupplier(CheckedFunction0<T> checkedSupplier) throws Throwable {
-        return decorateCheckedSupplier(this, checkedSupplier).apply();
+    default <T> T executeCheckedSupplier(CheckedSupplier<T> checkedSupplier) throws Throwable {
+        return decorateCheckedSupplier(this, checkedSupplier).get();
     }
 
     /**
@@ -184,15 +184,15 @@ public interface AdaptiveBulkhead {
      * @param <T>      the type of results supplied by this supplier
      * @return a supplier which is decorated by a Bulkhead.
      */
-    static <T> CheckedFunction0<T> decorateCheckedSupplier(AdaptiveBulkhead bulkhead,
-        CheckedFunction0<T> supplier) {
+    static <T> CheckedSupplier<T> decorateCheckedSupplier(AdaptiveBulkhead bulkhead,
+        CheckedSupplier<T> supplier) {
         return () -> {
             long start = 0;
             boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
 				start = System.currentTimeMillis();
-                return supplier.apply();
+                return supplier.get();
             } catch (Exception e) {
                 bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
                 isFailed = true;
@@ -244,33 +244,6 @@ public interface AdaptiveBulkhead {
                 }
             }
             return promise;
-        };
-    }
-
-    /**
-     * Returns a supplier of type Future which is decorated by a bulkhead. AdaptiveBulkhead will reserve permission until {@link Future#get()}
-     * or {@link Future#get(long, TimeUnit)} is evaluated even if the underlying call took less time to return. Any delays in evaluating
-     * future will result in holding of permission in the underlying Semaphore.
-     *
-     * @param bulkhead the bulkhead
-     * @param supplier the original supplier
-     * @param <T> the type of the returned Future result
-     * @return a supplier which is decorated by a AdaptiveBulkhead.
-     */
-    static <T> Supplier<Future<T>> decorateFuture(AdaptiveBulkhead bulkhead, Supplier<Future<T>> supplier) {
-        return () -> {
-            if (!bulkhead.tryAcquirePermission()) {
-                final CompletableFuture<T> promise = new CompletableFuture<>();
-                promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
-                return promise;
-            }
-            long start = System.currentTimeMillis();
-            try {
-                return new BulkheadFuture<T>(bulkhead, supplier.get());
-            } catch (Throwable e) {
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
-                throw e;
-            }
         };
     }
 
@@ -508,8 +481,8 @@ public interface AdaptiveBulkhead {
      * @param <R>      the type of the result of the function
      * @return a function which is decorated by a bulkhead.
      */
-    static <T, R> CheckedFunction1<T, R> decorateCheckedFunction(AdaptiveBulkhead bulkhead,
-        CheckedFunction1<T, R> function) {
+    static <T, R> CheckedFunction<T, R> decorateCheckedFunction(AdaptiveBulkhead bulkhead,
+        CheckedFunction<T, R> function) {
         return (T t) -> {
             long start = 0;
             boolean failed = false;

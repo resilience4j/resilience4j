@@ -19,20 +19,19 @@ import java.util.concurrent.TimeUnit;
 
 public class AdaptiveBulkheadGraphTest {
 
-    public static final int CALLS = 300;
+    private static final boolean DRAW_GRAPHS = false;
+    private static final int CALLS = 300;
     private static final Random NON_RANDOM = new Random(0);
     private static final int SLOW_CALL_DURATION_THRESHOLD = 200;
-    public static final int RATE_THRESHOLD = 50;
-    public static final int MAX_CONCURRENT_CALLS = 100;
-    public static final int MIN_CONCURRENT_CALLS = 10;
-    public static final int INITIAL_CONCURRENT_CALLS = 30;
+    private static final int RATE_THRESHOLD = 50;
+    private static final int MAX_CONCURRENT_CALLS = 100;
+    private static final int MIN_CONCURRENT_CALLS = 10;
+    private static final int INITIAL_CONCURRENT_CALLS = 30;
     private AdaptiveBulkheadStateMachine bulkhead;
-    // TODO disable
-    private boolean drawGraphs = !false;
-    List<Double> time = new ArrayList<>();
-    List<Integer> concurrencyLimitData = new ArrayList<>();
-    List<Float> slowCallsRateData = new ArrayList<>();
-    List<Float> errorCallsRateData = new ArrayList<>();
+    private List<Double> time = new ArrayList<>();
+    private List<Integer> concurrencyLimitData = new ArrayList<>();
+    private List<Float> slowCallsRateData = new ArrayList<>();
+    private List<Float> errorCallsRateData = new ArrayList<>();
 
     @Before
     public void setup() {
@@ -140,7 +139,7 @@ public class AdaptiveBulkheadGraphTest {
     }
 
     private void drawGraph(String testName) {
-        if (!drawGraphs) {
+        if (!DRAW_GRAPHS) {
             return;
         }
         XYChart chart = new XYChartBuilder()

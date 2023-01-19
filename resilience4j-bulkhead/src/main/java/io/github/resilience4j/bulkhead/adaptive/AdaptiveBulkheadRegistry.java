@@ -20,11 +20,11 @@ package io.github.resilience4j.bulkhead.adaptive;
 
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import io.github.resilience4j.bulkhead.adaptive.internal.InMemoryAdaptiveBulkheadRegistry;
 import io.github.resilience4j.core.Registry;
-import io.vavr.collection.Seq;
 
 /**
  * The {@link AdaptiveBulkheadRegistry} is a factory to create AdaptiveBulkhead instances which stores all bulkhead instances in a registry.
@@ -36,7 +36,7 @@ public interface AdaptiveBulkheadRegistry extends Registry<AdaptiveBulkhead, Ada
 	 *
 	 * @return all managed {@link AdaptiveBulkhead} instances.
 	 */
-	Seq<AdaptiveBulkhead> getAllBulkheads();
+	Set<AdaptiveBulkhead> getAllBulkheads();
 
 	/**
 	 * Returns a managed {@link AdaptiveBulkhead} or creates a new one with default configuration.

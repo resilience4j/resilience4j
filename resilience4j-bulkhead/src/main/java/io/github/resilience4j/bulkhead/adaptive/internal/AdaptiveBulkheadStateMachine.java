@@ -28,6 +28,7 @@ import io.github.resilience4j.core.lang.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -49,6 +50,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private final AtomicReference<AdaptiveBulkheadState> stateReference;
     private final AdaptiveBulkheadConfig adaptiveBulkheadConfig;
     private final AdaptiveBulkheadEventProcessor eventProcessor;
+    private final Clock clock;
     private final AdaptiveBulkheadMetrics metrics;
     private final Bulkhead innerBulkhead;
     private final AdaptationCalculator adaptationCalculator;
@@ -63,8 +65,8 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             .maxWaitDuration(adaptiveBulkheadConfig.getMaxWaitDuration())
             .build();
         this.innerBulkhead = new SemaphoreBulkhead(name + "-internal", internalBulkheadConfig);
-        this.metrics = new AdaptiveBulkheadMetrics(
-            adaptiveBulkheadConfig, innerBulkhead.getMetrics());
+        this.clock = Clock.systemUTC();
+        this.metrics = new AdaptiveBulkheadMetrics(adaptiveBulkheadConfig, innerBulkhead.getMetrics(), clock);
         this.stateReference = new AtomicReference<>(new SlowStartState(metrics));
         this.eventProcessor = new AdaptiveBulkheadEventProcessor();
         this.adaptationCalculator = new AdaptationCalculator(this);
@@ -421,18 +423,5 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         eventData.put("exceptionMsg", throwable.getMessage());
         return eventData;
     }
-
-
-	/**
-	 * @param callTime the call duration time
-	 * @param durationUnit the duration unit
-	 * @param throwable the error exception
-	 */
-	private void handleError(long callTime, TimeUnit durationUnit, Throwable throwable) {
-		bulkhead.onComplete();
-		publishBulkheadEvent(new BulkheadOnErrorEvent(bulkhead.getName().substring(0, bulkhead.getName().indexOf('-')), errorData(throwable)));
-		final LimitResult limitResult = record(durationUnit.toMillis(callTime), false, inFlight.getAndDecrement());
-		adoptLimit(bulkhead, limitResult.getLimit(), limitResult.waitTime());
-	}
 
 }

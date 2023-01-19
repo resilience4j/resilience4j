@@ -1,11 +1,11 @@
 package io.github.resilience4j.bulkhead.adaptive;
 
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.core.functions.CheckedConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,10 +138,10 @@ public class AdaptiveBulkheadTest {
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithException())
             .willReturn("Hello world");
-        CheckedFunction0<String> checkedSupplier = AdaptiveBulkhead
+        CheckedSupplier<String> checkedSupplier = AdaptiveBulkhead
             .decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
 
-        String result = checkedSupplier.apply();
+        String result = checkedSupplier.get();
 
         assertThat(result).isEqualTo("Hello world");
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
@@ -153,10 +153,10 @@ public class AdaptiveBulkheadTest {
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
-        CheckedFunction0<String> checkedSupplier = AdaptiveBulkhead
+        CheckedSupplier<String> checkedSupplier = AdaptiveBulkhead
             .decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
 
-        Try<String> result = Try.of(checkedSupplier);
+        Try<String> result = Try.of(checkedSupplier::get);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -174,10 +174,10 @@ public class AdaptiveBulkheadTest {
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithException())
             .willThrow(new RuntimeException("BAM!"));
-        CheckedFunction0<String> checkedSupplier = AdaptiveBulkhead
+        CheckedSupplier<String> checkedSupplier = AdaptiveBulkhead
             .decorateCheckedSupplier(bulkhead, helloWorldService::returnHelloWorldWithException);
 
-        Try<String> result = Try.of(checkedSupplier);
+        Try<String> result = Try.of(checkedSupplier::get);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -269,7 +269,7 @@ public class AdaptiveBulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try<Void> result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable::run);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -288,7 +288,7 @@ public class AdaptiveBulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try<Void> result = Try.run(checkedRunnable);
+        Try<Void> result = Try.run(checkedRunnable::run);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -470,7 +470,7 @@ public class AdaptiveBulkheadTest {
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willThrow(new RuntimeException("BAM!"));
-        CheckedFunction1<String, String> function = AdaptiveBulkhead
+        CheckedFunction<String, String> function = AdaptiveBulkhead
             .decorateCheckedFunction(bulkhead,
                 helloWorldService::returnHelloWorldWithNameWithException);
 
@@ -495,7 +495,7 @@ public class AdaptiveBulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try<?> result = Try.run(checkedRunnable);
+        Try<?> result = Try.run(checkedRunnable::run);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(BulkheadFullException.class);
@@ -514,7 +514,7 @@ public class AdaptiveBulkheadTest {
             throw new RuntimeException("BAM!");
         });
 
-        Try<?> result = Try.run(checkedRunnable);
+        Try<?> result = Try.run(checkedRunnable::run);
 
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
@@ -635,12 +635,12 @@ public class AdaptiveBulkheadTest {
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
         AdaptiveBulkhead anotherBulkhead = AdaptiveBulkhead.of("testAnother", config);
         // Given a Supplier and a Function which are decorated by different bulkheads
-        CheckedFunction0<String> decoratedSupplier = AdaptiveBulkhead
+        CheckedSupplier<String> decoratedSupplier = AdaptiveBulkhead
             .decorateCheckedSupplier(bulkhead, () -> "Hello");
-        CheckedFunction1<String, String> decoratedFunction = AdaptiveBulkhead
+        CheckedFunction<String, String> decoratedFunction = AdaptiveBulkhead
             .decorateCheckedFunction(anotherBulkhead, (input) -> input + " world");
 
-        Try<String> result = Try.of(decoratedSupplier).mapTry(decoratedFunction);
+        Try<String> result = Try.of(decoratedSupplier::get).mapTry(decoratedFunction::apply);
 
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.get()).isEqualTo("Hello world");
@@ -654,10 +654,10 @@ public class AdaptiveBulkheadTest {
     public void shouldInvokeMap() {
         // tag::shouldInvokeMap[]
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("testName", config);
-        CheckedFunction0<String> decoratedSupplier = AdaptiveBulkhead.decorateCheckedSupplier(
+        CheckedSupplier<String> decoratedSupplier = AdaptiveBulkhead.decorateCheckedSupplier(
             bulkhead, () -> "This can be any method which returns: 'Hello");
 
-        Try<String> result = Try.of(decoratedSupplier)
+        Try<String> result = Try.of(decoratedSupplier::get)
             .map(value -> value + " world'");
 
         assertThat(result.isSuccess()).isTrue();

@@ -19,6 +19,8 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -27,8 +29,6 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.AbstractRegistry;
-import io.vavr.collection.Array;
-import io.vavr.collection.Seq;
 
 /**
  * Bulkhead instance manager;
@@ -61,8 +61,8 @@ public final class InMemoryAdaptiveBulkheadRegistry extends AbstractRegistry<Ada
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Seq<AdaptiveBulkhead> getAllBulkheads() {
-		return Array.ofAll(entryMap.values());
+	public Set<AdaptiveBulkhead> getAllBulkheads() {
+		return new HashSet<>(entryMap.values());
 	}
 
 	/**
