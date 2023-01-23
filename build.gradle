@@ -118,6 +118,10 @@ configure(project.coreProjects) {
 
     afterEvaluate {
         jar {
+            from('../') {
+                include 'COPYRIGHT.txt'
+            }
+
             inputs.property('moduleName', moduleName)
             manifest.attributes(
                     'Automatic-Module-Name': moduleName
