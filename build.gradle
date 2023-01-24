@@ -120,6 +120,7 @@ configure(project.coreProjects) {
         jar {
             from('../') {
                 include 'COPYRIGHT.txt'
+                include 'LICENSE.txt'
             }
 
             inputs.property('moduleName', moduleName)
