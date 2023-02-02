@@ -189,6 +189,38 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
     }
 
+
+    @Test
+    public void shouldOpenAfterFailureRateThresholdExceeded2() {
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+
+        mockClock.advanceBySeconds(1);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        mockClock.advanceBySeconds(1);
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
+
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
     @Test
     public void shouldOpenAfterFailureRateThresholdExceeded() {
         // A ring buffer with size 5 is used in closed state

@@ -178,7 +178,7 @@ class CoroutineCircuitBreakerTest {
             assertThat(cancellationException!!.message).isEqualTo("test cancel")
             assertThat(metrics.numberOfBufferedCalls).isEqualTo(expectedNumberOfFailedCalls)
             assertThat(metrics.numberOfFailedCalls).isEqualTo(expectedNumberOfFailedCalls)
-            assertThat(metrics.numberOfSuccessfulCalls).isEqualTo(0)
+            assertThat(metrics.numberOfSuccessfulCalls).isZero()
             // Then the helloWorldService should be invoked 1 time
             assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
