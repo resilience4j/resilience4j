@@ -33,7 +33,7 @@ public class SlidingTimeWindowMetricsTest {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         SlidingTimeWindowMetrics metrics = new SlidingTimeWindowMetrics(5, clock);
 
-        PartialAggregation[] buckets = metrics.partialAggregations;
+        PartialAggregation[] buckets = metrics.getPartialAggregations();
 
         long epochSecond = clock.instant().getEpochSecond();
         for (int i = 0; i < buckets.length; i++) {
@@ -133,25 +133,19 @@ public class SlidingTimeWindowMetricsTest {
     public void testMoveHeadIndexByOne() {
         MockClock clock = MockClock.at(2019, 8, 4, 12, 0, 0, ZoneId.of("UTC"));
         SlidingTimeWindowMetrics metrics = new SlidingTimeWindowMetrics(3, clock);
-
-        assertThat(metrics.headIndex).isZero();
-
-        metrics.moveHeadIndexByOne();
-
-        assertThat(metrics.headIndex).isEqualTo(1);
+        assertThat(metrics.getHeadIndex()).isZero();
 
         metrics.moveHeadIndexByOne();
-
-        assertThat(metrics.headIndex).isEqualTo(2);
-
-        metrics.moveHeadIndexByOne();
-
-        assertThat(metrics.headIndex).isZero();
+        assertThat(metrics.getHeadIndex()).isEqualTo(1);
 
         metrics.moveHeadIndexByOne();
+        assertThat(metrics.getHeadIndex()).isEqualTo(2);
 
-        assertThat(metrics.headIndex).isEqualTo(1);
+        metrics.moveHeadIndexByOne();
+        assertThat(metrics.getHeadIndex()).isZero();
 
+        metrics.moveHeadIndexByOne();
+        assertThat(metrics.getHeadIndex()).isEqualTo(1);
     }
 
     @Test

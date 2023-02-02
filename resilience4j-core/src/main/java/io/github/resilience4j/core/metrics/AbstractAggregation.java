@@ -20,7 +20,7 @@ package io.github.resilience4j.core.metrics;
 
 import java.util.concurrent.TimeUnit;
 
-class AbstractAggregation {
+abstract class AbstractAggregation {
 
     long totalDurationInMillis = 0;
     int numberOfSlowCalls = 0;

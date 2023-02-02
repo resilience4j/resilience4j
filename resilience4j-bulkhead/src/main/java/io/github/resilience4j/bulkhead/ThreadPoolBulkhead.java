@@ -192,21 +192,6 @@ public interface ThreadPoolBulkhead extends AutoCloseable {
      *
      * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
      *
-     * @param supplier the value-returning task to submit
-     * @param <T>      the result type of the callable
-     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing
-     * the asynchronous computation of the task
-     */
-    default <T> Supplier<CompletionStage<T>> decorateSupplier(Supplier<T> supplier) {
-        return decorateSupplier(this, supplier);
-    }
-
-    /**
-     * Returns a supplier which submits a value-returning task for execution and
-     * returns a CompletionStage representing the asynchronous computation of the task.
-     *
-     * The Supplier throws a {@link BulkheadFullException} if the task cannot be submitted, because the Bulkhead is full.
-     *
      * @param callable the value-returning task to submit
      * @param <T>      the result type of the callable
      * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing
