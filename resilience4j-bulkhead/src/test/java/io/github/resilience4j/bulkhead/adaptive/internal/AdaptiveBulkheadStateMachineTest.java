@@ -2,8 +2,7 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnLimitIncreasedEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnLimitChangedEvent;
 import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnStateTransitionEvent;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,8 +20,7 @@ public class AdaptiveBulkheadStateMachineTest {
     public static final int RATE_THRESHOLD = 50;
 
     private AdaptiveBulkheadStateMachine bulkhead;
-    private final List<BulkheadOnLimitIncreasedEvent> limitIncreases = new LinkedList<>();
-    private final List<BulkheadOnLimitDecreasedEvent> limitDecreases = new LinkedList<>();
+    private final List<BulkheadOnLimitChangedEvent> limitChanges = new LinkedList<>();
     private final List<BulkheadOnStateTransitionEvent> stateTransitions = new LinkedList<>();
 
     @Before
@@ -39,8 +37,7 @@ public class AdaptiveBulkheadStateMachineTest {
             .slowCallDurationThreshold(Duration.ofMillis(SLOW_CALL_DURATION_THRESHOLD))
             .build();
         bulkhead = (AdaptiveBulkheadStateMachine) AdaptiveBulkhead.of("test", config);
-        bulkhead.getEventPublisher().onLimitIncreased(limitIncreases::add);
-        bulkhead.getEventPublisher().onLimitDecreased(limitDecreases::add);
+        bulkhead.getEventPublisher().onLimitChanged(limitChanges::add);
         bulkhead.getEventPublisher().onStateTransition(stateTransitions::add);
     }
 
@@ -54,16 +51,13 @@ public class AdaptiveBulkheadStateMachineTest {
         for (int i = 0; i < 10; i++) {
             onError(failure);
         }
-        
-        assertThat(limitIncreases)
-            .extracting(BulkheadOnLimitIncreasedEvent::getNewMaxConcurrentCalls)
-            .containsExactly(24, 48, 96);
-        assertThat(limitDecreases)
-            .extracting(BulkheadOnLimitDecreasedEvent::getNewMaxConcurrentCalls)
-            .containsExactly(48, 24, 12);
-        assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getFromState)
-            .containsExactly(AdaptiveBulkhead.State.SLOW_START);
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(24, 48, 96, 48, 24, 12);
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
+            .containsExactly(true, true, true, false, false, false);
         assertThat(stateTransitions)
             .extracting(BulkheadOnStateTransitionEvent::getToState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
@@ -77,14 +71,12 @@ public class AdaptiveBulkheadStateMachineTest {
             onSuccess();
         }
 
-        assertThat(limitDecreases)
-            .isEmpty();
-        assertThat(limitIncreases)
-            .extracting(BulkheadOnLimitIncreasedEvent::getNewMaxConcurrentCalls)
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
             .containsExactly(13, 14, 15);
-        assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getFromState)
-            .containsExactly(AdaptiveBulkhead.State.SLOW_START);
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
+            .containsExactly(true, true, true);
         assertThat(stateTransitions)
             .extracting(BulkheadOnStateTransitionEvent::getToState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
@@ -100,14 +92,12 @@ public class AdaptiveBulkheadStateMachineTest {
             onError(failure);
         }
 
-        assertThat(limitIncreases)
-            .isEmpty();
-        assertThat(limitDecreases)
-            .extracting(BulkheadOnLimitDecreasedEvent::getNewMaxConcurrentCalls)
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
             .containsExactly(6, 3, 2);
-        assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getFromState)
-            .containsExactly(AdaptiveBulkhead.State.SLOW_START);
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
+            .containsExactly(false, false, false);
         assertThat(stateTransitions)
             .extracting(BulkheadOnStateTransitionEvent::getToState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);

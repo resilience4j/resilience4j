@@ -647,10 +647,7 @@ public interface AdaptiveBulkhead {
      */
 	interface AdaptiveEventPublisher extends EventPublisher<AdaptiveBulkheadEvent> {
 
-        // TODO Maybe we can replace these 2 events by 1 BulkheadOnLimitChangedEvent(oldValue, newValue) 
-        EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer);
-
-        EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
+        EventPublisher onLimitChanged(EventConsumer<BulkheadOnLimitChangedEvent> eventConsumer);
 
         EventPublisher onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer);
 

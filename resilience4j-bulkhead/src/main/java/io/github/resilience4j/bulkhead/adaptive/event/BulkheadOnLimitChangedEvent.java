@@ -21,32 +21,39 @@ package io.github.resilience4j.bulkhead.adaptive.event;
 import io.github.resilience4j.core.lang.NonNull;
 
 /**
- * A BulkheadEvent which informs that a limit has been increased
+ * A BulkheadEvent which informs that a limit has been changed
  */
-public class BulkheadOnLimitIncreasedEvent extends AbstractAdaptiveBulkheadEvent {
+public class BulkheadOnLimitChangedEvent extends AbstractAdaptiveBulkheadEvent {
 
+    private final int oldMaxConcurrentCalls;
     private final int newMaxConcurrentCalls;
 
-    public BulkheadOnLimitIncreasedEvent(String bulkheadName, int newMaxConcurrentCalls) {
+    public BulkheadOnLimitChangedEvent(String bulkheadName, int oldMaxConcurrentCalls, int newMaxConcurrentCalls) {
         super(bulkheadName);
+        this.oldMaxConcurrentCalls = oldMaxConcurrentCalls;
         this.newMaxConcurrentCalls = newMaxConcurrentCalls;
     }
 
     @NonNull
     @Override
     public Type getEventType() {
-        return Type.LIMIT_INCREASED;
+        return Type.LIMIT_CHANGED;
     }
 
     public int getNewMaxConcurrentCalls() {
         return newMaxConcurrentCalls;
     }
 
+    public boolean isIncrease() {
+        return newMaxConcurrentCalls > oldMaxConcurrentCalls;
+    }
+
     @Override
     public String toString() {
-        return String.format("%s: Bulkhead '%s' recorded a limit increase: %s",
+        return String.format("%s: Bulkhead '%s' recorded a limit change from %s to %s",
             getCreationTime(),
             getBulkheadName(),
+            oldMaxConcurrentCalls,
             newMaxConcurrentCalls
         );
     }

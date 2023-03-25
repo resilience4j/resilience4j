@@ -34,15 +34,11 @@ public interface AdaptiveBulkheadEvent {
      */
     enum Type {
         /**
-         * A AdaptiveBulkheadEvent which informs that a limit has been increased
+         * A AdaptiveBulkheadEvent which informs that a limit has been changed
          */
-        LIMIT_INCREASED(false),
+        LIMIT_CHANGED(false),
         /**
-         * A AdaptiveBulkheadEvent which informs that a limit has been decreased
-         */
-        LIMIT_DECREASED(false),
-        /**
-         * An adaptive bulkhead event which informs that an error has been recorded
+         * A AdaptiveBulkheadEvent which informs that a limit has been changed
          */
         ERROR(false),
         /**

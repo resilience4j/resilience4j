@@ -53,7 +53,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private final AdaptationCalculator adaptationCalculator;
 
     public AdaptiveBulkheadStateMachine(@NonNull String name,
-        @NonNull AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
+                                        @NonNull AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
         this.name = name;
         this.adaptiveBulkheadConfig = Objects
             .requireNonNull(adaptiveBulkheadConfig, "Config must not be null");
@@ -104,7 +104,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     @Override
     public void onError(long startTime, TimeUnit durationUnit, Throwable throwable) {
         if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
-			releasePermission();
+            releasePermission();
             publishBulkheadEvent(new BulkheadOnIgnoreEvent(
                 shortName(innerBulkhead), throwable));
         } else if (startTime != 0
@@ -155,7 +155,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     }
 
     private void stateTransition(State newState,
-        UnaryOperator<AdaptiveBulkheadState> newStateGenerator) {
+                                 UnaryOperator<AdaptiveBulkheadState> newStateGenerator) {
         LOG.debug("stateTransition to {}", newState);
         AdaptiveBulkheadState previous = stateReference.getAndUpdate(newStateGenerator);
         publishBulkheadEvent(new BulkheadOnStateTransitionEvent(
@@ -164,12 +164,11 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     private void changeConcurrencyLimit(int newValue) {
         int oldValue = innerBulkhead.getBulkheadConfig().getMaxConcurrentCalls();
-        if (newValue > oldValue) {
+        if (newValue != oldValue) {
             changeInternals(oldValue, newValue);
-            publishBulkheadOnLimitIncreasedEvent(newValue);
-        } else if (newValue < oldValue) {
-            changeInternals(oldValue, newValue);
-            publishBulkheadOnLimitDecreasedEvent(newValue);
+            publishBulkheadOnLimitChangedEvent(oldValue, newValue);
+        } else {
+            LOG.trace("change of concurrency limit is ignored");
         }
     }
 
@@ -184,16 +183,11 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         }
     }
 
-    private void publishBulkheadOnLimitIncreasedEvent(int maxConcurrentCalls) {
-        publishBulkheadEvent(new BulkheadOnLimitIncreasedEvent(
+    private void publishBulkheadOnLimitChangedEvent(int oldMaxConcurrentCalls, int newMaxConcurrentCalls) {
+        publishBulkheadEvent(new BulkheadOnLimitChangedEvent(
             shortName(innerBulkhead),
-            maxConcurrentCalls));
-    }
-
-    private void publishBulkheadOnLimitDecreasedEvent(int maxConcurrentCalls) {
-        publishBulkheadEvent(new BulkheadOnLimitDecreasedEvent(
-            shortName(innerBulkhead),
-            maxConcurrentCalls));
+            oldMaxConcurrentCalls,
+            newMaxConcurrentCalls));
     }
 
     /**
@@ -366,7 +360,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
          * Get metrics of the AdaptiveBulkhead
          */
         @Override
-		public AdaptiveBulkheadMetrics getMetrics() {
+        public AdaptiveBulkheadMetrics getMetrics() {
             return adaptiveBulkheadMetrics;
         }
 
@@ -380,7 +374,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     /**
      * @param eventSupplier the event supplier to be pushed to consumers
      */
-	private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
+    private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
         if (eventProcessor.hasConsumers()) {
             eventProcessor.consumeEvent(eventSupplier);
         }
