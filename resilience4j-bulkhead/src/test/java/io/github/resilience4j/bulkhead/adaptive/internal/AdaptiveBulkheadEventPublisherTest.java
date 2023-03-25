@@ -20,7 +20,7 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.event.AdaptiveBulkheadEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.AdaptiveBulkheadEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;

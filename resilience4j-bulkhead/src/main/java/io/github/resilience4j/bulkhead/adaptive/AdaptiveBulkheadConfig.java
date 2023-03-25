@@ -27,7 +27,7 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
 /**
- * A {@link AdaptiveBulkheadConfig} configures a adaptation capabilities of  {@link AdaptiveBulkheadStateMachine}
+ * A {@link AdaptiveBulkheadConfig} configures an adaptation capabilities of {@link AdaptiveBulkheadStateMachine}
  */
 public class AdaptiveBulkheadConfig {
 
@@ -35,7 +35,6 @@ public class AdaptiveBulkheadConfig {
     private static final int DEFAULT_MIN_CONCURRENT_CALLS = 2;
     private static final int DEFAULT_INITIAL_CONCURRENT_CALLS = DEFAULT_MIN_CONCURRENT_CALLS;
     private static final Duration DEFAULT_MAX_WAIT_DURATION = Duration.ofSeconds(0);
-
     private static final float DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE = 50.0f;
     private static final float DEFAULT_SLOW_CALL_RATE_THRESHOLD_PERCENTAGE = 50.0f;
     private static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;

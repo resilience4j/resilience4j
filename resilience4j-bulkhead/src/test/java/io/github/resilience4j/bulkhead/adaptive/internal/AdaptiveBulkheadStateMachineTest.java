@@ -2,9 +2,9 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitDecreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnLimitIncreasedEvent;
-import io.github.resilience4j.bulkhead.event.BulkheadOnStateTransitionEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnLimitDecreasedEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnLimitIncreasedEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.BulkheadOnStateTransitionEvent;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,6 +62,9 @@ public class AdaptiveBulkheadStateMachineTest {
             .extracting(BulkheadOnLimitDecreasedEvent::getNewMaxConcurrentCalls)
             .containsExactly(48, 24, 12);
         assertThat(stateTransitions)
+            .extracting(BulkheadOnStateTransitionEvent::getFromState)
+            .containsExactly(AdaptiveBulkhead.State.SLOW_START);
+        assertThat(stateTransitions)
             .extracting(BulkheadOnStateTransitionEvent::getToState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
     }
@@ -79,6 +82,9 @@ public class AdaptiveBulkheadStateMachineTest {
         assertThat(limitIncreases)
             .extracting(BulkheadOnLimitIncreasedEvent::getNewMaxConcurrentCalls)
             .containsExactly(13, 14, 15);
+        assertThat(stateTransitions)
+            .extracting(BulkheadOnStateTransitionEvent::getFromState)
+            .containsExactly(AdaptiveBulkhead.State.SLOW_START);
         assertThat(stateTransitions)
             .extracting(BulkheadOnStateTransitionEvent::getToState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
@@ -99,6 +105,9 @@ public class AdaptiveBulkheadStateMachineTest {
         assertThat(limitDecreases)
             .extracting(BulkheadOnLimitDecreasedEvent::getNewMaxConcurrentCalls)
             .containsExactly(6, 3, 2);
+        assertThat(stateTransitions)
+            .extracting(BulkheadOnStateTransitionEvent::getFromState)
+            .containsExactly(AdaptiveBulkhead.State.SLOW_START);
         assertThat(stateTransitions)
             .extracting(BulkheadOnStateTransitionEvent::getToState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);

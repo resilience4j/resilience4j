@@ -84,10 +84,12 @@ public final class InMemoryAdaptiveBulkheadRegistry extends AbstractRegistry<Ada
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public AdaptiveBulkhead bulkhead(String name, Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
-		return computeIfAbsent(name, () -> AdaptiveBulkhead.of(name, Objects.requireNonNull(Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(), CONFIG_MUST_NOT_BE_NULL)));
-	}
+    @Override
+    public AdaptiveBulkhead bulkhead(String name, Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
+        Supplier<AdaptiveBulkheadConfig> supplier = Objects.requireNonNull(bulkheadConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL);
+        AdaptiveBulkheadConfig config = Objects.requireNonNull(supplier.get(), CONFIG_MUST_NOT_BE_NULL);
+        return computeIfAbsent(name, () -> AdaptiveBulkhead.of(name, config));
+    }
 
 	/**
 	 * {@inheritDoc}

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 Mahmoud Romeh
+ *  Copyright 2023 https://github.com/orgs/resilience4j/people
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,30 +16,9 @@
  *
  *
  */
-package io.github.resilience4j.bulkhead.event;
+@NonNullApi
+@NonNullFields
+package io.github.resilience4j.bulkhead.adaptive.event;
 
-import java.util.Map;
-
-/**
- * A BulkheadEvent which informs that a call has been failed
- */
-public class BulkheadOnErrorEvent extends AbstractBulkheadLimitEvent {
-
-	public BulkheadOnErrorEvent(String bulkheadName, Map<String, String> eventData) {
-		super(bulkheadName, eventData);
-	}
-
-	@Override
-	public Type getEventType() {
-		return Type.ERROR;
-	}
-
-	@Override
-	public String toString() {
-		return String.format(
-				"%s: Bulkhead '%s' call is failed.",
-				eventData(),
-				getBulkheadName()
-		);
-	}
-}
+import io.github.resilience4j.core.lang.NonNullApi;
+import io.github.resilience4j.core.lang.NonNullFields;
