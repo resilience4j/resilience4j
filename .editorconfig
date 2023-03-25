@@ -7,4 +7,5 @@ charset = utf-8
 indent_style = space
 indent_size = 4
 continuation_indent_size = 4
+ij_continuation_indent_size = 4 # continuation_indent_size is not supported by IntelliJ
 end_of_line = lf

@@ -16,30 +16,30 @@
  *
  *
  */
-package io.github.resilience4j.bulkhead.event;
+package io.github.resilience4j.bulkhead.adaptive.event;
 
-import java.util.Map;
+import io.github.resilience4j.core.lang.NonNull;
 
 /**
  * A BulkheadEvent which informs that a call has been succeeded
  */
-public class BulkheadOnSuccessEvent extends AbstractBulkheadLimitEvent {
+public class BulkheadOnSuccessEvent extends AbstractAdaptiveBulkheadEvent {
 
-	public BulkheadOnSuccessEvent(String bulkheadName, Map<String, String> eventData) {
-		super(bulkheadName, eventData);
-	}
+    public BulkheadOnSuccessEvent(String bulkheadName) {
+        super(bulkheadName);
+    }
 
-	@Override
-	public Type getEventType() {
-		return Type.SUCCESS;
-	}
+    @NonNull
+    @Override
+    public Type getEventType() {
+        return Type.SUCCESS;
+    }
 
-	@Override
-	public String toString() {
-		return String.format(
-				"%s: Bulkhead '%s' call is succeeded.",
-				eventData(),
-				getBulkheadName()
-		);
-	}
+    @Override
+    public String toString() {
+        return String.format("%s: Bulkhead '%s' recorded a successful call",
+            getCreationTime(),
+            getBulkheadName()
+        );
+    }
 }

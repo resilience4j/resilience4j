@@ -22,7 +22,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.event.*;
+import io.github.resilience4j.bulkhead.adaptive.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
 import org.slf4j.Logger;
@@ -31,9 +31,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -96,7 +93,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         releasePermission(); // ?
         stateReference.get().onSuccess(duration, durationUnit);
         publishBulkheadEvent(new BulkheadOnSuccessEvent(
-            shortName(innerBulkhead), Collections.emptyMap()));
+            shortName(innerBulkhead)));
     }
 
     /**
@@ -109,13 +106,13 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
 			releasePermission();
             publishBulkheadEvent(new BulkheadOnIgnoreEvent(
-                shortName(innerBulkhead), errorData(throwable)));
+                shortName(innerBulkhead), throwable));
         } else if (startTime != 0
             && adaptiveBulkheadConfig.getRecordExceptionPredicate().test(throwable)) {
             releasePermission(); // ?
             stateReference.get().onError(timeUntilNow(startTime), durationUnit, throwable);
             publishBulkheadEvent(new BulkheadOnErrorEvent(
-                shortName(innerBulkhead), errorData(throwable)));
+                shortName(innerBulkhead), throwable));
         } else if (startTime != 0) {
             onSuccess(timeUntilNow(startTime), durationUnit);
         }
@@ -162,7 +159,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         LOG.debug("stateTransition to {}", newState);
         AdaptiveBulkheadState previous = stateReference.getAndUpdate(newStateGenerator);
         publishBulkheadEvent(new BulkheadOnStateTransitionEvent(
-            name, Collections.emptyMap(), previous.getState(), newState));
+            name, previous.getState(), newState));
     }
 
     private void changeConcurrencyLimit(int newValue) {
@@ -190,17 +187,13 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private void publishBulkheadOnLimitIncreasedEvent(int maxConcurrentCalls) {
         publishBulkheadEvent(new BulkheadOnLimitIncreasedEvent(
             shortName(innerBulkhead),
-            limitChangeEventData(
-                innerBulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(),
-                maxConcurrentCalls)));
+            maxConcurrentCalls));
     }
 
     private void publishBulkheadOnLimitDecreasedEvent(int maxConcurrentCalls) {
         publishBulkheadEvent(new BulkheadOnLimitDecreasedEvent(
             shortName(innerBulkhead),
-            limitChangeEventData(
-                innerBulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(),
-                maxConcurrentCalls)));
+            maxConcurrentCalls));
     }
 
     /**
@@ -398,30 +391,6 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private static String shortName(Bulkhead bulkhead) {
         int cut = bulkhead.getName().indexOf('-');
         return cut > 0 ? bulkhead.getName().substring(0, cut) : bulkhead.getName();
-    }
-
-    /**
-     * @param waitTimeMillis        new wait time
-     * @param newMaxConcurrentCalls new max concurrent data
-     * @return map of kep value string of the event properties
-     */
-    private static Map<String, String> limitChangeEventData(long waitTimeMillis,
-        int newMaxConcurrentCalls) {
-        Map<String, String> eventData = new HashMap<>();
-        eventData.put("newMaxConcurrentCalls", String.valueOf(newMaxConcurrentCalls));
-        // TODO do we need newWaitTimeMillis here?
-        eventData.put("newWaitTimeMillis", String.valueOf(waitTimeMillis));
-        return eventData;
-    }
-
-    /**
-     * @param throwable error exception to be wrapped into the event data
-     * @return map of kep value string of the event properties
-     */
-    private Map<String, String> errorData(Throwable throwable) {
-        Map<String, String> eventData = new HashMap<>();
-        eventData.put("exceptionMsg", throwable.getMessage());
-        return eventData;
     }
 
 }

@@ -1,7 +1,7 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.event.*;
+import io.github.resilience4j.bulkhead.adaptive.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.EventPublisher;
