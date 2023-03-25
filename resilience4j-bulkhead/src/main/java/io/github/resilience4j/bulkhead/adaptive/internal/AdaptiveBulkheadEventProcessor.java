@@ -10,16 +10,9 @@ class AdaptiveBulkheadEventProcessor extends EventProcessor<AdaptiveBulkheadEven
     AdaptiveBulkhead.AdaptiveEventPublisher, EventConsumer<AdaptiveBulkheadEvent> {
 
     @Override
-    public EventPublisher<?> onLimitIncreased(
-        EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer) {
-        registerConsumer(BulkheadOnLimitIncreasedEvent.class.getName(), eventConsumer);
-        return this;
-    }
-
-    @Override
-    public EventPublisher<?> onLimitDecreased(
-        EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer) {
-        registerConsumer(BulkheadOnLimitDecreasedEvent.class.getName(), eventConsumer);
+    public EventPublisher<?> onLimitChanged(
+        EventConsumer<BulkheadOnLimitChangedEvent> eventConsumer) {
+        registerConsumer(BulkheadOnLimitChangedEvent.class.getName(), eventConsumer);
         return this;
     }
 

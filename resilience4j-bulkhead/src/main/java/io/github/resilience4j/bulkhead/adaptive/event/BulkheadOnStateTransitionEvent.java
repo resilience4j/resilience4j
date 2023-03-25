@@ -41,10 +41,6 @@ public class BulkheadOnStateTransitionEvent extends AbstractAdaptiveBulkheadEven
         return Type.STATE_TRANSITION;
     }
 
-    public AdaptiveBulkhead.State getFromState() {
-        return fromState;
-    }
-
     public AdaptiveBulkhead.State getToState() {
         return toState;
     }
