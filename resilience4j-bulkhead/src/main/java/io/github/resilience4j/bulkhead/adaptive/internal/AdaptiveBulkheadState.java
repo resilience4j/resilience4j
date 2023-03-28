@@ -1,7 +1,7 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.event.AdaptiveBulkheadEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.AdaptiveBulkheadEvent;
 
 import java.util.concurrent.TimeUnit;
 

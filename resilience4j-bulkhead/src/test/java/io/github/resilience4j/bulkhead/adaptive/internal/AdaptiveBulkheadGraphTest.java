@@ -2,7 +2,7 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.event.AbstractBulkheadLimitEvent;
+import io.github.resilience4j.bulkhead.adaptive.event.AbstractAdaptiveBulkheadEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.knowm.xchart.*;
@@ -130,7 +130,7 @@ public class AdaptiveBulkheadGraphTest {
         return NON_RANDOM.nextInt(2) == 0;
     }
 
-    private void recordCallStats(AbstractBulkheadLimitEvent event) {
+    private void recordCallStats(AbstractAdaptiveBulkheadEvent event) {
         AdaptiveBulkheadMetrics metrics = (AdaptiveBulkheadMetrics) bulkhead.getMetrics();
         concurrencyLimitData.add(metrics.getMaxAllowedConcurrentCalls());
         time.add((double) concurrencyLimitData.size());

@@ -20,8 +20,8 @@ package io.github.resilience4j.bulkhead.adaptive;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.adaptive.event.*;
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMachine;
-import io.github.resilience4j.bulkhead.event.*;
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.core.functions.CheckedConsumer;
@@ -30,7 +30,6 @@ import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.OnceConsumer;
 
-import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -648,10 +647,7 @@ public interface AdaptiveBulkhead {
      */
 	interface AdaptiveEventPublisher extends EventPublisher<AdaptiveBulkheadEvent> {
 
-        // TODO Maybe we can replace these 2 events by 1 BulkheadOnLimitChangedEvent(oldValue, newValue) 
-        EventPublisher onLimitIncreased(EventConsumer<BulkheadOnLimitIncreasedEvent> eventConsumer);
-
-        EventPublisher onLimitDecreased(EventConsumer<BulkheadOnLimitDecreasedEvent> eventConsumer);
+        EventPublisher onLimitChanged(EventConsumer<BulkheadOnLimitChangedEvent> eventConsumer);
 
         EventPublisher onSuccess(EventConsumer<BulkheadOnSuccessEvent> eventConsumer);
 
