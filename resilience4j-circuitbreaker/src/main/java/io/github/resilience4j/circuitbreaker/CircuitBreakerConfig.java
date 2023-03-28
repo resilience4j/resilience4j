@@ -812,19 +812,13 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         private Predicate<Throwable> createIgnoreFailurePredicate() {
-            return PredicateCreator.createExceptionsPredicate(ignoreExceptions)
-                .map(predicate -> ignoreExceptionPredicate != null ? predicate
-                    .or(ignoreExceptionPredicate) : predicate)
-                .orElseGet(() -> ignoreExceptionPredicate != null ? ignoreExceptionPredicate
-                    : DEFAULT_IGNORE_EXCEPTION_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(ignoreExceptionPredicate, ignoreExceptions)
+                .orElse(DEFAULT_IGNORE_EXCEPTION_PREDICATE);
         }
 
         private Predicate<Throwable> createRecordExceptionPredicate() {
-            return PredicateCreator.createExceptionsPredicate(recordExceptions)
-                .map(predicate -> recordExceptionPredicate != null ? predicate
-                    .or(recordExceptionPredicate) : predicate)
-                .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
-                    : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(recordExceptionPredicate, recordExceptions)
+                .orElse(DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
 
         private IntervalFunction validateWaitIntervalFunctionInOpenState() {

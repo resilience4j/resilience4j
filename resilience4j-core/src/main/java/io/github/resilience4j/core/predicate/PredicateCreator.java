@@ -11,6 +11,15 @@ public class PredicateCreator {
 
     @SafeVarargs
     public static Optional<Predicate<Throwable>> createExceptionsPredicate(
+        Predicate<Throwable> exceptionPredicate,
+        Class<? extends Throwable>... exceptions) {
+        return PredicateCreator.createExceptionsPredicate(exceptions)
+            .map(predicate -> exceptionPredicate == null ? predicate : predicate.or(exceptionPredicate))
+            .or(() -> Optional.ofNullable(exceptionPredicate));
+    }
+
+    @SafeVarargs
+    public static Optional<Predicate<Throwable>> createExceptionsPredicate(
         Class<? extends Throwable>... recordExceptions) {
         return exceptionPredicate(recordExceptions);
     }
