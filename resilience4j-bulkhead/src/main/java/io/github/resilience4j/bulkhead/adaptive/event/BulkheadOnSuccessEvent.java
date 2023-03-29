@@ -20,13 +20,15 @@ package io.github.resilience4j.bulkhead.adaptive.event;
 
 import io.github.resilience4j.core.lang.NonNull;
 
+import java.time.ZonedDateTime;
+
 /**
  * A BulkheadEvent which informs that a call has been succeeded
  */
 public class BulkheadOnSuccessEvent extends AbstractAdaptiveBulkheadEvent {
 
-    public BulkheadOnSuccessEvent(String bulkheadName) {
-        super(bulkheadName);
+    public BulkheadOnSuccessEvent(String bulkheadName, ZonedDateTime creationTime) {
+        super(bulkheadName, creationTime);
     }
 
     @NonNull

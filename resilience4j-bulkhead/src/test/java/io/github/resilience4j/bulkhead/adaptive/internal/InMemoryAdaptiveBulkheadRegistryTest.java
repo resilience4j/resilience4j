@@ -1,32 +1,29 @@
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
-import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author romeh
  */
 public class InMemoryAdaptiveBulkheadRegistryTest {
 
-    private AdaptiveBulkheadConfig config;
-	private AdaptiveBulkheadRegistry registry;
+    private AdaptiveBulkheadConfig customConfig;
+	private AdaptiveBulkheadRegistry defaultRegistry;
 
     @Before
     public void setUp() {
-        // registry with default config
-        registry = AdaptiveBulkheadRegistry.ofDefaults();
-        // registry with custom config
-        config = AdaptiveBulkheadConfig.custom()
+        defaultRegistry = AdaptiveBulkheadRegistry.ofDefaults();
+        customConfig = AdaptiveBulkheadConfig.custom()
             .maxConcurrentCalls(300)
             .slowCallDurationThreshold(Duration.ofMillis(1))
             .build();
@@ -34,37 +31,37 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 
 	@Test
 	public void shouldReturnCustomConfig() {
-		// give
-		AdaptiveBulkheadRegistry registry = AdaptiveBulkheadRegistry.of(config);
-		// when
+		AdaptiveBulkheadRegistry registry = AdaptiveBulkheadRegistry.of(customConfig);
+
 		AdaptiveBulkheadConfig bulkheadConfig = registry.getDefaultConfig();
-		// then
-		assertThat(bulkheadConfig).isSameAs(config);
+
+		assertThat(bulkheadConfig).isSameAs(customConfig);
 	}
 
 	@Test
 	public void shouldReturnTheCorrectName() {
-		AdaptiveBulkhead bulkhead = registry.bulkhead("test");
+		AdaptiveBulkhead bulkhead = defaultRegistry.bulkhead("test");
+
 		assertThat(bulkhead).isNotNull();
 		assertThat(bulkhead.getName()).isEqualTo("test");
 	}
 
 	@Test
 	public void shouldBeTheSameInstance() {
-		AdaptiveBulkhead bulkhead1 = registry.bulkhead("test", config);
-		AdaptiveBulkhead bulkhead2 = registry.bulkhead("test", config);
+		AdaptiveBulkhead bulkhead1 = defaultRegistry.bulkhead("test", customConfig);
+		AdaptiveBulkhead bulkhead2 = defaultRegistry.bulkhead("test", customConfig);
 
 		assertThat(bulkhead1).isSameAs(bulkhead2);
-		assertThat(registry.getAllBulkheads()).hasSize(1);
+		assertThat(defaultRegistry.getAllBulkheads()).hasSize(1);
 	}
 
 	@Test
 	public void shouldBeNotTheSameInstance() {
-		AdaptiveBulkhead bulkhead1 = registry.bulkhead("test1");
-		AdaptiveBulkhead bulkhead2 = registry.bulkhead("test2");
+		AdaptiveBulkhead bulkhead1 = defaultRegistry.bulkhead("test1");
+		AdaptiveBulkhead bulkhead2 = defaultRegistry.bulkhead("test2");
 
 		assertThat(bulkhead1).isNotSameAs(bulkhead2);
-		assertThat(registry.getAllBulkheads()).hasSize(2);
+		assertThat(defaultRegistry.getAllBulkheads()).hasSize(2);
 	}
 
 	@Test
@@ -93,7 +90,8 @@ public class InMemoryAdaptiveBulkheadRegistryTest {
 	@Test
 	public void testAddConfiguration() {
 		AdaptiveBulkheadRegistry bulkheadRegistry = AdaptiveBulkheadRegistry.ofDefaults();
-		bulkheadRegistry.addConfiguration("custom", AdaptiveBulkheadConfig.ofDefaults());
+
+        bulkheadRegistry.addConfiguration("custom", AdaptiveBulkheadConfig.ofDefaults());
 
 		assertThat(bulkheadRegistry.getDefaultConfig()).isNotNull();
 		assertThat(bulkheadRegistry.getConfiguration("custom")).isNotNull();

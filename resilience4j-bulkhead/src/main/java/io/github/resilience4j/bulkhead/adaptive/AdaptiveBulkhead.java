@@ -113,12 +113,16 @@ public interface AdaptiveBulkhead {
     Metrics getMetrics();
 
     /**
-	 * Returns an EventPublisher which subscribes to the reactive stream of
+     * Returns an EventPublisher which subscribes to the reactive stream of
      * BulkheadEvent/AdaptiveBulkheadEvent events and can be used to register event consumers.
      *
      * @return an AdaptiveEventPublisher
      */
     AdaptiveEventPublisher getEventPublisher();
+
+    long getCurrentTimestamp();
+
+    TimeUnit getTimestampUnit();
 
     /**
      * Decorates and executes the decorated Supplier.
@@ -184,13 +188,13 @@ public interface AdaptiveBulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> CheckedSupplier<T> decorateCheckedSupplier(AdaptiveBulkhead bulkhead,
-        CheckedSupplier<T> supplier) {
+                                                          CheckedSupplier<T> supplier) {
         return () -> {
             long start = 0;
             boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = System.currentTimeMillis();
                 return supplier.get();
             } catch (Exception e) {
                 bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
@@ -198,7 +202,7 @@ public interface AdaptiveBulkhead {
                 throw e;
             } finally {
                 if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
                 }
             }
         };
@@ -213,7 +217,7 @@ public interface AdaptiveBulkhead {
      * @return a supplier which is decorated by a Bulkhead.
      */
     static <T> Supplier<CompletionStage<T>> decorateCompletionStage(AdaptiveBulkhead bulkhead,
-        Supplier<CompletionStage<T>> supplier) {
+                                                                    Supplier<CompletionStage<T>> supplier) {
         return () -> {
 
             final CompletableFuture<T> promise = new CompletableFuture<>();
@@ -253,7 +257,7 @@ public interface AdaptiveBulkhead {
      *
      * @param bulkhead the bulkhead
      * @param supplier the original supplier
-     * @param <T> the type of the returned Future result
+     * @param <T>      the type of the returned Future result
      * @return a supplier which is decorated by a AdaptiveBulkhead.
      */
     static <T> Supplier<Future<T>> decorateFuture(AdaptiveBulkhead bulkhead, Supplier<Future<T>> supplier) {
@@ -263,11 +267,11 @@ public interface AdaptiveBulkhead {
                 promise.completeExceptionally(BulkheadFullException.createBulkheadFullException(bulkhead));
                 return promise;
             }
-            long start = System.currentTimeMillis();
+            long start = bulkhead.getCurrentTimestamp();
             try {
-                return new BulkheadFuture<T>(bulkhead, supplier.get());
+                return new BulkheadFuture<T>(bulkhead, supplier.get(), start);
             } catch (Throwable e) {
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             }
         };
@@ -281,21 +285,21 @@ public interface AdaptiveBulkhead {
      * @return a runnable which is decorated by a Bulkhead.
      */
     static CheckedRunnable decorateCheckedRunnable(AdaptiveBulkhead bulkhead,
-        CheckedRunnable runnable) {
+                                                   CheckedRunnable runnable) {
         return () -> {
             long start = 0;
             boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 runnable.run();
             } catch (Exception e) {
                 isFailed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -315,15 +319,15 @@ public interface AdaptiveBulkhead {
             boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 return callable.call();
             } catch (Exception e) {
                 isFailed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -343,15 +347,15 @@ public interface AdaptiveBulkhead {
             boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 return supplier.get();
             } catch (Exception e) {
                 isFailed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !isFailed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -371,15 +375,15 @@ public interface AdaptiveBulkhead {
             boolean failed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 consumer.accept(t);
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -394,21 +398,21 @@ public interface AdaptiveBulkhead {
      * @return a consumer which is decorated by a Bulkhead.
      */
     static <T> CheckedConsumer<T> decorateCheckedConsumer(AdaptiveBulkhead bulkhead,
-        CheckedConsumer<T> consumer) {
+                                                          CheckedConsumer<T> consumer) {
         return t -> {
             long start = 0;
             boolean failed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 consumer.accept(t);
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -427,15 +431,15 @@ public interface AdaptiveBulkhead {
             boolean failed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 runnable.run();
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -451,21 +455,21 @@ public interface AdaptiveBulkhead {
      * @return a function which is decorated by a bulkhead.
      */
     static <T, R> Function<T, R> decorateFunction(AdaptiveBulkhead bulkhead,
-        Function<T, R> function) {
+                                                  Function<T, R> function) {
         return (T t) -> {
             long start = 0;
             boolean failed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 return function.apply(t);
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -481,21 +485,21 @@ public interface AdaptiveBulkhead {
      * @return a function which is decorated by a bulkhead.
      */
     static <T, R> CheckedFunction<T, R> decorateCheckedFunction(AdaptiveBulkhead bulkhead,
-        CheckedFunction<T, R> function) {
+                                                                CheckedFunction<T, R> function) {
         return (T t) -> {
             long start = 0;
             boolean failed = false;
             bulkhead.acquirePermission();
             try {
-				start = System.currentTimeMillis();
+                start = bulkhead.getCurrentTimestamp();
                 return function.apply(t);
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-					bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -530,7 +534,7 @@ public interface AdaptiveBulkhead {
      * @return a Bulkhead instance
      */
     static AdaptiveBulkhead of(String name,
-        Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
+                               Supplier<AdaptiveBulkheadConfig> bulkheadConfigSupplier) {
         return new AdaptiveBulkheadStateMachine(name, bulkheadConfigSupplier.get());
     }
 
@@ -639,13 +643,13 @@ public interface AdaptiveBulkhead {
          */
         int getNumberOfSuccessfulCalls();
 
-      void resetRecords();
+        void resetRecords();
     }
 
     /**
      * An EventPublisher which can be used to register event consumers.
      */
-	interface AdaptiveEventPublisher extends EventPublisher<AdaptiveBulkheadEvent> {
+    interface AdaptiveEventPublisher extends EventPublisher<AdaptiveBulkheadEvent> {
 
         EventPublisher onLimitChanged(EventConsumer<BulkheadOnLimitChangedEvent> eventConsumer);
 
@@ -666,14 +670,19 @@ public interface AdaptiveBulkhead {
      * @param <T> of return type
      */
     final class BulkheadFuture<T> implements Future<T> {
-        final private Future<T> future;
-        final private OnceConsumer<AdaptiveBulkhead> onceToBulkhead;
+        private final Future<T> future;
+        private final OnceConsumer<AdaptiveBulkhead> onceToBulkhead;
+        private final long start;
 
         BulkheadFuture(AdaptiveBulkhead bulkhead, Future<T> future) {
+            this(bulkhead, future, bulkhead.getCurrentTimestamp());
+        }
+
+        BulkheadFuture(AdaptiveBulkhead bulkhead, Future<T> future, long start) {
             Objects.requireNonNull(future, "Non null Future is required to decorate");
             this.onceToBulkhead = OnceConsumer.of(bulkhead);
             this.future = future;
-
+            this.start = start;
         }
 
         @Override
@@ -693,25 +702,23 @@ public interface AdaptiveBulkhead {
 
         @Override
         public T get() throws InterruptedException, ExecutionException {
-            long start = System.currentTimeMillis();
             try {
                 return future.get();
-            }  finally {
+            } finally {
                 // TODO onError?
                 onceToBulkhead.applyOnce(b ->
-                    b.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS));
+                    b.onSuccess(b.getCurrentTimestamp() - start, b.getTimestampUnit()));
             }
         }
 
         @Override
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            long start = System.currentTimeMillis();
             try {
                 return future.get(timeout, unit);
             } finally {
                 // TODO onError?
                 onceToBulkhead.applyOnce(b ->
-                    b.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS));
+                    b.onSuccess(b.getCurrentTimestamp() - start, b.getTimestampUnit()));
             }
         }
     }

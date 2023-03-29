@@ -27,9 +27,9 @@ public abstract class AbstractAdaptiveBulkheadEvent implements AdaptiveBulkheadE
     private final String bulkheadName;
     private final ZonedDateTime creationTime;
 
-    AbstractAdaptiveBulkheadEvent(String bulkheadName) {
+    AbstractAdaptiveBulkheadEvent(String bulkheadName, ZonedDateTime creationTime) {
         this.bulkheadName = bulkheadName;
-        this.creationTime = ZonedDateTime.now();
+        this.creationTime = creationTime;
     }
 
     @NonNull

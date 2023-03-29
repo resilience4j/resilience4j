@@ -20,6 +20,8 @@ package io.github.resilience4j.bulkhead.adaptive.event;
 
 import io.github.resilience4j.core.lang.NonNull;
 
+import java.time.ZonedDateTime;
+
 /**
  * A BulkheadEvent which informs that an error has been ignored
  */
@@ -27,8 +29,8 @@ public class BulkheadOnIgnoreEvent extends AbstractAdaptiveBulkheadEvent {
 
     private final String exceptionMsg;
 
-    public BulkheadOnIgnoreEvent(String bulkheadName, Throwable throwable) {
-        super(bulkheadName);
+    public BulkheadOnIgnoreEvent(String bulkheadName, ZonedDateTime creationTime, Throwable throwable) {
+        super(bulkheadName, creationTime);
         this.exceptionMsg = throwable.getMessage();
     }
 
