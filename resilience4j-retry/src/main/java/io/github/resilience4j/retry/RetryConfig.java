@@ -423,11 +423,8 @@ public class RetryConfig implements Serializable {
         }
 
         private Predicate<Throwable> createRetryOnExceptionPredicate() {
-            return PredicateCreator.createExceptionsPredicate(retryExceptions)
-                .map(predicate -> retryOnExceptionPredicate != null ? predicate
-                    .or(retryOnExceptionPredicate) : predicate)
-                .orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate
-                    : DEFAULT_RECORD_FAILURE_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(retryOnExceptionPredicate, retryExceptions)
+                .orElse(DEFAULT_RECORD_FAILURE_PREDICATE);
         }
     }
 }
