@@ -37,7 +37,7 @@ import io.github.resilience4j.core.registry.AbstractRegistry;
 public final class InMemoryAdaptiveBulkheadRegistry extends AbstractRegistry<AdaptiveBulkhead, AdaptiveBulkheadConfig> implements AdaptiveBulkheadRegistry {
 
 	/**
-	 * The constructor with default default.
+	 * The constructor with default configuration.
 	 */
 	public InMemoryAdaptiveBulkheadRegistry() {
 		this(AdaptiveBulkheadConfig.ofDefaults());
@@ -49,9 +49,9 @@ public final class InMemoryAdaptiveBulkheadRegistry extends AbstractRegistry<Ada
 	}
 
 	/**
-	 * The constructor with custom default config.
+	 * The constructor with custom default configuration.
 	 *
-	 * @param defaultConfig The default config.
+	 * @param defaultConfig The default configuration.
 	 */
 	public InMemoryAdaptiveBulkheadRegistry(AdaptiveBulkheadConfig defaultConfig) {
 		super(defaultConfig);

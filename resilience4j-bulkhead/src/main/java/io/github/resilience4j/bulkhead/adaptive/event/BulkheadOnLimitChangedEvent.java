@@ -20,6 +20,8 @@ package io.github.resilience4j.bulkhead.adaptive.event;
 
 import io.github.resilience4j.core.lang.NonNull;
 
+import java.time.ZonedDateTime;
+
 /**
  * A BulkheadEvent which informs that a limit has been changed
  */
@@ -28,8 +30,11 @@ public class BulkheadOnLimitChangedEvent extends AbstractAdaptiveBulkheadEvent {
     private final int oldMaxConcurrentCalls;
     private final int newMaxConcurrentCalls;
 
-    public BulkheadOnLimitChangedEvent(String bulkheadName, int oldMaxConcurrentCalls, int newMaxConcurrentCalls) {
-        super(bulkheadName);
+    public BulkheadOnLimitChangedEvent(String bulkheadName,
+                                       ZonedDateTime creationTime,
+                                       int oldMaxConcurrentCalls,
+                                       int newMaxConcurrentCalls) {
+        super(bulkheadName, creationTime);
         this.oldMaxConcurrentCalls = oldMaxConcurrentCalls;
         this.newMaxConcurrentCalls = newMaxConcurrentCalls;
     }

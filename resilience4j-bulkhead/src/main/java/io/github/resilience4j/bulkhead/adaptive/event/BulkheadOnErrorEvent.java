@@ -20,6 +20,8 @@ package io.github.resilience4j.bulkhead.adaptive.event;
 
 import io.github.resilience4j.core.lang.NonNull;
 
+import java.time.ZonedDateTime;
+
 /**
  * A BulkheadEvent which informs that a call has been failed
  */
@@ -27,8 +29,8 @@ public class BulkheadOnErrorEvent extends AbstractAdaptiveBulkheadEvent {
 
     private final String exceptionMsg;
 
-    public BulkheadOnErrorEvent(String bulkheadName, Throwable throwable) {
-        super(bulkheadName);
+    public BulkheadOnErrorEvent(String bulkheadName, ZonedDateTime creationTime, Throwable throwable) {
+        super(bulkheadName, creationTime);
         this.exceptionMsg = throwable.getMessage();
     }
 

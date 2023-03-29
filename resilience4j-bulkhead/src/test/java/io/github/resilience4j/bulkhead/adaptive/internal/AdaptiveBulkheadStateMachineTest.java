@@ -59,7 +59,7 @@ public class AdaptiveBulkheadStateMachineTest {
             .extracting(BulkheadOnLimitChangedEvent::isIncrease)
             .containsExactly(true, true, true, false, false, false);
         assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getToState)
+            .extracting(BulkheadOnStateTransitionEvent::getNewState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
     }
 
@@ -78,7 +78,7 @@ public class AdaptiveBulkheadStateMachineTest {
             .extracting(BulkheadOnLimitChangedEvent::isIncrease)
             .containsExactly(true, true, true);
         assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getToState)
+            .extracting(BulkheadOnStateTransitionEvent::getNewState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
         assertThat(bulkhead.getMetrics().getFailureRate()).isEqualTo(-1f);
     }
@@ -99,7 +99,7 @@ public class AdaptiveBulkheadStateMachineTest {
             .extracting(BulkheadOnLimitChangedEvent::isIncrease)
             .containsExactly(false, false, false);
         assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getToState)
+            .extracting(BulkheadOnStateTransitionEvent::getNewState)
             .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
         assertThat(bulkhead.getMetrics().getFailureRate()).isEqualTo(-1f);
     }
