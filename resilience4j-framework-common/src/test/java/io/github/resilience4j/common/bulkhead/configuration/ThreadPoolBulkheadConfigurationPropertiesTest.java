@@ -175,9 +175,9 @@ public class ThreadPoolBulkheadConfigurationPropertiesTest  {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSize() {
+    public void testThreadPoolBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonThreadPoolBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(-1);
+        defaultProperties.setEventConsumerBufferSize(0);
     }
 
     @Test

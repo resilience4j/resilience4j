@@ -23,7 +23,6 @@ import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.retry.RetryConfig;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -342,9 +341,9 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
 
         public InstanceProperties setWaitDuration(Duration waitDuration) {
             Objects.requireNonNull(waitDuration);
-            if (waitDuration.toMillis() < 0) {
+            if (waitDuration.isNegative()) {
                 throw new IllegalArgumentException(
-                    "waitDuration must be a positive value");
+                    "Illegal argument waitDuration: " + waitDuration + " is negative");
             }
 
             this.waitDuration = waitDuration;
@@ -459,6 +458,10 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         }
 
         public InstanceProperties setExponentialBackoffMultiplier(Double exponentialBackoffMultiplier) {
+            if (exponentialBackoffMultiplier <= 0) {
+                throw new IllegalArgumentException(
+                    "Illegal argument exponentialBackoffMultiplier: " + exponentialBackoffMultiplier + " is less or equal 0");
+            }
             this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
             return this;
         }
@@ -469,6 +472,10 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         }
 
         public InstanceProperties setExponentialMaxWaitDuration(Duration exponentialMaxWaitDuration) {
+            if (exponentialMaxWaitDuration.isNegative()) {
+                throw new IllegalArgumentException(
+                    "Illegal argument exponentialMaxWaitDuration: " + exponentialMaxWaitDuration + " is negative");
+            }
             this.exponentialMaxWaitDuration = exponentialMaxWaitDuration;
             return this;
         }
@@ -489,6 +496,10 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         }
 
         public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
+            if (randomizedWaitFactor < 0 || randomizedWaitFactor >= 1) {
+                throw new IllegalArgumentException(
+                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is negative");
+            }
             this.randomizedWaitFactor = randomizedWaitFactor;
             return this;
         }

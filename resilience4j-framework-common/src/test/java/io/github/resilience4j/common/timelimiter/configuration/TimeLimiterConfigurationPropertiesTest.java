@@ -120,15 +120,15 @@ public class TimeLimiterConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSize() {
+    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(-1);
+        defaultProperties.setEventConsumerBufferSize(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnTimeoutDuration() {
+    public void testIllegalArgumentOnTimeoutDurationNegative() {
         CommonTimeLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
-        defaultProperties.setTimeoutDuration(Duration.ofMillis(-1000));
+        defaultProperties.setTimeoutDuration(Duration.ofNanos(-1));
     }
 
     @Test
