@@ -109,7 +109,7 @@ Resilience4j provides several core modules:
 * resilience4j-timelimiter: Timeout handling
 * resilience4j-cache: Result caching
 
-There are also add-on modules for metrics, Retrofit, Feign, Kotlin, Spring, Ratpack, Vertx, RxJava2 and more.
+There are also add-on modules for metrics, Feign, Kotlin, Spring, Ratpack, Vertx, RxJava2 and more.
 
 NOTE: Find out full list of modules in our *https://resilience4j.readme.io/docs#section-modularization[User Guide]*.
 
@@ -134,7 +134,6 @@ https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 |<<circuitbreaker-retry-fallback,overview>>,
 https://resilience4j.readme.io/docs/circuitbreaker[documentation],
 https://resilience4j.readme.io/docs/feign[Feign],
-https://resilience4j.readme.io/docs/retrofit[Retrofit],
 https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Rate Limiter**
@@ -143,14 +142,12 @@ https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 |<<ratelimiter,overview>>,
 https://resilience4j.readme.io/docs/ratelimiter[documentation],
 https://resilience4j.readme.io/docs/feign[Feign],
-https://resilience4j.readme.io/docs/retrofit[Retrofit],
 https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Time Limiter**
 |limits duration of execution
 |Beyond a certain wait interval, a successful result is unlikely.
 |https://resilience4j.readme.io/docs/timeout[documentation],
-https://resilience4j.readme.io/docs/retrofit[Retrofit],
 https://resilience4j.readme.io/docs/getting-started-3#annotations[Spring]
 
 |**Bulkhead**
