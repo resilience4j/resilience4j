@@ -161,7 +161,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     }
 
     @Override
-    public AdaptiveEventPublisher getEventPublisher() {
+    public EventPublisher getEventPublisher() {
         return eventProcessor;
     }
 

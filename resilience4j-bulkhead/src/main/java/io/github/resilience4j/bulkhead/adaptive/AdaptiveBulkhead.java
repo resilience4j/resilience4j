@@ -23,7 +23,6 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.adaptive.event.*;
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMachine;
 import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.EventPublisher;
 import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
@@ -118,7 +117,7 @@ public interface AdaptiveBulkhead {
      *
      * @return an AdaptiveEventPublisher
      */
-    AdaptiveEventPublisher getEventPublisher();
+    EventPublisher getEventPublisher();
 
     long getCurrentTimestamp();
 
@@ -649,7 +648,7 @@ public interface AdaptiveBulkhead {
     /**
      * An EventPublisher which can be used to register event consumers.
      */
-    interface AdaptiveEventPublisher extends EventPublisher<AdaptiveBulkheadEvent> {
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<AdaptiveBulkheadEvent> {
 
         EventPublisher onLimitChanged(EventConsumer<BulkheadOnLimitChangedEvent> eventConsumer);
 

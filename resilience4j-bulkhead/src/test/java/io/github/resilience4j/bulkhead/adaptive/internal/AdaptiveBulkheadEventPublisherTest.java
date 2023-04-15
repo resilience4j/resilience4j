@@ -47,8 +47,8 @@ public class AdaptiveBulkheadEventPublisherTest {
 
 	@Test
 	public void shouldReturnTheSameConsumer() {
-		AdaptiveBulkhead.AdaptiveEventPublisher eventPublisher = adaptiveBulkhead.getEventPublisher();
-		AdaptiveBulkhead.AdaptiveEventPublisher eventPublisher2 = adaptiveBulkhead.getEventPublisher();
+		AdaptiveBulkhead.EventPublisher eventPublisher = adaptiveBulkhead.getEventPublisher();
+		AdaptiveBulkhead.EventPublisher eventPublisher2 = adaptiveBulkhead.getEventPublisher();
 
 		assertThat(eventPublisher).isEqualTo(eventPublisher2);
 	}
