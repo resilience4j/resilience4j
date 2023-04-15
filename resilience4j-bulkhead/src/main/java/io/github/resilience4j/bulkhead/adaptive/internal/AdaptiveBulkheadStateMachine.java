@@ -31,10 +31,12 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
@@ -45,28 +47,55 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     private final String name;
     private final AtomicReference<AdaptiveBulkheadState> stateReference;
-    private final AdaptiveBulkheadConfig adaptiveBulkheadConfig;
+    private final AdaptiveBulkheadConfig config;
     private final AdaptiveBulkheadEventProcessor eventProcessor;
     private final Clock clock;
+    private final Function<Clock, Long> currentTimestampFunction;
+    private final TimeUnit timestampUnit;
     private final AdaptiveBulkheadMetrics metrics;
     private final Bulkhead innerBulkhead;
     private final AdaptationCalculator adaptationCalculator;
 
     public AdaptiveBulkheadStateMachine(@NonNull String name,
-                                        @NonNull AdaptiveBulkheadConfig adaptiveBulkheadConfig) {
+                                        @NonNull AdaptiveBulkheadConfig config) {
+        this(name, config, Clock.systemUTC());
+    }
+
+    public AdaptiveBulkheadStateMachine(@NonNull String name,
+                                        @NonNull AdaptiveBulkheadConfig config,
+                                        @NonNull Clock clock) {
         this.name = name;
-        this.adaptiveBulkheadConfig = Objects
-            .requireNonNull(adaptiveBulkheadConfig, "Config must not be null");
-        BulkheadConfig internalBulkheadConfig = BulkheadConfig.custom()
-            .maxConcurrentCalls(adaptiveBulkheadConfig.getInitialConcurrentCalls())
-            .maxWaitDuration(adaptiveBulkheadConfig.getMaxWaitDuration())
-            .build();
-        this.innerBulkhead = new SemaphoreBulkhead(name + "-internal", internalBulkheadConfig);
-        this.clock = Clock.systemUTC();
-        this.metrics = new AdaptiveBulkheadMetrics(adaptiveBulkheadConfig, innerBulkhead.getMetrics(), clock);
+        this.config = Objects.requireNonNull(config, "Config must not be null");
+        this.innerBulkhead = innerBulkhead(name, config);
+        this.clock = clock;
+        this.currentTimestampFunction = config.getCurrentTimestampFunction();
+        this.timestampUnit = config.getTimestampUnit();
+        this.metrics = new AdaptiveBulkheadMetrics(config, innerBulkhead.getMetrics(), clock);
         this.stateReference = new AtomicReference<>(new SlowStartState(metrics));
         this.eventProcessor = new AdaptiveBulkheadEventProcessor();
         this.adaptationCalculator = new AdaptationCalculator(this);
+    }
+
+    private static SemaphoreBulkhead innerBulkhead(String name, AdaptiveBulkheadConfig config) {
+        return new SemaphoreBulkhead(name + "-internal",
+            BulkheadConfig.custom()
+                .maxConcurrentCalls(config.getInitialConcurrentCalls())
+                .maxWaitDuration(config.getMaxWaitDuration())
+                .build());
+    }
+
+    @Override
+    public long getCurrentTimestamp() {
+        return currentTimestampFunction.apply(clock);
+    }
+
+    @Override
+    public TimeUnit getTimestampUnit() {
+        return timestampUnit;
+    }
+
+    private ZonedDateTime time() {
+        return ZonedDateTime.now(clock);
     }
 
     @Override
@@ -92,8 +121,8 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     public void onSuccess(long duration, TimeUnit durationUnit) {
         releasePermission(); // ?
         stateReference.get().onSuccess(duration, durationUnit);
-        publishBulkheadEvent(new BulkheadOnSuccessEvent(
-            shortName(innerBulkhead)));
+        tryPublishEvent(
+            new BulkheadOnSuccessEvent(name, time()));
     }
 
     /**
@@ -103,28 +132,27 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
      */
     @Override
     public void onError(long startTime, TimeUnit durationUnit, Throwable throwable) {
-        if (adaptiveBulkheadConfig.getIgnoreExceptionPredicate().test(throwable)) {
+        if (config.getIgnoreExceptionPredicate().test(throwable)) {
             releasePermission();
-            publishBulkheadEvent(new BulkheadOnIgnoreEvent(
-                shortName(innerBulkhead), throwable));
-        } else if (startTime != 0
-            && adaptiveBulkheadConfig.getRecordExceptionPredicate().test(throwable)) {
+            tryPublishEvent(
+                new BulkheadOnIgnoreEvent(name, time(), throwable));
+        } else if (startTime != 0 && config.getRecordExceptionPredicate().test(throwable)) {
             releasePermission(); // ?
             stateReference.get().onError(timeUntilNow(startTime), durationUnit, throwable);
-            publishBulkheadEvent(new BulkheadOnErrorEvent(
-                shortName(innerBulkhead), throwable));
+            tryPublishEvent(
+                new BulkheadOnErrorEvent(name, time(), throwable));
         } else if (startTime != 0) {
             onSuccess(timeUntilNow(startTime), durationUnit);
         }
     }
 
     private long timeUntilNow(long start) {
-        return Duration.between(Instant.ofEpochMilli(start), Instant.now()).toMillis();
+        return Duration.between(Instant.ofEpochMilli(start), clock.instant()).toMillis();
     }
 
     @Override
     public AdaptiveBulkheadConfig getBulkheadConfig() {
-        return adaptiveBulkheadConfig;
+        return config;
     }
 
     @Override
@@ -158,15 +186,16 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
                                  UnaryOperator<AdaptiveBulkheadState> newStateGenerator) {
         LOG.debug("stateTransition to {}", newState);
         AdaptiveBulkheadState previous = stateReference.getAndUpdate(newStateGenerator);
-        publishBulkheadEvent(new BulkheadOnStateTransitionEvent(
-            name, previous.getState(), newState));
+        tryPublishEvent(
+            new BulkheadOnStateTransitionEvent(name, time(), previous.getState(), newState));
     }
 
     private void changeConcurrencyLimit(int newValue) {
         int oldValue = innerBulkhead.getBulkheadConfig().getMaxConcurrentCalls();
         if (newValue != oldValue) {
             changeInternals(oldValue, newValue);
-            publishBulkheadOnLimitChangedEvent(oldValue, newValue);
+            tryPublishEvent(
+                new BulkheadOnLimitChangedEvent(name, time(), oldValue, newValue));
         } else {
             LOG.trace("change of concurrency limit is ignored");
         }
@@ -181,13 +210,6 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         if (RESET_METRICS_ON_TRANSITION) {
             metrics.resetRecords();
         }
-    }
-
-    private void publishBulkheadOnLimitChangedEvent(int oldMaxConcurrentCalls, int newMaxConcurrentCalls) {
-        publishBulkheadEvent(new BulkheadOnLimitChangedEvent(
-            shortName(innerBulkhead),
-            oldMaxConcurrentCalls,
-            newMaxConcurrentCalls));
     }
 
     /**
@@ -275,7 +297,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     private void logStateDetails(AdaptiveBulkheadMetrics.Result result) {
         LOG.debug("calls:{}/{}, rate:{} result:{}",
             metrics.getNumberOfBufferedCalls(),
-            adaptiveBulkheadConfig.getMinimumNumberOfCalls(),
+            config.getMinimumNumberOfCalls(),
             Math.max(metrics.getSnapshot().getFailureRate(), metrics.getSnapshot().getSlowCallRate()),
             result);
     }
@@ -345,7 +367,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
         private boolean isConcurrencyLimitTooLow() {
             return getMetrics().getMaxAllowedConcurrentCalls()
-                == adaptiveBulkheadConfig.getMinConcurrentCalls();
+                == config.getMinConcurrentCalls();
         }
 
         /**
@@ -371,20 +393,21 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         return String.format("AdaptiveBulkhead '%s'", this.name);
     }
 
-    /**
-     * @param eventSupplier the event supplier to be pushed to consumers
-     */
-    private void publishBulkheadEvent(AdaptiveBulkheadEvent eventSupplier) {
-        if (eventProcessor.hasConsumers()) {
-            eventProcessor.consumeEvent(eventSupplier);
+    private void tryPublishEvent(AdaptiveBulkheadEvent event) {
+        if (!eventProcessor.hasConsumers()) {
+            LOG.debug("No consumers: Event {} not published", event.getEventType());
+            return;
         }
-    }
-
-    // it's a workaround for "-internal" suffix
-    @Deprecated
-    private static String shortName(Bulkhead bulkhead) {
-        int cut = bulkhead.getName().indexOf('-');
-        return cut > 0 ? bulkhead.getName().substring(0, cut) : bulkhead.getName();
+        if (!stateReference.get().shouldPublishEvents(event)) {
+            LOG.debug("Not allowed: Event {} not published", event.getEventType());
+            return;
+        }
+        try {
+            eventProcessor.consumeEvent(event);
+            LOG.debug("Event {} published: {}", event.getEventType(), event);
+        } catch (Throwable t) {
+            LOG.warn("Failed to handle event {}", event.getEventType(), t);
+        }
     }
 
 }

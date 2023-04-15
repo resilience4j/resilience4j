@@ -21,18 +21,23 @@ package io.github.resilience4j.bulkhead.adaptive.event;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
 
+import java.time.ZonedDateTime;
+
 /**
  * A BulkheadEvent which informs about a state transition.
  */
 public class BulkheadOnStateTransitionEvent extends AbstractAdaptiveBulkheadEvent {
 
-    private final AdaptiveBulkhead.State fromState;
-    private final AdaptiveBulkhead.State toState;
+    private final AdaptiveBulkhead.State oldState;
+    private final AdaptiveBulkhead.State newState;
 
-    public BulkheadOnStateTransitionEvent(String bulkheadName, AdaptiveBulkhead.State fromState, AdaptiveBulkhead.State toState) {
-        super(bulkheadName);
-        this.fromState = fromState;
-        this.toState = toState;
+    public BulkheadOnStateTransitionEvent(String bulkheadName,
+                                          ZonedDateTime creationTime,
+                                          AdaptiveBulkhead.State oldState,
+                                          AdaptiveBulkhead.State newState) {
+        super(bulkheadName, creationTime);
+        this.oldState = oldState;
+        this.newState = newState;
     }
 
     @NonNull
@@ -41,8 +46,8 @@ public class BulkheadOnStateTransitionEvent extends AbstractAdaptiveBulkheadEven
         return Type.STATE_TRANSITION;
     }
 
-    public AdaptiveBulkhead.State getToState() {
-        return toState;
+    public AdaptiveBulkhead.State getNewState() {
+        return newState;
     }
 
     @Override
@@ -50,8 +55,8 @@ public class BulkheadOnStateTransitionEvent extends AbstractAdaptiveBulkheadEven
         return String.format("%s: Bulkhead '%s' recorded a state transition from %s to %s",
             getCreationTime(),
             getBulkheadName(),
-            fromState,
-            toState
+            oldState,
+            newState
         );
     }
 }

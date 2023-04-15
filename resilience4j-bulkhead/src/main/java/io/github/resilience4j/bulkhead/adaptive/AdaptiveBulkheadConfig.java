@@ -18,13 +18,17 @@
  */
 package io.github.resilience4j.bulkhead.adaptive;
 
-import java.time.Duration;
-import java.util.function.Predicate;
-
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMachine;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * A {@link AdaptiveBulkheadConfig} configures an adaptation capabilities of {@link AdaptiveBulkheadStateMachine}
@@ -49,15 +53,17 @@ public class AdaptiveBulkheadConfig {
     private static final int DEFAULT_INCREASE_SUMMAND = 1;
     private static final float DEFAULT_INCREASE_MULTIPLIER = 2f;
     private static final float DEFAULT_DECREASE_MULTIPLIER = 0.5f;
+    private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
+    private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 	@NonNull
-	private Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
+	private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
 	@NonNull
-	private Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
+	private transient Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
 	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
@@ -71,7 +77,10 @@ public class AdaptiveBulkheadConfig {
     private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
     private int increaseSummand = DEFAULT_INCREASE_SUMMAND;
     private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
+    private float increaseMultiplier = DEFAULT_INCREASE_MULTIPLIER;
     private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
+    private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
+    private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
 	private AdaptiveBulkheadConfig() {
 	}
@@ -132,14 +141,43 @@ public class AdaptiveBulkheadConfig {
     public float getDecreaseMultiplier() {
         return decreaseMultiplier;
     }
-    
+
     public float getIncreaseMultiplier() {
-	    // TODO
-        return DEFAULT_INCREASE_MULTIPLIER;
+        return increaseMultiplier;
     }
 
     public Duration getMaxWaitDuration() {
         return maxWaitDuration;
+    }
+
+    public Function<Clock, Long> getCurrentTimestampFunction() {
+        return currentTimestampFunction;
+    }
+
+    public TimeUnit getTimestampUnit() {
+        return timestampUnit;
+    }
+
+    @Override
+    public String toString() {
+        return "AdaptiveBulkheadConfig{" +
+            "recordExceptions=" + Arrays.toString(recordExceptions) +
+            ", ignoreExceptions=" + Arrays.toString(ignoreExceptions) +
+            ", minimumNumberOfCalls=" + minimumNumberOfCalls +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            ", failureRateThreshold=" + failureRateThreshold +
+            ", slidingWindowSize=" + slidingWindowSize +
+            ", slidingWindowType=" + slidingWindowType +
+            ", slowCallRateThreshold=" + slowCallRateThreshold +
+            ", slowCallDurationThreshold=" + slowCallDurationThreshold +
+            ", minConcurrentCalls=" + minConcurrentCalls +
+            ", initialConcurrentCalls=" + initialConcurrentCalls +
+            ", maxConcurrentCalls=" + maxConcurrentCalls +
+            ", increaseSummand=" + increaseSummand +
+            ", decreaseMultiplier=" + decreaseMultiplier +
+            ", increaseMultiplier=" + increaseMultiplier +
+            ", maxWaitDuration=" + maxWaitDuration +
+            '}';
     }
 
     public enum SlidingWindowType {
@@ -197,6 +235,7 @@ public class AdaptiveBulkheadConfig {
         private int initialConcurrentCalls = DEFAULT_INITIAL_CONCURRENT_CALLS;
         private int increaseSummand = DEFAULT_INCREASE_SUMMAND;
         private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
+        private float increaseMultiplier = DEFAULT_INCREASE_MULTIPLIER;
         private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
 		@Nullable
 		private Predicate<Throwable> recordExceptionPredicate;
@@ -206,6 +245,8 @@ public class AdaptiveBulkheadConfig {
 		private Class<? extends Throwable>[] recordExceptions = new Class[0];
 		@SuppressWarnings("unchecked")
 		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
+        private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
+        private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
 
         private Builder() {
 		}
@@ -226,6 +267,9 @@ public class AdaptiveBulkheadConfig {
             this.initialConcurrentCalls = baseConfig.initialConcurrentCalls;
             this.increaseSummand = baseConfig.increaseSummand;
             this.decreaseMultiplier = baseConfig.decreaseMultiplier;
+            this.increaseMultiplier = baseConfig.increaseMultiplier;
+            this.currentTimestampFunction = baseConfig.currentTimestampFunction;
+            this.timestampUnit = baseConfig.timestampUnit;
         }
 
         /**
@@ -451,6 +495,15 @@ public class AdaptiveBulkheadConfig {
             return this;
         }
 
+        public final Builder increaseMultiplier(float increaseMultiplier) {
+            if (increaseMultiplier <= 1) {
+                throw new IllegalArgumentException(
+                    "increaseMultiplier must greater than 1");
+            }
+            this.increaseMultiplier = increaseMultiplier;
+            return this;
+        }
+
         /**
          * Configures a maximum amount of time which the calling thread will wait to enter the
          * bulkhead. If bulkhead has space available, entry is guaranteed and immediate. If bulkhead
@@ -473,6 +526,22 @@ public class AdaptiveBulkheadConfig {
             return this;
         }
 
+        /**
+         * Configures a function that returns current timestamp for the bulkhead.
+         * Default implementation uses System.nanoTime() to compute current timestamp.
+         * Configure currentTimestampFunction to provide different implementation to compute current timestamp.
+         * <p>
+         *
+         * @param currentTimestampFunction function that computes current timestamp.
+         * @param timeUnit                 TimeUnit of timestamp returned by the function.
+         * @return the AdaptiveBulkheadConfig.Builder
+         */
+        public Builder currentTimestampFunction(Function<Clock, Long> currentTimestampFunction, TimeUnit timeUnit) {
+            this.timestampUnit = timeUnit;
+            this.currentTimestampFunction = currentTimestampFunction;
+            return this;
+        }
+
 		public AdaptiveBulkheadConfig build() {
             AdaptiveBulkheadConfig config = new AdaptiveBulkheadConfig();
             config.slidingWindowType = slidingWindowType;
@@ -489,26 +558,23 @@ public class AdaptiveBulkheadConfig {
             config.initialConcurrentCalls = initialConcurrentCalls;
             config.increaseSummand = increaseSummand;
             config.decreaseMultiplier = decreaseMultiplier;
+            config.increaseMultiplier = increaseMultiplier;
             config.maxWaitDuration = maxWaitDuration;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            config.currentTimestampFunction = currentTimestampFunction;
+            config.timestampUnit = timestampUnit;
             return config;
 		}
 
         private Predicate<Throwable> createIgnoreFailurePredicate() {
-            return PredicateCreator.createExceptionsPredicate(ignoreExceptions)
-                .map(predicate -> ignoreExceptionPredicate != null ? predicate
-                    .or(ignoreExceptionPredicate) : predicate)
-                .orElseGet(() -> ignoreExceptionPredicate != null ? ignoreExceptionPredicate
-                    : DEFAULT_IGNORE_EXCEPTION_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(ignoreExceptionPredicate, ignoreExceptions)
+                .orElse(DEFAULT_IGNORE_EXCEPTION_PREDICATE);
         }
 
         private Predicate<Throwable> createRecordExceptionPredicate() {
-            return PredicateCreator.createExceptionsPredicate(recordExceptions)
-                .map(predicate -> recordExceptionPredicate != null ? predicate
-                    .or(recordExceptionPredicate) : predicate)
-                .orElseGet(() -> recordExceptionPredicate != null ? recordExceptionPredicate
-                    : DEFAULT_RECORD_EXCEPTION_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(recordExceptionPredicate, recordExceptions)
+                .orElse(DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
 
     }
