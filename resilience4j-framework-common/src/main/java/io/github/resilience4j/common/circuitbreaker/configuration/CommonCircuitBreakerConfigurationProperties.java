@@ -737,7 +737,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
             if (randomizedWaitFactor < 0 || randomizedWaitFactor >= 1) {
                 throw new IllegalArgumentException(
-                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range (0..1]");
+                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range [0..1)");
             }
             this.randomizedWaitFactor = randomizedWaitFactor;
             return this;

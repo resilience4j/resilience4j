@@ -498,7 +498,7 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
             if (randomizedWaitFactor < 0 || randomizedWaitFactor >= 1) {
                 throw new IllegalArgumentException(
-                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is negative");
+                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range [0..1)");
             }
             this.randomizedWaitFactor = randomizedWaitFactor;
             return this;
