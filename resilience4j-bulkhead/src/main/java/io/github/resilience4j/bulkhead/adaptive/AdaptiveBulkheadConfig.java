@@ -23,6 +23,8 @@ import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
@@ -33,7 +35,10 @@ import java.util.function.Predicate;
 /**
  * A {@link AdaptiveBulkheadConfig} configures an adaptation capabilities of {@link AdaptiveBulkheadStateMachine}
  */
-public class AdaptiveBulkheadConfig {
+public class AdaptiveBulkheadConfig implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -1632235529951414090L;
 
     private static final int DEFAULT_MAX_CONCURRENT_CALLS = 25;
     private static final int DEFAULT_MIN_CONCURRENT_CALLS = 2;
@@ -48,24 +53,26 @@ public class AdaptiveBulkheadConfig {
     private static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
     // The default exception predicate counts all exceptions as failures.
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
-	// The default exception predicate ignores no exceptions.
-	private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
+    // The default exception predicate ignores no exceptions.
+    private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
     private static final int DEFAULT_INCREASE_SUMMAND = 1;
     private static final float DEFAULT_INCREASE_MULTIPLIER = 2f;
     private static final float DEFAULT_DECREASE_MULTIPLIER = 0.5f;
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
+    private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
+
 
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
-	@NonNull
-	private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
-	@NonNull
-	private transient Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
+    @NonNull
+    private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
+    @NonNull
+    private transient Predicate<Throwable> ignoreExceptionPredicate = DEFAULT_IGNORE_EXCEPTION_PREDICATE;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
-	private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+    private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
     private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
@@ -81,17 +88,18 @@ public class AdaptiveBulkheadConfig {
     private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
     private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
+    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
 
-	private AdaptiveBulkheadConfig() {
-	}
+    private AdaptiveBulkheadConfig() {
+    }
 
     public Predicate<Throwable> getRecordExceptionPredicate() {
-		return recordExceptionPredicate;
-	}
+        return recordExceptionPredicate;
+    }
 
-	public Predicate<Throwable> getIgnoreExceptionPredicate() {
-		return ignoreExceptionPredicate;
-	}
+    public Predicate<Throwable> getIgnoreExceptionPredicate() {
+        return ignoreExceptionPredicate;
+    }
 
     public int getMinimumNumberOfCalls() {
         return minimumNumberOfCalls;
@@ -118,9 +126,9 @@ public class AdaptiveBulkheadConfig {
         return slowCallDurationThreshold;
     }
 
-	public boolean isWritableStackTraceEnabled() {
-		return writableStackTraceEnabled;
-	}
+    public boolean isWritableStackTraceEnabled() {
+        return writableStackTraceEnabled;
+    }
 
     public int getMinConcurrentCalls() {
         return minConcurrentCalls;
@@ -158,6 +166,10 @@ public class AdaptiveBulkheadConfig {
         return timestampUnit;
     }
 
+    public Predicate<Object> getRecordResultPredicate() {
+        return recordResultPredicate;
+    }
+
     @Override
     public String toString() {
         return "AdaptiveBulkheadConfig{" +
@@ -184,43 +196,43 @@ public class AdaptiveBulkheadConfig {
         TIME_BASED, COUNT_BASED
     }
 
-	/**
-	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
-	 *
-	 * @return a {@link AdaptiveBulkheadConfig.Builder}
-	 */
-	public static Builder from(AdaptiveBulkheadConfig baseConfig) {
-		return AdaptiveBulkheadConfig.builder(baseConfig);
-	}
+    /**
+     * Returns a builder to create a custom AdaptiveBulkheadConfig.
+     *
+     * @return a {@link AdaptiveBulkheadConfig.Builder}
+     */
+    public static Builder from(AdaptiveBulkheadConfig baseConfig) {
+        return AdaptiveBulkheadConfig.builder(baseConfig);
+    }
 
-	/**
-	 * Creates a default Bulkhead configuration.
-	 *
-	 * @return a default Bulkhead configuration.
-	 */
-	public static AdaptiveBulkheadConfig ofDefaults() {
-		return AdaptiveBulkheadConfig.custom().build();
-	}
+    /**
+     * Creates a default Bulkhead configuration.
+     *
+     * @return a default Bulkhead configuration.
+     */
+    public static AdaptiveBulkheadConfig ofDefaults() {
+        return AdaptiveBulkheadConfig.custom().build();
+    }
 
-	/**
-	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
-	 *
-	 * @return a {@link AdaptiveBulkheadConfig.Builder}
-	 */
-	public static Builder custom() {
-		return new Builder();
-	}
+    /**
+     * Returns a builder to create a custom AdaptiveBulkheadConfig.
+     *
+     * @return a {@link AdaptiveBulkheadConfig.Builder}
+     */
+    public static Builder custom() {
+        return new Builder();
+    }
 
-	/**
-	 * Returns a builder to create a custom AdaptiveBulkheadConfig.
-	 *
-	 * @return a {@link AdaptiveBulkheadConfig.Builder}
-	 */
-	public static  Builder builder(AdaptiveBulkheadConfig bulkheadConfig) {
-		return new Builder(bulkheadConfig);
-	}
+    /**
+     * Returns a builder to create a custom AdaptiveBulkheadConfig.
+     *
+     * @return a {@link AdaptiveBulkheadConfig.Builder}
+     */
+    public static Builder builder(AdaptiveBulkheadConfig bulkheadConfig) {
+        return new Builder(bulkheadConfig);
+    }
 
-	public static class Builder {
+    public static class Builder {
 
         private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
@@ -237,21 +249,22 @@ public class AdaptiveBulkheadConfig {
         private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
         private float increaseMultiplier = DEFAULT_INCREASE_MULTIPLIER;
         private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
-		@Nullable
-		private Predicate<Throwable> recordExceptionPredicate;
-		@Nullable
-		private Predicate<Throwable> ignoreExceptionPredicate;
-		@SuppressWarnings("unchecked")
-		private Class<? extends Throwable>[] recordExceptions = new Class[0];
-		@SuppressWarnings("unchecked")
-		private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
+        @Nullable
+        private Predicate<Throwable> recordExceptionPredicate;
+        @Nullable
+        private Predicate<Throwable> ignoreExceptionPredicate;
+        @SuppressWarnings("unchecked")
+        private Class<? extends Throwable>[] recordExceptions = new Class[0];
+        @SuppressWarnings("unchecked")
+        private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
         private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
         private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
+        private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
         private Builder() {
-		}
+        }
 
-		private Builder(AdaptiveBulkheadConfig baseConfig) {
+        private Builder(AdaptiveBulkheadConfig baseConfig) {
             this.slidingWindowSize = baseConfig.slidingWindowSize;
             this.slidingWindowType = baseConfig.slidingWindowType;
             this.minimumNumberOfCalls = baseConfig.minimumNumberOfCalls;
@@ -270,6 +283,7 @@ public class AdaptiveBulkheadConfig {
             this.increaseMultiplier = baseConfig.increaseMultiplier;
             this.currentTimestampFunction = baseConfig.currentTimestampFunction;
             this.timestampUnit = baseConfig.timestampUnit;
+            this.recordResultPredicate = baseConfig.recordResultPredicate;
         }
 
         /**
@@ -368,61 +382,61 @@ public class AdaptiveBulkheadConfig {
             return this;
         }
 
-		/**
-		 * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
-		 * The Predicate must return true if the exception must be ignored .
-		 * The Predicate must return false, if the exception must count as a failure.
-		 *
-		 * @param predicate the Predicate which checks if an exception should count as a failure
-		 * @return the Builder
-		 */
-		public final Builder ignoreException(Predicate<Throwable> predicate) {
-			this.ignoreExceptionPredicate = predicate;
-			return this;
-		}
+        /**
+         * Configures a Predicate which evaluates if an exception should be ignored and neither count as a failure nor success.
+         * The Predicate must return true if the exception must be ignored .
+         * The Predicate must return false, if the exception must count as a failure.
+         *
+         * @param predicate the Predicate which checks if an exception should count as a failure
+         * @return the Builder
+         */
+        public final Builder ignoreException(Predicate<Throwable> predicate) {
+            this.ignoreExceptionPredicate = predicate;
+            return this;
+        }
 
-		/**
-		 * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
-		 * an exception matching or inheriting from one of the list should count as a failure
-		 *
-		 * @param errorClasses the error classes which are recorded
-		 * @return the Builder
-		 * @see #ignoreExceptions(Class[]) ). Ignoring an exception has more priority over recording an exception.
-		 */
-		@SuppressWarnings("unchecked")
-		@SafeVarargs
-		public final Builder recordExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
-			this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
-			return this;
-		}
+        /**
+         * Configures a list of error classes that are recorded as a failure and thus increase the failure rate.
+         * an exception matching or inheriting from one of the list should count as a failure
+         *
+         * @param errorClasses the error classes which are recorded
+         * @return the Builder
+         * @see #ignoreExceptions(Class[]) ). Ignoring an exception has more priority over recording an exception.
+         */
+        @SuppressWarnings("unchecked")
+        @SafeVarargs
+        public final Builder recordExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
+            this.recordExceptions = errorClasses != null ? errorClasses : new Class[0];
+            return this;
+        }
 
-		/**
-		 * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
-		 * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception should count as a success
-		 * ,unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
-		 *
-		 * @param predicate the Predicate which checks if an exception should count as a failure
-		 * @return the Builder
-		 */
-		public final Builder recordException(Predicate<Throwable> predicate) {
-			this.recordExceptionPredicate = predicate;
-			return this;
-		}
+        /**
+         * Configures a Predicate which evaluates if an exception should be recorded as a failure and thus increase the failure rate.
+         * The Predicate must return true if the exception should count as a failure. The Predicate must return false, if the exception should count as a success
+         * ,unless the exception is explicitly ignored by {@link #ignoreExceptions(Class[])} or {@link #ignoreException(Predicate)}.
+         *
+         * @param predicate the Predicate which checks if an exception should count as a failure
+         * @return the Builder
+         */
+        public final Builder recordException(Predicate<Throwable> predicate) {
+            this.recordExceptionPredicate = predicate;
+            return this;
+        }
 
-		/**
-		 * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
-		 * an exception matching or inheriting from one of that list will not count as a failure nor success
-		 *
-		 * @param errorClasses the error classes which are ignored
-		 * @return the Builder
-		 * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
-		 */
-		@SuppressWarnings("unchecked")
-		@SafeVarargs
-		public final Builder ignoreExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
-			this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
-			return this;
-		}
+        /**
+         * Configures a list of error classes that are ignored and thus neither count as a failure nor success.
+         * an exception matching or inheriting from one of that list will not count as a failure nor success
+         *
+         * @param errorClasses the error classes which are ignored
+         * @return the Builder
+         * @see #recordExceptions(Class[]) . Ignoring an exception has priority over recording an exception.
+         */
+        @SuppressWarnings("unchecked")
+        @SafeVarargs
+        public final Builder ignoreExceptions(@Nullable Class<? extends Throwable>... errorClasses) {
+            this.ignoreExceptions = errorClasses != null ? errorClasses : new Class[0];
+            return this;
+        }
 
         /**
          * Configures the minimum number of calls which are required (per sliding window period)
@@ -542,7 +556,21 @@ public class AdaptiveBulkheadConfig {
             return this;
         }
 
-		public AdaptiveBulkheadConfig build() {
+        /**
+         * Configures a Predicate which evaluates if the result of the protected function call
+         * should be recorded as a failure and thus increase the failure rate.
+         * The Predicate must return true if the result should count as a failure.
+         * The Predicate must return false, if the result should count as a success.
+         *
+         * @param recordResultPredicate the Predicate which evaluates if a result should count as a failure
+         * @return the Builder
+         */
+        public Builder recordResult(Predicate<Object> recordResultPredicate) {
+            this.recordResultPredicate = recordResultPredicate;
+            return this;
+        }
+
+        public AdaptiveBulkheadConfig build() {
             AdaptiveBulkheadConfig config = new AdaptiveBulkheadConfig();
             config.slidingWindowType = slidingWindowType;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
@@ -560,21 +588,16 @@ public class AdaptiveBulkheadConfig {
             config.decreaseMultiplier = decreaseMultiplier;
             config.increaseMultiplier = increaseMultiplier;
             config.maxWaitDuration = maxWaitDuration;
-            config.recordExceptionPredicate = createRecordExceptionPredicate();
-            config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            config.recordExceptionPredicate = PredicateCreator
+                .createExceptionsPredicate(recordExceptionPredicate, recordExceptions)
+                .orElse(DEFAULT_RECORD_EXCEPTION_PREDICATE);
+            config.ignoreExceptionPredicate = PredicateCreator
+                .createExceptionsPredicate(ignoreExceptionPredicate, ignoreExceptions)
+                .orElse(DEFAULT_IGNORE_EXCEPTION_PREDICATE);
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
+            config.recordResultPredicate = recordResultPredicate;
             return config;
-		}
-
-        private Predicate<Throwable> createIgnoreFailurePredicate() {
-            return PredicateCreator.createExceptionsPredicate(ignoreExceptionPredicate, ignoreExceptions)
-                .orElse(DEFAULT_IGNORE_EXCEPTION_PREDICATE);
-        }
-
-        private Predicate<Throwable> createRecordExceptionPredicate() {
-            return PredicateCreator.createExceptionsPredicate(recordExceptionPredicate, recordExceptions)
-                .orElse(DEFAULT_RECORD_EXCEPTION_PREDICATE);
         }
 
     }

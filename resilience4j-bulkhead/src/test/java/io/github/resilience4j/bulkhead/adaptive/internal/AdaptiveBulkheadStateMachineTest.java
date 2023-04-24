@@ -10,7 +10,6 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -105,11 +104,11 @@ public class AdaptiveBulkheadStateMachineTest {
     }
 
     private void onSuccess() {
-        bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+        bulkhead.onSuccess(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit());
     }
 
     private void onError(Throwable failure) {
-        bulkhead.onError(System.currentTimeMillis(), TimeUnit.MILLISECONDS, failure);
+        bulkhead.onError(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit(), failure);
     }
 
 }

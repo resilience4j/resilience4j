@@ -13,9 +13,9 @@ interface AdaptiveBulkheadState {
 
     void releasePermission();
 
-    void onError(long duration, TimeUnit durationUnit, Throwable throwable);
+    void onError(long startTime, TimeUnit timeUnit, Throwable throwable);
 
-    void onSuccess(long duration, TimeUnit durationUnit);
+    void onSuccess(long startTime, TimeUnit timeUnit);
 
     AdaptiveBulkhead.State getState();
 

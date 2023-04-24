@@ -23,12 +23,10 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.adaptive.event.*;
 import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadStateMachine;
 import io.github.resilience4j.core.EventConsumer;
-import io.github.resilience4j.core.functions.CheckedConsumer;
-import io.github.resilience4j.core.functions.CheckedFunction;
-import io.github.resilience4j.core.functions.CheckedRunnable;
-import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.core.functions.OnceConsumer;
+import io.github.resilience4j.core.functions.*;
+import io.github.resilience4j.core.lang.Nullable;
 
+import java.time.Clock;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -81,14 +79,20 @@ public interface AdaptiveBulkhead {
     void releasePermission();
 
     /**
+     * Records a call and releases a permission.
+     */
+    void onResult(long startTime, TimeUnit timeUnit, @Nullable Object result);
+
+
+    /**
      * Records a successful call and releases a permission.
      */
-    void onSuccess(long startTime, TimeUnit durationUnit);
+    void onSuccess(long startTime, TimeUnit timeUnit);
 
     /**
      * Records a failed call and releases a permission.
      */
-    void onError(long startTime, TimeUnit durationUnit, Throwable throwable);
+    void onError(long startTime, TimeUnit timeUnit, Throwable throwable);
 
     /**
      * Returns the name of this bulkhead.
@@ -190,19 +194,15 @@ public interface AdaptiveBulkhead {
                                                           CheckedSupplier<T> supplier) {
         return () -> {
             long start = 0;
-            boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
-                start = System.currentTimeMillis();
-                return supplier.get();
+                start = bulkhead.getCurrentTimestamp();
+                T result = supplier.get();
+                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                return result;
             } catch (Exception e) {
-                bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
-                isFailed = true;
+                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
-            } finally {
-                if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
-                }
             }
         };
     }
@@ -225,23 +225,22 @@ public interface AdaptiveBulkhead {
                 promise.completeExceptionally(
                     BulkheadFullException.createBulkheadFullException(bulkhead));
             } else {
-                long start = System.currentTimeMillis();
+                long start = bulkhead.getCurrentTimestamp();
                 try {
                     supplier.get()
                         .whenComplete(
                             (result, throwable) -> {
                                 if (throwable != null) {
-                                    bulkhead.onError(start, TimeUnit.MILLISECONDS, throwable);
+                                    bulkhead.onError(start, bulkhead.getTimestampUnit(), throwable);
                                     promise.completeExceptionally(throwable);
                                 } else {
-                                    bulkhead.onSuccess(System.currentTimeMillis() - start,
-                                        TimeUnit.MILLISECONDS);
+                                    bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
                                     promise.complete(result);
                                 }
                             }
                         );
                 } catch (Exception e) {
-                    bulkhead.onError(start, TimeUnit.MILLISECONDS, e);
+                    bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                     promise.completeExceptionally(e);
                 }
             }
@@ -298,7 +297,7 @@ public interface AdaptiveBulkhead {
                 throw e;
             } finally {
                 if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -315,19 +314,15 @@ public interface AdaptiveBulkhead {
     static <T> Callable<T> decorateCallable(AdaptiveBulkhead bulkhead, Callable<T> callable) {
         return () -> {
             long start = 0;
-            boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
                 start = bulkhead.getCurrentTimestamp();
-                return callable.call();
+                T result = callable.call();
+                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                return result;
             } catch (Exception e) {
-                isFailed = true;
                 bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
-            } finally {
-                if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
-                }
             }
         };
     }
@@ -343,19 +338,15 @@ public interface AdaptiveBulkhead {
     static <T> Supplier<T> decorateSupplier(AdaptiveBulkhead bulkhead, Supplier<T> supplier) {
         return () -> {
             long start = 0;
-            boolean isFailed = false;
             bulkhead.acquirePermission();
             try {
                 start = bulkhead.getCurrentTimestamp();
-                return supplier.get();
+                T result = supplier.get();
+                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                return result;
             } catch (Exception e) {
-                isFailed = true;
                 bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
-            } finally {
-                if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
-                }
             }
         };
     }
@@ -382,7 +373,7 @@ public interface AdaptiveBulkhead {
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -411,7 +402,7 @@ public interface AdaptiveBulkhead {
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -438,7 +429,7 @@ public interface AdaptiveBulkhead {
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
                 }
             }
         };
@@ -457,19 +448,15 @@ public interface AdaptiveBulkhead {
                                                   Function<T, R> function) {
         return (T t) -> {
             long start = 0;
-            boolean failed = false;
             bulkhead.acquirePermission();
             try {
                 start = bulkhead.getCurrentTimestamp();
-                return function.apply(t);
+                R result = function.apply(t);
+                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                return result;
             } catch (Exception e) {
-                failed = true;
                 bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
-            } finally {
-                if (start != 0 && !failed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
-                }
             }
         };
     }
@@ -487,20 +474,16 @@ public interface AdaptiveBulkhead {
                                                                 CheckedFunction<T, R> function) {
         return (T t) -> {
             long start = 0;
-            boolean failed = false;
             bulkhead.acquirePermission();
             try {
                 start = bulkhead.getCurrentTimestamp();
-                return function.apply(t);
+                R result = function.apply(t);
+                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                return result;
             } catch (Exception e) {
-                failed = true;
                 bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
-            } finally {
-                if (start != 0 && !failed) {
-                    bulkhead.onSuccess(bulkhead.getCurrentTimestamp() - start, bulkhead.getTimestampUnit());
-                }
-            }
+            } 
         };
     }
 
@@ -523,6 +506,18 @@ public interface AdaptiveBulkhead {
      */
     static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config) {
         return new AdaptiveBulkheadStateMachine(name, config);
+    }
+
+    /**
+     * Creates a bulkhead with a custom configuration
+     *
+     * @param name   the name of the bulkhead
+     * @param config a custom BulkheadConfig configuration
+     * @param clock access to the current instant
+     * @return a Bulkhead instance
+     */
+    static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, Clock clock) {
+        return new AdaptiveBulkheadStateMachine(name, config, clock);
     }
 
     /**
@@ -702,22 +697,28 @@ public interface AdaptiveBulkhead {
         @Override
         public T get() throws InterruptedException, ExecutionException {
             try {
-                return future.get();
-            } finally {
-                // TODO onError?
+                T result = future.get();
                 onceToBulkhead.applyOnce(b ->
-                    b.onSuccess(b.getCurrentTimestamp() - start, b.getTimestampUnit()));
+                    b.onResult(start, b.getTimestampUnit(), result));
+                return result;
+            } catch (Throwable throwable) {
+                onceToBulkhead.applyOnce(b ->
+                    b.onError(start, b.getTimestampUnit(), throwable));
+                throw throwable;
             }
         }
 
         @Override
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             try {
-                return future.get(timeout, unit);
-            } finally {
-                // TODO onError?
+                T result = future.get(timeout, unit);
                 onceToBulkhead.applyOnce(b ->
-                    b.onSuccess(b.getCurrentTimestamp() - start, b.getTimestampUnit()));
+                    b.onResult(start, b.getTimestampUnit(), result));
+                return result;
+            } catch (Throwable throwable) {
+                onceToBulkhead.applyOnce(b ->
+                    b.onError(start, b.getTimestampUnit(), throwable));
+                throw throwable;
             }
         }
     }

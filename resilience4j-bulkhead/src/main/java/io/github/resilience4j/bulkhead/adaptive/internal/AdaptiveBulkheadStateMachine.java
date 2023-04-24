@@ -22,15 +22,15 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
+import io.github.resilience4j.bulkhead.adaptive.ResultRecordedAsFailureException;
 import io.github.resilience4j.bulkhead.adaptive.event.*;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
+import io.github.resilience4j.core.lang.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -94,7 +94,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         return timestampUnit;
     }
 
-    private ZonedDateTime time() {
+    private ZonedDateTime now() {
         return ZonedDateTime.now(clock);
     }
 
@@ -114,40 +114,60 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
     }
 
     /**
-     * @param duration     call time
-     * @param durationUnit call time unit
+     * This method must be invoked when a call returned a result
+     * and the result predicate should decide if the call was successful or not.
+     *
+     * @param startTime The start time of the call
+     * @param timeUnit  The time unit
+     * @param result    The result of the protected function
      */
-    @Override
-    public void onSuccess(long duration, TimeUnit durationUnit) {
-        releasePermission(); // ?
-        stateReference.get().onSuccess(duration, durationUnit);
-        tryPublishEvent(
-            new BulkheadOnSuccessEvent(name, time()));
-    }
-
-    /**
-     * @param startTime    call start time in millis or 0
-     * @param durationUnit call time unit
-     * @param throwable    an error
-     */
-    @Override
-    public void onError(long startTime, TimeUnit durationUnit, Throwable throwable) {
-        if (config.getIgnoreExceptionPredicate().test(throwable)) {
-            releasePermission();
-            tryPublishEvent(
-                new BulkheadOnIgnoreEvent(name, time(), throwable));
-        } else if (startTime != 0 && config.getRecordExceptionPredicate().test(throwable)) {
-            releasePermission(); // ?
-            stateReference.get().onError(timeUntilNow(startTime), durationUnit, throwable);
-            tryPublishEvent(
-                new BulkheadOnErrorEvent(name, time(), throwable));
-        } else if (startTime != 0) {
-            onSuccess(timeUntilNow(startTime), durationUnit);
+    public void onResult(long startTime, TimeUnit timeUnit, @Nullable Object result) {
+        if (result != null && config.getRecordResultPredicate().test(result)) {
+            ResultRecordedAsFailureException failure = new ResultRecordedAsFailureException(name, result);
+            LOG.debug("'{}' recorded a result type '{}' as a failure", name, result.getClass());
+            onError(startTime, timeUnit, failure);
+        } else {
+            onSuccess(startTime, timeUnit);
         }
     }
 
-    private long timeUntilNow(long start) {
-        return Duration.between(Instant.ofEpochMilli(start), clock.instant()).toMillis();
+    /**
+     * @param startTime The start time of the call
+     * @param timeUnit  The time unit
+     */
+    @Override
+    public void onSuccess(long startTime, TimeUnit timeUnit) {
+        LOG.debug("'{}' recorded a success", name);
+        releasePermission(); // ?
+        stateReference.get().onSuccess(startTime, timeUnit);
+        tryPublishEvent(
+            new BulkheadOnSuccessEvent(name, now()));
+    }
+
+    /**
+     * @param startTime The start time of the call
+     * @param timeUnit  The time unit
+     * @param throwable An error
+     */
+    @Override
+    public void onError(long startTime, TimeUnit timeUnit, Throwable throwable) {
+        if (config.getIgnoreExceptionPredicate().test(throwable)) {
+            releasePermission();
+            tryPublishEvent(
+                new BulkheadOnIgnoreEvent(name, now(), throwable));
+        } else if (config.getRecordExceptionPredicate().test(throwable)) {
+            LOG.debug("'{}' recorded an error:", name, throwable);
+            releasePermission(); // ?
+            stateReference.get().onError(startTime, timeUnit, throwable);
+            tryPublishEvent(
+                new BulkheadOnErrorEvent(name, now(), throwable));
+        } else {
+            onSuccess(startTime, timeUnit);
+        }
+    }
+
+    private long nanosUntilNow(long startTime, TimeUnit timeUnit) {
+        return Math.max(0, getTimestampUnit().toNanos(getCurrentTimestamp()) - timeUnit.toNanos(startTime));
     }
 
     @Override
@@ -184,10 +204,10 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     private void stateTransition(State newState,
                                  UnaryOperator<AdaptiveBulkheadState> newStateGenerator) {
-        LOG.debug("stateTransition to {}", newState);
+        LOG.debug("'{}' did a state transition to {}", name, newState);
         AdaptiveBulkheadState previous = stateReference.getAndUpdate(newStateGenerator);
         tryPublishEvent(
-            new BulkheadOnStateTransitionEvent(name, time(), previous.getState(), newState));
+            new BulkheadOnStateTransitionEvent(name, now(), previous.getState(), newState));
     }
 
     private void changeConcurrencyLimit(int newValue) {
@@ -195,14 +215,14 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         if (newValue != oldValue) {
             changeInternals(oldValue, newValue);
             tryPublishEvent(
-                new BulkheadOnLimitChangedEvent(name, time(), oldValue, newValue));
+                new BulkheadOnLimitChangedEvent(name, now(), oldValue, newValue));
         } else {
-            LOG.trace("change of concurrency limit is ignored");
+            LOG.trace("'{}' ignored a change of concurrency limit", name);
         }
     }
 
     private void changeInternals(int oldValue, int newValue) {
-        LOG.debug("changeConcurrencyLimit from {} to {}", oldValue, newValue);
+        LOG.debug("'{}' changed concurrency limit from {} to {}", name, oldValue, newValue);
         innerBulkhead.changeConfig(
             BulkheadConfig.from(innerBulkhead.getBulkheadConfig())
                 .maxConcurrentCalls(newValue)
@@ -242,15 +262,15 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         }
 
         @Override
-        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
-            // AdaptiveBulkheadMetrics is thread-safe
-            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(duration, durationUnit));
+        public void onError(long startTime, TimeUnit timeUnit, Throwable throwable) {
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(
+                nanosUntilNow(startTime, timeUnit)));
         }
 
         @Override
-        public void onSuccess(long duration, TimeUnit durationUnit) {
-            // AdaptiveBulkheadMetrics is thread-safe
-            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(duration, durationUnit));
+        public void onSuccess(long startTime, TimeUnit timeUnit) {
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(
+                nanosUntilNow(startTime, timeUnit)));
         }
 
         /**
@@ -295,7 +315,8 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     @Deprecated
     private void logStateDetails(AdaptiveBulkheadMetrics.Result result) {
-        LOG.debug("calls:{}/{}, rate:{} result:{}",
+        LOG.debug("'{}' buffered calls:{}/{}, rate:{} result:{}",
+            name,
             metrics.getNumberOfBufferedCalls(),
             config.getMinimumNumberOfCalls(),
             Math.max(metrics.getSnapshot().getFailureRate(), metrics.getSnapshot().getSlowCallRate()),
@@ -329,15 +350,15 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         }
 
         @Override
-        public void onError(long duration, TimeUnit durationUnit, Throwable throwable) {
-            // AdaptiveBulkheadMetrics is thread-safe
-            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(duration, durationUnit));
+        public void onError(long startTime, TimeUnit timeUnit, Throwable throwable) {
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onError(
+                nanosUntilNow(startTime, timeUnit)));
         }
 
         @Override
-        public void onSuccess(long duration, TimeUnit durationUnit) {
-            // AdaptiveBulkheadMetrics is thread-safe
-            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(duration, durationUnit));
+        public void onSuccess(long startTime, TimeUnit timeUnit) {
+            checkIfThresholdsExceeded(adaptiveBulkheadMetrics.onSuccess(
+                nanosUntilNow(startTime, timeUnit)));
         }
 
         /**
@@ -395,18 +416,18 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     private void tryPublishEvent(AdaptiveBulkheadEvent event) {
         if (!eventProcessor.hasConsumers()) {
-            LOG.debug("No consumers: Event {} not published", event.getEventType());
+            LOG.debug("'{}' has no consumers: Event {} not published", name, event.getEventType());
             return;
         }
         if (!stateReference.get().shouldPublishEvents(event)) {
-            LOG.debug("Not allowed: Event {} not published", event.getEventType());
+            LOG.debug("'{}' did not allow: Event {} not published", name, event.getEventType());
             return;
         }
         try {
             eventProcessor.consumeEvent(event);
-            LOG.debug("Event {} published: {}", event.getEventType(), event);
+            LOG.debug("'{}' published an event {}: {}", name, event.getEventType(), event);
         } catch (Throwable t) {
-            LOG.warn("Failed to handle event {}", event.getEventType(), t);
+            LOG.debug("'{}' consumer failure: Event {} not published:", name, event.getEventType(), t);
         }
     }
 
