@@ -483,7 +483,7 @@ public interface AdaptiveBulkhead {
             } catch (Exception e) {
                 bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
-            } 
+            }
         };
     }
 
@@ -513,7 +513,7 @@ public interface AdaptiveBulkhead {
      *
      * @param name   the name of the bulkhead
      * @param config a custom BulkheadConfig configuration
-     * @param clock access to the current instant
+     * @param clock  access to the current instant
      * @return a Bulkhead instance
      */
     static AdaptiveBulkhead of(String name, AdaptiveBulkheadConfig config, Clock clock) {
@@ -551,7 +551,7 @@ public interface AdaptiveBulkhead {
 
         CONGESTION_AVOIDANCE(2, true);
 
-        public final boolean allowPublish;
+        private final boolean allowPublish;
         private final int order;
 
         /**
@@ -573,6 +573,16 @@ public interface AdaptiveBulkhead {
         public int getOrder() {
             return order;
         }
+
+        /**
+         * Should the AdaptiveBulkhead in this state publish events
+         *
+         * @return a boolean signaling if the events should be published
+         */
+        public boolean isAllowed(AdaptiveBulkheadEvent event) {
+            return allowPublish || event.getEventType().isForced();
+        }
+
     }
 
     interface Metrics extends Bulkhead.Metrics {
