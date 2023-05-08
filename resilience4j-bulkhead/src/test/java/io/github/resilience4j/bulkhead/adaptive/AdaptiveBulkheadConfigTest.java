@@ -48,7 +48,8 @@ public class AdaptiveBulkheadConfigTest {
         assertThat(AdaptiveBulkheadConfig.custom()
             .decreaseMultiplier(0.85f)
             .build()
-            .getDecreaseMultiplier()).isEqualTo(0.85f);
+            .getDecreaseMultiplier())
+            .isEqualTo(0.85f);
     }
 
     @Test
@@ -65,7 +66,17 @@ public class AdaptiveBulkheadConfigTest {
         assertThat(AdaptiveBulkheadConfig.custom()
             .increaseMultiplier(1.85f)
             .build()
-            .getIncreaseMultiplier()).isEqualTo(1.85f);
+            .getIncreaseMultiplier())
+            .isEqualTo(1.85f);
+    }
+
+    @Test
+    public void testRecordResultPredicate() {
+        assertThat(AdaptiveBulkheadConfig.custom()
+            .recordResult(result -> true)
+            .build()
+            .getRecordResultPredicate())
+            .isNotEqualTo(AdaptiveBulkheadConfig.ofDefaults().getRecordResultPredicate());
     }
 
     @Test

@@ -63,10 +63,14 @@ public interface AdaptiveBulkheadEvent {
          */
         DISABLED(false);
 
-        public final boolean forcePublish;
+        private final boolean forcePublish;
 
         Type(boolean forcePublish) {
             this.forcePublish = forcePublish;
+        }
+
+        public boolean isForced() {
+            return forcePublish;
         }
     }
 
