@@ -2,5 +2,6 @@ dependencies {
     api project(':resilience4j-core')
     testImplementation project(':resilience4j-test')
     testImplementation 'org.knowm.xchart:xchart:3.8.3'
+    testImplementation(libraries.mock_clock)
 }
 ext.moduleName = 'io.github.resilience4j.bulkhead'

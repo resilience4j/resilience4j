@@ -76,8 +76,8 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      *
      * @return the result of the check
      */
-    public Result onSuccess(long duration, TimeUnit durationUnit) {
-        return checkIfThresholdsExceeded(record(duration, durationUnit, true));
+    public Result onSuccess(long nanoseconds) {
+        return checkIfThresholdsExceeded(record(nanoseconds, true));
     }
 
     /**
@@ -85,13 +85,13 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      *
      * @return the result of the check
      */
-    public Result onError(long duration, TimeUnit durationUnit) {
-        return checkIfThresholdsExceeded(record(duration, durationUnit, false));
+    public Result onError(long nanoseconds) {
+        return checkIfThresholdsExceeded(record(nanoseconds, false));
     }
 
-    Snapshot record(long duration, TimeUnit durationUnit, boolean success) {
-        boolean slow = durationUnit.toNanos(duration) > slowCallDurationThresholdInNanos;
-        return slidingWindowMetrics.record(duration, durationUnit, Outcome.of(slow, success));
+    private Snapshot record(long nanoseconds, boolean success) {
+        boolean slow = nanoseconds > slowCallDurationThresholdInNanos;
+        return slidingWindowMetrics.record(nanoseconds, TimeUnit.NANOSECONDS, Outcome.of(slow, success));
     }
 
     /**
