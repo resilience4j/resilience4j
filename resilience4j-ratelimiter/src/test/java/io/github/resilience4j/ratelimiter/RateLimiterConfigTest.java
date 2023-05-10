@@ -19,7 +19,6 @@
 package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.functions.Either;
-import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.matchers.ThrowableCauseMatcher;
@@ -39,6 +38,7 @@ public class RateLimiterConfigTest {
     private static final Duration REFRESH_PERIOD = Duration.ofNanos(500);
     private static final Predicate<Either<? extends Throwable, ?>> DRAIN_CONDITION_CHECKER = result -> false;
     private static final String TIMEOUT_DURATION_MUST_NOT_BE_NULL = "TimeoutDuration must not be null";
+    private static final String TIMEOUT_DURATION_MUST_NOT_BE_NEGATIVE = "TimeoutDuration must not be negative";
     private static final String REFRESH_PERIOD_MUST_NOT_BE_NULL = "RefreshPeriod must not be null";
 
     @Rule
@@ -69,6 +69,14 @@ public class RateLimiterConfigTest {
     }
 
     @Test
+    public void builderTimeoutIsNegative() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(TIMEOUT_DURATION_MUST_NOT_BE_NEGATIVE);
+        RateLimiterConfig.custom()
+            .timeoutDuration(Duration.ofNanos(-1));
+    }
+
+    @Test
     public void builderRefreshPeriodIsNull() throws Exception {
         exception.expect(NullPointerException.class);
         exception.expectMessage(REFRESH_PERIOD_MUST_NOT_BE_NULL);
@@ -83,6 +91,16 @@ public class RateLimiterConfigTest {
         RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(Duration.ZERO)
+            .limitForPeriod(LIMIT)
+            .build();
+    }
+    @Test
+    public void builderRefreshPeriodNegative() throws Exception {
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage("RefreshPeriod is too short");
+        RateLimiterConfig.custom()
+            .timeoutDuration(TIMEOUT)
+            .limitRefreshPeriod(Duration.ofNanos(-1))
             .limitForPeriod(LIMIT)
             .build();
     }

@@ -148,7 +148,7 @@ public class CommonBulkheadConfigurationProperties extends CommonProperties {
 
         public InstanceProperties setMaxWaitDuration(Duration maxWaitDuration) {
             Objects.requireNonNull(maxWaitDuration);
-            if (maxWaitDuration.toMillis() < 0) {
+            if (maxWaitDuration.isNegative()) {
                 throw new IllegalArgumentException(
                     "maxWaitDuration must be greater than or equal to 0.");
             }

@@ -263,9 +263,15 @@ public class RateLimiterConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSize() {
+    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(-1);
+        defaultProperties.setEventConsumerBufferSize(0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnLimitForPeriodLessThanOne() {
+        CommonRateLimiterConfigurationProperties.InstanceProperties defaultProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
+        defaultProperties.setLimitForPeriod(0);
     }
 
     @Test
