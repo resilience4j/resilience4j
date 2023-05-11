@@ -1,9 +1,7 @@
 package io.github.resilience4j.micronaut.annotation;
 
-import io.github.resilience4j.micronaut.bulkhead.BulkheadInterceptor;
 import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Executable;
-import io.micronaut.context.annotation.Type;
 
 import java.lang.annotation.*;
 
@@ -14,7 +12,6 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
 @Around
-@Type({BulkheadInterceptor.class})
 @Documented
 @Executable
 public @interface Bulkhead {

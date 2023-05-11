@@ -21,6 +21,7 @@ import io.github.resilience4j.micronaut.util.PublisherExtension;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micronaut.aop.InterceptedMethod;
+import io.micronaut.aop.InterceptorBean;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.ExecutionHandleLocator;
@@ -38,7 +39,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
-@Singleton
+@InterceptorBean(io.github.resilience4j.micronaut.annotation.TimeLimiter.class)
 @Requires(beans = TimeLimiterRegistry.class)
 public class TimeLimiterInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
 

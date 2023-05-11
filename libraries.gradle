@@ -31,7 +31,7 @@ ext {
     kotlinCoroutinesVersion = '1.6.4'
     springBootOpenFeignVersion = '3.1.5'
     blockhoundVersion = '1.0.6.RELEASE'
-    micronautVersion = '3.7.3'
+    micronautVersion = '4.0.0-M2'
     micronautTestVersion = '3.7.0'
     groovyVersion = '3.0.9'
     spockVersion = '1.3-groovy-2.5'
@@ -106,7 +106,7 @@ ext {
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
 
             // Micronaut addon
-            micronaut: "io.micronaut:micronaut-bom:$micronautVersion",
+            micronaut: "io.micronaut.platform:micronaut-platform:$micronautVersion",
             micronaut_inject: "io.micronaut:micronaut-inject-groovy:$micronautVersion",
             micronaut_spock: "io.micronaut.test:micronaut-test-spock:$micronautTestVersion",
             spock: "org.spockframework:spock-core:${spockVersion}",
