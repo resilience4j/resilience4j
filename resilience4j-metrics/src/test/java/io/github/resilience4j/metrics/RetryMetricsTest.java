@@ -58,6 +58,23 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
         assertThat(result).isEqualTo("Success");
     }
 
+    @Test
+    public void shouldReturnTotalNumberOfRequestsAs1ForSuccessVoid() {
+        HelloWorldService helloWorldService = mock(HelloWorldService.class);
+
+        Retry retry = Retry.of("metrics", RetryConfig.<String>custom()
+                .retryOnResult(String::isEmpty)
+                .maxAttempts(5)
+                .build());
+
+
+        retry.executeRunnable(helloWorldService::sayHelloWorld);
+
+        //then(helloWorldService).should().sayHelloWorld();
+
+        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+    }
+
     // returns fail twice and then success
     @Test
     public void shouldReturnTotalNumberOfRequestsAs3ForFail() {

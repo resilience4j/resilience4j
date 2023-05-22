@@ -154,6 +154,7 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public void onComplete() {
+            totalAttemptsCounter.increment();
             int currentNumOfAttempts = numOfAttempts.get();
             if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
                 succeededAfterRetryCounter.increment();
@@ -183,9 +184,9 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public boolean onResult(T result) {
-            totalAttemptsCounter.increment();
 
             if (null != resultPredicate && resultPredicate.test(result)) {
+                totalAttemptsCounter.increment();
                 int currentNumOfAttempts = numOfAttempts.incrementAndGet();
 
                 if (currentNumOfAttempts >= maxAttempts) {
@@ -290,6 +291,7 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public void onComplete() {
+            totalAttemptsCounter.increment();
             int currentNumOfAttempts = numOfAttempts.get();
             if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
                 succeededAfterRetryCounter.increment();
@@ -355,8 +357,8 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public long onResult(T result) {
-            totalAttemptsCounter.increment();
             if (null != resultPredicate && resultPredicate.test(result)) {
+                totalAttemptsCounter.increment();
                 int attempt = numOfAttempts.incrementAndGet();
                 if (attempt >= maxAttempts) {
                     if(consumeResultBeforeRetryAttempt != null){
