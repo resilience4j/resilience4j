@@ -70,8 +70,6 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
         retry.executeRunnable(helloWorldService::sayHelloWorld);
 
-        //then(helloWorldService).should().sayHelloWorld();
-
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
     }
 
