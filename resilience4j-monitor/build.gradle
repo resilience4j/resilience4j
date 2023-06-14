@@ -1,0 +1,5 @@
+dependencies {
+    api project(':resilience4j-core')
+    testImplementation project(':resilience4j-test')
+}
+ext.moduleName = 'io.github.resilience4j.monitor'
