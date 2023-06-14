@@ -24,6 +24,7 @@ import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.monitor.Monitor;
 import io.github.resilience4j.monitor.event.MonitorEvent;
 import io.github.resilience4j.monitor.event.MonitorOnFailureEvent;
+import io.github.resilience4j.monitor.event.MonitorOnStartEvent;
 import io.github.resilience4j.monitor.event.MonitorOnSuccessEvent;
 
 public class MonitorEventProcessor extends EventProcessor<MonitorEvent> implements EventConsumer<MonitorEvent>, Monitor.EventPublisher {
@@ -31,6 +32,12 @@ public class MonitorEventProcessor extends EventProcessor<MonitorEvent> implemen
     @Override
     public void consumeEvent(@NonNull MonitorEvent event) {
         super.processEvent(event);
+    }
+
+    @Override
+    public Monitor.EventPublisher onStart(EventConsumer<MonitorOnStartEvent> eventConsumer) {
+        registerConsumer(MonitorOnStartEvent.class.getName(), eventConsumer);
+        return this;
     }
 
     @Override

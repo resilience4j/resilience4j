@@ -25,6 +25,7 @@ import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.monitor.event.MonitorEvent;
 import io.github.resilience4j.monitor.event.MonitorOnFailureEvent;
+import io.github.resilience4j.monitor.event.MonitorOnStartEvent;
 import io.github.resilience4j.monitor.event.MonitorOnSuccessEvent;
 import io.github.resilience4j.monitor.internal.MonitorImpl;
 
@@ -459,6 +460,8 @@ public interface Monitor {
      * To understand when the handlers are called, see the documentation of the respective events.
      */
     interface EventPublisher extends io.github.resilience4j.core.EventPublisher<MonitorEvent> {
+
+        EventPublisher onStart(EventConsumer<MonitorOnStartEvent> eventConsumer);
 
         EventPublisher onSuccess(EventConsumer<MonitorOnSuccessEvent> eventConsumer);
 
