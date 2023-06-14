@@ -154,6 +154,7 @@ public class MonitorConfig implements Serializable {
 
         /**
          * @param successResultNameResolver A function that resolves a result name from the output returned from the execution.
+         *                                  Default is "unspecified".
          * @return the MonitorConfig.Builder
          */
         public Builder<T> successResultNameResolver(@Nullable Function<T, String> successResultNameResolver) {
@@ -163,6 +164,7 @@ public class MonitorConfig implements Serializable {
 
         /**
          * @param failureResultNameResolver A function that resolves a result name from the exception thrown from the execution.
+         *                                  Default is exception class name.
          * @return the MonitorConfig.Builder
          */
         public Builder<T> failureResultNameResolver(@Nullable Function<Throwable, String> failureResultNameResolver) {
@@ -172,6 +174,7 @@ public class MonitorConfig implements Serializable {
 
         /**
          * @param logMode The log mode to use for logging the operation execution.
+         *                Default is @{@link LogMode#SINGLE}
          * @return the MonitorConfig.Builder
          */
         public Builder<T> logMode(@Nullable LogMode logMode) {
@@ -181,6 +184,7 @@ public class MonitorConfig implements Serializable {
 
         /**
          * @param logLevel The log level to use for logging the operation execution.
+         *                 Default is @{@link LogLevel#DEBUG}
          * @return the MonitorConfig.Builder
          */
         public Builder<T> logLevel(@Nullable LogLevel logLevel) {
