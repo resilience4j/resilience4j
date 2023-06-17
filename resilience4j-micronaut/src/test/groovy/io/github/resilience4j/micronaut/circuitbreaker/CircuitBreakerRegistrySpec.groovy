@@ -35,6 +35,7 @@ import javax.inject.Inject
 @Property(name = "resilience4j.circuitbreaker.instances.backendA.baseConfig", value = "default")
 @Property(name = "resilience4j.circuitbreaker.instances.backendB.baseConfig", value = "default")
 @Property(name = "resilience4j.circuitbreaker.instances.backendB.recordFailurePredicate", value = "io.github.resilience4j.micronaut.circuitbreaker.RecordFailurePredicate")
+@Property(name = "resilience4j.circuitbreaker.instances.backendB.recordResultPredicate", value = "io.github.resilience4j.micronaut.circuitbreaker.RecordResultPredicate")
 @Property(name = "resilience4j.circuitbreaker.instances.backendB.recordExceptions[0]", value = "io.github.resilience4j.micronaut.circuitbreaker.RecordedException")
 @Property(name = "resilience4j.circuitbreaker.instances.backendB.ignoreExceptions[0]", value = "io.github.resilience4j.micronaut.circuitbreaker.IgnoredException")
 class CircuitBreakerRegistrySpec extends Specification {
@@ -92,5 +93,7 @@ class CircuitBreakerRegistrySpec extends Specification {
         instanceProperties.ignoreExceptions.first() == IgnoredException.class
 
         instanceProperties.recordFailurePredicate == RecordFailurePredicate.class
+
+        instanceProperties.recordResultPredicate == RecordResultPredicate.class
     }
 }

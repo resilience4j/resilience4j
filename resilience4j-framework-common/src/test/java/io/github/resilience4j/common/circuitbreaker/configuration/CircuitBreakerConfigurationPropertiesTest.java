@@ -18,6 +18,7 @@ package io.github.resilience4j.common.circuitbreaker.configuration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
+import io.github.resilience4j.common.RecordResultPredicate;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import org.junit.Test;
 
@@ -59,6 +60,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         instanceProperties1.setRecordExceptions(new Class[]{IllegalStateException.class});
         //noinspection unchecked
         instanceProperties1.setRecordFailurePredicate((Class) RecordFailurePredicate.class);
+        instanceProperties1.setRecordResultPredicate((Class) RecordResultPredicate.class);
 
         CircuitBreakerConfigurationProperties.InstanceProperties instanceProperties2 = new CircuitBreakerConfigurationProperties.InstanceProperties();
         instanceProperties2.setSlidingWindowSize(1337);
@@ -87,6 +89,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(100);
         assertThat(circuitBreaker1.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
         assertThat(circuitBreaker1.isWritableStackTraceEnabled()).isFalse();
+        assertThat(circuitBreaker1.getRecordResultPredicate().getClass()).isEqualTo(RecordResultPredicate.class);
 
         final CircuitBreakerConfigurationProperties.InstanceProperties backend1 = circuitBreakerConfigurationProperties
             .getBackendProperties("backend1");
