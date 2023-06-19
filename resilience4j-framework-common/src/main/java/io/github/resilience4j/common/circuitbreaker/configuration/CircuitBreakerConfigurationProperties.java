@@ -102,6 +102,11 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
             builder.writableStackTraceEnabled(properties.getWritableStackTraceEnabled());
         }
 
+        if (properties.getRecordResultPredicate() != null) {
+            Predicate<Object> predicate = ClassUtils.instantiatePredicateClass(properties.getRecordResultPredicate());
+            builder.recordResult(predicate);
+        }
+
         if (properties.getSlowCallRateThreshold() != null) {
             builder.slowCallRateThreshold(properties.getSlowCallRateThreshold());
         }
@@ -305,6 +310,9 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
 
         @Nullable
         private Class<Predicate<Throwable>> recordFailurePredicate;
+
+        @Nullable
+        private Class<Predicate<Object>> recordResultPredicate;
 
         @Nullable
         private Class<? extends Throwable>[] recordExceptions;
@@ -551,6 +559,17 @@ public class CircuitBreakerConfigurationProperties extends CommonProperties {
         @Nullable
         public Class<Predicate<Throwable>> getRecordFailurePredicate() {
             return recordFailurePredicate;
+        }
+
+        @Nullable
+        public Class<Predicate<Object>> getRecordResultPredicate() {
+            return this.recordResultPredicate;
+        }
+
+        public InstanceProperties setRecordResultPredicate(
+                Class<Predicate<Object>> recordResultPredicate) {
+           this.recordResultPredicate = recordResultPredicate;
+            return this;
         }
 
         public InstanceProperties setRecordFailurePredicate(
