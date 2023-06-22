@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.core.functions;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -26,4 +27,24 @@ import java.util.function.Consumer;
 @FunctionalInterface
 public interface CheckedConsumer<T> {
     void accept(T t) throws Throwable;
-} 
+
+    default CheckedConsumer<T> andThen(CheckedConsumer<? super T> after) {
+        Objects.requireNonNull(after, "after is null");
+        return (T t) -> { accept(t); after.accept(t); };
+    }
+
+    default Consumer<T> unchecked() {
+        return t -> {
+            try {
+                accept(t);
+            } catch(Throwable x) {
+                sneakyThrow(x);
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    static <T extends Throwable, R> R sneakyThrow(Throwable t) throws T {
+        throw (T) t;
+    }
+}
