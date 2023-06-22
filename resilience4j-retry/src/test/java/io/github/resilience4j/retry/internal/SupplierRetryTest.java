@@ -18,6 +18,9 @@
  */
 package io.github.resilience4j.retry.internal;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.mockito.Mockito;
+import java.net.http.HttpResponse;
 import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -94,6 +97,51 @@ public class SupplierRetryTest {
         then(helloWorldService).should().returnHelloWorld();
         assertThat(result).isEqualTo("Hello world");
         assertThat(sleptTime).isZero();
+    }
+
+    @Test
+    public void shouldRetryWithResultOnServiceNotAvailable() {
+        // mock response
+        HttpResponse<String> mockedResponse = Mockito.mock(HttpResponse.class);
+        Mockito.when(mockedResponse.statusCode()).thenReturn(503);
+        Mockito.when(mockedResponse.body()).thenReturn("503 status returned");
+        given(helloWorldService.returnHelloWorldResponse()).willReturn(mockedResponse);
+
+        // retry setup specific to 503
+        final RetryConfig tryAgainOn503 = RetryConfig.<HttpResponse<String>>custom().waitDuration(Duration.ofSeconds(5))
+            .retryOnException(t -> !(t instanceof Throwable))
+            .retryOnResult(response -> response!=null && response.statusCode()==503)
+            .maxAttempts(5).build();
+        Retry retry = Retry.of("id", tryAgainOn503);
+        Supplier<HttpResponse<String>> supplier = Retry
+            .decorateSupplier(retry, helloWorldService::returnHelloWorldResponse);
+
+        // execute and test
+        HttpResponse<String> result = supplier.get();
+        then(helloWorldService).should(times(5)).returnHelloWorldResponse();
+        assertThat(result.statusCode()).isEqualTo(503);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2*5* 4);
+
+        // verify for non 503
+        Mockito.when(mockedResponse.statusCode()).thenReturn(200);
+        Mockito.when(mockedResponse.body()).thenReturn("200 status returned");
+        given(helloWorldService.returnHelloWorldResponse()).willReturn(mockedResponse);
+        result = supplier.get();
+        then(helloWorldService).should(times(6)).returnHelloWorldResponse();
+        assertThat(result.statusCode()).isEqualTo(200);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2*5* 4);
+
+        // verify for exception
+        mockedResponse = Mockito.mock(HttpResponse.class);
+        given(helloWorldService.returnHelloWorldResponse())
+        .willThrow(new HelloWorldException());
+
+        assertThatThrownBy(() -> {
+            supplier.get();
+        }).isInstanceOf(HelloWorldException.class);
+
+        then(helloWorldService).should(times(7)).returnHelloWorldResponse();
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2*5* 4);
     }
 
     @Test

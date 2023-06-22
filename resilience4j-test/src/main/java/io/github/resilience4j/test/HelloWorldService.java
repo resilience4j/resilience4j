@@ -23,8 +23,11 @@ import io.vavr.control.Try;
 
 import java.io.IOException;
 import java.util.concurrent.Future;
+import java.net.http.HttpResponse;
 
 public interface HelloWorldService {
+
+    HttpResponse<String> returnHelloWorldResponse();
 
     String returnHelloWorld();
 
