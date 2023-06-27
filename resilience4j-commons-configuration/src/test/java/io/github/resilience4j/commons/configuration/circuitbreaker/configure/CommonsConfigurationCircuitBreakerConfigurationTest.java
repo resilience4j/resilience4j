@@ -18,9 +18,9 @@ import java.util.Map;
 
 public class CommonsConfigurationCircuitBreakerConfigurationTest {
 
-    private static final String RESILIENCE_CONFIG_PROPERTIES_FILE_NAME = "resilience.properties";
-    private static final String BACKEND_A = "backendA";
-    private static final String BACKEND_B = "backendB";
+    static final String RESILIENCE_CONFIG_PROPERTIES_FILE_NAME = "resilience.properties";
+    static final String BACKEND_A = "backendA";
+    static final String BACKEND_B = "backendB";
     private static final String DEFAULT = "default";
     private static final String SHARED = "shared";
 
@@ -33,7 +33,7 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
                                 .setFileName(RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
         Configuration config = builder.getConfiguration();
 
-        CommonsConfigurationCircuitBreakerConfiguration commonsConfigurationCircuitBreakerConfiguration = CommonsConfigurationCircuitBreakerConfiguration.from(config);
+        CommonsConfigurationCircuitBreakerConfiguration commonsConfigurationCircuitBreakerConfiguration = CommonsConfigurationCircuitBreakerConfiguration.of(config);
 
         assertConfigs(commonsConfigurationCircuitBreakerConfiguration.getConfigs());
         assertInstances(commonsConfigurationCircuitBreakerConfiguration.getInstances());

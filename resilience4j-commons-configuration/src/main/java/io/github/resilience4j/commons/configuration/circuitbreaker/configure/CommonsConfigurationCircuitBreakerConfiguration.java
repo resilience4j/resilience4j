@@ -43,7 +43,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     private CommonsConfigurationCircuitBreakerConfiguration(){
     }
 
-    public static CommonsConfigurationCircuitBreakerConfiguration from(final Configuration configuration) {
+    public static CommonsConfigurationCircuitBreakerConfiguration of(final Configuration configuration) {
         CommonsConfigurationCircuitBreakerConfiguration obj = new CommonsConfigurationCircuitBreakerConfiguration();
         obj.getConfigs().putAll(obj.getProperties(configuration.subset(CIRCUITBREAKER_CONFIGS_PREFIX)));
         obj.getInstances().putAll(obj.getProperties(configuration.subset(CIRCUITBREAKER_INSTANCES_PREFIX)));

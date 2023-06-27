@@ -1,4 +1,4 @@
-package io.github.resilience4j.commons.configuration.util;
+package io.github.resilience4j.commons.configuration.exception;
 
 public class ConfigParseException extends RuntimeException{
     public ConfigParseException(String message) {

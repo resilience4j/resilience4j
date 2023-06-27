@@ -1,5 +1,7 @@
 package io.github.resilience4j.commons.configuration.util;
 
+import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;

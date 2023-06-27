@@ -1,6 +1,7 @@
 package io.github.resilience4j.commons.configuration.util;
 
 import io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate;
+import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
