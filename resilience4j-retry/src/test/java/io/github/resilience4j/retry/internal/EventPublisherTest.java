@@ -19,6 +19,7 @@
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.functions.CheckedRunnable;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.event.RetryEvent;
@@ -30,11 +31,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static io.github.resilience4j.test.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -65,6 +69,36 @@ public class EventPublisherTest {
         assertThat(result.isFailure()).isTrue();
         assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
+        testSubscriber.assertValueCount(3)
+            .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.RETRY, RetryEvent.Type.ERROR);
+    }
+
+    @Test
+    public void asyncShouldReturnAfterThreeAttempts() {
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+        String retryMessage = "hello world";
+        willReturn(retryMessage).given(helloWorldService).returnHelloWorld();
+        Retry retry = Retry.of(
+            "hello world retry",
+            RetryConfig
+                .custom()
+                .retryOnResult(result -> result.equals(retryMessage))
+                .waitDuration(Duration.ofMillis(1))
+                .failAfterMaxAttempts(true)
+                .build());
+
+
+        TestSubscriber<RetryEvent.Type> testSubscriber = toFlowable(retry.getEventPublisher())
+            .map(RetryEvent::getEventType)
+            .test();
+
+        CompletableFuture<String> result = retry
+            .executeCompletionStage(executor, () ->
+                CompletableFuture.completedFuture(helloWorldService.returnHelloWorld())).toCompletableFuture();
+
+        assertThatThrownBy(result::get).hasCauseInstanceOf(MaxRetriesExceededException.class);
+
+        then(helloWorldService).should(times(3)).returnHelloWorld();
         testSubscriber.assertValueCount(3)
             .assertValues(RetryEvent.Type.RETRY, RetryEvent.Type.RETRY, RetryEvent.Type.ERROR);
     }
