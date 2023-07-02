@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException;
 import io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate;
+import io.github.resilience4j.commons.configuration.util.Constants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -18,19 +19,13 @@ import java.util.Map;
 
 public class CommonsConfigurationCircuitBreakerConfigurationTest {
 
-    static final String RESILIENCE_CONFIG_PROPERTIES_FILE_NAME = "resilience.properties";
-    static final String BACKEND_A = "backendA";
-    static final String BACKEND_B = "backendB";
-    private static final String DEFAULT = "default";
-    private static final String SHARED = "shared";
-
     @Test
     public void testFromPropertiesFile() throws ConfigurationException {
         FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
                 .configure(new Parameters()
                                 .fileBased()
-                                .setListDelimiterHandler(new DefaultListDelimiterHandler(','))
-                                .setFileName(RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
+                                .setListDelimiterHandler(new DefaultListDelimiterHandler(Constants.LIST_DELIMITER))
+                                .setFileName(Constants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
         Configuration config = builder.getConfiguration();
 
         CommonsConfigurationCircuitBreakerConfiguration commonsConfigurationCircuitBreakerConfiguration = CommonsConfigurationCircuitBreakerConfiguration.of(config);
@@ -41,10 +36,10 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
 
     private static void assertConfigs(Map<String, CommonCircuitBreakerConfigurationProperties.InstanceProperties> config) {
         Assertions.assertThat(config.size()).isEqualTo(2);
-        Assertions.assertThat(config.containsKey(DEFAULT)).isTrue();
-        assertConfigDefault(config.get(DEFAULT));
-        Assertions.assertThat(config.containsKey(SHARED)).isTrue();
-        assertConfigShared(config.get(SHARED));
+        Assertions.assertThat(config.containsKey(Constants.DEFAULT)).isTrue();
+        assertConfigDefault(config.get(Constants.DEFAULT));
+        Assertions.assertThat(config.containsKey(Constants.SHARED)).isTrue();
+        assertConfigShared(config.get(Constants.SHARED));
     }
 
     private static void assertConfigDefault(CommonCircuitBreakerConfigurationProperties.InstanceProperties configDefault) {
@@ -78,18 +73,18 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
 
     private static void assertInstances(Map<String, CommonCircuitBreakerConfigurationProperties.InstanceProperties> instances) {
         Assertions.assertThat(instances.size()).isEqualTo(2);
-        Assertions.assertThat(instances.containsKey(BACKEND_A)).isTrue();
-        assertInstanceBackendA(instances.get(BACKEND_A));
-        assertInstanceBackendB(instances.get(BACKEND_B));
+        Assertions.assertThat(instances.containsKey(Constants.BACKEND_A)).isTrue();
+        assertInstanceBackendA(instances.get(Constants.BACKEND_A));
+        assertInstanceBackendB(instances.get(Constants.BACKEND_B));
     }
 
     private static void assertInstanceBackendA(CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceBackendA) {
-        Assertions.assertThat(instanceBackendA.getBaseConfig()).isEqualTo(DEFAULT);
+        Assertions.assertThat(instanceBackendA.getBaseConfig()).isEqualTo(Constants.DEFAULT);
         Assertions.assertThat(instanceBackendA.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(5));
     }
 
     private static void assertInstanceBackendB(CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceBackendB) {
-        Assertions.assertThat(instanceBackendB.getBaseConfig()).isEqualTo(SHARED);
+        Assertions.assertThat(instanceBackendB.getBaseConfig()).isEqualTo(Constants.SHARED);
         Assertions.assertThat(instanceBackendB.getRegisterHealthIndicator()).isEqualTo(true);
         Assertions.assertThat(instanceBackendB.getSlidingWindowSize()).isEqualTo(10);
         Assertions.assertThat(instanceBackendB.getMinimumNumberOfCalls()).isEqualTo(10);

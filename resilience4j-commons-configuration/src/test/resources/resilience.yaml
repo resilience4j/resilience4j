@@ -1,47 +1,98 @@
-resilience4j.circuitbreaker:
-    configs:
-        default:
-            slidingWindowSize: 100
-            permittedNumberOfCallsInHalfOpenState: 10
-            waitDurationInOpenState: PT1M
-            failureRateThreshold: 50
-            slowCallRateThreshold: 50
-            slowCallDurationThreshold: PT2S
-            writableStackTraceEnabled: true
-            automaticTransitionFromOpenToHalfOpenEnabled: true
-            slidingWindowType: TIME_BASED
-            minimumNumberOfCalls: 5
-            eventConsumerBufferSize: 10
-            registerHealthIndicator: true
-            recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate
-            recordExceptions:
-                - java.lang.IllegalArgumentException
-                - java.lang.NullPointerException
-            ignoreExceptionPredicate: java.lang.RuntimeException
-            ignoreExceptions:
-                - java.lang.IllegalStateException
-                - java.lang.IndexOutOfBoundsException
-        shared:
-            slidingWindowType: COUNT_BASED
-            slidingWindowSize: 100
-            permittedNumberOfCallsInHalfOpenState: 30
-            waitDurationInOpenState: PT10s
-            failureRateThreshold: 50
-            eventConsumerBufferSize: 10
-            ignoreExceptions:
-                - io.github.resilience4j.commons.configuration.dummy.DummyIgnoreException
-    instances:
-        backendA:
-            baseConfig: default
-            waitDurationInOpenState: PT5S
-        backendB:
-            baseConfig: shared
-            registerHealthIndicator: true
-            slidingWindowSize: 10
-            minimumNumberOfCalls: 10
-            permittedNumberOfCallsInHalfOpenState: 3
-            waitDurationInOpenState: PT5s
-            failureRateThreshold: 50
-            eventConsumerBufferSize: 10
-            recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate
-
+resilience4j:
+    circuitbreaker:
+        configs:
+            default:
+                slidingWindowSize: 100
+                permittedNumberOfCallsInHalfOpenState: 10
+                waitDurationInOpenState: PT1M
+                failureRateThreshold: 50
+                slowCallRateThreshold: 50
+                slowCallDurationThreshold: PT2S
+                writableStackTraceEnabled: true
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                slidingWindowType: TIME_BASED
+                minimumNumberOfCalls: 5
+                eventConsumerBufferSize: 10
+                registerHealthIndicator: true
+                recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate
+                recordExceptions:
+                    - java.lang.IllegalArgumentException
+                    - java.lang.NullPointerException
+                ignoreExceptionPredicate: java.lang.RuntimeException
+                ignoreExceptions:
+                    - java.lang.IllegalStateException
+                    - java.lang.IndexOutOfBoundsException
+            shared:
+                slidingWindowType: COUNT_BASED
+                slidingWindowSize: 100
+                permittedNumberOfCallsInHalfOpenState: 30
+                waitDurationInOpenState: PT10s
+                failureRateThreshold: 50
+                eventConsumerBufferSize: 10
+                ignoreExceptions:
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoreException
+        instances:
+            backendA:
+                baseConfig: default
+                waitDurationInOpenState: PT5S
+            backendB:
+                baseConfig: shared
+                registerHealthIndicator: true
+                slidingWindowSize: 10
+                minimumNumberOfCalls: 10
+                permittedNumberOfCallsInHalfOpenState: 3
+                waitDurationInOpenState: PT5s
+                failureRateThreshold: 50
+                eventConsumerBufferSize: 10
+                recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate
+    retry:
+        configs:
+            default:
+                maxAttempts: 3
+                waitDuration: 100
+                retryExceptions:
+                    - io.micronaut.http.exceptions.HttpStatusException
+                    - java.util.concurrent.TimeoutException
+                    - java.io.IOException
+                ignoreExceptions:
+                    - resilience4j.micronaut.demo.exception.BusinessException
+        instances:
+            backendA:
+                baseConfig: default
+            backendB:
+                baseConfig: default
+    bulkhead:
+        configs:
+            default:
+                maxConcurrentCalls: 100
+        instances:
+            backendA:
+                maxConcurrentCalls: 10
+            backendB:
+                maxWaitDuration: PT0.01S
+                maxConcurrentCalls: 20
+    ratelimiter:
+        configs:
+            default:
+                registerHealthIndicator: false
+                limitForPeriod: 10
+                limitRefreshPeriod: 1s
+                timeoutDuration: 0
+                eventConsumerBufferSize: 100
+        instances:
+            backendA:
+                baseConfig: default
+            backendB:
+                limitForPeriod: 6
+                limitRefreshPeriod: PT0.5S
+                timeoutDuration: 3s
+    timelimiter:
+        configs:
+            default:
+                cancelRunningFuture: false
+                timeoutDuration: PT2s
+        instances:
+            backendA:
+                baseConfig: default
+            backendB:
+                baseConfig: default }

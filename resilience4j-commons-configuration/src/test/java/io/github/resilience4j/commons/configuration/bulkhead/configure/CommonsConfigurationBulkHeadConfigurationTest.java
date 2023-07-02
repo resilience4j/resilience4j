@@ -1,0 +1,70 @@
+package io.github.resilience4j.commons.configuration.bulkhead.configure;
+
+import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
+
+import java.time.Duration;
+import java.util.Map;
+
+public class CommonsConfigurationBulkHeadConfigurationTest {
+    static final String RESILIENCE_CONFIG_PROPERTIES_FILE_NAME = "resilience.properties";
+    static final String BACKEND_A = "backendA";
+    static final String BACKEND_B = "backendB";
+    private static final String DEFAULT = "default";
+
+    @Test
+    public void testFromPropertiesFile() throws ConfigurationException {
+        FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+                .configure(new Parameters()
+                        .fileBased()
+                        .setListDelimiterHandler(new DefaultListDelimiterHandler(','))
+                        .setFileName(RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
+        Configuration config = builder.getConfiguration();
+
+        CommonsConfigurationBulkHeadConfiguration bulkHeadConfiguration  = CommonsConfigurationBulkHeadConfiguration.of(config);
+
+        assertConfigs(bulkHeadConfiguration.getConfigs());
+        assertInstances(bulkHeadConfiguration.getInstances());
+    }
+
+    private static void assertConfigs(Map<String, CommonBulkheadConfigurationProperties.InstanceProperties> config) {
+        Assertions.assertThat(config.size()).isEqualTo(1);
+        Assertions.assertThat(config.containsKey(DEFAULT)).isTrue();
+        assertConfigDefault(config.get(DEFAULT));
+    }
+
+    private static void assertConfigDefault(CommonBulkheadConfigurationProperties.InstanceProperties configDefault) {
+        Assertions.assertThat(configDefault.getMaxWaitDuration()).isNull();
+        Assertions.assertThat(configDefault.getMaxConcurrentCalls()).isEqualTo(100);
+        Assertions.assertThat(configDefault.getEventConsumerBufferSize()).isNull();
+        Assertions.assertThat(configDefault.isWritableStackTraceEnabled()).isNull();
+    }
+
+    private static void assertInstances(Map<String, CommonBulkheadConfigurationProperties.InstanceProperties> instances) {
+        Assertions.assertThat(instances.size()).isEqualTo(2);
+        Assertions.assertThat(instances.containsKey(BACKEND_A)).isTrue();
+        assertInstanceBackendA(instances.get(BACKEND_A));
+        assertInstanceBackendB(instances.get(BACKEND_B));
+    }
+
+    private static void assertInstanceBackendA(CommonBulkheadConfigurationProperties.InstanceProperties instanceBackendA) {
+        Assertions.assertThat(instanceBackendA.getMaxWaitDuration()).isNull();
+        Assertions.assertThat(instanceBackendA.getMaxConcurrentCalls()).isEqualTo(10);
+        Assertions.assertThat(instanceBackendA.getEventConsumerBufferSize()).isNull();
+        Assertions.assertThat(instanceBackendA.isWritableStackTraceEnabled()).isNull();
+    }
+
+    private static void assertInstanceBackendB(CommonBulkheadConfigurationProperties.InstanceProperties instanceBackendB) {
+        Assertions.assertThat(instanceBackendB.getMaxWaitDuration()).isEqualTo(Duration.ofMillis(10));
+        Assertions.assertThat(instanceBackendB.getMaxConcurrentCalls()).isEqualTo(20);
+        Assertions.assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(15);
+        Assertions.assertThat(instanceBackendB.isWritableStackTraceEnabled()).isTrue();
+    }
+}

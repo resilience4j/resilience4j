@@ -3,6 +3,7 @@ package io.github.resilience4j.commons.configuration.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.commons.configuration.util.ClassParseUtil;
+import io.github.resilience4j.commons.configuration.util.Constants;
 import io.github.resilience4j.commons.configuration.util.StringParseUtil;
 import org.apache.commons.configuration2.Configuration;
 
@@ -13,7 +14,6 @@ import java.util.function.Predicate;
 public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircuitBreakerConfigurationProperties{
     private static final String CIRCUITBREAKER_CONFIGS_PREFIX = "resilience4j.circuitbreaker.configs";
     private static final String CIRCUITBREAKER_INSTANCES_PREFIX = "resilience4j.circuitbreaker.instances";
-    protected static final String BASE_CONFIG = "baseConfig";
     protected static final String SLIDING_WINDOW_SIZE = "slidingWindowSize";
     protected static final String PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE = "permittedNumberOfCallsInHalfOpenState";
     protected static final String WAIT_DURATION_IN_OPEN_STATE = "waitDurationInOpenState";
@@ -38,7 +38,6 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     protected static final String EXPONENTIAL_MAX_WAIT_DURATION_IN_OPEN_STATE = "exponentialMaxWaitDurationInOpenState";
     protected static final String ENABLE_RANDOMIZED_WAIT = "enableRandomizedWait";
     protected static final String RANDOMIZED_WAIT_FACTOR = "randomizedWaitFactor";
-    protected static final String PROPERTIES_KEY_DELIMITER = ".";
 
     private CommonsConfigurationCircuitBreakerConfiguration(){
     }
@@ -51,7 +50,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     }
 
     private Map<String, InstanceProperties> getProperties(final Configuration configuration) {
-        Set<String> uniqueInstances = StringParseUtil.extractUniquePrefixes(configuration.getKeys(), PROPERTIES_KEY_DELIMITER);
+        Set<String> uniqueInstances = StringParseUtil.extractUniquePrefixes(configuration.getKeys(), Constants.PROPERTIES_KEY_DELIMITER);
         Map<String, InstanceProperties> instanceConfigsMap = new HashMap<>();
         uniqueInstances.forEach(instance -> {
             instanceConfigsMap.put(instance, mapConfigurationToInstanceProperties.apply(configuration.subset(instance)));
@@ -61,8 +60,8 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
 
     private final Function<Configuration, InstanceProperties> mapConfigurationToInstanceProperties = configuration -> {
         InstanceProperties instanceProperties = new InstanceProperties();
-        if(configuration.containsKey(BASE_CONFIG))
-            instanceProperties.setBaseConfig(configuration.getString(BASE_CONFIG));
+        if(configuration.containsKey(Constants.BASE_CONFIG))
+            instanceProperties.setBaseConfig(configuration.getString(Constants.BASE_CONFIG));
         if(configuration.containsKey(WAIT_DURATION_IN_OPEN_STATE))
             instanceProperties.setWaitDurationInOpenState(configuration.getDuration(WAIT_DURATION_IN_OPEN_STATE));
         if(configuration.containsKey(SLOW_CALL_DURATION_THRESHOLD))
@@ -106,8 +105,6 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
         if(configuration.containsKey(IGNORE_EXCEPTIONS))
             instanceProperties.setIgnoreExceptions(ClassParseUtil.convertStringListToClassTypeArray(configuration.getList(String.class,
                     IGNORE_EXCEPTIONS), Throwable.class));
-        if(configuration.containsKey(BASE_CONFIG))
-            instanceProperties.setBaseConfig(configuration.getString(BASE_CONFIG));
         if(configuration.containsKey(ENABLE_EXPONENTIAL_BACKOFF))
             instanceProperties.setEnableExponentialBackoff(configuration.getBoolean(ENABLE_EXPONENTIAL_BACKOFF));
         if(configuration.containsKey(EXPONENTIAL_BACKOFF_MULTIPLIER))
