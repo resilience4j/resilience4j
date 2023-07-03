@@ -354,7 +354,9 @@ public class RetryImpl<T> implements Retry {
                     }
                     return -1;
                 }
-                return intervalBiFunction.apply(attempt, Either.right(result));
+                Long interval = intervalBiFunction.apply(attempt, Either.right(result));
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, null, interval));
+                return interval;
             } else {
                 return -1;
             }
