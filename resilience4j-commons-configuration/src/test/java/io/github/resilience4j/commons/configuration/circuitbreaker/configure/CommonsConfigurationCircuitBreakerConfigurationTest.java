@@ -3,8 +3,8 @@ package io.github.resilience4j.commons.configuration.circuitbreaker.configure;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException;
-import io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate;
-import io.github.resilience4j.commons.configuration.util.Constants;
+import io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable;
+import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -24,8 +24,8 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
         FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
                 .configure(new Parameters()
                                 .fileBased()
-                                .setListDelimiterHandler(new DefaultListDelimiterHandler(Constants.LIST_DELIMITER))
-                                .setFileName(Constants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
+                                .setListDelimiterHandler(new DefaultListDelimiterHandler(TestConstants.LIST_DELIMITER))
+                                .setFileName(TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
         Configuration config = builder.getConfiguration();
 
         CommonsConfigurationCircuitBreakerConfiguration commonsConfigurationCircuitBreakerConfiguration = CommonsConfigurationCircuitBreakerConfiguration.of(config);
@@ -36,10 +36,10 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
 
     private static void assertConfigs(Map<String, CommonCircuitBreakerConfigurationProperties.InstanceProperties> config) {
         Assertions.assertThat(config.size()).isEqualTo(2);
-        Assertions.assertThat(config.containsKey(Constants.DEFAULT)).isTrue();
-        assertConfigDefault(config.get(Constants.DEFAULT));
-        Assertions.assertThat(config.containsKey(Constants.SHARED)).isTrue();
-        assertConfigShared(config.get(Constants.SHARED));
+        Assertions.assertThat(config.containsKey(TestConstants.DEFAULT)).isTrue();
+        assertConfigDefault(config.get(TestConstants.DEFAULT));
+        Assertions.assertThat(config.containsKey(TestConstants.SHARED)).isTrue();
+        assertConfigShared(config.get(TestConstants.SHARED));
     }
 
     private static void assertConfigDefault(CommonCircuitBreakerConfigurationProperties.InstanceProperties configDefault) {
@@ -55,9 +55,9 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
         Assertions.assertThat(configDefault.getMinimumNumberOfCalls()).isEqualTo(5);
         Assertions.assertThat(configDefault.getEventConsumerBufferSize()).isEqualTo(10);
         Assertions.assertThat(configDefault.getRegisterHealthIndicator()).isEqualTo(true);
-        Assertions.assertThat(configDefault.getRecordFailurePredicate()).isEqualTo(DummyRecordFailurePredicate.class);
+        Assertions.assertThat(configDefault.getRecordFailurePredicate()).isEqualTo(DummyPredicateThrowable.class);
         Assertions.assertThat(configDefault.getRecordExceptions()).containsExactly(IllegalArgumentException.class, NullPointerException.class);
-        Assertions.assertThat(configDefault.getIgnoreExceptionPredicate()).isEqualTo(DummyRecordFailurePredicate.class);
+        Assertions.assertThat(configDefault.getIgnoreExceptionPredicate()).isEqualTo(DummyPredicateThrowable.class);
         Assertions.assertThat(configDefault.getIgnoreExceptions()).containsExactly(IllegalStateException.class, IndexOutOfBoundsException.class);
     }
 
@@ -73,18 +73,18 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
 
     private static void assertInstances(Map<String, CommonCircuitBreakerConfigurationProperties.InstanceProperties> instances) {
         Assertions.assertThat(instances.size()).isEqualTo(2);
-        Assertions.assertThat(instances.containsKey(Constants.BACKEND_A)).isTrue();
-        assertInstanceBackendA(instances.get(Constants.BACKEND_A));
-        assertInstanceBackendB(instances.get(Constants.BACKEND_B));
+        Assertions.assertThat(instances.containsKey(TestConstants.BACKEND_A)).isTrue();
+        assertInstanceBackendA(instances.get(TestConstants.BACKEND_A));
+        assertInstanceBackendB(instances.get(TestConstants.BACKEND_B));
     }
 
     private static void assertInstanceBackendA(CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceBackendA) {
-        Assertions.assertThat(instanceBackendA.getBaseConfig()).isEqualTo(Constants.DEFAULT);
+        Assertions.assertThat(instanceBackendA.getBaseConfig()).isEqualTo(TestConstants.DEFAULT);
         Assertions.assertThat(instanceBackendA.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(5));
     }
 
     private static void assertInstanceBackendB(CommonCircuitBreakerConfigurationProperties.InstanceProperties instanceBackendB) {
-        Assertions.assertThat(instanceBackendB.getBaseConfig()).isEqualTo(Constants.SHARED);
+        Assertions.assertThat(instanceBackendB.getBaseConfig()).isEqualTo(TestConstants.SHARED);
         Assertions.assertThat(instanceBackendB.getRegisterHealthIndicator()).isEqualTo(true);
         Assertions.assertThat(instanceBackendB.getSlidingWindowSize()).isEqualTo(10);
         Assertions.assertThat(instanceBackendB.getMinimumNumberOfCalls()).isEqualTo(10);
@@ -92,6 +92,6 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
         Assertions.assertThat(instanceBackendB.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(3);
         Assertions.assertThat(instanceBackendB.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(5));
         Assertions.assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(20);
-        Assertions.assertThat(instanceBackendB.getRecordFailurePredicate()).isEqualTo(DummyRecordFailurePredicate.class);
+        Assertions.assertThat(instanceBackendB.getRecordFailurePredicate()).isEqualTo(DummyPredicateThrowable.class);
     }
 }

@@ -2,7 +2,7 @@ package io.github.resilience4j.commons.configuration.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.commons.configuration.util.Constants;
+import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -21,13 +21,13 @@ public class CommonsConfigurationBulkheadRegistryTest {
         FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
                 .configure(new Parameters()
                         .fileBased()
-                        .setListDelimiterHandler(new DefaultListDelimiterHandler(Constants.LIST_DELIMITER))
-                        .setFileName(Constants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
+                        .setListDelimiterHandler(new DefaultListDelimiterHandler(TestConstants.LIST_DELIMITER))
+                        .setFileName(TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
         Configuration config = builder.getConfiguration();
 
         BulkheadRegistry registry = CommonsConfigurationBulkheadRegistry.of(config, new CompositeCustomizer<>(List.of()));
 
-        Assertions.assertThat(registry.bulkhead(Constants.BACKEND_A).getName()).isEqualTo(Constants.BACKEND_A);
-        Assertions.assertThat(registry.bulkhead(Constants.BACKEND_B).getName()).isEqualTo(Constants.BACKEND_B);
+        Assertions.assertThat(registry.bulkhead(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
+        Assertions.assertThat(registry.bulkhead(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
     }
 }

@@ -1,6 +1,6 @@
 package io.github.resilience4j.commons.configuration.util;
 
-import io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate;
+import io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable;
 import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -28,11 +28,11 @@ public class ClassParseUtilTest {
 
     @Test
     public void testConvertPredicate() {
-        String predicateString = "io.github.resilience4j.commons.configuration.dummy.DummyRecordFailurePredicate";
+        String predicateString = "io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable";
 
         Class<Predicate<Throwable>> clazz = (Class<Predicate<Throwable>>) ClassParseUtil.convertStringToClassType(predicateString, Predicate.class);
 
-        Assertions.assertThat(clazz).isEqualTo(DummyRecordFailurePredicate.class);
+        Assertions.assertThat(clazz).isEqualTo(DummyPredicateThrowable.class);
     }
 
     @Test(expected = ConfigParseException.class)

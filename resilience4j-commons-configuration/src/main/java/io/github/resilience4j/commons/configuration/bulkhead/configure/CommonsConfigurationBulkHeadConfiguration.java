@@ -26,6 +26,7 @@ public class CommonsConfigurationBulkHeadConfiguration extends CommonBulkheadCon
      * Initializes a bulkhead configuration from a {@link Configuration} configuration
      * @param configuration the configuration to read from
      * @return  a {@link CommonsConfigurationBulkHeadConfiguration} object
+     * @throws ConfigParseException if the configuration is invalid
      */
     public static CommonsConfigurationBulkHeadConfiguration of(final Configuration configuration) throws ConfigParseException {
         CommonsConfigurationBulkHeadConfiguration obj = new CommonsConfigurationBulkHeadConfiguration();
