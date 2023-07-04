@@ -5,6 +5,7 @@ dependencies {
     implementation project(':resilience4j-timelimiter')
     implementation project(':resilience4j-bulkhead')
     implementation project(':resilience4j-retry')
+    implementation project(':resilience4j-micrometer')
     testImplementation(libraries.reactor)
     testImplementation(libraries.reactor_test)
     testImplementation(libraries.assertj)
