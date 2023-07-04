@@ -80,18 +80,23 @@ resilience4j:
     ratelimiter:
         configs:
             default:
-                registerHealthIndicator: false
-                limitForPeriod: 10
-                limitRefreshPeriod: 1s
-                timeoutDuration: 0
                 eventConsumerBufferSize: 100
+                limitForPeriod: 10
+                limitRefreshPeriod: PT1s
+                registerHealthIndicator: false
+                timeoutDuration: PT10S
         instances:
             backendA:
                 baseConfig: default
             backendB:
+                allowHealthIndicatorToFail: false
+                eventConsumerBufferSize: 10
                 limitForPeriod: 6
                 limitRefreshPeriod: PT0.5S
-                timeoutDuration: 3s
+                registerHealthIndicator: true
+                subscribeForEvents: true
+                timeoutDuration: PT3S
+                writableStackTraceEnabled: false
     timelimiter:
         configs:
             default:

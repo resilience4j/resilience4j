@@ -1,6 +1,7 @@
 package io.github.resilience4j.commons.configuration.bulkhead.configure;
 
 import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties;
+import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -14,18 +15,13 @@ import java.time.Duration;
 import java.util.Map;
 
 public class CommonsConfigurationBulkHeadConfigurationTest {
-    static final String RESILIENCE_CONFIG_PROPERTIES_FILE_NAME = "resilience.properties";
-    static final String BACKEND_A = "backendA";
-    static final String BACKEND_B = "backendB";
-    private static final String DEFAULT = "default";
-
     @Test
     public void testFromPropertiesFile() throws ConfigurationException {
         FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
                 .configure(new Parameters()
                         .fileBased()
                         .setListDelimiterHandler(new DefaultListDelimiterHandler(','))
-                        .setFileName(RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
+                        .setFileName(TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
         Configuration config = builder.getConfiguration();
 
         CommonsConfigurationBulkHeadConfiguration bulkHeadConfiguration  = CommonsConfigurationBulkHeadConfiguration.of(config);
@@ -36,8 +32,8 @@ public class CommonsConfigurationBulkHeadConfigurationTest {
 
     private static void assertConfigs(Map<String, CommonBulkheadConfigurationProperties.InstanceProperties> config) {
         Assertions.assertThat(config.size()).isEqualTo(1);
-        Assertions.assertThat(config.containsKey(DEFAULT)).isTrue();
-        assertConfigDefault(config.get(DEFAULT));
+        Assertions.assertThat(config.containsKey(TestConstants.DEFAULT)).isTrue();
+        assertConfigDefault(config.get(TestConstants.DEFAULT));
     }
 
     private static void assertConfigDefault(CommonBulkheadConfigurationProperties.InstanceProperties configDefault) {
@@ -49,9 +45,9 @@ public class CommonsConfigurationBulkHeadConfigurationTest {
 
     private static void assertInstances(Map<String, CommonBulkheadConfigurationProperties.InstanceProperties> instances) {
         Assertions.assertThat(instances.size()).isEqualTo(2);
-        Assertions.assertThat(instances.containsKey(BACKEND_A)).isTrue();
-        assertInstanceBackendA(instances.get(BACKEND_A));
-        assertInstanceBackendB(instances.get(BACKEND_B));
+        Assertions.assertThat(instances.containsKey(TestConstants.BACKEND_A)).isTrue();
+        assertInstanceBackendA(instances.get(TestConstants.BACKEND_A));
+        assertInstanceBackendB(instances.get(TestConstants.BACKEND_B));
     }
 
     private static void assertInstanceBackendA(CommonBulkheadConfigurationProperties.InstanceProperties instanceBackendA) {
