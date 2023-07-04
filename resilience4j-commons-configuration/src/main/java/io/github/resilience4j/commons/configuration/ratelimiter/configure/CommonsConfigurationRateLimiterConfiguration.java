@@ -1,6 +1,7 @@
 package io.github.resilience4j.commons.configuration.ratelimiter.configure;
 
 import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties;
+import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
 import io.github.resilience4j.commons.configuration.util.Constants;
 import io.github.resilience4j.commons.configuration.util.StringParseUtil;
 import org.apache.commons.configuration2.Configuration;
@@ -29,13 +30,18 @@ public class CommonsConfigurationRateLimiterConfiguration extends CommonRateLimi
     /**
      * Creates a CommonsConfigurationRateLimiterConfiguration from a Commons Configuration.
      * @param configuration a Commons Configuration
-     * @return  a CommonsConfigurationRateLimiterConfiguration
+     * @return a CommonsConfigurationRateLimiterConfiguration
+     * @throws ConfigParseException if the configuration is invalid
      */
-    public static CommonsConfigurationRateLimiterConfiguration of(final Configuration configuration) {
+    public static CommonsConfigurationRateLimiterConfiguration of(final Configuration configuration) throws ConfigParseException {
         CommonsConfigurationRateLimiterConfiguration obj = new CommonsConfigurationRateLimiterConfiguration();
-        obj.getConfigs().putAll(obj.getProperties(configuration.subset(RATE_LIMITER_CONFIGS_PREFIX)));
-        obj.getInstances().putAll(obj.getProperties(configuration.subset(RATE_LIMITER_INSTANCES_PREFIX)));
-        return obj;
+        try {
+            obj.getConfigs().putAll(obj.getProperties(configuration.subset(RATE_LIMITER_CONFIGS_PREFIX)));
+            obj.getInstances().putAll(obj.getProperties(configuration.subset(RATE_LIMITER_INSTANCES_PREFIX)));
+            return obj;
+        } catch (Exception ex) {
+            throw new ConfigParseException("Error creating ratelimiter configuration", ex);
+        }
     }
 
     private Map<String, InstanceProperties> getProperties(final Configuration configuration) {

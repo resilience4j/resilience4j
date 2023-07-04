@@ -100,10 +100,14 @@ resilience4j:
     timelimiter:
         configs:
             default:
-                cancelRunningFuture: false
-                timeoutDuration: PT2s
+                timeoutDuration: PT10S
+                eventConsumerBufferSize: '100'
+                cancelRunningFuture: 'true'
         instances:
             backendA:
                 baseConfig: default
+                timeoutDuration: PT5S
             backendB:
-                baseConfig: default }
+                timeoutDuration: PT15S
+                eventConsumerBufferSize: '10'
+                cancelRunningFuture: 'false'
