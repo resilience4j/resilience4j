@@ -72,22 +72,23 @@ public class FallbackMethod {
      * @param fallbackMethodName the configured fallback method name
      * @param originalMethod     the original method which has fallback method configured
      * @param args               the original method arguments
-     * @param target             the target class that own the original method and fallback method
+     * @param originalType       the original type
+     * @param proxy              the proxy that own the original method and fallback method
      * @return FallbackMethod instance
      */
     public static FallbackMethod create(String fallbackMethodName, Method originalMethod,
-        Object[] args, Object target) throws NoSuchMethodException {
+        Object[] args, Class<?> originalType, Object proxy) throws NoSuchMethodException {
         MethodMeta methodMeta = new MethodMeta(
             fallbackMethodName,
             originalMethod.getParameterTypes(),
             originalMethod.getReturnType(),
-            target.getClass());
+            originalType);
 
         Map<Class<?>, Method> methods = FALLBACK_METHODS_CACHE
             .computeIfAbsent(methodMeta, FallbackMethod::extractMethods);
 
         if (!methods.isEmpty()) {
-            return new FallbackMethod(methods, originalMethod.getReturnType(), args, target);
+            return new FallbackMethod(methods, originalMethod.getReturnType(), args, proxy);
         } else {
             throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)",
                 methodMeta.returnType, methodMeta.targetClass, methodMeta.fallbackMethodName,
