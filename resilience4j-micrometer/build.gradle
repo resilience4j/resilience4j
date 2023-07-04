@@ -6,6 +6,7 @@ dependencies {
     implementation project(':resilience4j-retry')
     implementation project(':resilience4j-ratelimiter')
     implementation project(':resilience4j-timelimiter')
+    implementation project(':resilience4j-monitor')
     testImplementation project(':resilience4j-test')
     testImplementation(libraries.micrometer_observation_test)
 }
