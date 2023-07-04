@@ -13,6 +13,7 @@ import io.github.resilience4j.core.functions.CheckedBiFunction;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
@@ -92,6 +93,10 @@ public interface Decorators {
             this.supplier = supplier;
         }
 
+        public DecorateSupplier<T> withTimer(Timer timer) {
+            supplier = Timer.decorateSupplier(timer, supplier);
+            return this;
+        }
 
         public DecorateSupplier<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
             supplier = CircuitBreaker.decorateSupplier(circuitBreaker, supplier);
@@ -175,6 +180,11 @@ public interface Decorators {
             this.function = function;
         }
 
+        public DecorateFunction<T, R> withTimer(Timer timer) {
+            function = Timer.decorateFunction(timer, function);
+            return this;
+        }
+
         public DecorateFunction<T, R> withCircuitBreaker(CircuitBreaker circuitBreaker) {
             function = CircuitBreaker.decorateFunction(circuitBreaker, function);
             return this;
@@ -220,6 +230,11 @@ public interface Decorators {
 
         private DecorateRunnable(Runnable runnable) {
             this.runnable = runnable;
+        }
+
+        public DecorateRunnable withTimer(Timer timer) {
+            runnable = Timer.decorateRunnable(timer, runnable);
+            return this;
         }
 
         public DecorateRunnable withCircuitBreaker(CircuitBreaker circuitBreaker) {
@@ -280,6 +295,10 @@ public interface Decorators {
             this.callable = callable;
         }
 
+        public DecorateCallable<T> withTimer(Timer timer) {
+            callable = Timer.decorateCallable(timer, callable);
+            return this;
+        }
 
         public DecorateCallable<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
             callable = CircuitBreaker.decorateCallable(circuitBreaker, callable);
@@ -364,6 +383,10 @@ public interface Decorators {
             this.supplier = supplier;
         }
 
+        public DecorateCheckedSupplier<T> withTimer(Timer timer) {
+            supplier = Timer.decorateCheckedSupplier(timer, supplier);
+            return this;
+        }
 
         public DecorateCheckedSupplier<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
             supplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, supplier);
@@ -435,6 +458,11 @@ public interface Decorators {
             this.function = function;
         }
 
+        public DecorateCheckedFunction<T, R> withTimer(Timer timer) {
+            function = Timer.decorateCheckedFunction(timer, function);
+            return this;
+        }
+
         public DecorateCheckedFunction<T, R> withCircuitBreaker(CircuitBreaker circuitBreaker) {
             function = CircuitBreaker.decorateCheckedFunction(circuitBreaker, function);
             return this;
@@ -483,6 +511,11 @@ public interface Decorators {
             this.runnable = runnable;
         }
 
+        public DecorateCheckedRunnable withTimer(Timer timer) {
+            runnable = Timer.decorateCheckedRunnable(timer, runnable);
+            return this;
+        }
+
         public DecorateCheckedRunnable withCircuitBreaker(CircuitBreaker circuitBreaker) {
             runnable = CircuitBreaker.decorateCheckedRunnable(circuitBreaker, runnable);
             return this;
@@ -523,6 +556,11 @@ public interface Decorators {
 
         public DecorateCompletionStage(Supplier<CompletionStage<T>> stageSupplier) {
             this.stageSupplier = stageSupplier;
+        }
+
+        public DecorateCompletionStage<T> withTimer(Timer timer) {
+            stageSupplier = Timer.decorateCompletionStage(timer, stageSupplier);
+            return this;
         }
 
         public DecorateCompletionStage<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
@@ -597,6 +635,11 @@ public interface Decorators {
 
         private DecorateConsumer(Consumer<T> consumer) {
             this.consumer = consumer;
+        }
+
+        public DecorateConsumer<T> withTimer(Timer timer) {
+            consumer = Timer.decorateConsumer(timer, consumer);
+            return this;
         }
 
         public DecorateConsumer<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
