@@ -18,10 +18,15 @@
  */
 package io.github.resilience4j.micrometer;
 
+import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.micrometer.event.TimerEvent;
+import io.github.resilience4j.micrometer.event.TimerOnFailureEvent;
+import io.github.resilience4j.micrometer.event.TimerOnStartEvent;
+import io.github.resilience4j.micrometer.event.TimerOnSuccessEvent;
 import io.github.resilience4j.micrometer.internal.TimerImpl;
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -422,5 +427,27 @@ public interface Timer {
          * @param output The output of the decorated operation
          */
         void onSuccess(Object output);
+    }
+
+    /**
+     * Returns an EventPublisher can be used to register event consumers.
+     *
+     * @return an EventPublisher
+     */
+    EventPublisher getEventPublisher();
+
+    /**
+     * An EventPublisher which subscribes to the reactive stream of TimerEvents and can be used to
+     * register event consumers.
+     * <p>
+     * To understand when the handlers are called, see the documentation of the respective events.
+     */
+    interface EventPublisher extends io.github.resilience4j.core.EventPublisher<TimerEvent> {
+
+        EventPublisher onStart(EventConsumer<TimerOnStartEvent> eventConsumer);
+
+        EventPublisher onSuccess(EventConsumer<TimerOnSuccessEvent> eventConsumer);
+
+        EventPublisher onFailure(EventConsumer<TimerOnFailureEvent> eventConsumer);
     }
 }
