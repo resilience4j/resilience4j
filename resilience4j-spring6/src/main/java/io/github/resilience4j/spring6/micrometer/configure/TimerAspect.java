@@ -24,7 +24,6 @@ import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.utils.AnnotationExtractor;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.logging.LoggingMeterRegistry;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -66,7 +65,7 @@ public class TimerAspect implements Ordered {
         this.timerAspectExtList = timerAspectExtList;
         this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
-        this.registry = registry != null ? registry : new LoggingMeterRegistry();
+        this.registry = registry;
     }
 
     @Pointcut(value = "@within(timer) || @annotation(timer)", argNames = "timer")

@@ -66,11 +66,12 @@ public class TimerConfiguration {
             TimerConfigurationProperties timerConfigurationProperties,
             EventConsumerRegistry<TimerEvent> timerEventConsumerRegistry,
             RegistryEventConsumer<Timer> timerRegistryEventConsumer,
-            @Qualifier("compositeTimerCustomizer") CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer
+            @Qualifier("compositeTimerCustomizer") CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
+            @Autowired(required = false) MeterRegistry registry
     ) {
         TimerRegistry timerRegistry = createTimerRegistry(timerConfigurationProperties, timerRegistryEventConsumer, compositeTimerCustomizer);
         registerEventConsumer(timerRegistry, timerEventConsumerRegistry, timerConfigurationProperties);
-        initTimerRegistry(timerRegistry, timerConfigurationProperties, compositeTimerCustomizer);
+        initTimerRegistry(timerRegistry, timerConfigurationProperties, compositeTimerCustomizer, registry);
         return timerRegistry;
     }
 
@@ -180,5 +181,4 @@ public class TimerConfiguration {
         timer.getEventPublisher().onEvent(
                 eventConsumerRegistry.createEventConsumer(timer.getName(), eventConsumerBufferSize));
     }
-
 }
