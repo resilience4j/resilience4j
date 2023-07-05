@@ -21,12 +21,19 @@ package io.github.resilience4j.micrometer.internal;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.micrometer.TimerConfig;
+import io.github.resilience4j.micrometer.event.TimerEvent;
+import io.github.resilience4j.micrometer.event.TimerOnFailureEvent;
+import io.github.resilience4j.micrometer.event.TimerOnStartEvent;
+import io.github.resilience4j.micrometer.event.TimerOnSuccessEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.micrometer.tagged.TagNames.KIND;
@@ -45,6 +52,7 @@ public class TimerImpl implements Timer {
     private final TimerConfig timerConfig;
     private final Map<String, String> tags;
     private final List<Tag> parsedTags;
+    private final TimerEventProcessor eventProcessor;
 
     public TimerImpl(@NonNull String name, @NonNull MeterRegistry registry, @NonNull TimerConfig timerConfig, @NonNull Map<String, String> tags) {
         this.name = requireNonNull(name, "Name must not be null");
@@ -54,6 +62,7 @@ public class TimerImpl implements Timer {
         parsedTags = this.tags.entrySet().stream()
                 .map(tagsEntry -> Tag.of(tagsEntry.getKey(), tagsEntry.getValue()))
                 .collect(toList());
+        eventProcessor = new TimerEventProcessor();
     }
 
     @Override
@@ -73,11 +82,12 @@ public class TimerImpl implements Timer {
 
     @Override
     public Context createContext() {
-        return new ContextImpl(name, registry, parsedTags, timerConfig);
+        return new ContextImpl(name, registry, parsedTags, timerConfig, eventProcessor);
     }
 
     public static class ContextImpl implements Context {
 
+        private static final Logger LOGGER = LoggerFactory.getLogger(ContextImpl.class);
         private static final String RESULT = "result";
         private static final String KIND_FAILED = "failed";
         private static final String KIND_SUCCESSFUL = "successful";
@@ -86,27 +96,32 @@ public class TimerImpl implements Timer {
         private final MeterRegistry registry;
         private final List<Tag> tags;
         private final TimerConfig timerConfig;
+        private final TimerEventProcessor eventProcessor;
         private final long start;
 
-        public ContextImpl(String name, MeterRegistry registry, List<Tag> tags, TimerConfig timerConfig) {
+        public ContextImpl(String name, MeterRegistry registry, List<Tag> tags, TimerConfig timerConfig, TimerEventProcessor eventProcessor) {
             this.name = name;
             this.registry = registry;
             this.tags = tags;
             this.timerConfig = timerConfig;
+            this.eventProcessor = eventProcessor;
             start = nanoTime();
+            if (eventProcessor.hasConsumers()) {
+                publishEvent(new TimerOnStartEvent(name));
+            }
         }
 
         @Override
         public void onFailure(Throwable throwable) {
-            recordCall(KIND_FAILED, () -> timerConfig.getFailureResultNameResolver().apply(throwable));
+            recordCall(KIND_FAILED, () -> timerConfig.getFailureResultNameResolver().apply(throwable), duration -> new TimerOnFailureEvent(name, duration));
         }
 
         @Override
         public void onSuccess(Object output) {
-            recordCall(KIND_SUCCESSFUL, () -> timerConfig.getSuccessResultNameResolver().apply(output));
+            recordCall(KIND_SUCCESSFUL, () -> timerConfig.getSuccessResultNameResolver().apply(output), duration -> new TimerOnSuccessEvent(name, duration));
         }
 
-        private void recordCall(String resultKind, Supplier<String> resultName) {
+        private void recordCall(String resultKind, Supplier<String> resultName, Function<Duration, TimerEvent> eventCreator) {
             Duration duration = ofNanos(nanoTime() - start);
             io.micrometer.core.instrument.Timer calls = builder(timerConfig.getMetricNames())
                     .description("Decorated operation calls")
@@ -116,6 +131,17 @@ public class TimerImpl implements Timer {
                     .tags(tags)
                     .register(registry);
             calls.record(duration);
+            if (eventProcessor.hasConsumers()) {
+                publishEvent(eventCreator.apply(duration));
+            }
+        }
+
+        private void publishEvent(TimerEvent event) {
+            try {
+                eventProcessor.consumeEvent(event);
+            } catch (RuntimeException e) {
+                LOGGER.warn("Failed to handle event {}", event.getEventType(), e);
+            }
         }
     }
 }
