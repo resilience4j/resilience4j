@@ -42,20 +42,20 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
     private final Map<String, InstanceProperties> configs = new HashMap<>();
 
     /**
-     * @param backend backend name
+     * @param instance instance name
      * @return the timer configuration
      */
-    public TimerConfig createTimerConfig(String backend, CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer) {
-        return createTimerConfig(instances.get(backend), compositeTimerCustomizer, backend);
+    public TimerConfig createTimerConfig(String instance, CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer) {
+        return createTimerConfig(instances.get(instance), compositeTimerCustomizer, instance);
     }
 
     /**
-     * @param backend timer backend name
-     * @return the configured spring backend properties
+     * @param instance timer instance name
+     * @return the configured spring instance properties
      */
     @Nullable
-    public InstanceProperties getBackendProperties(String backend) {
-        InstanceProperties instanceProperties = instances.get(backend);
+    public InstanceProperties getInstanceProperties(String instance) {
+        InstanceProperties instanceProperties = instances.get(instance);
         if (instanceProperties == null) {
             instanceProperties = configs.get(DEFAULT);
         } else if (configs.get(DEFAULT) != null) {
@@ -65,28 +65,21 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
     }
 
     /**
-     * @return the configured timer backend properties
+     * @return the configured timer instance properties
      */
     public Map<String, InstanceProperties> getInstances() {
         return instances;
     }
 
     /**
-     * For backwards compatibility when setting backends in configuration properties.
-     */
-    public Map<String, InstanceProperties> getBackends() {
-        return instances;
-    }
-
-    /**
-     * @return common configuration for timer backend
+     * @return common configuration for timer instance
      */
     public Map<String, InstanceProperties> getConfigs() {
         return configs;
     }
 
     /**
-     * @param instanceProperties the timer backend spring properties
+     * @param instanceProperties the timer instance spring properties
      * @return the timer configuration
      */
     public TimerConfig createTimerConfig(@Nullable InstanceProperties instanceProperties,
@@ -109,14 +102,14 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
     }
 
     /**
-     * @param properties the configured spring backend properties
+     * @param properties the configured spring instance properties
      * @return timer config builder instance
      */
     @SuppressWarnings("unchecked")
     private TimerConfig buildConfig(TimerConfig.Builder builder,
                                     @Nullable InstanceProperties properties,
                                     CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
-                                    String backend) {
+                                    String instance) {
         if (properties != null) {
             if (properties.getMetricNames() != null) {
                 builder.metricNames(properties.getMetricNames());
@@ -130,7 +123,7 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
                 builder.failureResultNameResolver(function);
             }
         }
-        compositeTimerCustomizer.getCustomizer(backend).ifPresent(customizer -> customizer.customize(builder));
+        compositeTimerCustomizer.getCustomizer(instance).ifPresent(customizer -> customizer.customize(builder));
         return builder.build();
     }
 
@@ -199,7 +192,7 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
 
         /**
          * Gets the shared configuration name. If this is set, the configuration builder will use
-         * the shared configuration backend over this one.
+         * the shared configuration instance over this one.
          *
          * @return The shared configuration name.
          */
@@ -210,7 +203,7 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
 
         /**
          * Sets the shared configuration name. If this is set, the configuration builder will use
-         * the shared configuration backend over this one.
+         * the shared configuration instance over this one.
          *
          * @param baseConfig The shared configuration name.
          */
