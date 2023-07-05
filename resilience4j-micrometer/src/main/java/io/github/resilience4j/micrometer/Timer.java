@@ -430,6 +430,13 @@ public interface Timer {
     }
 
     /**
+     * Returns an EventPublisher can be used to register event consumers.
+     *
+     * @return an EventPublisher
+     */
+    EventPublisher getEventPublisher();
+
+    /**
      * An EventPublisher which subscribes to the reactive stream of TimerEvents and can be used to
      * register event consumers.
      * <p>

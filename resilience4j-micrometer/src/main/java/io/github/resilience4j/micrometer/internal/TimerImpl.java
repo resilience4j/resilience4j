@@ -85,6 +85,11 @@ public class TimerImpl implements Timer {
         return new ContextImpl(name, registry, parsedTags, timerConfig, eventProcessor);
     }
 
+    @Override
+    public EventPublisher getEventPublisher() {
+        return eventProcessor;
+    }
+
     public static class ContextImpl implements Context {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(ContextImpl.class);
