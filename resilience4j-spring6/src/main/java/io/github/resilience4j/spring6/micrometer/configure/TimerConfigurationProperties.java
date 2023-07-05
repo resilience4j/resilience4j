@@ -23,7 +23,7 @@ import org.springframework.core.Ordered;
 public class TimerConfigurationProperties extends
         io.github.resilience4j.common.micrometer.configuration.CommonTimerConfigurationProperties {
 
-    private int timerAspectOrder = Ordered.LOWEST_PRECEDENCE - 5;
+    private int timerAspectOrder = Ordered.LOWEST_PRECEDENCE;
 
     public int getTimerAspectOrder() {
         return timerAspectOrder;

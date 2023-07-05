@@ -23,7 +23,7 @@ import org.springframework.core.Ordered;
 public class RetryConfigurationProperties extends
     io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties {
 
-    private int retryAspectOrder = Ordered.LOWEST_PRECEDENCE - 4;
+    private int retryAspectOrder = Ordered.LOWEST_PRECEDENCE - 5;
 
     /**
      * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then
