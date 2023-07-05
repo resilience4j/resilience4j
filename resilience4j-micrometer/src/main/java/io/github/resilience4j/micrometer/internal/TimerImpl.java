@@ -19,6 +19,7 @@
 package io.github.resilience4j.micrometer.internal;
 
 import io.github.resilience4j.core.lang.NonNull;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.micrometer.TimerConfig;
 import io.github.resilience4j.micrometer.event.TimerEvent;
@@ -27,6 +28,7 @@ import io.github.resilience4j.micrometer.event.TimerOnStartEvent;
 import io.github.resilience4j.micrometer.event.TimerOnSuccessEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.logging.LoggingMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,8 @@ import static java.util.stream.Collectors.toList;
 
 public class TimerImpl implements Timer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimerImpl.class);
+
     private final String name;
     private final MeterRegistry registry;
     private final TimerConfig timerConfig;
@@ -54,9 +58,14 @@ public class TimerImpl implements Timer {
     private final List<Tag> parsedTags;
     private final TimerEventProcessor eventProcessor;
 
-    public TimerImpl(@NonNull String name, @NonNull MeterRegistry registry, @NonNull TimerConfig timerConfig, @NonNull Map<String, String> tags) {
+    public TimerImpl(@NonNull String name, @Nullable MeterRegistry registry, @NonNull TimerConfig timerConfig, @NonNull Map<String, String> tags) {
         this.name = requireNonNull(name, "Name must not be null");
-        this.registry = requireNonNull(registry, "Meter registry must not be null");
+        if (registry != null) {
+            this.registry = registry;
+        } else {
+            LOGGER.warn("No meter registry provided to '{}' timer. Will use the logging meter registry", name);
+            this.registry = new LoggingMeterRegistry();
+        }
         this.timerConfig = requireNonNull(timerConfig, "Timer config must not be null");
         this.tags = copyOf(requireNonNull(tags, "Tags must not be null"));
         parsedTags = this.tags.entrySet().stream()
