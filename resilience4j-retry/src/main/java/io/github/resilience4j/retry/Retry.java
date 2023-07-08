@@ -431,6 +431,14 @@ public interface Retry {
          * @return the number of failed calls after all retry attempts
          */
         long getNumberOfFailedCallsWithRetryAttempt();
+
+
+        /**
+         * Returns the number of total calls after all retry attempts.
+         *
+         * @return the number of total calls after all retry attempts
+         */
+        long getNumberOfTotalCalls();
     }
 
     interface AsyncContext<T> {

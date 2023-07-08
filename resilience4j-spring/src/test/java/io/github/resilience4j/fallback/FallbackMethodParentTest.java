@@ -47,7 +47,7 @@ public class FallbackMethodParentTest {
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         FallbackMethod fallbackMethod = FallbackMethod
-            .create("fallbackParent", testMethod, new Object[]{"test"}, target);
+            .create("fallbackParent", testMethod, new Object[]{"test"}, target.getClass(), target);
 
         assertThat(fallbackMethod.fallback(new IllegalStateException("err")))
             .isEqualTo("proxy-recovered");
@@ -59,7 +59,7 @@ public class FallbackMethodParentTest {
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         FallbackMethod fallbackMethod = FallbackMethod
-            .create("fallbackInterface", testMethod, new Object[]{"test"}, target);
+            .create("fallbackInterface", testMethod, new Object[]{"test"}, target.getClass(), target);
 
         assertThat(fallbackMethod.fallback(new IllegalArgumentException("err")))
             .isEqualTo("proxy-recovered");
@@ -71,7 +71,7 @@ public class FallbackMethodParentTest {
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         FallbackMethod fallbackMethod = FallbackMethod
-            .create("fallbackOnlyInterface", testMethod, new Object[]{"test"}, target);
+            .create("fallbackOnlyInterface", testMethod, new Object[]{"test"}, target.getClass(), target);
 
         assertThat(fallbackMethod.fallback(new IllegalArgumentException("err")))
             .isEqualTo("only-interface-recovered");
@@ -83,7 +83,7 @@ public class FallbackMethodParentTest {
         Method testMethod = target.getClass().getMethod("testMethod", String.class);
 
         assertThatThrownBy(() -> FallbackMethod
-            .create("ambiguousFallback", testMethod, new Object[]{"test"}, target))
+            .create("ambiguousFallback", testMethod, new Object[]{"test"}, target.getClass(), target))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("You have more that one fallback method that cover the same exception type "
                 + IOException.class.getName());
