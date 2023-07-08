@@ -4,12 +4,11 @@ import io.github.resilience4j.common.retry.configuration.CommonRetryConfiguratio
 import io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException;
 import io.github.resilience4j.commons.configuration.dummy.DummyPredicateObject;
 import io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable;
+import io.github.resilience4j.commons.configuration.util.CommonsConfigurationUtil;
 import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.apache.commons.configuration2.YAMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -23,12 +22,17 @@ public class CommonsConfigurationRetryConfigurationTest {
 
     @Test
     public void testFromPropertiesFile() throws ConfigurationException {
-        FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-                .configure(new Parameters()
-                        .fileBased()
-                        .setListDelimiterHandler(new DefaultListDelimiterHandler(','))
-                        .setFileName(TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME));
-        Configuration config = builder.getConfiguration();
+        Configuration config = CommonsConfigurationUtil.getConfiguration(PropertiesConfiguration.class, TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME);
+
+        CommonsConfigurationRetryConfiguration retryConfiguration = CommonsConfigurationRetryConfiguration.of(config);
+
+        assertConfigs(retryConfiguration.getConfigs());
+        assertInstances(retryConfiguration.getInstances());
+    }
+
+    @Test
+    public void testFromYamlFile() throws ConfigurationException {
+        Configuration config = CommonsConfigurationUtil.getConfiguration(YAMLConfiguration.class, TestConstants.RESILIENCE_CONFIG_YAML_FILE_NAME);
 
         CommonsConfigurationRetryConfiguration retryConfiguration = CommonsConfigurationRetryConfiguration.of(config);
 

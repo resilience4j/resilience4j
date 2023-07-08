@@ -18,7 +18,7 @@ resilience4j:
                 recordExceptions:
                     - java.lang.IllegalArgumentException
                     - java.lang.NullPointerException
-                ignoreExceptionPredicate: java.lang.RuntimeException
+                ignoreExceptionPredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
                 ignoreExceptions:
                     - java.lang.IllegalStateException
                     - java.lang.IndexOutOfBoundsException
@@ -30,7 +30,7 @@ resilience4j:
                 failureRateThreshold: 50
                 eventConsumerBufferSize: 10
                 ignoreExceptions:
-                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoreException
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException
         instances:
             backendA:
                 baseConfig: default
@@ -42,15 +42,19 @@ resilience4j:
                 minimumNumberOfCalls: 10
                 permittedNumberOfCallsInHalfOpenState: 3
                 waitDurationInOpenState: PT5s
-                failureRateThreshold: 50
-                eventConsumerBufferSize: 10
+                failureRateThreshold: 60
+                eventConsumerBufferSize: 20
                 recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
     retry:
         configs:
             default:
-                ignoreExceptions: io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException, java.lang.RuntimeException
+                ignoreExceptions:
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException
+                    - java.lang.RuntimeException
                 maxAttempts: 3
-                retryExceptions: java.util.concurrent.TimeoutException, java.io.IOException
+                retryExceptions:
+                    - java.util.concurrent.TimeoutException
+                    - java.io.IOException
                 waitDuration: PT10S
         instances:
             backendA:
@@ -62,11 +66,15 @@ resilience4j:
                 exponentialBackoffMultiplier: 2
                 exponentialMaxWaitDuration: PT10S
                 failAfterMaxAttempts: true
-                ignoreExceptions: io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException, java.lang.RuntimeException
+                ignoreExceptions:
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException
+                    - java.lang.RuntimeException
                 maxAttempts: 5
                 resultPredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateObject
                 retryExceptionPredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
-                retryExceptions: java.util.concurrent.TimeoutException, java.io.IOException
+                retryExceptions:
+                    - java.util.concurrent.TimeoutException
+                    - java.io.IOException
     bulkhead:
         configs:
             default:
@@ -77,6 +85,8 @@ resilience4j:
             backendB:
                 maxWaitDuration: PT0.01S
                 maxConcurrentCalls: 20
+                eventConsumerBufferSize: 15
+                writableStackTraceEnabled: true
     ratelimiter:
         configs:
             default:
