@@ -4,4 +4,4 @@ dependencies {
     runtimeOnly (libraries.apache_commons_beanutils)
     runtimeOnly (libraries.jackson_dataformat_yaml)
 }
-ext.moduleName = 'io.github.resilience4j.commonsconfiguration'
+ext.moduleName = 'io.github.resilience4j.commons.configuration'
