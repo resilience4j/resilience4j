@@ -101,10 +101,11 @@ public class TimerImpl implements Timer {
 
     public static class ContextImpl implements Context {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(ContextImpl.class);
-        private static final String RESULT = "result";
+        private static final String RESULT_TAG = "result";
         private static final String KIND_FAILED = "failed";
         private static final String KIND_SUCCESSFUL = "successful";
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(ContextImpl.class);
 
         private final String name;
         private final MeterRegistry registry;
@@ -141,7 +142,7 @@ public class TimerImpl implements Timer {
                     .description("Decorated operation calls")
                     .tag(NAME, name)
                     .tag(KIND, resultKind)
-                    .tag(RESULT, resultName.get())
+                    .tag(RESULT_TAG, resultName.get())
                     .tags(tags)
                     .register(registry);
             calls.record(duration);

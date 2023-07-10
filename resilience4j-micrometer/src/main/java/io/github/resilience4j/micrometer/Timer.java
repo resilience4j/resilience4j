@@ -46,6 +46,17 @@ import static java.util.Collections.emptyMap;
 public interface Timer {
 
     /**
+     * Creates a Timer with a default Timer configuration.
+     *
+     * @param name     the name of the Timer
+     * @param registry the registry to bind Timer to
+     * @return a Timer with a custom Timer configuration.
+     */
+    static Timer of(String name, MeterRegistry registry) {
+        return of(name, registry, TimerConfig.ofDefaults(), emptyMap());
+    }
+
+    /**
      * Creates a Timer with a custom Timer configuration.
      *
      * @param name        the name of the Timer
@@ -68,42 +79,6 @@ public interface Timer {
      */
     static Timer of(String name, MeterRegistry registry, TimerConfig timerConfig, Map<String, String> tags) {
         return new TimerImpl(name, registry, timerConfig, tags);
-    }
-
-    /**
-     * Creates a Timer with a custom Timer configuration.
-     *
-     * @param name                the name of the Timer
-     * @param registry            the registry to bind Timer to
-     * @param timerConfigSupplier a supplier of a custom Timer configuration
-     * @return a Timer with a custom Timer configuration.
-     */
-    static Timer of(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier) {
-        return of(name, registry, timerConfigSupplier.get(), emptyMap());
-    }
-
-    /**
-     * Creates a Timer with a custom Timer configuration.
-     *
-     * @param name                the name of the Timer
-     * @param registry            the registry to bind Timer to
-     * @param timerConfigSupplier a supplier of a custom Timer configuration
-     * @param tags                tags to assign to the Timer
-     * @return a Timer with a custom Timer configuration.
-     */
-    static Timer of(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier, Map<String, String> tags) {
-        return new TimerImpl(name, registry, timerConfigSupplier.get(), tags);
-    }
-
-    /**
-     * Creates a Timer with default configuration.
-     *
-     * @param name     the name of the Timer
-     * @param registry the registry to bind Timer to
-     * @return a Timer with default configuration
-     */
-    static Timer ofDefaults(String name, MeterRegistry registry) {
-        return of(name, registry, TimerConfig.ofDefaults(), emptyMap());
     }
 
     /**
@@ -170,7 +145,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onSuccess(Void.TYPE);
+                context.onSuccess(null);
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -257,7 +232,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onSuccess(Void.TYPE);
+                context.onSuccess(null);
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -301,7 +276,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onSuccess(Void.TYPE);
+                context.onSuccess(null);
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -322,7 +297,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onSuccess(Void.TYPE);
+                context.onSuccess(null);
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
