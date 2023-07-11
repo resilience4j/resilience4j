@@ -108,6 +108,11 @@ public class TimerConfig {
                 .toString();
     }
 
+    /**
+     * Builds Timer configuration
+     *
+     * @param <T> The decorated operation result type
+     */
     public static class Builder<T> {
 
         @Nullable

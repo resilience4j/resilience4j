@@ -19,16 +19,19 @@
 package io.github.resilience4j.kotlin.micrometer
 
 import io.github.resilience4j.micrometer.Timer
+import io.github.resilience4j.micrometer.Timer.Context
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 
 fun <T> Flow<T>.timer(timer: Timer): Flow<T> {
-    val source = this
-    return channelFlow {
-        timer.executeSuspendFunction {
-            source.collect {
-                send(it)
-            }
+    var context: Context? = null
+    return onStart {
+        context = timer.createContext()
+    }.onCompletion {
+        when (it) {
+            null -> context?.onSuccess(null)
+            else -> context?.onFailure(it)
         }
     }
 }
