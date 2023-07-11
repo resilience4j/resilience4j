@@ -19,7 +19,6 @@
 package io.github.resilience4j.micrometer.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.registry.AbstractRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.micrometer.Timer;
@@ -27,69 +26,22 @@ import io.github.resilience4j.micrometer.TimerConfig;
 import io.github.resilience4j.micrometer.TimerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNullElse;
 
-/**
- * Constructs backend Timers according to configuration values.
- */
 public class InMemoryTimerRegistry extends AbstractRegistry<Timer, TimerConfig> implements TimerRegistry {
 
-    /**
-     * Constructor
-     *
-     * @param defaultConfig          the default config to use for new Timers
-     * @param registryEventConsumers initialized consumers for timers
-     * @param tags                   a map of tags for the registry
-     */
-    public InMemoryTimerRegistry(TimerConfig defaultConfig, List<RegistryEventConsumer<Timer>> registryEventConsumers, Map<String, String> tags) {
+    public InMemoryTimerRegistry(TimerConfig defaultConfig, Map<String, TimerConfig> configs, List<RegistryEventConsumer<Timer>> registryEventConsumers, Map<String, String> tags) {
         super(defaultConfig, registryEventConsumers, tags);
-    }
-
-    public static class Builder {
-
-        private final Map<String, String> tags = new HashMap<>();
-        private final Map<String, TimerConfig> configs = new HashMap<>();
-        private TimerConfig defaultConfig = TimerConfig.ofDefaults();
-        private final List<RegistryEventConsumer<Timer>> consumers = new ArrayList<>();
-
-        public Builder withTags(@NonNull Map<String, String> tags) {
-            this.tags.putAll(tags);
-            return this;
-        }
-
-        public Builder withConfigs(@NonNull Map<String, TimerConfig> configs) {
-            this.configs.putAll(configs);
-            return this;
-        }
-
-        public Builder withDefaultConfig(@NonNull TimerConfig defaultConfig) {
-            this.defaultConfig = defaultConfig;
-            return this;
-        }
-
-        public Builder withConsumers(@NonNull List<RegistryEventConsumer<Timer>> registryEventConsumers) {
-            this.consumers.addAll(registryEventConsumers);
-            return this;
-        }
-
-        public Builder withConsumer(@NonNull RegistryEventConsumer<Timer> registryEventConsumer) {
-            this.consumers.add(registryEventConsumer);
-            return this;
-        }
-
-        public TimerRegistry build() {
-            configs.remove("default");
-            TimerRegistry registry = new InMemoryTimerRegistry(defaultConfig, consumers, tags);
-            configs.forEach(registry::addConfiguration);
-            return registry;
-        }
+        requireNonNullElse(configs, Collections.<String, TimerConfig>emptyMap()).entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(DEFAULT_CONFIG))
+                .forEach(entry -> addConfiguration(entry.getKey(), entry.getValue()));
     }
 
     @Override

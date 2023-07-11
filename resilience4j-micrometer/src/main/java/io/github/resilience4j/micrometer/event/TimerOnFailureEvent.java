@@ -17,7 +17,7 @@ package io.github.resilience4j.micrometer.event;
 
 import java.time.Duration;
 
-import static io.github.resilience4j.micrometer.event.TimerEvent.Type.SUCCESS;
+import static io.github.resilience4j.micrometer.event.TimerEvent.Type.FAILURE;
 
 /**
  * A TimerEvent which informs that the decorated operation threw an exception.
@@ -27,7 +27,7 @@ public class TimerOnFailureEvent extends AbstractTimerEvent {
     private final Duration operationDuration;
 
     public TimerOnFailureEvent(String monitorName, Duration operationDuration) {
-        super(monitorName, SUCCESS);
+        super(monitorName, FAILURE);
         this.operationDuration = operationDuration;
     }
 
