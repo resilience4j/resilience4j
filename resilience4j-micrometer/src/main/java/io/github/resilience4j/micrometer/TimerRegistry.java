@@ -19,25 +19,66 @@
 package io.github.resilience4j.micrometer;
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.micrometer.internal.InMemoryTimerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 /**
  * Manages all Timer instances.
  */
 public interface TimerRegistry extends Registry<Timer, TimerConfig> {
 
+
     /**
-     * Gets a registry builder.
+     * Creates a TimerRegistry.
      *
-     * @return a builder for building {@link InMemoryTimerRegistry} instances.
+     * @return a TimerRegistry with a default Timer configuration.
      */
-    static InMemoryTimerRegistry.Builder builder() {
-        return new InMemoryTimerRegistry.Builder();
+    static TimerRegistry ofDefaults() {
+        return of(TimerConfig.ofDefaults(), emptyMap(), emptyList(), emptyMap());
+    }
+
+    /**
+     * Creates a TimerRegistry.
+     *
+     * @param defaultConfig the default config to use for new Timers
+     * @return a TimerRegistry with a custom Timer configuration.
+     */
+    static TimerRegistry of(TimerConfig defaultConfig) {
+        return of(defaultConfig, emptyMap(), emptyList(), emptyMap());
+    }
+
+    /**
+     * Creates a TimerRegistry.
+     *
+     * @param defaultConfig the default config to use for new Timers
+     * @param configs       the additional configs to use for new Timers
+     * @return a TimerRegistry with a custom Timer configuration.
+     */
+    static TimerRegistry of(TimerConfig defaultConfig, Map<String, TimerConfig> configs) {
+        return of(defaultConfig, configs, emptyList(), emptyMap());
+    }
+
+    /**
+     * Creates a TimerRegistry.
+     *
+     * @param defaultConfig          the default config to use for new Timers
+     * @param configs                the additional configs to use for new Timers
+     * @param registryEventConsumers initialized consumers for timers
+     * @param tags                   a map of tags for the registry
+     * @return a TimerRegistry with a Map of shared Timer configurations and a list of Timer
+     * registry event consumers.
+     */
+    static TimerRegistry of(TimerConfig defaultConfig, Map<String, TimerConfig> configs, List<RegistryEventConsumer<Timer>> registryEventConsumers, Map<String, String> tags) {
+        return new InMemoryTimerRegistry(defaultConfig, configs, registryEventConsumers, tags);
     }
 
     /**
@@ -76,12 +117,12 @@ public interface TimerRegistry extends Registry<Timer, TimerConfig> {
      * Returns a managed {@link Timer} or creates a new one with a custom Timer
      * configuration.
      *
-     * @param name        the name of the Timer
-     * @param registry    the registry to bind Timer to
-     * @param timerConfig a custom Timer configuration
+     * @param name     the name of the Timer
+     * @param registry the registry to bind Timer to
+     * @param config   a custom Timer configuration
      * @return The {@link Timer}
      */
-    Timer timer(String name, MeterRegistry registry, TimerConfig timerConfig);
+    Timer timer(String name, MeterRegistry registry, TimerConfig config);
 
     /**
      * Returns a managed {@link Timer} or creates a new one with a custom Timer
@@ -91,24 +132,24 @@ public interface TimerRegistry extends Registry<Timer, TimerConfig> {
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
-     * @param name        the name of the Timer
-     * @param registry    the registry to bind Timer to
-     * @param timerConfig a custom Timer configuration
-     * @param tags        tags added to the Timer
+     * @param name     the name of the Timer
+     * @param registry the registry to bind Timer to
+     * @param config   a custom Timer configuration
+     * @param tags     tags added to the Timer
      * @return The {@link Timer}
      */
-    Timer timer(String name, MeterRegistry registry, TimerConfig timerConfig, Map<String, String> tags);
+    Timer timer(String name, MeterRegistry registry, TimerConfig config, Map<String, String> tags);
 
     /**
      * Returns a managed {@link TimerConfig} or creates a new one with a custom
      * TimerConfig configuration.
      *
-     * @param name                the name of the TimerConfig
-     * @param registry            the registry to bind Timer to
-     * @param timerConfigSupplier a supplier of a custom TimerConfig configuration
+     * @param name           the name of the TimerConfig
+     * @param registry       the registry to bind Timer to
+     * @param configSupplier a supplier of a custom TimerConfig configuration
      * @return The {@link TimerConfig}
      */
-    Timer timer(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier);
+    Timer timer(String name, MeterRegistry registry, Supplier<TimerConfig> configSupplier);
 
     /**
      * Returns a managed {@link Timer} or creates a new one with a custom Timer
@@ -118,13 +159,13 @@ public interface TimerRegistry extends Registry<Timer, TimerConfig> {
      * When tags (keys) of the two collide the tags passed with this method will override the tags
      * of the registry.
      *
-     * @param name                the name of the Timer
-     * @param registry            the registry to bind Timer to
-     * @param timerConfigSupplier a supplier of a custom Timer configuration
-     * @param tags                tags added to the Timer
+     * @param name           the name of the Timer
+     * @param registry       the registry to bind Timer to
+     * @param configSupplier a supplier of a custom Timer configuration
+     * @param tags           tags added to the Timer
      * @return The {@link Timer}
      */
-    Timer timer(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier, Map<String, String> tags);
+    Timer timer(String name, MeterRegistry registry, Supplier<TimerConfig> configSupplier, Map<String, String> tags);
 
     /**
      * Returns a managed {@link Timer} or creates a new one.
