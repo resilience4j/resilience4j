@@ -15,23 +15,18 @@
  */
 package io.github.resilience4j.micrometer;
 
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static io.github.resilience4j.micrometer.Timer.*;
-import static io.github.resilience4j.micrometer.tagged.TagNames.KIND;
-import static io.github.resilience4j.micrometer.tagged.TagNames.NAME;
+import static io.github.resilience4j.micrometer.TimerAssertions.thenFailureTimed;
+import static io.github.resilience4j.micrometer.TimerAssertions.thenSuccessTimed;
 import static java.util.concurrent.CompletableFuture.completedStage;
 import static java.util.concurrent.CompletableFuture.failedFuture;
-import static java.util.stream.Collectors.toCollection;
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class TimerTest {
@@ -346,28 +341,5 @@ public class TimerTest {
         } catch (IllegalStateException e) {
             thenFailureTimed(registry, timer, e);
         }
-    }
-
-    private static void thenSuccessTimed(MeterRegistry registry, Timer timer, Object output) {
-        thenTimed(registry, timer, "successful", timer.getTimerConfig().getSuccessResultNameResolver().apply(output));
-    }
-
-    private static void thenFailureTimed(MeterRegistry registry, Timer timer, Throwable throwable) {
-        thenTimed(registry, timer, "failed", timer.getTimerConfig().getFailureResultNameResolver().apply(throwable));
-    }
-
-    private static void thenTimed(MeterRegistry registry, Timer timer, String resultKind, String resultName) {
-        List<Meter> meters = registry.getMeters().stream()
-                .filter(meter -> meter.getId().getName().equals(timer.getTimerConfig().getMetricNames()))
-                .toList();
-        then(meters.size()).isEqualTo(1);
-        io.micrometer.core.instrument.Timer meter = (io.micrometer.core.instrument.Timer) meters.get(0);
-        List<Tag> tags = timer.getTags().entrySet().stream().map(tag -> Tag.of(tag.getKey(), tag.getValue())).collect(toCollection(ArrayList::new));
-        tags.add(Tag.of(NAME, timer.getName()));
-        tags.add(Tag.of(KIND, resultKind));
-        tags.add(Tag.of("result", resultName));
-        then(meter.count()).isEqualTo(1);
-        then(meter.getId().getTags()).containsExactlyInAnyOrderElementsOf(tags);
-        registry.clear();
     }
 }

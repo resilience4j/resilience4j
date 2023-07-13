@@ -19,6 +19,7 @@ dependencies {
     testImplementation(project(':resilience4j-retry'))
     testImplementation(project(':resilience4j-timelimiter'))
     testImplementation(project(':resilience4j-micrometer'))
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 
 compileKotlin {

@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.resilience4j.reactor.micrometer;
+package io.github.resilience4j.reactor.micrometer.operator;
 
 import io.github.resilience4j.micrometer.Timer;
-import io.github.resilience4j.micrometer.Timer.Context;
 import io.github.resilience4j.reactor.IllegalPublisherException;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -25,7 +24,7 @@ import reactor.core.publisher.Mono;
 import java.util.function.UnaryOperator;
 
 /**
- * A Reactor Timer operator which wraps a reactive type in a Timer.
+ * A Reactor Time operator which wraps a reactive type in a Timer.
  *
  * @param <T> the value type of the upstream and downstream
  */
@@ -38,7 +37,7 @@ public class TimerOperator<T> implements UnaryOperator<Publisher<T>> {
     }
 
     /**
-     * Creates a timer.
+     * Creates a TimerOperator.
      *
      * @param <T>   the value type of the upstream and downstream
      * @param timer the timer
@@ -51,15 +50,9 @@ public class TimerOperator<T> implements UnaryOperator<Publisher<T>> {
     @Override
     public Publisher<T> apply(Publisher<T> publisher) {
         if (publisher instanceof Mono) {
-            Context context = timer.createContext();
-            return ((Mono<T>) publisher)
-                    .doOnSuccess(context::onSuccess)
-                    .doOnError(context::onFailure);
+            return new MonoTimer<>((Mono<? extends T>) publisher, timer);
         } else if (publisher instanceof Flux) {
-            Context context = timer.createContext();
-            return ((Flux<T>) publisher)
-                    .doOnNext(context::onSuccess)
-                    .doOnError(context::onFailure);
+            return new FluxTimer<>((Flux<? extends T>) publisher, timer);
         } else {
             throw new IllegalPublisherException(publisher);
         }
