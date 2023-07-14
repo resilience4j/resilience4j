@@ -55,8 +55,15 @@ public class TimerEventPublisherTest {
         AtomicReference<TimerOnSuccessEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onSuccess(consumedEvent::set);
-        timer.executeSupplier(() -> "result");
 
+        timer.executeRunnable(() -> {
+        });
+        then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
+        then(consumedEvent.get().getEventType()).isEqualTo(SUCCESS);
+        then(consumedEvent.get().getCreationTime()).isAfter(now).isBefore(now());
+        then(consumedEvent.get().getOperationDuration()).isPositive();
+
+        timer.executeSupplier(() -> "result");
         then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
         then(consumedEvent.get().getEventType()).isEqualTo(SUCCESS);
         then(consumedEvent.get().getCreationTime()).isAfter(now).isBefore(now());

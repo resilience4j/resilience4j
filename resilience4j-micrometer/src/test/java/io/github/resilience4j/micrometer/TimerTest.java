@@ -15,23 +15,18 @@
  */
 package io.github.resilience4j.micrometer;
 
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static io.github.resilience4j.micrometer.Timer.*;
-import static io.github.resilience4j.micrometer.tagged.TagNames.KIND;
-import static io.github.resilience4j.micrometer.tagged.TagNames.NAME;
+import static io.github.resilience4j.micrometer.TimerAssertions.thenFailureTimed;
+import static io.github.resilience4j.micrometer.TimerAssertions.thenSuccessTimed;
 import static java.util.concurrent.CompletableFuture.completedStage;
 import static java.util.concurrent.CompletableFuture.failedFuture;
-import static java.util.stream.Collectors.toCollection;
 import static org.assertj.core.api.BDDAssertions.then;
 
 public class TimerTest {
@@ -46,8 +41,9 @@ public class TimerTest {
         then(timer.getEventPublisher()).isNotNull();
         then(timer.getTimerConfig()).isNotNull();
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
-        then(timer.getTimerConfig().getSuccessResultNameResolver().apply("123")).isEqualTo(TimerConfig.ofDefaults().getSuccessResultNameResolver().apply("123"));
-        then(timer.getTimerConfig().getFailureResultNameResolver().apply(new IllegalStateException())).isEqualTo(TimerConfig.ofDefaults().getFailureResultNameResolver().apply(new IllegalStateException()));
+        then(timer.getTimerConfig().getOnNoResultTagResolver().get()).isEqualTo(TimerConfig.ofDefaults().getOnNoResultTagResolver().get());
+        then(timer.getTimerConfig().getOnResultTagResolver().apply("123")).isEqualTo(TimerConfig.ofDefaults().getOnResultTagResolver().apply("123"));
+        then(timer.getTimerConfig().getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo(TimerConfig.ofDefaults().getOnFailureTagResolver().apply(new IllegalStateException()));
     }
 
     @Test
@@ -55,8 +51,9 @@ public class TimerTest {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<String>custom()
                 .metricNames("resilience4j.timer.operations")
-                .successResultNameResolver(output -> String.valueOf(output.length()))
-                .failureResultNameResolver(throwable -> throwable.getClass().getName())
+                .onNoResultTagResolver(() -> "custom tag")
+                .onResultTagResolver(result -> String.valueOf(result.length()))
+                .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
         Map<String, String> tags = Map.of("tag 1", "value 1");
         Timer timer = of("timer 1", registry, config, tags);
@@ -66,8 +63,9 @@ public class TimerTest {
         then(timer.getEventPublisher()).isNotNull();
         then(timer.getTimerConfig()).isNotNull();
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(config.getMetricNames());
-        then(timer.getTimerConfig().getSuccessResultNameResolver().apply("123")).isEqualTo(config.getSuccessResultNameResolver().apply("123"));
-        then(timer.getTimerConfig().getFailureResultNameResolver().apply(new IllegalStateException())).isEqualTo(config.getFailureResultNameResolver().apply(new IllegalStateException()));
+        then(timer.getTimerConfig().getOnNoResultTagResolver().get()).isEqualTo(config.getOnNoResultTagResolver().get());
+        then(timer.getTimerConfig().getOnResultTagResolver().apply("123")).isEqualTo(config.getOnResultTagResolver().apply("123"));
+        then(timer.getTimerConfig().getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo(config.getOnFailureTagResolver().apply(new IllegalStateException()));
     }
 
     @Test
@@ -75,39 +73,39 @@ public class TimerTest {
         MeterRegistry registry = new SimpleMeterRegistry();
         Timer timer = of("timer 1", registry);
 
-        String output1 = decorateSupplier(timer, () -> "output").get();
-        thenSuccessTimed(registry, timer, output1);
+        String result1 = decorateSupplier(timer, () -> "result").get();
+        thenSuccessTimed(registry, timer, result1);
 
-        String output2 = decorateCheckedSupplier(timer, () -> "output").get();
-        thenSuccessTimed(registry, timer, output2);
+        String result2 = decorateCheckedSupplier(timer, () -> "result").get();
+        thenSuccessTimed(registry, timer, result2);
 
-        String output3 = decorateFunction(timer, input -> "output").apply("input");
-        thenSuccessTimed(registry, timer, output3);
+        String result3 = decorateFunction(timer, input -> "result").apply("input");
+        thenSuccessTimed(registry, timer, result3);
 
-        String output4 = decorateCheckedFunction(timer, input -> "output").apply("input");
-        thenSuccessTimed(registry, timer, output4);
+        String result4 = decorateCheckedFunction(timer, input -> "result").apply("input");
+        thenSuccessTimed(registry, timer, result4);
 
-        String output5 = decorateCallable(timer, () -> "output").call();
-        thenSuccessTimed(registry, timer, output5);
+        String result5 = decorateCallable(timer, () -> "result").call();
+        thenSuccessTimed(registry, timer, result5);
 
-        String output6 = decorateCompletionStage(timer, () -> completedStage("output")).get().toCompletableFuture().get();
-        thenSuccessTimed(registry, timer, output6);
+        String result6 = decorateCompletionStage(timer, () -> completedStage("result")).get().toCompletableFuture().get();
+        thenSuccessTimed(registry, timer, result6);
 
         decorateRunnable(timer, () -> {
         }).run();
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
 
         decorateCheckedRunnable(timer, () -> {
         }).run();
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
 
         decorateConsumer(timer, input -> {
         }).accept("input");
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
 
         decorateCheckedConsumer(timer, input -> {
         }).accept("input");
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test
@@ -115,31 +113,31 @@ public class TimerTest {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<String>custom()
                 .metricNames("resilience4j.timer.operations")
-                .successResultNameResolver(output -> {
-                    then(output).isEqualTo("output");
-                    return output;
+                .onResultTagResolver(result -> {
+                    then(result).isEqualTo("result");
+                    return result;
                 })
                 .build();
         Map<String, String> tags = Map.of("tag 1", "value 1");
         Timer timer = of("timer 1", registry, config, tags);
 
-        String output1 = decorateSupplier(timer, () -> "output").get();
-        thenSuccessTimed(registry, timer, output1);
+        String result1 = decorateSupplier(timer, () -> "result").get();
+        thenSuccessTimed(registry, timer, result1);
 
-        String output2 = decorateCheckedSupplier(timer, () -> "output").get();
-        thenSuccessTimed(registry, timer, output2);
+        String result2 = decorateCheckedSupplier(timer, () -> "result").get();
+        thenSuccessTimed(registry, timer, result2);
 
-        String output3 = decorateFunction(timer, input -> "output").apply("input");
-        thenSuccessTimed(registry, timer, output3);
+        String result3 = decorateFunction(timer, input -> "result").apply("input");
+        thenSuccessTimed(registry, timer, result3);
 
-        String output4 = decorateCheckedFunction(timer, input -> "output").apply("input");
-        thenSuccessTimed(registry, timer, output4);
+        String result4 = decorateCheckedFunction(timer, input -> "result").apply("input");
+        thenSuccessTimed(registry, timer, result4);
 
-        String output5 = decorateCallable(timer, () -> "output").call();
-        thenSuccessTimed(registry, timer, output5);
+        String result5 = decorateCallable(timer, () -> "result").call();
+        thenSuccessTimed(registry, timer, result5);
 
-        String output6 = decorateCompletionStage(timer, () -> completedStage("output")).get().toCompletableFuture().get();
-        thenSuccessTimed(registry, timer, output6);
+        String result6 = decorateCompletionStage(timer, () -> completedStage("result")).get().toCompletableFuture().get();
+        thenSuccessTimed(registry, timer, result6);
     }
 
     @Test
@@ -147,8 +145,8 @@ public class TimerTest {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
-                .successResultNameResolver(output -> {
-                    then(output).isNull();
+                .onResultTagResolver(result -> {
+                    then(result).isNull();
                     return "void";
                 })
                 .build();
@@ -157,19 +155,19 @@ public class TimerTest {
 
         decorateRunnable(timer, () -> {
         }).run();
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
 
         decorateCheckedRunnable(timer, () -> {
         }).run();
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
 
         decorateConsumer(timer, input -> {
         }).accept("input");
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
 
         decorateCheckedConsumer(timer, input -> {
         }).accept("input");
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test
@@ -261,7 +259,7 @@ public class TimerTest {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
-                .failureResultNameResolver(throwable -> {
+                .onFailureTagResolver(throwable -> {
                     then(throwable).isInstanceOf(IllegalStateException.class);
                     return throwable.getClass().getName();
                 })
@@ -346,28 +344,5 @@ public class TimerTest {
         } catch (IllegalStateException e) {
             thenFailureTimed(registry, timer, e);
         }
-    }
-
-    private static void thenSuccessTimed(MeterRegistry registry, Timer timer, Object output) {
-        thenTimed(registry, timer, "successful", timer.getTimerConfig().getSuccessResultNameResolver().apply(output));
-    }
-
-    private static void thenFailureTimed(MeterRegistry registry, Timer timer, Throwable throwable) {
-        thenTimed(registry, timer, "failed", timer.getTimerConfig().getFailureResultNameResolver().apply(throwable));
-    }
-
-    private static void thenTimed(MeterRegistry registry, Timer timer, String resultKind, String resultName) {
-        List<Meter> meters = registry.getMeters().stream()
-                .filter(meter -> meter.getId().getName().equals(timer.getTimerConfig().getMetricNames()))
-                .toList();
-        then(meters.size()).isEqualTo(1);
-        io.micrometer.core.instrument.Timer meter = (io.micrometer.core.instrument.Timer) meters.get(0);
-        List<Tag> tags = timer.getTags().entrySet().stream().map(tag -> Tag.of(tag.getKey(), tag.getValue())).collect(toCollection(ArrayList::new));
-        tags.add(Tag.of(NAME, timer.getName()));
-        tags.add(Tag.of(KIND, resultKind));
-        tags.add(Tag.of("result", resultName));
-        then(meter.count()).isEqualTo(1);
-        then(meter.getId().getTags()).containsExactlyInAnyOrderElementsOf(tags);
-        registry.clear();
     }
 }
