@@ -49,8 +49,7 @@ class FallbackFactory<T> implements FallbackHandler<T> {
             } catch (Exception exception) {
                 if (filter.test(exception)) {
                     T fallbackInstance = fallbackSupplier.apply(exception);
-                    validateFallback(fallbackInstance, method);
-                    Method fallbackMethod = getFallbackMethod(fallbackInstance, method);
+                    Method fallbackMethod = validateAndGetFallbackMethod(fallbackInstance, method);
                     try {
                         return fallbackMethod.invoke(fallbackInstance, args);
                     } catch (InvocationTargetException e) {
