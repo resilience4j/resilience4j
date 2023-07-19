@@ -16,6 +16,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class AdaptiveBulkheadConfigTest {
 
+    private static final AdaptiveBulkheadConfig DEFAULT_BULKHEAD = AdaptiveBulkheadConfig.ofDefaults();
+
     @Test
     public void testBuildCustom() {
         AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
@@ -45,11 +47,13 @@ public class AdaptiveBulkheadConfigTest {
 
     @Test
     public void testDecreaseMultiplierConfig() {
+        float decreaseMultiplier = 0.85f;
         assertThat(AdaptiveBulkheadConfig.custom()
-            .decreaseMultiplier(0.85f)
+            .decreaseMultiplier(decreaseMultiplier)
             .build()
             .getDecreaseMultiplier())
-            .isEqualTo(0.85f);
+            .isEqualTo(decreaseMultiplier)
+            .isNotEqualTo(DEFAULT_BULKHEAD.getDecreaseMultiplier());
     }
 
     @Test
@@ -63,20 +67,35 @@ public class AdaptiveBulkheadConfigTest {
 
     @Test
     public void testIncreaseMultiplierConfig() {
+        float increaseMultiplier = 1.85f;
         assertThat(AdaptiveBulkheadConfig.custom()
-            .increaseMultiplier(1.85f)
+            .increaseMultiplier(increaseMultiplier)
             .build()
             .getIncreaseMultiplier())
-            .isEqualTo(1.85f);
+            .isEqualTo(increaseMultiplier)
+            .isNotEqualTo(DEFAULT_BULKHEAD.getIncreaseMultiplier());
     }
 
     @Test
     public void testRecordResultPredicate() {
+        Predicate<Object> predicate = result -> true;
         assertThat(AdaptiveBulkheadConfig.custom()
-            .recordResult(result -> true)
+            .recordResult(predicate)
             .build()
             .getRecordResultPredicate())
-            .isNotEqualTo(AdaptiveBulkheadConfig.ofDefaults().getRecordResultPredicate());
+            .isEqualTo(predicate)
+            .isNotEqualTo(DEFAULT_BULKHEAD.getRecordResultPredicate());
+    }
+
+    @Test
+    public void testResetMetricsOnTransition() {
+        boolean resetMetricsOnTransition = true;
+        assertThat(AdaptiveBulkheadConfig.custom()
+            .resetMetricsOnTransition(resetMetricsOnTransition)
+            .build()
+            .isResetMetricsOnTransition())
+            .isEqualTo(resetMetricsOnTransition)
+            .isNotEqualTo(DEFAULT_BULKHEAD.isResetMetricsOnTransition());
     }
 
     @Test

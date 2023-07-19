@@ -23,10 +23,12 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 
 class AdaptationCalculator {
 
-    private final AdaptiveBulkhead adaptiveBulkhead;
+    private final AdaptiveBulkheadConfig config;
+    private final AdaptiveBulkhead.Metrics metrics;
 
-    AdaptationCalculator(AdaptiveBulkhead adaptiveBulkhead) {
-        this.adaptiveBulkhead = adaptiveBulkhead;
+    AdaptationCalculator(AdaptiveBulkheadConfig config, AdaptiveBulkhead.Metrics metrics) {
+        this.config = config;
+        this.metrics = metrics;
     }
 
     /**
@@ -36,7 +38,7 @@ class AdaptationCalculator {
      */
     int increment() {
         return fitToRange(
-            getActualConcurrencyLimit() + getConfig().getIncreaseSummand());
+            metrics.getMaxAllowedConcurrentCalls() + config.getIncreaseSummand());
     }
 
     /**
@@ -46,7 +48,7 @@ class AdaptationCalculator {
      */
     int increase() {
         return fitToRange(
-            (int) (getActualConcurrencyLimit() * getConfig().getIncreaseMultiplier()));
+            (int) Math.ceil(metrics.getMaxAllowedConcurrentCalls() * config.getIncreaseMultiplier()));
     }
 
     /**
@@ -56,19 +58,14 @@ class AdaptationCalculator {
      */
     int decrease() {
         return fitToRange(
-            (int) (getActualConcurrencyLimit() * getConfig().getDecreaseMultiplier()));
+            (int) Math.floor(metrics.getMaxAllowedConcurrentCalls() * config.getDecreaseMultiplier()));
     }
 
-    private AdaptiveBulkheadConfig getConfig() {
-        return adaptiveBulkhead.getBulkheadConfig();
-    }
-
-    private int getActualConcurrencyLimit() {
-        return adaptiveBulkhead.getMetrics().getMaxAllowedConcurrentCalls();
-    }
-
-    private int fitToRange(int concurrencyLimitProposal) {
-        return Math.min(getConfig().getMaxConcurrentCalls(),
-            Math.max(getConfig().getMinConcurrentCalls(), concurrencyLimitProposal));
+    private int fitToRange(int proposal) {
+        if (proposal < config.getMinConcurrentCalls()) {
+            return config.getMinConcurrentCalls();
+        } else {
+            return Math.min(proposal, config.getMaxConcurrentCalls());
+        }
     }
 }

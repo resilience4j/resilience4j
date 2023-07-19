@@ -24,6 +24,7 @@ import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.ResultRecordedAsFailureException;
 import io.github.resilience4j.bulkhead.adaptive.event.*;
+import io.github.resilience4j.bulkhead.adaptive.internal.AdaptiveBulkheadState.ThresholdResult;
 import io.github.resilience4j.bulkhead.internal.SemaphoreBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
@@ -38,11 +39,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
+public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead, StateMachine, ConcurrencyLimit {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdaptiveBulkheadStateMachine.class);
-    // TODO remove
-    public static final boolean RESET_METRICS_ON_TRANSITION = true;
 
     private final String name;
     private final AtomicReference<AdaptiveBulkheadState> stateReference;
@@ -70,9 +69,9 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         this.currentTimestampFunction = config.getCurrentTimestampFunction();
         this.timestampUnit = config.getTimestampUnit();
         this.metrics = new AdaptiveBulkheadMetrics(config, innerBulkhead.getMetrics(), clock);
-        this.stateReference = new AtomicReference<>(new SlowStartState(this));
+        this.stateReference = new AtomicReference<>(new SlowStartState<>(this));
         this.eventProcessor = new AdaptiveBulkheadEventProcessor();
-        this.adaptationCalculator = new AdaptationCalculator(this);
+        this.adaptationCalculator = new AdaptationCalculator(config, metrics);
     }
 
     private static SemaphoreBulkhead innerBulkhead(String name, AdaptiveBulkheadConfig config) {
@@ -99,17 +98,17 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
 
     @Override
     public boolean tryAcquirePermission() {
-        return stateReference.get().tryAcquirePermission();
+        return stateReference.get().isActive() && innerBulkhead.tryAcquirePermission();
     }
 
     @Override
     public void acquirePermission() {
-        stateReference.get().acquirePermission();
+        innerBulkhead.acquirePermission();
     }
 
     @Override
     public void releasePermission() {
-        stateReference.get().releasePermission();
+        innerBulkhead.releasePermission();
     }
 
     /**
@@ -136,9 +135,8 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
      */
     @Override
     public void onSuccess(long startTime, TimeUnit timeUnit) {
-        LOG.debug("'{}' recorded a success", name);
         releasePermission(); // ?
-        stateReference.get().onSuccess(startTime, timeUnit);
+        recordSuccess(startTime, timeUnit);
         tryPublishEvent(
             new BulkheadOnSuccessEvent(name, now()));
     }
@@ -155,9 +153,8 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             tryPublishEvent(
                 new BulkheadOnIgnoreEvent(name, now(), throwable));
         } else if (config.getRecordExceptionPredicate().test(throwable)) {
-            LOG.debug("'{}' recorded an error:", name, throwable);
             releasePermission(); // ?
-            stateReference.get().onError(startTime, timeUnit, throwable);
+            recordError(startTime, timeUnit, throwable);
             tryPublishEvent(
                 new BulkheadOnErrorEvent(name, now(), throwable));
         } else {
@@ -189,20 +186,16 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         return name;
     }
 
-    Bulkhead inner() {
-        return innerBulkhead;
-    }
-
     @Override
     public void transitionToCongestionAvoidance() {
         stateTransition(State.CONGESTION_AVOIDANCE,
-            current -> new CongestionAvoidanceState(this));
+            current -> new CongestionAvoidanceState<>(this));
     }
 
     @Override
     public void transitionToSlowStart() {
         stateTransition(State.SLOW_START,
-            current -> new SlowStartState(this));
+            current -> new SlowStartState<>(this));
     }
 
     private void stateTransition(State newState,
@@ -213,26 +206,30 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
             new BulkheadOnStateTransitionEvent(name, now(), previous.getState(), newState));
     }
 
-    void incrementConcurrencyLimit() {
+    @Override
+    public void incrementLimit() {
         changeConcurrencyLimit(adaptationCalculator.increment());
     }
 
-    void increaseConcurrencyLimit() {
+    @Override
+    public void increaseLimit() {
         changeConcurrencyLimit(adaptationCalculator.increase());
     }
 
-    void decreaseConcurrencyLimit() {
+    @Override
+    public void decreaseLimit() {
         changeConcurrencyLimit(adaptationCalculator.decrease());
     }
 
-    boolean isConcurrencyLimitTooLow() {
+    @Override
+    public boolean isMinimumLimit() {
         return metrics.getMaxAllowedConcurrentCalls() == config.getMinConcurrentCalls();
     }
 
     private void changeConcurrencyLimit(int newValue) {
         int oldValue = innerBulkhead.getBulkheadConfig().getMaxConcurrentCalls();
         if (newValue != oldValue) {
-            changeInternals(oldValue, newValue);
+            changeConfig(oldValue, newValue);
             tryPublishEvent(
                 new BulkheadOnLimitChangedEvent(name, now(), oldValue, newValue));
         } else {
@@ -240,35 +237,48 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead {
         }
     }
 
-    private void changeInternals(int oldValue, int newValue) {
+    private void changeConfig(int oldValue, int newValue) {
         LOG.debug("'{}' changed concurrency limit from {} to {}", name, oldValue, newValue);
         innerBulkhead.changeConfig(
             BulkheadConfig.from(innerBulkhead.getBulkheadConfig())
                 .maxConcurrentCalls(newValue)
                 .build());
-        if (RESET_METRICS_ON_TRANSITION) {
+        if (config.isResetMetricsOnTransition()) {
             metrics.resetRecords();
         }
     }
 
-    AdaptiveBulkheadMetrics.Result recordError(long startTime, TimeUnit timeUnit) {
-        return metrics.onError(nanosUntilNow(startTime, timeUnit));
+    private void recordError(long startTime, TimeUnit timeUnit, Throwable throwable) {
+        LOG.debug("'{}' recorded an error:", name, throwable);
+        long nanoseconds = nanosUntilNow(startTime, timeUnit);
+        onThresholdExcess(metrics.onError(nanoseconds));
     }
 
-    AdaptiveBulkheadMetrics.Result recordSuccess(long startTime, TimeUnit timeUnit) {
-        return metrics.onSuccess(nanosUntilNow(startTime, timeUnit));
+    private void recordSuccess(long startTime, TimeUnit timeUnit) {
+        LOG.debug("'{}' recorded a success", name);
+        long nanoseconds = nanosUntilNow(startTime, timeUnit);
+        onThresholdExcess(metrics.onSuccess(nanoseconds));
+    }
+
+    public void onThresholdExcess(ThresholdResult thresholdResult) {
+        logStateDetails(thresholdResult);
+        if (stateReference.get().isActive()) {
+            switch (thresholdResult) {
+                case BELOW_FAULT_RATE -> stateReference.get().onBelowThresholds();
+                case ABOVE_FAULT_RATE -> stateReference.get().onAboveThresholds();
+            }
+        }
     }
 
     @Deprecated
-    void logStateDetails(AdaptiveBulkheadMetrics.Result result) {
-        LOG.debug("'{}' buffered calls:{}/{}, rate:{} result:{}",
+    private void logStateDetails(ThresholdResult thresholdResult) {
+        LOG.debug("'{}' buffered calls:{}/{}, rate:{} thresholdsExcess:{}",
             name,
             metrics.getNumberOfBufferedCalls(),
             config.getMinimumNumberOfCalls(),
             Math.max(metrics.getSnapshot().getFailureRate(), metrics.getSnapshot().getSlowCallRate()),
-            result);
+            thresholdResult);
     }
-
 
     @Override
     public String toString() {

@@ -2,20 +2,32 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 
-import java.util.concurrent.TimeUnit;
-
 interface AdaptiveBulkheadState {
 
-    boolean tryAcquirePermission();
+    enum ThresholdResult {
 
-    void acquirePermission();
+        /**
+         * Is below the error or slow calls rate.
+         */
+        BELOW_FAULT_RATE,
 
-    void releasePermission();
+        /**
+         * Is above the error or slow calls rate.
+         */
+        ABOVE_FAULT_RATE,
 
-    void onError(long startTime, TimeUnit timeUnit, Throwable throwable);
+        /**
+         * Is below minimum number of calls which are required (per sliding window period) before
+         * the Adaptive Bulkhead can calculate the reliable error or slow calls rate.
+         */
+        UNRELIABLE
+    }
 
-    void onSuccess(long startTime, TimeUnit timeUnit);
+    void onBelowThresholds();
+
+    void onAboveThresholds();
 
     AdaptiveBulkhead.State getState();
 
+    boolean isActive();
 }
