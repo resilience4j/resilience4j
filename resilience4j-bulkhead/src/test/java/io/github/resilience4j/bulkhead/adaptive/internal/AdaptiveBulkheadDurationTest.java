@@ -37,8 +37,8 @@ public class AdaptiveBulkheadDurationTest {
         bulkhead.onResult(startTime, bulkhead.getTimestampUnit(), 400);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isOne();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration()).hasMillis(2);
         assertThat(snapshot.getAverageDuration()).hasMillis(2);
     }
@@ -53,10 +53,10 @@ public class AdaptiveBulkheadDurationTest {
         bulkhead.onResult(startTime, bulkhead.getTimestampUnit(), 200);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
-        assertThat(snapshot.getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isEqualTo(0);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSuccessfulCalls()).isOne();
+        assertThat(snapshot.getNumberOfFailedCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowSuccessfulCalls()).isZero();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration()).hasSeconds(2);
         assertThat(snapshot.getAverageDuration()).hasSeconds(2);
     }
@@ -76,7 +76,7 @@ public class AdaptiveBulkheadDurationTest {
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(2);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration()).hasSeconds(seconds * 2L);
         assertThat(snapshot.getAverageDuration()).hasSeconds(seconds);
     }
@@ -91,8 +91,8 @@ public class AdaptiveBulkheadDurationTest {
         bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isOne();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration()).hasSeconds(2);
         assertThat(snapshot.getAverageDuration()).hasSeconds(2);
     }
@@ -128,8 +128,8 @@ public class AdaptiveBulkheadDurationTest {
         bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(1);
+        assertThat(snapshot.getNumberOfFailedCalls()).isOne();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isOne();
         assertThat(snapshot.getTotalDuration()).hasDays(2);
         assertThat(snapshot.getAverageDuration()).hasDays(2);
     }
@@ -144,7 +144,7 @@ public class AdaptiveBulkheadDurationTest {
         bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(snapshot.getNumberOfFailedCalls()).isOne();
         assertThat(snapshot.getTotalDuration()).hasDays(0);
     }
 
@@ -159,8 +159,8 @@ public class AdaptiveBulkheadDurationTest {
         bulkhead.onError(startTime + 600, bulkhead.getTimestampUnit(), failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
-        assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(1);
-        assertThat(snapshot.getNumberOfSlowFailedCalls()).isEqualTo(0);
+        assertThat(snapshot.getNumberOfFailedCalls()).isOne();
+        assertThat(snapshot.getNumberOfSlowFailedCalls()).isZero();
         assertThat(snapshot.getTotalDuration()).hasMillis(0);
         assertThat(snapshot.getAverageDuration()).hasMillis(0);
     }

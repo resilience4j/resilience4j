@@ -213,7 +213,11 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead, StateMach
 
     @Override
     public void increaseLimit() {
-        changeConcurrencyLimit(adaptationCalculator.increase());
+        if (metrics.getNumberOfBufferedCalls() % config.getIncreaseInterval() == 0) {
+            changeConcurrencyLimit(adaptationCalculator.increase());
+        } else {
+            LOG.trace("'{}' ignored an increase of concurrency limit", name);
+        }
     }
 
     @Override
@@ -266,6 +270,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead, StateMach
             switch (thresholdResult) {
                 case BELOW_FAULT_RATE -> stateReference.get().onBelowThresholds();
                 case ABOVE_FAULT_RATE -> stateReference.get().onAboveThresholds();
+                case UNRELIABLE -> LOG.trace("cannot calculate the reliable error or slow calls rate");
             }
         }
     }
@@ -297,7 +302,7 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead, StateMach
         try {
             eventProcessor.consumeEvent(event);
             LOG.debug("'{}' published an event {}: {}", name, event.getEventType(), event);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             LOG.debug("'{}' consumer failure: Event {} not published:", name, event.getEventType(), t);
         }
     }

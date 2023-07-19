@@ -36,7 +36,7 @@ public class AdaptiveBulkheadGraphTest {
     @Before
     public void setup() {
         AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
-            .increaseSummand(5)
+            .increaseAugend(5)
             .maxConcurrentCalls(MAX_CONCURRENT_CALLS)
             .minConcurrentCalls(MIN_CONCURRENT_CALLS)
             .initialConcurrentCalls(INITIAL_CONCURRENT_CALLS)
@@ -95,7 +95,7 @@ public class AdaptiveBulkheadGraphTest {
     @Test
     public void testSlowCallsWithLowMinConcurrentCalls() {
         AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
-            .increaseSummand(1)
+            .increaseAugend(1)
             .maxConcurrentCalls(MAX_CONCURRENT_CALLS)
             .minConcurrentCalls(10)
             .initialConcurrentCalls(20)

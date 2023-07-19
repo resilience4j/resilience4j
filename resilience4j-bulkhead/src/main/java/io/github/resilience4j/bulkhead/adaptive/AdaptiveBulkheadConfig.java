@@ -55,13 +55,14 @@ public class AdaptiveBulkheadConfig implements Serializable {
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     // The default exception predicate ignores no exceptions.
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
-    private static final int DEFAULT_INCREASE_SUMMAND = 1;
+    private static final int DEFAULT_INCREASE_AUGEND = 1;
     private static final float DEFAULT_INCREASE_MULTIPLIER = 2f;
     private static final float DEFAULT_DECREASE_MULTIPLIER = 0.5f;
+    private static final int DEFAULT_INCREASE_INTERVAL = 1;
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
     private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
-    private static final boolean RESET_METRICS_ON_TRANSITION = false;
+    private static final boolean DEFAULT_RESET_METRICS_ON_TRANSITION = false;
 
 
     @SuppressWarnings("unchecked")
@@ -83,14 +84,15 @@ public class AdaptiveBulkheadConfig implements Serializable {
     private int minConcurrentCalls = DEFAULT_MIN_CONCURRENT_CALLS;
     private int initialConcurrentCalls = DEFAULT_INITIAL_CONCURRENT_CALLS;
     private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
-    private int increaseSummand = DEFAULT_INCREASE_SUMMAND;
+    private int increaseAugend = DEFAULT_INCREASE_AUGEND;
     private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
     private float increaseMultiplier = DEFAULT_INCREASE_MULTIPLIER;
+    private int increaseInterval = DEFAULT_INCREASE_INTERVAL;
     private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
     private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
     private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
-    private boolean resetMetricsOnTransition = RESET_METRICS_ON_TRANSITION;
+    private boolean resetMetricsOnTransition = DEFAULT_RESET_METRICS_ON_TRANSITION;
 
     private AdaptiveBulkheadConfig() {
     }
@@ -144,8 +146,8 @@ public class AdaptiveBulkheadConfig implements Serializable {
         return maxConcurrentCalls;
     }
 
-    public int getIncreaseSummand() {
-        return increaseSummand;
+    public int getIncreaseAugend() {
+        return increaseAugend;
     }
 
     public float getDecreaseMultiplier() {
@@ -154,6 +156,10 @@ public class AdaptiveBulkheadConfig implements Serializable {
 
     public float getIncreaseMultiplier() {
         return increaseMultiplier;
+    }
+
+    public int getIncreaseInterval() {
+        return increaseInterval;
     }
 
     public Duration getMaxWaitDuration() {
@@ -191,7 +197,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
             ", minConcurrentCalls=" + minConcurrentCalls +
             ", initialConcurrentCalls=" + initialConcurrentCalls +
             ", maxConcurrentCalls=" + maxConcurrentCalls +
-            ", increaseSummand=" + increaseSummand +
+            ", increaseAugend=" + increaseAugend +
             ", decreaseMultiplier=" + decreaseMultiplier +
             ", increaseMultiplier=" + increaseMultiplier +
             ", maxWaitDuration=" + maxWaitDuration +
@@ -238,7 +244,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
         return new Builder(bulkheadConfig);
     }
 
-    public static class Builder {
+    public static class Builder implements Serializable {
 
         private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD_PERCENTAGE;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
@@ -251,22 +257,23 @@ public class AdaptiveBulkheadConfig implements Serializable {
         private int minConcurrentCalls = DEFAULT_MIN_CONCURRENT_CALLS;
         private int maxConcurrentCalls = DEFAULT_MAX_CONCURRENT_CALLS;
         private int initialConcurrentCalls = DEFAULT_INITIAL_CONCURRENT_CALLS;
-        private int increaseSummand = DEFAULT_INCREASE_SUMMAND;
+        private int increaseAugend = DEFAULT_INCREASE_AUGEND;
         private float decreaseMultiplier = DEFAULT_DECREASE_MULTIPLIER;
         private float increaseMultiplier = DEFAULT_INCREASE_MULTIPLIER;
+        private int increaseInterval = DEFAULT_INCREASE_INTERVAL;
         private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
         @Nullable
-        private Predicate<Throwable> recordExceptionPredicate;
+        private transient Predicate<Throwable> recordExceptionPredicate;
         @Nullable
-        private Predicate<Throwable> ignoreExceptionPredicate;
+        private transient Predicate<Throwable> ignoreExceptionPredicate;
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
         private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
         private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
-        private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
-        private boolean resetMetricsOnTransition = RESET_METRICS_ON_TRANSITION;
+        private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
+        private boolean resetMetricsOnTransition = DEFAULT_RESET_METRICS_ON_TRANSITION;
 
         private Builder() {
         }
@@ -285,9 +292,10 @@ public class AdaptiveBulkheadConfig implements Serializable {
             this.minConcurrentCalls = baseConfig.minConcurrentCalls;
             this.maxConcurrentCalls = baseConfig.maxConcurrentCalls;
             this.initialConcurrentCalls = baseConfig.initialConcurrentCalls;
-            this.increaseSummand = baseConfig.increaseSummand;
+            this.increaseAugend = baseConfig.increaseAugend;
             this.decreaseMultiplier = baseConfig.decreaseMultiplier;
             this.increaseMultiplier = baseConfig.increaseMultiplier;
+            this.increaseInterval = baseConfig.increaseInterval;
             this.currentTimestampFunction = baseConfig.currentTimestampFunction;
             this.timestampUnit = baseConfig.timestampUnit;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
@@ -303,8 +311,8 @@ public class AdaptiveBulkheadConfig implements Serializable {
          * percentage which means that all recorded calls must be slower than {@link
          * #slowCallDurationThreshold(Duration)}.
          *
-         * @param slowCallRateThreshold the slow calls threshold in percentage
-         * @return the AdaptiveBulkheadConfig.Builder
+         * @param slowCallRateThreshold the slow calls' threshold in percentage
+         * @return the Builder
          * @throws IllegalArgumentException if {@code slowCallRateThreshold <= 0 ||
          *                                  slowCallRateThreshold > 100}
          */
@@ -319,10 +327,10 @@ public class AdaptiveBulkheadConfig implements Serializable {
 
         /**
          * Configures the duration threshold above which calls are considered as slow and increase
-         * the slow calls percentage. Default value is 60 seconds.
+         * the slow calls' percentage. Default value is 60 seconds.
          *
          * @param slowCallDurationThreshold the duration above which calls are considered as slow
-         * @return the AdaptiveBulkheadConfig.Builder
+         * @return the Builder
          * @throws IllegalArgumentException if {@code slowCallDurationThreshold.toNanos() < 1}
          */
         public Builder slowCallDurationThreshold(Duration slowCallDurationThreshold) {
@@ -344,7 +352,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
          *
          * @param slidingWindowSize the size of the sliding window when the AdaptiveBulkhead is
          *                          closed.
-         * @return the AdaptiveBulkheadConfig.Builder
+         * @return the Builder
          * @throws IllegalArgumentException if {@code slidingWindowSize < 1}
          */
         public Builder slidingWindowSize(int slidingWindowSize) {
@@ -363,7 +371,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
          *
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
          *                          TIME_BASED.
-         * @return the AdaptiveBulkheadConfig.Builder
+         * @return the Builder
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
@@ -377,7 +385,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
          * percentage.
          *
          * @param failureRateThreshold the failure rate threshold in percentage
-         * @return the AdaptiveBulkheadConfig.Builder
+         * @return the Builder
          * @throws IllegalArgumentException if {@code failureRateThreshold <= 0 ||
          *                                  failureRateThreshold > 100}
          */
@@ -499,12 +507,12 @@ public class AdaptiveBulkheadConfig implements Serializable {
             return this;
         }
 
-        public final Builder increaseSummand(int increaseSummand) {
-            if (increaseSummand <= 0) {
+        public final Builder increaseAugend(int increaseAugend) {
+            if (increaseAugend <= 0) {
                 throw new IllegalArgumentException(
-                    "increaseSummand must greater than 0");
+                    "increaseAugend must greater than 0");
             }
-            this.increaseSummand = increaseSummand;
+            this.increaseAugend = increaseAugend;
             return this;
         }
 
@@ -527,6 +535,21 @@ public class AdaptiveBulkheadConfig implements Serializable {
         }
 
         /**
+         * Increase concurrency limit every nth success in SlowStartState where n is a value of increaseInterval.
+         *
+         * @param increaseInterval minimum 1
+         * @return the Builder
+         */
+        public final Builder increaseInterval(int increaseInterval) {
+            if (increaseInterval < 1) {
+                throw new IllegalArgumentException(
+                    "increaseInterval must be at least 1");
+            }
+            this.increaseInterval = increaseInterval;
+            return this;
+        }
+
+        /**
          * Configures a maximum amount of time which the calling thread will wait to enter the
          * bulkhead. If bulkhead has space available, entry is guaranteed and immediate. If bulkhead
          * is full, calling threads will contest for space, if it becomes available. maxWaitDuration
@@ -537,7 +560,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
          * most likely have a negative effect on application throughput.
          *
          * @param maxWaitDuration maximum wait time for bulkhead entry
-         * @return the BulkheadConfig.Builder
+         * @return the Builder
          */
         public AdaptiveBulkheadConfig.Builder maxWaitDuration(Duration maxWaitDuration) {
             if (maxWaitDuration.toMillis() < 0) {
@@ -556,7 +579,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
          *
          * @param currentTimestampFunction function that computes current timestamp.
          * @param timeUnit                 TimeUnit of timestamp returned by the function.
-         * @return the AdaptiveBulkheadConfig.Builder
+         * @return the Builder
          */
         public Builder currentTimestampFunction(Function<Clock, Long> currentTimestampFunction, TimeUnit timeUnit) {
             this.timestampUnit = timeUnit;
@@ -597,9 +620,10 @@ public class AdaptiveBulkheadConfig implements Serializable {
             config.minConcurrentCalls = minConcurrentCalls;
             config.maxConcurrentCalls = maxConcurrentCalls;
             config.initialConcurrentCalls = initialConcurrentCalls;
-            config.increaseSummand = increaseSummand;
+            config.increaseAugend = increaseAugend;
             config.decreaseMultiplier = decreaseMultiplier;
             config.increaseMultiplier = increaseMultiplier;
+            config.increaseInterval = increaseInterval;
             config.maxWaitDuration = maxWaitDuration;
             config.recordExceptionPredicate = PredicateCreator
                 .createExceptionsPredicate(recordExceptionPredicate, recordExceptions)

@@ -31,6 +31,62 @@ public class ConcurrencyLimitTest {
     }
 
     @Test
+    public void testIncreaseMultiplier() {
+        givenBulkhead(AdaptiveBulkheadConfig.custom()
+            .minimumNumberOfCalls(1)
+            .maxConcurrentCalls(1000)
+            .initialConcurrentCalls(1)
+            .increaseMultiplier(3)
+            .build());
+
+        for (int i = 0; i < 6; i++) {
+            onSuccess();
+        }
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(3, 9, 27, 81, 243, 729);
+    }
+
+    @Test
+    public void testIncreaseInterval2() {
+        givenBulkhead(AdaptiveBulkheadConfig.custom()
+            .minimumNumberOfCalls(1)
+            .maxConcurrentCalls(1000)
+            .initialConcurrentCalls(1)
+            .increaseMultiplier(3)
+            .increaseInterval(2)
+            .build());
+
+        for (int i = 0; i < 6; i++) {
+            onSuccess();
+        }
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(3, 9, 27);
+    }
+
+    @Test
+    public void testIncreaseInterval3() {
+        givenBulkhead(AdaptiveBulkheadConfig.custom()
+            .minimumNumberOfCalls(1)
+            .maxConcurrentCalls(1000)
+            .initialConcurrentCalls(1)
+            .increaseMultiplier(3)
+            .increaseInterval(3)
+            .build());
+
+        for (int i = 0; i < 6; i++) {
+            onSuccess();
+        }
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(3, 9);
+    }
+
+    @Test
     public void testFastIncrease() {
         givenBulkhead(AdaptiveBulkheadConfig.custom()
             .minimumNumberOfCalls(1)
