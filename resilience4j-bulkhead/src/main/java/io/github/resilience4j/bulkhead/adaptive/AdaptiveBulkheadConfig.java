@@ -60,7 +60,8 @@ public class AdaptiveBulkheadConfig implements Serializable {
     private static final float DEFAULT_DECREASE_MULTIPLIER = 0.5f;
     private static final Function<Clock, Long> DEFAULT_TIMESTAMP_FUNCTION = clock -> System.nanoTime();
     private static final TimeUnit DEFAULT_TIMESTAMP_UNIT = TimeUnit.NANOSECONDS;
-    private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
+    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
+    private static final boolean RESET_METRICS_ON_TRANSITION = false;
 
 
     @SuppressWarnings("unchecked")
@@ -88,7 +89,8 @@ public class AdaptiveBulkheadConfig implements Serializable {
     private Duration maxWaitDuration = DEFAULT_MAX_WAIT_DURATION;
     private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
     private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
-    private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
+    private transient Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
+    private boolean resetMetricsOnTransition = RESET_METRICS_ON_TRANSITION;
 
     private AdaptiveBulkheadConfig() {
     }
@@ -168,6 +170,10 @@ public class AdaptiveBulkheadConfig implements Serializable {
 
     public Predicate<Object> getRecordResultPredicate() {
         return recordResultPredicate;
+    }
+
+    public boolean isResetMetricsOnTransition() {
+        return resetMetricsOnTransition;
     }
 
     @Override
@@ -260,6 +266,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
         private transient Function<Clock, Long> currentTimestampFunction = DEFAULT_TIMESTAMP_FUNCTION;
         private TimeUnit timestampUnit = DEFAULT_TIMESTAMP_UNIT;
         private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
+        private boolean resetMetricsOnTransition = RESET_METRICS_ON_TRANSITION;
 
         private Builder() {
         }
@@ -284,6 +291,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
             this.currentTimestampFunction = baseConfig.currentTimestampFunction;
             this.timestampUnit = baseConfig.timestampUnit;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
+            this.resetMetricsOnTransition = baseConfig.resetMetricsOnTransition;
         }
 
         /**
@@ -570,6 +578,11 @@ public class AdaptiveBulkheadConfig implements Serializable {
             return this;
         }
 
+        public Builder resetMetricsOnTransition(boolean resetMetricsOnTransition) {
+            this.resetMetricsOnTransition = resetMetricsOnTransition;
+            return this;
+        }
+
         public AdaptiveBulkheadConfig build() {
             AdaptiveBulkheadConfig config = new AdaptiveBulkheadConfig();
             config.slidingWindowType = slidingWindowType;
@@ -597,6 +610,7 @@ public class AdaptiveBulkheadConfig implements Serializable {
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
             config.recordResultPredicate = recordResultPredicate;
+            config.resetMetricsOnTransition = resetMetricsOnTransition;
             return config;
         }
 

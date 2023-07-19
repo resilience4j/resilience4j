@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import static io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig.custom;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AdaptiveBulkheadResultHandlingTest {
+public class AdaptiveBulkheadThresholdResultHandlingTest {
 
     @Test
     public void shouldRecordSpecificStringResultAsAFailureAndAnyOtherAsSuccess() {

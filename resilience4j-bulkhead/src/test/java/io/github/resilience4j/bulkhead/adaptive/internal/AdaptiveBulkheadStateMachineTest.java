@@ -15,100 +15,104 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AdaptiveBulkheadStateMachineTest {
 
+    private static final Throwable ERROR = new Throwable("test");
     private static final int SLOW_CALL_DURATION_THRESHOLD = 200;
-    public static final int RATE_THRESHOLD = 50;
+    private static final int RATE_THRESHOLD = 50;
+    private static final int MIN_CONCURRENT_CALLS = 10;
+    private static final int MAX_CONCURRENT_CALLS = 100;
 
     private AdaptiveBulkheadStateMachine bulkhead;
+    private AdaptiveBulkheadMetrics metrics;
     private final List<BulkheadOnLimitChangedEvent> limitChanges = new LinkedList<>();
     private final List<BulkheadOnStateTransitionEvent> stateTransitions = new LinkedList<>();
 
     @Before
     public void setup() {
         AdaptiveBulkheadConfig config = AdaptiveBulkheadConfig.custom()
-            .maxConcurrentCalls(100)
-            .minConcurrentCalls(2)
-            .initialConcurrentCalls(12)
+            .minConcurrentCalls(MIN_CONCURRENT_CALLS)
+            .maxConcurrentCalls(MAX_CONCURRENT_CALLS)
+            .initialConcurrentCalls(22)
             .slidingWindowSize(5)
             .slidingWindowType(AdaptiveBulkheadConfig.SlidingWindowType.TIME_BASED)
             .minimumNumberOfCalls(3)
             .failureRateThreshold(RATE_THRESHOLD)
             .slowCallRateThreshold(RATE_THRESHOLD)
             .slowCallDurationThreshold(Duration.ofMillis(SLOW_CALL_DURATION_THRESHOLD))
+            .resetMetricsOnTransition(true)
             .build();
         bulkhead = (AdaptiveBulkheadStateMachine) AdaptiveBulkhead.of("test", config);
         bulkhead.getEventPublisher().onLimitChanged(limitChanges::add);
         bulkhead.getEventPublisher().onStateTransition(stateTransitions::add);
-    }
-
-    @Test
-    public void testTransitionToCongestionAvoidance() {
-        Throwable failure = new Throwable();
-
-        for (int i = 0; i < 10; i++) {
-            onSuccess();
-        }
-        for (int i = 0; i < 10; i++) {
-            onError(failure);
-        }
-
-        assertThat(limitChanges)
-            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
-            .containsExactly(24, 48, 96, 48, 24, 12);
-        assertThat(limitChanges)
-            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
-            .containsExactly(true, true, true, false, false, false);
-        assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getNewState)
-            .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
-    }
-
-    @Test
-    public void testCongestionAvoidanceBelowThresholds() {
-        bulkhead.transitionToCongestionAvoidance();
-
-        for (int i = 0; i < 10; i++) {
-            onSuccess();
-        }
-
-        assertThat(limitChanges)
-            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
-            .containsExactly(13, 14, 15);
-        assertThat(limitChanges)
-            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
-            .containsExactly(true, true, true);
-        assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getNewState)
-            .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
-        assertThat(bulkhead.getMetrics().getFailureRate()).isEqualTo(-1f);
-    }
-
-    @Test
-    public void testCongestionAvoidanceAboveThresholds() {
-        Throwable failure = new Throwable();
-        bulkhead.transitionToCongestionAvoidance();
-
-        for (int i = 0; i < 10; i++) {
-            onError(failure);
-        }
-
-        assertThat(limitChanges)
-            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
-            .containsExactly(6, 3, 2);
-        assertThat(limitChanges)
-            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
-            .containsExactly(false, false, false);
-        assertThat(stateTransitions)
-            .extracting(BulkheadOnStateTransitionEvent::getNewState)
-            .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
-        assertThat(bulkhead.getMetrics().getFailureRate()).isEqualTo(-1f);
+        metrics = (AdaptiveBulkheadMetrics) bulkhead.getMetrics();
     }
 
     private void onSuccess() {
         bulkhead.onSuccess(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit());
     }
 
-    private void onError(Throwable failure) {
-        bulkhead.onError(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit(), failure);
+    private void onError() {
+        bulkhead.onError(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit(), ERROR);
+    }
+
+    @Test
+    public void testTransitionToCongestionAvoidance() {
+        for (int i = 0; i < MIN_CONCURRENT_CALLS; i++) {
+            onSuccess();
+        }
+        for (int i = 0; i < 2 * MIN_CONCURRENT_CALLS; i++) {
+            onError();
+        }
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(44, 88, MAX_CONCURRENT_CALLS, 50, 25, 12, MIN_CONCURRENT_CALLS);
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
+            .containsExactly(true, true, true, false, false, false, false);
+        assertThat(stateTransitions)
+            .extracting(BulkheadOnStateTransitionEvent::getNewState)
+            .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
+        assertThat(metrics.getSnapshot().getFailureRate()).isEqualTo(100f);
+    }
+
+    @Test
+    public void testCongestionAvoidanceBelowThresholds() {
+        bulkhead.transitionToCongestionAvoidance();
+
+        for (int i = 0; i < MIN_CONCURRENT_CALLS; i++) {
+            onSuccess();
+        }
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(23, 24, 25);
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
+            .containsExactly(true, true, true);
+        assertThat(stateTransitions)
+            .extracting(BulkheadOnStateTransitionEvent::getNewState)
+            .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
+        assertThat(metrics.getSnapshot().getFailureRate()).isZero();
+    }
+
+    @Test
+    public void testCongestionAvoidanceAboveThresholds() {
+        bulkhead.transitionToCongestionAvoidance();
+
+        for (int i = 0; i < MIN_CONCURRENT_CALLS; i++) {
+            onError();
+        }
+
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::getNewMaxConcurrentCalls)
+            .containsExactly(11, 10);
+        assertThat(limitChanges)
+            .extracting(BulkheadOnLimitChangedEvent::isIncrease)
+            .containsExactly(false, false);
+        assertThat(stateTransitions)
+            .extracting(BulkheadOnStateTransitionEvent::getNewState)
+            .containsExactly(AdaptiveBulkhead.State.CONGESTION_AVOIDANCE);
+        assertThat(metrics.getSnapshot().getFailureRate()).isEqualTo(100f);
     }
 
 }

@@ -2,67 +2,35 @@ package io.github.resilience4j.bulkhead.adaptive.internal;
 
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * Although the strategy is referred to as slow start, its congestion window growth is quite
  * aggressive, more aggressive than the congestion avoidance phase.
  */
-class SlowStartState implements AdaptiveBulkheadState {
+class SlowStartState<T extends StateMachine & ConcurrencyLimit> implements AdaptiveBulkheadState {
 
-    private final AdaptiveBulkheadStateMachine adaptiveBulkheadStateMachine;
-    private final AtomicBoolean active;
+    private final StateMachine stateMachine;
+    private final ConcurrencyLimit concurrencyLimit;
+    private final Activity activity;
 
-    SlowStartState(AdaptiveBulkheadStateMachine adaptiveBulkheadStateMachine) {
-        this.adaptiveBulkheadStateMachine = adaptiveBulkheadStateMachine;
-        this.active = new AtomicBoolean(true);
+    SlowStartState(T stateMachine) {
+        this.stateMachine = stateMachine;
+        this.concurrencyLimit = stateMachine;
+        this.activity = new Activity();
     }
 
     @Override
-    public boolean tryAcquirePermission() {
-        return active.get() && adaptiveBulkheadStateMachine.inner().tryAcquirePermission();
-    }
-
-    @Override
-    public void acquirePermission() {
-        adaptiveBulkheadStateMachine.inner().acquirePermission();
-    }
-
-    @Override
-    public void releasePermission() {
-        adaptiveBulkheadStateMachine.inner().releasePermission();
-    }
-
-    @Override
-    public void onError(long startTime, TimeUnit timeUnit, Throwable throwable) {
-        checkIfThresholdsExceeded(adaptiveBulkheadStateMachine.recordError(startTime, timeUnit));
-    }
-
-    @Override
-    public void onSuccess(long startTime, TimeUnit timeUnit) {
-        checkIfThresholdsExceeded(adaptiveBulkheadStateMachine.recordSuccess(startTime, timeUnit));
+    public void onBelowThresholds() {
+        concurrencyLimit.increaseLimit();
     }
 
     /**
-     * Transitions to CONGESTION_AVOIDANCE state when thresholds have been exceeded.
-     *
-     * @param result the Result
+     * Transits to CONGESTION_AVOIDANCE state when thresholds have been exceeded.
      */
-    private void checkIfThresholdsExceeded(AdaptiveBulkheadMetrics.Result result) {
-        adaptiveBulkheadStateMachine.logStateDetails(result);
-        if (active.get()) {
-            switch (result) {
-                case BELOW_THRESHOLDS:
-                    adaptiveBulkheadStateMachine.increaseConcurrencyLimit();
-                    break;
-                case ABOVE_THRESHOLDS:
-                    if (active.compareAndSet(true, false)) {
-                        adaptiveBulkheadStateMachine.decreaseConcurrencyLimit();
-                        adaptiveBulkheadStateMachine.transitionToCongestionAvoidance();
-                    }
-                    break;
-            }
+    @Override
+    public void onAboveThresholds() {
+        if (activity.tryDeactivate()) {
+            concurrencyLimit.decreaseLimit();
+            stateMachine.transitionToCongestionAvoidance();
         }
     }
 
@@ -72,6 +40,11 @@ class SlowStartState implements AdaptiveBulkheadState {
     @Override
     public AdaptiveBulkhead.State getState() {
         return AdaptiveBulkhead.State.SLOW_START;
+    }
+
+    @Override
+    public boolean isActive() {
+        return activity.isActive();
     }
 
 }

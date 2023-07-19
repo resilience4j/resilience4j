@@ -39,12 +39,12 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
     private final float slowCallRateThreshold;
     private final long slowCallDurationThresholdInNanos;
     private final int minimumNumberOfCalls;
-    private final Bulkhead.Metrics internalBulkheadMetrics;
+    private final Bulkhead.Metrics innerMetrics;
 
     private AdaptiveBulkheadMetrics(int slidingWindowSize,
                                     AdaptiveBulkheadConfig.SlidingWindowType slidingWindowType,
                                     AdaptiveBulkheadConfig adaptiveBulkheadConfig,
-                                    Bulkhead.Metrics internalBulkheadMetrics,
+                                    Bulkhead.Metrics innerMetrics,
                                     Clock clock) {
         if (slidingWindowType == AdaptiveBulkheadConfig.SlidingWindowType.COUNT_BASED) {
             this.slidingWindowMetrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
@@ -58,63 +58,67 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
         this.slowCallRateThreshold = adaptiveBulkheadConfig.getSlowCallRateThreshold();
         this.slowCallDurationThresholdInNanos = adaptiveBulkheadConfig
             .getSlowCallDurationThreshold().toNanos();
-        this.internalBulkheadMetrics = internalBulkheadMetrics;
+        this.innerMetrics = innerMetrics;
     }
 
     public AdaptiveBulkheadMetrics(AdaptiveBulkheadConfig adaptiveBulkheadConfig,
-        Bulkhead.Metrics internalBulkheadMetrics,
-        Clock clock) {
+                                   Bulkhead.Metrics innerMetrics,
+                                   Clock clock) {
         this(adaptiveBulkheadConfig.getSlidingWindowSize(),
             adaptiveBulkheadConfig.getSlidingWindowType(),
             adaptiveBulkheadConfig,
-            internalBulkheadMetrics, 
+            innerMetrics,
             clock);
     }
 
     /**
-     * Records a successful call and checks if the thresholds are exceeded.
+     * Records a successful call
      *
-     * @return the result of the check
+     * @return the ThresholdResult
      */
-    public Result onSuccess(long nanoseconds) {
-        return checkIfThresholdsExceeded(record(nanoseconds, true));
+    public AdaptiveBulkheadState.ThresholdResult onSuccess(long nanoseconds) {
+        return record(nanoseconds, true);
     }
 
     /**
-     * Records a failed call and checks if the thresholds are exceeded.
+     * Records a failed call
      *
-     * @return the result of the check
+     * @return the ThresholdResult
      */
-    public Result onError(long nanoseconds) {
-        return checkIfThresholdsExceeded(record(nanoseconds, false));
+    public AdaptiveBulkheadState.ThresholdResult onError(long nanoseconds) {
+        return record(nanoseconds, false);
     }
 
-    private Snapshot record(long nanoseconds, boolean success) {
-        boolean slow = nanoseconds > slowCallDurationThresholdInNanos;
-        return slidingWindowMetrics.record(nanoseconds, TimeUnit.NANOSECONDS, Outcome.of(slow, success));
+    private AdaptiveBulkheadState.ThresholdResult record(long nanoseconds, boolean success) {
+        Outcome outcome = Outcome.of(nanoseconds > slowCallDurationThresholdInNanos, success);
+        Snapshot snapshot = slidingWindowMetrics.record(nanoseconds, TimeUnit.NANOSECONDS, outcome);
+        return thresholdsExcess(snapshot);
     }
 
     /**
-     * Checks if the failure rate is above the threshold or if the slow calls percentage is above
-     * the threshold.
+     * Checks if the failure rate is above the threshold or if the slow calls' percentage is above the threshold.
      *
      * @param snapshot a metrics snapshot
-     * @return false, if the thresholds haven't been exceeded.
+     * @return thresholds haven been exceeded
      */
-    private Result checkIfThresholdsExceeded(Snapshot snapshot) {
+    private AdaptiveBulkheadState.ThresholdResult thresholdsExcess(Snapshot snapshot) {
         if (isBelowMinimumNumberOfCalls(snapshot)) {
-            return Result.UNRELIABLE_THRESHOLDS;
-        } else if (snapshot.getFailureRate() >= failureRateThreshold
-            || snapshot.getSlowCallRate() >= slowCallRateThreshold) {
-            return Result.ABOVE_THRESHOLDS;
+            return AdaptiveBulkheadState.ThresholdResult.UNRELIABLE;
+        } else if (isAboveFaultRate(snapshot)) {
+            return AdaptiveBulkheadState.ThresholdResult.ABOVE_FAULT_RATE;
         } else {
-            return Result.BELOW_THRESHOLDS;
+            return AdaptiveBulkheadState.ThresholdResult.BELOW_FAULT_RATE;
         }
     }
 
     private boolean isBelowMinimumNumberOfCalls(Snapshot snapshot) {
         return snapshot.getTotalNumberOfCalls() == 0
             || snapshot.getTotalNumberOfCalls() < minimumNumberOfCalls;
+    }
+
+    private boolean isAboveFaultRate(Snapshot snapshot) {
+        return snapshot.getFailureRate() >= failureRateThreshold
+            || snapshot.getSlowCallRate() >= slowCallRateThreshold;
     }
 
     /**
@@ -185,7 +189,7 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      */
     @Override
     public int getAvailableConcurrentCalls() {
-        return internalBulkheadMetrics.getAvailableConcurrentCalls();
+        return innerMetrics.getAvailableConcurrentCalls();
     }
 
     /**
@@ -193,22 +197,7 @@ class AdaptiveBulkheadMetrics implements AdaptiveBulkhead.Metrics {
      */
     @Override
     public int getMaxAllowedConcurrentCalls() {
-        return internalBulkheadMetrics.getMaxAllowedConcurrentCalls();
+        return innerMetrics.getMaxAllowedConcurrentCalls();
     }
 
-    enum Result {
-        /**
-         * Is below the error or slow calls rate.
-         */
-        BELOW_THRESHOLDS,
-        /**
-         * Is above the error or slow calls rate.
-         */
-        ABOVE_THRESHOLDS,
-        /**
-         * Is below minimum number of calls which are required (per sliding window period) before
-         * the Adaptive Bulkhead can calculate the reliable error or slow calls rate.
-         */
-        UNRELIABLE_THRESHOLDS
-    }
 }
