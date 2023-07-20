@@ -38,7 +38,7 @@ class AdaptationCalculator {
      */
     int increment() {
         return fitToRange(
-            metrics.getMaxAllowedConcurrentCalls() + config.getIncreaseSummand());
+            metrics.getMaxAllowedConcurrentCalls() + config.getIncreaseAugend());
     }
 
     /**

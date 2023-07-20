@@ -108,6 +108,26 @@ public class AdaptiveBulkheadConfigTest {
     }
 
     @Test
+    public void testIncreaseIntervalConfig() {
+        int increaseInterval = 2;
+        assertThat(AdaptiveBulkheadConfig.custom()
+            .increaseInterval(increaseInterval)
+            .build()
+            .getIncreaseInterval())
+            .isEqualTo(increaseInterval)
+            .isNotEqualTo(DEFAULT_BULKHEAD.getIncreaseInterval());
+    }
+
+    @Test
+    public void testInvalidIncreaseIntervalConfig() {
+        assertThatThrownBy(() -> AdaptiveBulkheadConfig.custom()
+            .increaseInterval(0)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("increaseInterval must be at least 1");
+    }
+
+    @Test
     public void testSlowCallDurationThresholdConfig() {
         assertThatThrownBy(() -> AdaptiveBulkheadConfig.custom()
             .slowCallDurationThreshold(Duration.ofMillis(0))

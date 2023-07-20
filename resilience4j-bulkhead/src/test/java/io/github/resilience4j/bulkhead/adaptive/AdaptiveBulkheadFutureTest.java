@@ -141,7 +141,7 @@ public class AdaptiveBulkheadFutureTest {
         AdaptiveBulkhead bulkhead = AdaptiveBulkhead.of("test", config);
         bulkhead.tryAcquirePermission();
         bulkhead.tryAcquirePermission();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(0);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
         given(future.get()).willReturn("Hello world");
         given(helloWorldService.returnHelloWorldFuture()).willReturn(future);
         Supplier<Future<String>> supplier = AdaptiveBulkhead.decorateFuture(bulkhead, helloWorldService::returnHelloWorldFuture);

@@ -53,7 +53,7 @@ public class AdaptiveBulkheadTest {
 
     @Test
     public void testToString() {
-        assertThat(bulkhead.toString()).isEqualTo("AdaptiveBulkhead 'test'");
+        assertThat(bulkhead).hasToString("AdaptiveBulkhead 'test'");
     }
 
     @Test
