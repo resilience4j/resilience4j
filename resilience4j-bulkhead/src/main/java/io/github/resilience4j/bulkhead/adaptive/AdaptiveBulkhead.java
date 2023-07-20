@@ -267,7 +267,7 @@ public interface AdaptiveBulkhead {
             }
             long start = bulkhead.getCurrentTimestamp();
             try {
-                return new BulkheadFuture<T>(bulkhead, supplier.get(), start);
+                return new BulkheadFuture<>(bulkhead, supplier.get(), start);
             } catch (Throwable e) {
                 bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
                 throw e;
