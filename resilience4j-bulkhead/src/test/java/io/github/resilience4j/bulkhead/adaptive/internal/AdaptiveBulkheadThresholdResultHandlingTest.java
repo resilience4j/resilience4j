@@ -19,11 +19,11 @@ public class AdaptiveBulkheadThresholdResultHandlingTest {
             .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
-        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, "success");
+        circuitBreaker.onResult(0, "success");
 
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
-        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, "failure");
+        circuitBreaker.onResult(0, "failure");
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
@@ -40,11 +40,11 @@ public class AdaptiveBulkheadThresholdResultHandlingTest {
             .build());
 
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
-        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, Either.left("accepted fail"));
+        circuitBreaker.onResult(0, Either.left("accepted fail"));
 
         // Call 2 is a failure
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
-        circuitBreaker.onResult(0, TimeUnit.NANOSECONDS, Either.left("failure"));
+        circuitBreaker.onResult(0, Either.left("failure"));
 
         assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);

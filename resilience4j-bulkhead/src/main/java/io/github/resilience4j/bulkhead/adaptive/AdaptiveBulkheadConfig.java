@@ -64,7 +64,6 @@ public class AdaptiveBulkheadConfig implements Serializable {
     private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
     private static final boolean DEFAULT_RESET_METRICS_ON_TRANSITION = false;
 
-
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] recordExceptions = new Class[0];
     @SuppressWarnings("unchecked")
