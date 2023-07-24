@@ -2,10 +2,7 @@ package io.github.resilience4j.micronaut.processor;
 
 import io.micronaut.inject.annotation.PackageRenameRemapper;
 
-/**
- * Allows using either resilience4j annotations or the Micronaut versions.
- */
-public final class Resilience4jAnnotationRemapper implements PackageRenameRemapper {
+public class RateLimiterAnnotationRemapper implements PackageRenameRemapper {
 
     @Override
     public String getTargetPackage() {
@@ -14,6 +11,6 @@ public final class Resilience4jAnnotationRemapper implements PackageRenameRemapp
 
     @Override
     public String getPackageName() {
-        return "io.github.resilience4j.bulkhead.annotation";
+        return "io.github.resilience4j.circuitbreaker.annotation";
     }
 }

@@ -26,7 +26,6 @@ import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
-import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
