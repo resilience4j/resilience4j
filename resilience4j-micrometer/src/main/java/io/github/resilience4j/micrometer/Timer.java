@@ -145,7 +145,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onNoResult();
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -232,7 +232,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onNoResult();
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -276,7 +276,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onNoResult();
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -297,7 +297,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onNoResult();
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -390,19 +390,19 @@ public interface Timer {
     interface Context {
 
         /**
-         * Records decorated operation success if the operation returns no result (is void).
+         * Records a successful, decorated void operation.
          */
-        void onNoResult();
+        void onSuccess();
 
         /**
-         * Records decorated operation failure.
+         * Records a failed, decorated operation.
          *
          * @param throwable The throwable thrown from the decorated operation
          */
         void onFailure(Throwable throwable);
 
         /**
-         * Records decorated operation success if it returns a result.
+         * Records a successful, decorated non void operation.
          *
          * @param result The result of the decorated operation
          */

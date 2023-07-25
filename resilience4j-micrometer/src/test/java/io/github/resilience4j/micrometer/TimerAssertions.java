@@ -30,7 +30,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TimerAssertions {
 
     public static void thenSuccessTimed(MeterRegistry registry, Timer timer) {
-        thenTimed(registry, timer, "successful", timer.getTimerConfig().getOnNoResultTagResolver().get());
+        thenTimed(registry, timer, "successful", timer.getTimerConfig().getOnSuccessTagResolver().get());
     }
 
     public static void thenSuccessTimed(MeterRegistry registry, Timer timer, Object result) {

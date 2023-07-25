@@ -126,8 +126,8 @@ public class TimerImpl implements Timer {
         }
 
         @Override
-        public void onNoResult() {
-            recordCall(KIND_SUCCESSFUL, timerConfig.getOnNoResultTagResolver().get(), duration -> new TimerOnSuccessEvent(name, duration));
+        public void onSuccess() {
+            recordCall(KIND_SUCCESSFUL, timerConfig.getOnSuccessTagResolver().get(), duration -> new TimerOnSuccessEvent(name, duration));
         }
 
         @Override

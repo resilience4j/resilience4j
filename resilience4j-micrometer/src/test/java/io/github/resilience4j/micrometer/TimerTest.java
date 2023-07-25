@@ -41,7 +41,7 @@ public class TimerTest {
         then(timer.getEventPublisher()).isNotNull();
         then(timer.getTimerConfig()).isNotNull();
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
-        then(timer.getTimerConfig().getOnNoResultTagResolver().get()).isEqualTo(TimerConfig.ofDefaults().getOnNoResultTagResolver().get());
+        then(timer.getTimerConfig().getOnSuccessTagResolver().get()).isEqualTo(TimerConfig.ofDefaults().getOnSuccessTagResolver().get());
         then(timer.getTimerConfig().getOnResultTagResolver().apply("123")).isEqualTo(TimerConfig.ofDefaults().getOnResultTagResolver().apply("123"));
         then(timer.getTimerConfig().getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo(TimerConfig.ofDefaults().getOnFailureTagResolver().apply(new IllegalStateException()));
     }
@@ -51,7 +51,7 @@ public class TimerTest {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<String>custom()
                 .metricNames("resilience4j.timer.operations")
-                .onNoResultTagResolver(() -> "custom tag")
+                .onSuccessTagResolver(() -> "custom tag")
                 .onResultTagResolver(result -> String.valueOf(result.length()))
                 .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
@@ -63,7 +63,7 @@ public class TimerTest {
         then(timer.getEventPublisher()).isNotNull();
         then(timer.getTimerConfig()).isNotNull();
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(config.getMetricNames());
-        then(timer.getTimerConfig().getOnNoResultTagResolver().get()).isEqualTo(config.getOnNoResultTagResolver().get());
+        then(timer.getTimerConfig().getOnSuccessTagResolver().get()).isEqualTo(config.getOnSuccessTagResolver().get());
         then(timer.getTimerConfig().getOnResultTagResolver().apply("123")).isEqualTo(config.getOnResultTagResolver().apply("123"));
         then(timer.getTimerConfig().getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo(config.getOnFailureTagResolver().apply(new IllegalStateException()));
     }
