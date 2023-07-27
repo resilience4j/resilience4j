@@ -36,38 +36,38 @@ public class FlowableTimerTest {
         List<String> messages = List.of("Hello 1", "Hello 2", "Hello 3");
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<List<String>>custom()
-                .successResultNameResolver(output -> {
-                    then(output).containsExactlyInAnyOrderElementsOf(messages);
-                    return String.valueOf(output.size());
+                .onResultTagResolver(result -> {
+                    then(result).containsExactlyInAnyOrderElementsOf(messages);
+                    return String.valueOf(result.size());
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        List<String> output = Flowable.fromIterable(messages)
+        List<String> result = Flowable.fromIterable(messages)
                 .compose(TimerTransformer.of(timer))
                 .toList()
                 .blockingGet();
 
-        then(output).containsExactlyInAnyOrderElementsOf(messages);
-        thenSuccessTimed(registry, timer, output);
+        then(result).containsExactlyInAnyOrderElementsOf(messages);
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
     public void shouldTimeSuccessfulEmptyFlowable() {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<List<String>>custom()
-                .successResultNameResolver(output -> {
-                    then(output).isEmpty();
-                    return String.valueOf(output.size());
+                .onResultTagResolver(result -> {
+                    then(result).isEmpty();
+                    return String.valueOf(result.size());
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        List<Object> output = Flowable.empty()
+        List<Object> result = Flowable.empty()
                 .compose(TimerTransformer.of(timer))
                 .toList()
                 .blockingGet();
 
-        then(output).isEmpty();
-        thenSuccessTimed(registry, timer, output);
+        then(result).isEmpty();
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
@@ -75,7 +75,7 @@ public class FlowableTimerTest {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .failureResultNameResolver(ex -> {
+                .onFailureTagResolver(ex -> {
                     then(ex).isEqualTo(exception);
                     return ex.toString();
                 })

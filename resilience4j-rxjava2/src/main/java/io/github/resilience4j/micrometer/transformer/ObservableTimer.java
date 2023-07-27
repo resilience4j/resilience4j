@@ -44,7 +44,7 @@ class ObservableTimer<T> extends Observable<T> {
     class TimerObserver extends AbstractObserver<T> {
 
         private final Context context;
-        private final KeySetView<ValueWrapper<T>, Boolean> output = newKeySet();
+        private final KeySetView<ValueWrapper<T>, Boolean> result = newKeySet();
 
         TimerObserver(Observer<? super T> downstreamObserver, Timer timer) {
             super(downstreamObserver);
@@ -53,7 +53,7 @@ class ObservableTimer<T> extends Observable<T> {
 
         @Override
         public void onNext(T item) {
-            output.add(new ValueWrapper<>(item));
+            result.add(new ValueWrapper<>(item));
             super.onNext(item);
         }
 
@@ -64,13 +64,13 @@ class ObservableTimer<T> extends Observable<T> {
 
         @Override
         protected void hookOnComplete() {
-            List<T> items = output.stream().map(ValueWrapper::getValue).toList();
-            context.onSuccess(items);
+            List<T> items = result.stream().map(ValueWrapper::getValue).toList();
+            context.onResult(items);
         }
 
         @Override
         protected void hookOnCancel() {
-            context.onSuccess(null);
+            context.onSuccess();
         }
     }
 }

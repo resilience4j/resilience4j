@@ -37,38 +37,38 @@ public class FluxTimerTest {
         List<String> messages = List.of("Hello 1", "Hello 2", "Hello 3");
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<List<String>>custom()
-                .successResultNameResolver(output -> {
-                    then(output).containsExactlyInAnyOrderElementsOf(messages);
-                    return String.valueOf(output.size());
+                .onResultTagResolver(result -> {
+                    then(result).containsExactlyInAnyOrderElementsOf(messages);
+                    return String.valueOf(result.size());
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        List<String> output = Flux.fromIterable(messages)
+        List<String> result = Flux.fromIterable(messages)
                 .transformDeferred(TimerOperator.of(timer))
                 .collectList()
                 .block(ofSeconds(1));
 
-        then(output).containsExactlyInAnyOrderElementsOf(messages);
-        thenSuccessTimed(registry, timer, output);
+        then(result).containsExactlyInAnyOrderElementsOf(messages);
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
     public void shouldTimeSuccessfulEmptyFlux() {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<List<String>>custom()
-                .successResultNameResolver(output -> {
-                    then(output).isEmpty();
-                    return String.valueOf(output.size());
+                .onResultTagResolver(result -> {
+                    then(result).isEmpty();
+                    return String.valueOf(result.size());
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        List<Object> output = Flux.empty()
+        List<Object> result = Flux.empty()
                 .transformDeferred(TimerOperator.of(timer))
                 .collectList()
                 .block(ofSeconds(1));
 
-        then(output).isEmpty();
-        thenSuccessTimed(registry, timer, output);
+        then(result).isEmpty();
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class FluxTimerTest {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .failureResultNameResolver(ex -> {
+                .onFailureTagResolver(ex -> {
                     then(ex).isEqualTo(exception);
                     return ex.toString();
                 })

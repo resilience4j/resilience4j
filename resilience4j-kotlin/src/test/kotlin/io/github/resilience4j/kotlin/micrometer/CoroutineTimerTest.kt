@@ -37,18 +37,18 @@ class CoroutineTimerTest {
             val message = "Hello!"
             val registry: MeterRegistry = SimpleMeterRegistry()
             val timer = Timer.of("timer 1", registry, TimerConfig<String> {
-                successResultNameResolver {
+                onResultTagResolver {
                     then(it).isEqualTo(message)
                     it
                 }
             })
-            val output = timer.executeSuspendFunction {
+            val result = timer.executeSuspendFunction {
                 delay(0)
                 message
             }
 
-            then(output).isEqualTo(message)
-            thenSuccessTimed(registry, timer, output)
+            then(result).isEqualTo(message)
+            thenSuccessTimed(registry, timer, result)
         }
     }
 
@@ -57,16 +57,15 @@ class CoroutineTimerTest {
         runBlocking {
             val registry: MeterRegistry = SimpleMeterRegistry()
             val timer = Timer.of("timer 1", registry, TimerConfig<Unit> {
-                successResultNameResolver {
-                    then(it).isNotNull()
-                    it.toString()
+                onSuccessTagResolver {
+                    "success"
                 }
             })
-            val output = timer.executeSuspendFunction {
+            timer.executeSuspendFunction {
                 delay(0)
             }
 
-            thenSuccessTimed(registry, timer, output)
+            thenSuccessTimed(registry, timer)
         }
     }
 
@@ -76,7 +75,7 @@ class CoroutineTimerTest {
             val exception = IllegalStateException()
             val registry: MeterRegistry = SimpleMeterRegistry()
             val timer = Timer.of("timer 1", registry, TimerConfig<String> {
-                failureResultNameResolver {
+                onFailureTagResolver {
                     then(it).isEqualTo(exception)
                     it.toString()
                 }

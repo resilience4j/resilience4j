@@ -41,17 +41,17 @@ class FlowTimerTest {
             val messages = listOf("Hello! 1", "Hello! 1", "Hello! 2")
             val registry: MeterRegistry = SimpleMeterRegistry()
             val timer = Timer.of("timer 1", registry, TimerConfig<List<String>> {
-                successResultNameResolver {
+                onResultTagResolver {
                     then(it).containsExactlyInAnyOrderElementsOf(messages)
                     it.size.toString()
                 }
             })
-            val output = messages.asFlow()
+            val result = messages.asFlow()
                 .timer(timer)
                 .toList()
 
-            then(output).containsExactlyInAnyOrderElementsOf(messages)
-            thenSuccessTimed(registry, timer, output)
+            then(result).containsExactlyInAnyOrderElementsOf(messages)
+            thenSuccessTimed(registry, timer, result)
         }
     }
 
@@ -60,17 +60,17 @@ class FlowTimerTest {
         runBlocking {
             val registry: MeterRegistry = SimpleMeterRegistry()
             val timer = Timer.of("timer 1", registry, TimerConfig<List<String>> {
-                successResultNameResolver {
+                onResultTagResolver {
                     then(it).isEmpty()
                     it.size.toString()
                 }
             })
-            val output = flowOf<Any>()
+            val result = flowOf<Any>()
                 .timer(timer)
                 .toList()
 
-            then(output).isEmpty()
-            thenSuccessTimed(registry, timer, output)
+            then(result).isEmpty()
+            thenSuccessTimed(registry, timer, result)
         }
     }
 
@@ -80,7 +80,7 @@ class FlowTimerTest {
             val exception = IllegalStateException()
             val registry: MeterRegistry = SimpleMeterRegistry()
             val timer = Timer.of("timer 1", registry, TimerConfig<String> {
-                failureResultNameResolver {
+                onFailureTagResolver {
                     then(it).isEqualTo(exception)
                     it.toString()
                 }

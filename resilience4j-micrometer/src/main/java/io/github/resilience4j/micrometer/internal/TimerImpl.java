@@ -36,7 +36,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static io.github.resilience4j.micrometer.tagged.TagNames.KIND;
 import static io.github.resilience4j.micrometer.tagged.TagNames.NAME;
@@ -127,22 +126,27 @@ public class TimerImpl implements Timer {
         }
 
         @Override
-        public void onFailure(Throwable throwable) {
-            recordCall(KIND_FAILED, () -> timerConfig.getFailureResultNameResolver().apply(throwable), duration -> new TimerOnFailureEvent(name, duration));
+        public void onSuccess() {
+            recordCall(KIND_SUCCESSFUL, timerConfig.getOnSuccessTagResolver().get(), duration -> new TimerOnSuccessEvent(name, duration));
         }
 
         @Override
-        public void onSuccess(Object output) {
-            recordCall(KIND_SUCCESSFUL, () -> timerConfig.getSuccessResultNameResolver().apply(output), duration -> new TimerOnSuccessEvent(name, duration));
+        public void onFailure(Throwable throwable) {
+            recordCall(KIND_FAILED, timerConfig.getOnFailureTagResolver().apply(throwable), duration -> new TimerOnFailureEvent(name, duration));
         }
 
-        private void recordCall(String resultKind, Supplier<String> resultName, Function<Duration, TimerEvent> eventCreator) {
+        @Override
+        public void onResult(Object output) {
+            recordCall(KIND_SUCCESSFUL, timerConfig.getOnResultTagResolver().apply(output), duration -> new TimerOnSuccessEvent(name, duration));
+        }
+
+        private void recordCall(String resultKind, String resultTag, Function<Duration, TimerEvent> eventCreator) {
             Duration duration = ofNanos(nanoTime() - start);
             io.micrometer.core.instrument.Timer calls = builder(timerConfig.getMetricNames())
-                    .description("Decorated operation calls")
+                    .description("Timed decorated operation calls")
                     .tag(NAME, name)
                     .tag(KIND, resultKind)
-                    .tag(RESULT_TAG, resultName.get())
+                    .tag(RESULT_TAG, resultTag)
                     .tags(tags)
                     .register(registry);
             calls.record(duration);

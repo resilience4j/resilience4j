@@ -47,7 +47,7 @@ class MaybeTimer<T> extends Maybe<T> {
 
         @Override
         protected void hookOnComplete() {
-            context.onSuccess(null);
+            context.onResult(null);
         }
 
         @Override
@@ -57,12 +57,12 @@ class MaybeTimer<T> extends Maybe<T> {
 
         @Override
         protected void hookOnSuccess(T value) {
-            context.onSuccess(value);
+            context.onResult(value);
         }
 
         @Override
         protected void hookOnCancel() {
-            context.onSuccess(null);
+            context.onSuccess();
         }
     }
 }

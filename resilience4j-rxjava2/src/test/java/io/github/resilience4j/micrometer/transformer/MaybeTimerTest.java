@@ -34,36 +34,36 @@ public class MaybeTimerTest {
         String message = "Hello!";
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<String>custom()
-                .successResultNameResolver(output -> {
-                    then(output).isEqualTo(message);
-                    return output;
+                .onResultTagResolver(result -> {
+                    then(result).isEqualTo(message);
+                    return result;
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        String output = Maybe.just(message)
+        String result = Maybe.just(message)
                 .compose(TimerTransformer.of(timer))
                 .blockingGet();
 
-        then(output).isEqualTo(message);
-        thenSuccessTimed(registry, timer, output);
+        then(result).isEqualTo(message);
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
     public void shouldTimeSuccessfulEmptyMaybe() {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .successResultNameResolver(output -> {
-                    then(output).isNull();
-                    return String.valueOf(output);
+                .onResultTagResolver(result -> {
+                    then(result).isNull();
+                    return String.valueOf(result);
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        Object output = Maybe.empty()
+        Object result = Maybe.empty()
                 .compose(TimerTransformer.of(timer))
                 .blockingGet();
 
-        then(output).isNull();
-        thenSuccessTimed(registry, timer, output);
+        then(result).isNull();
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class MaybeTimerTest {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .failureResultNameResolver(ex -> {
+                .onFailureTagResolver(ex -> {
                     then(ex).isEqualTo(exception);
                     return ex.toString();
                 })

@@ -26,35 +26,40 @@ public class TimerConfigTest {
         TimerConfig config = TimerConfig.ofDefaults();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.calls");
-        then(config.getSuccessResultNameResolver().apply(123)).isEqualTo("none");
-        then(config.getFailureResultNameResolver().apply(new IllegalStateException())).isEqualTo("IllegalStateException");
+        then(config.getOnSuccessTagResolver().get()).isEqualTo("unspecified");
+        then(config.getOnResultTagResolver().apply(123)).isEqualTo("unspecified");
+        then(config.getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo("IllegalStateException");
     }
 
     @Test
     public void shouldCreateCustomTimerConfig() {
         TimerConfig config = TimerConfig.<Integer>custom()
                 .metricNames("resilience4j.timer.operations")
-                .successResultNameResolver(Object::toString)
-                .failureResultNameResolver(throwable -> throwable.getClass().getName())
+                .onSuccessTagResolver(() -> "custom tag")
+                .onResultTagResolver(Object::toString)
+                .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.operations");
-        then(config.getSuccessResultNameResolver().apply(123)).isEqualTo("123");
-        then(config.getFailureResultNameResolver().apply(new IllegalStateException())).isEqualTo("java.lang.IllegalStateException");
+        then(config.getOnSuccessTagResolver().get()).isEqualTo("custom tag");
+        then(config.getOnResultTagResolver().apply(123)).isEqualTo("123");
+        then(config.getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo("java.lang.IllegalStateException");
     }
 
     @Test
     public void shouldCreateTimerConfigFromPrototype() {
         TimerConfig prototype = TimerConfig.<Integer>custom()
-                .failureResultNameResolver(throwable -> throwable.getClass().getName())
+                .onSuccessTagResolver(() -> "custom tag")
+                .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
         TimerConfig config = TimerConfig.from(prototype)
                 .metricNames("resilience4j.timer.operations")
-                .failureResultNameResolver(throwable -> throwable.getClass().getSimpleName())
+                .onFailureTagResolver(throwable -> throwable.getClass().getSimpleName())
                 .build();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.operations");
-        then(config.getSuccessResultNameResolver().apply(123)).isEqualTo("none");
-        then(config.getFailureResultNameResolver().apply(new IllegalStateException())).isEqualTo("IllegalStateException");
+        then(config.getOnSuccessTagResolver().get()).isEqualTo("custom tag");
+        then(config.getOnResultTagResolver().apply(123)).isEqualTo("unspecified");
+        then(config.getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo("IllegalStateException");
     }
 }

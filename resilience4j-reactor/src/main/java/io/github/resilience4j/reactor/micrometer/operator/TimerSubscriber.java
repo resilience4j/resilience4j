@@ -21,6 +21,7 @@ import io.github.resilience4j.reactor.AbstractSubscriber;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,10 +40,10 @@ class TimerSubscriber<T> extends AbstractSubscriber<T> {
     private final Context context;
     private final AtomicBoolean successSignaled = new AtomicBoolean(false);
     private final boolean singleProducer;
-    private final AtomicReference<T> singleProducerOutput = new AtomicReference<>();
-    private final KeySetView<ValueWrapper<T>, Boolean> multipleProducerOutput = newKeySet();
+    private final AtomicReference<T> singleProducerResult = new AtomicReference<>();
+    private final KeySetView<ValueWrapper<T>, Boolean> multipleProducerResult = newKeySet();
 
-    protected TimerSubscriber(Timer timer, CoreSubscriber<? super T> downstreamSubscriber, boolean singleProducer) {
+    TimerSubscriber(Timer timer, CoreSubscriber<? super T> downstreamSubscriber, boolean singleProducer) {
         super(downstreamSubscriber);
         this.singleProducer = singleProducer;
         context = requireNonNull(timer, "Timer is null").createContext();
@@ -52,9 +53,9 @@ class TimerSubscriber<T> extends AbstractSubscriber<T> {
     protected void hookOnNext(T value) {
         if (!isDisposed()) {
             if (singleProducer) {
-                singleProducerOutput.set(value);
+                singleProducerResult.set(value);
             } else {
-                multipleProducerOutput.add(new ValueWrapper<>(value));
+                multipleProducerResult.add(new ValueWrapper<>(value));
             }
             downstreamSubscriber.onNext(value);
         }
@@ -64,19 +65,19 @@ class TimerSubscriber<T> extends AbstractSubscriber<T> {
     protected void hookOnComplete() {
         if (successSignaled.compareAndSet(false, true)) {
             if (singleProducer) {
-                context.onSuccess(singleProducerOutput.get());
+                context.onResult(singleProducerResult.get());
             } else {
-                List<T> output = multipleProducerOutput.stream().map(ValueWrapper::getValue).toList();
-                context.onSuccess(output);
+                List<T> result = multipleProducerResult.stream().map(ValueWrapper::getValue).toList();
+                context.onResult(result);
             }
         }
         downstreamSubscriber.onComplete();
     }
 
     @Override
-    public void hookOnCancel() {
+    protected void hookOnCancel() {
         if (!successSignaled.get()) {
-            context.onSuccess(null);
+            context.onSuccess();
         }
     }
 
@@ -87,7 +88,7 @@ class TimerSubscriber<T> extends AbstractSubscriber<T> {
     }
 
     /**
-     * Wraps a value to prevent the same values be treated as equal ones when adding to Set.
+     * Wraps a value to prevent the same values be treated as equal when adding to Set.
      *
      * @param <T> value type
      */

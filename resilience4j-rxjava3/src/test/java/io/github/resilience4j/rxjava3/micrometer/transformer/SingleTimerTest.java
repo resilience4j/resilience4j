@@ -34,18 +34,18 @@ public class SingleTimerTest {
         String message = "Hello!";
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.<String>custom()
-                .successResultNameResolver(output -> {
-                    then(output).isEqualTo(message);
-                    return output;
+                .onResultTagResolver(result -> {
+                    then(result).isEqualTo(message);
+                    return result;
                 })
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
-        String output = Single.just(message)
+        String result = Single.just(message)
                 .compose(TimerTransformer.of(timer))
                 .blockingGet();
 
-        then(output).isEqualTo(message);
-        thenSuccessTimed(registry, timer, output);
+        then(result).isEqualTo(message);
+        thenSuccessTimed(registry, timer, result);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class SingleTimerTest {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .failureResultNameResolver(ex -> {
+                .onFailureTagResolver(ex -> {
                     then(ex).isEqualTo(exception);
                     return ex.toString();
                 })

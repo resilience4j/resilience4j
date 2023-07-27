@@ -31,7 +31,12 @@ suspend fun <T> Timer.executeSuspendFunction(block: suspend () -> T): T = decora
 fun <T> Timer.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     val context = createContext()
     try {
-        block().also { context.onSuccess(it) }
+        block().also {
+            when (it) {
+                is Unit -> context.onSuccess()
+                else -> context.onResult(it)
+            }
+        }
     } catch (e: Exception) {
         context.onFailure(e)
         throw e

@@ -28,21 +28,21 @@ import java.util.concurrent.ConcurrentHashMap.newKeySet
 
 fun <T> Flow<T>.timer(timer: Timer): Flow<T> {
     var context: Context? = null
-    val output = newKeySet<ValueWrapper<T>>()
+    val result = newKeySet<ValueWrapper<T>>()
     return onStart {
         context = timer.createContext()
     }.onEach {
-        output += ValueWrapper(it)
+        result += ValueWrapper(it)
     }.onCompletion { throwable ->
         when (throwable) {
-            null -> context?.onSuccess(output.map { it.value })
+            null -> context?.onResult(result.map { it.value })
             else -> context?.onFailure(throwable)
         }
     }
 }
 
 /**
- * Wraps a value to prevent the same values be treated as equal ones when adding to Set.
+ * Wraps a value to prevent the same values be treated as equal when adding to Set.
  * @param <T> value type
  */
 private class ValueWrapper<T>(val value: T?)

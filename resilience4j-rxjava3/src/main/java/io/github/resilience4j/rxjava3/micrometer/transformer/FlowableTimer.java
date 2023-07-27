@@ -45,7 +45,7 @@ class FlowableTimer<T> extends Flowable<T> {
     class TimerSubscriber extends AbstractSubscriber<T> {
 
         private final Context context;
-        private final KeySetView<ValueWrapper<T>, Boolean> output = newKeySet();
+        private final KeySetView<ValueWrapper<T>, Boolean> result = newKeySet();
 
         TimerSubscriber(Subscriber<? super T> downstreamObserver, Timer timer) {
             super(downstreamObserver);
@@ -54,7 +54,7 @@ class FlowableTimer<T> extends Flowable<T> {
 
         @Override
         public void onNext(T item) {
-            output.add(new ValueWrapper<>(item));
+            result.add(new ValueWrapper<>(item));
             super.onNext(item);
         }
 
@@ -65,13 +65,13 @@ class FlowableTimer<T> extends Flowable<T> {
 
         @Override
         protected void hookOnComplete() {
-            List<T> items = output.stream().map(ValueWrapper::getValue).toList();
-            context.onSuccess(items);
+            List<T> items = result.stream().map(ValueWrapper::getValue).toList();
+            context.onResult(items);
         }
 
         @Override
         protected void hookOnCancel() {
-            context.onSuccess(null);
+            context.onSuccess();
         }
     }
 }

@@ -34,17 +34,14 @@ public class CompletableTimerTest {
     public void shouldTimeSuccessfulCompletable() {
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .successResultNameResolver(output -> {
-                    then(output).isNull();
-                    return String.valueOf(output);
-                })
+                .onSuccessTagResolver(() -> "success")
                 .build();
         Timer timer = Timer.of("timer 1", registry, config);
         Completable.complete()
                 .compose(TimerTransformer.of(timer))
                 .blockingAwait(1, SECONDS);
 
-        thenSuccessTimed(registry, timer, null);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test
@@ -52,7 +49,7 @@ public class CompletableTimerTest {
         IllegalStateException exception = new IllegalStateException();
         MeterRegistry registry = new SimpleMeterRegistry();
         TimerConfig config = TimerConfig.custom()
-                .failureResultNameResolver(ex -> {
+                .onFailureTagResolver(ex -> {
                     then(ex).isEqualTo(exception);
                     return ex.toString();
                 })

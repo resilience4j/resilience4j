@@ -94,13 +94,13 @@ public interface Timer {
             CompletableFuture<T> promise = new CompletableFuture<>();
             Context context = timer.createContext();
             try {
-                supplier.get().whenComplete((output, throwable) -> {
+                supplier.get().whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         context.onFailure(throwable);
                         promise.completeExceptionally(throwable);
                     } else {
-                        context.onSuccess(output);
-                        promise.complete(output);
+                        context.onResult(result);
+                        promise.complete(result);
                     }
                 });
             } catch (Exception e) {
@@ -123,9 +123,9 @@ public interface Timer {
         return () -> {
             Context context = timer.createContext();
             try {
-                T output = supplier.get();
-                context.onSuccess(output);
-                return output;
+                T result = supplier.get();
+                context.onResult(result);
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -145,7 +145,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onSuccess(null);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -166,9 +166,9 @@ public interface Timer {
         return (input) -> {
             Context context = timer.createContext();
             try {
-                R output = function.apply(input);
-                context.onSuccess(output);
-                return output;
+                R result = function.apply(input);
+                context.onResult(result);
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -188,9 +188,9 @@ public interface Timer {
         return () -> {
             Context context = timer.createContext();
             try {
-                T output = supplier.get();
-                context.onSuccess(output);
-                return output;
+                T result = supplier.get();
+                context.onResult(result);
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -210,9 +210,9 @@ public interface Timer {
         return () -> {
             Context context = timer.createContext();
             try {
-                T output = callable.call();
-                context.onSuccess(output);
-                return output;
+                T result = callable.call();
+                context.onResult(result);
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -232,7 +232,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onSuccess(null);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -253,9 +253,9 @@ public interface Timer {
         return (input) -> {
             Context context = timer.createContext();
             try {
-                R output = function.apply(input);
-                context.onSuccess(output);
-                return output;
+                R result = function.apply(input);
+                context.onResult(result);
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -276,7 +276,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onSuccess(null);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -297,7 +297,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onSuccess(null);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -390,18 +390,23 @@ public interface Timer {
     interface Context {
 
         /**
-         * Records decorated operation failure.
+         * Records a successful, decorated void operation.
+         */
+        void onSuccess();
+
+        /**
+         * Records a failed, decorated operation.
          *
          * @param throwable The throwable thrown from the decorated operation
          */
         void onFailure(Throwable throwable);
 
         /**
-         * Records successful decorated operation.
+         * Records a successful, decorated non void operation.
          *
-         * @param output The output of the decorated operation
+         * @param result The result of the decorated operation
          */
-        void onSuccess(Object output);
+        void onResult(Object result);
     }
 
     /**

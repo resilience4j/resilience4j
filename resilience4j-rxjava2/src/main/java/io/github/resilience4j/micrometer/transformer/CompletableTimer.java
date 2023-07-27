@@ -47,7 +47,7 @@ class CompletableTimer extends Completable {
 
         @Override
         protected void hookOnComplete() {
-            context.onSuccess(null);
+            context.onSuccess();
         }
 
         @Override
@@ -57,7 +57,7 @@ class CompletableTimer extends Completable {
 
         @Override
         protected void hookOnCancel() {
-            context.onSuccess(null);
+            context.onSuccess();
         }
     }
 }
