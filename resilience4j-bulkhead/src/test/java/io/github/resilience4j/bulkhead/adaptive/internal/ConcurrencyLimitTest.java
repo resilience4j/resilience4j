@@ -23,11 +23,11 @@ public class ConcurrencyLimitTest {
     }
 
     private void onSuccess() {
-        bulkhead.onSuccess(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit());
+        bulkhead.onSuccess(bulkhead.getCurrentTimestamp());
     }
 
     private void onError() {
-        bulkhead.onError(bulkhead.getCurrentTimestamp(), bulkhead.getTimestampUnit(), ERROR);
+        bulkhead.onError(bulkhead.getCurrentTimestamp(), ERROR);
     }
 
     @Test

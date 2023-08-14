@@ -34,7 +34,7 @@ public class AdaptiveBulkheadDurationTest {
         long startTime = bulkhead.getCurrentTimestamp();
         clock.advanceByMillis(2);
 
-        bulkhead.onResult(startTime, bulkhead.getTimestampUnit(), 400);
+        bulkhead.onResult(startTime, 400);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isOne();
@@ -50,7 +50,7 @@ public class AdaptiveBulkheadDurationTest {
         long startTime = bulkhead.getCurrentTimestamp();
         clock.advanceBySeconds(2);
 
-        bulkhead.onResult(startTime, bulkhead.getTimestampUnit(), 200);
+        bulkhead.onResult(startTime, 200);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfSuccessfulCalls()).isOne();
@@ -71,8 +71,8 @@ public class AdaptiveBulkheadDurationTest {
         int seconds = (int) (slowCallDurationThreshold.getSeconds() - 1);
         clock.advanceBySeconds(seconds);
 
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
+        bulkhead.onError(startTime, failure);
+        bulkhead.onError(startTime, failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(2);
@@ -88,7 +88,7 @@ public class AdaptiveBulkheadDurationTest {
         AdaptiveBulkheadStateMachine bulkhead = bulkhead(clock);
         long startTime = bulkhead.getCurrentTimestamp() - TimeUnit.SECONDS.toMillis(2);
 
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
+        bulkhead.onError(startTime, failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isOne();
@@ -107,8 +107,8 @@ public class AdaptiveBulkheadDurationTest {
         int seconds = (int) (slowCallDurationThreshold.getSeconds() + 1);
         clock.advanceBySeconds(seconds);
 
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
+        bulkhead.onError(startTime, failure);
+        bulkhead.onError(startTime, failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isEqualTo(2);
@@ -125,7 +125,7 @@ public class AdaptiveBulkheadDurationTest {
         long startTime = bulkhead.getCurrentTimestamp();
         clock.advanceByDays(2);
 
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
+        bulkhead.onError(startTime, failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isOne();
@@ -141,7 +141,7 @@ public class AdaptiveBulkheadDurationTest {
         AdaptiveBulkheadStateMachine bulkhead = bulkhead(clock);
         long startTime = bulkhead.getCurrentTimestamp();
 
-        bulkhead.onError(startTime, bulkhead.getTimestampUnit(), failure);
+        bulkhead.onError(startTime, failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isOne();
@@ -156,7 +156,7 @@ public class AdaptiveBulkheadDurationTest {
         long startTime = bulkhead.getCurrentTimestamp();
         clock.advanceByMillis(2);
 
-        bulkhead.onError(startTime + 600, bulkhead.getTimestampUnit(), failure);
+        bulkhead.onError(startTime + 600, failure);
 
         Snapshot snapshot = ((AdaptiveBulkheadMetrics) bulkhead.getMetrics()).getSnapshot();
         assertThat(snapshot.getNumberOfFailedCalls()).isOne();
