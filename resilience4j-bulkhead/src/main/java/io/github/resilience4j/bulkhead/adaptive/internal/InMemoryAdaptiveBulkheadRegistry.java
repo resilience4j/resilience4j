@@ -18,17 +18,17 @@
  */
 package io.github.resilience4j.bulkhead.adaptive.internal;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.function.Supplier;
-
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkhead;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadConfig;
 import io.github.resilience4j.bulkhead.adaptive.AdaptiveBulkheadRegistry;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Bulkhead instance manager;

@@ -19,12 +19,12 @@
 package io.github.resilience4j.bulkhead.adaptive;
 
 
+import io.github.resilience4j.bulkhead.adaptive.internal.InMemoryAdaptiveBulkheadRegistry;
+import io.github.resilience4j.core.Registry;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import io.github.resilience4j.bulkhead.adaptive.internal.InMemoryAdaptiveBulkheadRegistry;
-import io.github.resilience4j.core.Registry;
 
 /**
  * The {@link AdaptiveBulkheadRegistry} is a factory to create AdaptiveBulkhead instances which stores all bulkhead instances in a registry.

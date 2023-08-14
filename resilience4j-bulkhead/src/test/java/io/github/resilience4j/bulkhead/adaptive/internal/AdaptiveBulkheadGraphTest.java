@@ -55,7 +55,7 @@ public class AdaptiveBulkheadGraphTest {
     @Test
     public void testSlowCalls() {
         for (int i = 0; i < CALLS; i++) {
-            bulkhead.onSuccess(nextLatency(), TimeUnit.MILLISECONDS);
+            bulkhead.onSuccess(nextLatency());
         }
         drawGraph("testSlowCalls");
     }
@@ -66,9 +66,9 @@ public class AdaptiveBulkheadGraphTest {
 
         for (int i = 0; i < CALLS; i++) {
             if (nextErrorOccurred()) {
-                bulkhead.onError(1, TimeUnit.MILLISECONDS, failure);
+                bulkhead.onError(1, failure);
             } else {
-                bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+                bulkhead.onSuccess(1);
             }
         }
         drawGraph("testFailedCalls");
@@ -79,7 +79,7 @@ public class AdaptiveBulkheadGraphTest {
         Throwable failure = new Throwable();
 
         for (int i = 0; i < CALLS; i++) {
-            bulkhead.onError(1, TimeUnit.MILLISECONDS, failure);
+            bulkhead.onError(1, failure);
         }
         drawGraph("testFailedCallsOnly");
     }
@@ -87,7 +87,7 @@ public class AdaptiveBulkheadGraphTest {
     @Test
     public void testSuccessfulCallsOnly() {
         for (int i = 0; i < CALLS; i++) {
-            bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+            bulkhead.onSuccess(1);
         }
         drawGraph("testSuccessfulCallsOnly");
     }
@@ -113,10 +113,10 @@ public class AdaptiveBulkheadGraphTest {
 
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 5; i++) {
-                bulkhead.onSuccess(1, TimeUnit.MILLISECONDS);
+                bulkhead.onSuccess(1);
             }
             for (int i = 0; i < 3; i++) {
-                bulkhead.onError(System.currentTimeMillis(), TimeUnit.MILLISECONDS, failure);
+                bulkhead.onError(System.currentTimeMillis(), failure);
             }
         }
         drawGraph("WithLowMinConcurrentCalls");

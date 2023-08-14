@@ -47,8 +47,8 @@ import java.util.function.Supplier;
  * additional operations will be permitted to execute until space is available.
  * <p>
  * Once the operation is complete, regardless of the result (Success or Failure), client needs to
- * call {@link AdaptiveBulkhead#onSuccess(long, TimeUnit)} or {@link AdaptiveBulkhead#onError(long,
- * TimeUnit, Throwable)}  in order to maintain integrity of internal bulkhead state which is handled
+ * call {@link AdaptiveBulkhead#onSuccess} or {@link AdaptiveBulkhead#onError}
+ * in order to maintain integrity of internal bulkhead state which is handled
  * by invoking the configured adaptive limit policy.
  * <p>
  */
@@ -72,8 +72,8 @@ public interface AdaptiveBulkhead {
     /**
      * Releases a permission and increases the number of available permits by one.
      * <p>
-     * Should only be used when a permission was acquired but not used. Otherwise use {@link
-     * AdaptiveBulkhead#onSuccess(long, TimeUnit)} to signal a completed call and release a
+     * Should only be used when a permission was acquired but not used. Otherwise, use {@link
+     * AdaptiveBulkhead#onSuccess} to signal a completed call and release a
      * permission.
      */
     void releasePermission();
@@ -81,18 +81,18 @@ public interface AdaptiveBulkhead {
     /**
      * Records a call and releases a permission.
      */
-    void onResult(long startTime, TimeUnit timeUnit, @Nullable Object result);
+    void onResult(long startTime, @Nullable Object result);
 
 
     /**
      * Records a successful call and releases a permission.
      */
-    void onSuccess(long startTime, TimeUnit timeUnit);
+    void onSuccess(long startTime);
 
     /**
      * Records a failed call and releases a permission.
      */
-    void onError(long startTime, TimeUnit timeUnit, Throwable throwable);
+    void onError(long startTime, Throwable throwable);
 
     /**
      * Returns the name of this bulkhead.
@@ -198,10 +198,10 @@ public interface AdaptiveBulkhead {
             try {
                 start = bulkhead.getCurrentTimestamp();
                 T result = supplier.get();
-                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                bulkhead.onResult(start, result);
                 return result;
             } catch (Exception e) {
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             }
         };
@@ -231,16 +231,16 @@ public interface AdaptiveBulkhead {
                         .whenComplete(
                             (result, throwable) -> {
                                 if (throwable != null) {
-                                    bulkhead.onError(start, bulkhead.getTimestampUnit(), throwable);
+                                    bulkhead.onError(start, throwable);
                                     promise.completeExceptionally(throwable);
                                 } else {
-                                    bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                                    bulkhead.onResult(start, result);
                                     promise.complete(result);
                                 }
                             }
                         );
                 } catch (Exception e) {
-                    bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                    bulkhead.onError(start, e);
                     promise.completeExceptionally(e);
                 }
             }
@@ -269,7 +269,7 @@ public interface AdaptiveBulkhead {
             try {
                 return new BulkheadFuture<>(bulkhead, supplier.get(), start);
             } catch (Throwable e) {
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             }
         };
@@ -293,11 +293,11 @@ public interface AdaptiveBulkhead {
                 runnable.run();
             } catch (Exception e) {
                 isFailed = true;
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             } finally {
                 if (start != 0 && !isFailed) {
-                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start);
                 }
             }
         };
@@ -318,10 +318,10 @@ public interface AdaptiveBulkhead {
             try {
                 start = bulkhead.getCurrentTimestamp();
                 T result = callable.call();
-                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                bulkhead.onResult(start, result);
                 return result;
             } catch (Exception e) {
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             }
         };
@@ -342,10 +342,10 @@ public interface AdaptiveBulkhead {
             try {
                 start = bulkhead.getCurrentTimestamp();
                 T result = supplier.get();
-                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                bulkhead.onResult(start, result);
                 return result;
             } catch (Exception e) {
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             }
         };
@@ -369,11 +369,11 @@ public interface AdaptiveBulkhead {
                 consumer.accept(t);
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start);
                 }
             }
         };
@@ -398,11 +398,11 @@ public interface AdaptiveBulkhead {
                 consumer.accept(t);
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start);
                 }
             }
         };
@@ -425,11 +425,11 @@ public interface AdaptiveBulkhead {
                 runnable.run();
             } catch (Exception e) {
                 failed = true;
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             } finally {
                 if (start != 0 && !failed) {
-                    bulkhead.onSuccess(start, bulkhead.getTimestampUnit());
+                    bulkhead.onSuccess(start);
                 }
             }
         };
@@ -452,10 +452,10 @@ public interface AdaptiveBulkhead {
             try {
                 start = bulkhead.getCurrentTimestamp();
                 R result = function.apply(t);
-                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                bulkhead.onResult(start, result);
                 return result;
             } catch (Exception e) {
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             }
         };
@@ -478,10 +478,10 @@ public interface AdaptiveBulkhead {
             try {
                 start = bulkhead.getCurrentTimestamp();
                 R result = function.apply(t);
-                bulkhead.onResult(start, bulkhead.getTimestampUnit(), result);
+                bulkhead.onResult(start, result);
                 return result;
             } catch (Exception e) {
-                bulkhead.onError(start, bulkhead.getTimestampUnit(), e);
+                bulkhead.onError(start, e);
                 throw e;
             }
         };
@@ -556,14 +556,14 @@ public interface AdaptiveBulkhead {
 
         /**
          * Order is a FIXED integer, it should be preserved regardless of the ordinal number of the
-         * enumeration. While a State.ordinal() does mostly the same, it is prone to changing the
+         * enumeration. While a State.ordinal() does mostly the same, it is prone to change the
          * order based on how the programmer  sets the enum. If more states are added the "order"
          * should be preserved. For example, if there is a state inserted between CLOSED and
          * HALF_OPEN (say FIXED_OPEN) then the order of HALF_OPEN remains at 2 and the new state
          * takes 3 regardless of its order in the enum.
          *
-         * @param order
-         * @param allowPublish
+         * @param order        int
+         * @param allowPublish boolean
          */
         State(int order, boolean allowPublish) {
             this.order = order;
@@ -629,7 +629,7 @@ public interface AdaptiveBulkhead {
         /**
          * Returns the current total number of buffered calls in the sliding window.
          *
-         * @return he current total number of buffered calls in the sliding window
+         * @return the current total number of buffered calls in the sliding window
          */
         int getNumberOfBufferedCalls();
 
@@ -709,11 +709,11 @@ public interface AdaptiveBulkhead {
             try {
                 T result = future.get();
                 onceToBulkhead.applyOnce(b ->
-                    b.onResult(start, b.getTimestampUnit(), result));
+                    b.onResult(start, result));
                 return result;
             } catch (Throwable throwable) {
                 onceToBulkhead.applyOnce(b ->
-                    b.onError(start, b.getTimestampUnit(), throwable));
+                    b.onError(start, throwable));
                 throw throwable;
             }
         }
@@ -723,11 +723,11 @@ public interface AdaptiveBulkhead {
             try {
                 T result = future.get(timeout, unit);
                 onceToBulkhead.applyOnce(b ->
-                    b.onResult(start, b.getTimestampUnit(), result));
+                    b.onResult(start, result));
                 return result;
             } catch (Throwable throwable) {
                 onceToBulkhead.applyOnce(b ->
-                    b.onError(start, b.getTimestampUnit(), throwable));
+                    b.onError(start, throwable));
                 throw throwable;
             }
         }

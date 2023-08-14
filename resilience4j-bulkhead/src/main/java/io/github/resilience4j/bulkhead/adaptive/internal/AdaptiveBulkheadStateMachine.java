@@ -116,54 +116,53 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead, StateMach
      * and the result predicate should decide if the call was successful or not.
      *
      * @param startTime The start time of the call
-     * @param timeUnit  The time unit
      * @param result    The result of the protected function
      */
-    public void onResult(long startTime, TimeUnit timeUnit, @Nullable Object result) {
+    public void onResult(long startTime, @Nullable Object result) {
         if (result != null && config.getRecordResultPredicate().test(result)) {
             ResultRecordedAsFailureException failure = new ResultRecordedAsFailureException(name, result);
             LOG.debug("'{}' recorded a result type '{}' as a failure", name, result.getClass());
-            onError(startTime, timeUnit, failure);
+            onError(startTime, failure);
         } else {
-            onSuccess(startTime, timeUnit);
+            onSuccess(startTime);
         }
     }
 
     /**
      * @param startTime The start time of the call
-     * @param timeUnit  The time unit
      */
     @Override
-    public void onSuccess(long startTime, TimeUnit timeUnit) {
-        releasePermission(); // ?
-        recordSuccess(startTime, timeUnit);
+    public void onSuccess(long startTime) {
+        releasePermission(); // TODO?
+        recordSuccess(startTime);
         tryPublishEvent(
             new BulkheadOnSuccessEvent(name, now()));
     }
 
     /**
      * @param startTime The start time of the call
-     * @param timeUnit  The time unit
      * @param throwable An error
      */
     @Override
-    public void onError(long startTime, TimeUnit timeUnit, Throwable throwable) {
+    public void onError(long startTime, Throwable throwable) {
         if (config.getIgnoreExceptionPredicate().test(throwable)) {
             releasePermission();
             tryPublishEvent(
                 new BulkheadOnIgnoreEvent(name, now(), throwable));
         } else if (config.getRecordExceptionPredicate().test(throwable)) {
             releasePermission(); // ?
-            recordError(startTime, timeUnit, throwable);
+            recordError(startTime, throwable);
             tryPublishEvent(
                 new BulkheadOnErrorEvent(name, now(), throwable));
         } else {
-            onSuccess(startTime, timeUnit);
+            onSuccess(startTime);
         }
     }
 
-    private long nanosUntilNow(long startTime, TimeUnit timeUnit) {
-        return Math.max(0, getTimestampUnit().toNanos(getCurrentTimestamp()) - timeUnit.toNanos(startTime));
+    private long nanosUntilNow(long startTime) {
+        long now = getTimestampUnit().toNanos(getCurrentTimestamp());
+        long start = timestampUnit.toNanos(startTime);
+        return Math.max(0, now - start);
     }
 
     @Override
@@ -252,15 +251,15 @@ public class AdaptiveBulkheadStateMachine implements AdaptiveBulkhead, StateMach
         }
     }
 
-    private void recordError(long startTime, TimeUnit timeUnit, Throwable throwable) {
+    private void recordError(long startTime, Throwable throwable) {
         LOG.debug("'{}' recorded an error:", name, throwable);
-        long nanoseconds = nanosUntilNow(startTime, timeUnit);
+        long nanoseconds = nanosUntilNow(startTime);
         onThresholdExcess(metrics.onError(nanoseconds));
     }
 
-    private void recordSuccess(long startTime, TimeUnit timeUnit) {
+    private void recordSuccess(long startTime) {
         LOG.debug("'{}' recorded a success", name);
-        long nanoseconds = nanosUntilNow(startTime, timeUnit);
+        long nanoseconds = nanosUntilNow(startTime);
         onThresholdExcess(metrics.onSuccess(nanoseconds));
     }
 

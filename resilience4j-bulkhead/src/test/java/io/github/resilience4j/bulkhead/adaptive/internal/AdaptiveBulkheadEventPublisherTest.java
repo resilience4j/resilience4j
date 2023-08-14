@@ -59,7 +59,7 @@ public class AdaptiveBulkheadEventPublisherTest {
 		adaptiveBulkhead.getEventPublisher()
 				.onSuccess(this::logEventType);
 
-		adaptiveBulkhead.onSuccess(1000, TimeUnit.NANOSECONDS);
+		adaptiveBulkhead.onSuccess(1000);
 
 		then(logger).should(times(1)).info("SUCCESS");
 	}
@@ -69,7 +69,7 @@ public class AdaptiveBulkheadEventPublisherTest {
 		adaptiveBulkhead.getEventPublisher()
 				.onError(this::logEventType);
 
-		adaptiveBulkhead.onError(1000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
+		adaptiveBulkhead.onError(1000, new IOException("BAM!"));
 
 		then(logger).should(times(1)).info("ERROR");
 	}
@@ -90,7 +90,7 @@ public class AdaptiveBulkheadEventPublisherTest {
 		adaptiveBulkhead.getEventPublisher()
 				.onIgnoredError(this::logEventType);
 
-		adaptiveBulkhead.onError(10000, TimeUnit.NANOSECONDS, new IOException("BAM!"));
+		adaptiveBulkhead.onError(10000, new IOException("BAM!"));
 
 		then(logger).should(times(1)).info("IGNORED_ERROR");
 	}
