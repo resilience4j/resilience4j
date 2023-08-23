@@ -33,42 +33,17 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class FluxTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulNonEmptyFlux() {
+    public void shouldTimeSuccessfulFlux() {
         List<String> messages = List.of("Hello 1", "Hello 2", "Hello 3");
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<List<String>>custom()
-                .onResultTagResolver(result -> {
-                    then(result).containsExactlyInAnyOrderElementsOf(messages);
-                    return String.valueOf(result.size());
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
+        Timer timer = Timer.of("timer 1", registry);
         List<String> result = Flux.fromIterable(messages)
                 .transformDeferred(TimerOperator.of(timer))
                 .collectList()
                 .block(ofSeconds(1));
 
         then(result).containsExactlyInAnyOrderElementsOf(messages);
-        thenSuccessTimed(registry, timer, result);
-    }
-
-    @Test
-    public void shouldTimeSuccessfulEmptyFlux() {
-        MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<List<String>>custom()
-                .onResultTagResolver(result -> {
-                    then(result).isEmpty();
-                    return String.valueOf(result.size());
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
-        List<Object> result = Flux.empty()
-                .transformDeferred(TimerOperator.of(timer))
-                .collectList()
-                .block(ofSeconds(1));
-
-        then(result).isEmpty();
-        thenSuccessTimed(registry, timer, result);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test

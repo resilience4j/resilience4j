@@ -22,11 +22,6 @@ import io.reactivex.rxjava3.core.Flowable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
-
-import static java.util.concurrent.ConcurrentHashMap.newKeySet;
-
 class FlowableTimer<T> extends Flowable<T> {
 
     private final Timer timer;
@@ -45,17 +40,10 @@ class FlowableTimer<T> extends Flowable<T> {
     class TimerSubscriber extends AbstractSubscriber<T> {
 
         private final Context context;
-        private final KeySetView<ValueWrapper<T>, Boolean> result = newKeySet();
 
         TimerSubscriber(Subscriber<? super T> downstreamObserver, Timer timer) {
             super(downstreamObserver);
             context = timer.createContext();
-        }
-
-        @Override
-        public void onNext(T item) {
-            result.add(new ValueWrapper<>(item));
-            super.onNext(item);
         }
 
         @Override
@@ -65,8 +53,7 @@ class FlowableTimer<T> extends Flowable<T> {
 
         @Override
         protected void hookOnComplete() {
-            List<T> items = result.stream().map(ValueWrapper::getValue).toList();
-            context.onResult(items);
+            context.onSuccess();
         }
 
         @Override

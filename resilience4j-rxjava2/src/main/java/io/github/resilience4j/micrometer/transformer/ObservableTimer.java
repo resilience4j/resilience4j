@@ -21,11 +21,6 @@ import io.github.resilience4j.micrometer.Timer.Context;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
-
-import static java.util.concurrent.ConcurrentHashMap.newKeySet;
-
 class ObservableTimer<T> extends Observable<T> {
 
     private final Observable<T> upstream;
@@ -44,17 +39,10 @@ class ObservableTimer<T> extends Observable<T> {
     class TimerObserver extends AbstractObserver<T> {
 
         private final Context context;
-        private final KeySetView<ValueWrapper<T>, Boolean> result = newKeySet();
 
         TimerObserver(Observer<? super T> downstreamObserver, Timer timer) {
             super(downstreamObserver);
             context = timer.createContext();
-        }
-
-        @Override
-        public void onNext(T item) {
-            result.add(new ValueWrapper<>(item));
-            super.onNext(item);
         }
 
         @Override
@@ -64,8 +52,7 @@ class ObservableTimer<T> extends Observable<T> {
 
         @Override
         protected void hookOnComplete() {
-            List<T> items = result.stream().map(ValueWrapper::getValue).toList();
-            context.onResult(items);
+            context.onSuccess();
         }
 
         @Override

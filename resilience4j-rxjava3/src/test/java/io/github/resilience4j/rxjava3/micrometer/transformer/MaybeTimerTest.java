@@ -30,40 +30,16 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class MaybeTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulNonEmptyMaybe() {
+    public void shouldTimeSuccessfulMaybe() {
         String message = "Hello!";
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<String>custom()
-                .onResultTagResolver(result -> {
-                    then(result).isEqualTo(message);
-                    return result;
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
+        Timer timer = Timer.of("timer 1", registry);
         String result = Maybe.just(message)
                 .compose(TimerTransformer.of(timer))
                 .blockingGet();
 
         then(result).isEqualTo(message);
-        thenSuccessTimed(registry, timer, result);
-    }
-
-    @Test
-    public void shouldTimeSuccessfulEmptyMaybe() {
-        MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.custom()
-                .onResultTagResolver(result -> {
-                    then(result).isNull();
-                    return String.valueOf(result);
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
-        Object result = Maybe.empty()
-                .compose(TimerTransformer.of(timer))
-                .blockingGet();
-
-        then(result).isNull();
-        thenSuccessTimed(registry, timer, result);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test

@@ -26,30 +26,23 @@ public class TimerConfigTest {
         TimerConfig config = TimerConfig.ofDefaults();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.calls");
-        then(config.getOnSuccessTagResolver().get()).isEqualTo("unspecified");
-        then(config.getOnResultTagResolver().apply(123)).isEqualTo("unspecified");
         then(config.getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo("IllegalStateException");
     }
 
     @Test
     public void shouldCreateCustomTimerConfig() {
-        TimerConfig config = TimerConfig.<Integer>custom()
+        TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
-                .onSuccessTagResolver(() -> "custom tag")
-                .onResultTagResolver(Object::toString)
                 .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.operations");
-        then(config.getOnSuccessTagResolver().get()).isEqualTo("custom tag");
-        then(config.getOnResultTagResolver().apply(123)).isEqualTo("123");
         then(config.getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo("java.lang.IllegalStateException");
     }
 
     @Test
     public void shouldCreateTimerConfigFromPrototype() {
-        TimerConfig prototype = TimerConfig.<Integer>custom()
-                .onSuccessTagResolver(() -> "custom tag")
+        TimerConfig prototype = TimerConfig.custom()
                 .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
         TimerConfig config = TimerConfig.from(prototype)
@@ -58,8 +51,6 @@ public class TimerConfigTest {
                 .build();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.operations");
-        then(config.getOnSuccessTagResolver().get()).isEqualTo("custom tag");
-        then(config.getOnResultTagResolver().apply(123)).isEqualTo("unspecified");
         then(config.getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo("IllegalStateException");
     }
 }

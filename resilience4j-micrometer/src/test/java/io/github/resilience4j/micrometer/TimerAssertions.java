@@ -30,18 +30,14 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TimerAssertions {
 
     public static void thenSuccessTimed(MeterRegistry registry, Timer timer) {
-        thenTimed(registry, timer, "successful", timer.getTimerConfig().getOnSuccessTagResolver().get());
-    }
-
-    public static void thenSuccessTimed(MeterRegistry registry, Timer timer, Object result) {
-        thenTimed(registry, timer, "successful", timer.getTimerConfig().getOnResultTagResolver().apply(result));
+        thenTimed(registry, timer, "successful", null);
     }
 
     public static void thenFailureTimed(MeterRegistry registry, Timer timer, Throwable throwable) {
-        thenTimed(registry, timer, "failed", timer.getTimerConfig().getOnFailureTagResolver().apply(throwable));
+        thenTimed(registry, timer, "failed", throwable);
     }
 
-    private static void thenTimed(MeterRegistry registry, Timer timer, String resultKind, String resultName) {
+    private static void thenTimed(MeterRegistry registry, Timer timer, String resultKind, Throwable throwable) {
         List<Meter> meters = registry.getMeters().stream()
                 .filter(meter -> meter.getId().getName().equals(timer.getTimerConfig().getMetricNames()))
                 .toList();
@@ -50,7 +46,9 @@ public class TimerAssertions {
         List<Tag> tags = timer.getTags().entrySet().stream().map(tag -> Tag.of(tag.getKey(), tag.getValue())).collect(toCollection(ArrayList::new));
         tags.add(Tag.of(NAME, timer.getName()));
         tags.add(Tag.of(KIND, resultKind));
-        tags.add(Tag.of("result", resultName));
+        if (throwable != null) {
+            tags.add(Tag.of("failure", timer.getTimerConfig().getOnFailureTagResolver().apply(throwable)));
+        }
         then(meter.count()).isEqualTo(1);
         then(meter.getId().getTags()).containsExactlyInAnyOrderElementsOf(tags);
         registry.clear();

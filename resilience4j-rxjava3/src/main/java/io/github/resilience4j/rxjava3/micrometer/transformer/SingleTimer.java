@@ -52,7 +52,7 @@ class SingleTimer<T> extends Single<T> {
 
         @Override
         protected void hookOnSuccess(T value) {
-            context.onResult(value);
+            context.onSuccess();
         }
 
         @Override

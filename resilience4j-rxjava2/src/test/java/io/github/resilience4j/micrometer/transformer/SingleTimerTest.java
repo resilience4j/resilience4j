@@ -33,19 +33,13 @@ public class SingleTimerTest {
     public void shouldTimeSuccessfulSingle() {
         String message = "Hello!";
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<String>custom()
-                .onResultTagResolver(result -> {
-                    then(result).isEqualTo(message);
-                    return result;
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
+        Timer timer = Timer.of("timer 1", registry);
         String result = Single.just(message)
                 .compose(TimerTransformer.of(timer))
                 .blockingGet();
 
         then(result).isEqualTo(message);
-        thenSuccessTimed(registry, timer, result);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test

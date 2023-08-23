@@ -31,6 +31,6 @@ class FluxTimer<T> extends FluxOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.subscribe(new TimerSubscriber<>(timer, actual, false));
+        source.subscribe(new TimerSubscriber<>(timer, actual));
     }
 }

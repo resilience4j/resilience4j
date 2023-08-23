@@ -25,10 +25,10 @@ import io.github.resilience4j.micrometer.TimerConfig
  *
  * @param config methods of [TimerConfig.Builder] that customize resulting `TimerConfig`
  */
-inline fun <T> TimerConfig(
-    config: TimerConfig.Builder<T>.() -> Unit
+inline fun TimerConfig(
+    config: TimerConfig.Builder.() -> Unit
 ): TimerConfig {
-    return TimerConfig.custom<T>().apply(config).build()
+    return TimerConfig.custom().apply(config).build()
 }
 
 /**
@@ -37,9 +37,9 @@ inline fun <T> TimerConfig(
  * @param baseConfig base `TimerConfig`
  * @param config methods of [TimerConfig.Builder] that customize resulting `TimerConfig`
  */
-inline fun <T> TimerConfig(
+inline fun TimerConfig(
     baseConfig: TimerConfig,
-    config: TimerConfig.Builder<T>.() -> Unit
+    config: TimerConfig.Builder.() -> Unit
 ): TimerConfig {
-    return TimerConfig.from<T>(baseConfig).apply(config).build()
+    return TimerConfig.from(baseConfig).apply(config).build()
 }

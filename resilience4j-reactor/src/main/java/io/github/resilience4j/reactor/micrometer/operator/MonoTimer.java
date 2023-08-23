@@ -31,6 +31,6 @@ class MonoTimer<T> extends MonoOperator<T, T> {
 
     @Override
     public void subscribe(CoreSubscriber<? super T> actual) {
-        source.subscribe(new TimerSubscriber<>(timer, actual, true));
+        source.subscribe(new TimerSubscriber<>(timer, actual));
     }
 }

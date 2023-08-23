@@ -33,10 +33,7 @@ public class CompletableTimerTest {
     @Test
     public void shouldTimeSuccessfulCompletable() {
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.custom()
-                .onSuccessTagResolver(() -> "success")
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
+        Timer timer = Timer.of("timer 1", registry);
         Completable.complete()
                 .compose(TimerTransformer.of(timer))
                 .blockingAwait(1, SECONDS);

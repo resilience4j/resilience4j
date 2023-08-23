@@ -26,7 +26,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.BDDAssertions.failBecauseExceptionWasNotThrown
@@ -36,41 +35,17 @@ import org.junit.Test
 class FlowTimerTest {
 
     @Test
-    fun `should time successful, non-empty flow`() {
+    fun `should time successful flow`() {
         runBlocking {
             val messages = listOf("Hello! 1", "Hello! 1", "Hello! 2")
             val registry: MeterRegistry = SimpleMeterRegistry()
-            val timer = Timer.of("timer 1", registry, TimerConfig<List<String>> {
-                onResultTagResolver {
-                    then(it).containsExactlyInAnyOrderElementsOf(messages)
-                    it.size.toString()
-                }
-            })
+            val timer = Timer.of("timer 1", registry)
             val result = messages.asFlow()
                 .timer(timer)
                 .toList()
 
             then(result).containsExactlyInAnyOrderElementsOf(messages)
-            thenSuccessTimed(registry, timer, result)
-        }
-    }
-
-    @Test
-    fun `should time successful, empty flow`() {
-        runBlocking {
-            val registry: MeterRegistry = SimpleMeterRegistry()
-            val timer = Timer.of("timer 1", registry, TimerConfig<List<String>> {
-                onResultTagResolver {
-                    then(it).isEmpty()
-                    it.size.toString()
-                }
-            })
-            val result = flowOf<Any>()
-                .timer(timer)
-                .toList()
-
-            then(result).isEmpty()
-            thenSuccessTimed(registry, timer, result)
+            thenSuccessTimed(registry, timer)
         }
     }
 
@@ -79,7 +54,7 @@ class FlowTimerTest {
         runBlocking {
             val exception = IllegalStateException()
             val registry: MeterRegistry = SimpleMeterRegistry()
-            val timer = Timer.of("timer 1", registry, TimerConfig<String> {
+            val timer = Timer.of("timer 1", registry, TimerConfig {
                 onFailureTagResolver {
                     then(it).isEqualTo(exception)
                     it.toString()

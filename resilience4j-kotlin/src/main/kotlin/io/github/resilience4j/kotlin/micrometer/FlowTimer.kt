@@ -22,27 +22,16 @@ import io.github.resilience4j.micrometer.Timer
 import io.github.resilience4j.micrometer.Timer.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import java.util.concurrent.ConcurrentHashMap.newKeySet
 
 fun <T> Flow<T>.timer(timer: Timer): Flow<T> {
     var context: Context? = null
-    val result = newKeySet<ValueWrapper<T>>()
     return onStart {
         context = timer.createContext()
-    }.onEach {
-        result += ValueWrapper(it)
     }.onCompletion { throwable ->
         when (throwable) {
-            null -> context?.onResult(result.map { it.value })
+            null -> context?.onSuccess()
             else -> context?.onFailure(throwable)
         }
     }
 }
-
-/**
- * Wraps a value to prevent the same values be treated as equal when adding to Set.
- * @param <T> value type
- */
-private class ValueWrapper<T>(val value: T?)

@@ -32,39 +32,17 @@ import org.junit.Test
 class CoroutineTimerTest {
 
     @Test
-    fun `should time successful, non-empty coroutine`() {
+    fun `should time successful coroutine`() {
         runBlocking {
             val message = "Hello!"
             val registry: MeterRegistry = SimpleMeterRegistry()
-            val timer = Timer.of("timer 1", registry, TimerConfig<String> {
-                onResultTagResolver {
-                    then(it).isEqualTo(message)
-                    it
-                }
-            })
+            val timer = Timer.of("timer 1", registry)
             val result = timer.executeSuspendFunction {
                 delay(0)
                 message
             }
 
             then(result).isEqualTo(message)
-            thenSuccessTimed(registry, timer, result)
-        }
-    }
-
-    @Test
-    fun `should time successful, empty coroutine`() {
-        runBlocking {
-            val registry: MeterRegistry = SimpleMeterRegistry()
-            val timer = Timer.of("timer 1", registry, TimerConfig<Unit> {
-                onSuccessTagResolver {
-                    "success"
-                }
-            })
-            timer.executeSuspendFunction {
-                delay(0)
-            }
-
             thenSuccessTimed(registry, timer)
         }
     }
@@ -74,7 +52,7 @@ class CoroutineTimerTest {
         runBlocking {
             val exception = IllegalStateException()
             val registry: MeterRegistry = SimpleMeterRegistry()
-            val timer = Timer.of("timer 1", registry, TimerConfig<String> {
+            val timer = Timer.of("timer 1", registry, TimerConfig {
                 onFailureTagResolver {
                     then(it).isEqualTo(exception)
                     it.toString()

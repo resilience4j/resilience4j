@@ -32,42 +32,17 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class ObservableTimerTest {
 
     @Test
-    public void shouldTimeSuccessfulNonEmptyObservable() {
+    public void shouldTimeSuccessfulObservable() {
         List<String> messages = List.of("Hello 1", "Hello 2", "Hello 3");
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<List<String>>custom()
-                .onResultTagResolver(result -> {
-                    then(result).containsExactlyInAnyOrderElementsOf(messages);
-                    return String.valueOf(result.size());
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
+        Timer timer = Timer.of("timer 1", registry);
         List<String> result = Observable.fromIterable(messages)
                 .compose(TimerTransformer.of(timer))
                 .toList()
                 .blockingGet();
 
         then(result).containsExactlyInAnyOrderElementsOf(messages);
-        thenSuccessTimed(registry, timer, result);
-    }
-
-    @Test
-    public void shouldTimeSuccessfulEmptyObservable() {
-        MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<List<String>>custom()
-                .onResultTagResolver(result -> {
-                    then(result).isEmpty();
-                    return String.valueOf(result.size());
-                })
-                .build();
-        Timer timer = Timer.of("timer 1", registry, config);
-        List<Object> result = Observable.empty()
-                .compose(TimerTransformer.of(timer))
-                .toList()
-                .blockingGet();
-
-        then(result).isEmpty();
-        thenSuccessTimed(registry, timer, result);
+        thenSuccessTimed(registry, timer);
     }
 
     @Test
