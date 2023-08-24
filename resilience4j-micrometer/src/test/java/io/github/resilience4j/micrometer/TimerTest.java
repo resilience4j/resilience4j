@@ -41,18 +41,14 @@ public class TimerTest {
         then(timer.getEventPublisher()).isNotNull();
         then(timer.getTimerConfig()).isNotNull();
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
-        then(timer.getTimerConfig().getOnSuccessTagResolver().get()).isEqualTo(TimerConfig.ofDefaults().getOnSuccessTagResolver().get());
-        then(timer.getTimerConfig().getOnResultTagResolver().apply("123")).isEqualTo(TimerConfig.ofDefaults().getOnResultTagResolver().apply("123"));
         then(timer.getTimerConfig().getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo(TimerConfig.ofDefaults().getOnFailureTagResolver().apply(new IllegalStateException()));
     }
 
     @Test
     public void shouldCreateCustomTimer() {
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<String>custom()
+        TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
-                .onSuccessTagResolver(() -> "custom tag")
-                .onResultTagResolver(result -> String.valueOf(result.length()))
                 .onFailureTagResolver(throwable -> throwable.getClass().getName())
                 .build();
         Map<String, String> tags = Map.of("tag 1", "value 1");
@@ -63,8 +59,6 @@ public class TimerTest {
         then(timer.getEventPublisher()).isNotNull();
         then(timer.getTimerConfig()).isNotNull();
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(config.getMetricNames());
-        then(timer.getTimerConfig().getOnSuccessTagResolver().get()).isEqualTo(config.getOnSuccessTagResolver().get());
-        then(timer.getTimerConfig().getOnResultTagResolver().apply("123")).isEqualTo(config.getOnResultTagResolver().apply("123"));
         then(timer.getTimerConfig().getOnFailureTagResolver().apply(new IllegalStateException())).isEqualTo(config.getOnFailureTagResolver().apply(new IllegalStateException()));
     }
 
@@ -74,22 +68,28 @@ public class TimerTest {
         Timer timer = of("timer 1", registry);
 
         String result1 = decorateSupplier(timer, () -> "result").get();
-        thenSuccessTimed(registry, timer, result1);
+        thenSuccessTimed(registry, timer);
+        then(result1).isEqualTo("result");
 
         String result2 = decorateCheckedSupplier(timer, () -> "result").get();
-        thenSuccessTimed(registry, timer, result2);
+        thenSuccessTimed(registry, timer);
+        then(result2).isEqualTo("result");
 
         String result3 = decorateFunction(timer, input -> "result").apply("input");
-        thenSuccessTimed(registry, timer, result3);
+        thenSuccessTimed(registry, timer);
+        then(result3).isEqualTo("result");
 
         String result4 = decorateCheckedFunction(timer, input -> "result").apply("input");
-        thenSuccessTimed(registry, timer, result4);
+        thenSuccessTimed(registry, timer);
+        then(result4).isEqualTo("result");
 
         String result5 = decorateCallable(timer, () -> "result").call();
-        thenSuccessTimed(registry, timer, result5);
+        thenSuccessTimed(registry, timer);
+        then(result5).isEqualTo("result");
 
         String result6 = decorateCompletionStage(timer, () -> completedStage("result")).get().toCompletableFuture().get();
-        thenSuccessTimed(registry, timer, result6);
+        thenSuccessTimed(registry, timer);
+        then(result6).isEqualTo("result");
 
         decorateRunnable(timer, () -> {
         }).run();
@@ -109,49 +109,37 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldTimeNonVoidSuccessfulOperationUsingCustomTimer() throws Throwable {
+    public void shouldTimeSuccessfulOperationUsingCustomTimer() throws Throwable {
         MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.<String>custom()
+        TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
-                .onResultTagResolver(result -> {
-                    then(result).isEqualTo("result");
-                    return result;
-                })
                 .build();
         Map<String, String> tags = Map.of("tag 1", "value 1");
         Timer timer = of("timer 1", registry, config, tags);
 
         String result1 = decorateSupplier(timer, () -> "result").get();
-        thenSuccessTimed(registry, timer, result1);
+        thenSuccessTimed(registry, timer);
+        then(result1).isEqualTo("result");
 
         String result2 = decorateCheckedSupplier(timer, () -> "result").get();
-        thenSuccessTimed(registry, timer, result2);
+        thenSuccessTimed(registry, timer);
+        then(result2).isEqualTo("result");
 
         String result3 = decorateFunction(timer, input -> "result").apply("input");
-        thenSuccessTimed(registry, timer, result3);
+        thenSuccessTimed(registry, timer);
+        then(result3).isEqualTo("result");
 
         String result4 = decorateCheckedFunction(timer, input -> "result").apply("input");
-        thenSuccessTimed(registry, timer, result4);
+        thenSuccessTimed(registry, timer);
+        then(result4).isEqualTo("result");
 
         String result5 = decorateCallable(timer, () -> "result").call();
-        thenSuccessTimed(registry, timer, result5);
+        thenSuccessTimed(registry, timer);
+        then(result5).isEqualTo("result");
 
         String result6 = decorateCompletionStage(timer, () -> completedStage("result")).get().toCompletableFuture().get();
-        thenSuccessTimed(registry, timer, result6);
-    }
-
-    @Test
-    public void shouldTimeVoidSuccessfulOperationUsingCustomTimer() throws Throwable {
-        MeterRegistry registry = new SimpleMeterRegistry();
-        TimerConfig config = TimerConfig.custom()
-                .metricNames("resilience4j.timer.operations")
-                .onResultTagResolver(result -> {
-                    then(result).isNull();
-                    return "void";
-                })
-                .build();
-        Map<String, String> tags = Map.of("tag 1", "value 1");
-        Timer timer = of("timer 1", registry, config, tags);
+        thenSuccessTimed(registry, timer);
+        then(result6).isEqualTo("result");
 
         decorateRunnable(timer, () -> {
         }).run();

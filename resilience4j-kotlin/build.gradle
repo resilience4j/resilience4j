@@ -11,12 +11,15 @@ dependencies {
     compileOnly(project(':resilience4j-ratelimiter'))
     compileOnly(project(':resilience4j-retry'))
     compileOnly(project(':resilience4j-timelimiter'))
+    compileOnly(project(':resilience4j-micrometer'))
 
     testImplementation(project(':resilience4j-bulkhead'))
     testImplementation(project(':resilience4j-circuitbreaker'))
     testImplementation(project(':resilience4j-ratelimiter'))
     testImplementation(project(':resilience4j-retry'))
     testImplementation(project(':resilience4j-timelimiter'))
+    testImplementation(project(':resilience4j-micrometer'))
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 
 compileKotlin {

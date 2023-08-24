@@ -100,7 +100,7 @@ public class TimerImpl implements Timer {
 
     public static class ContextImpl implements Context {
 
-        private static final String RESULT_TAG = "result";
+        private static final String FAILURE_TAG = "failure";
         private static final String KIND_FAILED = "failed";
         private static final String KIND_SUCCESSFUL = "successful";
 
@@ -127,29 +127,26 @@ public class TimerImpl implements Timer {
 
         @Override
         public void onSuccess() {
-            recordCall(KIND_SUCCESSFUL, timerConfig.getOnSuccessTagResolver().get(), duration -> new TimerOnSuccessEvent(name, duration));
+            recordCall(KIND_SUCCESSFUL, null, duration -> new TimerOnSuccessEvent(name, duration));
         }
 
         @Override
         public void onFailure(Throwable throwable) {
-            recordCall(KIND_FAILED, timerConfig.getOnFailureTagResolver().apply(throwable), duration -> new TimerOnFailureEvent(name, duration));
+            recordCall(KIND_FAILED, throwable, duration -> new TimerOnFailureEvent(name, duration));
         }
 
-        @Override
-        public void onResult(Object output) {
-            recordCall(KIND_SUCCESSFUL, timerConfig.getOnResultTagResolver().apply(output), duration -> new TimerOnSuccessEvent(name, duration));
-        }
-
-        private void recordCall(String resultKind, String resultTag, Function<Duration, TimerEvent> eventCreator) {
+        private void recordCall(String resultKind, @Nullable Throwable throwable, Function<Duration, TimerEvent> eventCreator) {
             Duration duration = ofNanos(nanoTime() - start);
-            io.micrometer.core.instrument.Timer calls = builder(timerConfig.getMetricNames())
+            io.micrometer.core.instrument.Timer.Builder calls = builder(timerConfig.getMetricNames())
                     .description("Timed decorated operation calls")
                     .tag(NAME, name)
-                    .tag(KIND, resultKind)
-                    .tag(RESULT_TAG, resultTag)
-                    .tags(tags)
-                    .register(registry);
-            calls.record(duration);
+                    .tag(KIND, resultKind);
+            if (throwable != null) {
+                calls.tag(FAILURE_TAG, timerConfig.getOnFailureTagResolver().apply(throwable));
+            }
+            calls.tags(tags)
+                    .register(registry)
+                    .record(duration);
             if (eventProcessor.hasConsumers()) {
                 publishEvent(eventCreator.apply(duration));
             }

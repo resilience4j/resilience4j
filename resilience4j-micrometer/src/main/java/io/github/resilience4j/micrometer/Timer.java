@@ -99,7 +99,7 @@ public interface Timer {
                         context.onFailure(throwable);
                         promise.completeExceptionally(throwable);
                     } else {
-                        context.onResult(result);
+                        context.onSuccess();
                         promise.complete(result);
                     }
                 });
@@ -124,7 +124,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 T result = supplier.get();
-                context.onResult(result);
+                context.onSuccess();
                 return result;
             } catch (Exception e) {
                 context.onFailure(e);
@@ -167,7 +167,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 R result = function.apply(input);
-                context.onResult(result);
+                context.onSuccess();
                 return result;
             } catch (Exception e) {
                 context.onFailure(e);
@@ -189,7 +189,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 T result = supplier.get();
-                context.onResult(result);
+                context.onSuccess();
                 return result;
             } catch (Exception e) {
                 context.onFailure(e);
@@ -211,7 +211,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 T result = callable.call();
-                context.onResult(result);
+                context.onSuccess();
                 return result;
             } catch (Exception e) {
                 context.onFailure(e);
@@ -254,7 +254,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 R result = function.apply(input);
-                context.onResult(result);
+                context.onSuccess();
                 return result;
             } catch (Exception e) {
                 context.onFailure(e);
@@ -390,23 +390,16 @@ public interface Timer {
     interface Context {
 
         /**
-         * Records a successful, decorated void operation.
+         * Records a decorated operation success.
          */
         void onSuccess();
 
         /**
-         * Records a failed, decorated operation.
+         * Records a decorated operation failure.
          *
          * @param throwable The throwable thrown from the decorated operation
          */
         void onFailure(Throwable throwable);
-
-        /**
-         * Records a successful, decorated non void operation.
-         *
-         * @param result The result of the decorated operation
-         */
-        void onResult(Object result);
     }
 
     /**
