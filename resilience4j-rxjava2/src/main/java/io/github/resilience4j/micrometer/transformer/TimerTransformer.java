@@ -13,70 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.resilience4j.micrometer.transformer;
 
 import io.github.resilience4j.micrometer.Timer;
-import io.github.resilience4j.micrometer.Timer.Context;
 import io.reactivex.*;
 import org.reactivestreams.Publisher;
 
-public class TimerTransformer<T> implements FlowableTransformer<T, T>, ObservableTransformer<T, T>, SingleTransformer<T, T>, CompletableTransformer, MaybeTransformer<T, T> {
+import static java.util.Objects.requireNonNull;
+
+public class TimerTransformer<T> implements FlowableTransformer<T, T>, SingleTransformer<T, T>, MaybeTransformer<T, T>, CompletableTransformer, ObservableTransformer<T, T> {
 
     private final Timer timer;
 
     private TimerTransformer(Timer timer) {
-        this.timer = timer;
+        this.timer = requireNonNull(timer, "timer is null");
     }
 
-    /**
-     * Creates a TimerTransformer.
-     *
-     * @param timer the Timer
-     * @param <T>   the value type of the upstream and downstream
-     * @return a TimerTransformer
-     */
     public static <T> TimerTransformer<T> of(Timer timer) {
         return new TimerTransformer<>(timer);
     }
 
     @Override
     public Publisher<T> apply(Flowable<T> upstream) {
-        Context context = timer.createContext();
-        return upstream
-                .doOnNext(context::onSuccess)
-                .doOnError(context::onFailure);
+        return new FlowableTimer<>(upstream, timer);
     }
 
-    @Override
-    public ObservableSource<T> apply(Observable<T> upstream) {
-        Context context = timer.createContext();
-        return upstream
-                .doOnNext(context::onSuccess)
-                .doOnError(context::onFailure);
-    }
 
     @Override
     public SingleSource<T> apply(Single<T> upstream) {
-        Context context = timer.createContext();
-        return upstream
-                .doOnSuccess(context::onSuccess)
-                .doOnError(context::onFailure);
+        return new SingleTimer<>(upstream, timer);
     }
 
     @Override
     public CompletableSource apply(Completable upstream) {
-        Context context = timer.createContext();
-        return upstream
-                .doOnComplete(() -> context.onSuccess(Void.TYPE))
-                .doOnError(context::onFailure);
+        return new CompletableTimer(upstream, timer);
     }
 
     @Override
     public MaybeSource<T> apply(Maybe<T> upstream) {
-        Context context = timer.createContext();
-        return upstream
-                .doOnSuccess(context::onSuccess)
-                .doOnError(context::onFailure);
+        return new MaybeTimer<>(upstream, timer);
+    }
+
+    @Override
+    public ObservableSource<T> apply(Observable<T> upstream) {
+        return new ObservableTimer<>(upstream, timer);
     }
 }

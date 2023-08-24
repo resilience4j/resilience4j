@@ -39,9 +39,7 @@ class DefaultFallbackHandler<T> implements FallbackHandler<T> {
         CheckedFunction<Object[], Object> invocationCall,
         Method method,
         Predicate<Exception> filter) {
-        validateFallback(fallback, method);
-        Method fallbackMethod = getFallbackMethod(fallback, method);
-        fallbackMethod.setAccessible(true);
+        Method fallbackMethod = validateAndGetFallbackMethod(fallback, method);
         return args -> {
             try {
                 return invocationCall.apply(args);

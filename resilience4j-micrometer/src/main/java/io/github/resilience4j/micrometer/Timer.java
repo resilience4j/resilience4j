@@ -46,6 +46,17 @@ import static java.util.Collections.emptyMap;
 public interface Timer {
 
     /**
+     * Creates a Timer with a default Timer configuration.
+     *
+     * @param name     the name of the Timer
+     * @param registry the registry to bind Timer to
+     * @return a Timer with a custom Timer configuration.
+     */
+    static Timer of(String name, MeterRegistry registry) {
+        return of(name, registry, TimerConfig.ofDefaults(), emptyMap());
+    }
+
+    /**
      * Creates a Timer with a custom Timer configuration.
      *
      * @param name        the name of the Timer
@@ -71,42 +82,6 @@ public interface Timer {
     }
 
     /**
-     * Creates a Timer with a custom Timer configuration.
-     *
-     * @param name                the name of the Timer
-     * @param registry            the registry to bind Timer to
-     * @param timerConfigSupplier a supplier of a custom Timer configuration
-     * @return a Timer with a custom Timer configuration.
-     */
-    static Timer of(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier) {
-        return of(name, registry, timerConfigSupplier.get(), emptyMap());
-    }
-
-    /**
-     * Creates a Timer with a custom Timer configuration.
-     *
-     * @param name                the name of the Timer
-     * @param registry            the registry to bind Timer to
-     * @param timerConfigSupplier a supplier of a custom Timer configuration
-     * @param tags                tags to assign to the Timer
-     * @return a Timer with a custom Timer configuration.
-     */
-    static Timer of(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier, Map<String, String> tags) {
-        return new TimerImpl(name, registry, timerConfigSupplier.get(), tags);
-    }
-
-    /**
-     * Creates a Timer with default configuration.
-     *
-     * @param name     the name of the Timer
-     * @param registry the registry to bind Timer to
-     * @return a Timer with default configuration
-     */
-    static Timer ofDefaults(String name, MeterRegistry registry) {
-        return of(name, registry, TimerConfig.ofDefaults(), emptyMap());
-    }
-
-    /**
      * Decorates CompletionStageSupplier with Timer
      *
      * @param timer    the timer
@@ -119,13 +94,13 @@ public interface Timer {
             CompletableFuture<T> promise = new CompletableFuture<>();
             Context context = timer.createContext();
             try {
-                supplier.get().whenComplete((output, throwable) -> {
+                supplier.get().whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         context.onFailure(throwable);
                         promise.completeExceptionally(throwable);
                     } else {
-                        context.onSuccess(output);
-                        promise.complete(output);
+                        context.onSuccess();
+                        promise.complete(result);
                     }
                 });
             } catch (Exception e) {
@@ -148,9 +123,9 @@ public interface Timer {
         return () -> {
             Context context = timer.createContext();
             try {
-                T output = supplier.get();
-                context.onSuccess(output);
-                return output;
+                T result = supplier.get();
+                context.onSuccess();
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -170,7 +145,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onSuccess(Void.TYPE);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -191,9 +166,9 @@ public interface Timer {
         return (input) -> {
             Context context = timer.createContext();
             try {
-                R output = function.apply(input);
-                context.onSuccess(output);
-                return output;
+                R result = function.apply(input);
+                context.onSuccess();
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -213,9 +188,9 @@ public interface Timer {
         return () -> {
             Context context = timer.createContext();
             try {
-                T output = supplier.get();
-                context.onSuccess(output);
-                return output;
+                T result = supplier.get();
+                context.onSuccess();
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -235,9 +210,9 @@ public interface Timer {
         return () -> {
             Context context = timer.createContext();
             try {
-                T output = callable.call();
-                context.onSuccess(output);
-                return output;
+                T result = callable.call();
+                context.onSuccess();
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -257,7 +232,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 runnable.run();
-                context.onSuccess(Void.TYPE);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -278,9 +253,9 @@ public interface Timer {
         return (input) -> {
             Context context = timer.createContext();
             try {
-                R output = function.apply(input);
-                context.onSuccess(output);
-                return output;
+                R result = function.apply(input);
+                context.onSuccess();
+                return result;
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -301,7 +276,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onSuccess(Void.TYPE);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -322,7 +297,7 @@ public interface Timer {
             Context context = timer.createContext();
             try {
                 consumer.accept(input);
-                context.onSuccess(Void.TYPE);
+                context.onSuccess();
             } catch (Exception e) {
                 context.onFailure(e);
                 throw e;
@@ -415,18 +390,16 @@ public interface Timer {
     interface Context {
 
         /**
-         * Records decorated operation failure.
+         * Records a decorated operation success.
+         */
+        void onSuccess();
+
+        /**
+         * Records a decorated operation failure.
          *
          * @param throwable The throwable thrown from the decorated operation
          */
         void onFailure(Throwable throwable);
-
-        /**
-         * Records successful decorated operation.
-         *
-         * @param output The output of the decorated operation
-         */
-        void onSuccess(Object output);
     }
 
     /**

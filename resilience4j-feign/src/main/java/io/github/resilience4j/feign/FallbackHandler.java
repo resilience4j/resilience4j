@@ -31,6 +31,11 @@ interface FallbackHandler<T> {
     CheckedFunction<Object[], Object> decorate(CheckedFunction<Object[], Object> invocationCall,
                                                Method method, Predicate<Exception> filter);
 
+    default Method validateAndGetFallbackMethod(T fallback, Method method) {
+        validateFallback(fallback, method);
+        return getFallbackMethod(fallback, method);
+    }
+
     default void validateFallback(T fallback, Method method) {
         if (fallback.getClass().isAssignableFrom(method.getDeclaringClass())) {
             throw new IllegalArgumentException("Cannot use the fallback ["
@@ -49,6 +54,7 @@ interface FallbackHandler<T> {
                 + fallbackInstance.getClass() + "] for ["
                 + method.getDeclaringClass() + "]", e);
         }
+        fallbackMethod.setAccessible(true);
         return fallbackMethod;
     }
 }

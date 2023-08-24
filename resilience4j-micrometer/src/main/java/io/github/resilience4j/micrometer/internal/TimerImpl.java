@@ -36,7 +36,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static io.github.resilience4j.micrometer.tagged.TagNames.KIND;
 import static io.github.resilience4j.micrometer.tagged.TagNames.NAME;
@@ -101,10 +100,11 @@ public class TimerImpl implements Timer {
 
     public static class ContextImpl implements Context {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(ContextImpl.class);
-        private static final String RESULT = "result";
+        private static final String FAILURE_TAG = "failure";
         private static final String KIND_FAILED = "failed";
         private static final String KIND_SUCCESSFUL = "successful";
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(ContextImpl.class);
 
         private final String name;
         private final MeterRegistry registry;
@@ -126,25 +126,27 @@ public class TimerImpl implements Timer {
         }
 
         @Override
-        public void onFailure(Throwable throwable) {
-            recordCall(KIND_FAILED, () -> timerConfig.getFailureResultNameResolver().apply(throwable), duration -> new TimerOnFailureEvent(name, duration));
+        public void onSuccess() {
+            recordCall(KIND_SUCCESSFUL, null, duration -> new TimerOnSuccessEvent(name, duration));
         }
 
         @Override
-        public void onSuccess(Object output) {
-            recordCall(KIND_SUCCESSFUL, () -> timerConfig.getSuccessResultNameResolver().apply(output), duration -> new TimerOnSuccessEvent(name, duration));
+        public void onFailure(Throwable throwable) {
+            recordCall(KIND_FAILED, throwable, duration -> new TimerOnFailureEvent(name, duration));
         }
 
-        private void recordCall(String resultKind, Supplier<String> resultName, Function<Duration, TimerEvent> eventCreator) {
+        private void recordCall(String resultKind, @Nullable Throwable throwable, Function<Duration, TimerEvent> eventCreator) {
             Duration duration = ofNanos(nanoTime() - start);
-            io.micrometer.core.instrument.Timer calls = builder(timerConfig.getMetricNames())
-                    .description("Decorated operation calls")
+            io.micrometer.core.instrument.Timer.Builder calls = builder(timerConfig.getMetricNames())
+                    .description("Timed decorated operation calls")
                     .tag(NAME, name)
-                    .tag(KIND, resultKind)
-                    .tag(RESULT, resultName.get())
-                    .tags(tags)
-                    .register(registry);
-            calls.record(duration);
+                    .tag(KIND, resultKind);
+            if (throwable != null) {
+                calls.tag(FAILURE_TAG, timerConfig.getOnFailureTagResolver().apply(throwable));
+            }
+            calls.tags(tags)
+                    .register(registry)
+                    .record(duration);
             if (eventProcessor.hasConsumers()) {
                 publishEvent(eventCreator.apply(duration));
             }

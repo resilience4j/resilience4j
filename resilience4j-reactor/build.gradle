@@ -12,5 +12,6 @@ dependencies {
     testImplementation(libraries.reactive_streams_tck)
     testImplementation(libraries.blockhound)
     testImplementation project(':resilience4j-test')
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 ext.moduleName = 'io.github.resilience4j.reactor'

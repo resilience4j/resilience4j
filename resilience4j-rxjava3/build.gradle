@@ -8,5 +8,6 @@ dependencies {
     implementation project(':resilience4j-micrometer')
     testImplementation(libraries.rxjava3)
     testImplementation project(':resilience4j-test')
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 ext.moduleName = 'io.github.resilience4j.rxjava3'

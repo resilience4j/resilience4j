@@ -30,20 +30,16 @@ import static java.util.Objects.requireNonNullElse;
 public class TimerConfig {
 
     private static final String DEFAULT_METRIC_NAMES = "resilience4j.timer.calls";
-    private static final Function<?, String> DEFAULT_SUCCESS_RESULT_NAME_RESOLVER = result -> "none";
-    private static final Function<Throwable, String> DEFAULT_FAILURE_RESULT_NAME_RESOLVER = throwable -> throwable.getClass().getSimpleName();
+    private static final Function<Throwable, String> DEFAULT_ON_FAILURE_TAG_RESOLVER = throwable -> throwable.getClass().getSimpleName();
 
     @NonNull
     private final String metricNames;
     @NonNull
-    private final Function successResultNameResolver;
-    @NonNull
-    private final Function<Throwable, String> failureResultNameResolver;
+    private final Function<Throwable, String> onFailureTagResolver;
 
-    private TimerConfig(@Nullable String metricNames, @Nullable Function<?, String> successResultNameResolver, @Nullable Function<Throwable, String> failureResultNameResolver) {
+    private TimerConfig(@Nullable String metricNames, @Nullable Function<Throwable, String> onFailureTagResolver) {
         this.metricNames = requireNonNullElse(metricNames, DEFAULT_METRIC_NAMES);
-        this.successResultNameResolver = requireNonNullElse(successResultNameResolver, DEFAULT_SUCCESS_RESULT_NAME_RESOLVER);
-        this.failureResultNameResolver = requireNonNullElse(failureResultNameResolver, DEFAULT_FAILURE_RESULT_NAME_RESOLVER);
+        this.onFailureTagResolver = requireNonNullElse(onFailureTagResolver, DEFAULT_ON_FAILURE_TAG_RESOLVER);
     }
 
     /**
@@ -54,40 +50,29 @@ public class TimerConfig {
     }
 
     /**
-     * @param <T> The decorated operation result type
-     * @return The function that resolves a result name from the output returned from the decorated operation.
+     * @return The function that resolves a tag from the exception thrown from the decorated operation.
      */
-    @SuppressWarnings("unchecked")
-    public <T> Function<T, String> getSuccessResultNameResolver() {
-        return successResultNameResolver;
-    }
-
-    /**
-     * @return The function that resolves a result name from the exception thrown from the decorated operation.
-     */
-    public Function<Throwable, String> getFailureResultNameResolver() {
-        return failureResultNameResolver;
+    public Function<Throwable, String> getOnFailureTagResolver() {
+        return onFailureTagResolver;
     }
 
     /**
      * Returns a builder to create a custom TimerConfig.
      *
-     * @param <T> The decorated operation result type
      * @return a {@link Builder}
      */
-    public static <T> Builder<T> custom() {
-        return new Builder<>();
+    public static Builder custom() {
+        return new Builder();
     }
 
     /**
      * Returns a builder to create a custom TimerConfig using specified config as prototype
      *
-     * @param <T>       The decorated operation result type
      * @param prototype A {@link TimerConfig} prototype.
      * @return a {@link Builder}
      */
-    public static <T> Builder<T> from(TimerConfig prototype) {
-        return new Builder<>(prototype);
+    public static Builder from(TimerConfig prototype) {
+        return new Builder(prototype);
     }
 
     /**
@@ -96,26 +81,26 @@ public class TimerConfig {
      * @return a default Timer configuration.
      */
     public static TimerConfig ofDefaults() {
-        return new Builder<>().build();
+        return new Builder().build();
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", TimerConfig.class.getSimpleName() + "[", "]")
                 .add("metricNames=" + metricNames)
-                .add("successResultNameResolver=" + successResultNameResolver)
-                .add("failureResultNameResolver=" + failureResultNameResolver)
+                .add("onFailureTagResolver=" + onFailureTagResolver)
                 .toString();
     }
 
-    public static class Builder<T> {
+    /**
+     * Builds Timer configuration
+     */
+    public static class Builder {
 
         @Nullable
         private String metricNames;
         @Nullable
-        private Function<T, String> successResultNameResolver;
-        @Nullable
-        private Function<Throwable, String> failureResultNameResolver;
+        private Function<Throwable, String> onFailureTagResolver;
 
         private Builder() {
         }
@@ -123,37 +108,26 @@ public class TimerConfig {
         private Builder(@NonNull TimerConfig prototype) {
             requireNonNull(prototype, "Timer configuration prototype is null");
             metricNames = prototype.getMetricNames();
-            successResultNameResolver = prototype.getSuccessResultNameResolver();
-            failureResultNameResolver = prototype.getFailureResultNameResolver();
+            onFailureTagResolver = prototype.getOnFailureTagResolver();
         }
 
         /**
          * @param metricNames The metric names.
-         *                    Default is "resilience4j.timer.calls".
+         *                    Default is {@value DEFAULT_METRIC_NAMES}.
          * @return the TimerConfig.Builder
          */
-        public Builder<T> metricNames(@Nullable String metricNames) {
+        public Builder metricNames(@Nullable String metricNames) {
             this.metricNames = metricNames;
             return this;
         }
 
         /**
-         * @param successResultNameResolver A function that resolves a result name from the output returned from the decorated operation.
-         *                                  Default is "unspecified".
+         * @param onFailureTagResolver A function that resolves a tag from the exception thrown from the decorated operation.
+         *                             Default is exception class name.
          * @return the TimerConfig.Builder
          */
-        public Builder<T> successResultNameResolver(@Nullable Function<T, String> successResultNameResolver) {
-            this.successResultNameResolver = successResultNameResolver;
-            return this;
-        }
-
-        /**
-         * @param failureResultNameResolver A function that resolves a result name from the exception thrown from the decorated operation.
-         *                                  Default is exception class name.
-         * @return the TimerConfig.Builder
-         */
-        public Builder<T> failureResultNameResolver(@Nullable Function<Throwable, String> failureResultNameResolver) {
-            this.failureResultNameResolver = failureResultNameResolver;
+        public Builder onFailureTagResolver(@Nullable Function<Throwable, String> onFailureTagResolver) {
+            this.onFailureTagResolver = onFailureTagResolver;
             return this;
         }
 
@@ -163,7 +137,7 @@ public class TimerConfig {
          * @return the TimerConfig
          */
         public TimerConfig build() {
-            return new TimerConfig(metricNames, successResultNameResolver, failureResultNameResolver);
+            return new TimerConfig(metricNames, onFailureTagResolver);
         }
     }
 }
