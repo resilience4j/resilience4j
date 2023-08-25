@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * REST API endpoint to retrieve all configured timers
  */
-@Endpoint(id = "retries")
+@Endpoint(id = "timers")
 public class TimerEndpoint {
 
     private final TimerRegistry timerRegistry;

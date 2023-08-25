@@ -19,6 +19,7 @@ package io.github.resilience4j.common.micrometer.monitoring.endpoint;
 import io.github.resilience4j.micrometer.event.TimerEvent;
 
 import java.time.Duration;
+import java.util.StringJoiner;
 
 public class TimerEventDTO {
 
@@ -26,6 +27,9 @@ public class TimerEventDTO {
     private TimerEvent.Type type;
     private String creationTime;
     private Duration operationDuration;
+
+    private TimerEventDTO() {
+    }
 
     public TimerEventDTO(String timerName, TimerEvent.Type type, String creationTime) {
         this(timerName, type, creationTime, null);
@@ -68,5 +72,15 @@ public class TimerEventDTO {
 
     public void setOperationDuration(Duration operationDuration) {
         this.operationDuration = operationDuration;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", TimerEventDTO.class.getSimpleName() + "[", "]")
+                .add("timerName='" + timerName + "'")
+                .add("type=" + type)
+                .add("creationTime='" + creationTime + "'")
+                .add("operationDuration=" + operationDuration)
+                .toString();
     }
 }

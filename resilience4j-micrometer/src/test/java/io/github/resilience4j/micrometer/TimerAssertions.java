@@ -51,6 +51,6 @@ public class TimerAssertions {
         }
         then(meter.count()).isEqualTo(1);
         then(meter.getId().getTags()).containsExactlyInAnyOrderElementsOf(tags);
-        registry.clear();
+        registry.remove(meter);
     }
 }

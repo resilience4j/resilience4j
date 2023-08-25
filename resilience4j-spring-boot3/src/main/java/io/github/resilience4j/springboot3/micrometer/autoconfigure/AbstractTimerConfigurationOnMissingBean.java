@@ -66,9 +66,7 @@ public abstract class AbstractTimerConfigurationOnMissingBean {
             @Qualifier("compositeTimerCustomizer") CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
             @Autowired(required = false) MeterRegistry registry
     ) {
-        return timerConfiguration.timerRegistry(
-                timerProperties, timerEventsConsumerRegistry, timerRegistryEventConsumer, compositeTimerCustomizer, registry
-        );
+        return timerConfiguration.timerRegistry(timerProperties, timerEventsConsumerRegistry, timerRegistryEventConsumer, compositeTimerCustomizer, registry);
     }
 
     @Bean
@@ -85,12 +83,9 @@ public abstract class AbstractTimerConfigurationOnMissingBean {
             TimerRegistry timerRegistry,
             @Autowired(required = false) List<TimerAspectExt> timerAspectExtList,
             FallbackExecutor fallbackExecutor,
-            SpelResolver spelResolver,
-            @Autowired(required = false) MeterRegistry registry
+            SpelResolver spelResolver
     ) {
-        return timerConfiguration.timerAspect(
-                timerProperties, timerRegistry, timerAspectExtList, fallbackExecutor, spelResolver, registry
-        );
+        return timerConfiguration.timerAspect(timerProperties, timerRegistry, timerAspectExtList, fallbackExecutor, spelResolver);
     }
 
     @Bean
