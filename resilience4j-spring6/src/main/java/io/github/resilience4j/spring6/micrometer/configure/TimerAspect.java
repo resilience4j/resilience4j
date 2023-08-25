@@ -23,7 +23,6 @@ import io.github.resilience4j.micrometer.annotation.Timer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.utils.AnnotationExtractor;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -50,22 +49,19 @@ public class TimerAspect implements Ordered {
     private final List<TimerAspectExt> timerAspectExtList;
     private final FallbackExecutor fallbackExecutor;
     private final SpelResolver spelResolver;
-    @Nullable
-    private final MeterRegistry registry;
 
-    public TimerAspect(TimerRegistry timerRegistry,
-                       TimerConfigurationProperties properties,
-                       @Nullable List<TimerAspectExt> timerAspectExtList,
-                       FallbackExecutor fallbackExecutor,
-                       SpelResolver spelResolver,
-                       @Nullable
-                       MeterRegistry registry) {
+    public TimerAspect(
+            TimerRegistry timerRegistry,
+            TimerConfigurationProperties properties,
+            @Nullable List<TimerAspectExt> timerAspectExtList,
+            FallbackExecutor fallbackExecutor,
+            SpelResolver spelResolver
+    ) {
         this.timerRegistry = timerRegistry;
         this.properties = properties;
         this.timerAspectExtList = timerAspectExtList;
         this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
-        this.registry = registry;
     }
 
     @Pointcut(value = "@within(timer) || @annotation(timer)", argNames = "timer")
@@ -86,7 +82,7 @@ public class TimerAspect implements Ordered {
         String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), timerAnnotation.name());
         io.github.resilience4j.micrometer.Timer timer = getOrCreateTimer(methodName, name);
         Class<?> returnType = method.getReturnType();
-        final CheckedSupplier<Object> timerExecution = () -> proceed(proceedingJoinPoint, methodName, timer, returnType);
+        CheckedSupplier<Object> timerExecution = () -> proceed(proceedingJoinPoint, methodName, timer, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, timerAnnotation.fallbackMethod(), timerExecution);
     }
 
@@ -99,13 +95,13 @@ public class TimerAspect implements Ordered {
             }
         }
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return handleJoinPointCompletableFuture(proceedingJoinPoint, timer);
+            return handleJoinPointCompletableStage(proceedingJoinPoint, timer);
         }
         return handleDefaultJoinPoint(proceedingJoinPoint, timer);
     }
 
     private io.github.resilience4j.micrometer.Timer getOrCreateTimer(String methodName, String name) {
-        io.github.resilience4j.micrometer.Timer timer = timerRegistry.timer(name, registry);
+        io.github.resilience4j.micrometer.Timer timer = timerRegistry.timer(name);
         if (logger.isDebugEnabled()) {
             logger.debug("Created or retrieved timer '{}' for method: '{}'", name, methodName);
         }
@@ -113,7 +109,7 @@ public class TimerAspect implements Ordered {
     }
 
     @Nullable
-    private static Timer getTimerAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+    private Timer getTimerAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug("The Timer annotation is kept on a interface which is acting as a proxy");
             return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Timer.class);
@@ -122,7 +118,7 @@ public class TimerAspect implements Ordered {
         }
     }
 
-    private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.micrometer.Timer timer) {
+    private Object handleJoinPointCompletableStage(ProceedingJoinPoint proceedingJoinPoint, io.github.resilience4j.micrometer.Timer timer) {
         return timer.executeCompletionStage(() -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();

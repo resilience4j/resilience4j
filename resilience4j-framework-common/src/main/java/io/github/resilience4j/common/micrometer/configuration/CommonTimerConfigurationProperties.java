@@ -17,7 +17,6 @@ package io.github.resilience4j.common.micrometer.configuration;
 
 import io.github.resilience4j.common.CommonProperties;
 import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.utils.ConfigUtils;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.StringUtils;
 import io.github.resilience4j.core.lang.Nullable;
@@ -27,14 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import static io.github.resilience4j.common.utils.ConfigUtils.mergePropertiesIfAny;
 import static io.github.resilience4j.core.ClassUtils.instantiateFunction;
 import static io.github.resilience4j.micrometer.TimerConfig.custom;
 import static io.github.resilience4j.micrometer.TimerConfig.from;
 import static java.util.Objects.requireNonNull;
 
-/**
- * Main spring properties for timer configuration
- */
 public class CommonTimerConfigurationProperties extends CommonProperties {
 
     private static final String DEFAULT = "default";
@@ -59,7 +56,7 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
         if (instanceProperties == null) {
             instanceProperties = configs.get(DEFAULT);
         } else if (configs.get(DEFAULT) != null) {
-            ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+            mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
         }
         return instanceProperties;
     }
@@ -82,19 +79,22 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
      * @param instanceProperties the timer instance spring properties
      * @return the timer configuration
      */
-    public TimerConfig createTimerConfig(@Nullable InstanceProperties instanceProperties,
-                                         CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer, String instanceName) {
+    public TimerConfig createTimerConfig(
+            @Nullable InstanceProperties instanceProperties,
+            CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
+            String instanceName
+    ) {
         TimerConfig baseConfig = null;
         if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
             InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
             if (baseProperties == null) {
                 throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
             }
-            ConfigUtils.mergePropertiesIfAny(baseProperties, instanceProperties);
+            mergePropertiesIfAny(baseProperties, instanceProperties);
             baseConfig = createTimerConfig(baseProperties, compositeTimerCustomizer, instanceProperties.getBaseConfig());
         } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
             if (instanceProperties != null) {
-                ConfigUtils.mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
+                mergePropertiesIfAny(configs.get(DEFAULT), instanceProperties);
             }
             baseConfig = createTimerConfig(configs.get(DEFAULT), compositeTimerCustomizer, DEFAULT);
         }
@@ -105,22 +105,19 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
      * @param properties the configured spring instance properties
      * @return timer config builder instance
      */
-    @SuppressWarnings("unchecked")
-    private TimerConfig buildConfig(TimerConfig.Builder builder,
-                                    @Nullable InstanceProperties properties,
-                                    CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
-                                    String instance) {
+    private TimerConfig buildConfig(
+            TimerConfig.Builder builder,
+            @Nullable InstanceProperties properties,
+            CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
+            String instance
+    ) {
         if (properties != null) {
             if (properties.getMetricNames() != null) {
                 builder.metricNames(properties.getMetricNames());
             }
-            if (properties.getSuccessResultNameResolver() != null) {
-                Function<Object, String> function = instantiateFunction(properties.getSuccessResultNameResolver());
-                builder.successResultNameResolver(function);
-            }
-            if (properties.getFailureResultNameResolver() != null) {
-                Function<Throwable, String> function = instantiateFunction(properties.getFailureResultNameResolver());
-                builder.failureResultNameResolver(function);
+            if (properties.getOnFailureTagResolver() != null) {
+                Function<Throwable, String> function = instantiateFunction(properties.getOnFailureTagResolver());
+                builder.onFailureTagResolver(function);
             }
         }
         compositeTimerCustomizer.getCustomizer(instance).ifPresent(customizer -> customizer.customize(builder));
@@ -140,16 +137,10 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
         private String metricNames;
 
         /**
-         * The function that resolves a result name from the output returned from the decorated operation.
+         * The function that resolves a tag from the exception thrown from the decorated operation.
          */
         @Nullable
-        private Class<? extends Function<Object, String>> successResultNameResolver;
-
-        /**
-         * The function that resolves a result name from the exception thrown from the decorated operation.
-         */
-        @Nullable
-        private Class<? extends Function<Throwable, String>> failureResultNameResolver;
+        private Class<? extends Function<Throwable, String>> onFailureTagResolver;
 
         @Nullable
         private String baseConfig;
@@ -171,22 +162,12 @@ public class CommonTimerConfigurationProperties extends CommonProperties {
         }
 
         @Nullable
-        public Class<? extends Function<Object, String>> getSuccessResultNameResolver() {
-            return successResultNameResolver;
+        public Class<? extends Function<Throwable, String>> getOnFailureTagResolver() {
+            return onFailureTagResolver;
         }
 
-        public InstanceProperties setSuccessResultNameResolver(@Nullable Class<? extends Function<Object, String>> successResultNameResolver) {
-            this.successResultNameResolver = successResultNameResolver;
-            return this;
-        }
-
-        @Nullable
-        public Class<? extends Function<Throwable, String>> getFailureResultNameResolver() {
-            return failureResultNameResolver;
-        }
-
-        public InstanceProperties setFailureResultNameResolver(@Nullable Class<? extends Function<Throwable, String>> failureResultNameResolver) {
-            this.failureResultNameResolver = failureResultNameResolver;
+        public InstanceProperties setOnFailureTagResolver(@Nullable Class<? extends Function<Throwable, String>> onFailureTagResolver) {
+            this.onFailureTagResolver = onFailureTagResolver;
             return this;
         }
 

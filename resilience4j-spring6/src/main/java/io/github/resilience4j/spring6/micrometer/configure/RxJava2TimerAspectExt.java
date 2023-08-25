@@ -28,8 +28,7 @@ import static io.github.resilience4j.spring6.utils.AspectUtil.newHashSet;
 
 public class RxJava2TimerAspectExt implements TimerAspectExt {
 
-    private final Set<Class<?>> rxSupportedTypes = newHashSet(ObservableSource.class,
-            SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
+    private final Set<Class<?>> rxSupportedTypes = newHashSet(ObservableSource.class, SingleSource.class, CompletableSource.class, MaybeSource.class, Flowable.class);
 
     /**
      * @param returnType the AOP method return type class

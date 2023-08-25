@@ -56,8 +56,7 @@ public class TimerConfiguration {
 
     @Bean
     @Qualifier("compositeTimerCustomizer")
-    public CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer(
-            @Autowired(required = false) List<TimerConfigCustomizer> customizers) {
+    public CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer(@Autowired(required = false) List<TimerConfigCustomizer> customizers) {
         return new CompositeCustomizer<>(customizers);
     }
 
@@ -69,9 +68,9 @@ public class TimerConfiguration {
             @Qualifier("compositeTimerCustomizer") CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
             @Autowired(required = false) MeterRegistry registry
     ) {
-        TimerRegistry timerRegistry = createTimerRegistry(timerConfigurationProperties, timerRegistryEventConsumer, compositeTimerCustomizer);
+        TimerRegistry timerRegistry = createTimerRegistry(timerConfigurationProperties, timerRegistryEventConsumer, compositeTimerCustomizer, registry);
         registerEventConsumer(timerRegistry, timerEventConsumerRegistry, timerConfigurationProperties);
-        initTimerRegistry(timerRegistry, timerConfigurationProperties, compositeTimerCustomizer, registry);
+        initTimerRegistry(timerRegistry, timerConfigurationProperties, compositeTimerCustomizer);
         return timerRegistry;
     }
 
@@ -88,10 +87,9 @@ public class TimerConfiguration {
             TimerRegistry timerRegistry,
             @Autowired(required = false) List<TimerAspectExt> timerAspectExtList,
             FallbackExecutor fallbackExecutor,
-            SpelResolver spelResolver,
-            @Autowired(required = false) MeterRegistry registry
+            SpelResolver spelResolver
     ) {
-        return new TimerAspect(timerRegistry, timerConfigurationProperties, timerAspectExtList, fallbackExecutor, spelResolver, registry);
+        return new TimerAspect(timerRegistry, timerConfigurationProperties, timerAspectExtList, fallbackExecutor, spelResolver);
     }
 
     @Bean
@@ -122,23 +120,21 @@ public class TimerConfiguration {
      * Initializes a timer registry.
      *
      * @param timerConfigurationProperties The timer configuration properties.
+     * @param meterRegistry                the registry to bind Timer to
      * @return a timerRegistry
      */
     private static TimerRegistry createTimerRegistry(
             TimerConfigurationProperties timerConfigurationProperties,
             RegistryEventConsumer<Timer> timerRegistryEventConsumer,
-            CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer
+            CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
+            MeterRegistry meterRegistry
     ) {
         Map<String, TimerConfig> configs = timerConfigurationProperties.getConfigs().entrySet().stream()
                 .collect(toMap(
                         Entry::getKey,
                         entry -> timerConfigurationProperties.createTimerConfig(entry.getValue(), compositeTimerCustomizer, entry.getKey())
                 ));
-        return TimerRegistry.builder()
-                .withConfigs(configs)
-                .withConsumer(timerRegistryEventConsumer)
-                .withTags(Map.copyOf(timerConfigurationProperties.getTags()))
-                .build();
+        return TimerRegistry.of(configs, List.of(timerRegistryEventConsumer), Map.copyOf(timerConfigurationProperties.getTags()), meterRegistry);
     }
 
     /**
@@ -150,11 +146,10 @@ public class TimerConfiguration {
     void initTimerRegistry(
             TimerRegistry timerRegistry,
             TimerConfigurationProperties timerConfigurationProperties,
-            CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
-            MeterRegistry registry
+            CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer
     ) {
         timerConfigurationProperties.getInstances().forEach((name, properties) ->
-                timerRegistry.timer(name, registry, timerConfigurationProperties.createTimerConfig(properties, compositeTimerCustomizer, name))
+                timerRegistry.timer(name, timerConfigurationProperties.createTimerConfig(properties, compositeTimerCustomizer, name))
         );
     }
 
@@ -165,16 +160,21 @@ public class TimerConfiguration {
      * @param eventConsumerRegistry The event consumer registry.
      * @param properties            timer configuration properties
      */
-    private static void registerEventConsumer(TimerRegistry timerRegistry,
-                                              EventConsumerRegistry<TimerEvent> eventConsumerRegistry,
-                                              TimerConfigurationProperties properties) {
+    private static void registerEventConsumer(
+            TimerRegistry timerRegistry,
+            EventConsumerRegistry<TimerEvent> eventConsumerRegistry,
+            TimerConfigurationProperties properties
+    ) {
         timerRegistry.getEventPublisher()
                 .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
                 .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
     }
 
-    private static void registerEventConsumer(EventConsumerRegistry<TimerEvent> eventConsumerRegistry, Timer timer,
-                                              TimerConfigurationProperties timerConfigurationProperties) {
+    private static void registerEventConsumer(
+            EventConsumerRegistry<TimerEvent> eventConsumerRegistry,
+            Timer timer,
+            TimerConfigurationProperties timerConfigurationProperties
+    ) {
         int eventConsumerBufferSize = Optional.ofNullable(timerConfigurationProperties.getInstanceProperties(timer.getName()))
                 .map(InstanceProperties::getEventConsumerBufferSize)
                 .orElse(100);

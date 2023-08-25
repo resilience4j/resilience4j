@@ -24,5 +24,6 @@ dependencies {
     testImplementation(libraries.spring_boot2_web)
     testImplementation(libraries.spring_boot2_test)
     testImplementation(libraries.spring_boot2_aop)
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 ext.moduleName = 'io.github.resilience4j.spring6'

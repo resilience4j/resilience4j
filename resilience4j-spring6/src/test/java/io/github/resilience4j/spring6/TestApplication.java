@@ -15,9 +15,10 @@
  */
 package io.github.resilience4j.spring6;
 
+import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.spring6.bulkhead.configure.BulkheadConfigurationProperties;
 import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
-import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
+import io.github.resilience4j.spring6.micrometer.configure.TimerConfigurationProperties;
 import io.github.resilience4j.spring6.ratelimiter.configure.RateLimiterConfigurationProperties;
 import io.github.resilience4j.spring6.retry.configure.RetryConfigurationProperties;
 import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterConfigurationProperties;
@@ -64,4 +65,8 @@ public class TestApplication {
         return new TimeLimiterConfigurationProperties();
     }
 
+    @Bean
+    public TimerConfigurationProperties timerConfigurationProperties() {
+        return new TimerConfigurationProperties();
+    }
 }

@@ -37,11 +37,18 @@ import static java.util.Objects.requireNonNullElse;
 
 public class InMemoryTimerRegistry extends AbstractRegistry<Timer, TimerConfig> implements TimerRegistry {
 
-    public InMemoryTimerRegistry(TimerConfig defaultConfig, Map<String, TimerConfig> configs, List<RegistryEventConsumer<Timer>> registryEventConsumers, Map<String, String> tags) {
+    private MeterRegistry meterRegistry;
+
+    public InMemoryTimerRegistry(Map<String, TimerConfig> configs, List<RegistryEventConsumer<Timer>> registryEventConsumers, Map<String, String> tags, MeterRegistry meterRegistry) {
+        this(configs.getOrDefault(DEFAULT_CONFIG, TimerConfig.ofDefaults()), configs, registryEventConsumers, tags, meterRegistry);
+    }
+
+    public InMemoryTimerRegistry(TimerConfig defaultConfig, Map<String, TimerConfig> configs, List<RegistryEventConsumer<Timer>> registryEventConsumers, Map<String, String> tags, MeterRegistry meterRegistry) {
         super(defaultConfig, registryEventConsumers, tags);
         requireNonNullElse(configs, Collections.<String, TimerConfig>emptyMap()).entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(DEFAULT_CONFIG))
                 .forEach(entry -> addConfiguration(entry.getKey(), entry.getValue()));
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -50,43 +57,43 @@ public class InMemoryTimerRegistry extends AbstractRegistry<Timer, TimerConfig> 
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry) {
-        return timer(name, registry, getDefaultConfig(), emptyMap());
+    public Timer timer(String name) {
+        return timer(name, getDefaultConfig(), emptyMap());
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, Map<String, String> tags) {
-        return timer(name, registry, getDefaultConfig(), tags);
+    public Timer timer(String name, Map<String, String> tags) {
+        return timer(name, getDefaultConfig(), tags);
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, TimerConfig config) {
-        return timer(name, registry, config, emptyMap());
+    public Timer timer(String name, TimerConfig config) {
+        return timer(name, config, emptyMap());
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, TimerConfig timerConfig, Map<String, String> tags) {
-        return computeIfAbsent(name, () -> Timer.of(name, registry, timerConfig, getAllTags(tags)));
+    public Timer timer(String name, TimerConfig timerConfig, Map<String, String> tags) {
+        return computeIfAbsent(name, () -> Timer.of(name, meterRegistry, timerConfig, getAllTags(tags)));
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier) {
-        return timer(name, registry, timerConfigSupplier, emptyMap());
+    public Timer timer(String name, Supplier<TimerConfig> timerConfigSupplier) {
+        return timer(name, timerConfigSupplier, emptyMap());
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, Supplier<TimerConfig> timerConfigSupplier, Map<String, String> tags) {
-        return computeIfAbsent(name, () -> Timer.of(name, registry, timerConfigSupplier.get(), getAllTags(tags)));
+    public Timer timer(String name, Supplier<TimerConfig> timerConfigSupplier, Map<String, String> tags) {
+        return computeIfAbsent(name, () -> Timer.of(name, meterRegistry, timerConfigSupplier.get(), getAllTags(tags)));
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, String configName) {
-        return timer(name, registry, configName, emptyMap());
+    public Timer timer(String name, String configName) {
+        return timer(name, configName, emptyMap());
     }
 
     @Override
-    public Timer timer(String name, MeterRegistry registry, String configName, Map<String, String> tags) {
+    public Timer timer(String name, String configName, Map<String, String> tags) {
         TimerConfig config = getConfiguration(configName).orElseThrow(() -> new ConfigurationNotFoundException(configName));
-        return timer(name, registry, config, tags);
+        return timer(name, config, tags);
     }
 }

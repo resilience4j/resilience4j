@@ -24,5 +24,4 @@ public interface TimerAspectExt {
     boolean canHandleReturnType(Class<?> returnType);
 
     Object handle(ProceedingJoinPoint proceedingJoinPoint, Timer timer, String methodName) throws Throwable;
-
 }

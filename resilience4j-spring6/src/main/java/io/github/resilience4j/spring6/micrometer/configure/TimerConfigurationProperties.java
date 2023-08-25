@@ -15,15 +15,16 @@ package io.github.resilience4j.spring6.micrometer.configure;
  * limitations under the License.
  */
 
-import org.springframework.core.Ordered;
+import io.github.resilience4j.common.micrometer.configuration.CommonTimerConfigurationProperties;
+
+import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
 /**
  * Main spring properties for timer configuration
  */
-public class TimerConfigurationProperties extends
-        io.github.resilience4j.common.micrometer.configuration.CommonTimerConfigurationProperties {
+public class TimerConfigurationProperties extends CommonTimerConfigurationProperties {
 
-    private int timerAspectOrder = Ordered.LOWEST_PRECEDENCE;
+    private int timerAspectOrder = LOWEST_PRECEDENCE;
 
     public int getTimerAspectOrder() {
         return timerAspectOrder;

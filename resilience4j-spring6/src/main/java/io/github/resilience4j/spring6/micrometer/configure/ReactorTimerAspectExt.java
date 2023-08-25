@@ -17,7 +17,7 @@
 package io.github.resilience4j.spring6.micrometer.configure;
 
 import io.github.resilience4j.micrometer.Timer;
-import io.github.resilience4j.reactor.micrometer.TimerOperator;
+import io.github.resilience4j.reactor.micrometer.operator.TimerOperator;
 import io.github.resilience4j.spring6.timelimiter.configure.IllegalReturnTypeException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import reactor.core.publisher.Flux;
