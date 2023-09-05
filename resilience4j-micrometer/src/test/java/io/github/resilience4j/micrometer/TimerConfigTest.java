@@ -22,7 +22,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 public class TimerConfigTest {
 
     @Test
-    public void shouldDefaultCustomTimerConfig() {
+    public void shouldCreateDefaultTimerConfig() {
         TimerConfig config = TimerConfig.ofDefaults();
 
         then(config.getMetricNames()).isEqualTo("resilience4j.timer.calls");

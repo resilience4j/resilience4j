@@ -38,7 +38,7 @@ public class TimerRegistryTest {
 
     @Test
     public void shouldCreateDefaultTimerRegistry() {
-        TimerRegistry registry = ofDefaults();
+        TimerRegistry registry = ofDefaults(new SimpleMeterRegistry());
 
         then(registry.getDefaultConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
         then(registry.getTags()).isEmpty();
@@ -51,7 +51,7 @@ public class TimerRegistryTest {
         TimerConfig defaultConfig = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
-        TimerRegistry registry = of(defaultConfig, Map.of("custom", TimerConfig.ofDefaults()), Collections.emptyList(), Map.of("tag1", "value1"));
+        TimerRegistry registry = of(defaultConfig, Map.of("custom", TimerConfig.ofDefaults()), Collections.emptyList(), Map.of("tag1", "value1"), new SimpleMeterRegistry());
 
         then(registry.getDefaultConfig().getMetricNames()).isEqualTo(defaultConfig.getMetricNames());
         then(registry.getConfiguration("custom")).hasValueSatisfying(config ->
@@ -67,15 +67,15 @@ public class TimerRegistryTest {
         TimerConfig defaultConfig = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
-        TimerRegistry registry = of(defaultConfig, Map.of("custom", TimerConfig.ofDefaults()), Collections.emptyList(), Map.of("tag1", "value1"));
+        TimerRegistry registry = of(defaultConfig, Map.of("custom", TimerConfig.ofDefaults()), Collections.emptyList(), Map.of("tag1", "value1"), new SimpleMeterRegistry());
 
-        Timer defaultTimer = registry.timer("some operation", new SimpleMeterRegistry());
+        Timer defaultTimer = registry.timer("some operation");
         then(defaultTimer.getTimerConfig().getMetricNames()).isEqualTo(defaultConfig.getMetricNames());
         then(defaultTimer.getName()).isEqualTo("some operation");
         then(defaultTimer.getTags()).containsExactlyInAnyOrderEntriesOf(Map.of("tag1", "value1"));
         then(defaultTimer.getEventPublisher()).isNotNull();
 
-        Timer customTimer = registry.timer("some other operation", new SimpleMeterRegistry(), "custom");
+        Timer customTimer = registry.timer("some other operation", "custom");
         then(customTimer.getTimerConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
         then(customTimer.getName()).isEqualTo("some other operation");
         then(customTimer.getTags()).containsExactlyInAnyOrderEntriesOf(Map.of("tag1", "value1"));
@@ -84,9 +84,9 @@ public class TimerRegistryTest {
 
     @Test
     public void shouldCreateTimerWithCustomTagsFromRegistry() {
-        TimerRegistry registry = of(TimerConfig.ofDefaults(), emptyMap(), Collections.emptyList(), Map.of("tag1", "ignored value"));
+        TimerRegistry registry = of(TimerConfig.ofDefaults(), emptyMap(), Collections.emptyList(), Map.of("tag1", "ignored value"), new SimpleMeterRegistry());
 
-        Timer timer = registry.timer("some operation", new SimpleMeterRegistry(), Map.of("tag1", "primary value", "tag2", "value2"));
+        Timer timer = registry.timer("some operation", Map.of("tag1", "primary value", "tag2", "value2"));
         then(timer.getTags()).containsExactlyInAnyOrderEntriesOf(Map.of("tag1", "primary value", "tag2", "value2"));
     }
 
@@ -95,15 +95,15 @@ public class TimerRegistryTest {
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
-        TimerRegistry registry = ofDefaults();
+        TimerRegistry registry = ofDefaults(new SimpleMeterRegistry());
 
-        Timer timer = registry.timer("some operation", new SimpleMeterRegistry(), config);
+        Timer timer = registry.timer("some operation", config);
         then(timer.getTimerConfig().getMetricNames()).isEqualTo(config.getMetricNames());
     }
 
     @Test
     public void shouldAddEventConsumerToRegistry() {
-        TimerRegistry registry = of(TimerConfig.ofDefaults(), emptyMap(), List.of(new NoOpTimerEventConsumer()), emptyMap());
+        TimerRegistry registry = of(TimerConfig.ofDefaults(), emptyMap(), List.of(new NoOpTimerEventConsumer()), emptyMap(), new SimpleMeterRegistry());
 
         then(getEventProcessor(registry.getEventPublisher())).hasValueSatisfying(processor ->
                 then(processor.hasConsumers()).isTrue()
@@ -115,7 +115,7 @@ public class TimerRegistryTest {
         TimerConfig config = TimerConfig.custom()
                 .metricNames("resilience4j.timer.operations")
                 .build();
-        TimerRegistry registry = of(TimerConfig.ofDefaults(), Map.of("custom", config));
+        TimerRegistry registry = of(TimerConfig.ofDefaults(), Map.of("custom", config), new SimpleMeterRegistry());
 
         then(registry.getDefaultConfig().getMetricNames()).isEqualTo(TimerConfig.ofDefaults().getMetricNames());
         then(registry.getConfiguration("custom")).hasValueSatisfying(cfg ->
