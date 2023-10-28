@@ -89,6 +89,14 @@ public interface Registry<E, C> {
     EventPublisher<E> getEventPublisher();
 
     /**
+     +     * Removes a configuration from the registry
+     +     *
+     +     * @param configName    the configuration name
+     +     * @return configuration mapped to the configName.
+     +     */
+    C removeConfiguration(String configName);
+
+    /**
      * An EventPublisher can be used to register event consumers.
      */
     interface EventPublisher<E> extends io.github.resilience4j.core.EventPublisher<RegistryEvent> {
