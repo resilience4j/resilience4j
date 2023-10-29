@@ -41,6 +41,22 @@ public class AbstractRegistryTest {
     }
 
     @Test
+    public void shouldRemoveCustomConfiguration() {
+        TestRegistry testRegistry = new TestRegistry();
+        testRegistry.addConfiguration("customRemovable", "test");
+        testRegistry.removeConfiguration("customRemovable");
+        assertThat(testRegistry.getConfiguration("customRemovable").isPresent()).isEqualTo(false);
+    }
+
+    @Test
+    public void shouldNotAllowToRemoveDefaultConfiguration() {
+        TestRegistry testRegistry = new TestRegistry();
+
+        assertThatThrownBy(() -> testRegistry.removeConfiguration("default"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     public void shouldConsumeRegistryEvents() {
         List<RegistryEvent> consumedEvents = new ArrayList<>();
         List<EntryAddedEvent<String>> addedEvents = new ArrayList<>();
