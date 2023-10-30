@@ -361,6 +361,7 @@ public class SupplierRetryTest {
         Try<String> result = Try.of(() -> retryableSupplier.get())
             .recover((throwable) -> "Hello world from recovery function");
         assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        Thread.interrupted();
     }
 
 
