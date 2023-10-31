@@ -1,0 +1,7 @@
+dependencies {
+    api project(':resilience4j-framework-common')
+    api (libraries.apache_commons_configuration2)
+    runtimeOnly (libraries.apache_commons_beanutils)
+    runtimeOnly (libraries.jackson_dataformat_yaml)
+}
+ext.moduleName = 'io.github.resilience4j.commons.configuration'

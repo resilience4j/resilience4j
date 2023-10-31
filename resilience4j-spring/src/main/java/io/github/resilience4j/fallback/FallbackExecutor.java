@@ -28,7 +28,7 @@ public class FallbackExecutor {
         if (StringUtils.hasLength(fallbackMethodName)) {
             try {
                 fallbackMethod = FallbackMethod
-                    .create(fallbackMethodName, method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
+                    .create(fallbackMethodName, method, proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget().getClass(), proceedingJoinPoint.getThis());
             } catch (NoSuchMethodException ex) {
                 logger.warn("No fallback method match found", ex);
             }

@@ -195,6 +195,38 @@ resilience4j.timelimiter:
     backendB:
       timeoutDuration: 1s
 
+resilience4j.micrometer.timer:
+  configs:
+    shared:
+      metricNames: resilience4j.timer.callsShared
+      onFailureTagResolver: io.github.resilience4j.springboot3.service.test.micrometer.FixedOnFailureTagResolver
+  instances:
+    backendA:
+      metricNames: resilience4j.timer.callsA
+    backendB:
+      onFailureTagResolver: io.github.resilience4j.springboot3.service.test.micrometer.QualifiedClassNameOnFailureTagResolver
+    backendC:
+      metricNames: resilience4j.timer.callsC
+      onFailureTagResolver: io.github.resilience4j.springboot3.service.test.micrometer.QualifiedClassNameOnFailureTagResolver
+    backendD:
+      baseConfig: shared
+    backendE:
+      baseConfig: shared
+      metricNames: resilience4j.timer.callsE
+    backendF:
+      baseConfig: shared
+      onFailureTagResolver: io.github.resilience4j.springboot3.service.test.micrometer.QualifiedClassNameOnFailureTagResolver
+    backendG:
+      baseConfig: shared
+      metricNames: resilience4j.timer.callsG
+      onFailureTagResolver: io.github.resilience4j.springboot3.service.test.micrometer.QualifiedClassNameOnFailureTagResolver
+    backendH:
+      baseConfig: shared
+    backendI:
+      baseConfig: shared
+      metricNames: resilience4j.timer.callsI
+
+
 management.security.enabled: false
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always

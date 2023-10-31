@@ -27,6 +27,7 @@ dependencies {
     testImplementation(libraries.feign_wiremock)
     testImplementation(libraries.spring_boot3_webflux)
     testImplementation project(':resilience4j-test')
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 
 compileJava.dependsOn(processResources)

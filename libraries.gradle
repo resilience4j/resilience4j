@@ -35,6 +35,9 @@ ext {
     micronautTestVersion = '3.7.0'
     groovyVersion = '3.0.9'
     spockVersion = '1.3-groovy-2.5'
+    apacheCommonsConfiguration2Version = '2.9.0'
+    apacheCommonsBeanutilsVersion = '1.9.4'
+    jacksonDataformatYamlVersion = '2.12.3'
 
     libraries = [
             // compile
@@ -138,7 +141,13 @@ ext {
             // Spring cloud addon
             spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
             spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
-            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}"
+            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
+
+            // commons configuration addon
+            apache_commons_configuration2: "org.apache.commons:commons-configuration2:${apacheCommonsConfiguration2Version}",
+            apache_commons_beanutils: "commons-beanutils:commons-beanutils:${apacheCommonsBeanutilsVersion}",
+            jackson_dataformat_yaml: "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonDataformatYamlVersion}",
+
     ]
 
 }

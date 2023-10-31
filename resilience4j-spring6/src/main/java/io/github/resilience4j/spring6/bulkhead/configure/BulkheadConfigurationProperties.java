@@ -25,7 +25,7 @@ public class BulkheadConfigurationProperties extends
      * async case of threadPool bulkhead
      */
     public int getBulkheadAspectOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
+        return Ordered.LOWEST_PRECEDENCE -1;
     }
 
 }

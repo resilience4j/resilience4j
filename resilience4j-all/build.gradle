@@ -5,6 +5,7 @@ dependencies {
     api project(':resilience4j-retry')
     api project(':resilience4j-cache')
     api project(':resilience4j-timelimiter')
+    api project(':resilience4j-micrometer')
     testImplementation project(':resilience4j-test')
 }
 ext.moduleName = 'io.github.resilience4j.all'
