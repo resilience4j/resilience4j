@@ -98,6 +98,21 @@ public class DefaultSpelResolverTest {
     }
 
     /**
+     * #root.className
+     */
+    @Test
+    public void testRootClassName() throws Exception {
+        String testExpression = "#root.className";
+
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{}, testExpression);
+
+        assertThat(result).isEqualTo("io.github.resilience4j.spring6.spelresolver.DefaultSpelResolverTest");
+    }
+
+    /**
      * #p0
      */
     @Test

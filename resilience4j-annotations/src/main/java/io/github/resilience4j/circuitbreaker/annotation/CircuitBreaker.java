@@ -31,9 +31,13 @@ public @interface CircuitBreaker {
 
     /**
      * Name of the circuit breaker.
-     * It can be SpEL expression. If you want to use the first parameter of the method as name, you can
-     * express it as {@code #root.args[0]}, {@code #p0} or {@code #a0}. The method name can be accessed via
-     * {@code #root.methodName}.  To invoke a method on a Spring bean, pass {@code @yourBean.yourMethod(#a0)}.
+     * It can be SpEL expression.
+     * <ul>
+     * <li>If you want to use the first parameter of the method as name, you can
+     * express it as {@code #root.args[0]}, {@code #p0} or {@code #a0}.</li>
+     * <li>The method and class name can be accessed via {@code #root.methodName} and {@code #root.className}.</li>
+     * <li>To invoke a method on a Spring bean, pass {@code @yourBean.yourMethod(#a0)}.</li>
+     * </ul>
      *
      * @return the name of the circuit breaker
      */
