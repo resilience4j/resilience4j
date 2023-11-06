@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,8 @@ public class FallbackMethod {
     private static final Map<MethodMeta, Map<Class<?>, Method>> FALLBACK_METHODS_CACHE = new ConcurrentReferenceHashMap<>();
     private final Map<Class<?>, Method> fallbackMethods;
     private final Object[] args;
-    private final Object target;
+    private final Object original;
+    private final Object proxy;
     private final Class<?> returnType;
 
     /**
@@ -57,14 +59,16 @@ public class FallbackMethod {
      * @param originalMethodReturnType the return type of the original source method
      * @param args                     arguments those were passed to the original method. They will
      *                                 be passed to the fallbackMethod method.
-     * @param target                   target object the fallbackMethod method will be invoked
+     * @param original                 target object the fallbackMethod method will be invoked
+     * @param proxy                    proxy object the fallbackMethod method will be invoked
      */
     private FallbackMethod(Map<Class<?>, Method> fallbackMethods, Class<?> originalMethodReturnType,
-        Object[] args, Object target) {
+                           Object[] args, Object original, Object proxy) {
 
         this.fallbackMethods = fallbackMethods;
         this.args = args;
-        this.target = target;
+        this.original = original;
+        this.proxy = proxy;
         this.returnType = originalMethodReturnType;
     }
 
@@ -72,23 +76,23 @@ public class FallbackMethod {
      * @param fallbackMethodName the configured fallback method name
      * @param originalMethod     the original method which has fallback method configured
      * @param args               the original method arguments
-     * @param originalType       the original type
+     * @param original           the original that own the original method and fallback method
      * @param proxy              the proxy that own the original method and fallback method
      * @return FallbackMethod instance
      */
     public static FallbackMethod create(String fallbackMethodName, Method originalMethod,
-        Object[] args, Class<?> originalType, Object proxy) throws NoSuchMethodException {
+                                        Object[] args, Object original, Object proxy) throws NoSuchMethodException {
         MethodMeta methodMeta = new MethodMeta(
             fallbackMethodName,
             originalMethod.getParameterTypes(),
             originalMethod.getReturnType(),
-            originalType);
+            original.getClass());
 
         Map<Class<?>, Method> methods = FALLBACK_METHODS_CACHE
             .computeIfAbsent(methodMeta, FallbackMethod::extractMethods);
 
         if (!methods.isEmpty()) {
-            return new FallbackMethod(methods, originalMethod.getReturnType(), args, proxy);
+            return new FallbackMethod(methods, originalMethod.getReturnType(), args, original, proxy);
         } else {
             throw new NoSuchMethodException(String.format("%s %s.%s(%s,%s)",
                 methodMeta.returnType, methodMeta.targetClass, methodMeta.fallbackMethodName,
@@ -202,6 +206,7 @@ public class FallbackMethod {
             if (!accessible) {
                 ReflectionUtils.makeAccessible(fallback);
             }
+            Object target = getTarget(fallback);
             if (args.length != 0) {
                 if (fallback.getParameterTypes().length == 1 && Throwable.class
                     .isAssignableFrom(fallback.getParameterTypes()[0])) {
@@ -225,6 +230,15 @@ public class FallbackMethod {
         }
     }
 
+    private Object getTarget(Method fallback) {
+        boolean isPrivate = Modifier.isPrivate(fallback.getModifiers());
+        if (isPrivate) {
+            return original;
+        } else {
+            return proxy;
+        }
+    }
+
     private static class MethodMeta {
 
         final String fallbackMethodName;
@@ -240,7 +254,7 @@ public class FallbackMethod {
          *                           method
          */
         MethodMeta(String fallbackMethodName, Class<?>[] params, Class<?> returnType,
-            Class<?> targetClass) {
+                   Class<?> targetClass) {
             this.fallbackMethodName = fallbackMethodName;
             this.params = params;
             this.returnType = returnType;

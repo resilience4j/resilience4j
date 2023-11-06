@@ -32,14 +32,18 @@ public class FallbackAspectTest {
     @Qualifier("fallbackTestDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    @Qualifier("fallbackDependencyTestDummyService")
+    TestDummyService testDependencyDummyService;
 
     @Test
     public void testFallbackAspect() {
         assertThat(testDummyService.sync()).isEqualTo("aspect");
+        assertThat(testDependencyDummyService.sync()).isEqualTo("dependency");
     }
 
-    @Component
     public static class FallbackTestDummyService extends CircuitBreakerDummyService {
+
         @Override
         @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
         public String sync() {
@@ -52,12 +56,47 @@ public class FallbackAspectTest {
         }
     }
 
+    public static class FallbackDependencyTestDummyService extends CircuitBreakerDummyService {
+        private final DependencyTestDummyService dependencyTestDummyService;
+
+        public FallbackDependencyTestDummyService(DependencyTestDummyService dependencyTestDummyService) {
+            this.dependencyTestDummyService = dependencyTestDummyService;
+        }
+
+        @Override
+        @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+        public String sync() {
+            return syncError();
+        }
+
+        @TestAround
+        private String fallback(RuntimeException throwable) {
+            return dependencyTestDummyService.test();
+        }
+    }
+
+    public static class DependencyTestDummyService {
+        public String test() {
+            return "dependency";
+        }
+    }
+
     @Configuration
     static class TestConfig {
 
         @Bean
+        public DependencyTestDummyService testService() {
+            return new DependencyTestDummyService();
+        }
+
+        @Bean
         public FallbackTestDummyService fallbackTestDummyService() {
             return new FallbackTestDummyService();
+        }
+
+        @Bean
+        public FallbackDependencyTestDummyService fallbackDependencyTestDummyService(DependencyTestDummyService dependencyTestDummyService) {
+            return new FallbackDependencyTestDummyService(dependencyTestDummyService);
         }
 
         @Bean

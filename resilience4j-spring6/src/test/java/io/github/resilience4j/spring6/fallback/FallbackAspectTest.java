@@ -7,6 +7,7 @@ import io.github.resilience4j.spring6.TestDummyService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +23,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {TestApplication.class, FallbackAspectTest.TestConfig.class})
 public class FallbackAspectTest {
@@ -32,14 +31,18 @@ public class FallbackAspectTest {
     @Qualifier("fallbackTestDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    @Qualifier("fallbackDependencyTestDummyService")
+    TestDummyService testDependencyDummyService;
 
     @Test
     public void testFallbackAspect() {
-        assertThat(testDummyService.sync()).isEqualTo("aspect");
+        AssertionsForClassTypes.assertThat(testDummyService.sync()).isEqualTo("aspect");
+        AssertionsForClassTypes.assertThat(testDependencyDummyService.sync()).isEqualTo("dependency");
     }
 
-    @Component
     public static class FallbackTestDummyService extends CircuitBreakerDummyService {
+
         @Override
         @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
         public String sync() {
@@ -52,12 +55,47 @@ public class FallbackAspectTest {
         }
     }
 
+    public static class FallbackDependencyTestDummyService extends CircuitBreakerDummyService {
+        private final DependencyTestDummyService dependencyTestDummyService;
+
+        public FallbackDependencyTestDummyService(DependencyTestDummyService dependencyTestDummyService) {
+            this.dependencyTestDummyService = dependencyTestDummyService;
+        }
+
+        @Override
+        @CircuitBreaker(name = BACKEND, fallbackMethod = "fallback")
+        public String sync() {
+            return syncError();
+        }
+
+        @TestAround
+        private String fallback(RuntimeException throwable) {
+            return dependencyTestDummyService.test();
+        }
+    }
+
+    public static class DependencyTestDummyService {
+        public String test() {
+            return "dependency";
+        }
+    }
+
     @Configuration
     static class TestConfig {
 
         @Bean
+        public DependencyTestDummyService testService() {
+            return new DependencyTestDummyService();
+        }
+
+        @Bean
         public FallbackTestDummyService fallbackTestDummyService() {
             return new FallbackTestDummyService();
+        }
+
+        @Bean
+        public FallbackDependencyTestDummyService fallbackDependencyTestDummyService(DependencyTestDummyService dependencyTestDummyService) {
+            return new FallbackDependencyTestDummyService(dependencyTestDummyService);
         }
 
         @Bean
@@ -69,7 +107,7 @@ public class FallbackAspectTest {
     @Aspect
     static class TestAspect {
 
-        @Around("@annotation(io.github.resilience4j.spring6.fallback.FallbackAspectTest.TestAround)")
+        @Around("@annotation(FallbackAspectTest.TestAround)")
         public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
             joinPoint.proceed();
             return "aspect";
