@@ -696,6 +696,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         public InstanceProperties setExponentialBackoffMultiplier(
             Double exponentialBackoffMultiplier) {
+            if (exponentialBackoffMultiplier <= 0) {
+                throw new IllegalArgumentException(
+                    "Illegal argument exponentialBackoffMultiplier: " + exponentialBackoffMultiplier + " is less or equal 0");
+            }
             this.exponentialBackoffMultiplier = exponentialBackoffMultiplier;
             return this;
         }
@@ -707,6 +711,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         public InstanceProperties setExponentialMaxWaitDurationInOpenState(
             Duration exponentialMaxWaitDurationInOpenState) {
+            if (exponentialMaxWaitDurationInOpenState.toMillis() < 1) {
+                throw new IllegalArgumentException(
+                    "Illegal argument interval: " + exponentialMaxWaitDurationInOpenState + " is less than 1 millisecond");
+            }
             this.exponentialMaxWaitDurationInOpenState = exponentialMaxWaitDurationInOpenState;
             return this;
         }
@@ -727,6 +735,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         }
 
         public InstanceProperties setRandomizedWaitFactor(Double randomizedWaitFactor) {
+            if (randomizedWaitFactor < 0 || randomizedWaitFactor >= 1) {
+                throw new IllegalArgumentException(
+                    "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range [0..1)");
+            }
             this.randomizedWaitFactor = randomizedWaitFactor;
             return this;
         }

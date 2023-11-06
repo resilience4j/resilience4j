@@ -1,0 +1,123 @@
+resilience4j:
+    circuitbreaker:
+        configs:
+            default:
+                slidingWindowSize: 100
+                permittedNumberOfCallsInHalfOpenState: 10
+                waitDurationInOpenState: PT1M
+                failureRateThreshold: 50
+                slowCallRateThreshold: 50
+                slowCallDurationThreshold: PT2S
+                writableStackTraceEnabled: true
+                automaticTransitionFromOpenToHalfOpenEnabled: true
+                slidingWindowType: TIME_BASED
+                minimumNumberOfCalls: 5
+                eventConsumerBufferSize: 10
+                registerHealthIndicator: true
+                recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
+                recordExceptions:
+                    - java.lang.IllegalArgumentException
+                    - java.lang.NullPointerException
+                ignoreExceptionPredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
+                ignoreExceptions:
+                    - java.lang.IllegalStateException
+                    - java.lang.IndexOutOfBoundsException
+            shared:
+                slidingWindowType: COUNT_BASED
+                slidingWindowSize: 100
+                permittedNumberOfCallsInHalfOpenState: 30
+                waitDurationInOpenState: PT10s
+                failureRateThreshold: 50
+                eventConsumerBufferSize: 10
+                ignoreExceptions:
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException
+        instances:
+            backendA:
+                baseConfig: default
+                waitDurationInOpenState: PT5S
+            backendB:
+                baseConfig: shared
+                registerHealthIndicator: true
+                slidingWindowSize: 10
+                minimumNumberOfCalls: 10
+                permittedNumberOfCallsInHalfOpenState: 3
+                waitDurationInOpenState: PT5s
+                failureRateThreshold: 60
+                eventConsumerBufferSize: 20
+                recordFailurePredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
+    retry:
+        configs:
+            default:
+                ignoreExceptions:
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException
+                    - java.lang.RuntimeException
+                maxAttempts: 3
+                retryExceptions:
+                    - java.util.concurrent.TimeoutException
+                    - java.io.IOException
+                waitDuration: PT10S
+        instances:
+            backendA:
+                baseConfig: default
+            backendB:
+                enableExponentialBackoff: true
+                enableRandomizedWait: false
+                eventConsumerBufferSize: 10
+                exponentialBackoffMultiplier: 2
+                exponentialMaxWaitDuration: PT10S
+                failAfterMaxAttempts: true
+                ignoreExceptions:
+                    - io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException
+                    - java.lang.RuntimeException
+                maxAttempts: 5
+                resultPredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateObject
+                retryExceptionPredicate: io.github.resilience4j.commons.configuration.dummy.DummyPredicateThrowable
+                retryExceptions:
+                    - java.util.concurrent.TimeoutException
+                    - java.io.IOException
+    bulkhead:
+        configs:
+            default:
+                maxConcurrentCalls: 100
+        instances:
+            backendA:
+                maxConcurrentCalls: 10
+            backendB:
+                maxWaitDuration: PT0.01S
+                maxConcurrentCalls: 20
+                eventConsumerBufferSize: 15
+                writableStackTraceEnabled: true
+    ratelimiter:
+        configs:
+            default:
+                eventConsumerBufferSize: 100
+                limitForPeriod: 10
+                limitRefreshPeriod: PT1s
+                registerHealthIndicator: false
+                timeoutDuration: PT10S
+        instances:
+            backendA:
+                baseConfig: default
+            backendB:
+                allowHealthIndicatorToFail: false
+                eventConsumerBufferSize: 10
+                limitForPeriod: 6
+                limitRefreshPeriod: PT0.5S
+                registerHealthIndicator: true
+                subscribeForEvents: true
+                timeoutDuration: PT3S
+                writableStackTraceEnabled: false
+    timelimiter:
+        configs:
+            default:
+                timeoutDuration: PT10S
+                eventConsumerBufferSize: '100'
+                cancelRunningFuture: 'true'
+        instances:
+            backendA:
+                baseConfig: default
+                timeoutDuration: PT5S
+            backendB:
+                timeoutDuration: PT15S
+                eventConsumerBufferSize: '10'
+                cancelRunningFuture: 'false'

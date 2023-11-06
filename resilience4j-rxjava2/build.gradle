@@ -4,8 +4,10 @@ dependencies {
     implementation project(':resilience4j-ratelimiter')
     implementation project(':resilience4j-timelimiter')
     implementation project(':resilience4j-bulkhead')
-    implementation project(':resilience4j-retry')    
+    implementation project(':resilience4j-retry')
+    implementation project(':resilience4j-micrometer')
     testImplementation(libraries.rxjava2)
     testImplementation project(':resilience4j-test')
+    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 ext.moduleName = 'io.github.resilience4j.rxjava2'

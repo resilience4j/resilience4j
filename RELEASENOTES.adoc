@@ -399,6 +399,14 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 ==== Enhancements
 * Support Spring Boot 3 by adding resilience4j-spring-boot3 and resilience4j-spring6
 * Issue #1787: Apply Spring Boot customizers even if there is no instance entry in the config file
+* Removed deprecated configuration properties [#1188](https://github.com/resilience4j/resilience4j/pull/1188)
+** Circutbreaker:
+*** `ringBufferSizeInClosedState` replaced by `slidingWindowSize`
+*** `ringBufferSizeInHalfOpenState` replaced by `permittedNumberOfCallsInHalfOpenState`
+** Retry:
+*** `maxRetryAttempts` replaced by `maxAttempts`
+** Bulkhead:
+*** `contextPropagator` list replaced by `contextPropagators`
 
 ==== Bugs
 
@@ -410,3 +418,12 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 ==== Bugs
 
 * Issue #1835: Fixed CircuitBreaker CheckedSupplier and CheckedFunction decorator not opening on recordResultPredicate
+
+=== Version 2.1.0
+
+==== Enhancements
+* Fallbackmethod supports usage of annotations in Spring
+* Issue #1955: RecordResultPredicate can be configured in Spring Boot config now
+
+==== Bugs
+* Issue #1980: Fixed API regression following removal of io.vavr dependencies in v2.0.0

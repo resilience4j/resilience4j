@@ -123,9 +123,9 @@ public class CommonTimeLimiterConfigurationProperties extends CommonProperties {
 
         public InstanceProperties setTimeoutDuration(Duration timeoutDuration) {
             Objects.requireNonNull(timeoutDuration);
-            if (timeoutDuration.toMillis() < 0) {
+            if (timeoutDuration.isNegative()) {
                 throw new IllegalArgumentException(
-                        "timeoutDuration must be greater than or equal to 0.");
+                    "Illegal argument exponentialMaxWaitDuration: " + timeoutDuration + " is negative");
             }
             this.timeoutDuration = timeoutDuration;
             return this;

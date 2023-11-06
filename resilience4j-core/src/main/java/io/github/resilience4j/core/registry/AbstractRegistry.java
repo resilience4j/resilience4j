@@ -140,6 +140,15 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     }
 
     @Override
+    public C removeConfiguration(String configName) {
+        if (configName.equals(DEFAULT_CONFIG)) {
+            throw new IllegalArgumentException(
+                "You cannot remove the default configuration");
+        }
+        return this.configurations.remove(configName);
+    }
+
+    @Override
     public C getDefaultConfig() {
         return configurations.get(DEFAULT_CONFIG);
     }

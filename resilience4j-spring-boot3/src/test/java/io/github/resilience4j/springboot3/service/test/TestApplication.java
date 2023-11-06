@@ -4,6 +4,7 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
+import io.github.resilience4j.common.micrometer.configuration.TimerConfigCustomizer;
 import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
@@ -33,17 +34,17 @@ public class TestApplication {
 
     @Bean
     public ThreadPoolBulkheadConfigCustomizer contextPropagatorBeanCustomizer(
-        List<? extends ContextPropagator> contextPropagators) {
+            List<? extends ContextPropagator> contextPropagators) {
         return ThreadPoolBulkheadConfigCustomizer.of("backendC", (builder) ->
-            builder.contextPropagator(
-                contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
+                builder.contextPropagator(
+                        contextPropagators.toArray(new ContextPropagator[contextPropagators.size()])));
     }
 
     @Bean
     public BulkheadConfigCustomizer testBulkheadCustomizer() {
         return BulkheadConfigCustomizer.of(
-            "backendCustomizer",
-            builder -> builder.maxConcurrentCalls(20));
+                "backendCustomizer",
+                builder -> builder.maxConcurrentCalls(20));
     }
 
     @Bean
@@ -54,26 +55,26 @@ public class TestApplication {
     @Bean
     public CircuitBreakerConfigCustomizer testCustomizer() {
         return CircuitBreakerConfigCustomizer
-            .of("backendC", builder -> builder.slidingWindowSize(100));
+                .of("backendC", builder -> builder.slidingWindowSize(100));
     }
 
     @Bean
     public RateLimiterConfigCustomizer testRateLimiterCustomizer() {
         return RateLimiterConfigCustomizer
-            .of("backendCustomizer", builder -> builder.limitForPeriod(200));
+                .of("backendCustomizer", builder -> builder.limitForPeriod(200));
     }
 
     @Bean
     public RetryConfigCustomizer testRetryCustomizer() {
         return RetryConfigCustomizer.of("retryBackendD",
-            builder -> builder.maxAttempts(4));
+                builder -> builder.maxAttempts(4));
     }
 
 
     @Bean
     public TimeLimiterConfigCustomizer testTimeLimiterCustomizer() {
         return TimeLimiterConfigCustomizer.of("timeLimiterBackendD",
-            builder -> builder.timeoutDuration(Duration.ofSeconds(3)));
+                builder -> builder.timeoutDuration(Duration.ofSeconds(3)));
     }
 
     @Bean
@@ -89,5 +90,15 @@ public class TestApplication {
                 return "backendD";
             }
         };
+    }
+
+    @Bean
+    public TimerConfigCustomizer testTimerConfigCustomizerH() {
+        return TimerConfigCustomizer.of("backendH", builder -> builder.metricNames("resilience4j.timer.callsHCustomized"));
+    }
+
+    @Bean
+    public TimerConfigCustomizer testTimerConfigCustomizerI() {
+        return TimerConfigCustomizer.of("backendI", builder -> builder.metricNames("resilience4j.timer.callsICustomized"));
     }
 }

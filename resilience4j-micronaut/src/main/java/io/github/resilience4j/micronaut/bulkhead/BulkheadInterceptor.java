@@ -133,7 +133,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
     }
 
     private CompletionStage<?> handleThreadPoolBulkhead(MethodInvocationContext<Object, Object> context, AnnotationValue<io.github.resilience4j.micronaut.annotation.Bulkhead> bulkheadAnnotationValue) {
-        final String name = bulkheadAnnotationValue.stringValue().orElse("default");
+        final String name = bulkheadAnnotationValue.stringValue("name").orElse("default");
         ThreadPoolBulkhead bulkhead = this.threadPoolBulkheadRegistry.bulkhead(name);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context);

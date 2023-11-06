@@ -220,21 +220,21 @@ public class BulkheadConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMaxConcurrentCalls() {
+    public void testIllegalArgumentOnMaxConcurrentCallsLessThanOne() {
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxConcurrentCalls(-100);
+        defaultProperties.setMaxConcurrentCalls(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMaxWaitDuration() {
+    public void testIllegalArgumentOnMaxWaitDurationNegative() {
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxWaitDuration(Duration.ofMillis(-1000));
+        defaultProperties.setMaxWaitDuration(Duration.ofNanos(-1));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBulkheadIllegalArgumentOnEventConsumerBufferSize() {
+    public void testBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(-1);
+        defaultProperties.setEventConsumerBufferSize(0);
     }
 
     @Test
