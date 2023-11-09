@@ -21,15 +21,16 @@ import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.util.PublisherExtension;
 import io.micronaut.aop.InterceptedMethod;
+import io.micronaut.aop.InterceptorBean;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.convert.ConversionService;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import jakarta.inject.Singleton;
 
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -38,7 +39,7 @@ import java.util.concurrent.*;
  * A {@link MethodInterceptor} that intercepts all method calls which are annotated with a {@link io.github.resilience4j.micronaut.annotation.Bulkhead}
  * annotation.
  **/
-@Singleton
+@InterceptorBean(io.github.resilience4j.micronaut.annotation.Bulkhead.class)
 @Requires(beans = {BulkheadRegistry.class, ThreadPoolBulkheadRegistry.class})
 public class BulkheadInterceptor extends BaseInterceptor implements MethodInterceptor<Object, Object> {
 
@@ -46,6 +47,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
     private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
     private final ExecutionHandleLocator executionHandleLocator;
     private final PublisherExtension extension;
+    private final ConversionService conversionService;
 
     /**
      * @param executionHandleLocator                The bean context to allow for DI.
@@ -53,11 +55,15 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
      * @param threadPoolBulkheadRegistry thread pool bulkhead registry used to retrieve {@link Bulkhead} by name
      */
     public BulkheadInterceptor(BeanContext executionHandleLocator,
-                               BulkheadRegistry bulkheadRegistry, ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry, PublisherExtension extension) {
+                               BulkheadRegistry bulkheadRegistry,
+                               ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
+                               PublisherExtension extension,
+                               ConversionService conversionService) {
         this.bulkheadRegistry = bulkheadRegistry;
         this.executionHandleLocator = executionHandleLocator;
         this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
         this.extension = extension;
+        this.conversionService = conversionService;
     }
 
     @Override
@@ -82,20 +88,20 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
 
-        Optional<AnnotationValue<io.github.resilience4j.micronaut.annotation.Bulkhead>> opt = context.findAnnotation(io.github.resilience4j.micronaut.annotation.Bulkhead.class);
-        if (!opt.isPresent()) {
+        AnnotationValue<io.github.resilience4j.micronaut.annotation.Bulkhead> bulkheadAnnotationValue = context.findAnnotation(io.github.resilience4j.micronaut.annotation.Bulkhead.class).orElse(null);
+        if (bulkheadAnnotationValue == null) {
             return context.proceed();
         }
-        final io.github.resilience4j.micronaut.annotation.Bulkhead.Type type = opt.get().enumValue("type", io.github.resilience4j.micronaut.annotation.Bulkhead.Type.class).orElse(io.github.resilience4j.micronaut.annotation.Bulkhead.Type.SEMAPHORE);
+        final io.github.resilience4j.micronaut.annotation.Bulkhead.Type type = bulkheadAnnotationValue.enumValue("type", io.github.resilience4j.micronaut.annotation.Bulkhead.Type.class).orElse(io.github.resilience4j.micronaut.annotation.Bulkhead.Type.SEMAPHORE);
 
         if (type == io.github.resilience4j.micronaut.annotation.Bulkhead.Type.THREADPOOL) {
-            return handleThreadPoolBulkhead(context, opt.get());
+            return handleThreadPoolBulkhead(context, bulkheadAnnotationValue);
         } else {
 
-            final String name = opt.get().stringValue("name").orElse("default");
+            final String name = bulkheadAnnotationValue.stringValue("name").orElse("default");
             Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
 
-            InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
+            InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
             try {
                 switch (interceptedMethod.resultType()) {
                     case PUBLISHER:
@@ -136,7 +142,7 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         final String name = bulkheadAnnotationValue.stringValue("name").orElse("default");
         ThreadPoolBulkhead bulkhead = this.threadPoolBulkheadRegistry.bulkhead(name);
 
-        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
         if (interceptedMethod.resultType() == InterceptedMethod.ResultType.COMPLETION_STAGE) {
             try {
                 return this.fallbackForFuture(bulkhead.executeCallable(() -> {
