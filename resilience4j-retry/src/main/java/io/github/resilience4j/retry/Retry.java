@@ -566,7 +566,7 @@ public interface Retry {
         private void onError(Exception t) {
             final long delay = retryContext.onError(t);
 
-            if (delay < 1) {
+            if (delay < 0) {
                 promise.completeExceptionally(t);
             } else {
                 scheduler.schedule(this, delay, TimeUnit.MILLISECONDS);
@@ -576,7 +576,7 @@ public interface Retry {
         private void onResult(T result) {
             final long delay = retryContext.onResult(result);
 
-            if (delay < 1) {
+            if (delay < 0) {
                 try {
                     retryContext.onComplete();
                     promise.complete(result);
