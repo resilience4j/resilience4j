@@ -258,8 +258,13 @@ public class RetryImpl<T> implements Retry {
         private void waitIntervalAfterException(int currentNumOfAttempts, Either<Throwable, T> either) throws Exception{
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
-            publishRetryEvent(
-                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+
+            if (interval < 0) {
+                publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
+            } else {
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+            }
+
             try {
                 sleepFunction.accept(interval);
             } catch (InterruptedException ex) {
@@ -273,8 +278,13 @@ public class RetryImpl<T> implements Retry {
         private void waitIntervalAfterRuntimeException(int currentNumOfAttempts, Either<Throwable, T> either) {
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
-            publishRetryEvent(
-                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+
+            if (interval < 0) {
+                publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
+            } else {
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+            }
+
             try {
                 sleepFunction.accept(interval);
             } catch (Throwable ex) {
@@ -351,7 +361,13 @@ public class RetryImpl<T> implements Retry {
             }
 
             long interval = intervalBiFunction.apply(attempt, Either.left(throwable));
-            publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+
+            if (interval < 0) {
+                publishRetryEvent(() -> new RetryOnErrorEvent(getName(), attempt, throwable));
+            } else {
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+            }
+
             return interval;
         }
 
