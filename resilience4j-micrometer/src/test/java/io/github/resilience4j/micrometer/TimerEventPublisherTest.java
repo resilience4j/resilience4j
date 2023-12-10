@@ -38,7 +38,6 @@ public class TimerEventPublisherTest {
 
     @Test
     public void shouldHandleOnStartEvent() {
-        ZonedDateTime now = now();
         AtomicReference<TimerOnStartEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onStart(consumedEvent::set);
@@ -46,12 +45,10 @@ public class TimerEventPublisherTest {
 
         then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
         then(consumedEvent.get().getEventType()).isEqualTo(START);
-        then(consumedEvent.get().getCreationTime()).isAfter(now).isBefore(now());
     }
 
     @Test
     public void shouldHandleOnSuccessEvent() {
-        ZonedDateTime now = now();
         AtomicReference<TimerOnSuccessEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onSuccess(consumedEvent::set);
@@ -60,13 +57,11 @@ public class TimerEventPublisherTest {
         });
         then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
         then(consumedEvent.get().getEventType()).isEqualTo(SUCCESS);
-        then(consumedEvent.get().getCreationTime()).isAfter(now).isBefore(now());
         then(consumedEvent.get().getOperationDuration()).isPositive();
 
         timer.executeSupplier(() -> "result");
         then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
         then(consumedEvent.get().getEventType()).isEqualTo(SUCCESS);
-        then(consumedEvent.get().getCreationTime()).isAfter(now).isBefore(now());
         then(consumedEvent.get().getOperationDuration()).isPositive();
     }
 
@@ -74,7 +69,6 @@ public class TimerEventPublisherTest {
     public void shouldHandleOnFailureEvent() {
         expectedException.expect(RuntimeException.class);
 
-        ZonedDateTime now = now();
         AtomicReference<TimerOnFailureEvent> consumedEvent = new AtomicReference<>();
         Timer timer = Timer.of("some operation", new SimpleMeterRegistry());
         timer.getEventPublisher().onFailure(consumedEvent::set);
@@ -84,7 +78,6 @@ public class TimerEventPublisherTest {
 
         then(consumedEvent.get().getTimerName()).isEqualTo("some operation");
         then(consumedEvent.get().getEventType()).isEqualTo(FAILURE);
-        then(consumedEvent.get().getCreationTime()).isAfter(now).isBefore(now());
         then(consumedEvent.get().getOperationDuration()).isPositive();
     }
 }

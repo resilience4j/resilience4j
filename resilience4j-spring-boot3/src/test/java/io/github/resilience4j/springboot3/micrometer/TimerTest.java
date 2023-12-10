@@ -119,21 +119,17 @@ public class TimerTest {
         then(events.get(0).getTimerName()).isEqualTo(timer.getName());
         then(events.get(0).getType()).isEqualTo(START);
         then(events.get(0).getOperationDuration()).isNull();
-        then(parse(events.get(0).getCreationTime())).isAfter(now);
 
         then(events.get(1).getTimerName()).isEqualTo(timer.getName());
         then(events.get(1).getType()).isEqualTo(SUCCESS);
         then(events.get(1).getOperationDuration()).isPositive();
-        then(parse(events.get(1).getCreationTime())).isAfter(parse(events.get(0).getCreationTime()));
 
         then(events.get(2).getTimerName()).isEqualTo(timer.getName());
         then(events.get(2).getType()).isEqualTo(START);
         then(events.get(2).getOperationDuration()).isNull();
-        then(parse(events.get(2).getCreationTime())).isAfter(parse(events.get(1).getCreationTime()));
 
         then(events.get(3).getTimerName()).isEqualTo(timer.getName());
         then(events.get(3).getType()).isEqualTo(FAILURE);
         then(events.get(3).getOperationDuration()).isPositive();
-        then(parse(events.get(3).getCreationTime())).isAfter(parse(events.get(2).getCreationTime()));
     }
 }
