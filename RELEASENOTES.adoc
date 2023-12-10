@@ -427,3 +427,17 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 
 ==== Bugs
 * Issue #1980: Fixed API regression following removal of io.vavr dependencies in v2.0.0
+
+=== Version 2.2.0
+
+==== Enhancements
+* Support Micronaut 4
+* Issue #1962: Added apache commons configuration based registries
+
+==== Bugs
+* Issue #2052: Support class name using SpEL expression at @Circuitbreaker name field enhancement
+* Issue #2040: ThreadPoolBulkhead always uses the "default" configuration in micronaut application bug
+* Issue #2037: Removing stale retry configurations from configuration map enhancement
+* Issue #1625: New module that collects overall information enhancement
+* Issue #1565: Do not retry if IntervalFunction returns interval less than 0
+* Issue #1865: Timelimiter always uses the "default" configuration in micronaut application
