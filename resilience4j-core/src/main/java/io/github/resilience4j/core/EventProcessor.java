@@ -20,6 +20,7 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class EventProcessor<T> implements EventPublisher<T> {
 
     final Set<EventConsumer<T>> onEventConsumers = new CopyOnWriteArraySet<>();
-    final ConcurrentMap<String, List<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
+    final ConcurrentMap<String, Set<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
     private boolean consumerRegistered;
 
     public boolean hasConsumers() {
