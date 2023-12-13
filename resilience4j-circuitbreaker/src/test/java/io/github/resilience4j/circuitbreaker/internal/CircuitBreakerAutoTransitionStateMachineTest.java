@@ -95,7 +95,7 @@ public class CircuitBreakerAutoTransitionStateMachineTest {
         circuitBreaker.transitionToForcedOpenState();
 
         // Verify scheduled future is canceled
-        then(mockFuture).should(times(1)).cancel(true);
+        then(mockFuture).should(times(1)).cancel(false);
     }
 
     @Test
