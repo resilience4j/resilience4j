@@ -50,9 +50,9 @@ public class EventProcessorTest {
         eventProcessor.onEvent(eventConsumer);
         eventProcessor.onEvent(eventConsumer);
 
-        assertThat(eventProcessor.onEventConsumers).hasSize(2);
+        assertThat(eventProcessor.onEventConsumers).hasSize(1);
         boolean consumed = eventProcessor.processEvent(1);
-        then(logger).should(times(2)).info("1");
+        then(logger).should(times(1)).info("1");
         assertThat(consumed).isTrue();
     }
 
@@ -65,9 +65,9 @@ public class EventProcessorTest {
         eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer);
 
         assertThat(eventProcessor.eventConsumerMap).hasSize(1);
-        assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(2);
+        assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(1);
         boolean consumed = eventProcessor.processEvent(1);
-        then(logger).should(times(2)).info("1");
+        then(logger).should(times(1)).info("1");
         assertThat(consumed).isTrue();
     }
 

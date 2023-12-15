@@ -21,14 +21,15 @@ package io.github.resilience4j.core;
 import io.github.resilience4j.core.lang.Nullable;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
-    final List<EventConsumer<T>> onEventConsumers = new CopyOnWriteArrayList<>();
-    final ConcurrentMap<String, List<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
+    final Set<EventConsumer<T>> onEventConsumers = new CopyOnWriteArraySet<>();
+    final ConcurrentMap<String, Set<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
     private boolean consumerRegistered;
 
     public boolean hasConsumers() {
@@ -39,7 +40,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
     public synchronized void registerConsumer(String className, EventConsumer<? extends T> eventConsumer) {
         this.eventConsumerMap.compute(className, (k, consumers) -> {
             if (consumers == null) {
-                consumers = new CopyOnWriteArrayList<>();
+                consumers = new CopyOnWriteArraySet<>();
                 consumers.add((EventConsumer<T>) eventConsumer);
                 return consumers;
             } else {
@@ -60,7 +61,7 @@ public class EventProcessor<T> implements EventPublisher<T> {
         }
 
         if (!eventConsumerMap.isEmpty()) {
-            final List<EventConsumer<T>> consumers = this.eventConsumerMap.get(event.getClass().getName());
+            final Set<EventConsumer<T>> consumers = this.eventConsumerMap.get(event.getClass().getName());
             if (consumers != null && !consumers.isEmpty()) {
                 for (EventConsumer<T> consumer : consumers) {
                     consumer.consumeEvent(event);
