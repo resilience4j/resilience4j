@@ -441,3 +441,4 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 * Issue #1625: New module that collects overall information enhancement
 * Issue #1565: Do not retry if IntervalFunction returns interval less than 0
 * Issue #1865: Timelimiter always uses the "default" configuration in micronaut application
+* Issue #2038: java.lang.StackOverflowError due to infinite loop in CircuitBreakerStateMachine$OpenState.tryAcquirePermission
