@@ -184,20 +184,18 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public boolean onResult(T result) {
-
             if (null != resultPredicate && resultPredicate.test(result)) {
                 totalAttemptsCounter.increment();
                 int currentNumOfAttempts = numOfAttempts.incrementAndGet();
-
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
-                } else {
-                    if (consumeResultBeforeRetryAttempt != null) {
-                        consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
-                    }
-                    waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.right(result));
-                    return true;
                 }
+
+                if (consumeResultBeforeRetryAttempt != null) {
+                    consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
+                }
+                waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.right(result));
+                return true;
             }
 
             return false;
@@ -375,19 +373,20 @@ public class RetryImpl<T> implements Retry {
         public long onResult(T result) {
             if (null != resultPredicate && resultPredicate.test(result)) {
                 totalAttemptsCounter.increment();
-                int attempt = numOfAttempts.incrementAndGet();
-                if (attempt >= maxAttempts) {
-                    if(consumeResultBeforeRetryAttempt != null){
-                        consumeResultBeforeRetryAttempt.accept(attempt, result);
-                    }
+                int currentNumOfAttempts = numOfAttempts.incrementAndGet();
+                if (currentNumOfAttempts >= maxAttempts) {
                     return -1;
                 }
-                Long interval = intervalBiFunction.apply(attempt, Either.right(result));
-                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, null, interval));
+
+                if(consumeResultBeforeRetryAttempt != null){
+                    consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
+                }
+                Long interval = intervalBiFunction.apply(currentNumOfAttempts, Either.right(result));
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval));
                 return interval;
-            } else {
-                return -1;
             }
+
+            return -1;
         }
     }
 

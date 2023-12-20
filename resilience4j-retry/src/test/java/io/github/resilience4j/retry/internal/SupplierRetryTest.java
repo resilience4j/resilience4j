@@ -33,10 +33,11 @@ import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -360,6 +361,7 @@ public class SupplierRetryTest {
         Try<String> result = Try.of(() -> retryableSupplier.get())
             .recover((throwable) -> "Hello world from recovery function");
         assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        Thread.interrupted();
     }
 
 
@@ -520,6 +522,39 @@ public class SupplierRetryTest {
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
         assertThat(result).isEqualTo(helloWorldServiceReturnValue);
+        assertThat(consumerInvocations.get()).isEqualTo(2);
+    }
+
+    @Test
+    public void shouldPerformConsumeResultBeforeRetryAttemptOnRetryAsync() {
+        String helloWorldServiceReturnValue = "Hello World!";
+        given(helloWorldServiceAsync.returnHelloWorld())
+                .willReturn(completedFuture(helloWorldServiceReturnValue));
+
+        Predicate<String> shouldRetry = helloWorldServiceReturnValue::equals;
+        AtomicInteger consumerInvocations = new AtomicInteger(0);
+        BiConsumer<Integer, String> consumeResultBeforeRetryAttempt = (currentAttempt, value) -> {
+            if (helloWorldServiceReturnValue.equals(value)) {
+                consumerInvocations.set(currentAttempt);
+            }
+        };
+
+        RetryConfig config = new RetryConfig.Builder<String>()
+                .retryOnResult(shouldRetry)
+                .consumeResultBeforeRetryAttempt(consumeResultBeforeRetryAttempt)
+                .build();
+
+        Retry retry = Retry.of("id", config);
+
+        Supplier<CompletionStage<String>> supplierAsync = Retry.decorateCompletionStage(
+                retry,
+                scheduler,
+                helloWorldServiceAsync::returnHelloWorld);
+        Try<String> resultTry = Try.of(() -> awaitResult(supplierAsync.get()));
+
+        then(helloWorldServiceAsync).should(times(3)).returnHelloWorld();
+        assertThat(resultTry.isSuccess()).isTrue();
+        assertThat(resultTry.get()).isEqualTo(helloWorldServiceReturnValue);
         assertThat(consumerInvocations.get()).isEqualTo(2);
     }
 
