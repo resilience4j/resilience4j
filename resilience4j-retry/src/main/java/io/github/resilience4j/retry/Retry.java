@@ -119,6 +119,21 @@ public interface Retry {
     }
 
     /**
+     * Decorates CompletionStageSupplier using current instance as context.
+     *
+     * @param scheduler execution service to use to schedule retries
+     * @param supplier  completion stage supplier
+     * @param <T>       type of completion stage result
+     * @return decorated supplier
+     */
+    default <T> Supplier<CompletionStage<T>> decorateCompletionStage(
+            ScheduledExecutorService scheduler,
+            Supplier<CompletionStage<T>> supplier
+    ) {
+        return decorateCompletionStage(this, scheduler, supplier);
+    }
+
+    /**
      * Creates a retryable supplier.
      *
      * @param retry    the retry context
@@ -146,6 +161,17 @@ public interface Retry {
     }
 
     /**
+     * Creates a retryable supplier using current instance as context.
+     *
+     * @param supplier the original function
+     * @param <T>      the type of results supplied by this supplier
+     * @return a retryable function
+     */
+    default <T> CheckedSupplier<T> decorateCheckedSupplier(CheckedSupplier<T> supplier) {
+        return decorateCheckedSupplier(this, supplier);
+    }
+
+    /**
      * Creates a retryable runnable.
      *
      * @param retry    the retry context
@@ -165,6 +191,16 @@ public interface Retry {
                 }
             } while (true);
         };
+    }
+
+    /**
+     * Creates a retryable runnable using current instance as context.
+     *
+     * @param runnable the original runnable
+     * @return a retryable runnable
+     */
+    default CheckedRunnable decorateCheckedRunnable(CheckedRunnable runnable) {
+        return decorateCheckedRunnable(this, runnable);
     }
 
     /**
@@ -196,6 +232,18 @@ public interface Retry {
     }
 
     /**
+     * Creates a retryable function using current instance as context.
+     *
+     * @param function the original function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the result type of the function
+     * @return a retryable function
+     */
+    default <T, R> CheckedFunction<T, R> decorateCheckedFunction(CheckedFunction<T, R> function) {
+        return decorateCheckedFunction(this, function);
+    }
+
+    /**
      * Creates a retryable supplier.
      *
      * @param retry    the retry context
@@ -219,6 +267,17 @@ public interface Retry {
                 }
             } while (true);
         };
+    }
+
+    /**
+     * Creates a retryable supplier using current instance as context.
+     *
+     * @param supplier the original function
+     * @param <T>      the type of results supplied by this supplier
+     * @return a retryable function
+     */
+    default <T> Supplier<T> decorateSupplier(Supplier<T> supplier) {
+        return decorateSupplier(this, supplier);
     }
 
     /**
@@ -248,6 +307,18 @@ public interface Retry {
     }
 
     /**
+     * Creates a retryable callable using current instance as context.
+     *
+     * @param supplier the original function
+     * @param <T>      the type of results supplied by this supplier
+     * @return a retryable function
+     */
+    default <T> Callable<T> decorateCallable(Callable<T> supplier) {
+        return decorateCallable(this, supplier);
+    }
+
+
+    /**
      * Creates a retryable runnable.
      *
      * @param retry    the retry context
@@ -267,6 +338,16 @@ public interface Retry {
                 }
             } while (true);
         };
+    }
+
+    /**
+     * Creates a retryable runnable using current instance as context.
+     *
+     * @param runnable the original runnable
+     * @return a retryable runnable
+     */
+    default Runnable decorateRunnable(Runnable runnable) {
+        return decorateRunnable(this, runnable);
     }
 
     /**
@@ -294,6 +375,18 @@ public interface Retry {
                 }
             } while (true);
         };
+    }
+
+    /**
+     * Creates a retryable function using current instance as context.
+     *
+     * @param function the original function
+     * @param <T>      the type of the input to the function
+     * @param <R>      the result type of the function
+     * @return a retryable function
+     */
+    default <T, R> Function<T, R> decorateFunction(Function<T, R> function) {
+        return decorateFunction(this, function);
     }
 
     /**
