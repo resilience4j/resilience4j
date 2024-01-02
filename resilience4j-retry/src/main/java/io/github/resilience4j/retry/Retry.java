@@ -378,18 +378,6 @@ public interface Retry {
     }
 
     /**
-     * Creates a retryable function using current instance as context.
-     *
-     * @param function the original function
-     * @param <T>      the type of the input to the function
-     * @param <R>      the result type of the function
-     * @return a retryable function
-     */
-    default <T, R> Function<T, R> decorateFunction(Function<T, R> function) {
-        return decorateFunction(this, function);
-    }
-
-    /**
      * Returns the ID of this Retry.
      *
      * @return the ID of this Retry
