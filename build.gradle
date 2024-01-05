@@ -16,7 +16,7 @@ allprojects {
 
     version = '2.3.0-SNAPSHOT'
     group = 'io.github.resilience4j'
-    description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
+    description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java17+ and functional programming'
 
     repositories {
         mavenCentral()

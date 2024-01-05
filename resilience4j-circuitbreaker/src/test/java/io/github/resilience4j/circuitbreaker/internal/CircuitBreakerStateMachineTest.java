@@ -157,7 +157,6 @@ public class CircuitBreakerStateMachineTest {
         assertThat(circuitBreaker.tryAcquirePermission()).isFalse();
     }
 
-
     @Test
     public void shouldOpenAfterFailureRateThresholdExceeded2() {
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
