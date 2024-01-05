@@ -66,6 +66,7 @@ public class RetryImpl<T> implements Retry {
     private final LongAdder failedAfterRetryCounter;
     private final LongAdder succeededWithoutRetryCounter;
     private final LongAdder failedWithoutRetryCounter;
+    private final LongAdder totalAttemptsCounter;
 
     public RetryImpl(String name, RetryConfig config) {
         this(name, config, Collections.emptyMap());
@@ -87,6 +88,7 @@ public class RetryImpl<T> implements Retry {
         failedAfterRetryCounter = new LongAdder();
         succeededWithoutRetryCounter = new LongAdder();
         failedWithoutRetryCounter = new LongAdder();
+        totalAttemptsCounter = new LongAdder();
     }
 
     public static void setSleepFunction(CheckedConsumer<Long> sleepFunction) {
@@ -152,6 +154,7 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public void onComplete() {
+            totalAttemptsCounter.increment();
             int currentNumOfAttempts = numOfAttempts.get();
             if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
                 succeededAfterRetryCounter.increment();
@@ -182,22 +185,25 @@ public class RetryImpl<T> implements Retry {
         @Override
         public boolean onResult(T result) {
             if (null != resultPredicate && resultPredicate.test(result)) {
+                totalAttemptsCounter.increment();
                 int currentNumOfAttempts = numOfAttempts.incrementAndGet();
                 if (currentNumOfAttempts >= maxAttempts) {
                     return false;
-                } else {
-                    if(consumeResultBeforeRetryAttempt != null){
-                        consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
-                    }
-                    waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.right(result));
-                    return true;
                 }
+
+                if (consumeResultBeforeRetryAttempt != null) {
+                    consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
+                }
+                waitIntervalAfterRuntimeException(currentNumOfAttempts, Either.right(result));
+                return true;
             }
+
             return false;
         }
 
         @Override
         public void onError(Exception exception) throws Exception {
+            totalAttemptsCounter.increment();
             if (exceptionPredicate.test(exception)) {
                 lastException.set(exception);
                 throwOrSleepAfterException();
@@ -210,6 +216,7 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public void onRuntimeError(RuntimeException runtimeException) {
+            totalAttemptsCounter.increment();
             if (exceptionPredicate.test(runtimeException)) {
                 lastRuntimeException.set(runtimeException);
                 throwOrSleepAfterRuntimeException();
@@ -249,8 +256,13 @@ public class RetryImpl<T> implements Retry {
         private void waitIntervalAfterException(int currentNumOfAttempts, Either<Throwable, T> either) throws Exception{
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
-            publishRetryEvent(
-                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+
+            if (interval < 0) {
+                publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
+            } else {
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+            }
+
             try {
                 sleepFunction.accept(interval);
             } catch (InterruptedException ex) {
@@ -264,8 +276,13 @@ public class RetryImpl<T> implements Retry {
         private void waitIntervalAfterRuntimeException(int currentNumOfAttempts, Either<Throwable, T> either) {
             // wait interval until the next attempt should start
             long interval = intervalBiFunction.apply(numOfAttempts.get(), either);
-            publishRetryEvent(
-                () -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+
+            if (interval < 0) {
+                publishRetryEvent(() -> new RetryOnErrorEvent(getName(), currentNumOfAttempts, either.swap().getOrNull()));
+            } else {
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, either.swap().getOrNull(), interval));
+            }
+
             try {
                 sleepFunction.accept(interval);
             } catch (Throwable ex) {
@@ -282,6 +299,7 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public void onComplete() {
+            totalAttemptsCounter.increment();
             int currentNumOfAttempts = numOfAttempts.get();
             if (currentNumOfAttempts > 0 && currentNumOfAttempts < maxAttempts) {
                 succeededAfterRetryCounter.increment();
@@ -310,6 +328,7 @@ public class RetryImpl<T> implements Retry {
 
         @Override
         public long onError(Throwable throwable) {
+            totalAttemptsCounter.increment();
             // Handle the case if the completable future throw CompletionException wrapping the original exception
             // where original exception is the one to retry not the CompletionException.
             if (throwable instanceof CompletionException || throwable instanceof ExecutionException) {
@@ -340,24 +359,34 @@ public class RetryImpl<T> implements Retry {
             }
 
             long interval = intervalBiFunction.apply(attempt, Either.left(throwable));
-            publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+
+            if (interval < 0) {
+                publishRetryEvent(() -> new RetryOnErrorEvent(getName(), attempt, throwable));
+            } else {
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), attempt, throwable, interval));
+            }
+
             return interval;
         }
 
         @Override
         public long onResult(T result) {
             if (null != resultPredicate && resultPredicate.test(result)) {
-                int attempt = numOfAttempts.incrementAndGet();
-                if (attempt >= maxAttempts) {
-                    if(consumeResultBeforeRetryAttempt != null){
-                        consumeResultBeforeRetryAttempt.accept(attempt, result);
-                    }
+                totalAttemptsCounter.increment();
+                int currentNumOfAttempts = numOfAttempts.incrementAndGet();
+                if (currentNumOfAttempts >= maxAttempts) {
                     return -1;
                 }
-                return intervalBiFunction.apply(attempt, Either.right(result));
-            } else {
-                return -1;
+
+                if(consumeResultBeforeRetryAttempt != null){
+                    consumeResultBeforeRetryAttempt.accept(currentNumOfAttempts, result);
+                }
+                Long interval = intervalBiFunction.apply(currentNumOfAttempts, Either.right(result));
+                publishRetryEvent(() -> new RetryOnRetryEvent(getName(), currentNumOfAttempts, null, interval));
+                return interval;
             }
+
+            return -1;
         }
     }
 
@@ -384,6 +413,11 @@ public class RetryImpl<T> implements Retry {
         @Override
         public long getNumberOfFailedCallsWithRetryAttempt() {
             return failedAfterRetryCounter.longValue();
+        }
+
+        @Override
+        public long getNumberOfTotalCalls() {
+            return totalAttemptsCounter.longValue();
         }
     }
 

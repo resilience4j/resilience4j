@@ -50,9 +50,9 @@ public class EventProcessorTest {
         eventProcessor.onEvent(eventConsumer);
         eventProcessor.onEvent(eventConsumer);
 
-        assertThat(eventProcessor.onEventConsumers).hasSize(2);
+        assertThat(eventProcessor.onEventConsumers).hasSize(1);
         boolean consumed = eventProcessor.processEvent(1);
-        then(logger).should(times(2)).info("1");
+        then(logger).should(times(1)).info("1");
         assertThat(consumed).isTrue();
     }
 
@@ -62,13 +62,44 @@ public class EventProcessorTest {
         EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
 
         eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer);
+
+        assertThat(eventProcessor.eventConsumerMap).hasSize(1);
+        assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(1);
+        boolean consumed = eventProcessor.processEvent(1);
+        then(logger).should(times(1)).info("1");
+        assertThat(consumed).isTrue();
+    }
+
+    @Test
+    public void testRegisterSameConsumerOnlyOnce() {
+        EventProcessor<Number> eventProcessor = new EventProcessor<>();
+        EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
+
         eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer);
+        eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer);
+
+        assertThat(eventProcessor.eventConsumerMap).hasSize(1);
+        assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(1);
+        boolean consumed = eventProcessor.processEvent(1);
+        then(logger).should(times(1)).info("1");
+        assertThat(consumed).isTrue();
+    }
+
+    @Test
+    public void testRegisterTwoDifferentConsumers() {
+        EventProcessor<Number> eventProcessor = new EventProcessor<>();
+
+        EventConsumer<Integer> eventConsumer1 = event -> logger.info(event.toString());
+        EventConsumer<Integer> eventConsumer2 = event -> logger.info(event.toString());
+
+        eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer1);
+        eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer2);
 
         assertThat(eventProcessor.eventConsumerMap).hasSize(1);
         assertThat(eventProcessor.eventConsumerMap.get(Integer.class.getName())).hasSize(2);
         boolean consumed = eventProcessor.processEvent(1);
-        then(logger).should(times(2)).info("1");
         assertThat(consumed).isTrue();
+        then(logger).should(times(2)).info("1");
     }
 
     @Test

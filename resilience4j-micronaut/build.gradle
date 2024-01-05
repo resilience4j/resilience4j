@@ -1,11 +1,8 @@
-apply plugin: 'groovy'
-repositories {
-    maven { url "https://repo.grails.org/grails/core" }
-    maven { url "https://oss.jfrog.org/oss-snapshot-local" }
-}
+apply plugin:'groovy'
 dependencies {
     annotationProcessor(platform(libraries.micronaut))
     testAnnotationProcessor(platform(libraries.micronaut))
+    api project(':resilience4j-annotations')
     implementation(platform(libraries.micronaut))
     annotationProcessor "io.micronaut:micronaut-inject-java"
 
@@ -13,8 +10,10 @@ dependencies {
     compileOnly "io.micronaut:micronaut-http-server"
     compileOnly "io.micronaut:micronaut-aop"
 
-    implementation "io.micronaut:micronaut-validation"
+    implementation "io.micronaut.validation:micronaut-validation"
     implementation "io.micronaut:micronaut-router"
+    implementation "io.micronaut:micronaut-discovery-core"
+    implementation "io.micronaut:micronaut-retry"
 
 
     compileOnly(libraries.rxjava2)
@@ -33,6 +32,8 @@ dependencies {
     compileOnly project(':resilience4j-core')
     implementation project(':resilience4j-framework-common')
 
+    testAnnotationProcessor project(':resilience4j-micronaut-annotation')
+    testCompileOnly project(':resilience4j-micronaut-annotation')
     testImplementation project(':resilience4j-circuitbreaker')
     testImplementation project(':resilience4j-ratelimiter')
     testImplementation project(':resilience4j-timelimiter')
@@ -42,10 +43,11 @@ dependencies {
     testImplementation project(':resilience4j-rxjava2')
     testImplementation "io.micronaut:micronaut-aop"
     testImplementation("io.micronaut.reactor:micronaut-reactor")
-    implementation("io.micronaut.rxjava3:micronaut-rxjava3")
-    implementation("io.micronaut.rxjava2:micronaut-rxjava2")
+    testImplementation("io.micronaut.rxjava3:micronaut-rxjava3")
+    testImplementation("io.micronaut.rxjava2:micronaut-rxjava2")
 
     testImplementation "io.micronaut:micronaut-http-client"
+    testImplementation "io.micronaut:micronaut-jackson-databind"
     testImplementation "io.micronaut:micronaut-http-server-netty"
 
     testImplementation(libraries.micronaut_inject)
@@ -53,11 +55,6 @@ dependencies {
 
     testImplementation "cglib:cglib-nodep:3.3.0"
     testImplementation "org.objenesis:objenesis:3.3"
-
-    testImplementation(libraries.spock){
-        exclude module:'groovy-all'
-    }
-    testImplementation (libraries.groovy_test)
     testImplementation "io.micronaut:micronaut-http-client"
     testImplementation "io.micronaut:micronaut-http-server-netty"
 }

@@ -21,29 +21,32 @@ import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.util.PublisherExtension;
 import io.micronaut.aop.InterceptedMethod;
+import io.micronaut.aop.InterceptorBean;
 import io.micronaut.aop.MethodInterceptor;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.annotation.Requires;
-import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.convert.ConversionService;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
-import jakarta.inject.Singleton;
 
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
-@Singleton
+@InterceptorBean(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class)
 @Requires(beans = CircuitBreakerRegistry.class)
 public class CircuitBreakerInterceptor extends BaseInterceptor implements MethodInterceptor<Object,Object> {
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final ExecutionHandleLocator executionHandleLocator;
     private final PublisherExtension extension;
 
-    public CircuitBreakerInterceptor(ExecutionHandleLocator executionHandleLocator, CircuitBreakerRegistry circuitBreakerRegistry, PublisherExtension extension) {
+    private final ConversionService conversionService;
+
+    public CircuitBreakerInterceptor(ExecutionHandleLocator executionHandleLocator, CircuitBreakerRegistry circuitBreakerRegistry, PublisherExtension extension, ConversionService conversionService) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.executionHandleLocator = executionHandleLocator;
         this.extension = extension;
+        this.conversionService = conversionService;
     }
 
     @Override
@@ -67,15 +70,14 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
-        Optional<AnnotationValue<io.github.resilience4j.micronaut.annotation.CircuitBreaker>> opt = context.findAnnotation(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class);
-        if (!opt.isPresent()) {
+        if (!context.hasAnnotation(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class)) {
             return context.proceed();
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class, "name").orElse("default");
         CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
 
-        InterceptedMethod interceptedMethod = InterceptedMethod.of(context);
+        InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
         try {
             switch (interceptedMethod.resultType()) {
                 case PUBLISHER:

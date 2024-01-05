@@ -1,0 +1,5 @@
+io.github.resilience4j.micronaut.processor.BulkheadAnnotationRemapper
+io.github.resilience4j.micronaut.processor.RetryAnnotationRemapper
+io.github.resilience4j.micronaut.processor.RateLimiterAnnotationRemapper
+io.github.resilience4j.micronaut.processor.CircuitBreakerAnnotationRemapper
+io.github.resilience4j.micronaut.processor.TimeLimiterRemapper

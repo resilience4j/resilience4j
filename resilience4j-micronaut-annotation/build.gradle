@@ -1,0 +1,13 @@
+dependencies {
+    annotationProcessor(platform(libraries.micronaut))
+    testAnnotationProcessor(platform(libraries.micronaut))
+    implementation(platform(libraries.micronaut))
+    api project(':resilience4j-annotations')
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    implementation "io.micronaut:micronaut-core-processor"
+}
+test {
+    useJUnitPlatform()
+}
+
+ext.moduleName = 'io.github.resilience4j.micronautannotation'

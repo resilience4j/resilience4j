@@ -84,8 +84,11 @@ public class RateLimiterConfig implements Serializable {
     }
 
     private static Duration checkTimeoutDuration(final Duration timeoutDuration) {
-        return validateDurationWithinRange(
-            requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL), TIMEOUT_DURATION_TOO_LARGE);
+        requireNonNull(timeoutDuration, TIMEOUT_DURATION_MUST_NOT_BE_NULL);
+        if (timeoutDuration.isNegative()) {
+            throw new IllegalArgumentException("TimeoutDuration must not be negative");
+        }
+        return validateDurationWithinRange(timeoutDuration, TIMEOUT_DURATION_TOO_LARGE);
     }
 
     private static Duration validateDurationWithinRange(Duration duration, String message) {

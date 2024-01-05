@@ -291,60 +291,96 @@ public class CircuitBreakerConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSize() {
+    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(-1);
+        defaultProperties.setEventConsumerBufferSize(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnFailureRateThreshold() {
+    public void testIllegalArgumentOnFailureRateThresholdLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setFailureRateThreshold(0f);
+        defaultProperties.setFailureRateThreshold(0.999f);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnWaitDurationInOpenState() {
+    public void testIllegalArgumentOnFailureRateThresholdAboveHundred() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDurationInOpenState(Duration.ZERO);
+        defaultProperties.setFailureRateThreshold(100.001f);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnPermittedNumberOfCallsInHalfOpenState() {
+    public void testIllegalArgumentOnWaitDurationInOpenStateLessThanMillisecond() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setWaitDurationInOpenState(Duration.ofNanos(999999));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnPermittedNumberOfCallsInHalfOpenStateLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setPermittedNumberOfCallsInHalfOpenState(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMinimumNumberOfCalls() {
+    public void testIllegalArgumentOnMinimumNumberOfCallsLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setMinimumNumberOfCalls(0);
     }
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlidingWindowSize() {
+    public void testIllegalArgumentOnSlidingWindowSizeLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setSlidingWindowSize(0);
     }
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlowCallRateThreshold() {
+    public void testIllegalArgumentOnSlowCallRateThresholdLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultProperties.setSlowCallRateThreshold(0f);
+        defaultProperties.setSlowCallRateThreshold(0.999f);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnSlowCallRateThresholdAboveHundred() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setSlowCallRateThreshold(100.001f);
     }
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnSlowCallDurationThreshold() {
+    public void testIllegalArgumentOnSlowCallDurationThresholdLessThanOne() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setSlowCallDurationThreshold(Duration.ZERO);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnWaitDurationInHalfOpenState() {
+    public void testIllegalArgumentOnWaitDurationInHalfOpenStateNegative() {
         CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxWaitDurationInHalfOpenState(Duration.ofMillis(-1));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setExponentialBackoffMultiplier(0.0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnExponentialMaxWaitDurationInOpenStateLessThanMillisecond() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setExponentialMaxWaitDurationInOpenState(Duration.ofNanos(999999));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnRandomizedWaitFactorNegative() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setRandomizedWaitFactor(-0.001);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setRandomizedWaitFactor(1.0);
     }
 
     @Test

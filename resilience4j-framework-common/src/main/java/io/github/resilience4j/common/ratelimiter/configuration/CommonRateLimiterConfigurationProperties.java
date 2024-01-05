@@ -167,6 +167,10 @@ public class CommonRateLimiterConfigurationProperties extends CommonProperties {
          * @param limitForPeriod the permissions limit for refresh period
          */
         public InstanceProperties setLimitForPeriod(Integer limitForPeriod) {
+            if (limitForPeriod < 1) {
+                throw new IllegalArgumentException(
+                    "Illegal argument limitForPeriod: " + limitForPeriod + " is less than 1");
+            }
             this.limitForPeriod = limitForPeriod;
             return this;
         }

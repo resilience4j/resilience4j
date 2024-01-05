@@ -26,6 +26,7 @@ import io.github.resilience4j.core.predicate.PredicateCreator;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -140,7 +141,7 @@ public class RetryConfig implements Serializable {
     }
 
     /**
-     * Return the Predicate which evaluates if an result should be retried. The Predicate must
+     * Return the Predicate which evaluates if a result should be retried. The Predicate must
      * return true if the result should be retried, otherwise it must return false.
      *
      * @param <T> The type of result.
@@ -160,6 +161,32 @@ public class RetryConfig implements Serializable {
      */
     public <T> BiConsumer<Integer, T> getConsumeResultBeforeRetryAttempt(){
         return consumeResultBeforeRetryAttempt;
+    }
+    @Override
+    public String toString() {
+        StringBuilder retryConfig = new StringBuilder("RetryConfig {");
+        retryConfig.append("maxAttempts=");
+        retryConfig.append(maxAttempts);
+        retryConfig.append(", failAfterMaxAttempts=");
+        retryConfig.append(failAfterMaxAttempts);
+        retryConfig.append(", writableStackTraceEnabled=");
+        retryConfig.append(writableStackTraceEnabled);
+        retryConfig.append(", intervalFunction=");
+        retryConfig.append(intervalFunction);
+        retryConfig.append(", retryOnExceptionPredicate=");
+        retryConfig.append(retryOnExceptionPredicate);
+        retryConfig.append(", retryOnResultPredicate=");
+        retryConfig.append(retryOnResultPredicate);
+        retryConfig.append(", intervalBiFunction=");
+        retryConfig.append(intervalBiFunction);
+        retryConfig.append(", consumeResultBeforeRetryAttempt=");
+        retryConfig.append(consumeResultBeforeRetryAttempt);
+        retryConfig.append(", retryExceptions=");
+        retryConfig.append(Arrays.toString(retryExceptions));
+        retryConfig.append(", ignoreExceptions=");
+        retryConfig.append(Arrays.toString(ignoreExceptions));
+        retryConfig.append("}");
+        return retryConfig.toString();
     }
 
     public static class Builder<T> {
@@ -186,32 +213,6 @@ public class RetryConfig implements Serializable {
         private Class<? extends Throwable>[] retryExceptions = new Class[0];
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
-
-        @Override
-        public String toString() {
-            StringBuilder retryConfig = new StringBuilder("RetryConfig {");
-            retryConfig.append("maxAttempts=");
-            retryConfig.append(maxAttempts);
-            retryConfig.append(", failAfterMaxAttempts=");
-            retryConfig.append(failAfterMaxAttempts);
-            retryConfig.append(", writableStackTraceEnabled=");
-            retryConfig.append(writableStackTraceEnabled);
-            retryConfig.append(", intervalFunction=");
-            retryConfig.append(intervalFunction);
-            retryConfig.append(", retryOnExceptionPredicate=");
-            retryConfig.append(retryOnExceptionPredicate);
-            retryConfig.append(", retryOnResultPredicate=");
-            retryConfig.append(retryOnResultPredicate);
-            retryConfig.append(", intervalBiFunction=");
-            retryConfig.append(intervalBiFunction);
-            retryConfig.append(", consumeResultBeforeRetryAttempt=");
-            retryConfig.append(consumeResultBeforeRetryAttempt);
-            retryConfig.append(", retryExceptions=");
-            retryConfig.append(retryExceptions);
-            retryConfig.append(", ignoreExceptions=");
-            retryConfig.append(ignoreExceptions);
-            return retryConfig.toString();
-        }
 
         public Builder() {
         }
@@ -423,11 +424,8 @@ public class RetryConfig implements Serializable {
         }
 
         private Predicate<Throwable> createRetryOnExceptionPredicate() {
-            return PredicateCreator.createExceptionsPredicate(retryExceptions)
-                .map(predicate -> retryOnExceptionPredicate != null ? predicate
-                    .or(retryOnExceptionPredicate) : predicate)
-                .orElseGet(() -> retryOnExceptionPredicate != null ? retryOnExceptionPredicate
-                    : DEFAULT_RECORD_FAILURE_PREDICATE);
+            return PredicateCreator.createExceptionsPredicate(retryOnExceptionPredicate, retryExceptions)
+                .orElse(DEFAULT_RECORD_FAILURE_PREDICATE);
         }
     }
 }

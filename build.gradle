@@ -14,7 +14,7 @@ apply from: "${rootDir}/libraries.gradle"
 allprojects {
     apply plugin: 'jacoco'
 
-    version = '2.1.0-SNAPSHOT'
+    version = '2.3.0-SNAPSHOT'
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java17+ and functional programming'
 
@@ -118,6 +118,11 @@ configure(project.coreProjects) {
 
     afterEvaluate {
         jar {
+            from('../') {
+                include 'COPYRIGHT.txt'
+                include 'LICENSE.txt'
+            }
+
             inputs.property('moduleName', moduleName)
             manifest.attributes(
                     'Automatic-Module-Name': moduleName

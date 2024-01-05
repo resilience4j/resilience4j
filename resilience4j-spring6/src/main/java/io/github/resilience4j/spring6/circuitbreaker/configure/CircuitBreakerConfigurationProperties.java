@@ -20,7 +20,7 @@ import org.springframework.core.Ordered;
 public class CircuitBreakerConfigurationProperties extends
     io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties {
 
-    private int circuitBreakerAspectOrder = Ordered.LOWEST_PRECEDENCE - 3;
+    private int circuitBreakerAspectOrder = Ordered.LOWEST_PRECEDENCE - 4;
 
     /**
      * As of release 0.16.0 as we set an implicit spring aspect order now which is retry then

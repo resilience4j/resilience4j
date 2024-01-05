@@ -28,6 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
@@ -164,6 +166,83 @@ public class CompletionStageRetryTest {
             .withMessage("Retry 'retry' has exhausted all attempts (3)");
         then(helloWorldService).should(times(3)).returnHelloWorld();
     }
+
+    @Test
+    public void shouldStopRetryingAndEmitProperEventsIfIntervalFunctionReturnsLessThanZero() {
+        given(helloWorldService.returnHelloWorld())
+                .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
+
+        AtomicInteger numberOfTimesIntervalFunctionCalled = new AtomicInteger(0);
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+                .intervalFunction((ignored) -> {
+                    int numTimesCalled = numberOfTimesIntervalFunctionCalled.incrementAndGet();
+                    return numTimesCalled > 1 ? -1L : 0L;
+                })
+                .maxAttempts(3)
+                .build();
+
+        AtomicInteger numberOfRetryEvents = new AtomicInteger();
+        AtomicBoolean onErrorEventOccurred = new AtomicBoolean(false);
+
+        Retry retry = Retry.of("retry", retryConfig);
+        retry.getEventPublisher().onRetry((ignored) -> numberOfRetryEvents.getAndIncrement());
+        retry.getEventPublisher().onError((ignored) -> onErrorEventOccurred.set(true));
+
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+                retry,
+                scheduler,
+                helloWorldService::returnHelloWorld
+        );
+
+        assertThat(supplier.get())
+                .failsWithin(5, TimeUnit.SECONDS)
+                .withThrowableOfType(ExecutionException.class)
+                .havingCause()
+                .isInstanceOf(HelloWorldException.class)
+                .withMessage("Exceptional!");
+        assertThat(numberOfRetryEvents).hasValue(1);
+        assertThat(onErrorEventOccurred).isTrue();
+        then(helloWorldService).should(times(2)).returnHelloWorld();
+    }
+
+    @Test
+    public void shouldContinueRetryingAndEmitProperEventsIfIntervalFunctionReturnsZeroOrMore() {
+        given(helloWorldService.returnHelloWorld())
+                .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
+
+        AtomicInteger numberOfTimesIntervalFunctionCalled = new AtomicInteger(0);
+        RetryConfig retryConfig = RetryConfig.<String>custom()
+                .intervalFunction((ignored) -> {
+                    // Returns 0, 1, 2
+                    return (long) numberOfTimesIntervalFunctionCalled.getAndIncrement();
+                })
+                .maxAttempts(3)
+                .build();
+
+        AtomicInteger numberOfRetryEvents = new AtomicInteger();
+        AtomicBoolean onErrorEventOccurred = new AtomicBoolean(false);
+
+        Retry retry = Retry.of("retry", retryConfig);
+        retry.getEventPublisher().onRetry((ignored) -> numberOfRetryEvents.getAndIncrement());
+        retry.getEventPublisher().onError((ignored) -> onErrorEventOccurred.set(true));
+
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+                retry,
+                scheduler,
+                helloWorldService::returnHelloWorld
+        );
+
+        assertThat(supplier.get())
+                .failsWithin(5, TimeUnit.SECONDS)
+                .withThrowableOfType(ExecutionException.class)
+                .havingCause()
+                .isInstanceOf(HelloWorldException.class)
+                .withMessage("Exceptional!");
+        assertThat(numberOfRetryEvents).hasValue(2);
+        assertThat(onErrorEventOccurred).isTrue();
+        then(helloWorldService).should(times(3)).returnHelloWorld();
+    }
+
 
     @Test
     public void shouldCompleteFutureAfterOneAttemptInCaseOfExceptionAtAsyncStage() {

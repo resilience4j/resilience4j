@@ -34,9 +34,6 @@ import io.github.resilience4j.common.utils.ConsumeResultBeforeRetryAttempt;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 @RunWith(MockitoJUnitRunner.class)
 public class RetryConfigurationPropertiesTest {
 
@@ -232,21 +229,44 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSize() {
+    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(-1);
+        defaultProperties.setEventConsumerBufferSize(0);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnWaitDuration() {
+    public void testIllegalArgumentOnWaitDurationIsNegative() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDuration(Duration.ofMillis(-1));
+        defaultProperties.setWaitDuration(Duration.ofNanos(-1));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalArgumentOnMaxAttempts() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxAttempts(0);
+    }
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        defaultProperties.setExponentialBackoffMultiplier(0.0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnExponentialMaxWaitDurationNegative() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        defaultProperties.setExponentialMaxWaitDuration(Duration.ofNanos(-1));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnRandomizedWaitFactorNegative() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        defaultProperties.setRandomizedWaitFactor(-0.001);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        defaultProperties.setRandomizedWaitFactor(1.0);
     }
 
     @Test

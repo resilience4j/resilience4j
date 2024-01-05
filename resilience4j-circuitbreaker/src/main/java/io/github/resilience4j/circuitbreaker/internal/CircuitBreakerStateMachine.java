@@ -815,8 +815,8 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         }
 
         private void cancelAutomaticTransitionToHalfOpen() {
-            if (transitionToHalfOpenFuture != null && !transitionToHalfOpenFuture.isDone()) {
-                transitionToHalfOpenFuture.cancel(true);
+            if (transitionToHalfOpenFuture != null) {
+                transitionToHalfOpenFuture.cancel(false);
             }
         }
 
