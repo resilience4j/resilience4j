@@ -45,11 +45,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class SlidingTimeWindowMetrics implements Metrics {
 
-    final PartialAggregation[] partialAggregations;
+    private final PartialAggregation[] partialAggregations;
     private final int timeWindowSizeInSeconds;
     private final TotalAggregation totalAggregation;
     private final Clock clock;
-    int headIndex;
+    private int headIndex;
 
     /**
      * Creates a new {@link SlidingTimeWindowMetrics} with the given clock and window of time.
@@ -76,6 +76,12 @@ public class SlidingTimeWindowMetrics implements Metrics {
         moveWindowToCurrentEpochSecond(getLatestPartialAggregation())
             .record(duration, durationUnit, outcome);
         return new SnapshotImpl(totalAggregation);
+    }
+
+    @Override
+    public void resetRecords() {
+        headIndex = 0;
+        totalAggregation.reset();
     }
 
     public synchronized Snapshot getSnapshot() {
@@ -125,5 +131,13 @@ public class SlidingTimeWindowMetrics implements Metrics {
      */
     void moveHeadIndexByOne() {
         this.headIndex = (headIndex + 1) % timeWindowSizeInSeconds;
+    }
+
+    PartialAggregation[] getPartialAggregations() {
+        return partialAggregations;
+    }
+
+    int getHeadIndex() {
+        return headIndex;
     }
 }
