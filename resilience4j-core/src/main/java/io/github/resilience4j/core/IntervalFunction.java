@@ -235,12 +235,13 @@ final class IntervalFunctionCompanion {
     }
 
     @SuppressWarnings("squid:S2245") // this is not security-sensitive code
+    // Given randomizationFactor is restricted by checkRandomizationFactor the return value => 0.0 <= x < 2 * current
     static double randomize(final double current, final double randomizationFactor) {
         final double delta = randomizationFactor * current;
-        final double min = current - delta;
-        final double max = current + delta;
-
-        return (min + (Math.random() * (max - min + 1)));
+        final double min = current - delta; // 0.0 <= min <= current
+        final double max = current + delta; // current <= max <= 2 * current
+        final double random = Math.random(); // 0.0 >= random < 1.0
+        return min + random * (max - min); // min <= return < max, 0.0 <= return < 2 * current
     }
 
     static void checkInterval(long intervalMillis) {
