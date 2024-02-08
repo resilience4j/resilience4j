@@ -57,11 +57,11 @@ public final class Resilience4jFeign {
         }
 
         @Override
-        public Feign build() {
+        public Feign internalBuild() {
             super.invocationHandlerFactory(
                 (target, dispatch) -> new DecoratorInvocationHandler(target, dispatch,
                     invocationDecorator));
-            return super.build();
+            return super.internalBuild();
         }
 
     }
