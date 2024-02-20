@@ -536,7 +536,19 @@ public interface RateLimiter {
      * @return the decorated CompletionStage.
      */
     default <T> CompletionStage<T> executeCompletionStage(Supplier<CompletionStage<T>> supplier) {
-        return decorateCompletionStage(this, supplier).get();
+        return executeCompletionStage(1, supplier);
+    }
+
+    /**
+     * Decorates and executes the decorated CompletionStage.
+     *
+     * @param permits  number of permits that this call requires
+     * @param supplier the original CompletionStage
+     * @param <T>      the type of results supplied by this supplier
+     * @return the decorated CompletionStage.
+     */
+    default <T> CompletionStage<T> executeCompletionStage(int permits, Supplier<CompletionStage<T>> supplier) {
+        return decorateCompletionStage(this, permits, supplier).get();
     }
 
     /**

@@ -112,12 +112,13 @@ public class RateLimiterAspect implements Ordered {
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
             methodName, name);
         Class<?> returnType = method.getReturnType();
-        final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
+        int permits = rateLimiterAnnotation.permits();
+        final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter, permits);
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
-        Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
+                           Class<?> returnType, io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, int permits)
         throws Throwable {
         if (rateLimiterAspectExtList != null && !rateLimiterAspectExtList.isEmpty()) {
             for (RateLimiterAspectExt rateLimiterAspectExt : rateLimiterAspectExtList) {
@@ -128,9 +129,9 @@ public class RateLimiterAspect implements Ordered {
             }
         }
         if (CompletionStage.class.isAssignableFrom(returnType)) {
-            return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter);
+            return handleJoinPointCompletableFuture(proceedingJoinPoint, rateLimiter, permits);
         }
-        return handleJoinPoint(proceedingJoinPoint, rateLimiter);
+        return handleJoinPoint(proceedingJoinPoint, rateLimiter, permits);
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName,
@@ -165,9 +166,9 @@ public class RateLimiterAspect implements Ordered {
     }
 
     private Object handleJoinPoint(ProceedingJoinPoint proceedingJoinPoint,
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter)
+                                   io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, int permits)
         throws Throwable {
-        return rateLimiter.executeCheckedSupplier(proceedingJoinPoint::proceed);
+        return rateLimiter.executeCheckedSupplier(permits, proceedingJoinPoint::proceed);
     }
 
     /**
@@ -175,11 +176,12 @@ public class RateLimiterAspect implements Ordered {
      *
      * @param proceedingJoinPoint AOPJoinPoint
      * @param rateLimiter         configured rate limiter
+     * @param permits
      * @return CompletionStage
      */
     private Object handleJoinPointCompletableFuture(ProceedingJoinPoint proceedingJoinPoint,
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter) {
-        return rateLimiter.executeCompletionStage(() -> {
+                                                    io.github.resilience4j.ratelimiter.RateLimiter rateLimiter, int permits) {
+        return rateLimiter.executeCompletionStage(permits, () -> {
             try {
                 return (CompletionStage<?>) proceedingJoinPoint.proceed();
             } catch (Throwable throwable) {
