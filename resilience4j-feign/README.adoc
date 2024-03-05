@@ -14,8 +14,9 @@ resilience4j-feign makes it easy to incorporate "fault tolerance" patterns into 
  
 == Decorating Feign Interfaces
 
-The `Resilience4jFeign.builder` is the main class for creating fault tolerance instances of feign. 
-It extends the `Feign.builder` and can be configured in the same way with the exception of adding a custom 
+The `Resilience4jFeign.capability` is the main class for creating fault tolerance instances of feign.
+It proves a mechanism to bind feign with resilience4j using the capabilities api implemented in feign 10.9.
+Previous releases relied on Resilience4jFeign.builder, which used a mechanism that is no longer working since feign 12.5.
 `InvocationHandlerFactory`. Resilience4jFeign uses its own `InvocationHandlerFactory` to apply the decorators.
 Decorators can be built using the `FeignDecorators` class. Multiple decorators can be combined  
 
@@ -35,7 +36,9 @@ The following example shows how to decorate a feign interface with a RateLimiter
                                          .withRateLimiter(rateLimiter)
                                          .withCircuitBreaker(circuitBreaker)
                                          .build();
-        MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
+        MyService myService = Feign.builder()
+                                .addCapability(Resilience4jFeign.capability(decorators))
+                                .target(MyService.class, "http://localhost:8080/");
 ```
 
 Calling any method of the `MyService` instance will invoke a CircuitBreaker and then a RateLimiter.
@@ -82,7 +85,9 @@ Fallbacks can be defined that are called when Exceptions are thrown. Exceptions 
                                          .withFallback(requestFailedFallback, FeignException.class)
                                          .withFallback(circuitBreakerFallback, CallNotPermittedException.class)
                                          .build();
-        MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/", fallback);
+        MyService myService = Feign.builder()
+                                .addCapability(Resilience4jFeign.capability(decorators))
+                                .target(MyService.class, "http://localhost:8080/", fallback);
 ```
 In this example, the `requestFailedFallback` is called when a `FeignException` is thrown (usually when the HTTP request fails), whereas
  the `circuitBreakerFallback` is only called in the case of a `CallNotPermittedException`.

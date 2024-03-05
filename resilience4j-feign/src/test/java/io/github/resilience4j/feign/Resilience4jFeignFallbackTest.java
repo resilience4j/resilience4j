@@ -17,6 +17,7 @@
 package io.github.resilience4j.feign;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.feign.test.TestService;
@@ -52,7 +53,9 @@ public class Resilience4jFeignFallbackTest {
             .withFallback(testServiceFallback)
             .build();
 
-        testService = Resilience4jFeign.builder(decorators).target(TestService.class, MOCK_URL);
+        testService = Feign.builder()
+            .addCapability(Resilience4jFeign.capability(decorators))
+            .target(TestService.class, MOCK_URL);
     }
 
     @Test
