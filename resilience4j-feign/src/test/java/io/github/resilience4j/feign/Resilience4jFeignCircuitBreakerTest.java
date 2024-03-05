@@ -17,6 +17,7 @@
 package io.github.resilience4j.feign;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -50,7 +51,8 @@ public class Resilience4jFeignCircuitBreakerTest {
         circuitBreaker = CircuitBreaker.of("test", circuitBreakerConfig);
         final FeignDecorators decorators = FeignDecorators.builder()
             .withCircuitBreaker(circuitBreaker).build();
-        testService = Resilience4jFeign.builder(decorators)
+        testService = Feign.builder()
+            .addCapability(Resilience4jFeign.capability(decorators))
             .target(TestService.class, "http://localhost:8080/");
     }
 
