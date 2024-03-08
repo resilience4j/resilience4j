@@ -81,4 +81,29 @@ public class CircuitBreakerRecoveryTest {
     public void testFlowableRecovery() {
         assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
     }
+
+    @Test
+    public void testRx3ObservableRecovery() {
+        assertThat(testDummyService.rx3Observable().blockingFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testRx3SingleRecovery() {
+        assertThat(testDummyService.rx3Single().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testRx3CompletableRecovery() {
+        testDummyService.rx3Completable().test().assertComplete();
+    }
+
+    @Test
+    public void testRx3MaybeRecovery() {
+        assertThat(testDummyService.rx3Maybe().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testRx3FlowableRecovery() {
+        assertThat(testDummyService.rx3Flowable().blockingFirst()).isEqualTo("recovered");
+    }
 }

@@ -28,6 +28,7 @@ import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.spelresolver.configure.SpelResolverConfiguration;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -98,6 +99,12 @@ public class TimeLimiterConfiguration {
     @Conditional({RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public RxJava2TimeLimiterAspectExt rxJava2TimeLimiterAspectExt() {
         return new RxJava2TimeLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional({RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public RxJava3TimeLimiterAspectExt rxJava3TimeLimiterAspectExt() {
+        return new RxJava3TimeLimiterAspectExt();
     }
 
     @Bean

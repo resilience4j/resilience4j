@@ -81,4 +81,29 @@ public class RetryRecoveryTest {
     public void testFlowableRecovery() {
         assertThat(testDummyService.flowable().blockingFirst()).isEqualTo("recovered");
     }
+
+    @Test
+    public void testRx3ObservableRecovery() {
+        assertThat(testDummyService.rx3Observable().blockingFirst()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testRx3SingleRecovery() {
+        assertThat(testDummyService.rx3Single().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testRx3CompletableRecovery() {
+        assertThat(testDummyService.rx3Completable().blockingAwait(2, TimeUnit.SECONDS)).isTrue();
+    }
+
+    @Test
+    public void testRx3MaybeRecovery() {
+        assertThat(testDummyService.rx3Maybe().blockingGet()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testRx3FlowableRecovery() {
+        assertThat(testDummyService.rx3Flowable().blockingFirst()).isEqualTo("recovered");
+    }
 }

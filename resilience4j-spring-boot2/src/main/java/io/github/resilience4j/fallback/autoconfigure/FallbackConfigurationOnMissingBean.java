@@ -22,6 +22,7 @@ import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurati
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +64,13 @@ public class FallbackConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2FallbackDecorator rxJava2FallbackDecorator() {
         return fallbackConfiguration.rxJava2FallbackDecorator();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3FallbackDecorator rxJava3FallbackDecorator() {
+        return fallbackConfiguration.rxJava3FallbackDecorator();
     }
 
     @Bean

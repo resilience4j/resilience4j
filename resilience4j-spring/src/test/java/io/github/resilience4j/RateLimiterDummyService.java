@@ -1,5 +1,6 @@
 package io.github.resilience4j;
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.reactivex.*;
 import org.springframework.stereotype.Component;
@@ -75,6 +76,36 @@ public class RateLimiterDummyService implements TestDummyService {
     @RateLimiter(name = BACKEND, fallbackMethod = "flowableRecovery")
     public Flowable<String> flowable() {
         return flowableError();
+    }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "rx3ObservableRecovery")
+    public io.reactivex.rxjava3.core.Observable<String> rx3Observable() {
+        return rx3ObservableError();
+    }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "rx3SingleRecovery")
+    public io.reactivex.rxjava3.core.Single<String> rx3Single() {
+        return rx3SingleError();
+    }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "rx3CompletableRecovery")
+    public io.reactivex.rxjava3.core.Completable rx3Completable() {
+        return rx3CompletableError();
+    }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "rx3MaybeRecovery")
+    public io.reactivex.rxjava3.core.Maybe<String> rx3Maybe() {
+        return rx3MaybeError();
+    }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "rx3FlowableRecovery")
+    public io.reactivex.rxjava3.core.Flowable<String> rx3Flowable() {
+        return rx3FlowableError();
     }
 
     @Override

@@ -35,6 +35,7 @@ import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurati
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -106,6 +107,13 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
         return bulkheadConfiguration.rxJava2BulkHeadAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3BulkheadAspectExt rxJava3BulkHeadAspectExt() {
+        return bulkheadConfiguration.rxJava3BulkHeadAspectExt();
     }
 
     @Bean

@@ -34,6 +34,7 @@ import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
@@ -170,6 +171,12 @@ public class RetryConfiguration {
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
         return new RxJava2RetryAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public RxJava3RetryAspectExt rxJava3RetryAspectExt() {
+        return new RxJava3RetryAspectExt();
     }
 
     @Bean

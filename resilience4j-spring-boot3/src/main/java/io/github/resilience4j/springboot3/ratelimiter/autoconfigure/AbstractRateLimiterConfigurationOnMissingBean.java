@@ -20,6 +20,7 @@ import io.github.resilience4j.common.ratelimiter.configuration.RateLimiterConfig
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
@@ -96,6 +97,13 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt() {
         return rateLimiterConfiguration.rxJava2RateLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3RateLimiterAspectExt rxJava3RateLimiterAspectExt() {
+        return rateLimiterConfiguration.rxJava3RateLimiterAspectExt();
     }
 
     @Bean

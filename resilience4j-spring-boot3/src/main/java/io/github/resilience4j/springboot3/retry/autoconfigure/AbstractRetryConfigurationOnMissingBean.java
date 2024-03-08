@@ -21,6 +21,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -110,6 +111,13 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
         return retryConfiguration.rxJava2RetryAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3RetryAspectExt rxJava3RetryAspectExt() {
+        return retryConfiguration.rxJava3RetryAspectExt();
     }
 
     @Bean
