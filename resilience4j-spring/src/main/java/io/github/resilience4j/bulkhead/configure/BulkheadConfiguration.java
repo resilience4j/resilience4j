@@ -35,6 +35,7 @@ import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
@@ -166,6 +167,12 @@ public class BulkheadConfiguration {
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public RxJava2BulkheadAspectExt rxJava2BulkHeadAspectExt() {
         return new RxJava2BulkheadAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public RxJava3BulkheadAspectExt rxJava3BulkHeadAspectExt() {
+        return new RxJava3BulkheadAspectExt();
     }
 
     @Bean

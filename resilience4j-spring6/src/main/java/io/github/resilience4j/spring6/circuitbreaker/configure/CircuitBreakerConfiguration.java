@@ -33,6 +33,7 @@ import io.github.resilience4j.spring6.spelresolver.configure.SpelResolverConfigu
 import io.github.resilience4j.spring6.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
@@ -105,6 +106,12 @@ public class CircuitBreakerConfiguration {
     @Conditional(value = {RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public RxJava2CircuitBreakerAspectExt rxJava2CircuitBreakerAspect() {
         return new RxJava2CircuitBreakerAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public RxJava3CircuitBreakerAspectExt rxJava3CircuitBreakerAspect() {
+        return new RxJava3CircuitBreakerAspectExt();
     }
 
     @Bean

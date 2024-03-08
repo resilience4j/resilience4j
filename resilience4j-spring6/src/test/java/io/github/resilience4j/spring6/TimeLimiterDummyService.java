@@ -78,6 +78,36 @@ public class TimeLimiterDummyService implements TestDummyService {
     }
 
     @Override
+    @TimeLimiter(name = BACKEND, fallbackMethod = "rx3ObservableRecovery")
+    public io.reactivex.rxjava3.core.Observable<String> rx3Observable() {
+        return rx3ObservableError();
+    }
+
+    @Override
+    @TimeLimiter(name = BACKEND, fallbackMethod = "rx3SingleRecovery")
+    public io.reactivex.rxjava3.core.Single<String> rx3Single() {
+        return rx3SingleError();
+    }
+
+    @Override
+    @TimeLimiter(name = BACKEND, fallbackMethod = "rx3CompletableRecovery")
+    public io.reactivex.rxjava3.core.Completable rx3Completable() {
+        return rx3CompletableError();
+    }
+
+    @Override
+    @TimeLimiter(name = BACKEND, fallbackMethod = "rx3MaybeRecovery")
+    public io.reactivex.rxjava3.core.Maybe<String> rx3Maybe() {
+        return rx3MaybeError();
+    }
+
+    @Override
+    @TimeLimiter(name = BACKEND, fallbackMethod = "rx3FlowableRecovery")
+    public io.reactivex.rxjava3.core.Flowable<String> rx3Flowable() {
+        return rx3FlowableError();
+    }
+
+    @Override
     @TimeLimiter(name = "#root.args[0]", fallbackMethod = "${missing.property:monoRecovery}")
     public Mono<String> spelMono(String backend) {
         return monoError(backend);
