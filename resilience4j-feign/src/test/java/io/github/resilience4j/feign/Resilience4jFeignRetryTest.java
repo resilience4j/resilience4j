@@ -17,6 +17,7 @@
 package io.github.resilience4j.feign;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.retry.Retry;
@@ -47,7 +48,8 @@ public class Resilience4jFeignRetryTest {
         final FeignDecorators decorators = FeignDecorators.builder()
             .withRetry(retry)
             .build();
-        testService = Resilience4jFeign.builder(decorators)
+        testService = Feign.builder()
+            .addCapability(Resilience4jFeign.capability(decorators))
             .target(TestService.class, MOCK_URL);
     }
 
