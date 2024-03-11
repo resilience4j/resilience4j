@@ -27,11 +27,9 @@ public class RefreshScopedCircuitBreakerAutoConfiguration {
 
 
     private final CircuitBreakerConfiguration circuitBreakerConfiguration;
-    private final CircuitBreakerConfigurationProperties circuitBreakerProperties;
 
     public RefreshScopedCircuitBreakerAutoConfiguration(
         CircuitBreakerConfigurationProperties circuitBreakerProperties) {
-        this.circuitBreakerProperties = circuitBreakerProperties;
         this.circuitBreakerConfiguration = new CircuitBreakerConfiguration(
             circuitBreakerProperties);
     }
