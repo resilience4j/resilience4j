@@ -32,7 +32,7 @@ suspend fun <T> Retry.executeSuspendFunction(block: suspend () -> T): T {
         try {
             val result = block()
             val delayMs = retryContext.onResult(result)
-            if (delayMs < 1) {
+            if (delayMs < 0) {
                 retryContext.onComplete()
                 return result
             } else {
@@ -40,7 +40,7 @@ suspend fun <T> Retry.executeSuspendFunction(block: suspend () -> T): T {
             }
         } catch (e: Exception) {
             val delayMs = retryContext.onError(e)
-            if (delayMs < 1) {
+            if (delayMs < 0) {
                 throw e
             } else {
                 delay(delayMs)
