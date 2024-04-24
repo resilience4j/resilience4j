@@ -239,8 +239,9 @@ final class IntervalFunctionCompanion {
         final double delta = randomizationFactor * current;
         final double min = current - delta;
         final double max = current + delta;
+        final double randomizedValue = min + (Math.random() * (max - min + 1));
 
-        return (min + (Math.random() * (max - min + 1)));
+        return Math.max(1.0, randomizedValue);
     }
 
     static void checkInterval(long intervalMillis) {
