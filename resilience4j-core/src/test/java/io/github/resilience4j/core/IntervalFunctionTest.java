@@ -118,7 +118,7 @@ public class IntervalFunctionTest {
     public void shouldPassPositiveRandomizationFactor() {
         final Duration duration = Duration.ofMillis(100);
         final float multiplier = 1.5f;
-        final List<Float> correctFactors = List.of(0.0f, 0.25f, 0.5f, 0.75f, 0.1f);
+        final List<Float> correctFactors = List.of(0.0f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f);
 
         correctFactors.forEach(v -> IntervalFunction.ofRandomized(duration, v));
         correctFactors
