@@ -45,4 +45,11 @@ public @interface RateLimiter {
      * @return fallbackMethod method name.
      */
     String fallbackMethod() default "";
+
+    /**
+     * Number of permits that this call requires.
+     *
+     * @return the number of permits that this call requires.
+     */
+    int permits() default 1;
 }

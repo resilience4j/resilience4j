@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEndpointResponse;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventDTO;
 import io.github.resilience4j.common.ratelimiter.monitoring.endpoint.RateLimiterEventsEndpointResponse;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.ratelimiter.autoconfigure.RateLimiterProperties;
 import io.github.resilience4j.ratelimiter.configure.RateLimiterAspect;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
@@ -65,6 +66,8 @@ public class RateLimiterAutoConfigurationTest {
     private TestRestTemplate restTemplate;
     @Autowired
     private RateLimiterDummyFeignClient rateLimiterDummyFeignClient;
+    @Autowired
+    private EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry;
 
     /**
      * This test verifies that the combination of @FeignClient and @RateLimiter annotation works as
@@ -207,5 +210,23 @@ public class RateLimiterAutoConfigurationTest {
         RateLimiter backendCustomizer = rateLimiterRegistry.rateLimiter("backendCustomizer");
         assertThat(backendCustomizer.getRateLimiterConfig().getLimitForPeriod()).isEqualTo(200);
 
+    }
+
+
+    @Test
+    public void testPermitsInRateLimiterAnnotation() {
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(DummyService.BACKEND);
+        await()
+                .atMost(2, TimeUnit.SECONDS)
+                .until(() -> rateLimiter.getMetrics().getAvailablePermissions() == 10);
+
+        dummyService.doSomethingExpensive();
+        assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(0);
+
+        assertThat(eventConsumerRegistry.getEventConsumer(DummyService.BACKEND).getBufferedEvents()).last()
+                .satisfies(event -> {
+                    assertThat(event.getEventType()).isEqualTo(RateLimiterEvent.Type.SUCCESSFUL_ACQUIRE);
+                    assertThat(event.getNumberOfPermits()).isEqualTo(10);
+                });
     }
 }
