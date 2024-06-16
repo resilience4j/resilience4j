@@ -197,18 +197,16 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         if (maxWaitDuration != null &&
             randomizedWaitFactor != null &&
             backoffMultiplier != null) {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier, randomizedWaitFactor, maxWaitDuration));
+            withIntervalBiFunction(builder,
+                    IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier, randomizedWaitFactor, maxWaitDuration));
         } else if (randomizedWaitFactor != null &&
             backoffMultiplier != null) {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier, randomizedWaitFactor));
+            withIntervalBiFunction(builder,
+                    IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier, randomizedWaitFactor));
         } else if (backoffMultiplier != null) {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier));
+            withIntervalBiFunction(builder, IntervalFunction.ofExponentialRandomBackoff(waitDuration, backoffMultiplier));
         } else {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialRandomBackoff(waitDuration));
+            withIntervalBiFunction(builder, IntervalFunction.ofExponentialRandomBackoff(waitDuration));
         }
     }
 
@@ -218,14 +216,11 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         Duration maxWaitDuration = properties.getExponentialMaxWaitDuration();
         if (maxWaitDuration != null &&
             backoffMultiplier != null) {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier, maxWaitDuration));
+            withIntervalBiFunction(builder, IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier, maxWaitDuration));
         } else if (backoffMultiplier != null) {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier));
+            withIntervalBiFunction(builder, IntervalFunction.ofExponentialBackoff(waitDuration, backoffMultiplier));
         } else {
-            builder.intervalFunction(
-                IntervalFunction.ofExponentialBackoff(waitDuration));
+            withIntervalBiFunction(builder, IntervalFunction.ofExponentialBackoff(waitDuration));
         }
     }
 
@@ -233,12 +228,14 @@ public class CommonRetryConfigurationProperties extends CommonProperties {
         Duration waitDuration = properties.getWaitDuration();
         Double randomizedWaitFactor = properties.getRandomizedWaitFactor();
         if (randomizedWaitFactor != null) {
-            builder.intervalFunction(
-                IntervalFunction.ofRandomized(waitDuration, randomizedWaitFactor));
+            withIntervalBiFunction(builder, IntervalFunction.ofRandomized(waitDuration, randomizedWaitFactor));
         } else {
-            builder.intervalFunction(
-                IntervalFunction.ofRandomized(waitDuration));
+            withIntervalBiFunction(builder, IntervalFunction.ofRandomized(waitDuration));
         }
+    }
+
+    private void withIntervalBiFunction(RetryConfig.Builder<Object> builder, IntervalFunction intervalFunction) {
+        builder.intervalBiFunction(IntervalBiFunction.ofIntervalFunction(intervalFunction));
     }
 
     /**

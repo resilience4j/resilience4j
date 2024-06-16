@@ -82,8 +82,8 @@ public class RetryConfigurationPropertiesTest {
         assertThat(retry1.getConsumeResultBeforeRetryAttempt().getClass()).isEqualTo(ConsumeResultBeforeRetryAttempt.class);
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
-        assertThat(retry2.getIntervalFunction().apply(1)).isEqualTo(99L);
-        assertThat(retry2.getIntervalFunction().apply(2)).isEqualTo(99L);
+        assertThat(retry2.getIntervalBiFunction().apply(1,null)).isEqualTo(99L);
+        assertThat(retry2.getIntervalBiFunction().apply(2,null)).isEqualTo(99L);
         assertThat(retry2.isFailAfterMaxAttempts()).isFalse();
         assertThat(retry2.getConsumeResultBeforeRetryAttempt()).isNull();
     }
