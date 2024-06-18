@@ -17,6 +17,7 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.circuitbreaker.IgnoredException;
 import io.github.resilience4j.common.retry.monitoring.endpoint.RetryEventsEndpointResponse;
+import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.retry.autoconfigure.RetryProperties;
 import io.github.resilience4j.retry.configure.RetryAspect;
 import io.github.resilience4j.service.test.TestApplication;
@@ -98,10 +99,10 @@ public class RetryAutoConfigurationRxJavaTest {
         assertThat(retry.getRetryConfig().getExceptionPredicate().test(new IgnoredException()))
             .isFalse();
 
-        Function<Integer, Long> exponentialBackoff = retry.getRetryConfig().getIntervalFunction();
-        assertThat(exponentialBackoff.apply(1)).isEqualTo(100);
-        assertThat(exponentialBackoff.apply(2)).isEqualTo(200);
-        assertThat(exponentialBackoff.apply(3)).isEqualTo(222);
+        IntervalBiFunction<?> exponentialBackoff = retry.getRetryConfig().getIntervalBiFunction();
+        assertThat(exponentialBackoff.apply(1,null)).isEqualTo(100);
+        assertThat(exponentialBackoff.apply(2,null)).isEqualTo(200);
+        assertThat(exponentialBackoff.apply(3,null)).isEqualTo(222);
 
         assertThat(retryAspect.getOrder()).isEqualTo(399);
 
