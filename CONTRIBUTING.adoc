@@ -55,13 +55,13 @@ NOTE: We use https://guides.github.com/introduction/flow/index.html[Github Flow]
 
 Pull Requests are the best way to propose changes to the codebase:
 
-. Fork the repo and create your branch from `master`.
+. Fork the repo and create your branch from `+master+`.
 . If you added code, add tests.
-. Don't forget about backward compatibility and `Javadoc` for public methods.
+. Don't forget about backward compatibility and `+Javadoc+` for public methods.
 . Apply out Twitter based coding style link:.editorconfig[.editorconfig]
 (https://blog.jetbrains.com/idea/2019/06/managing-code-style-on-a-directory-level-with-editorconfig/[Idea])
 and https://gist.github.com/wojteklu/73c6914cc446146b8b533c0988cf8d29[Clean Code] rules.
-. Use our commit message format: `Issue #699: Fixed/Added bla bla`
+. Use our commit message format: `+Issue #699: Fixed/Added bla bla+`
 . Send that Pull Request and participate in a code review.
 . After a merge update the documentation especially if you've changed API (public methods).
 
@@ -73,7 +73,7 @@ and static imports for them.
 Please write test body in the _Arrange-Act-Assert_ manner.
 Keep _Act (When)_ section as small as possible.
 
-TIP: Instead of `//Given` `//When` `//Then` comments separate sections by a new line.
+TIP: Instead of `+//Given+` `+//When+` `+//Then+` comments separate sections by a new line.
 For complex _Given_ setup you can extract private methods.
 
 

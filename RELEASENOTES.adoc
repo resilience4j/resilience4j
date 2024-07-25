@@ -39,7 +39,7 @@
 * CircuitBreakerRegistry has a new method which takes a Supplier of a CircuitBreakerConfig so that the CircuitBreakerConfig is only created when needed.
 
 === Version 0.3.3
-* CircuitBreaker has a new method `getCircuitBreakerConfig` which allows to retrieve the CircuitBreakerConfig of the CircuitBreaker.
+* CircuitBreaker has a new method `+getCircuitBreakerConfig+` which allows to retrieve the CircuitBreakerConfig of the CircuitBreaker.
 * Renamed the state HALF_CLOSED to HALF_OPEN to match the pattern description of Martin Fowler.
 
 === Version 0.3.4
@@ -133,7 +133,7 @@ NOTE: Breaking changes:
 * PR #166: Bulkhead metrics for Dropwizard metrics module
 * PR #176: Retrofit enqueue support for circuit breaker and rate limiter
 * PR #177: Dynamic rate limiter configuration
-* PR #181: RxJava bulkhead operator for `Maybe` and `Completable`
+* PR #181: RxJava bulkhead operator for `+Maybe+` and `+Completable+`
 * PR #169: Bulkhead integration with Ratpack and call finished metric for bulkhead
 * PR #184: Dynamic bulkhead configuration
 
@@ -331,7 +331,7 @@ NOTE: Breaking changes:
 === Enhancements
 * RetryConfig.DEFAULT_MAX_ATTEMPTS should be public [#1180](https://github.com/resilience4j/resilience4j/issues/1180)
 * Circuitbreaker doesn't open when nested TimeLimiter throws TimeOutCancellationException [#1123](https://github.com/resilience4j/resilience4j/issues/1123)
-* Enhance Server Side Events  `/circuitbreaker/events`  [#1076](https://github.com/resilience4j/resilience4j/issues/1076)
+* Enhance Server Side Events  `+/circuitbreaker/events+`  [#1076](https://github.com/resilience4j/resilience4j/issues/1076)
 * CallNotPermittedException should contain circuit breaker name (and possibly other information) [#1062](https://github.com/resilience4j/resilience4j/issues/1062)
 * Retry: Exponential backoff with constant behaviour after certain time [#1044](https://github.com/resilience4j/resilience4j/issues/1044)
 * Respecting the clock set in the CircuitBreakerStateMachine for detecting slow calls [#734](https://github.com/resilience4j/resilience4j/issues/734)
@@ -401,12 +401,12 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 * Issue #1787: Apply Spring Boot customizers even if there is no instance entry in the config file
 * Removed deprecated configuration properties [#1188](https://github.com/resilience4j/resilience4j/pull/1188)
 ** Circutbreaker:
-*** `ringBufferSizeInClosedState` replaced by `slidingWindowSize`
-*** `ringBufferSizeInHalfOpenState` replaced by `permittedNumberOfCallsInHalfOpenState`
+*** `+ringBufferSizeInClosedState+` replaced by `+slidingWindowSize+`
+*** `+ringBufferSizeInHalfOpenState+` replaced by `+permittedNumberOfCallsInHalfOpenState+`
 ** Retry:
-*** `maxRetryAttempts` replaced by `maxAttempts`
+*** `+maxRetryAttempts+` replaced by `+maxAttempts+`
 ** Bulkhead:
-*** `contextPropagator` list replaced by `contextPropagators`
+*** `+contextPropagator+` list replaced by `+contextPropagators+`
 
 ==== Bugs
 
