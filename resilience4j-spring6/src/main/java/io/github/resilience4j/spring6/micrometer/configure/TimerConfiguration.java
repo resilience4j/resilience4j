@@ -34,6 +34,7 @@ import io.github.resilience4j.spring6.spelresolver.configure.SpelResolverConfigu
 import io.github.resilience4j.spring6.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -96,6 +97,12 @@ public class TimerConfiguration {
     @Conditional({RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public RxJava2TimerAspectExt rxJava2TimerAspectExt() {
         return new RxJava2TimerAspectExt();
+    }
+
+    @Bean
+    @Conditional({RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    public RxJava3TimerAspectExt rxJava3TimerAspectExt() {
+        return new RxJava3TimerAspectExt();
     }
 
     @Bean

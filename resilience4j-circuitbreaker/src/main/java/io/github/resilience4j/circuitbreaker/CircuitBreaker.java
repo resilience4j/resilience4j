@@ -363,7 +363,7 @@ public interface CircuitBreaker {
      *
      * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig a custom CircuitBreaker configuration
-     * @param tags                 tags added to the Retry
+     * @param tags                 tags added to the CircuitBreaker
      * @return a CircuitBreaker with a custom CircuitBreaker configuration.
      */
     static CircuitBreaker of(String name, CircuitBreakerConfig circuitBreakerConfig, Map<String, String> tags) {
@@ -611,9 +611,9 @@ public interface CircuitBreaker {
     Metrics getMetrics();
 
     /**
-     * Returns an unmodifiable map with tags assigned to this Retry.
+     * Returns an unmodifiable map with tags assigned to this CircuitBreaker.
      *
-     * @return the tags assigned to this Retry in an unmodifiable map
+     * @return the tags assigned to this CircuitBreaker in an unmodifiable map
      */
     Map<String, String> getTags();
 

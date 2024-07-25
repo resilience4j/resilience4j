@@ -651,7 +651,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             Objects.requireNonNull(slowCallDurationThreshold);
             if (slowCallDurationThreshold.toNanos() < 1) {
                 throw new IllegalArgumentException(
-                    "waitDurationInOpenStateMillis must be greater than or equal to 1 nanos.");
+                    "slowCallDurationThreshold must be greater than or equal to 1 nanos.");
             }
 
             this.slowCallDurationThreshold = slowCallDurationThreshold;

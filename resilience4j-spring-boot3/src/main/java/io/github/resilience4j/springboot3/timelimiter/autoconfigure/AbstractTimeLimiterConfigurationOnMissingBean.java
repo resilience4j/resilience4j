@@ -22,6 +22,7 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.springboot3.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
@@ -96,6 +97,13 @@ public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2TimeLimiterAspectExt rxJava2TimeLimiterAspectExt() {
         return timeLimiterConfiguration.rxJava2TimeLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional({RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3TimeLimiterAspectExt rxJava3TimeLimiterAspectExt() {
+        return timeLimiterConfiguration.rxJava3TimeLimiterAspectExt();
     }
 
     @Bean

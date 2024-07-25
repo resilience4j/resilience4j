@@ -49,6 +49,16 @@ public interface TestDummyService {
 
     Flowable<String> flowable();
 
+    io.reactivex.rxjava3.core.Observable<String> rx3Observable();
+
+    io.reactivex.rxjava3.core.Single<String> rx3Single();
+
+    io.reactivex.rxjava3.core.Completable rx3Completable();
+
+    io.reactivex.rxjava3.core.Maybe<String> rx3Maybe();
+
+    io.reactivex.rxjava3.core.Flowable<String> rx3Flowable();
+
     default String spelSync(String backend) {
         return syncError();
     }
@@ -96,6 +106,26 @@ public interface TestDummyService {
         return Flowable.error(new RuntimeException("Test"));
     }
 
+    default io.reactivex.rxjava3.core.Observable<String> rx3ObservableError() {
+        return io.reactivex.rxjava3.core.Observable.error(new RuntimeException("Test"));
+    }
+
+    default io.reactivex.rxjava3.core.Single<String> rx3SingleError() {
+        return io.reactivex.rxjava3.core.Single.error(new RuntimeException("Test"));
+    }
+
+    default io.reactivex.rxjava3.core.Completable rx3CompletableError() {
+        return io.reactivex.rxjava3.core.Completable.error(new RuntimeException("Test"));
+    }
+
+    default io.reactivex.rxjava3.core.Maybe<String> rx3MaybeError() {
+        return io.reactivex.rxjava3.core.Maybe.error(new RuntimeException("Test"));
+    }
+
+    default io.reactivex.rxjava3.core.Flowable<String> rx3FlowableError() {
+        return io.reactivex.rxjava3.core.Flowable.error(new RuntimeException("Test"));
+    }
+
     default String recovery(RuntimeException throwable) {
         return "recovered";
     }
@@ -130,5 +160,25 @@ public interface TestDummyService {
 
     default Flowable<String> flowableRecovery(Throwable throwable) {
         return Flowable.just("recovered");
+    }
+
+    default io.reactivex.rxjava3.core.Observable<String> rx3ObservableRecovery(Throwable throwable) {
+        return io.reactivex.rxjava3.core.Observable.just("recovered");
+    }
+
+    default io.reactivex.rxjava3.core.Single<String> rx3SingleRecovery(Throwable throwable) {
+        return io.reactivex.rxjava3.core.Single.just("recovered");
+    }
+
+    default io.reactivex.rxjava3.core.Completable rx3CompletableRecovery(Throwable throwable) {
+        return io.reactivex.rxjava3.core.Completable.complete();
+    }
+
+    default io.reactivex.rxjava3.core.Maybe<String> rx3MaybeRecovery(Throwable throwable) {
+        return io.reactivex.rxjava3.core.Maybe.just("recovered");
+    }
+
+    default io.reactivex.rxjava3.core.Flowable<String> rx3FlowableRecovery(Throwable throwable) {
+        return io.reactivex.rxjava3.core.Flowable.just("recovered");
     }
 }

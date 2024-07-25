@@ -31,6 +31,7 @@ import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurati
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -110,6 +111,13 @@ public abstract class AbstractRetryConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2RetryAspectExt rxJava2RetryAspectExt() {
         return retryConfiguration.rxJava2RetryAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3RetryAspectExt rxJava3RetryAspectExt() {
+        return retryConfiguration.rxJava3RetryAspectExt();
     }
 
     @Bean

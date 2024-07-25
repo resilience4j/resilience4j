@@ -30,6 +30,7 @@ import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurati
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.utils.RxJava3OnClasspathCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -96,6 +97,13 @@ public abstract class AbstractRateLimiterConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2RateLimiterAspectExt rxJava2RateLimiterAspectExt() {
         return rateLimiterConfiguration.rxJava2RateLimiterAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = {RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3RateLimiterAspectExt rxJava3RateLimiterAspectExt() {
+        return rateLimiterConfiguration.rxJava3RateLimiterAspectExt();
     }
 
     @Bean

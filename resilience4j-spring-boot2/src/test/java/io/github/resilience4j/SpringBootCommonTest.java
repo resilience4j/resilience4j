@@ -76,6 +76,7 @@ public class SpringBootCommonTest {
                     ThreadPoolBulkheadConfigCustomizer.of("backend", builder -> builder.maxThreadPoolSize(128)))))).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.reactorBulkHeadAspectExt()).isNotNull();
         assertThat(bulkheadConfigurationOnMissingBean.rxJava2BulkHeadAspectExt()).isNotNull();
+        assertThat(bulkheadConfigurationOnMissingBean.rxJava3BulkHeadAspectExt()).isNotNull();
         final DefaultSpelResolver spelResolver = new DefaultSpelResolver(new SpelExpressionParser(), new StandardReflectionParameterNameDiscoverer(), new GenericApplicationContext());
         final FallbackDecorators fallbackDecorators = new FallbackDecorators(Collections.singletonList(new CompletionStageFallbackDecorator()));
         assertThat(bulkheadConfigurationOnMissingBean
@@ -94,6 +95,7 @@ public class SpringBootCommonTest {
             new CircuitBreakerConfigurationProperties());
         assertThat(circuitBreakerConfig.reactorCircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.rxJava2CircuitBreakerAspect()).isNotNull();
+        assertThat(circuitBreakerConfig.rxJava3CircuitBreakerAspect()).isNotNull();
         assertThat(circuitBreakerConfig.circuitBreakerRegistry(new DefaultEventConsumerRegistry<>(),
             new CompositeRegistryEventConsumer<>(Collections.emptyList()),
             new CompositeCustomizer<>(Collections.singletonList(new TestCustomizer())))).isNotNull();
@@ -111,6 +113,7 @@ public class SpringBootCommonTest {
         RetryConfigurationOnMissingBean retryConfigurationOnMissingBean = new RetryConfigurationOnMissingBean();
         assertThat(retryConfigurationOnMissingBean.reactorRetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean.rxJava2RetryAspectExt()).isNotNull();
+        assertThat(retryConfigurationOnMissingBean.rxJava3RetryAspectExt()).isNotNull();
         assertThat(retryConfigurationOnMissingBean
             .retryRegistry(new RetryConfigurationProperties(), new DefaultEventConsumerRegistry<>(),
                 new CompositeRegistryEventConsumer<>(Collections.emptyList()),
@@ -130,6 +133,7 @@ public class SpringBootCommonTest {
         RateLimiterConfigurationOnMissingBean rateLimiterConfigurationOnMissingBean = new RateLimiterConfigurationOnMissingBean();
         assertThat(rateLimiterConfigurationOnMissingBean.reactorRateLimiterAspectExt()).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean.rxJava2RateLimiterAspectExt()).isNotNull();
+        assertThat(rateLimiterConfigurationOnMissingBean.rxJava3RateLimiterAspectExt()).isNotNull();
         assertThat(rateLimiterConfigurationOnMissingBean
             .rateLimiterRegistry(new RateLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),
@@ -151,6 +155,7 @@ public class SpringBootCommonTest {
         TimeLimiterConfigurationOnMissingBean timeLimiterConfigurationOnMissingBean = new TimeLimiterConfigurationOnMissingBean();
         assertThat(timeLimiterConfigurationOnMissingBean.reactorTimeLimiterAspectExt()).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean.rxJava2TimeLimiterAspectExt()).isNotNull();
+        assertThat(timeLimiterConfigurationOnMissingBean.rxJava3TimeLimiterAspectExt()).isNotNull();
         assertThat(timeLimiterConfigurationOnMissingBean
             .timeLimiterRegistry(new TimeLimiterConfigurationProperties(),
                 new DefaultEventConsumerRegistry<>(),

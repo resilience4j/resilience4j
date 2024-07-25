@@ -29,6 +29,7 @@ import io.github.resilience4j.spring6.spelresolver.SpelResolver;
 import io.github.resilience4j.spring6.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.springboot3.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -93,6 +94,13 @@ public abstract class AbstractTimerConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public RxJava2TimerAspectExt rxJava2TimerAspectExt() {
         return timerConfiguration.rxJava2TimerAspectExt();
+    }
+
+    @Bean
+    @Conditional({RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3TimerAspectExt rxJava3TimerAspectExt() {
+        return timerConfiguration.rxJava3TimerAspectExt();
     }
 
     @Bean

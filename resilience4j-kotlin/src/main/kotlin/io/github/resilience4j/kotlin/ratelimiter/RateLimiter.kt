@@ -31,7 +31,15 @@ import java.util.concurrent.TimeUnit
  */
 suspend fun <T> RateLimiter.executeSuspendFunction(block: suspend () -> T): T {
     awaitPermission()
-    return block()
+
+    try {
+        val result = block()
+        onResult(result)
+        return result
+    } catch (e: Throwable) {
+        onError(e)
+        throw e
+    }
 }
 
 /**

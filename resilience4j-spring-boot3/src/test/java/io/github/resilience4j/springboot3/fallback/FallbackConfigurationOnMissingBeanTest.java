@@ -19,6 +19,6 @@ public class FallbackConfigurationOnMissingBeanTest {
 
     @Test
     public void testSizeOfDecorators() {
-        assertThat(fallbackDecorators.getFallbackDecorators().size()).isEqualTo(3);
+        assertThat(fallbackDecorators.getFallbackDecorators().size()).isEqualTo(4);
     }
 }

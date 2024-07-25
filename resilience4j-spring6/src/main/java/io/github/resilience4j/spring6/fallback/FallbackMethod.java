@@ -23,6 +23,7 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -234,9 +235,11 @@ public class FallbackMethod {
         boolean isPrivate = Modifier.isPrivate(fallback.getModifiers());
         if (isPrivate) {
             return original;
-        } else {
-            return proxy;
         }
+        if (Proxy.isProxyClass(proxy.getClass())) {
+            return original;
+        }
+        return proxy;
     }
 
     private static class MethodMeta {

@@ -240,8 +240,9 @@ final class IntervalFunctionCompanion {
         final double delta = randomizationFactor * current;
         final double min = current - delta;
         final double max = current + delta;
+        final double randomizedValue = min + (Math.random() * (max - min + 1));
 
-        return (min + (Math.random() * (max - min + 1)));
+        return Math.max(1.0, randomizedValue);
     }
 
     static void checkInterval(long intervalMillis) {
@@ -252,7 +253,7 @@ final class IntervalFunctionCompanion {
     }
 
     static void checkRandomizationFactor(double randomizationFactor) {
-        if (randomizationFactor < 0.0 || randomizationFactor >= 1.0) {
+        if (randomizationFactor < 0.0 || randomizationFactor > 1.0) {
             throw new IllegalArgumentException(
                 "Illegal argument randomizationFactor: " + randomizationFactor);
         }
