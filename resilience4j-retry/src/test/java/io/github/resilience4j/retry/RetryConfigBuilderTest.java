@@ -236,7 +236,7 @@ public class RetryConfigBuilderTest {
                 .intervalBiFunction(biFunction)
                 .build();
         assertThat(config).isNotNull();
-        assertThat(config.getIntervalFunction()).isNotNull();
+        assertThat(config.getIntervalFunction()).isNull();
         assertThat(config.getIntervalFunction()).isNotEqualTo(function);
         assertThat(config.getIntervalBiFunction()).isEqualTo(biFunction);
     }
