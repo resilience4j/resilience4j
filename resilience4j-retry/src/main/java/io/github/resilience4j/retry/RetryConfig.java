@@ -245,7 +245,7 @@ public class RetryConfig implements Serializable {
 
         public Builder<T> waitDuration(Duration waitDuration) {
             if (waitDuration.toMillis() >= 0) {
-                this.intervalBiFunction = (attempt, either) -> waitDuration.toMillis();
+                this.intervalBiFunction((attempt, either) -> waitDuration.toMillis());
             } else {
                 throw new IllegalArgumentException(
                     "waitDuration must be a positive value");
@@ -311,6 +311,7 @@ public class RetryConfig implements Serializable {
          */
         public Builder<T> intervalFunction(IntervalFunction f) {
             this.intervalFunction = f;
+            this.intervalBiFunction = null;
             return this;
         }
 
@@ -322,6 +323,7 @@ public class RetryConfig implements Serializable {
          */
         public Builder<T> intervalBiFunction(IntervalBiFunction<T> f) {
             this.intervalBiFunction = f;
+            this.intervalFunction = null;
             return this;
         }
 

@@ -216,11 +216,29 @@ public class RetryConfigBuilderTest {
         assertThat(config1.getMaxAttempts()).isEqualTo(5);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void intervalFunctionUsedWithIntervalBiFunctionShouldFail() {
-        RetryConfig.custom().intervalBiFunction((attempt, either) -> 100L)
-            .intervalFunction(IntervalFunction.ofDefaults())
-            .build();
+    @Test()
+    public void intervalFunctionClearIntervalBiFunction() {
+        IntervalBiFunction<Object> biFunction = (attempt, either) -> 100L;
+        IntervalFunction function = IntervalFunction.ofDefaults();
+        RetryConfig config = RetryConfig.custom().intervalBiFunction(biFunction)
+                .intervalFunction(function)
+                .build();
+        assertThat(config).isNotNull();
+        assertThat(config.getIntervalFunction()).isEqualTo(function);
+        assertThat(config.getIntervalBiFunction()).isNotEqualTo(biFunction);
+    }
+
+    @Test
+    public void intervalBiFunctionClearIntervalFunction() {
+        IntervalBiFunction<Object> biFunction = (attempt, either) -> 100L;
+        IntervalFunction function = IntervalFunction.ofDefaults();
+        RetryConfig config = RetryConfig.custom().intervalFunction(function)
+                .intervalBiFunction(biFunction)
+                .build();
+        assertThat(config).isNotNull();
+        assertThat(config.getIntervalFunction()).isNull();
+        assertThat(config.getIntervalFunction()).isNotEqualTo(function);
+        assertThat(config.getIntervalBiFunction()).isEqualTo(biFunction);
     }
 
     @Test
