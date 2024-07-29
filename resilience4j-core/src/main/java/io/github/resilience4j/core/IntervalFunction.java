@@ -134,6 +134,7 @@ public interface IntervalFunction extends Function<Integer, Long> {
         long maxIntervalMillis
     ) {
         checkInterval(maxIntervalMillis);
+        checkRandomizationFactor(randomizationFactor);
         return attempt -> {
             checkAttempt(attempt);
             final long interval = ofExponentialRandomBackoff(initialIntervalMillis, multiplier, randomizationFactor)
