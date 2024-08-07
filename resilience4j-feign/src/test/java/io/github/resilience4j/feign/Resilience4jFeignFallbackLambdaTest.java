@@ -17,6 +17,7 @@
 package io.github.resilience4j.feign;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import feign.Feign;
 import io.github.resilience4j.feign.test.Issue560;
 import io.github.resilience4j.feign.test.TestService;
 import org.junit.Before;
@@ -44,7 +45,8 @@ public class Resilience4jFeignFallbackLambdaTest {
             .withFallback(Issue560.createLambdaFallback())
             .build();
 
-        this.testService = Resilience4jFeign.builder(decorators)
+        this.testService = Feign.builder()
+            .addCapability(Resilience4jFeign.capability(decorators))
             .target(TestService.class, MOCK_URL);
     }
 
