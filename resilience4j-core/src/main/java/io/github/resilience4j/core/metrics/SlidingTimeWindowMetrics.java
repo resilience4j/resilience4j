@@ -21,6 +21,9 @@ package io.github.resilience4j.core.metrics;
 
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * A {@link Metrics} implementation is backed by a sliding time window that aggregates only the
@@ -45,11 +48,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class SlidingTimeWindowMetrics implements Metrics {
 
-    final PartialAggregation[] partialAggregations;
+    final AtomicReferenceArray<PartialAggregation> partialAggregations;
     private final int timeWindowSizeInSeconds;
     private final TotalAggregation totalAggregation;
     private final Clock clock;
-    int headIndex;
+    final AtomicInteger headIndex;
+    private final AtomicBoolean isMovingWindow = new AtomicBoolean(false);
+
 
     /**
      * Creates a new {@link SlidingTimeWindowMetrics} with the given clock and window of time.
@@ -60,11 +65,11 @@ public class SlidingTimeWindowMetrics implements Metrics {
     public SlidingTimeWindowMetrics(int timeWindowSizeInSeconds, Clock clock) {
         this.clock = clock;
         this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
-        this.partialAggregations = new PartialAggregation[timeWindowSizeInSeconds];
-        this.headIndex = 0;
+        this.partialAggregations = new AtomicReferenceArray<>(timeWindowSizeInSeconds);
+        this.headIndex = new AtomicInteger();
         long epochSecond = clock.instant().getEpochSecond();
         for (int i = 0; i < timeWindowSizeInSeconds; i++) {
-            partialAggregations[i] = new PartialAggregation(epochSecond);
+            partialAggregations.set(i, new PartialAggregation(epochSecond));
             epochSecond++;
         }
         this.totalAggregation = new TotalAggregation();
@@ -73,13 +78,12 @@ public class SlidingTimeWindowMetrics implements Metrics {
     @Override
     public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
-        moveWindowToCurrentEpochSecond(getLatestPartialAggregation())
-            .record(duration, durationUnit, outcome);
+        moveWindowToCurrentEpochSecond().record(duration, durationUnit, outcome);
         return new SnapshotImpl(totalAggregation);
     }
 
     public synchronized Snapshot getSnapshot() {
-        moveWindowToCurrentEpochSecond(getLatestPartialAggregation());
+        moveWindowToCurrentEpochSecond();
         return new SnapshotImpl(totalAggregation);
     }
 
@@ -92,23 +96,34 @@ public class SlidingTimeWindowMetrics implements Metrics {
      *
      * @param latestPartialAggregation the latest partial aggregation of the circular array
      */
-    private PartialAggregation moveWindowToCurrentEpochSecond(
-        PartialAggregation latestPartialAggregation) {
+    private  PartialAggregation moveWindowToCurrentEpochSecond() {
         long currentEpochSecond = clock.instant().getEpochSecond();
+        PartialAggregation latestPartialAggregation = getLatestPartialAggregation();
         long differenceInSeconds = currentEpochSecond - latestPartialAggregation.getEpochSecond();
-        if (differenceInSeconds == 0) {
+        if (differenceInSeconds <= 0) {
             return latestPartialAggregation;
         }
-        long secondsToMoveTheWindow = Math.min(differenceInSeconds, timeWindowSizeInSeconds);
-        PartialAggregation currentPartialAggregation;
-        do {
-            secondsToMoveTheWindow--;
-            moveHeadIndexByOne();
-            currentPartialAggregation = getLatestPartialAggregation();
-            totalAggregation.removeBucket(currentPartialAggregation);
-            currentPartialAggregation.reset(currentEpochSecond - secondsToMoveTheWindow);
-        } while (secondsToMoveTheWindow > 0);
-        return currentPartialAggregation;
+
+        // Try to acquire the lock
+        if (!isMovingWindow.compareAndSet(false, true)) {
+            // If another thread is already moving the window, return the latest aggregation
+            return latestPartialAggregation;
+        }
+        try {
+            long secondsToMoveTheWindow = Math.min(differenceInSeconds, timeWindowSizeInSeconds);
+            PartialAggregation currentPartialAggregation = null;
+            do {
+                secondsToMoveTheWindow--;
+                moveHeadIndexByOne();
+                currentPartialAggregation = getLatestPartialAggregation();
+                totalAggregation.removeBucket(currentPartialAggregation);
+                currentPartialAggregation.reset(currentEpochSecond - secondsToMoveTheWindow);
+            } while (secondsToMoveTheWindow > 0);
+            return currentPartialAggregation;
+        } finally {
+            // Release the lock
+            isMovingWindow.set(false);
+        }
     }
 
     /**
@@ -117,13 +132,13 @@ public class SlidingTimeWindowMetrics implements Metrics {
      * @return the head partial aggregation of the circular array
      */
     private PartialAggregation getLatestPartialAggregation() {
-        return partialAggregations[headIndex];
+        return partialAggregations.get(headIndex.get());
     }
 
     /**
      * Moves the headIndex to the next bucket.
      */
     void moveHeadIndexByOne() {
-        this.headIndex = (headIndex + 1) % timeWindowSizeInSeconds;
+        headIndex.getAndUpdate(index -> (index + 1) % timeWindowSizeInSeconds);
     }
 }

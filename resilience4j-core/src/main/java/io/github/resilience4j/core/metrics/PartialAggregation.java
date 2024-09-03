@@ -18,24 +18,26 @@
  */
 package io.github.resilience4j.core.metrics;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class PartialAggregation extends AbstractAggregation {
 
-    private long epochSecond;
+    private final AtomicLong epochSecond;
 
     PartialAggregation(long epochSecond) {
-        this.epochSecond = epochSecond;
+        this.epochSecond = new AtomicLong(epochSecond);
     }
 
     void reset(long epochSecond) {
-        this.epochSecond = epochSecond;
-        this.totalDurationInMillis = 0;
-        this.numberOfSlowCalls = 0;
-        this.numberOfFailedCalls = 0;
-        this.numberOfSlowFailedCalls = 0;
-        this.numberOfCalls = 0;
+        this.epochSecond.set(epochSecond);
+        this.totalDurationInMillis.reset();
+        this.numberOfSlowCalls.reset();
+        this.numberOfFailedCalls.reset();
+        this.numberOfSlowFailedCalls.reset();
+        this.numberOfCalls.reset();
     }
 
     public long getEpochSecond() {
-        return epochSecond;
+        return epochSecond.get();
     }
 }

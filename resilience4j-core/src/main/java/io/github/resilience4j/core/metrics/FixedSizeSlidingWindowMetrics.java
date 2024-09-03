@@ -20,6 +20,8 @@ package io.github.resilience4j.core.metrics;
 
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * A {@link Metrics} implementation is backed by a sliding window that aggregates only the last
@@ -40,8 +42,8 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
 
     private final int windowSize;
     private final TotalAggregation totalAggregation;
-    private final Measurement[] measurements;
-    int headIndex;
+    private final AtomicReferenceArray<Measurement> measurements;
+    final AtomicInteger headIndex;
 
     /**
      * Creates a new {@link FixedSizeSlidingWindowMetrics} with the given window size.
@@ -50,46 +52,35 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
      */
     public FixedSizeSlidingWindowMetrics(int windowSize) {
         this.windowSize = windowSize;
-        this.measurements = new Measurement[this.windowSize];
-        this.headIndex = 0;
+        this.measurements = new AtomicReferenceArray<>(this.windowSize);
+        this.headIndex = new AtomicInteger();
         for (int i = 0; i < this.windowSize; i++) {
-            measurements[i] = new Measurement();
+            measurements.set(i, new Measurement());
         }
         this.totalAggregation = new TotalAggregation();
     }
 
     @Override
-    public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
+    public Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
-        moveWindowByOne().record(duration, durationUnit, outcome);
+        moveWindowByOne(duration, durationUnit, outcome);
         return new SnapshotImpl(totalAggregation);
     }
 
-    public synchronized Snapshot getSnapshot() {
+    public Snapshot getSnapshot() {
         return new SnapshotImpl(totalAggregation);
     }
 
-    private Measurement moveWindowByOne() {
-        moveHeadIndexByOne();
-        Measurement latestMeasurement = getLatestMeasurement();
+    private void moveWindowByOne(long duration, TimeUnit durationUnit, Outcome outcome) {
+        int lastIndex = moveHeadIndexByOne();
+        Measurement latestMeasurement = measurements.getAndSet(lastIndex, new Measurement(duration, durationUnit, outcome));
         totalAggregation.removeBucket(latestMeasurement);
-        latestMeasurement.reset();
-        return latestMeasurement;
-    }
-
-    /**
-     * Returns the head partial aggregation of the circular array.
-     *
-     * @return the head partial aggregation of the circular array
-     */
-    private Measurement getLatestMeasurement() {
-        return measurements[headIndex];
     }
 
     /**
      * Moves the headIndex to the next bucket.
      */
-    void moveHeadIndexByOne() {
-        this.headIndex = (headIndex + 1) % windowSize;
+    int moveHeadIndexByOne() {
+        return headIndex.getAndUpdate(index -> (index + 1) % windowSize);
     }
 }

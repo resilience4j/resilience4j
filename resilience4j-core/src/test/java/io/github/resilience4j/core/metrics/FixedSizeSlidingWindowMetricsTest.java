@@ -117,23 +117,23 @@ public class FixedSizeSlidingWindowMetricsTest {
     public void testMoveHeadIndexByOne() {
         FixedSizeSlidingWindowMetrics metrics = new FixedSizeSlidingWindowMetrics(3);
 
-        assertThat(metrics.headIndex).isZero();
+        assertThat(metrics.headIndex.get()).isZero();
 
         metrics.moveHeadIndexByOne();
 
-        assertThat(metrics.headIndex).isEqualTo(1);
+        assertThat(metrics.headIndex.get()).isEqualTo(1);
 
         metrics.moveHeadIndexByOne();
 
-        assertThat(metrics.headIndex).isEqualTo(2);
+        assertThat(metrics.headIndex.get()).isEqualTo(2);
 
         metrics.moveHeadIndexByOne();
 
-        assertThat(metrics.headIndex).isZero();
+        assertThat(metrics.headIndex.get()).isZero();
 
         metrics.moveHeadIndexByOne();
 
-        assertThat(metrics.headIndex).isEqualTo(1);
+        assertThat(metrics.headIndex.get()).isEqualTo(1);
 
     }
 

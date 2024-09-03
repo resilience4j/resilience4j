@@ -29,11 +29,11 @@ public class SnapshotImpl implements Snapshot {
     private final int totalNumberOfCalls;
 
     SnapshotImpl(TotalAggregation totalAggregation) {
-        this.totalDurationInMillis = totalAggregation.totalDurationInMillis;
-        this.totalNumberOfSlowCalls = totalAggregation.numberOfSlowCalls;
-        this.totalNumberOfSlowFailedCalls = totalAggregation.numberOfSlowFailedCalls;
-        this.totalNumberOfFailedCalls = totalAggregation.numberOfFailedCalls;
-        this.totalNumberOfCalls = totalAggregation.numberOfCalls;
+        this.totalDurationInMillis = totalAggregation.totalDurationInMillis.sum();
+        this.totalNumberOfSlowCalls = totalAggregation.numberOfSlowCalls.intValue();
+        this.totalNumberOfSlowFailedCalls = totalAggregation.numberOfSlowFailedCalls.intValue();
+        this.totalNumberOfFailedCalls = totalAggregation.numberOfFailedCalls.intValue();
+        this.totalNumberOfCalls = totalAggregation.numberOfCalls.intValue();
 
     }
 

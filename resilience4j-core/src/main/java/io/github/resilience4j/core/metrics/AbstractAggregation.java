@@ -19,34 +19,32 @@
 package io.github.resilience4j.core.metrics;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 class AbstractAggregation {
 
-    long totalDurationInMillis = 0;
-    int numberOfSlowCalls = 0;
-    int numberOfSlowFailedCalls = 0;
-    int numberOfFailedCalls = 0;
-    int numberOfCalls = 0;
+    LongAdder totalDurationInMillis = new LongAdder();
+    LongAdder numberOfSlowCalls = new LongAdder();
+    LongAdder numberOfSlowFailedCalls = new LongAdder();
+    LongAdder numberOfFailedCalls = new LongAdder();
+    LongAdder numberOfCalls = new LongAdder();
 
     void record(long duration, TimeUnit durationUnit, Metrics.Outcome outcome) {
-        this.numberOfCalls++;
-        this.totalDurationInMillis += durationUnit.toMillis(duration);
+        this.numberOfCalls.add(1);
+        this.totalDurationInMillis.add(durationUnit.toMillis(duration));
         switch (outcome) {
             case SLOW_SUCCESS:
-                numberOfSlowCalls++;
+                numberOfSlowCalls.add(1);
                 break;
 
             case SLOW_ERROR:
-                numberOfSlowCalls++;
-                numberOfFailedCalls++;
-                numberOfSlowFailedCalls++;
+                numberOfSlowCalls.add(1);
+                numberOfFailedCalls.add(1);
+                numberOfSlowFailedCalls.add(1);
                 break;
 
             case ERROR:
-                numberOfFailedCalls++;
-                break;
-
-            default:
+                numberOfFailedCalls.add(1);
                 break;
         }
     }
