@@ -72,7 +72,7 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
     }
 
     private Measurement moveWindowByOne() {
-        int lastIndex = headIndex.getAndUpdate(index -> (index + 1) % windowSize);
+        int lastIndex = moveHeadIndexByOne();
         Measurement latestMeasurement = measurements.get(lastIndex);
         totalAggregation.removeBucket(latestMeasurement);
         return latestMeasurement;
