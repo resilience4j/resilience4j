@@ -23,7 +23,6 @@ import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * A {@link Metrics} implementation is backed by a sliding time window that aggregates only the
@@ -48,7 +47,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
  */
 public class SlidingTimeWindowMetrics implements Metrics {
 
-    final AtomicReferenceArray<PartialAggregation> partialAggregations;
+    final PartialAggregation[] partialAggregations;
     private final int timeWindowSizeInSeconds;
     private final TotalAggregation totalAggregation;
     private final Clock clock;
@@ -65,11 +64,11 @@ public class SlidingTimeWindowMetrics implements Metrics {
     public SlidingTimeWindowMetrics(int timeWindowSizeInSeconds, Clock clock) {
         this.clock = clock;
         this.timeWindowSizeInSeconds = timeWindowSizeInSeconds;
-        this.partialAggregations = new AtomicReferenceArray<>(timeWindowSizeInSeconds);
+        this.partialAggregations = new PartialAggregation[timeWindowSizeInSeconds];
         this.headIndex = new AtomicInteger();
         long epochSecond = clock.instant().getEpochSecond();
         for (int i = 0; i < timeWindowSizeInSeconds; i++) {
-            partialAggregations.set(i, new PartialAggregation(epochSecond));
+            partialAggregations[i] = new PartialAggregation(epochSecond);
             epochSecond++;
         }
         this.totalAggregation = new TotalAggregation();
@@ -132,7 +131,7 @@ public class SlidingTimeWindowMetrics implements Metrics {
      * @return the head partial aggregation of the circular array
      */
     private PartialAggregation getLatestPartialAggregation() {
-        return partialAggregations.get(headIndex.get());
+        return partialAggregations[headIndex.get()];
     }
 
     /**

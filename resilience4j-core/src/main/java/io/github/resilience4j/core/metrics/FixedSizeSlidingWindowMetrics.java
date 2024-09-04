@@ -21,7 +21,6 @@ package io.github.resilience4j.core.metrics;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * A {@link Metrics} implementation is backed by a sliding window that aggregates only the last
@@ -42,7 +41,7 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
 
     private final int windowSize;
     private final TotalAggregation totalAggregation;
-    private final AtomicReferenceArray<Measurement> measurements;
+    private final Measurement[] measurements;
     final AtomicInteger headIndex;
 
     /**
@@ -52,10 +51,10 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
      */
     public FixedSizeSlidingWindowMetrics(int windowSize) {
         this.windowSize = windowSize;
-        this.measurements = new AtomicReferenceArray<>(this.windowSize);
+        this.measurements = new Measurement[this.windowSize];
         this.headIndex = new AtomicInteger();
         for (int i = 0; i < this.windowSize; i++) {
-            measurements.set(i, new Measurement());
+            measurements[i] = new Measurement();
         }
         this.totalAggregation = new TotalAggregation();
     }
@@ -73,7 +72,7 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
 
     private Measurement moveWindowByOne() {
         int lastIndex = moveHeadIndexByOne();
-        Measurement latestMeasurement = measurements.get(lastIndex);
+        Measurement latestMeasurement = measurements[lastIndex];
         totalAggregation.removeBucket(latestMeasurement);
         return latestMeasurement;
     }
