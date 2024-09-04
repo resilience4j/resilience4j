@@ -28,13 +28,8 @@ public class PartialAggregation extends AbstractAggregation {
         this.epochSecond = new AtomicLong(epochSecond);
     }
 
-    void reset(long epochSecond) {
+    void setEpochSecond(long epochSecond) {
         this.epochSecond.set(epochSecond);
-        this.totalDurationInMillis.reset();
-        this.numberOfSlowCalls.reset();
-        this.numberOfFailedCalls.reset();
-        this.numberOfSlowFailedCalls.reset();
-        this.numberOfCalls.reset();
     }
 
     public long getEpochSecond() {

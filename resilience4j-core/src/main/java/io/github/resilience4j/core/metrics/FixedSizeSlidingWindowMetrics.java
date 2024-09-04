@@ -63,7 +63,7 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
     @Override
     public Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
         totalAggregation.record(duration, durationUnit, outcome);
-        moveWindowByOne(duration, durationUnit, outcome);
+        moveWindowByOne().record(duration, durationUnit, outcome);
         return new SnapshotImpl(totalAggregation);
     }
 
@@ -71,10 +71,11 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
         return new SnapshotImpl(totalAggregation);
     }
 
-    private void moveWindowByOne(long duration, TimeUnit durationUnit, Outcome outcome) {
-        int lastIndex = moveHeadIndexByOne();
-        Measurement latestMeasurement = measurements.getAndSet(lastIndex, new Measurement(duration, durationUnit, outcome));
+    private Measurement moveWindowByOne() {
+        int lastIndex = headIndex.getAndUpdate(index -> (index + 1) % windowSize);
+        Measurement latestMeasurement = measurements.get(lastIndex);
         totalAggregation.removeBucket(latestMeasurement);
+        return latestMeasurement;
     }
 
     /**

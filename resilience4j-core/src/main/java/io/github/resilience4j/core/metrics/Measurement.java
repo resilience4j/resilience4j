@@ -18,24 +18,7 @@
  */
 package io.github.resilience4j.core.metrics;
 
-import java.util.concurrent.TimeUnit;
 
 class Measurement extends AbstractAggregation {
-
-    public Measurement() {
-
-    }
-
-    public Measurement(long duration, TimeUnit durationUnit, Metrics.Outcome outcome) {
-        record(duration, durationUnit, outcome);
-    }
-
-    void reset() {
-        this.totalDurationInMillis.reset();
-        this.numberOfSlowCalls.reset();
-        this.numberOfFailedCalls.reset();
-        this.numberOfSlowFailedCalls.reset();
-        this.numberOfCalls.reset();
-    }
 
 }

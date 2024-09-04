@@ -21,10 +21,10 @@ package io.github.resilience4j.core.metrics;
 class TotalAggregation extends AbstractAggregation {
 
     void removeBucket(AbstractAggregation bucket) {
-        this.totalDurationInMillis.add(-bucket.totalDurationInMillis.sum());
-        this.numberOfSlowCalls.add(-bucket.numberOfSlowCalls.sum());
-        this.numberOfSlowFailedCalls.add(-bucket.numberOfSlowFailedCalls.sum());
-        this.numberOfFailedCalls.add(-bucket.numberOfFailedCalls.sum());
-        this.numberOfCalls.add(-bucket.numberOfCalls.sum());
+        this.totalDurationInMillis.add(-bucket.totalDurationInMillis.sumThenReset());
+        this.numberOfSlowCalls.add(-bucket.numberOfSlowCalls.sumThenReset());
+        this.numberOfSlowFailedCalls.add(-bucket.numberOfSlowFailedCalls.sumThenReset());
+        this.numberOfFailedCalls.add(-bucket.numberOfFailedCalls.sumThenReset());
+        this.numberOfCalls.add(-bucket.numberOfCalls.sumThenReset());
     }
 }
