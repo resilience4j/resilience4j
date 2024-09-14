@@ -470,6 +470,18 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreakerConfig.getIgnoreExceptionPredicate().test(new NullPointerException())).isFalse();
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testCircularReferenceInBaseConfigThrowsIllegalStateException() {
+        CommonCircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CommonCircuitBreakerConfigurationProperties();
+
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultConfig.setBaseConfig("defaultConfig");
+
+        circuitBreakerConfigurationProperties.getInstances().put("defaultConfig", defaultConfig);
+
+        circuitBreakerConfigurationProperties.createCircuitBreakerConfig("defaultConfig", defaultConfig, compositeCircuitBreakerCustomizer());
+    }
+
     @Test
     public void testFindCircuitBreakerPropertiesWithoutDefaultConfig() {
         //Given
