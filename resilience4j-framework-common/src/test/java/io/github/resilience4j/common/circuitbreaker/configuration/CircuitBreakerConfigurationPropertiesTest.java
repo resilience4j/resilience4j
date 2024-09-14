@@ -474,12 +474,11 @@ public class CircuitBreakerConfigurationPropertiesTest {
     public void testCircularReferenceInBaseConfigThrowsIllegalStateException() {
         CommonCircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CommonCircuitBreakerConfigurationProperties();
 
-        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
-        defaultConfig.setBaseConfig("defaultConfig");
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties selfReferencingConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        selfReferencingConfig.setBaseConfig("selfReferencingConfig");
+        circuitBreakerConfigurationProperties.getConfigs().put("selfReferencingConfig", selfReferencingConfig);
 
-        circuitBreakerConfigurationProperties.getInstances().put("defaultConfig", defaultConfig);
-
-        circuitBreakerConfigurationProperties.createCircuitBreakerConfig("defaultConfig", defaultConfig, compositeCircuitBreakerCustomizer());
+        circuitBreakerConfigurationProperties.createCircuitBreakerConfig("selfReferencingConfig", selfReferencingConfig, compositeCircuitBreakerCustomizer());
     }
 
     @Test
