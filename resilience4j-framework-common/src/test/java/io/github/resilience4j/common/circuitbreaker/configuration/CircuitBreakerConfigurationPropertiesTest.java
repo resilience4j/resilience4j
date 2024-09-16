@@ -526,6 +526,31 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreakerProperties.get().getEventConsumerBufferSize()).isEqualTo(99);
     }
 
+    @Test
+    public void testCreateCircuitBreakerRegistryWithBaseAndDefaultConfig() {
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties baseProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        baseProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED);
+        baseProperties.setSlidingWindowSize(2000);
+        baseProperties.setMaxWaitDurationInHalfOpenState(Duration.ofMillis(100L));
+
+        CommonCircuitBreakerConfigurationProperties.InstanceProperties defaultProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
+        defaultProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED);
+        defaultProperties.setSlidingWindowSize(1000);
+        defaultProperties.setBaseConfig("baseConfig");
+
+        CommonCircuitBreakerConfigurationProperties circuitBreakerConfigurationProperties = new CommonCircuitBreakerConfigurationProperties();
+        circuitBreakerConfigurationProperties.getConfigs().put("baseConfig", baseProperties);
+        circuitBreakerConfigurationProperties.getConfigs().put("default", defaultProperties);
+
+        CircuitBreakerConfig config = circuitBreakerConfigurationProperties.createCircuitBreakerConfig(
+                "default", defaultProperties, compositeCircuitBreakerCustomizer());
+
+        assertThat(config.getMaxWaitDurationInHalfOpenState()).isEqualTo(baseProperties.getMaxWaitDurationInHalfOpenState());
+        assertThat(config.getSlidingWindowSize()).isEqualTo(defaultProperties.getSlidingWindowSize());
+        assertThat(config.getSlidingWindowType()).isEqualTo(defaultProperties.getSlidingWindowType());
+    }
+
+
     private CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer() {
         return new CompositeCustomizer<>(Collections.emptyList());
     }
