@@ -52,23 +52,57 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
     }
 
     public CircuitBreakerConfig createCircuitBreakerConfig(String instanceName,
-        @Nullable InstanceProperties instanceProperties,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+             @Nullable InstanceProperties instanceProperties,
+             CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+
         CircuitBreakerConfig baseConfig = null;
         if (instanceProperties != null && StringUtils.isNotEmpty(instanceProperties.getBaseConfig())) {
-            InstanceProperties baseProperties = configs.get(instanceProperties.getBaseConfig());
-            if (baseProperties == null) {
-                throw new ConfigurationNotFoundException(instanceProperties.getBaseConfig());
-            }
-            ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
-            baseConfig = createCircuitBreakerConfig(instanceProperties.getBaseConfig(), baseProperties, customizer);
-        } else if (!instanceName.equals(DEFAULT) && configs.get(DEFAULT) != null) {
-            if (instanceProperties != null) {
-                ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(DEFAULT));
-            }
-            baseConfig = createCircuitBreakerConfig(DEFAULT, configs.get(DEFAULT), customizer);
+            baseConfig = createBaseConfig(instanceName, instanceProperties, customizer);
+        } else if (configs.get(instanceName) != null) {
+            baseConfig = createDirectConfig(instanceName, instanceProperties, customizer);
+        } else if (configs.get(DEFAULT) != null) {
+            baseConfig = createDefaultConfig(instanceProperties, customizer);
         }
+
         return buildConfig(baseConfig != null ? from(baseConfig) : custom(), instanceProperties, customizer, instanceName);
+    }
+
+    private CircuitBreakerConfig createBaseConfig(String instanceName,
+            InstanceProperties instanceProperties,
+            CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+
+        String baseConfigName = instanceProperties.getBaseConfig();
+        if (instanceName.equals(baseConfigName)) {
+            throw new IllegalStateException("Circular reference detected in instance config: " + instanceName);
+        }
+
+        InstanceProperties baseProperties = configs.get(baseConfigName);
+        if (baseProperties == null) {
+            throw new ConfigurationNotFoundException(baseConfigName);
+        }
+
+        ConfigUtils.mergePropertiesIfAny(instanceProperties, baseProperties);
+        return createCircuitBreakerConfig(baseConfigName, baseProperties, customizer);
+    }
+
+    private CircuitBreakerConfig createDirectConfig(String instanceName,
+            @Nullable InstanceProperties instanceProperties,
+            CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+
+        if (instanceProperties != null) {
+            ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(instanceName));
+        }
+        return buildConfig(custom(), configs.get(instanceName), customizer, instanceName);
+    }
+
+    private CircuitBreakerConfig createDefaultConfig(
+            @Nullable InstanceProperties instanceProperties,
+            CompositeCustomizer<CircuitBreakerConfigCustomizer> customizer) {
+
+        if (instanceProperties != null) {
+            ConfigUtils.mergePropertiesIfAny(instanceProperties, configs.get(DEFAULT));
+        }
+        return createCircuitBreakerConfig(DEFAULT, configs.get(DEFAULT), customizer);
     }
 
     private CircuitBreakerConfig buildConfig(Builder builder, @Nullable InstanceProperties properties,
