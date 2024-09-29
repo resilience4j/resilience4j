@@ -43,7 +43,7 @@ import static org.mockito.Mockito.times;
 public class CompletionStageRetryTest {
 
     private AsyncHelloWorldService helloWorldService;
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     @Before
     public void setUp() {
@@ -170,16 +170,16 @@ public class CompletionStageRetryTest {
     @Test
     public void shouldStopRetryingAndEmitProperEventsIfIntervalFunctionReturnsLessThanZero() {
         given(helloWorldService.returnHelloWorld())
-            .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
+                .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
 
         AtomicInteger numberOfTimesIntervalFunctionCalled = new AtomicInteger(0);
         RetryConfig retryConfig = RetryConfig.<String>custom()
-            .intervalFunction((ignored) -> {
-                int numTimesCalled = numberOfTimesIntervalFunctionCalled.incrementAndGet();
-                return numTimesCalled > 1 ? -1L : 0L;
-            })
-            .maxAttempts(3)
-            .build();
+                .intervalFunction((ignored) -> {
+                    int numTimesCalled = numberOfTimesIntervalFunctionCalled.incrementAndGet();
+                    return numTimesCalled > 1 ? -1L : 0L;
+                })
+                .maxAttempts(3)
+                .build();
 
         AtomicInteger numberOfRetryEvents = new AtomicInteger();
         AtomicBoolean onErrorEventOccurred = new AtomicBoolean(false);
@@ -189,17 +189,17 @@ public class CompletionStageRetryTest {
         retry.getEventPublisher().onError((ignored) -> onErrorEventOccurred.set(true));
 
         Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-            retry,
-            scheduler,
-            helloWorldService::returnHelloWorld
+                retry,
+                scheduler,
+                helloWorldService::returnHelloWorld
         );
 
         assertThat(supplier.get())
-            .failsWithin(5, TimeUnit.SECONDS)
-            .withThrowableOfType(ExecutionException.class)
-            .havingCause()
-            .isInstanceOf(HelloWorldException.class)
-            .withMessage("Exceptional!");
+                .failsWithin(5, TimeUnit.SECONDS)
+                .withThrowableOfType(ExecutionException.class)
+                .havingCause()
+                .isInstanceOf(HelloWorldException.class)
+                .withMessage("Exceptional!");
         assertThat(numberOfRetryEvents).hasValue(1);
         assertThat(onErrorEventOccurred).isTrue();
         then(helloWorldService).should(times(2)).returnHelloWorld();
@@ -208,16 +208,16 @@ public class CompletionStageRetryTest {
     @Test
     public void shouldContinueRetryingAndEmitProperEventsIfIntervalFunctionReturnsZeroOrMore() {
         given(helloWorldService.returnHelloWorld())
-            .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
+                .willReturn(CompletableFuture.failedFuture(new HelloWorldException("Exceptional!")));
 
         AtomicInteger numberOfTimesIntervalFunctionCalled = new AtomicInteger(0);
         RetryConfig retryConfig = RetryConfig.<String>custom()
-            .intervalFunction((ignored) -> {
-                // Returns 0, 1, 2
-                return (long) numberOfTimesIntervalFunctionCalled.getAndIncrement();
-            })
-            .maxAttempts(3)
-            .build();
+                .intervalFunction((ignored) -> {
+                    // Returns 0, 1, 2
+                    return (long) numberOfTimesIntervalFunctionCalled.getAndIncrement();
+                })
+                .maxAttempts(3)
+                .build();
 
         AtomicInteger numberOfRetryEvents = new AtomicInteger();
         AtomicBoolean onErrorEventOccurred = new AtomicBoolean(false);
@@ -227,17 +227,17 @@ public class CompletionStageRetryTest {
         retry.getEventPublisher().onError((ignored) -> onErrorEventOccurred.set(true));
 
         Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
-            retry,
-            scheduler,
-            helloWorldService::returnHelloWorld
+                retry,
+                scheduler,
+                helloWorldService::returnHelloWorld
         );
 
         assertThat(supplier.get())
-            .failsWithin(5, TimeUnit.SECONDS)
-            .withThrowableOfType(ExecutionException.class)
-            .havingCause()
-            .isInstanceOf(HelloWorldException.class)
-            .withMessage("Exceptional!");
+                .failsWithin(5, TimeUnit.SECONDS)
+                .withThrowableOfType(ExecutionException.class)
+                .havingCause()
+                .isInstanceOf(HelloWorldException.class)
+                .withMessage("Exceptional!");
         assertThat(numberOfRetryEvents).hasValue(2);
         assertThat(onErrorEventOccurred).isTrue();
         then(helloWorldService).should(times(3)).returnHelloWorld();
@@ -283,7 +283,7 @@ public class CompletionStageRetryTest {
     }
 
     private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
-                                                                                   String retryResponse) {
+        String retryResponse) {
         given(helloWorldService.returnHelloWorld())
             .willReturn(completedFuture("Hello world"));
         Retry retryContext = Retry.of(
