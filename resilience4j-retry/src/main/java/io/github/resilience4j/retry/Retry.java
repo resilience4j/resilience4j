@@ -642,8 +642,8 @@ public interface Retry {
                     } else {
                         onResult(result);
                     }
-                } catch (Throwable unKnown) {
-                    promise.completeExceptionally(unKnown);
+                } catch (Throwable unknownTh) {
+                    promise.completeExceptionally(unknownTh);
                 }
             });
         }
