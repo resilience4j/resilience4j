@@ -304,4 +304,26 @@ public class CompletionStageRetryTest {
         assertThat(resultTry.isSuccess()).isTrue();
     }
 
+    @Test
+    public void shouldCompleteExceptionallyWhenRetryOnExPredicateThrows() {
+        given(helloWorldService.returnHelloWorld())
+            .willReturn(CompletableFuture.failedFuture(new HelloWorldException()));
+        final RetryConfig retryConfig = RetryConfig.custom()
+            .retryOnException(__ -> {
+                throw new RuntimeException();
+            })
+            .build();
+        Retry retryContext = Retry.of("id", retryConfig);
+
+        Supplier<CompletionStage<String>> supplier = Retry.decorateCompletionStage(
+            retryContext,
+            scheduler,
+            () -> helloWorldService.returnHelloWorld());
+        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+
+        then(helloWorldService).should(times(1)).returnHelloWorld();
+        assertThat(resultTry.isFailure()).isTrue();
+        assertThat(resultTry.getCause().getCause()).isInstanceOf(RuntimeException.class);
+    }
+
 }
