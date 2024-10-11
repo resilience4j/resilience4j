@@ -632,14 +632,18 @@ public interface Retry {
             final CompletionStage<T> stage = supplier.get();
 
             stage.whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    if (throwable instanceof Exception) {
-                        onError((Exception) throwable);
+                try {
+                    if (throwable != null) {
+                        if (throwable instanceof Exception) {
+                            onError((Exception) throwable);
+                        } else {
+                            promise.completeExceptionally(throwable);
+                        }
                     } else {
-                        promise.completeExceptionally(throwable);
+                        onResult(result);
                     }
-                } else {
-                    onResult(result);
+                } catch (Throwable unknownTh) {
+                    promise.completeExceptionally(unknownTh);
                 }
             });
         }
