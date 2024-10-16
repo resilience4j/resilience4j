@@ -131,6 +131,13 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
     }
 
+
+    @Test
+    public void shouldSetFailureRateThresholdAsAFloatGreaterThanZero() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(0.5f).build();
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(0.5f);
+    }
+
     @Test
     public void shouldSetWaitDurationInHalfOpenState() {
         CircuitBreakerConfig circuitBreakerConfig = custom().maxWaitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
@@ -141,6 +148,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetSlowCallRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = custom().slowCallRateThreshold(25).build();
         then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(25);
+    }
+
+    @Test
+    public void shouldSetSlowCallRateThresholdAsFloatGreaterThanZero() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().slowCallRateThreshold(0.5f).build();
+        then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(0.5f);
     }
 
     @Test

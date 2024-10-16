@@ -363,7 +363,7 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder failureRateThreshold(float failureRateThreshold) {
             if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException(
-                    "failureRateThreshold must be between 1 and 100");
+                    "failureRateThreshold must be greater than 0 and lower than 100, but was " + failureRateThreshold);
             }
             this.failureRateThreshold = failureRateThreshold;
             return this;
@@ -388,7 +388,7 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder slowCallRateThreshold(float slowCallRateThreshold) {
             if (slowCallRateThreshold <= 0 || slowCallRateThreshold > 100) {
                 throw new IllegalArgumentException(
-                    "slowCallRateThreshold must be between 1 and 100");
+                    "slowCallRateThreshold must be greater than 0 and not greater than 100, but was " + slowCallRateThreshold);
             }
             this.slowCallRateThreshold = slowCallRateThreshold;
             return this;
