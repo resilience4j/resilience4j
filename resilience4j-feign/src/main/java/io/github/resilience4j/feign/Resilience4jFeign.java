@@ -17,52 +17,70 @@
 package io.github.resilience4j.feign;
 
 import feign.Feign;
-import feign.InvocationHandlerFactory;
+import feign.Target;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * Main class for combining feign with Resilience4j.
  *
  * <pre>
  * {@code
- *     MyService myService = Resilience4jFeign.builder(decorators).target(MyService.class, "http://localhost:8080/");
+ *     MyService myService = Feign.builder()
+ *                              .addCapability(Resilience4jFeign.capability(decorators)
+ *                              .target(MyService.class, "http://localhost:8080/");
  * }
  * </pre>
  * <p>
- * {@link Resilience4jFeign} works in the same way as the standard {@link Feign.Builder}. Only
- * {@link Feign.Builder#invocationHandlerFactory(InvocationHandlerFactory)} may not be called as
+ * {@link Resilience4jFeign.Builder} builder works in the same way as the standard {@link Feign.Builder}. (10.9 - 12.4),
+ * {@link Resilience4jFeign.Capability} for 12.5+ you must use Resilience4jFeign.Capability instead
  * this is how {@link Resilience4jFeign} decorates the feign interface. <br> See {@link
  * FeignDecorators} on how to build decorators and enhance your feign interfaces.
  */
 public final class Resilience4jFeign {
 
+    /**
+     * @deprecated Feign 12.5+ is not compatible, please use Resilience4jFeign.capability() instead
+     */
+    @Deprecated
     public static Builder builder(FeignDecorator invocationDecorator) {
-        return new Builder(invocationDecorator);
+        Builder builder = new Builder();
+        builder.addCapability(Resilience4jFeign.capability(invocationDecorator));
+        return builder;
+    }
+
+    public static Capability capability(FeignDecorator invocationDecorator) {
+        return new Capability(invocationDecorator);
     }
 
     public static final class Builder extends Feign.Builder {
+    }
 
-        private final FeignDecorator invocationDecorator;
+    public static final class InvocationHandlerFactory implements feign.InvocationHandlerFactory {
+        private final FeignDecorator feignDecorator;
 
-        public Builder(FeignDecorator invocationDecorator) {
-            this.invocationDecorator = invocationDecorator;
-        }
-
-        /**
-         * Will throw an {@link UnsupportedOperationException} exception.
-         */
-        @Override
-        public Feign.Builder invocationHandlerFactory(
-            InvocationHandlerFactory invocationHandlerFactory) {
-            throw new UnsupportedOperationException();
+        public InvocationHandlerFactory(FeignDecorator feignDecorator) {
+            this.feignDecorator = feignDecorator;
         }
 
         @Override
-        public Feign build() {
-            super.invocationHandlerFactory(
-                (target, dispatch) -> new DecoratorInvocationHandler(target, dispatch,
-                    invocationDecorator));
-            return super.build();
+        public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+            return new DecoratorInvocationHandler(target, dispatch, feignDecorator);
+        }
+    }
+
+    public static final class Capability implements feign.Capability {
+        private final FeignDecorator feignDecorator;
+
+        public Capability(FeignDecorator feignDecorator) {
+            this.feignDecorator = feignDecorator;
         }
 
+        @Override
+        public feign.InvocationHandlerFactory enrich(feign.InvocationHandlerFactory invocationHandlerFactory) {
+            return new InvocationHandlerFactory(feignDecorator);
+        }
     }
 }

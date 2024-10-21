@@ -2,6 +2,7 @@ package io.github.resilience4j.feign;
 
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
@@ -33,7 +34,8 @@ public class Resilience4jFeignBulkheadTest {
         final FeignDecorators decorators = FeignDecorators.builder()
                 .withBulkhead(bulkhead)
                 .build();
-        testService = Resilience4jFeign.builder(decorators)
+        testService = Feign.builder()
+                .addCapability(Resilience4jFeign.capability(decorators))
                 .target(TestService.class, MOCK_URL);
 
     }
