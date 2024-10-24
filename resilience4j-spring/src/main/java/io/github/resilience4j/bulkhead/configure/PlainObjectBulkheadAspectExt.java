@@ -50,6 +50,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
      * @return {@code true} if the method has a plain object return type; {@code false} otherwise.
      */
     @Override
+    @SuppressWarnings("rawtypes")
     public boolean canHandleReturnType(Class returnType) {
         return !returnType.equals(CompletableFuture.class)
                 && !returnType.equals(Mono.class)
