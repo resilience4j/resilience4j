@@ -1,13 +1,17 @@
 package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * The {@code PlainObjectBulkheadAspectExt} class provides an aspect for managing method executions
@@ -30,6 +34,14 @@ import java.util.concurrent.CompletableFuture;
 public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(PlainObjectBulkheadAspectExt.class);
+
+    private final TimeLimiterRegistry timeLimiterRegistry;
+    private final ScheduledExecutorService executorService;
+
+    public PlainObjectBulkheadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
+        this.timeLimiterRegistry = timeLimiterRegistry;
+        this.executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+    }
 
     /**
      * Determines if the aspect can handle the specified return type of a method.
@@ -55,11 +67,37 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
+
         try {
-            return proceedingJoinPoint.proceed();
-        } catch (Throwable throwable) {
-            logger.error("Error occurred while executing method: {}", methodName, throwable);
-            throw throwable;
+            Supplier<CompletableFuture<Object>> futureSupplier = Bulkhead.decorateSupplier(bulkhead, () -> {
+               try {
+                   return CompletableFuture.completedFuture(proceedingJoinPoint.proceed());
+               } catch (Throwable throwable) {
+                   CompletableFuture<Object> future = new CompletableFuture<>();
+                   future.completeExceptionally(throwable);
+                   return future;
+               }
+            });
+
+            return timeLimiter.executeCompletionStage(executorService, futureSupplier)
+                    .toCompletableFuture()
+                    .join();
+        } catch (Exception ex) {
+            logException(ex, methodName);
+            throw ex;
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
+    private void logException(Exception exception, String methodName) {
+        logger.error("Error occurred executing '{}': {}", methodName, exception.getMessage(), exception);
+        if (exception instanceof BulkheadFullException) {
+            logger.debug("Bulkhead '{}' is full.", methodName);
+        } else if (exception instanceof CompletionException) {
+            Throwable cause = exception.getCause();
+            logger.error("Error occurred executing '{}': {}", methodName, cause.getMessage(), cause);
         }
     }
 }
