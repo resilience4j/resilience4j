@@ -32,6 +32,8 @@ import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.configure.TimeLimiterConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -50,7 +52,7 @@ import java.util.stream.Collectors;
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class, SpelResolverConfiguration.class})
+@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class, SpelResolverConfiguration.class, TimeLimiterConfiguration.class})
 public class BulkheadConfiguration {
 
     @Bean
@@ -179,6 +181,12 @@ public class BulkheadConfiguration {
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
         return new ReactorBulkheadAspectExt();
+    }
+
+    @Bean
+    @Conditional(value = AspectJOnClasspathCondition.class)
+    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
+        return new PlainObjectBulkheadAspectExt(timeLimiterRegistry);
     }
 
     /**
