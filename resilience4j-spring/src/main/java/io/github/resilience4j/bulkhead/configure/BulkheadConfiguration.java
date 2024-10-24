@@ -110,7 +110,7 @@ public class BulkheadConfiguration {
      * Initializes a bulkhead registry.
      *
      * @param bulkheadConfigurationProperties The bulkhead configuration properties.
-     * @param compositeBulkheadCustomizer
+     * @param compositeBulkheadCustomizer The composite bulkhead customizer.
      * @return a BulkheadRegistry
      */
     private BulkheadRegistry createBulkheadRegistry(
