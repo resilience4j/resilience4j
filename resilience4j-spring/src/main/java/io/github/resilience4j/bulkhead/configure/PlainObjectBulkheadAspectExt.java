@@ -44,7 +44,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
     }
 
     /**
-     * Determines if the aspect can handle the specified return type of a method.
+     * Determines if the aspect can handle the specified return type of the method.
      *
      * @param returnType the AOP method return type class
      * @return {@code true} if the method has a plain object return type; {@code false} otherwise.
