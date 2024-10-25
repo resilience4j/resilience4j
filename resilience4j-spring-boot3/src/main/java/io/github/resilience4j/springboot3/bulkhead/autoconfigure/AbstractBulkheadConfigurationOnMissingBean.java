@@ -36,6 +36,8 @@ import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.springboot3.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
+import io.github.resilience4j.springboot3.timelimiter.autoconfigure.TimeLimiterConfigurationOnMissingBean;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -48,7 +50,7 @@ import java.util.Optional;
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class, TimeLimiterConfigurationOnMissingBean.class})
 public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
     protected final BulkheadConfiguration bulkheadConfiguration;
@@ -123,6 +125,12 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         return bulkheadConfiguration.reactorBulkHeadAspectExt();
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    @Conditional(value = AspectJOnClasspathCondition.class)
+    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
+        return new PlainObjectBulkheadAspectExt(timeLimiterRegistry);
+    }
 
     @Bean
     @ConditionalOnMissingBean(name = "compositeThreadPoolBulkheadCustomizer")
