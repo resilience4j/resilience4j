@@ -127,7 +127,7 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(value = AspectJOnClasspathCondition.class)
-    public PlainObjectBulkheadAspectExt plainObjectBulkheadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
+    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
         return bulkheadConfiguration.plainObjectBulkHeadAspectExt(timeLimiterRegistry);
     }
 
