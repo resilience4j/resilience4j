@@ -1,4 +1,4 @@
-package io.github.resilience4j.bulkhead.configure;
+package io.github.resilience4j.spring6.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 /**
@@ -33,9 +36,6 @@ import java.util.function.Supplier;
  */
 public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
 
-    /** TODO
-     * Make it work with Thread pool
-     */
     private static final Logger logger = LoggerFactory.getLogger(PlainObjectBulkheadAspectExt.class);
 
     private final TimeLimiterRegistry timeLimiterRegistry;

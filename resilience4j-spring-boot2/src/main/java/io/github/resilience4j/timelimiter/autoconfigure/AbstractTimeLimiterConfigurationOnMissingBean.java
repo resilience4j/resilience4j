@@ -51,6 +51,11 @@ public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
     }
 
     @Bean
+    public TimeLimiterConfigurationProperties timeLimiterProperties() {
+        return timeLimiterConfiguration.timeLimiterConfigurationProperties();
+    }
+
+    @Bean
     @ConditionalOnMissingBean(name = "compositeTimeLimiterCustomizer")
     @Qualifier("compositeTimeLimiterCustomizer")
     public CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer(

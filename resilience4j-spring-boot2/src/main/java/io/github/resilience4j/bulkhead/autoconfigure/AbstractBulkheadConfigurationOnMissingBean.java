@@ -32,6 +32,8 @@ import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import io.github.resilience4j.timelimiter.autoconfigure.TimeLimiterConfigurationOnMissingBean;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -48,7 +50,7 @@ import java.util.Optional;
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class, TimeLimiterConfigurationOnMissingBean.class})
 public abstract class AbstractBulkheadConfigurationOnMissingBean {
 
     protected final BulkheadConfiguration bulkheadConfiguration;
@@ -58,7 +60,6 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         this.threadPoolBulkheadConfiguration = new ThreadPoolBulkheadConfiguration();
         this.bulkheadConfiguration = new BulkheadConfiguration();
     }
-
 
     @Bean
     @ConditionalOnMissingBean(name = "compositeBulkheadCustomizer")
@@ -123,6 +124,12 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
         return bulkheadConfiguration.reactorBulkHeadAspectExt();
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    @Conditional(value = AspectJOnClasspathCondition.class)
+    public PlainObjectBulkheadAspectExt plainObjectBulkheadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
+        return bulkheadConfiguration.plainObjectBulkHeadAspectExt(timeLimiterRegistry);
+    }
 
     @Bean
     @ConditionalOnMissingBean(name = "compositeThreadPoolBulkheadCustomizer")
