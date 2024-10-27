@@ -63,7 +63,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         return handleSemaphoreBulkhead(proceedingJoinPoint, bulkhead, methodName);
     }
 
-    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
+    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) {
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
         try {
             Supplier<CompletableFuture<Object>> futureSupplier = createBulkheadFuture(proceedingJoinPoint, bulkhead);
@@ -75,14 +75,14 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
             throw ex;
         } catch (CompletionException ex) {
             logCompletionException(methodName, ex);
-            throw ex.getCause();
+            throw ex;
         } catch (Throwable ex) {
             logGenericException(methodName, ex);
             throw ex;
         }
     }
 
-    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, String methodName) throws Throwable {
+    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, String methodName) {
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(threadPoolBulkhead.getName());
         try {
             CompletableFuture<Object> completableFuture = threadPoolBulkhead.executeCallable(() -> {
@@ -101,7 +101,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
             throw ex;
         } catch (CompletionException ex) {
             logCompletionException(methodName, ex);
-            throw ex.getCause();
+            throw ex;
         } catch (Throwable ex) {
             logGenericException(methodName, ex);
             throw ex;
