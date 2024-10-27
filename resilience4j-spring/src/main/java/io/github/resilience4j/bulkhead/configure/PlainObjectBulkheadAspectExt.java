@@ -2,6 +2,8 @@ package io.github.resilience4j.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.internal.ThreadPoolBulkheadAdapter;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -16,28 +18,10 @@ import java.util.function.Supplier;
 /**
  * The {@code PlainObjectBulkheadAspectExt} class provides an aspect for managing method executions
  * that return plain objects while enforcing bulkhead constraints.
- *
- * <p>Example usage:</p>
- * <pre>
- *     {@code
- *     @Bulkhead(name = "myBulkHead")
- *     public String myMethod() {
- *         return "This is a plain result";
- *     }
- *     }
- * </pre>
- * <p>
- *     The aspect can be configured to handle specific return types if needed by overriding the
- *     {@link #canHandleReturnType(Class)} method.
- * </p>
  */
 public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
 
-    /** TODO
-     * Make it work with Thread pool
-     */
     private static final Logger logger = LoggerFactory.getLogger(PlainObjectBulkheadAspectExt.class);
-
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final ScheduledExecutorService executorService;
 
@@ -51,7 +35,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
      *
      * @param returnType the AOP method return type class
      * @return {@code true} if the method has a plain object return type; {@code false} otherwise.
-     * */
+     */
     @Override
     @SuppressWarnings("rawtypes")
     public boolean canHandleReturnType(Class returnType) {
@@ -71,16 +55,55 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
-        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
+        if (bulkhead instanceof ThreadPoolBulkheadAdapter) {
+            ThreadPoolBulkhead threadPoolBulkhead = ((ThreadPoolBulkheadAdapter) bulkhead).threadPoolBulkhead();
+            return handleThreadPoolBulkhead(proceedingJoinPoint, threadPoolBulkhead, methodName);
+        }
 
+        return handleSemaphoreBulkhead(proceedingJoinPoint, bulkhead, methodName);
+    }
+
+    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
         try {
             Supplier<CompletableFuture<Object>> futureSupplier = createBulkheadFuture(proceedingJoinPoint, bulkhead);
             return timeLimiter.executeCompletionStage(executorService, futureSupplier)
                     .toCompletableFuture()
                     .join();
+        } catch (BulkheadFullException ex) {
+            logBulkheadFullException(methodName, ex);
+            throw ex;
+        } catch (CompletionException ex) {
+            logCompletionException(methodName, ex);
+            throw ex.getCause();
+        } catch (Throwable ex) {
+            logGenericException(methodName, ex);
+            throw ex;
+        }
+    }
 
-        } catch (Exception ex) {
-            logException(ex, methodName);
+    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, String methodName) throws Throwable {
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(threadPoolBulkhead.getName());
+        try {
+            CompletableFuture<Object> completableFuture = threadPoolBulkhead.executeCallable(() -> {
+                try {
+                    return proceedingJoinPoint.proceed();
+                } catch (Throwable throwable) {
+                    return completeFutureExceptionally(throwable);
+                }
+            }).toCompletableFuture();
+
+            return timeLimiter.executeCompletionStage(executorService, () -> completableFuture)
+                    .toCompletableFuture()
+                    .join();
+        } catch (BulkheadFullException ex) {
+            logBulkheadFullException(methodName, ex);
+            throw ex;
+        } catch (CompletionException ex) {
+            logCompletionException(methodName, ex);
+            throw ex.getCause();
+        } catch (Throwable ex) {
+            logGenericException(methodName, ex);
             throw ex;
         }
     }
@@ -90,20 +113,27 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
             try {
                 return CompletableFuture.completedFuture(proceedingJoinPoint.proceed());
             } catch (Throwable throwable) {
-                CompletableFuture<Object> future = new CompletableFuture<>();
-                future.completeExceptionally(throwable);
-                return future;
+                return completeFutureExceptionally(throwable);
             }
         });
     }
 
-    private void logException(Exception exception, String methodName) {
-        logger.error("Error occurred executing '{}': {}", methodName, exception.getMessage(), exception);
-        if (exception instanceof BulkheadFullException) {
-            logger.debug("Bulkhead '{}' is full.", methodName);
-        } else if (exception instanceof CompletionException) {
-            Throwable cause = exception.getCause();
-            logger.error("Error occurred executing '{}': {}", methodName, cause.getMessage(), cause);
-        }
+    private CompletableFuture<Object> completeFutureExceptionally(Throwable throwable) {
+        CompletableFuture<Object> future = new CompletableFuture<>();
+        future.completeExceptionally(throwable);
+        return future;
+    }
+
+    private void logBulkheadFullException(String methodName, BulkheadFullException exception) {
+        logger.error("Bulkhead '{}' is full: {}", methodName, exception.getMessage(), exception);
+    }
+
+    private void logCompletionException(String methodName, CompletionException exception) {
+        Throwable cause = exception.getCause();
+        logger.error("Completion exception occurred while executing '{}': {}", methodName, cause.getMessage(), cause);
+    }
+
+    private void logGenericException(String methodName, Throwable exception) {
+        logger.error("Unexpected error occurred executing '{}': {}", methodName, exception.getMessage(), exception);
     }
 }

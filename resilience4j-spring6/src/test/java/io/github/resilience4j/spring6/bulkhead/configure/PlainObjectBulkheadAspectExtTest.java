@@ -2,6 +2,9 @@ package io.github.resilience4j.spring6.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
+import io.github.resilience4j.bulkhead.internal.ThreadPoolBulkheadAdapter;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -18,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.verify;
@@ -61,6 +65,24 @@ public class PlainObjectBulkheadAspectExtTest {
         assertThat(actual).isEqualTo(expected);
     }
 
+    @Test
+    public void testBulkheadTypeThreadPoolReturnsPlainObject() throws Throwable {
+        String expected = "ThreadPool Result";
+        when(proceedingJoinPoint.proceed()).thenReturn(expected);
+
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+                .maxThreadPoolSize(5)
+                .coreThreadPoolSize(2)
+                .queueCapacity(10)
+                .build();
+
+        ThreadPoolBulkhead threadPoolBulkhead = ThreadPoolBulkhead.of(BULKHEAD_NAME, config);
+        bulkhead = new ThreadPoolBulkheadAdapter(threadPoolBulkhead);
+
+        Object actual = plainObjectBulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, TEST_METHOD);
+
+        assertThat(actual).isEqualTo(expected);
+    }
 
     @Test
     public void testThrowableIsThrownAndCaught() throws Throwable {
@@ -74,6 +96,22 @@ public class PlainObjectBulkheadAspectExtTest {
         } catch (Exception ex) {
             assertThat(ex.getCause()).isEqualTo(throwable);
             assertThat(ex.getCause().getMessage()).isEqualTo(expectedMessage);
+        }
+
+        verify(timeLimiterRegistry).timeLimiter(BULKHEAD_NAME);
+    }
+
+    @Test
+    public void testTimeLimiterTimeoutExceptionIsThrownAndCaught() throws Throwable {
+        when(proceedingJoinPoint.proceed()).thenAnswer(invocation -> {
+            Thread.sleep(200);
+            return "Should timeout";
+        });
+
+        try {
+            plainObjectBulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, TEST_METHOD);
+        } catch (TimeoutException ex) {
+            assertThat(ex.getMessage()).contains("did not complete within time");
         }
 
         verify(timeLimiterRegistry).timeLimiter(BULKHEAD_NAME);
@@ -108,3 +146,4 @@ public class PlainObjectBulkheadAspectExtTest {
         assertThat(plainObjectBulkHeadAspectExt.canHandleReturnType(Mono.class)).isFalse();
     }
 }
+
