@@ -39,6 +39,7 @@ public class CircuitBreakerConfig implements Serializable {
 
     private static final long serialVersionUID = -5429814941777001669L;
 
+    public static final boolean DEFAULT_IGNORE_UNKNOWN_EXCEPTIONS_ENABLED = false;
     public static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50; // Percentage
     public static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 100; // Percentage
     public static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
@@ -71,6 +72,7 @@ public class CircuitBreakerConfig implements Serializable {
     @SuppressWarnings("unchecked")
     private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
 
+    private boolean ignoreUnknownExceptions = DEFAULT_IGNORE_UNKNOWN_EXCEPTIONS_ENABLED;
     private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
     private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
@@ -167,6 +169,10 @@ public class CircuitBreakerConfig implements Serializable {
 
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
+    }
+
+    public boolean isIgnoreUnknownExceptionsEnabled() {
+        return ignoreUnknownExceptions;
     }
 
     public int getPermittedNumberOfCallsInHalfOpenState() {
@@ -297,6 +303,7 @@ public class CircuitBreakerConfig implements Serializable {
         private Class<? extends Throwable>[] recordExceptions = new Class[0];
         @SuppressWarnings("unchecked")
         private Class<? extends Throwable>[] ignoreExceptions = new Class[0];
+        private boolean ignoreUnknownExceptions = DEFAULT_IGNORE_UNKNOWN_EXCEPTIONS_ENABLED;
 
         private float failureRateThreshold = DEFAULT_FAILURE_RATE_THRESHOLD;
         private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
@@ -341,6 +348,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
+            this.ignoreUnknownExceptions = baseConfig.ignoreUnknownExceptions;
         }
 
         public Builder() {
@@ -704,6 +712,27 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
+         * Configures whether unknown exceptions should be ignored by the circuit breaker.
+         *
+         * <p>
+         *     If set to {@code true}, the circuit breaker will ignore unknown exceptions listed in the
+         *     'ignoreExceptions' field during application startup, preventing the application from failing to start.
+         * </p>
+         *
+         * <p>
+         *     The default value is {@code false}, meaning unknown exceptions will trigger a {@code ClassNotFoundException}
+         *     during startup.
+         * </p>
+         *
+         * @param ignoreUnknownExceptions {@code true} to ignore unknown exceptions during startup.
+         * @return CircuitBreakerConfig.Builder
+         */
+        public final Builder ignoreUnknownExceptions(@Nullable boolean ignoreUnknownExceptions) {
+            this.ignoreUnknownExceptions = ignoreUnknownExceptions;
+            return this;
+        }
+
+        /**
          * Configures a list of error classes that are recorded as a failure and thus increase the
          * failure rate. Any exception matching or inheriting from one of the list should count as a
          * failure, unless ignored via {@link #ignoreExceptions(Class[])} or {@link
@@ -808,6 +837,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
             config.recordResultPredicate = recordResultPredicate;
+            config.ignoreUnknownExceptions = ignoreUnknownExceptions;
             return config;
         }
 

@@ -177,6 +177,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 buildIgnoreExceptionPredicate(properties, builder);
             }
 
+            if (properties.ignoreUnknownExceptions != null) {
+                builder.ignoreUnknownExceptions(properties.ignoreUnknownExceptions);
+            }
+
             if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
                 builder.automaticTransitionFromOpenToHalfOpenEnabled(
                     properties.automaticTransitionFromOpenToHalfOpenEnabled);
@@ -379,6 +383,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
+
+        @Nullable
+        private Boolean ignoreUnknownExceptions;
 
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.
@@ -774,6 +781,15 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                     "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range [0..1)");
             }
             this.randomizedWaitFactor = randomizedWaitFactor;
+            return this;
+        }
+
+        public Boolean shouldIgnoreUnknownExceptions() {
+            return ignoreUnknownExceptions;
+        }
+
+        public InstanceProperties ignoreUnknownExceptions(Boolean ignoreUnknownExceptions) {
+            this.ignoreUnknownExceptions = ignoreUnknownExceptions;
             return this;
         }
     }

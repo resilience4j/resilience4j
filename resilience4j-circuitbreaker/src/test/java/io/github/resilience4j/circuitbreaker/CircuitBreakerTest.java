@@ -22,6 +22,7 @@ import static io.github.resilience4j.circuitbreaker.utils.CircuitBreakerResultUt
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -1192,6 +1193,41 @@ public class CircuitBreakerTest {
 
         assertThat(metrics.getNumberOfBufferedCalls()).isZero();
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldIgnoreUnknownExceptionsWhenSetToTrue() {
+        CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom().ignoreUnknownExceptions(true);
+        CircuitBreakerConfig config = builder.build();
+
+        assertThat(config.isIgnoreUnknownExceptionsEnabled()).isTrue();
+
+        try {
+            simulateApplicationStartup(config.isIgnoreUnknownExceptionsEnabled());
+        } catch (ClassNotFoundException ex) {
+            fail("Should not throw an exception when ignoreUnknownExceptions is true.");
+        }
+    }
+
+    @Test
+    public void shouldNotIgnoreUnknownExceptionsByDefault() {
+        CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+        CircuitBreakerConfig config = builder.build();
+
+        assertThat(config.isIgnoreUnknownExceptionsEnabled()).isFalse();
+
+        try {
+            simulateApplicationStartup(config.isIgnoreUnknownExceptionsEnabled());
+            fail("Expected a ClassNotFoundException to be thrown.");
+        } catch (ClassNotFoundException ex) {
+            assertThat(ex.getMessage()).isEqualTo("Simulated unknown exception during application startup.");
+        }
+    }
+
+    private void simulateApplicationStartup(boolean ignoreUnknownExceptions) throws ClassNotFoundException {
+        if (!ignoreUnknownExceptions) {
+            throw new ClassNotFoundException("Simulated unknown exception during application startup.");
+        }
     }
 
     private static class AccessBanException extends Exception {
