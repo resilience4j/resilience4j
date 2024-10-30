@@ -177,8 +177,8 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 buildIgnoreExceptionPredicate(properties, builder);
             }
 
-            if (properties.ignoreUnknownExceptions != null) {
-                builder.ignoreUnknownExceptions(properties.ignoreUnknownExceptions);
+            if (properties.getIgnoreExceptions() != null) {
+                builder.ignoreUnknownExceptions(Boolean.TRUE.equals(properties.ignoreUnknownExceptions));
             }
 
             if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
@@ -784,7 +784,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             return this;
         }
 
-        public Boolean shouldIgnoreUnknownExceptions() {
+        public Boolean getIgnoreUnknownExceptions() {
             return ignoreUnknownExceptions;
         }
 
