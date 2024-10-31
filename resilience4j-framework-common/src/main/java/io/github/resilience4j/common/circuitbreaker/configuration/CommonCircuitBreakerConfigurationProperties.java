@@ -177,7 +177,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 buildIgnoreExceptionPredicate(properties, builder);
             }
 
-            if (properties.getIgnoreExceptions() != null) {
+            if (properties.getIgnoreUnknownExceptions() != null) {
                 builder.ignoreUnknownExceptions(Boolean.TRUE.equals(properties.ignoreUnknownExceptions));
             }
 
