@@ -4,12 +4,12 @@ import org.springframework.core.convert.converter.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StringToThrowableClassConverter implements Converter<String, Class<? extends Throwable>> {
+public class CircuitBreakerExceptionClassConverter implements Converter<String, Class<? extends Throwable>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StringToThrowableClassConverter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerExceptionClassConverter.class);
     private final boolean ignoreUnknownExceptions;
 
-    public StringToThrowableClassConverter(boolean ignoreUnknownExceptions) {
+    public CircuitBreakerExceptionClassConverter(boolean ignoreUnknownExceptions) {
         this.ignoreUnknownExceptions = ignoreUnknownExceptions;
         if (ignoreUnknownExceptions) {
             LOG.info("IgnoreUnknownExceptions set to true.");
