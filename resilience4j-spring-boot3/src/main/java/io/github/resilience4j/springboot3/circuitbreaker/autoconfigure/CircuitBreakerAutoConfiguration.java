@@ -34,8 +34,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.env.Environment;
 
-import java.util.Map;
-
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
@@ -47,30 +45,22 @@ import java.util.Map;
 @Import({CircuitBreakerConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class CircuitBreakerAutoConfiguration {
 
-    private final String CIRCUIT_BREAKER_PREFIX = "resilience4j.circuitbreaker.configs.";
-
     private final Environment environment;
-    private final CircuitBreakerProperties circuitBreakerProperties;
 
-    public CircuitBreakerAutoConfiguration(Environment environment, CircuitBreakerProperties circuitBreakerProperties) {
+    public CircuitBreakerAutoConfiguration(Environment environment) {
         this.environment = environment;
-        this.circuitBreakerProperties = circuitBreakerProperties;
     }
 
     @Bean
     @ConfigurationPropertiesBinding
     public StringToThrowableClassConverter stringToThrowableClassConverter() {
-        return new StringToThrowableClassConverter(environment, CIRCUIT_BREAKER_PREFIX + "default");
+        boolean ignoreUnknownExceptions = environment.getProperty("resilience4j.circuitbreaker.configs.default.ignoreUnknownExceptions", Boolean.class, false);
+        return new StringToThrowableClassConverter(ignoreUnknownExceptions);
     }
 
     @Bean
     public ConverterRegistry converterRegistry(StringToThrowableClassConverter stringToThrowableClassConverter, ConverterRegistry registry) {
         registry.addConverter(stringToThrowableClassConverter);
-        for (Map.Entry<String, CircuitBreakerProperties.InstanceProperties> entrySet : circuitBreakerProperties.getConfigs().entrySet()) {
-            String configPrefix = CIRCUIT_BREAKER_PREFIX + entrySet.getKey();
-            registry.addConverter(new StringToThrowableClassConverter(environment, configPrefix));
-        }
-
         return registry;
     }
 
