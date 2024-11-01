@@ -11,6 +11,10 @@ public class StringToThrowableClassConverter implements Converter<String, Class<
 
     public StringToThrowableClassConverter(boolean ignoreUnknownExceptions) {
         this.ignoreUnknownExceptions = ignoreUnknownExceptions;
+        if (ignoreUnknownExceptions) {
+            LOG.info("IgnoreUnknownExceptions set to true.");
+            LOG.info("Ignoring all unknown exceptions.");
+        }
     }
 
     @Override
@@ -20,8 +24,7 @@ public class StringToThrowableClassConverter implements Converter<String, Class<
             return (Class<? extends Throwable>) Class.forName(source);
         } catch (ClassNotFoundException ex) {
             if (ignoreUnknownExceptions) {
-                LOG.warn("Ignore Unknown Exceptions set to true.");
-                LOG.warn("Class not found: {}. Ignoring...", source);
+                LOG.warn("Ignoring unknown exception: {}", source);
                 return PlaceHolderException.class;
             } else {
                 throw new IllegalArgumentException("Class not found: " + source, ex);
