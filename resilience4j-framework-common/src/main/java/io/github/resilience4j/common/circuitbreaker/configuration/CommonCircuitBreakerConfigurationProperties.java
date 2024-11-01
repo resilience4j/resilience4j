@@ -784,11 +784,12 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             return this;
         }
 
+        @Nullable
         public Boolean getIgnoreUnknownExceptions() {
             return ignoreUnknownExceptions;
         }
 
-        public InstanceProperties ignoreUnknownExceptions(Boolean ignoreUnknownExceptions) {
+        public InstanceProperties setIgnoreUnknownExceptions(Boolean ignoreUnknownExceptions) {
             this.ignoreUnknownExceptions = ignoreUnknownExceptions;
             return this;
         }
