@@ -1,5 +1,6 @@
 dependencies {
     api project(':resilience4j-core')
+    implementation 'org.springframework.boot:spring-boot-starter:2.5.5'
     testImplementation project(':resilience4j-test')
     testImplementation(libraries.mock_clock)
 }
