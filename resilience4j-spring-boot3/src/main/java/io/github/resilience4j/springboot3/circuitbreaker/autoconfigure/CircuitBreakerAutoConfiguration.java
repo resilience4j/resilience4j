@@ -19,10 +19,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerExceptionClassConverter;
+import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
+import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerConfigurationProperties;
 import io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -31,8 +34,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
+
+import java.util.Arrays;
+import java.util.stream.StreamSupport;
 
 
 /**
@@ -45,22 +54,32 @@ import org.springframework.core.env.Environment;
 @Import({CircuitBreakerConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class CircuitBreakerAutoConfiguration {
 
-    private final Environment environment;
+    private final AbstractEnvironment environment;
 
-    public CircuitBreakerAutoConfiguration(Environment environment) {
+    public CircuitBreakerAutoConfiguration(AbstractEnvironment environment) {
         this.environment = environment;
     }
 
     @Bean
     @ConfigurationPropertiesBinding
-    public CircuitBreakerExceptionClassConverter stringToThrowableClassConverter() {
-        boolean ignoreUnknownExceptions = environment.getProperty("resilience4j.circuitbreaker.configs.default.ignoreUnknownExceptions", Boolean.class, false);
+    public CircuitBreakerExceptionClassConverter circuitBreakerExceptionClassConverter() {
+        boolean ignoreUnknownExceptions = environment
+                .getPropertySources()
+                .stream()
+                .filter(EnumerablePropertySource.class::isInstance)
+                .map(EnumerablePropertySource.class::cast)
+                .flatMap(ps -> Arrays.stream(ps.getPropertyNames()))
+                .filter(name -> name.contains(".configs.") && name.endsWith(".ignoreUnknownExceptions"))
+                .findFirst()
+                .map(name -> environment.getProperty(name, Boolean.class, false))
+                .orElse(false);
+
         return new CircuitBreakerExceptionClassConverter(ignoreUnknownExceptions);
     }
 
     @Bean
-    public ConverterRegistry converterRegistry(CircuitBreakerExceptionClassConverter stringToThrowableClassConverter, ConverterRegistry registry) {
-        registry.addConverter(stringToThrowableClassConverter);
+    public ConverterRegistry converterRegistry(CircuitBreakerExceptionClassConverter circuitBreakerExceptionClassConverter, ConverterRegistry registry) {
+        registry.addConverter(circuitBreakerExceptionClassConverter);
         return registry;
     }
 
