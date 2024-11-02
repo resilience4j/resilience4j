@@ -39,6 +39,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -65,6 +66,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     private final SchedulerFactory schedulerFactory;
     private final Function<Clock, Long> currentTimestampFunction;
     private final TimeUnit timestampUnit;
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * Creates a circuitBreaker.
@@ -808,9 +810,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             cancelAutomaticTransitionToHalfOpen();
         }
 
-        private synchronized void toHalfOpenState() {
-            if (isOpen.compareAndSet(true, false)) {
-                transitionToHalfOpenState();
+        private void toHalfOpenState() {
+            lock.lock();
+
+            try {
+                if (isOpen.compareAndSet(true, false)) {
+                    transitionToHalfOpenState();
+                }
+            } finally {
+                lock.unlock();
             }
         }
 
