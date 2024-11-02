@@ -34,7 +34,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.Environment;
 
 import java.util.Arrays;
 
