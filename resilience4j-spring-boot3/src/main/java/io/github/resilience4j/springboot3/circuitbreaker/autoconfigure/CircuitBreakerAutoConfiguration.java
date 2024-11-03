@@ -18,7 +18,7 @@ package io.github.resilience4j.springboot3.circuitbreaker.autoconfigure;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerExceptionClassConverter;
+import io.github.resilience4j.circuitbreaker.internal.IgnoreUnknownExceptionConverter;
 import io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -55,7 +55,7 @@ public class CircuitBreakerAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    public CircuitBreakerExceptionClassConverter circuitBreakerExceptionClassConverter() {
+    public IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter() {
         boolean ignoreUnknownExceptions = environment
                 .getPropertySources()
                 .stream()
@@ -67,12 +67,12 @@ public class CircuitBreakerAutoConfiguration {
                 .map(name -> environment.getProperty(name, Boolean.class, false))
                 .orElse(false);
 
-        return new CircuitBreakerExceptionClassConverter(ignoreUnknownExceptions);
+        return new IgnoreUnknownExceptionConverter(ignoreUnknownExceptions);
     }
 
     @Bean
-    public ConverterRegistry converterRegistry(CircuitBreakerExceptionClassConverter circuitBreakerExceptionClassConverter, ConverterRegistry registry) {
-        registry.addConverter(circuitBreakerExceptionClassConverter);
+    public ConverterRegistry converterRegistry(IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter, ConverterRegistry registry) {
+        registry.addConverter(ignoreUnknownExceptionConverter);
         return registry;
     }
 
