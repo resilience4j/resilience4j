@@ -31,7 +31,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 
@@ -71,9 +74,39 @@ public class CircuitBreakerAutoConfiguration {
     }
 
     @Bean
-    public ConverterRegistry converterRegistry(IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter, ConverterRegistry registry) {
+    public ConverterRegistry converterRegistry(IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter) {
+        ConverterRegistry registry = getConverterRegistry();
         registry.addConverter(ignoreUnknownExceptionConverter);
         return registry;
+    }
+
+    private ConverterRegistry getConverterRegistry() {
+        return new ConverterRegistry() {
+            @Override
+            public void addConverter(Converter<?, ?> converter) {
+
+            }
+
+            @Override
+            public <S, T> void addConverter(Class<S> sourceType, Class<T> targetType, Converter<? super S, ? extends T> converter) {
+
+            }
+
+            @Override
+            public void addConverter(GenericConverter converter) {
+
+            }
+
+            @Override
+            public void addConverterFactory(ConverterFactory<?, ?> factory) {
+
+            }
+
+            @Override
+            public void removeConvertible(Class<?> sourceType, Class<?> targetType) {
+
+            }
+        };
     }
 
     @Configuration
