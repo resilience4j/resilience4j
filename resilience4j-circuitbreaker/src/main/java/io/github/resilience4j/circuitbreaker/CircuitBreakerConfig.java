@@ -171,7 +171,7 @@ public class CircuitBreakerConfig implements Serializable {
         return writableStackTraceEnabled;
     }
 
-    public boolean isIgnoreUnknownExceptionsEnabled() {
+    public boolean ignoreClassBindingExceptions() {
         return ignoreUnknownExceptions;
     }
 

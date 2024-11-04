@@ -1200,10 +1200,10 @@ public class CircuitBreakerTest {
         CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom().ignoreUnknownExceptions(true);
         CircuitBreakerConfig config = builder.build();
 
-        assertThat(config.isIgnoreUnknownExceptionsEnabled()).isTrue();
+        assertThat(config.ignoreClassBindingExceptions()).isTrue();
 
         try {
-            simulateApplicationStartup(config.isIgnoreUnknownExceptionsEnabled());
+            simulateApplicationStartup(config.ignoreClassBindingExceptions());
         } catch (ClassNotFoundException ex) {
             fail("Should not throw an exception when ignoreUnknownExceptions is true.");
         }
@@ -1214,10 +1214,10 @@ public class CircuitBreakerTest {
         CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
         CircuitBreakerConfig config = builder.build();
 
-        assertThat(config.isIgnoreUnknownExceptionsEnabled()).isFalse();
+        assertThat(config.ignoreClassBindingExceptions()).isFalse();
 
         try {
-            simulateApplicationStartup(config.isIgnoreUnknownExceptionsEnabled());
+            simulateApplicationStartup(config.ignoreClassBindingExceptions());
             fail("Expected a ClassNotFoundException to be thrown.");
         } catch (ClassNotFoundException ex) {
             assertThat(ex.getMessage()).isEqualTo("Simulated unknown exception during application startup.");
