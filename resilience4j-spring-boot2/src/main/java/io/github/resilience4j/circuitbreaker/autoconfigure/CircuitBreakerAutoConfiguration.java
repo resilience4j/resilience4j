@@ -18,7 +18,7 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.internal.CircuitBreakerExceptionClassConverter;
+import io.github.resilience4j.circuitbreaker.internal.IgnoreUnknownExceptionConverter;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -31,8 +31,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.ConverterRegistry;
-import org.springframework.core.env.Environment;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+
+import java.util.Arrays;
 
 
 /**
@@ -45,23 +51,63 @@ import org.springframework.core.env.Environment;
 @Import({CircuitBreakerConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class CircuitBreakerAutoConfiguration {
 
-    private final Environment environment;
+    private final AbstractEnvironment environment;
 
-    public CircuitBreakerAutoConfiguration(Environment environment) {
+    public CircuitBreakerAutoConfiguration(AbstractEnvironment environment) {
         this.environment = environment;
     }
 
     @Bean
     @ConfigurationPropertiesBinding
-    public CircuitBreakerExceptionClassConverter stringToThrowableClassConverter() {
-        boolean ignoreUnknownExceptions = environment.getProperty("resilience4j.circuitbreaker.configs.default.ignoreUnknownExceptions", Boolean.class, false);
-        return new CircuitBreakerExceptionClassConverter(ignoreUnknownExceptions);
+    public IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter() {
+        boolean ignoreUnknownExceptions = environment
+                .getPropertySources()
+                .stream()
+                .filter(EnumerablePropertySource.class::isInstance)
+                .map(EnumerablePropertySource.class::cast)
+                .flatMap(ps -> Arrays.stream(ps.getPropertyNames()))
+                .filter(name -> name.contains(".configs.") && name.endsWith(".ignoreUnknownExceptions"))
+                .findFirst()
+                .map(name -> environment.getProperty(name, Boolean.class, false))
+                .orElse(false);
+
+        return new IgnoreUnknownExceptionConverter(ignoreUnknownExceptions);
     }
 
     @Bean
-    public ConverterRegistry converterRegistry(CircuitBreakerExceptionClassConverter stringToThrowableClassConverter, ConverterRegistry registry) {
-        registry.addConverter(stringToThrowableClassConverter);
+    public ConverterRegistry converterRegistry(IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter) {
+        ConverterRegistry registry = getConverterRegistry();
+        registry.addConverter(ignoreUnknownExceptionConverter);
         return registry;
+    }
+
+    private ConverterRegistry getConverterRegistry() {
+        return new ConverterRegistry() {
+            @Override
+            public void addConverter(Converter<?, ?> converter) {
+
+            }
+
+            @Override
+            public <S, T> void addConverter(Class<S> sourceType, Class<T> targetType, Converter<? super S, ? extends T> converter) {
+
+            }
+
+            @Override
+            public void addConverter(GenericConverter converter) {
+
+            }
+
+            @Override
+            public void addConverterFactory(ConverterFactory<?, ?> factory) {
+
+            }
+
+            @Override
+            public void removeConvertible(Class<?> sourceType, Class<?> targetType) {
+
+            }
+        };
     }
 
     @Configuration
