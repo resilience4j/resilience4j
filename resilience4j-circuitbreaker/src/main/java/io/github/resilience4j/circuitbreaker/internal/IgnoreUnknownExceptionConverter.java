@@ -1,6 +1,6 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import org.springframework.core.convert.converter.Converter;
+import io.github.resilience4j.core.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
