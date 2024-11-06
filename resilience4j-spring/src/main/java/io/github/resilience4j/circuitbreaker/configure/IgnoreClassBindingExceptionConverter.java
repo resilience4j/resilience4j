@@ -23,7 +23,7 @@ public class IgnoreClassBindingExceptionConverter implements Converter<String, C
     public IgnoreClassBindingExceptionConverter(boolean ignoreUnknownExceptions) {
         this.ignoreUnknownExceptions = ignoreUnknownExceptions;
         if (ignoreUnknownExceptions) {
-            LOG.debug("Ignoring unknown exceptions");
+            LOG.debug("Configured to ignore unknown exceptions. Unknown exceptions will be replaced with a placeholder.");
         }
     }
 
@@ -49,9 +49,10 @@ public class IgnoreClassBindingExceptionConverter implements Converter<String, C
             return (Class<? extends Throwable>) Class.forName(source);
         } catch (ClassNotFoundException ex) {
             if (ignoreUnknownExceptions) {
-                LOG.debug("Ignoring unknown exception '{}'", source);
+                LOG.debug("Exception class '{}' could not be found. Ignoring and substituting with placeholder exception.", source);
                 return IgnoreClassBindingExceptionConverter.PlaceHolderException.class;
             } else {
+                LOG.error("Class '{}' not found and ignoreUnknownExceptions is set to false.", source);
                 throw new IllegalArgumentException("Class not found: " + source, ex);
             }
         }
