@@ -15,12 +15,12 @@ import org.springframework.core.convert.converter.Converter;
  *     If {@code false}, an {@link IllegalArgumentException} is thrown when the class is not found.
  * </p>
  */
-public class IgnoreClassBindingExceptionsConverter implements Converter<String, Class<? extends Throwable>> {
+public class IgnoreClassBindingExceptionConverter implements Converter<String, Class<? extends Throwable>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IgnoreClassBindingExceptionsConverter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IgnoreClassBindingExceptionConverter.class);
     private final boolean ignoreUnknownExceptions;
 
-    public IgnoreClassBindingExceptionsConverter(boolean ignoreUnknownExceptions) {
+    public IgnoreClassBindingExceptionConverter(boolean ignoreUnknownExceptions) {
         this.ignoreUnknownExceptions = ignoreUnknownExceptions;
         if (ignoreUnknownExceptions) {
             LOG.debug("Ignoring unknown exceptions");
@@ -50,7 +50,7 @@ public class IgnoreClassBindingExceptionsConverter implements Converter<String, 
         } catch (ClassNotFoundException ex) {
             if (ignoreUnknownExceptions) {
                 LOG.debug("Ignoring unknown exception '{}'", source);
-                return IgnoreClassBindingExceptionsConverter.PlaceHolderException.class;
+                return IgnoreClassBindingExceptionConverter.PlaceHolderException.class;
             } else {
                 throw new IllegalArgumentException("Class not found: " + source, ex);
             }

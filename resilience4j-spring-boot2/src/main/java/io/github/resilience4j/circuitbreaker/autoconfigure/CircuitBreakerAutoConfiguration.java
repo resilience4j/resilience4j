@@ -17,7 +17,7 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.configure.IgnoreClassBindingExceptionsConverter;
+import io.github.resilience4j.circuitbreaker.configure.IgnoreClassBindingExceptionConverter;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
@@ -55,9 +55,9 @@ public class CircuitBreakerAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    public IgnoreClassBindingExceptionsConverter ignoreClassBindingExceptionsConverter() {
+    public IgnoreClassBindingExceptionConverter ignoreClassBindingExceptionsConverter() {
         boolean ignoreClassBindingExceptions = isIgnoreClassBindingExceptionsEnabled();
-        return new IgnoreClassBindingExceptionsConverter(ignoreClassBindingExceptions);
+        return new IgnoreClassBindingExceptionConverter(ignoreClassBindingExceptions);
     }
 
     @Bean
