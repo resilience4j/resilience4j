@@ -17,9 +17,7 @@ package io.github.resilience4j.springboot3.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.ConverterRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.internal.IgnoreUnknownExceptionConverter;
 import io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.springboot3.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -27,15 +25,10 @@ import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigu
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
-
-import java.util.Arrays;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
@@ -46,36 +39,6 @@ import java.util.Arrays;
 @EnableConfigurationProperties(CircuitBreakerProperties.class)
 @Import({CircuitBreakerConfigurationOnMissingBean.class, FallbackConfigurationOnMissingBean.class})
 public class CircuitBreakerAutoConfiguration {
-
-    private final AbstractEnvironment environment;
-
-    public CircuitBreakerAutoConfiguration(AbstractEnvironment environment) {
-        this.environment = environment;
-    }
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    public IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter() {
-        boolean ignoreUnknownExceptions = environment
-                .getPropertySources()
-                .stream()
-                .filter(EnumerablePropertySource.class::isInstance)
-                .map(EnumerablePropertySource.class::cast)
-                .flatMap(ps -> Arrays.stream(ps.getPropertyNames()))
-                .filter(name -> name.contains(".configs.") && name.endsWith(".ignoreUnknownExceptions"))
-                .findFirst()
-                .map(name -> environment.getProperty(name, Boolean.class, false))
-                .orElse(false);
-
-        return new IgnoreUnknownExceptionConverter(ignoreUnknownExceptions);
-    }
-
-    @Bean
-    public ConverterRegistry converterRegistry(IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter) {
-        ConverterRegistry registry = new ConverterRegistry();
-        registry.registerConverter(String.class, ignoreUnknownExceptionConverter);
-        return registry;
-    }
 
     @Configuration
     @ConditionalOnClass(Endpoint.class)
