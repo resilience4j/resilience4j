@@ -17,9 +17,8 @@ package io.github.resilience4j.circuitbreaker.autoconfigure;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.ConverterRegistry;
+import io.github.resilience4j.circuitbreaker.configure.IgnoreClassBindingExceptionsConverter;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import io.github.resilience4j.circuitbreaker.internal.IgnoreUnknownExceptionConverter;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEndpoint;
 import io.github.resilience4j.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpoint;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
@@ -32,11 +31,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 
 import java.util.Arrays;
-
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration} for
@@ -50,14 +49,26 @@ public class CircuitBreakerAutoConfiguration {
 
     private final AbstractEnvironment environment;
 
-    public CircuitBreakerAutoConfiguration(AbstractEnvironment environment) {
+    public CircuitBreakerAutoConfiguration(final AbstractEnvironment environment) {
         this.environment = environment;
     }
 
     @Bean
     @ConfigurationPropertiesBinding
-    public IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter() {
-        boolean ignoreUnknownExceptions = environment
+    public IgnoreClassBindingExceptionsConverter ignoreClassBindingExceptionsConverter() {
+        boolean ignoreClassBindingExceptions = isIgnoreClassBindingExceptionsEnabled();
+        return new IgnoreClassBindingExceptionsConverter(ignoreClassBindingExceptions);
+    }
+
+    @Bean
+    public GenericConversionService genericConversionService() {
+        GenericConversionService genericConversionService = new GenericConversionService();
+        genericConversionService.addConverter(ignoreClassBindingExceptionsConverter());
+        return genericConversionService;
+    }
+
+    private boolean isIgnoreClassBindingExceptionsEnabled() {
+        return environment
                 .getPropertySources()
                 .stream()
                 .filter(EnumerablePropertySource.class::isInstance)
@@ -67,15 +78,6 @@ public class CircuitBreakerAutoConfiguration {
                 .findFirst()
                 .map(name -> environment.getProperty(name, Boolean.class, false))
                 .orElse(false);
-
-        return new IgnoreUnknownExceptionConverter(ignoreUnknownExceptions);
-    }
-
-    @Bean
-    public ConverterRegistry converterRegistry(IgnoreUnknownExceptionConverter ignoreUnknownExceptionConverter) {
-        ConverterRegistry registry = new ConverterRegistry();
-        registry.registerConverter(String.class, ignoreUnknownExceptionConverter);
-        return registry;
     }
 
     @Configuration
