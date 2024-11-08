@@ -184,8 +184,11 @@ public interface Retry {
             do {
                 try {
                     runnable.run();
-                    context.onComplete();
-                    break;
+                    final boolean validationOfResult = context.onResult(null);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        break;
+                    }
                 } catch (Exception exception) {
                     context.onError(exception);
                 }
@@ -331,8 +334,11 @@ public interface Retry {
             do {
                 try {
                     runnable.run();
-                    context.onComplete();
-                    break;
+                    final boolean validationOfResult = context.onResult(null);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        break;
+                    }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
                 }
@@ -616,10 +622,10 @@ public interface Retry {
         private final CompletableFuture<T> promise;
 
         AsyncRetryBlock(
-            ScheduledExecutorService scheduler,
-            Retry.AsyncContext<T> retryContext,
-            Supplier<CompletionStage<T>> supplier,
-            CompletableFuture<T> promise
+                ScheduledExecutorService scheduler,
+                Retry.AsyncContext<T> retryContext,
+                Supplier<CompletionStage<T>> supplier,
+                CompletableFuture<T> promise
         ) {
             this.scheduler = scheduler;
             this.retryContext = retryContext;
