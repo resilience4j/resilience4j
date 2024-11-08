@@ -622,10 +622,10 @@ public interface Retry {
         private final CompletableFuture<T> promise;
 
         AsyncRetryBlock(
-                ScheduledExecutorService scheduler,
-                Retry.AsyncContext<T> retryContext,
-                Supplier<CompletionStage<T>> supplier,
-                CompletableFuture<T> promise
+            ScheduledExecutorService scheduler,
+            Retry.AsyncContext<T> retryContext,
+            Supplier<CompletionStage<T>> supplier,
+            CompletableFuture<T> promise
         ) {
             this.scheduler = scheduler;
             this.retryContext = retryContext;
