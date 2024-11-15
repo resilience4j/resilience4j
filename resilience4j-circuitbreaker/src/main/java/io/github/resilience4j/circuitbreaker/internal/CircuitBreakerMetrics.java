@@ -43,14 +43,13 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private CircuitBreakerMetrics(int slidingWindowSize,
         CircuitBreakerConfig.SlidingWindowType slidingWindowType,
-        CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock) {
+        CircuitBreakerConfig circuitBreakerConfig) {
         if (slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED) {
             this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
             this.minimumNumberOfCalls = Math
                 .min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         } else {
-            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize, clock);
+            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize, circuitBreakerConfig.getClock());
             this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
@@ -61,33 +60,33 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     }
 
     private CircuitBreakerMetrics(int slidingWindowSize,
-        CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
-        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig, clock);
+        CircuitBreakerConfig circuitBreakerConfig) {
+        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forClosed(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    static CircuitBreakerMetrics forClosed(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
-            circuitBreakerConfig, clock);
+            circuitBreakerConfig);
     }
 
     static CircuitBreakerMetrics forHalfOpen(int permittedNumberOfCallsInHalfOpenState,
-        CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState,
-            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig, clock);
+            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
-            circuitBreakerConfig, clock);
+            circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
-            circuitBreakerConfig, clock);
+            circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
-        return forClosed(circuitBreakerConfig, clock);
+    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig) {
+        return forClosed(circuitBreakerConfig);
     }
 
     /**

@@ -34,10 +34,11 @@ public class CircuitBreakerMetricsTest {
     public void testCircuitBreakerMetrics() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .clock(MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC")))
             .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
-            .forClosed(circuitBreakerConfig, MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC")));
+            .forClosed(circuitBreakerConfig);
 
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
         circuitBreakerMetrics.onSuccess(0, TimeUnit.NANOSECONDS);
