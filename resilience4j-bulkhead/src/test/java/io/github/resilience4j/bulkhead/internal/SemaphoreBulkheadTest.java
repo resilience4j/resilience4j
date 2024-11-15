@@ -508,7 +508,7 @@ public class SemaphoreBulkheadTest {
         secondChangerThread.start();
 
         await().atMost(1, SECONDS)
-            .until(() -> secondChangerThread.getState().equals(BLOCKED));
+            .until(() -> secondChangerThread.getState().equals(WAITING));
 
         bulkheadThreadTrigger.set(false);
         await().atMost(1, SECONDS)

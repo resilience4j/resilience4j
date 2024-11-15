@@ -34,6 +34,8 @@ import io.github.resilience4j.core.lang.Nullable;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
@@ -52,7 +54,7 @@ public class SemaphoreBulkhead implements Bulkhead {
     private final BulkheadMetrics metrics;
     private final BulkheadEventProcessor eventProcessor;
 
-    private final Object configChangesLock = new Object();
+    private final Lock lock = new ReentrantLock();
     private final Map<String, String> tags;
     @SuppressWarnings("squid:S3077")
     // this object is immutable and we replace ref entirely during config change.
@@ -123,7 +125,8 @@ public class SemaphoreBulkhead implements Bulkhead {
      */
     @Override
     public void changeConfig(final BulkheadConfig newConfig) {
-        synchronized (configChangesLock) {
+        lock.lock();
+        try {
             int delta = newConfig.getMaxConcurrentCalls() - config.getMaxConcurrentCalls();
             if (delta < 0) {
                 semaphore.acquireUninterruptibly(-delta);
@@ -131,6 +134,8 @@ public class SemaphoreBulkhead implements Bulkhead {
                 semaphore.release(delta);
             }
             config = newConfig;
+        } finally {
+            lock.unlock();
         }
     }
 

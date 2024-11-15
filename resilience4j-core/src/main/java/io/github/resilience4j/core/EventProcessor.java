@@ -20,35 +20,42 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
     final Set<EventConsumer<T>> onEventConsumers = new CopyOnWriteArraySet<>();
     final ConcurrentMap<String, Set<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
     private boolean consumerRegistered;
+    private final Lock lock = new ReentrantLock();
 
     public boolean hasConsumers() {
         return consumerRegistered;
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized void registerConsumer(String className, EventConsumer<? extends T> eventConsumer) {
-        this.eventConsumerMap.compute(className, (k, consumers) -> {
-            if (consumers == null) {
-                consumers = new CopyOnWriteArraySet<>();
-                consumers.add((EventConsumer<T>) eventConsumer);
-                return consumers;
-            } else {
-                consumers.add((EventConsumer<T>) eventConsumer);
-                return consumers;
-            }
-        });
-        this.consumerRegistered = true;
+    public void registerConsumer(String className, EventConsumer<? extends T> eventConsumer) {
+        lock.lock();
+        try {
+            this.eventConsumerMap.compute(className, (k, consumers) -> {
+                if (consumers == null) {
+                    consumers = new CopyOnWriteArraySet<>();
+                    consumers.add((EventConsumer<T>) eventConsumer);
+                    return consumers;
+                } else {
+                    consumers.add((EventConsumer<T>) eventConsumer);
+                    return consumers;
+                }
+            });
+            this.consumerRegistered = true;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public <E extends T> boolean processEvent(E event) {
@@ -73,8 +80,13 @@ public class EventProcessor<T> implements EventPublisher<T> {
     }
 
     @Override
-    public synchronized void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
-        this.onEventConsumers.add(onEventConsumer);
-        this.consumerRegistered = true;
+    public void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
+        lock.lock();
+        try {
+            this.onEventConsumers.add(onEventConsumer);
+            this.consumerRegistered = true;
+        } finally {
+            lock.unlock();
+        }
     }
 }
