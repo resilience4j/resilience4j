@@ -29,12 +29,14 @@ import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.await;
@@ -458,12 +460,17 @@ public class SemaphoreBulkheadTest {
 
     @SuppressWarnings("Duplicates")
     @Test
-    public void changePermissionsConcurrently() {
+    public void changePermissionsConcurrently() throws NoSuchFieldException, IllegalAccessException {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(0))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
+        // Access to reflection to check the lock state of ReentrantLock
+        Field field = SemaphoreBulkhead.class.getDeclaredField("lock");
+        field.setAccessible(true);
+
+        ReentrantLock lock = (ReentrantLock) field.get(bulkhead);
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(3);
 
@@ -508,7 +515,9 @@ public class SemaphoreBulkheadTest {
         secondChangerThread.start();
 
         await().atMost(1, SECONDS)
-            .until(() -> secondChangerThread.getState().equals(BLOCKED));
+                .until(lock::isLocked);
+        await().atMost(1, SECONDS)
+                .until(() -> lock.hasQueuedThread(secondChangerThread));
 
         bulkheadThreadTrigger.set(false);
         await().atMost(1, SECONDS)
@@ -517,6 +526,9 @@ public class SemaphoreBulkheadTest {
             .until(() -> firstChangerThread.getState().equals(TERMINATED));
         await().atMost(1, SECONDS)
             .until(() -> secondChangerThread.getState().equals(TERMINATED));
+
+        await().atMost(1, SECONDS)
+                .until(() -> !lock.isLocked());
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(4);
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls())
