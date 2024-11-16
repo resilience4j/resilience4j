@@ -71,16 +71,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      *
      * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
-     * @param clock                A Clock which can be mocked in tests.
      * @param schedulerFactory     A SchedulerFactory which can be mocked in tests.
      */
     private CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock, SchedulerFactory schedulerFactory, Map<String, String> tags) {
+        SchedulerFactory schedulerFactory, Map<String, String> tags) {
         this.name = name;
         this.circuitBreakerConfig = Objects
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.eventProcessor = new CircuitBreakerEventProcessor();
-        this.clock = clock;
+        this.clock = circuitBreakerConfig.getClock();
         this.stateReference = new AtomicReference<>(new ClosedState());
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
@@ -97,29 +96,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         SchedulerFactory schedulerFactory) {
-        this(name, circuitBreakerConfig, Clock.systemUTC(), schedulerFactory, emptyMap());
-    }
-
-    /**
-     * Creates a circuitBreaker.
-     *
-     * @param name                 the name of the CircuitBreaker
-     * @param circuitBreakerConfig The CircuitBreaker configuration.
-     */
-    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock) {
-        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), emptyMap());
-    }
-
-    /**
-     * Creates a circuitBreaker.
-     *
-     * @param name                 the name of the CircuitBreaker
-     * @param circuitBreakerConfig The CircuitBreaker configuration.
-     */
-    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock, Map<String, String> tags) {
-        this(name, circuitBreakerConfig, clock, SchedulerFactory.getInstance(), tags);
+        this(name, circuitBreakerConfig, schedulerFactory, emptyMap());
     }
 
     /**
@@ -129,7 +106,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      * @param circuitBreakerConfig The CircuitBreaker configuration.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig) {
-        this(name, circuitBreakerConfig, Clock.systemUTC());
+        this(name, circuitBreakerConfig, SchedulerFactory.getInstance(), emptyMap());
     }
 
     /**
@@ -137,11 +114,10 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      *
      * @param name                 the name of the CircuitBreaker
      * @param circuitBreakerConfig The CircuitBreaker configuration.
-     * @param tags                 Tags to add to the CircuitBreaker.
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         Map<String, String> tags) {
-        this(name, circuitBreakerConfig, Clock.systemUTC(), tags);
+        this(name, circuitBreakerConfig, SchedulerFactory.getInstance(), tags);
     }
 
     /**
@@ -588,7 +564,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final AtomicBoolean isClosed;
 
         ClosedState() {
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig(), clock);
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig());
             this.isClosed = new AtomicBoolean(true);
         }
 
@@ -828,7 +804,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         DisabledState() {
             this.circuitBreakerMetrics = CircuitBreakerMetrics
-                .forDisabled(getCircuitBreakerConfig(), clock);
+                .forDisabled(getCircuitBreakerConfig());
         }
 
         /**
@@ -899,7 +875,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         MetricsOnlyState() {
             circuitBreakerMetrics = CircuitBreakerMetrics
-                .forMetricsOnly(getCircuitBreakerConfig(), clock);
+                .forMetricsOnly(getCircuitBreakerConfig());
             isFailureRateExceeded = new AtomicBoolean(false);
             isSlowCallRateExceeded = new AtomicBoolean(false);
         }
@@ -995,7 +971,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         ForcedOpenState(int attempts) {
             this.attempts = attempts;
-            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedOpen(circuitBreakerConfig, clock);
+            this.circuitBreakerMetrics = CircuitBreakerMetrics.forForcedOpen(circuitBreakerConfig);
         }
 
         /**
@@ -1074,7 +1050,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
                 .getPermittedNumberOfCallsInHalfOpenState();
             this.circuitBreakerMetrics = CircuitBreakerMetrics
-                .forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig(), clock);
+                .forHalfOpen(permittedNumberOfCallsInHalfOpenState, getCircuitBreakerConfig());
             this.permittedNumberOfCalls = new AtomicInteger(permittedNumberOfCallsInHalfOpenState);
             this.isHalfOpen = new AtomicBoolean(true);
             this.attempts = attempts;
