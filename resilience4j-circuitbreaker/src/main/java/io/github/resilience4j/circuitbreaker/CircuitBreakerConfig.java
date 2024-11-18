@@ -57,6 +57,7 @@ public class CircuitBreakerConfig implements Serializable {
     private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
     private static final Function<Either<Object, Throwable>, TransitionCheckResult> DEFAULT_TRANSITION_ON_RESULT
         = any -> TransitionCheckResult.noTransition();
+    private static final Clock DEFAULT_CLOCK = Clock.systemUTC();
     // The default exception predicate counts all exceptions as failures.
 
     private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
@@ -89,6 +90,7 @@ public class CircuitBreakerConfig implements Serializable {
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
     private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
+    private transient Clock clock = DEFAULT_CLOCK;
 
     private CircuitBreakerConfig() {
     }
@@ -193,6 +195,10 @@ public class CircuitBreakerConfig implements Serializable {
 
     public Duration getMaxWaitDurationInHalfOpenState() {
         return maxWaitDurationInHalfOpenState;
+    }
+
+    public Clock getClock() {
+        return clock;
     }
 
     public enum SlidingWindowType {
@@ -326,6 +332,7 @@ public class CircuitBreakerConfig implements Serializable {
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
         private byte createWaitIntervalFunctionCounter = 0;
+        private Clock clock = DEFAULT_CLOCK;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -349,6 +356,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
             this.ignoreUnknownExceptions = baseConfig.ignoreUnknownExceptions;
+            this.clock = baseConfig.clock;
         }
 
         public Builder() {
@@ -811,6 +819,22 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
+         * Configures a custom Clock instance to use for time measurements.
+         * Default value is Clock.systemUTC().
+         *
+         * @param clock the Clock to use
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder clock(Clock clock) {
+            if (clock == null) {
+                this.clock = DEFAULT_CLOCK;
+            } else {
+                this.clock = clock;
+            }
+            return this;
+        }
+
+        /**
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
@@ -838,6 +862,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.timestampUnit = timestampUnit;
             config.recordResultPredicate = recordResultPredicate;
             config.ignoreUnknownExceptions = ignoreUnknownExceptions;
+            config.clock = clock;
             return config;
         }
 

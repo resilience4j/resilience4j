@@ -66,7 +66,7 @@ public class CircuitBreakerStateMachineTest {
 
     @Before
     @SuppressWarnings("unchecked")
-    public void setUp() {        
+    public void setUp() {
         mockOnSuccessEventConsumer = (EventConsumer<CircuitBreakerOnSuccessEvent>) mock(EventConsumer.class);
         mockOnErrorEventConsumer = (EventConsumer<CircuitBreakerOnErrorEvent>) mock(EventConsumer.class);
         mockOnStateTransitionEventConsumer = (EventConsumer<CircuitBreakerOnStateTransitionEvent>) mock(EventConsumer.class);
@@ -83,7 +83,8 @@ public class CircuitBreakerStateMachineTest {
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .ignoreExceptions(NumberFormatException.class)
             .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
-            .build(), mockClock);
+            .clock(mockClock)
+            .build());
     }
 
     @Test
@@ -427,7 +428,8 @@ public class CircuitBreakerStateMachineTest {
                 .permittedNumberOfCallsInHalfOpenState(4)
                 .waitIntervalFunctionInOpenState(IntervalFunction.ofExponentialBackoff(5000L))
                 .recordException(error -> !(error instanceof NumberFormatException))
-                .build(), mockClock);
+                .clock(mockClock)
+                .build());
 
         // Initially the CircuitBreaker is open
         intervalCircuitBreaker.transitionToOpenState();
