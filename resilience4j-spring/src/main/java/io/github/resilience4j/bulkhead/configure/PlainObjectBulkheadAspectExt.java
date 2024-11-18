@@ -25,9 +25,14 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final ScheduledExecutorService executorService;
 
-    public PlainObjectBulkheadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
+    public PlainObjectBulkheadAspectExt(
+            TimeLimiterRegistry timeLimiterRegistry,
+            @Nullable ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+    ) {
         this.timeLimiterRegistry = timeLimiterRegistry;
-        this.executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        this.executorService = contextAwareScheduledThreadPoolExecutor != null
+                ? contextAwareScheduledThreadPoolExecutor
+                : Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     /**

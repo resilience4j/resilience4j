@@ -27,6 +27,7 @@ import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustom
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
@@ -127,8 +128,10 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(value = AspectJOnClasspathCondition.class)
-    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
-        return bulkheadConfiguration.plainObjectBulkHeadAspectExt(timeLimiterRegistry);
+    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
+            TimeLimiterRegistry timeLimiterRegistry,
+            ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
+        return new PlainObjectBulkheadAspectExt(timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean
