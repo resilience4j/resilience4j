@@ -130,7 +130,7 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     @Conditional(value = AspectJOnClasspathCondition.class)
     public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
             TimeLimiterRegistry timeLimiterRegistry,
-            ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
+            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
         return new PlainObjectBulkheadAspectExt(timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 

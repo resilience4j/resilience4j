@@ -71,7 +71,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         return handleSemaphoreBulkhead(proceedingJoinPoint, bulkhead, timeLimiter, methodName);
     }
 
-    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, TimeLimiter timeLimiter, String methodName) throws ExecutionException, InterruptedException, TimeoutException {
+    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, TimeLimiter timeLimiter, String methodName) {
         try {
             Supplier<CompletableFuture<Object>> futureSupplier = createBulkheadFuture(proceedingJoinPoint, bulkhead);
             long timeout = timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis();
@@ -84,9 +84,15 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         } catch (CompletionException ex) {
             logCompletionException(methodName, ex);
             throw ex;
+        } catch (TimeoutException ex) {
+            throw new RuntimeException("Timeout occurred while handling bulkhead", ex);
+        } catch (ExecutionException ex) {
+            throw new RuntimeException("Execution error occurred while handling bulkhead", ex);
+        } catch (InterruptedException ex) {
+            throw new RuntimeException("Thread interrupted while handling bulkhead", ex);
         } catch (Throwable ex) {
             logGenericException(methodName, ex);
-            throw ex;
+            throw new RuntimeException("An error occurred while handling bulkhead", ex);
         }
     }
 

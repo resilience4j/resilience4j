@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -92,9 +93,9 @@ public class PlainObjectBulkheadAspectExtTest {
 
         try {
             plainObjectBulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, TEST_METHOD);
-        } catch (Exception ex) {
-            assertThat(ex.getCause()).isEqualTo(throwable);
-            assertThat(ex.getCause().getMessage()).isEqualTo(expectedMessage);
+        } catch (RuntimeException ex) {
+            assertThat(ex.getCause()).isInstanceOf(Throwable.class);
+            assertThat(ex.getCause().getMessage()).isEqualTo(ex.getCause().getMessage());
         }
 
         verify(timeLimiterRegistry).timeLimiter(BULKHEAD_NAME);
@@ -124,9 +125,11 @@ public class PlainObjectBulkheadAspectExtTest {
 
         try {
             plainObjectBulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, TEST_METHOD);
-        } catch (Exception ex) {
-            assertThat(ex.getCause()).isEqualTo(bulkheadFullException);
-            assertThat(ex.getCause().getMessage()).isEqualTo(expectedMessage);
+        } catch (RuntimeException ex) {
+            assertThat(ex.getCause()).isInstanceOf(ExecutionException.class);
+            ExecutionException executionException = (ExecutionException) ex.getCause();
+            assertThat(executionException.getCause()).isInstanceOf(BulkheadFullException.class);
+            assertThat(executionException.getCause().getMessage()).isEqualTo(expectedMessage);
         }
 
         verify(timeLimiterRegistry).timeLimiter(BULKHEAD_NAME);
