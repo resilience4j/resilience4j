@@ -19,6 +19,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
@@ -170,8 +171,10 @@ public class BulkheadConfiguration {
 
     @Bean
     @Conditional(value = AspectJOnClasspathCondition.class)
-    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(TimeLimiterRegistry timeLimiterRegistry) {
-        return new PlainObjectBulkheadAspectExt(timeLimiterRegistry);
+    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
+            TimeLimiterRegistry timeLimiterRegistry,
+            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
+        return new PlainObjectBulkheadAspectExt(timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 
     /**
