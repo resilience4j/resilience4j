@@ -88,7 +88,6 @@ public class PlainObjectBulkheadAspectExtTest {
     public void testThrowableIsThrownAndCaught() throws Throwable {
         String expectedMessage = "Test Exception";
         Throwable throwable = new Throwable(expectedMessage);
-
         when(proceedingJoinPoint.proceed()).thenThrow(throwable);
 
         try {
@@ -121,7 +120,6 @@ public class PlainObjectBulkheadAspectExtTest {
     public void testBulkheadFullExceptionIsThrownAndCaught() throws Throwable {
         String expectedMessage = "Bulkhead 'test' is full and does not permit further calls";
         BulkheadFullException bulkheadFullException = BulkheadFullException.createBulkheadFullException(bulkhead);
-
         when(proceedingJoinPoint.proceed()).thenThrow(bulkheadFullException);
 
         try {

@@ -4,6 +4,8 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.internal.ThreadPoolBulkheadAdapter;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -60,21 +62,22 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
      */
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
         if (bulkhead instanceof ThreadPoolBulkheadAdapter) {
             ThreadPoolBulkhead threadPoolBulkhead = ((ThreadPoolBulkheadAdapter) bulkhead).threadPoolBulkhead();
-            return handleThreadPoolBulkhead(proceedingJoinPoint, threadPoolBulkhead, methodName);
+            return handleThreadPoolBulkhead(proceedingJoinPoint, threadPoolBulkhead, timeLimiter, methodName);
         }
 
-        return handleSemaphoreBulkhead(proceedingJoinPoint, bulkhead, methodName);
+        return handleSemaphoreBulkhead(proceedingJoinPoint, bulkhead, timeLimiter, methodName);
     }
 
-    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) {
-        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
+    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, TimeLimiter timeLimiter, String methodName) throws ExecutionException, InterruptedException, TimeoutException {
         try {
             Supplier<CompletableFuture<Object>> futureSupplier = createBulkheadFuture(proceedingJoinPoint, bulkhead);
+            long timeout = timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis();
             return timeLimiter.executeCompletionStage(executorService, futureSupplier)
                     .toCompletableFuture()
-                    .join();
+                    .get(timeout, TimeUnit.MILLISECONDS);
         } catch (BulkheadFullException ex) {
             logBulkheadFullException(methodName, ex);
             throw ex;
@@ -87,18 +90,17 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         }
     }
 
-    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, String methodName) {
-        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(threadPoolBulkhead.getName());
+    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) {
         try {
-            CompletableFuture<Object> completableFuture = threadPoolBulkhead.executeCallable(() -> {
+            Supplier<CompletionStage<Object>> futureSupplier = threadPoolBulkhead.decorateCallable (() -> {
                 try {
                     return proceedingJoinPoint.proceed();
                 } catch (Throwable throwable) {
                     return completeFutureExceptionally(throwable);
                 }
-            }).toCompletableFuture();
+            });
 
-            return timeLimiter.executeCompletionStage(executorService, () -> completableFuture)
+            return timeLimiter.executeCompletionStage(executorService, futureSupplier)
                     .toCompletableFuture()
                     .join();
         } catch (BulkheadFullException ex) {

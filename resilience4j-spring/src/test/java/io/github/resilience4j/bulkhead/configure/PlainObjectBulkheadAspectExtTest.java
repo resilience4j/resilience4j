@@ -69,7 +69,6 @@ public class PlainObjectBulkheadAspectExtTest {
 
         ThreadPoolBulkhead threadPoolBulkhead = ThreadPoolBulkhead.of(BULKHEAD_NAME, config);
         bulkhead = new ThreadPoolBulkheadAdapter(threadPoolBulkhead);
-
         Object actual = plainObjectBulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, TEST_METHOD);
 
         assertThat(actual).isEqualTo(expected);
@@ -77,16 +76,16 @@ public class PlainObjectBulkheadAspectExtTest {
 
     @Test
     public void testThrowableIsThrownAndCaught() throws Throwable {
-        String expectedMessage = "Test Exception";
-        Throwable throwable = new Throwable(expectedMessage);
-
+        String expected = "Test Exception";
+        Throwable throwable = new Throwable(expected);
         when(proceedingJoinPoint.proceed()).thenThrow(throwable);
 
         try {
             plainObjectBulkHeadAspectExt.handle(proceedingJoinPoint, bulkhead, TEST_METHOD);
-        } catch (Exception ex) {
-            assertThat(ex.getCause()).isEqualTo(throwable);
-            assertThat(ex.getCause().getMessage()).isEqualTo(expectedMessage);
+        } catch (Throwable ex) {
+            assertThat(ex).isInstanceOf(ExecutionException.class);
+            assertThat(ex.getCause()).isInstanceOf(Throwable.class);
+            assertThat(ex.getCause().getMessage()).isEqualTo(expected);
         }
 
         verify(timeLimiterRegistry).timeLimiter(BULKHEAD_NAME);
@@ -112,7 +111,6 @@ public class PlainObjectBulkheadAspectExtTest {
     public void testBulkheadFullExceptionIsThrownAndCaught() throws Throwable {
         String expectedMessage = "Bulkhead 'test' is full and does not permit further calls";
         BulkheadFullException bulkheadFullException = BulkheadFullException.createBulkheadFullException(bulkhead);
-
         when(proceedingJoinPoint.proceed()).thenThrow(bulkheadFullException);
 
         try {
