@@ -24,6 +24,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
+import io.github.resilience4j.bulkhead.internal.ThreadPoolBulkheadAdapter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -229,7 +230,20 @@ public class BulkheadAspect implements Ordered {
             logger.debug("ThreadPool bulkhead invocation for method {} in backend {}", methodName,
                 backend);
         }
+
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
+        if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
+            for (BulkheadAspectExt bulkheadAspectExt : bulkheadAspectExts) {
+                if (bulkheadAspectExt.canHandleReturnType(returnType)) {
+                    return bulkheadAspectExt.handle(
+                            proceedingJoinPoint,
+                            new ThreadPoolBulkheadAdapter(threadPoolBulkhead),
+                            methodName
+                    );
+                }
+            }
+        }
+
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             // threadPoolBulkhead.executeSupplier throws a BulkheadFullException, if the Bulkhead is full.
             // The RuntimeException is converted into an exceptionally completed future
