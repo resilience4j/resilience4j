@@ -784,7 +784,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             cancelAutomaticTransitionToHalfOpen();
         }
 
-        private synchronized void toHalfOpenState() {
+        private void toHalfOpenState() {
             if (isOpen.compareAndSet(true, false)) {
                 transitionToHalfOpenState();
             }
