@@ -6,6 +6,8 @@ ext {
     rxJava3Version = '3.0.0'
     reactorVersion = '3.4.24'
     junitVersion = '4.12'
+    junitParams = '1.1.1'
+    lincheck='2.34'
     slf4jVersion = '1.7.30'
     assertjVersion = '3.18.1'
     logbackVersion = '1.2.3'
@@ -50,6 +52,7 @@ ext {
 
             // testCompile
             junit: "junit:junit:${junitVersion}",
+            junitParams: "pl.pragmatists:JUnitParams:${junitParams}",
             assertj: "org.assertj:assertj-core:${assertjVersion}",
             logback: "ch.qos.logback:logback-classic:${logbackVersion}",
             mockito: "org.mockito:mockito-core:${mockitoVersion}",
@@ -61,6 +64,7 @@ ext {
             reactive_streams_tck: "org.reactivestreams:reactive-streams-tck:${reactiveStreamsVersion}",
             mock_clock: "com.statemachinesystems:mock-clock:1.0",
             blockhound: "io.projectreactor.tools:blockhound:${blockhoundVersion}",
+            lincheck: "org.jetbrains.kotlinx:lincheck:${lincheck}",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
