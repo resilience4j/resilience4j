@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.vavr.API.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -153,5 +154,27 @@ public class RunnableRetryTest {
         assertThat(sleptTime).isEqualTo(
             RetryConfig.DEFAULT_WAIT_DURATION +
                 RetryConfig.DEFAULT_WAIT_DURATION * RetryConfig.DEFAULT_WAIT_DURATION);
+    }
+
+    @Test
+    public void shouldTakeIntoAccountRetryOnResult() {
+        AtomicInteger value = new AtomicInteger(0);
+        final int targetValue = 2;
+        RetryConfig config = RetryConfig
+                .custom()
+                .retryOnResult(result -> value.get() != targetValue)
+                .build();
+        Retry retry = Retry.of("shouldTakeIntoAccountRetryOnResult", config);
+        CheckedRunnable retryableRunnable = Retry
+                .decorateCheckedRunnable(retry, () -> {
+                    helloWorldService.sayHelloWorld();
+                    value.incrementAndGet();
+                });
+
+        Try.run(() -> retryableRunnable.run());
+
+        then(helloWorldService).should(times(targetValue)).sayHelloWorld();
+        System.out.println(sleptTime);
+        assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
     }
 }

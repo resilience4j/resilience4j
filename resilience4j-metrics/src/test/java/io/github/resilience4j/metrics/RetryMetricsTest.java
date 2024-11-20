@@ -62,8 +62,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
     public void shouldReturnTotalNumberOfRequestsAs1ForSuccessVoid() {
         HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
-        Retry retry = Retry.of("metrics", RetryConfig.<String>custom()
-                .retryOnResult(String::isEmpty)
+        Retry retry = Retry.of("metrics", RetryConfig.custom()
                 .maxAttempts(5)
                 .build());
 
