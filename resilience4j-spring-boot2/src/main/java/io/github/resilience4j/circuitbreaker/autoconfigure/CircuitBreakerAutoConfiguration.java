@@ -74,7 +74,8 @@ public class CircuitBreakerAutoConfiguration {
                 .filter(EnumerablePropertySource.class::isInstance)
                 .map(EnumerablePropertySource.class::cast)
                 .flatMap(ps -> Arrays.stream(ps.getPropertyNames()))
-                .filter(name -> name.contains(".configs.") && name.endsWith(".ignoreUnknownExceptions"))
+                .filter(name -> name.contains(".configs.") && name.endsWith(".ignoreClassBindingExceptions")
+                                || name.contains(".configs.") && name.endsWith(".ignore-class-binding-exceptions"))
                 .findFirst()
                 .map(name -> environment.getProperty(name, Boolean.class, false))
                 .orElse(false);

@@ -52,9 +52,9 @@ public class ConfigUtils {
             baseProperties.getEventConsumerBufferSize() != null) {
             instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
         }
-        if (instanceProperties.getIgnoreUnknownExceptions() == null &&
-            baseProperties.getIgnoreUnknownExceptions() != null) {
-            instanceProperties.setIgnoreUnknownExceptions(baseProperties.getIgnoreUnknownExceptions());
+        if (instanceProperties.getIgnoreClassBindingExceptions() == null &&
+            baseProperties.getIgnoreClassBindingExceptions() != null) {
+            instanceProperties.setIgnoreClassBindingExceptions(baseProperties.getIgnoreClassBindingExceptions());
         }
     }
 

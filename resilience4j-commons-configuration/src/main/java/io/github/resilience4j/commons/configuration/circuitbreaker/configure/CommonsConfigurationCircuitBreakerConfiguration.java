@@ -55,7 +55,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     protected static final String EXPONENTIAL_MAX_WAIT_DURATION_IN_OPEN_STATE = "exponentialMaxWaitDurationInOpenState";
     protected static final String ENABLE_RANDOMIZED_WAIT = "enableRandomizedWait";
     protected static final String RANDOMIZED_WAIT_FACTOR = "randomizedWaitFactor";
-    protected static final String IGNORE_UNKNOWN_EXCEPTIONS = "ignoreUnknownExceptions";
+    protected static final String IGNORE_CLASS_BINDING_EXCEPTIONS = "ignoreClassBindingExceptions";
 
     private CommonsConfigurationCircuitBreakerConfiguration() {
     }
@@ -143,8 +143,8 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
             instanceProperties.setEnableRandomizedWait(configuration.getBoolean(ENABLE_RANDOMIZED_WAIT));
         if (configuration.containsKey(RANDOMIZED_WAIT_FACTOR))
             instanceProperties.setRandomizedWaitFactor(configuration.getDouble(RANDOMIZED_WAIT_FACTOR));
-        if (configuration.containsKey(IGNORE_UNKNOWN_EXCEPTIONS))
-            instanceProperties.setIgnoreUnknownExceptions(configuration.getBoolean(IGNORE_UNKNOWN_EXCEPTIONS));
+        if (configuration.containsKey(IGNORE_CLASS_BINDING_EXCEPTIONS))
+            instanceProperties.setIgnoreClassBindingExceptions(configuration.getBoolean(IGNORE_CLASS_BINDING_EXCEPTIONS));
 
         return instanceProperties;
     };

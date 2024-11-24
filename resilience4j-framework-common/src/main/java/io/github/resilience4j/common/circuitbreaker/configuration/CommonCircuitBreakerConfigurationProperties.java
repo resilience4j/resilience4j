@@ -176,11 +176,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             if (properties.ignoreExceptionPredicate != null) {
                 buildIgnoreExceptionPredicate(properties, builder);
             }
-
-            if (properties.getIgnoreUnknownExceptions() != null) {
-                builder.ignoreUnknownExceptions(Boolean.TRUE.equals(properties.ignoreUnknownExceptions));
-            }
-
+            
             if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
                 builder.automaticTransitionFromOpenToHalfOpenEnabled(
                     properties.automaticTransitionFromOpenToHalfOpenEnabled);
@@ -385,7 +381,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         private Double randomizedWaitFactor;
 
         @Nullable
-        private Boolean ignoreUnknownExceptions;
+        private Boolean ignoreClassBindingExceptions;
 
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.
@@ -785,12 +781,12 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         }
 
         @Nullable
-        public Boolean getIgnoreUnknownExceptions() {
-            return ignoreUnknownExceptions;
+        public Boolean getIgnoreClassBindingExceptions() {
+            return ignoreClassBindingExceptions;
         }
 
-        public InstanceProperties setIgnoreUnknownExceptions(Boolean ignoreUnknownExceptions) {
-            this.ignoreUnknownExceptions = ignoreUnknownExceptions;
+        public InstanceProperties setIgnoreClassBindingExceptions(Boolean ignoreClassBindingExceptions) {
+            this.ignoreClassBindingExceptions = ignoreClassBindingExceptions;
             return this;
         }
     }

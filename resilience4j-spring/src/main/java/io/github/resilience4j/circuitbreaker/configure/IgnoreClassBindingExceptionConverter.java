@@ -52,7 +52,7 @@ public class IgnoreClassBindingExceptionConverter implements Converter<String, C
                 LOG.debug("Exception class '{}' could not be found. Ignoring and substituting with placeholder exception.", source);
                 return IgnoreClassBindingExceptionConverter.PlaceHolderException.class;
             } else {
-                LOG.error("Class '{}' not found and ignoreUnknownExceptions is set to false.", source);
+                LOG.error("Class '{}' not found and ignoreClassBindingExceptions is set to false.", source);
                 throw new IllegalArgumentException("Class not found: " + source, ex);
             }
         }
