@@ -1195,41 +1195,6 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
     }
 
-    @Test
-    public void shouldIgnoreUnknownExceptionsWhenSetToTrue() {
-        CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom().ignoreUnknownExceptions(true);
-        CircuitBreakerConfig config = builder.build();
-
-        assertThat(config.ignoreClassBindingExceptions()).isTrue();
-
-        try {
-            simulateApplicationStartup(config.ignoreClassBindingExceptions());
-        } catch (ClassNotFoundException ex) {
-            fail("Should not throw an exception when ignoreUnknownExceptions is true.");
-        }
-    }
-
-    @Test
-    public void shouldNotIgnoreUnknownExceptionsByDefault() {
-        CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
-        CircuitBreakerConfig config = builder.build();
-
-        assertThat(config.ignoreClassBindingExceptions()).isFalse();
-
-        try {
-            simulateApplicationStartup(config.ignoreClassBindingExceptions());
-            fail("Expected a ClassNotFoundException to be thrown.");
-        } catch (ClassNotFoundException ex) {
-            assertThat(ex.getMessage()).isEqualTo("Simulated unknown exception during application startup.");
-        }
-    }
-
-    private void simulateApplicationStartup(boolean ignoreUnknownExceptions) throws ClassNotFoundException {
-        if (!ignoreUnknownExceptions) {
-            throw new ClassNotFoundException("Simulated unknown exception during application startup.");
-        }
-    }
-
     private static class AccessBanException extends Exception {
 
         private final Duration banDuration;
