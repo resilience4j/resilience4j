@@ -179,7 +179,8 @@ public class CircuitBreakerConfiguration {
                                       EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
         circuitBreakerRegistry.getEventPublisher()
             .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry()))
-            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry()));
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry()))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()))
     }
 
     private void registerEventConsumer(
@@ -191,5 +192,9 @@ public class CircuitBreakerConfiguration {
             .orElse(100);
         circuitBreaker.getEventPublisher().onEvent(eventConsumerRegistry
             .createEventConsumer(circuitBreaker.getName(), eventConsumerBufferSize));
+    }
+
+    private void unregisterEventConsumer(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry, CircuitBreaker circuitBreaker) {
+        eventConsumerRegistry.removeEventConsumer(circuitBreaker.getName());
     }
 }

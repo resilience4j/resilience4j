@@ -41,6 +41,10 @@ public class DefaultEventConsumerRegistry<T> implements EventConsumerRegistry<T>
     }
 
     @Override
+    public CircularEventConsumer<T> removeEventConsumer(String id) {
+        return registry.remove(id);
+    }
+    @Override
     public CircularEventConsumer<T> getEventConsumer(String id) {
         return registry.get(id);
     }
