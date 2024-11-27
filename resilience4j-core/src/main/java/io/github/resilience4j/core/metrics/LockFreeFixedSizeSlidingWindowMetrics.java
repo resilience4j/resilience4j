@@ -32,11 +32,11 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>
  * When a new record is added, the size of the window is maintained:
- * <ul>
- * <ol>1. A new node is added at the tail of the list.</ol>
- * <ol>2. The head of the list is moved to the next node.</ol>
- * <ol>3. The tail of the list is moved to the next node.</ol>
- * </ul>
+ * <ol>
+ * <li>A new node is added at the tail of the list.</li>
+ * <li>The head of the list is moved to the next node.</li>
+ * <li>The tail of the list is moved to the next node.</li>
+ * </ol>
  *
  * <p>
  * As these operations need to happen atomically, we use the VarHandle API to perform CAS operations on the head, tail
