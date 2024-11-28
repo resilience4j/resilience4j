@@ -23,6 +23,8 @@ import io.github.resilience4j.consumer.EventConsumerRegistry;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -121,7 +123,14 @@ public class TimeLimiterRegistryFactory {
     private static void registerEventConsumer(TimeLimiterRegistry timeLimiterRegistry,
                                               EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry,
                                               CommonTimeLimiterConfigurationProperties timeLimiterConfigurationProperties) {
-        timeLimiterRegistry.getEventPublisher().onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), timeLimiterConfigurationProperties));
+        timeLimiterRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), timeLimiterConfigurationProperties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), timeLimiterConfigurationProperties))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private static void unregisterEventConsumer(EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry, TimeLimiter timeLimiter) {
+        eventConsumerRegistry.removeEventConsumer(timeLimiter.getName());
     }
 
     private static void registerEventConsumer(EventConsumerRegistry<TimeLimiterEvent> eventConsumerRegistry, TimeLimiter timeLimiter,
