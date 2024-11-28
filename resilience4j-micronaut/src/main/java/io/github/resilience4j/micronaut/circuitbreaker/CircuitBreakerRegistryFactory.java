@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.micronaut.circuitbreaker;
 
+import io.github.resilience4j.bulkhead.Bulkhead;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -130,10 +132,15 @@ public class CircuitBreakerRegistryFactory {
      */
     public void registerEventConsumer(CommonCircuitBreakerConfigurationProperties circuitBreakerProperties,CircuitBreakerRegistry circuitBreakerRegistry,
                                       EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry) {
-        circuitBreakerRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(circuitBreakerProperties, eventConsumerRegistry, event.getAddedEntry()));
+        circuitBreakerRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(circuitBreakerProperties, eventConsumerRegistry, event.getAddedEntry()))
+            .onEntryReplaced(event -> registerEventConsumer(circuitBreakerProperties, eventConsumerRegistry, event.getNewEntry()))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
     }
 
+    private void unregisterEventConsumer(EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry, CircuitBreaker circuitBreaker) {
+        eventConsumerRegistry.removeEventConsumer(circuitBreaker.getName());
+    }
 
     private void registerEventConsumer( CommonCircuitBreakerConfigurationProperties circuitBreakerRegistry,
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,

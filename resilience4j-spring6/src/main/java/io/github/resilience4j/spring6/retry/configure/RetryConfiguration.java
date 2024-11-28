@@ -15,6 +15,8 @@
  */
 package io.github.resilience4j.spring6.retry.configure;
 
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties.InstanceProperties;
@@ -121,7 +123,12 @@ public class RetryConfiguration {
         RetryConfigurationProperties properties) {
         retryRegistry.getEventPublisher()
             .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
-            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private void unregisterEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry, Retry retry) {
+        eventConsumerRegistry.removeEventConsumer(retry.getName());
     }
 
     private void registerEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry,

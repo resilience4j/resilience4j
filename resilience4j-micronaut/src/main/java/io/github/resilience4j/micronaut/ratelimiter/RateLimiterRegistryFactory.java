@@ -95,9 +95,14 @@ public class RateLimiterRegistryFactory {
     private void registerEventConsumer(RateLimiterRegistry rateLimiterRegistry,
                                        EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry,
                                        CommonRateLimiterConfigurationProperties rateLimiterConfigurationProperties) {
-        rateLimiterRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                rateLimiterConfigurationProperties));
+        rateLimiterRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), rateLimiterConfigurationProperties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), rateLimiterConfigurationProperties))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private void unregisterEventConsumer(EventConsumerRegistry<RateLimiterEvent> eventConsumerRegistry, RateLimiter rateLimiter) {
+        eventConsumerRegistry.removeEventConsumer(rateLimiter.getName());
     }
 
     private void registerEventConsumer(

@@ -36,6 +36,22 @@ public class EventConsumerRegistryTest {
     }
 
     @Test
+    public void shouldRemoveAnEventConsumer() {
+        EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
+        String eventConsumerId = "testName";
+
+        EventConsumer<CircuitBreakerEvent> eventEventConsumerAdded = registry.createEventConsumer(eventConsumerId, 5);
+        assertThat(eventEventConsumerAdded).isNotNull();
+
+        EventConsumer<CircuitBreakerEvent> eventEventConsumerRemoved = registry.removeEventConsumer(eventConsumerId);
+        assertThat(eventEventConsumerRemoved).isNotNull();
+
+        assertThat(eventEventConsumerAdded).isEqualTo(eventEventConsumerRemoved);
+
+        EventConsumer<CircuitBreakerEvent> eventEventConsumer = registry.getEventConsumer(eventConsumerId);
+        assertThat(eventEventConsumer).isNull();
+    }
+    @Test
     public void shouldReturnTheSameEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         EventConsumer<CircuitBreakerEvent> eventEventConsumer1 = registry
