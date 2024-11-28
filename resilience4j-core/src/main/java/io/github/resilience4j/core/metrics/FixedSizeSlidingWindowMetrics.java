@@ -20,6 +20,7 @@ package io.github.resilience4j.core.metrics;
 
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A {@link Metrics} implementation is backed by a sliding window that aggregates only the last
@@ -43,6 +44,8 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
     private final Measurement[] measurements;
     int headIndex;
 
+    private final ReentrantLock lock = new ReentrantLock();
+
     /**
      * Creates a new {@link FixedSizeSlidingWindowMetrics} with the given window size.
      *
@@ -59,14 +62,26 @@ public class FixedSizeSlidingWindowMetrics implements Metrics {
     }
 
     @Override
-    public synchronized Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
-        totalAggregation.record(duration, durationUnit, outcome);
-        moveWindowByOne().record(duration, durationUnit, outcome);
-        return new SnapshotImpl(totalAggregation);
+    public Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
+        lock.lock();
+
+        try {
+            totalAggregation.record(duration, durationUnit, outcome);
+            moveWindowByOne().record(duration, durationUnit, outcome);
+            return new SnapshotImpl(totalAggregation);
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized Snapshot getSnapshot() {
-        return new SnapshotImpl(totalAggregation);
+    public Snapshot getSnapshot() {
+        lock.lock();
+
+        try {
+            return new SnapshotImpl(totalAggregation);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private Measurement moveWindowByOne() {
