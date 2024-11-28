@@ -24,6 +24,7 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -731,6 +732,27 @@ public class DecoratorsTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateCheckedConsumer() {
+        given(helloWorldService.returnHelloWorldWithName("Name"))
+            .willReturn("Hello world Name");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        CheckedConsumer<String> decoratedConsumer = Decorators
+            .ofCheckedConsumer(helloWorldService::returnHelloWorldWithName)
+            .withCircuitBreaker(circuitBreaker)
+            .withRetry(Retry.ofDefaults("id"))
+            .withRateLimiter(RateLimiter.ofDefaults("testName"))
+            .withBulkhead(Bulkhead.ofDefaults("testName"))
+            .decorate();
+
+        Try.run(() -> decoratedConsumer.accept("Name"));
+
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithName("Name");
     }
 
     @Test
