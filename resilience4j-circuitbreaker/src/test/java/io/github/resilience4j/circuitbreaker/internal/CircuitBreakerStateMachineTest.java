@@ -79,7 +79,12 @@ public class CircuitBreakerStateMachineTest {
             .slowCallDurationThreshold(Duration.ofSeconds(4))
             .slowCallRateThreshold(50)
             .maxWaitDurationInHalfOpenState(Duration.ofSeconds(1))
-            .slidingWindow(20, 5, SlidingWindowType.TIME_BASED)
+            .slidingWindow(
+                20,
+                5,
+                SlidingWindowType.TIME_BASED,
+                CircuitBreakerConfig.SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+            )
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .ignoreExceptions(NumberFormatException.class)
             .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)

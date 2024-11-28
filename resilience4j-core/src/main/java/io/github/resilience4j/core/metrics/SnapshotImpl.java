@@ -19,6 +19,7 @@
 package io.github.resilience4j.core.metrics;
 
 import java.time.Duration;
+import java.util.Objects;
 
 public class SnapshotImpl implements Snapshot {
 
@@ -28,13 +29,12 @@ public class SnapshotImpl implements Snapshot {
     private final int totalNumberOfFailedCalls;
     private final int totalNumberOfCalls;
 
-    SnapshotImpl(TotalAggregation totalAggregation) {
-        this.totalDurationInMillis = totalAggregation.totalDurationInMillis;
-        this.totalNumberOfSlowCalls = totalAggregation.numberOfSlowCalls;
-        this.totalNumberOfSlowFailedCalls = totalAggregation.numberOfSlowFailedCalls;
-        this.totalNumberOfFailedCalls = totalAggregation.numberOfFailedCalls;
-        this.totalNumberOfCalls = totalAggregation.numberOfCalls;
-
+    SnapshotImpl(MeasurementData measurementData) {
+        this.totalDurationInMillis = measurementData.getTotalDurationInMillis();
+        this.totalNumberOfSlowCalls = measurementData.getNumberOfSlowCalls();
+        this.totalNumberOfSlowFailedCalls = measurementData.getNumberOfSlowFailedCalls();
+        this.totalNumberOfFailedCalls = measurementData.getNumberOfFailedCalls();
+        this.totalNumberOfCalls = measurementData.getNumberOfCalls();
     }
 
     @Override
@@ -94,5 +94,39 @@ public class SnapshotImpl implements Snapshot {
             return Duration.ZERO;
         }
         return Duration.ofMillis(totalDurationInMillis / totalNumberOfCalls);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SnapshotImpl snapshot = (SnapshotImpl) o;
+        return totalDurationInMillis == snapshot.totalDurationInMillis &&
+            totalNumberOfSlowCalls == snapshot.totalNumberOfSlowCalls &&
+            totalNumberOfSlowFailedCalls == snapshot.totalNumberOfSlowFailedCalls &&
+            totalNumberOfFailedCalls == snapshot.totalNumberOfFailedCalls &&
+            totalNumberOfCalls == snapshot.totalNumberOfCalls;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            totalDurationInMillis,
+            totalNumberOfSlowCalls,
+            totalNumberOfSlowFailedCalls,
+            totalNumberOfFailedCalls,
+            totalNumberOfCalls
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "SnapshotImpl{" +
+            "totalDurationInMillis=" + totalDurationInMillis +
+            ", totalNumberOfSlowCalls=" + totalNumberOfSlowCalls +
+            ", totalNumberOfSlowFailedCalls=" + totalNumberOfSlowFailedCalls +
+            ", totalNumberOfFailedCalls=" + totalNumberOfFailedCalls +
+            ", totalNumberOfCalls=" + totalNumberOfCalls +
+            '}';
     }
 }

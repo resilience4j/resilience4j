@@ -20,21 +20,38 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import com.statemachinesystems.mockclock.MockClock;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.circuitbreaker.internal.CircuitBreakerMetrics.Result;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RunWith(JUnitParamsRunner.class)
 public class CircuitBreakerMetricsTest {
 
+    private List<SlidingWindowSynchronizationStrategy> slidingWindowConfig() {
+        return Arrays.asList(SlidingWindowSynchronizationStrategy.values());
+    }
+
     @Test
-    public void testCircuitBreakerMetrics() {
+    @Parameters(method = "slidingWindowConfig")
+    public void testCircuitBreakerMetrics(SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy) {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
-            .slidingWindow(10, 10, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .clock(MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC")))
+            .slidingWindow(
+                10,
+                10,
+                CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
+                slidingWindowSynchronizationStrategy
+            )
             .build();
 
         CircuitBreakerMetrics circuitBreakerMetrics = CircuitBreakerMetrics
