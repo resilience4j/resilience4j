@@ -285,7 +285,11 @@ public class RetryImpl<T> implements Retry {
 
             try {
                 sleepFunction.accept(interval);
-            } catch (Throwable ex) {
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw lastRuntimeException.get();
+            }
+            catch (Throwable ex) {
                 throw lastRuntimeException.get();
             }
         }
