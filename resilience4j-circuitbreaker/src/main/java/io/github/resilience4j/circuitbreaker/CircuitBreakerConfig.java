@@ -39,7 +39,6 @@ public class CircuitBreakerConfig implements Serializable {
 
     private static final long serialVersionUID = -5429814941777001669L;
 
-    public static final boolean DEFAULT_IGNORE_UNKNOWN_EXCEPTIONS_ENABLED = false;
     public static final int DEFAULT_FAILURE_RATE_THRESHOLD = 50; // Percentage
     public static final int DEFAULT_SLOW_CALL_RATE_THRESHOLD = 100; // Percentage
     public static final int DEFAULT_WAIT_DURATION_IN_OPEN_STATE = 60; // Seconds
