@@ -73,57 +73,31 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
-    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) throws ExecutionException, InterruptedException {
+    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) {
         try {
-            Supplier<CompletionStage<Object>> futureSupplier = threadPoolBulkhead.decorateCallable (() -> {
+            CompletableFuture<Object> completableFuture = threadPoolBulkhead.decorateCallable (() -> {
                 try {
                     return proceedingJoinPoint.proceed();
                 } catch (Throwable throwable) {
                     return completeFutureExceptionally(throwable);
                 }
-            });
+            }).get().toCompletableFuture();
 
-            return timeLimiter.executeCompletionStage(executorService, futureSupplier)
+            return timeLimiter.executeCompletionStage(executorService, () -> completableFuture)
                     .toCompletableFuture()
                     .join();
-        } catch (BulkheadFullException ex) {
-            logBulkheadFullException(methodName, ex);
-            throw ex;
         } catch (CompletionException ex) {
-            logCompletionException(methodName, ex);
+            logger.error("Completion exception occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
             throw ex;
-        } catch (Throwable ex) {
-            logGenericException(methodName, ex);
+        } catch (BulkheadFullException ex) {
+            logger.error("BulkheadFullException occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
             throw ex;
         }
-    }
-
-    private Supplier<CompletableFuture<Object>> createBulkheadFuture(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead) {
-        return Bulkhead.decorateSupplier(bulkhead, () -> {
-            try {
-                return CompletableFuture.completedFuture(proceedingJoinPoint.proceed());
-            } catch (Throwable throwable) {
-                return completeFutureExceptionally(throwable);
-            }
-        });
     }
 
     private CompletableFuture<Object> completeFutureExceptionally(Throwable throwable) {
         CompletableFuture<Object> future = new CompletableFuture<>();
         future.completeExceptionally(throwable);
         return future;
-    }
-
-    private void logBulkheadFullException(String methodName, BulkheadFullException exception) {
-        logger.error("Bulkhead '{}' is full: {}", methodName, exception.getMessage(), exception);
-    }
-
-    private void logCompletionException(String methodName, CompletionException exception) {
-        Throwable cause = exception.getCause();
-        logger.error("Completion exception occurred while executing '{}': {}", methodName, cause.getMessage(), cause);
-    }
-
-    private void logGenericException(String methodName, Throwable exception) {
-        logger.error("Unexpected error occurred executing '{}': {}", methodName, exception.getMessage(), exception);
     }
 }
