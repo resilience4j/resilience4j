@@ -70,33 +70,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
             ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(bulkhead.getName());
             return handleThreadPoolBulkhead(proceedingJoinPoint, threadPoolBulkhead, timeLimiter, methodName);
         }
-
-        return handleSemaphoreBulkhead(proceedingJoinPoint, bulkhead, timeLimiter, methodName);
-    }
-
-    private Object handleSemaphoreBulkhead(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, TimeLimiter timeLimiter, String methodName) {
-        try {
-            Supplier<CompletableFuture<Object>> futureSupplier = createBulkheadFuture(proceedingJoinPoint, bulkhead);
-            long timeout = timeLimiter.getTimeLimiterConfig().getTimeoutDuration().toMillis();
-            return timeLimiter.executeCompletionStage(executorService, futureSupplier)
-                    .toCompletableFuture()
-                    .get(timeout, TimeUnit.MILLISECONDS);
-        } catch (BulkheadFullException ex) {
-            logBulkheadFullException(methodName, ex);
-            throw ex;
-        } catch (CompletionException ex) {
-            logCompletionException(methodName, ex);
-            throw ex;
-        } catch (TimeoutException ex) {
-            throw new RuntimeException("Timeout occurred while handling bulkhead", ex);
-        } catch (ExecutionException ex) {
-            throw new RuntimeException("Execution error occurred while handling bulkhead", ex);
-        } catch (InterruptedException ex) {
-            throw new RuntimeException("Thread interrupted while handling bulkhead", ex);
-        } catch (Throwable ex) {
-            logGenericException(methodName, ex);
-            throw new RuntimeException("An error occurred while handling bulkhead", ex);
-        }
+        return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
     private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) throws ExecutionException, InterruptedException {
