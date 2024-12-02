@@ -187,9 +187,10 @@ public class BulkheadConfiguration {
     @Bean
     @Conditional(value = AspectJOnClasspathCondition.class)
     public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
             TimeLimiterRegistry timeLimiterRegistry,
             @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
-        return new PlainObjectBulkheadAspectExt(timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
+        return new PlainObjectBulkheadAspectExt(threadPoolBulkheadRegistry, timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 
     /**

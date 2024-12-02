@@ -3,7 +3,7 @@ package io.github.resilience4j.bulkhead.configure;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.internal.ThreadPoolBulkheadAdapter;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.timelimiter.TimeLimiter;
@@ -15,7 +15,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 /**
  * The {@code PlainObjectBulkheadAspectExt} class provides an aspect for managing method executions
@@ -24,13 +23,17 @@ import java.util.function.Supplier;
 public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
 
     private static final Logger logger = LoggerFactory.getLogger(PlainObjectBulkheadAspectExt.class);
+
+    private final ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry;
     private final TimeLimiterRegistry timeLimiterRegistry;
     private final ScheduledExecutorService executorService;
 
     public PlainObjectBulkheadAspectExt(
+            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
             TimeLimiterRegistry timeLimiterRegistry,
             @Nullable ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
+        this.threadPoolBulkheadRegistry = threadPoolBulkheadRegistry;
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.executorService = contextAwareScheduledThreadPoolExecutor != null
                 ? contextAwareScheduledThreadPoolExecutor
@@ -63,8 +66,8 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
     @Override
     public Object handle(ProceedingJoinPoint proceedingJoinPoint, Bulkhead bulkhead, String methodName) throws Throwable {
         TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(bulkhead.getName());
-        if (bulkhead instanceof ThreadPoolBulkheadAdapter) {
-            ThreadPoolBulkhead threadPoolBulkhead = ((ThreadPoolBulkheadAdapter) bulkhead).threadPoolBulkhead();
+        if (bulkhead instanceof ThreadPoolBulkhead) {
+            ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(bulkhead.getName());
             return handleThreadPoolBulkhead(proceedingJoinPoint, threadPoolBulkhead, timeLimiter, methodName);
         }
 

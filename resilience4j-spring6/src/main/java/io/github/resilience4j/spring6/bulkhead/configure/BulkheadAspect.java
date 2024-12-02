@@ -24,7 +24,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
-import io.github.resilience4j.bulkhead.internal.ThreadPoolBulkheadAdapter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -237,7 +236,7 @@ public class BulkheadAspect implements Ordered {
                 if (bulkheadAspectExt.canHandleReturnType(returnType)) {
                     return bulkheadAspectExt.handle(
                             proceedingJoinPoint,
-                            new ThreadPoolBulkheadAdapter(threadPoolBulkhead),
+                            bulkheadRegistry.bulkhead(backend),
                             methodName
                     );
                 }
