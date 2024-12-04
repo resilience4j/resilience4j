@@ -21,10 +21,8 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
-import io.github.resilience4j.core.metrics.Metrics;
-import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
-import io.github.resilience4j.core.metrics.Snapshot;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy;
+import io.github.resilience4j.core.metrics.*;
 
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
@@ -45,11 +43,18 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         CircuitBreakerConfig.SlidingWindowType slidingWindowType,
         CircuitBreakerConfig circuitBreakerConfig) {
         if (slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED) {
-            this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
+            this.metrics = buildCountBasedMetrics(
+                slidingWindowSize,
+                circuitBreakerConfig.getSlidingWindowSynchronizationStrategy()
+            );
             this.minimumNumberOfCalls = Math
                 .min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         } else {
-            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize, circuitBreakerConfig.getClock());
+            this.metrics = buildTimeBasedMetrics(
+                slidingWindowSize,
+                circuitBreakerConfig.getClock(),
+                circuitBreakerConfig.getSlidingWindowSynchronizationStrategy()
+            );
             this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
@@ -170,10 +175,32 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         return snapshot.getFailureRate();
     }
 
-    /**
+    private Metrics buildCountBasedMetrics(
+        int slidingWindowSize,
+        SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy
+    ) {
+        if (slidingWindowSynchronizationStrategy == SlidingWindowSynchronizationStrategy.SYNCHRONIZED) {
+            return new FixedSizeSlidingWindowMetrics(slidingWindowSize);
+        } else {
+            return new LockFreeFixedSizeSlidingWindowMetrics(slidingWindowSize);
+        }
+    }
+
+    private Metrics buildTimeBasedMetrics(
+        int slidingWindowSize,
+        Clock clock,
+        SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy
+    ) {
+        if (slidingWindowSynchronizationStrategy == SlidingWindowSynchronizationStrategy.SYNCHRONIZED) {
+            return new SlidingTimeWindowMetrics(slidingWindowSize, clock);
+        } else {
+            return new LockFreeSlidingTimeWindowMetrics(slidingWindowSize, io.github.resilience4j.core.Clock.SYSTEM);
+        }
+    }
+                                   /**
      * {@inheritDoc}
      */
-    @Override
+                                   @Override
     public float getFailureRate() {
         return getFailureRate(metrics.getSnapshot());
     }
