@@ -32,6 +32,14 @@ public interface EventConsumerRegistry<T> {
     CircularEventConsumer<T> createEventConsumer(String id, int bufferSize);
 
     /**
+     * remove a EventConsumer  in the registry.
+     *
+     * @param id         the id of the EventConsumer
+     * @return the removed EventConsumer
+     */
+    CircularEventConsumer<T> removeEventConsumer(String id);
+
+    /**
      * Returns the EventConsumer to which the specified id is mapped.
      *
      * @param id the id of the EventConsumer

@@ -96,9 +96,14 @@ public class RetryRegistryFactory {
     private void registerEventConsumer(RetryRegistry retryRegistry,
                                        EventConsumerRegistry<RetryEvent> eventConsumerRegistry,
                                        CommonRetryConfigurationProperties rateLimiterConfigurationProperties) {
-        retryRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                rateLimiterConfigurationProperties));
+        retryRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), rateLimiterConfigurationProperties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), rateLimiterConfigurationProperties))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private void unregisterEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry, Retry retry) {
+        eventConsumerRegistry.removeEventConsumer(retry.getName());
     }
 
     private void registerEventConsumer(
