@@ -176,7 +176,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             if (properties.ignoreExceptionPredicate != null) {
                 buildIgnoreExceptionPredicate(properties, builder);
             }
-
+            
             if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
                 builder.automaticTransitionFromOpenToHalfOpenEnabled(
                     properties.automaticTransitionFromOpenToHalfOpenEnabled);
@@ -379,6 +379,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
          * randomized delay factor value
          */
         private Double randomizedWaitFactor;
+
+        @Nullable
+        private Boolean ignoreClassBindingExceptions;
 
         /**
          * Returns the failure rate threshold for the circuit breaker as percentage.
@@ -774,6 +777,16 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                     "Illegal argument randomizedWaitFactor: " + randomizedWaitFactor + " is not in range [0..1)");
             }
             this.randomizedWaitFactor = randomizedWaitFactor;
+            return this;
+        }
+
+        @Nullable
+        public Boolean getIgnoreClassBindingExceptions() {
+            return ignoreClassBindingExceptions;
+        }
+
+        public InstanceProperties setIgnoreClassBindingExceptions(Boolean ignoreClassBindingExceptions) {
+            this.ignoreClassBindingExceptions = ignoreClassBindingExceptions;
             return this;
         }
     }
