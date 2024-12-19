@@ -73,7 +73,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
-    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) {
+    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) throws Throwable {
         try {
             CompletableFuture<Object> completableFuture = threadPoolBulkhead.decorateCallable (() -> {
                 try {
@@ -88,10 +88,10 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
                     .join();
         } catch (CompletionException ex) {
             logger.error("Completion exception occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
-            throw ex;
+            throw ex.getCause();
         } catch (BulkheadFullException ex) {
-          logger.error("BulkheadFullException occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
-          throw ex;
+            logger.error("BulkheadFullException occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
+            throw ex;
         }
     }
 

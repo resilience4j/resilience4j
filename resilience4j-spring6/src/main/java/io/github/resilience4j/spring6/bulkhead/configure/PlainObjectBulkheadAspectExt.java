@@ -1,4 +1,4 @@
-package io.github.resilience4j.spring6.bulkhead.configure;
+ package io.github.resilience4j.spring6.bulkhead.configure;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
@@ -73,7 +73,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
         return bulkhead.executeCheckedSupplier(proceedingJoinPoint::proceed);
     }
 
-    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) {
+    private Object handleThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint, ThreadPoolBulkhead threadPoolBulkhead, TimeLimiter timeLimiter, String methodName) throws Throwable {
         try {
             CompletableFuture<Object> completableFuture = threadPoolBulkhead.decorateCallable (() -> {
                 try {
@@ -88,7 +88,7 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
                     .join();
         } catch (CompletionException ex) {
             logger.error("Completion exception occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
-            throw ex;
+            throw ex.getCause();
         } catch (BulkheadFullException ex) {
             logger.error("BulkheadFullException occurred while executing '{}': {}", methodName, ex.getMessage(), ex);
             throw ex;
