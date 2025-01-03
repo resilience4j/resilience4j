@@ -20,10 +20,7 @@ package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.EventConsumer;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
-import io.github.resilience4j.core.functions.CheckedFunction;
-import io.github.resilience4j.core.functions.CheckedRunnable;
-import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.core.functions.Either;
+import io.github.resilience4j.core.functions.*;
 import io.github.resilience4j.ratelimiter.event.RateLimiterEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnFailureEvent;
 import io.github.resilience4j.ratelimiter.event.RateLimiterOnSuccessEvent;
@@ -307,6 +304,50 @@ public interface RateLimiter {
                                                                  Function<T, Integer> permitsCalculator, CheckedFunction<T, R> function) {
         return (T t) -> decorateCheckedFunction(rateLimiter, permitsCalculator.apply(t), function)
             .apply(t);
+    }
+
+    /**
+     * Creates a consumer which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param consumer    the original consumer
+     * @param <T>         the type of consumer argument
+     * @return a consumer which is restricted by a RateLimiter.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(RateLimiter rateLimiter,
+                                                           CheckedConsumer<T> consumer) {
+        return decorateCheckedConsumer(rateLimiter, 1, consumer);
+    }
+
+    /**
+     * Creates a consumer which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter the RateLimiter
+     * @param permits     number of permits that this call requires
+     * @param consumer    the original consumer
+     * @param <T>         the type of consumer argument
+     * @return a consumer which is restricted by a RateLimiter.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(RateLimiter rateLimiter,
+                                                                int permits, CheckedConsumer<T> consumer) {
+        return (T t) -> decorateCheckedRunnable(rateLimiter, permits, () -> consumer.accept(t))
+                .run();
+    }
+
+    /**
+     * Creates a consumer which is restricted by a RateLimiter.
+     *
+     * @param rateLimiter       the RateLimiter
+     * @param permitsCalculator calculates the number of permits required by this call based on the
+     *                          functions argument
+     * @param consumer          the original consumer
+     * @param <T>               the type of consumer argument
+     * @return a consumer which is restricted by a RateLimiter.
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(RateLimiter rateLimiter,
+                                                                Function<T, Integer> permitsCalculator, CheckedConsumer<T> consumer) {
+        return (T t) -> decorateCheckedConsumer(rateLimiter, permitsCalculator.apply(t), consumer)
+                .accept(t);
     }
 
     /**

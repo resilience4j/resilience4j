@@ -21,10 +21,8 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics;
-import io.github.resilience4j.core.metrics.Metrics;
-import io.github.resilience4j.core.metrics.SlidingTimeWindowMetrics;
-import io.github.resilience4j.core.metrics.Snapshot;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy;
+import io.github.resilience4j.core.metrics.*;
 
 import java.time.Clock;
 import java.util.concurrent.TimeUnit;
@@ -43,14 +41,20 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
 
     private CircuitBreakerMetrics(int slidingWindowSize,
         CircuitBreakerConfig.SlidingWindowType slidingWindowType,
-        CircuitBreakerConfig circuitBreakerConfig,
-        Clock clock) {
+        CircuitBreakerConfig circuitBreakerConfig) {
         if (slidingWindowType == CircuitBreakerConfig.SlidingWindowType.COUNT_BASED) {
-            this.metrics = new FixedSizeSlidingWindowMetrics(slidingWindowSize);
+            this.metrics = buildCountBasedMetrics(
+                slidingWindowSize,
+                circuitBreakerConfig.getSlidingWindowSynchronizationStrategy()
+            );
             this.minimumNumberOfCalls = Math
                 .min(circuitBreakerConfig.getMinimumNumberOfCalls(), slidingWindowSize);
         } else {
-            this.metrics = new SlidingTimeWindowMetrics(slidingWindowSize, clock);
+            this.metrics = buildTimeBasedMetrics(
+                slidingWindowSize,
+                circuitBreakerConfig.getClock(),
+                circuitBreakerConfig.getSlidingWindowSynchronizationStrategy()
+            );
             this.minimumNumberOfCalls = circuitBreakerConfig.getMinimumNumberOfCalls();
         }
         this.failureRateThreshold = circuitBreakerConfig.getFailureRateThreshold();
@@ -61,33 +65,33 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
     }
 
     private CircuitBreakerMetrics(int slidingWindowSize,
-        CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
-        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig, clock);
+        CircuitBreakerConfig circuitBreakerConfig) {
+        this(slidingWindowSize, circuitBreakerConfig.getSlidingWindowType(), circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forClosed(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    static CircuitBreakerMetrics forClosed(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(circuitBreakerConfig.getSlidingWindowSize(),
-            circuitBreakerConfig, clock);
+            circuitBreakerConfig);
     }
 
     static CircuitBreakerMetrics forHalfOpen(int permittedNumberOfCallsInHalfOpenState,
-        CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+        CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(permittedNumberOfCallsInHalfOpenState,
-            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig, clock);
+            CircuitBreakerConfig.SlidingWindowType.COUNT_BASED, circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    static CircuitBreakerMetrics forForcedOpen(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
-            circuitBreakerConfig, clock);
+            circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
+    static CircuitBreakerMetrics forDisabled(CircuitBreakerConfig circuitBreakerConfig) {
         return new CircuitBreakerMetrics(0, CircuitBreakerConfig.SlidingWindowType.COUNT_BASED,
-            circuitBreakerConfig, clock);
+            circuitBreakerConfig);
     }
 
-    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig, Clock clock) {
-        return forClosed(circuitBreakerConfig, clock);
+    static CircuitBreakerMetrics forMetricsOnly(CircuitBreakerConfig circuitBreakerConfig) {
+        return forClosed(circuitBreakerConfig);
     }
 
     /**
@@ -171,10 +175,32 @@ class CircuitBreakerMetrics implements CircuitBreaker.Metrics {
         return snapshot.getFailureRate();
     }
 
-    /**
+    private Metrics buildCountBasedMetrics(
+        int slidingWindowSize,
+        SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy
+    ) {
+        if (slidingWindowSynchronizationStrategy == SlidingWindowSynchronizationStrategy.SYNCHRONIZED) {
+            return new FixedSizeSlidingWindowMetrics(slidingWindowSize);
+        } else {
+            return new LockFreeFixedSizeSlidingWindowMetrics(slidingWindowSize);
+        }
+    }
+
+    private Metrics buildTimeBasedMetrics(
+        int slidingWindowSize,
+        Clock clock,
+        SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy
+    ) {
+        if (slidingWindowSynchronizationStrategy == SlidingWindowSynchronizationStrategy.SYNCHRONIZED) {
+            return new SlidingTimeWindowMetrics(slidingWindowSize, clock);
+        } else {
+            return new LockFreeSlidingTimeWindowMetrics(slidingWindowSize, io.github.resilience4j.core.Clock.SYSTEM);
+        }
+    }
+                                   /**
      * {@inheritDoc}
      */
-    @Override
+                                   @Override
     public float getFailureRate() {
         return getFailureRate(metrics.getSnapshot());
     }

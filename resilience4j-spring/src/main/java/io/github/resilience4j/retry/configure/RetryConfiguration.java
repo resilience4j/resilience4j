@@ -135,7 +135,12 @@ public class RetryConfiguration {
         RetryConfigurationProperties properties) {
         retryRegistry.getEventPublisher()
             .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
-            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private void unregisterEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry, Retry retry) {
+        eventConsumerRegistry.removeEventConsumer(retry.getName());
     }
 
     private void registerEventConsumer(EventConsumerRegistry<RetryEvent> eventConsumerRegistry,

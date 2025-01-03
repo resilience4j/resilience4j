@@ -16,6 +16,8 @@
 
 package io.github.resilience4j.spring6.micrometer.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.micrometer.configuration.CommonTimerConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.common.micrometer.configuration.TimerConfigCustomizer;
@@ -174,7 +176,12 @@ public class TimerConfiguration {
     ) {
         timerRegistry.getEventPublisher()
                 .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), properties))
-                .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties));
+                .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), properties))
+                .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private static void unregisterEventConsumer(EventConsumerRegistry<TimerEvent> eventConsumerRegistry, Timer timer) {
+        eventConsumerRegistry.removeEventConsumer(timer.getName());
     }
 
     private static void registerEventConsumer(
@@ -188,4 +195,5 @@ public class TimerConfiguration {
         timer.getEventPublisher().onEvent(
                 eventConsumerRegistry.createEventConsumer(timer.getName(), eventConsumerBufferSize));
     }
+
 }

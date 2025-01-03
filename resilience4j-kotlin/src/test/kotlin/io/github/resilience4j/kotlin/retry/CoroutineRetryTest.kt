@@ -84,6 +84,7 @@ class CoroutineRetryTest {
             val retry = Retry.of("testName") {
                 RetryConfig {
                     waitDuration(Duration.ofMillis(10))
+                    maxAttempts(6)
                     retryOnResult { helloWorldService.invocationCounter < 2 }
                 }
             }

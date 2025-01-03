@@ -20,7 +20,7 @@ package io.github.resilience4j.core.metrics;
 
 import java.util.concurrent.TimeUnit;
 
-class AbstractAggregation {
+abstract class AbstractAggregation implements CumulativeMeasurement {
 
     long totalDurationInMillis = 0;
     int numberOfSlowCalls = 0;
@@ -28,7 +28,32 @@ class AbstractAggregation {
     int numberOfFailedCalls = 0;
     int numberOfCalls = 0;
 
-    void record(long duration, TimeUnit durationUnit, Metrics.Outcome outcome) {
+    @Override
+    public long getTotalDurationInMillis() {
+        return totalDurationInMillis;
+    }
+
+    @Override
+    public int getNumberOfSlowCalls() {
+        return numberOfSlowCalls;
+    }
+
+    @Override
+    public int getNumberOfSlowFailedCalls() {
+        return numberOfSlowFailedCalls;
+    }
+
+    @Override
+    public int getNumberOfFailedCalls() {
+        return numberOfFailedCalls;
+    }
+
+    @Override
+    public int getNumberOfCalls() {
+        return numberOfCalls;
+    }
+
+    public void record(long duration, TimeUnit durationUnit, Metrics.Outcome outcome) {
         this.numberOfCalls++;
         this.totalDurationInMillis += durationUnit.toMillis(duration);
         switch (outcome) {

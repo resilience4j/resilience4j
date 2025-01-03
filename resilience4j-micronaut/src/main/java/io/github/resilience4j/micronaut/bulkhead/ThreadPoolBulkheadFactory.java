@@ -19,6 +19,8 @@ import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
@@ -117,9 +119,14 @@ public class ThreadPoolBulkheadFactory {
     private void registerEventConsumer(ThreadPoolBulkheadRegistry bulkheadRegistry,
                                        EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
                                        CommonThreadPoolBulkheadConfigurationProperties bulkheadConfigurationProperties) {
-        bulkheadRegistry.getEventPublisher().onEntryAdded(
-            event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(),
-                bulkheadConfigurationProperties));
+        bulkheadRegistry.getEventPublisher()
+            .onEntryAdded(event -> registerEventConsumer(eventConsumerRegistry, event.getAddedEntry(), bulkheadConfigurationProperties))
+            .onEntryReplaced(event -> registerEventConsumer(eventConsumerRegistry, event.getNewEntry(), bulkheadConfigurationProperties))
+            .onEntryRemoved(event -> unregisterEventConsumer(eventConsumerRegistry, event.getRemovedEntry()));
+    }
+
+    private void unregisterEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry, ThreadPoolBulkhead bulkHead) {
+        eventConsumerRegistry.removeEventConsumer(bulkHead.getName());
     }
 
     private void registerEventConsumer(EventConsumerRegistry<BulkheadEvent> eventConsumerRegistry,
@@ -133,4 +140,5 @@ public class ThreadPoolBulkheadFactory {
             String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkHead.getName()),
             eventConsumerBufferSize));
     }
+
 }

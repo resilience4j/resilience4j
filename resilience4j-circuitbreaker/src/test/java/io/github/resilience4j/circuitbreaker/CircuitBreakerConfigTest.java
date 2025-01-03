@@ -60,7 +60,12 @@ public class CircuitBreakerConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroSlidingWindowSizeShouldFail() {
-        custom().slidingWindow(0, 0, SlidingWindowType.COUNT_BASED).build();
+        custom().slidingWindow(
+            0,
+            0,
+            SlidingWindowType.COUNT_BASED,
+            SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+        ).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -70,7 +75,12 @@ public class CircuitBreakerConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void zeroMinimumNumberOfCallsShouldFail() {
-        custom().slidingWindow(2, 0, SlidingWindowType.COUNT_BASED).build();
+        custom().slidingWindow(
+            2,
+            0,
+            SlidingWindowType.COUNT_BASED,
+            SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+        ).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -112,6 +122,8 @@ public class CircuitBreakerConfigTest {
             .isEqualTo(DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE);
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(DEFAULT_SLIDING_WINDOW_SIZE);
         then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(DEFAULT_SLIDING_WINDOW_TYPE);
+        then(circuitBreakerConfig.getSlidingWindowSynchronizationStrategy())
+            .isEqualTo(DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY);
         then(circuitBreakerConfig.getMinimumNumberOfCalls())
             .isEqualTo(DEFAULT_MINIMUM_NUMBER_OF_CALLS);
         then(circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(1))
@@ -131,6 +143,13 @@ public class CircuitBreakerConfigTest {
         then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(25);
     }
 
+
+    @Test
+    public void shouldSetFailureRateThresholdAsAFloatGreaterThanZero() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().failureRateThreshold(0.5f).build();
+        then(circuitBreakerConfig.getFailureRateThreshold()).isEqualTo(0.5f);
+    }
+
     @Test
     public void shouldSetWaitDurationInHalfOpenState() {
         CircuitBreakerConfig circuitBreakerConfig = custom().maxWaitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
@@ -141,6 +160,12 @@ public class CircuitBreakerConfigTest {
     public void shouldSetSlowCallRateThreshold() {
         CircuitBreakerConfig circuitBreakerConfig = custom().slowCallRateThreshold(25).build();
         then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(25);
+    }
+
+    @Test
+    public void shouldSetSlowCallRateThresholdAsFloatGreaterThanZero() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().slowCallRateThreshold(0.5f).build();
+        then(circuitBreakerConfig.getSlowCallRateThreshold()).isEqualTo(0.5f);
     }
 
     @Test
@@ -166,7 +191,12 @@ public class CircuitBreakerConfigTest {
     @Test
     public void shouldSetCountBasedSlidingWindowSize() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
-            .slidingWindow(1000, 1000, SlidingWindowType.COUNT_BASED)
+            .slidingWindow(
+                1000,
+                1000,
+                SlidingWindowType.COUNT_BASED,
+                SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+            )
             .build();
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(1000);
     }
@@ -181,26 +211,42 @@ public class CircuitBreakerConfigTest {
     @Test
     public void shouldReduceMinimumNumberOfCallsToSlidingWindowSize() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
-            .slidingWindow(5, 6, SlidingWindowType.COUNT_BASED).build();
+            .slidingWindow(
+                5,
+                6,
+                SlidingWindowType.COUNT_BASED,
+                SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+            )
+            .build();
         then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(5);
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(5);
         then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.COUNT_BASED);
+        then(circuitBreakerConfig.getSlidingWindowSynchronizationStrategy())
+            .isEqualTo(SlidingWindowSynchronizationStrategy.SYNCHRONIZED);
     }
 
     @Test
     public void shouldSetSlidingWindowToCountBased() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
-            .slidingWindow(5, 3, SlidingWindowType.COUNT_BASED).build();
+            .slidingWindow(
+                5,
+                3,
+                SlidingWindowType.COUNT_BASED,
+                SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+            )
+            .build();
         then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(3);
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(5);
         then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.COUNT_BASED);
+        then(circuitBreakerConfig.getSlidingWindowSynchronizationStrategy())
+            .isEqualTo(SlidingWindowSynchronizationStrategy.SYNCHRONIZED);
     }
 
     @Test
     public void shouldSetSlidingWindowToTimeBased() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
-            .slidingWindowType(SlidingWindowType.COUNT_BASED).build();
-        then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.COUNT_BASED);
+            .slidingWindowType(SlidingWindowType.TIME_BASED).build();
+        then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.TIME_BASED);
     }
 
     @Test
@@ -218,6 +264,14 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
+    public void shouldSetSlidingWindowSynchronizationStrategyToLockFree() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+            .slidingWindowSynchronizationStrategy(SlidingWindowSynchronizationStrategy.LOCK_FREE).build();
+        then(circuitBreakerConfig.getSlidingWindowSynchronizationStrategy())
+            .isEqualTo(SlidingWindowSynchronizationStrategy.LOCK_FREE);
+    }
+
+    @Test
     public void maxWaitDurationInHalfOpenStateEqualZeroShouldPass() {
         CircuitBreakerConfig circuitBreakerConfig = custom().maxWaitDurationInHalfOpenState(Duration.ZERO).build();
         then(circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().getSeconds()).isEqualTo(0);
@@ -226,7 +280,13 @@ public class CircuitBreakerConfigTest {
     @Test
     public void shouldAllowHighMinimumNumberOfCallsWhenSlidingWindowIsTimeBased() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
-            .slidingWindow(10, 100, SlidingWindowType.TIME_BASED).build();
+            .slidingWindow(
+                10,
+                100,
+                SlidingWindowType.TIME_BASED,
+                SlidingWindowSynchronizationStrategy.SYNCHRONIZED
+            )
+            .build();
         then(circuitBreakerConfig.getMinimumNumberOfCalls()).isEqualTo(100);
         then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(10);
         then(circuitBreakerConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.TIME_BASED);
@@ -420,6 +480,8 @@ public class CircuitBreakerConfigTest {
         CircuitBreakerConfig baseConfig = custom()
             .waitDurationInOpenState(Duration.ofSeconds(100))
             .slidingWindowSize(1000)
+            .slidingWindowType(SlidingWindowType.TIME_BASED)
+            .slidingWindowSynchronizationStrategy(SlidingWindowSynchronizationStrategy.LOCK_FREE)
             .permittedNumberOfCallsInHalfOpenState(100)
             .writableStackTraceEnabled(false)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
@@ -435,6 +497,9 @@ public class CircuitBreakerConfigTest {
         then(extendedConfig.getSlidingWindowSize()).isEqualTo(1000);
         then(extendedConfig.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         then(extendedConfig.isAutomaticTransitionFromOpenToHalfOpenEnabled()).isTrue();
+        then(extendedConfig.getSlidingWindowType()).isEqualTo(SlidingWindowType.TIME_BASED);
+        then(extendedConfig.getSlidingWindowSynchronizationStrategy())
+            .isEqualTo(SlidingWindowSynchronizationStrategy.LOCK_FREE);
     }
 
     @Test
@@ -452,6 +517,7 @@ public class CircuitBreakerConfigTest {
         assertThat(result).contains("recordExceptions=[class java.lang.RuntimeException]");
         assertThat(result).contains("automaticTransitionFromOpenToHalfOpenEnabled=true");
         assertThat(result).contains("slidingWindowType=TIME_BASED");
+        assertThat(result).contains("slidingWindowSynchronizationStrategy=SYNCHRONIZED");
         assertThat(result).endsWith("}");
     }
 

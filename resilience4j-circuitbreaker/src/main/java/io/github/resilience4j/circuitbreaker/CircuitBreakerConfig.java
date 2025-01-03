@@ -48,6 +48,8 @@ public class CircuitBreakerConfig implements Serializable {
     public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
     public static final int DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE = 0; // Seconds. It is an optional parameter
     public static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
+    public static final SlidingWindowSynchronizationStrategy DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY =
+            SlidingWindowSynchronizationStrategy.SYNCHRONIZED;
     public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
     private static final Predicate<Throwable> DEFAULT_RECORD_EXCEPTION_PREDICATE = throwable -> true;
     private static final Predicate<Throwable> DEFAULT_IGNORE_EXCEPTION_PREDICATE = throwable -> false;
@@ -56,6 +58,7 @@ public class CircuitBreakerConfig implements Serializable {
     private static final Predicate<Object> DEFAULT_RECORD_RESULT_PREDICATE = (Object object) -> false;
     private static final Function<Either<Object, Throwable>, TransitionCheckResult> DEFAULT_TRANSITION_ON_RESULT
         = any -> TransitionCheckResult.noTransition();
+    private static final Clock DEFAULT_CLOCK = Clock.systemUTC();
     // The default exception predicate counts all exceptions as failures.
 
     private transient Predicate<Throwable> recordExceptionPredicate = DEFAULT_RECORD_EXCEPTION_PREDICATE;
@@ -75,6 +78,8 @@ public class CircuitBreakerConfig implements Serializable {
     private int permittedNumberOfCallsInHalfOpenState = DEFAULT_PERMITTED_CALLS_IN_HALF_OPEN_STATE;
     private int slidingWindowSize = DEFAULT_SLIDING_WINDOW_SIZE;
     private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+    private SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy =
+            DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY;
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
@@ -87,6 +92,7 @@ public class CircuitBreakerConfig implements Serializable {
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
     private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
+    private transient Clock clock = DEFAULT_CLOCK;
 
     private CircuitBreakerConfig() {
     }
@@ -177,6 +183,10 @@ public class CircuitBreakerConfig implements Serializable {
         return slidingWindowType;
     }
 
+    public SlidingWindowSynchronizationStrategy getSlidingWindowSynchronizationStrategy() {
+        return slidingWindowSynchronizationStrategy;
+    }
+
     public float getSlowCallRateThreshold() {
         return slowCallRateThreshold;
     }
@@ -189,8 +199,32 @@ public class CircuitBreakerConfig implements Serializable {
         return maxWaitDurationInHalfOpenState;
     }
 
+    public Clock getClock() {
+        return clock;
+    }
+
     public enum SlidingWindowType {
         TIME_BASED, COUNT_BASED
+    }
+
+    public enum SlidingWindowSynchronizationStrategy {
+        /**
+         * Lock-free algorithm based on CAS of immutable objects.
+         *
+         * This option is preferable in cases of high concurrency, as contention is handled better since threads
+         * cannot block each other. It has the disadvantage of allocating more objects as they cannot be mutated
+         * in place.
+         */
+        LOCK_FREE,
+
+        /**
+         * Blocking algorithm using locks.
+         *
+         * This option does not allocate extra memory, but threads can block each other. One thread that acquired
+         * the lock and is superseded from the CPU will block all other threads until is scheduled again by the
+         * OS scheduler.
+         */
+        SYNCHRONIZED
     }
 
     @Override
@@ -212,6 +246,8 @@ public class CircuitBreakerConfig implements Serializable {
         circuitBreakerConfig.append(slidingWindowSize);
         circuitBreakerConfig.append(", slidingWindowType=");
         circuitBreakerConfig.append(slidingWindowType);
+        circuitBreakerConfig.append(", slidingWindowSynchronizationStrategy=");
+        circuitBreakerConfig.append(slidingWindowSynchronizationStrategy);
         circuitBreakerConfig.append(", minimumNumberOfCalls=");
         circuitBreakerConfig.append(minimumNumberOfCalls);
         circuitBreakerConfig.append(", writableStackTraceEnabled=");
@@ -313,12 +349,15 @@ public class CircuitBreakerConfig implements Serializable {
 
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
+        private SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy =
+                DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY;
         private float slowCallRateThreshold = DEFAULT_SLOW_CALL_RATE_THRESHOLD;
         private Duration slowCallDurationThreshold = Duration
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
         private byte createWaitIntervalFunctionCounter = 0;
+        private Clock clock = DEFAULT_CLOCK;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -327,6 +366,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.permittedNumberOfCallsInHalfOpenState = baseConfig.permittedNumberOfCallsInHalfOpenState;
             this.slidingWindowSize = baseConfig.slidingWindowSize;
             this.slidingWindowType = baseConfig.slidingWindowType;
+            this.slidingWindowSynchronizationStrategy = baseConfig.slidingWindowSynchronizationStrategy;
             this.minimumNumberOfCalls = baseConfig.minimumNumberOfCalls;
             this.failureRateThreshold = baseConfig.failureRateThreshold;
             this.ignoreExceptions = baseConfig.ignoreExceptions;
@@ -341,6 +381,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
+            this.clock = baseConfig.clock;
         }
 
         public Builder() {
@@ -363,7 +404,7 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder failureRateThreshold(float failureRateThreshold) {
             if (failureRateThreshold <= 0 || failureRateThreshold > 100) {
                 throw new IllegalArgumentException(
-                    "failureRateThreshold must be between 1 and 100");
+                    "failureRateThreshold must be greater than 0 and lower than 100, but was " + failureRateThreshold);
             }
             this.failureRateThreshold = failureRateThreshold;
             return this;
@@ -388,7 +429,7 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder slowCallRateThreshold(float slowCallRateThreshold) {
             if (slowCallRateThreshold <= 0 || slowCallRateThreshold > 100) {
                 throw new IllegalArgumentException(
-                    "slowCallRateThreshold must be between 1 and 100");
+                    "slowCallRateThreshold must be greater than 0 and not greater than 100, but was " + slowCallRateThreshold);
             }
             this.slowCallRateThreshold = slowCallRateThreshold;
             return this;
@@ -553,6 +594,9 @@ public class CircuitBreakerConfig implements Serializable {
          * <p>
          * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is
          * COUNT_BASED.
+         * <p>
+         * The sliding window has two types of synchronization strategies,
+         * for more details check {@link SlidingWindowSynchronizationStrategy}. Default is SYNCHRONIZED.
          *
          * @param slidingWindowSize    the size of the sliding window when the CircuitBreaker is
          *                             closed.
@@ -560,12 +604,17 @@ public class CircuitBreakerConfig implements Serializable {
          *                             failure rate can be calculated.
          * @param slidingWindowType    the type of the sliding window. Either COUNT_BASED or
          *                             TIME_BASED.
+         * @param slidingWindowSynchronizationStrategy  the type of synchronization for the sliding window.
          * @return the CircuitBreakerConfig.Builder
          * @throws IllegalArgumentException if {@code slidingWindowSize < 1 || minimumNumberOfCalls
          *                                  < 1}
          */
-        public Builder slidingWindow(int slidingWindowSize, int minimumNumberOfCalls,
-            SlidingWindowType slidingWindowType) {
+        public Builder slidingWindow(
+                int slidingWindowSize,
+                int minimumNumberOfCalls,
+                SlidingWindowType slidingWindowType,
+                SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy
+        ) {
             if (slidingWindowSize < 1) {
                 throw new IllegalArgumentException("slidingWindowSize must be greater than 0");
             }
@@ -579,6 +628,7 @@ public class CircuitBreakerConfig implements Serializable {
             }
             this.slidingWindowSize = slidingWindowSize;
             this.slidingWindowType = slidingWindowType;
+            this.slidingWindowSynchronizationStrategy = slidingWindowSynchronizationStrategy;
             return this;
         }
 
@@ -595,7 +645,7 @@ public class CircuitBreakerConfig implements Serializable {
          *                          closed.
          * @return the CircuitBreakerConfig.Builder
          * @throws IllegalArgumentException if {@code slidingWindowSize < 1}
-         * @see #slidingWindow(int, int, SlidingWindowType)
+         * @see #slidingWindow(int, int, SlidingWindowType, SlidingWindowSynchronizationStrategy)
          */
         public Builder slidingWindowSize(int slidingWindowSize) {
             if (slidingWindowSize < 1) {
@@ -618,7 +668,7 @@ public class CircuitBreakerConfig implements Serializable {
          *                             failure rate can be calculated.
          * @return the CircuitBreakerConfig.Builder
          * @throws IllegalArgumentException if {@code minimumNumberOfCalls < 1}
-         * @see #slidingWindow(int, int, SlidingWindowType)
+         * @see #slidingWindow(int, int, SlidingWindowType, SlidingWindowSynchronizationStrategy)
          */
         public Builder minimumNumberOfCalls(int minimumNumberOfCalls) {
             if (minimumNumberOfCalls < 1) {
@@ -638,10 +688,27 @@ public class CircuitBreakerConfig implements Serializable {
          * @param slidingWindowType the type of the sliding window. Either COUNT_BASED or
          *                          TIME_BASED.
          * @return the CircuitBreakerConfig.Builder
-         * @see #slidingWindow(int, int, SlidingWindowType)
+         * @see #slidingWindow(int, int, SlidingWindowType, SlidingWindowSynchronizationStrategy)
          */
         public Builder slidingWindowType(SlidingWindowType slidingWindowType) {
             this.slidingWindowType = slidingWindowType;
+            return this;
+        }
+
+        /**
+         * Configures the synchronization strategy for the sliding window.
+         * For more details check {@link SlidingWindowSynchronizationStrategy}.
+         * <p>
+         * Default slidingWindowSynchonizationStrategy is SYNCHRONIZED.
+         *
+         * @param slidingWindowSynchronizationStrategy the synchronization strategy
+         * @return the CircuitBreakerConfig.Builder
+         * @see #slidingWindow(int, int, SlidingWindowType, SlidingWindowSynchronizationStrategy)
+         */
+        public Builder slidingWindowSynchronizationStrategy(
+                SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy
+        ) {
+            this.slidingWindowSynchronizationStrategy = slidingWindowSynchronizationStrategy;
             return this;
         }
 
@@ -782,6 +849,22 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
+         * Configures a custom Clock instance to use for time measurements.
+         * Default value is Clock.systemUTC().
+         *
+         * @param clock the Clock to use
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder clock(Clock clock) {
+            if (clock == null) {
+                this.clock = DEFAULT_CLOCK;
+            } else {
+                this.clock = clock;
+            }
+            return this;
+        }
+
+        /**
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
@@ -792,6 +875,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.waitIntervalFunctionInOpenState = validateWaitIntervalFunctionInOpenState();
             config.transitionOnResult = transitionOnResult;
             config.slidingWindowType = slidingWindowType;
+            config.slidingWindowSynchronizationStrategy = slidingWindowSynchronizationStrategy;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             config.slowCallRateThreshold = slowCallRateThreshold;
@@ -808,6 +892,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
             config.recordResultPredicate = recordResultPredicate;
+            config.clock = clock;
             return config;
         }
 

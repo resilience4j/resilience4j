@@ -9,10 +9,7 @@ import io.github.resilience4j.core.CallableUtils;
 import io.github.resilience4j.core.CheckedFunctionUtils;
 import io.github.resilience4j.core.CompletionStageUtils;
 import io.github.resilience4j.core.SupplierUtils;
-import io.github.resilience4j.core.functions.CheckedBiFunction;
-import io.github.resilience4j.core.functions.CheckedFunction;
-import io.github.resilience4j.core.functions.CheckedRunnable;
-import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.github.resilience4j.core.functions.*;
 import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
@@ -74,6 +71,10 @@ public interface Decorators {
 
     static DecorateCheckedRunnable ofCheckedRunnable(CheckedRunnable supplier) {
         return new DecorateCheckedRunnable(supplier);
+    }
+
+    static <T> DecorateCheckedConsumer<T> ofCheckedConsumer(CheckedConsumer<T> consumer) {
+        return new DecorateCheckedConsumer<>(consumer);
     }
 
     static <T> DecorateCompletionStage<T> ofCompletionStage(
@@ -550,6 +551,53 @@ public interface Decorators {
         }
     }
 
+    class DecorateCheckedConsumer<T> {
+
+        private CheckedConsumer<T> consumer;
+
+        private DecorateCheckedConsumer(CheckedConsumer<T> consumer) {
+            this.consumer = consumer;
+        }
+
+        public DecorateCheckedConsumer<T> withTimer(Timer timer) {
+            consumer = Timer.decorateCheckedConsumer(timer, consumer);
+            return this;
+        }
+
+        public DecorateCheckedConsumer<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
+            consumer = CircuitBreaker.decorateCheckedConsumer(circuitBreaker, consumer);
+            return this;
+        }
+
+        public DecorateCheckedConsumer<T> withRetry(Retry retryContext) {
+            consumer = Retry.decorateCheckedConsumer(retryContext, consumer);
+            return this;
+        }
+
+        public DecorateCheckedConsumer<T> withRateLimiter(RateLimiter rateLimiter) {
+            consumer = RateLimiter.decorateCheckedConsumer(rateLimiter, consumer);
+            return this;
+        }
+
+        public DecorateCheckedConsumer<T> withRateLimiter(RateLimiter rateLimiter, int permits) {
+            consumer = RateLimiter.decorateCheckedConsumer(rateLimiter, permits, consumer);
+            return this;
+        }
+
+        public DecorateCheckedConsumer<T> withBulkhead(Bulkhead bulkhead) {
+            consumer = Bulkhead.decorateCheckedConsumer(bulkhead, consumer);
+            return this;
+        }
+
+        public CheckedConsumer<T> decorate() {
+            return consumer;
+        }
+
+        public void accept(T t) throws Throwable {
+            consumer.accept(t);
+        }
+    }
+
     class DecorateCompletionStage<T> {
 
         private Supplier<CompletionStage<T>> stageSupplier;
@@ -644,6 +692,11 @@ public interface Decorators {
 
         public DecorateConsumer<T> withCircuitBreaker(CircuitBreaker circuitBreaker) {
             consumer = CircuitBreaker.decorateConsumer(circuitBreaker, consumer);
+            return this;
+        }
+
+        public DecorateConsumer<T> withRetry(Retry retryContext) {
+            consumer = Retry.decorateConsumer(retryContext, consumer);
             return this;
         }
 

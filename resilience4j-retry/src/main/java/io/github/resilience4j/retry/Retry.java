@@ -19,6 +19,7 @@
 package io.github.resilience4j.retry;
 
 import io.github.resilience4j.core.EventConsumer;
+import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -28,6 +29,7 @@ import io.github.resilience4j.retry.internal.RetryImpl;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -184,8 +186,11 @@ public interface Retry {
             do {
                 try {
                     runnable.run();
-                    context.onComplete();
-                    break;
+                    final boolean validationOfResult = context.onResult(null);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        break;
+                    }
                 } catch (Exception exception) {
                     context.onError(exception);
                 }
@@ -241,6 +246,43 @@ public interface Retry {
      */
     default <T, R> CheckedFunction<T, R> decorateCheckedFunction(CheckedFunction<T, R> function) {
         return decorateCheckedFunction(this, function);
+    }
+
+    /**
+     * Creates a retryable consumer.
+     *
+     * @param retry    the retry context
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a retryable consumer
+     */
+    static <T> CheckedConsumer<T> decorateCheckedConsumer(Retry retry, CheckedConsumer<T> consumer) {
+        return (T t) -> {
+            Retry.Context context = retry.context();
+            do {
+                try {
+                    consumer.accept(t);
+                    final boolean validationOfResult = context.onResult(null);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        break;
+                    }
+                } catch (Exception exception) {
+                    context.onError(exception);
+                }
+            } while (true);
+        };
+    }
+
+    /**
+     * Creates a retryable consumer using current instance as context.
+     *
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a retryable consumer
+     */
+    default <T> CheckedConsumer<T> decorateCheckedConsumer(CheckedConsumer<T> consumer) {
+        return decorateCheckedConsumer(this, consumer);
     }
 
     /**
@@ -331,8 +373,11 @@ public interface Retry {
             do {
                 try {
                     runnable.run();
-                    context.onComplete();
-                    break;
+                    final boolean validationOfResult = context.onResult(null);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        break;
+                    }
                 } catch (RuntimeException runtimeException) {
                     context.onRuntimeError(runtimeException);
                 }
@@ -375,6 +420,42 @@ public interface Retry {
                 }
             } while (true);
         };
+    }
+
+    /**
+     * Creates a retryable consumer.
+     *
+     * @param retry    the retry context
+     * @param consumer the original consumer
+     * @param <T>      the type of the input to the consumer
+     * @return a retryable consumer
+     */
+    static <T> Consumer<T> decorateConsumer(Retry retry, Consumer<T> consumer) {
+        return (T t) -> {
+            Retry.Context context = retry.context();
+            do {
+                try {
+                    consumer.accept(t);
+                    final boolean validationOfResult = context.onResult(null);
+                    if (!validationOfResult) {
+                        context.onComplete();
+                        break;
+                    }
+                } catch (RuntimeException runtimeException) {
+                    context.onRuntimeError(runtimeException);
+                }
+            } while (true);
+        };
+    }
+
+    /**
+     * Creates a retryable consumer using current instance as context.
+     *
+     * @param consumer the original consumer
+     * @return a retryable consumer
+     */
+    default <T> Consumer<T> decorateConsumer(Consumer<T> consumer) {
+        return decorateConsumer(this, consumer);
     }
 
     /**
