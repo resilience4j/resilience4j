@@ -442,3 +442,30 @@ Issue #1414: SpEL expressions support passing runtime method arguments to bean m
 * Issue #1565: Do not retry if IntervalFunction returns interval less than 0
 * Issue #1865: Timelimiter always uses the "default" configuration in micronaut application
 * Issue #2038: java.lang.StackOverflowError due to infinite loop in CircuitBreakerStateMachine$OpenState.tryAcquirePermission
+
+=== Version 2.3.0
+
+==== Enhancements
+* Issue #2234: Allow passing custom Clock to CircuitBreaker without needing to use internal API.
+* Issue #2131: Added support for RxJava3 in Spring projects.
+* Issue #2029: Include `decorateSupplier` as a `Retry` instance method.
+* Issue #2246: Add handling for the case where a non-checked retry consumer is interrupted during sleep.
+* Issue #2245: Refactor `Retry#executeSuspendExecute` condition to enhance consistency with `FlowRetry`.
+* Issue #2232: Convert `Synchronized` to `ReentrantLock` to avoid virtual-thread pinning issues.
+* Issue #2241: Implement a lock-free sliding window for internal CircuitBreaker metrics.
+* Issue #2239: Add a `Clock` to `CircuitBreakerConfig` and utilize it in the state machine.
+* Issue #2200: Ignore unknown exceptions in CircuitBreaker configuration.
+* Issue #2233: Improve exception message for failure rate threshold in CircuitBreaker configuration.
+* Issue #1404: Configure exponential backoff or randomized wait duration if base configuration allows it.
+* Issue #2179: Ensure `RateLimiter.executeSuspendFunction` respects `drainPermissionsOnResult` in the configuration.
+* Issue #2152: Ensure the randomize function always returns a number greater than 1.0.
+* Issue #2130: Add support for Feign 12.5+.
+* Issue #2121: Specify required `RateLimiter` permits in annotations.
+
+==== Bugs
+
+* Issue #2243: Fixed potential memory leak in `DefaultEventConsumerRegistry`.
+* Issue #2209: Resolved issue where `CompletionStage` does not complete on user-supplied predicate failures.
+* Issue #2190: Fixed `StackOverflowError` and circular reference in CircuitBreaker configuration handling.
+* Issue #2175: Fixed validation error message for `slowCallDurationThreshold`.
+
