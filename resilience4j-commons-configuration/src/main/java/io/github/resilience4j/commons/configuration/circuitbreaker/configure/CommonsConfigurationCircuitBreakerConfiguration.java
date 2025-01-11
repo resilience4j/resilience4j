@@ -42,6 +42,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     protected static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
     protected static final String MINIMUM_NUMBER_OF_CALLS = "minimumNumberOfCalls";
     protected static final String AUTOMATIC_TRANSITION_FROM_OPEN_TO_HALF_OPEN_ENABLED = "automaticTransitionFromOpenToHalfOpenEnabled";
+    protected static final String DISABLED = "disabled";
     protected static final String WRITABLE_STACK_TRACE_ENABLED = "writableStackTraceEnabled";
     protected static final String ALLOW_HEALTH_INDICATOR_TO_FAIL = "allowHealthIndicatorToFail";
     protected static final String EVENT_CONSUMER_BUFFER_SIZE = "eventConsumerBufferSize";
@@ -110,6 +111,8 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
             instanceProperties.setPermittedNumberOfCallsInHalfOpenState(configuration.getInt(PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE));
         if (configuration.containsKey(AUTOMATIC_TRANSITION_FROM_OPEN_TO_HALF_OPEN_ENABLED))
             instanceProperties.setAutomaticTransitionFromOpenToHalfOpenEnabled(configuration.getBoolean(AUTOMATIC_TRANSITION_FROM_OPEN_TO_HALF_OPEN_ENABLED));
+        if (configuration.containsKey(DISABLED))
+            instanceProperties.setDisabled(configuration.getBoolean(DISABLED));
         if (configuration.containsKey(WRITABLE_STACK_TRACE_ENABLED))
             instanceProperties.setWritableStackTraceEnabled(configuration.getBoolean(WRITABLE_STACK_TRACE_ENABLED));
         if (configuration.containsKey(ALLOW_HEALTH_INDICATOR_TO_FAIL))

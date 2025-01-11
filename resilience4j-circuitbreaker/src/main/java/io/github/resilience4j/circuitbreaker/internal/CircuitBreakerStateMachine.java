@@ -82,7 +82,12 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = circuitBreakerConfig.getClock();
-        this.stateReference = new AtomicReference<>(new ClosedState());
+
+        if(circuitBreakerConfig.isDisabled()){
+            this.stateReference = new AtomicReference<>(new DisabledState());
+        }else {
+            this.stateReference = new AtomicReference<>(new ClosedState());
+        }
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.currentTimestampFunction = circuitBreakerConfig.getCurrentTimestampFunction();

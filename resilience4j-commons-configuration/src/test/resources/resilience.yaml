@@ -10,6 +10,7 @@ resilience4j:
                 slowCallDurationThreshold: PT2S
                 writableStackTraceEnabled: true
                 automaticTransitionFromOpenToHalfOpenEnabled: true
+                disabled: false
                 slidingWindowType: TIME_BASED
                 minimumNumberOfCalls: 5
                 eventConsumerBufferSize: 10

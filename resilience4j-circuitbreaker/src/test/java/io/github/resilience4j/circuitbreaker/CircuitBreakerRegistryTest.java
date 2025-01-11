@@ -395,6 +395,20 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
     }
 
+    @Test
+    public void testCreateUsingBuilderWithCircuitBreakerDisabled(){
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .disabled().build();
+        CircuitBreakerRegistry circuitBreakerRegistry =
+                CircuitBreakerRegistry.custom().addCircuitBreakerConfig("testName", circuitBreakerConfig).build();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", "testName");
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig().isDisabled()).isEqualTo(false);
+        assertThat(circuitBreakerRegistry.getConfiguration("testName").get().isDisabled()).isEqualTo(true);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.DISABLED);
+
+    }
+
     private static class NoOpCircuitBreakerEventConsumer implements
         RegistryEventConsumer<CircuitBreaker> {
 

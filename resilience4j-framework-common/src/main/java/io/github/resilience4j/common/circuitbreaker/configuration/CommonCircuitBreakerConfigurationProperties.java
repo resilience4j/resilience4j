@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
@@ -181,6 +182,11 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 builder.automaticTransitionFromOpenToHalfOpenEnabled(
                     properties.automaticTransitionFromOpenToHalfOpenEnabled);
             }
+
+            if(properties.disabled != null){
+                builder.disabled(properties.disabled);
+            }
+
         }
         compositeCircuitBreakerCustomizer.getCustomizer(instanceName).ifPresent(
             circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
@@ -324,6 +330,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
 
         @Nullable
+        private Boolean disabled;
+
+        @Nullable
         private Boolean writableStackTraceEnabled;
 
         @Nullable
@@ -458,6 +467,14 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(
             Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
             this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+            return this;
+        }
+
+        public Boolean isDisabled(){
+            return this.disabled;
+        }
+        public InstanceProperties setDisabled(Boolean disabled){
+            this.disabled = disabled;
             return this;
         }
 
