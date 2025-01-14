@@ -82,11 +82,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = circuitBreakerConfig.getClock();
-        this.stateReference = new AtomicReference<>(new ClosedState());
         this.schedulerFactory = schedulerFactory;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.currentTimestampFunction = circuitBreakerConfig.getCurrentTimestampFunction();
         this.timestampUnit = circuitBreakerConfig.getTimestampUnit();
+        this.stateReference = new AtomicReference<>(
+                getCircuitBreakerStateObjectFromState(circuitBreakerConfig.getInitialState()));
+
     }
 
     /**
@@ -447,6 +449,25 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public EventPublisher getEventPublisher() {
         return eventProcessor;
+    }
+
+    private CircuitBreakerState getCircuitBreakerStateObjectFromState(State state){
+        switch (state) {
+            case DISABLED:
+                return new DisabledState();
+            case CLOSED:
+                return new ClosedState();
+            case METRICS_ONLY:
+                return new MetricsOnlyState();
+            case HALF_OPEN: 
+                return new HalfOpenState(1);
+            case FORCED_OPEN: 
+                return new ForcedOpenState(1);
+            case OPEN: 
+                return new OpenState(1, CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig()));
+            default: 
+                return new ClosedState();
+        }
     }
 
     private interface CircuitBreakerState {

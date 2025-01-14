@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.commons.configuration.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.commons.configuration.exception.ConfigParseException;
@@ -42,6 +43,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     protected static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
     protected static final String MINIMUM_NUMBER_OF_CALLS = "minimumNumberOfCalls";
     protected static final String AUTOMATIC_TRANSITION_FROM_OPEN_TO_HALF_OPEN_ENABLED = "automaticTransitionFromOpenToHalfOpenEnabled";
+    protected static final String INITIAL_STATE = "initialState";
     protected static final String WRITABLE_STACK_TRACE_ENABLED = "writableStackTraceEnabled";
     protected static final String ALLOW_HEALTH_INDICATOR_TO_FAIL = "allowHealthIndicatorToFail";
     protected static final String EVENT_CONSUMER_BUFFER_SIZE = "eventConsumerBufferSize";
@@ -146,6 +148,9 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
         if (configuration.containsKey(IGNORE_CLASS_BINDING_EXCEPTIONS))
             instanceProperties.setIgnoreClassBindingExceptions(configuration.getBoolean(IGNORE_CLASS_BINDING_EXCEPTIONS));
 
+        if(configuration.containsKey(INITIAL_STATE))
+            instanceProperties.setInitialState(configuration.getEnum(INITIAL_STATE, CircuitBreaker.State.class));
+ 
         return instanceProperties;
     };
 }

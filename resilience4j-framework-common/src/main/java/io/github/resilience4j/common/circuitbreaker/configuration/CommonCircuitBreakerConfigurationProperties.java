@@ -16,6 +16,7 @@
 package io.github.resilience4j.common.circuitbreaker.configuration;
 
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker.State;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.Builder;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
@@ -181,6 +182,11 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 builder.automaticTransitionFromOpenToHalfOpenEnabled(
                     properties.automaticTransitionFromOpenToHalfOpenEnabled);
             }
+
+            if(properties.getInitialState() != null){
+                builder.initialState(properties.getInitialState());
+            }
+
         }
         compositeCircuitBreakerCustomizer.getCustomizer(instanceName).ifPresent(
             circuitBreakerConfigCustomizer -> circuitBreakerConfigCustomizer.customize(builder));
@@ -324,6 +330,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         private Boolean automaticTransitionFromOpenToHalfOpenEnabled;
 
         @Nullable
+        private State initialState;
+
+        @Nullable
         private Boolean writableStackTraceEnabled;
 
         @Nullable
@@ -458,6 +467,27 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
         public InstanceProperties setAutomaticTransitionFromOpenToHalfOpenEnabled(
             Boolean automaticTransitionFromOpenToHalfOpenEnabled) {
             this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+            return this;
+        }
+        
+        /**
+         * Returns state by which Circuit breaker was initialized
+         *
+         * @return initialState 
+         */
+        @Nullable
+        public State getInitialState(){
+            return this.initialState;
+        }
+
+
+        /**
+         * Sets initial state of Circuit Breaker
+         *
+         * @param state inital state of Circuit breaker, Will set initializion using this state
+         */
+        public InstanceProperties setInitialState(State state){
+            this.initialState = state;
             return this;
         }
 
