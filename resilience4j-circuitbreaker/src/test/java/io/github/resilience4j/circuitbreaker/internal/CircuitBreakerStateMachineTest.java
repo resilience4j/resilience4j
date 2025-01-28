@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.circuitbreaker.internal;
 
-import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
+import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.*;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -914,6 +914,62 @@ public class CircuitBreakerStateMachineTest {
         Thread.sleep(2000l);
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
     }
+
+    @Test
+    public void circuitBreakerInitializeInClosedState(){
+        CircuitBreaker intervalCircuitBreaker = new CircuitBreakerStateMachine("testName",
+                CircuitBreakerConfig.custom()
+                        .initialState(CLOSED)
+                        .failureRateThreshold(50)
+                        .slidingWindowSize(5)
+                        .permittedNumberOfCallsInHalfOpenState(4)
+                        .waitIntervalFunctionInOpenState(IntervalFunction.ofExponentialBackoff(5000L))
+                        .recordException(error -> !(error instanceof NumberFormatException))
+                        .clock(mockClock)
+                        .build());
+
+        assertThat(intervalCircuitBreaker.getState()).isEqualTo(CLOSED);
+
+        intervalCircuitBreaker.transitionToOpenState();
+        assertThat(intervalCircuitBreaker.getState()).isEqualTo(OPEN);
+    }
+
+    @Test
+    public void circuitBreakerInitializeInOpenState() throws InterruptedException {
+        CircuitBreaker intervalCircuitBreaker = new CircuitBreakerStateMachine("testName",
+                CircuitBreakerConfig.custom()
+                        .initialState(OPEN)
+                        .failureRateThreshold(50)
+                        .slidingWindowSize(1)
+                        .slidingWindowType(SlidingWindowType.TIME_BASED)
+                        .permittedNumberOfCallsInHalfOpenState(4)
+                        .waitDurationInOpenState(Duration.ofSeconds(2))
+                        .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                        .clock(mockClock)
+                        .build());
+
+        assertThat(intervalCircuitBreaker.getState()).isEqualTo(OPEN);
+        intervalCircuitBreaker.transitionToHalfOpenState();
+        assertThat(intervalCircuitBreaker.getState()).isEqualTo(HALF_OPEN);
+    }
+
+    @Test
+    public void circuitBreakerInitializeInMetricOnlyState(){
+        CircuitBreaker intervalCircuitBreaker = new CircuitBreakerStateMachine("testName",
+                CircuitBreakerConfig.custom()
+                        .initialState(METRICS_ONLY)
+                        .failureRateThreshold(50)
+                        .slidingWindowSize(5)
+                        .permittedNumberOfCallsInHalfOpenState(4)
+                        .waitIntervalFunctionInOpenState(IntervalFunction.ofExponentialBackoff(5000L))
+                        .recordException(error -> !(error instanceof NumberFormatException))
+                        .clock(mockClock)
+                        .build());
+
+        assertThat(intervalCircuitBreaker.getState()).isEqualTo(METRICS_ONLY);
+    }
+
+
 
     private void assertCircuitBreakerMetricsEqualTo(Float expectedFailureRate,
         Integer expectedSuccessCalls, Integer expectedBufferedCalls, Integer expectedFailedCalls,

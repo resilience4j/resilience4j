@@ -22,6 +22,7 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.core.predicate.PredicateCreator;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker.State;
 
 import java.io.Serializable;
 import java.time.Clock;
@@ -83,6 +84,7 @@ public class CircuitBreakerConfig implements Serializable {
     private int minimumNumberOfCalls = DEFAULT_MINIMUM_NUMBER_OF_CALLS;
     private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
     private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+    private State initialState = State.CLOSED;
     private transient IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
         .of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));
     private transient Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult
@@ -166,6 +168,11 @@ public class CircuitBreakerConfig implements Serializable {
     public boolean isAutomaticTransitionFromOpenToHalfOpenEnabled() {
         return automaticTransitionFromOpenToHalfOpenEnabled;
     }
+
+    public State getInitialState(){
+        return initialState;
+    }
+
 
     public int getMinimumNumberOfCalls() {
         return minimumNumberOfCalls;
@@ -254,6 +261,8 @@ public class CircuitBreakerConfig implements Serializable {
         circuitBreakerConfig.append(writableStackTraceEnabled);
         circuitBreakerConfig.append(", automaticTransitionFromOpenToHalfOpenEnabled=");
         circuitBreakerConfig.append(automaticTransitionFromOpenToHalfOpenEnabled);
+        circuitBreakerConfig.append(", initialState=");
+        circuitBreakerConfig.append(initialState);
         circuitBreakerConfig.append(", waitIntervalFunctionInOpenState=");
         circuitBreakerConfig.append(waitIntervalFunctionInOpenState);
         circuitBreakerConfig.append(", slowCallRateThreshold=");
@@ -348,6 +357,7 @@ public class CircuitBreakerConfig implements Serializable {
             = DEFAULT_TRANSITION_ON_RESULT;
 
         private boolean automaticTransitionFromOpenToHalfOpenEnabled = false;
+        private State initialState = State.CLOSED;
         private SlidingWindowType slidingWindowType = DEFAULT_SLIDING_WINDOW_TYPE;
         private SlidingWindowSynchronizationStrategy slidingWindowSynchronizationStrategy =
                 DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY;
@@ -376,6 +386,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.currentTimestampFunction = baseConfig.currentTimestampFunction;
             this.timestampUnit = baseConfig.timestampUnit;
             this.automaticTransitionFromOpenToHalfOpenEnabled = baseConfig.automaticTransitionFromOpenToHalfOpenEnabled;
+            this.initialState = baseConfig.initialState;
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
             this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
@@ -834,6 +845,7 @@ public class CircuitBreakerConfig implements Serializable {
             return this;
         }
 
+
         /**
          * Enables automatic transition from OPEN to HALF_OPEN state once the
          * waitDurationInOpenState has passed.
@@ -845,6 +857,12 @@ public class CircuitBreakerConfig implements Serializable {
         public Builder automaticTransitionFromOpenToHalfOpenEnabled(
             boolean enableAutomaticTransitionFromOpenToHalfOpen) {
             this.automaticTransitionFromOpenToHalfOpenEnabled = enableAutomaticTransitionFromOpenToHalfOpen;
+            return this;
+        }
+
+
+        public Builder initialState(State state){
+            this.initialState = state;
             return this;
         }
 
@@ -886,6 +904,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.recordExceptions = recordExceptions;
             config.ignoreExceptions = ignoreExceptions;
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
+            config.initialState = initialState;
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();

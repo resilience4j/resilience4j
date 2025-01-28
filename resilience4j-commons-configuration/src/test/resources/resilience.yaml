@@ -11,6 +11,7 @@ resilience4j:
                 writableStackTraceEnabled: true
                 automaticTransitionFromOpenToHalfOpenEnabled: true
                 slidingWindowType: TIME_BASED
+                initialState: CLOSED
                 minimumNumberOfCalls: 5
                 eventConsumerBufferSize: 10
                 registerHealthIndicator: true
@@ -41,6 +42,7 @@ resilience4j:
                 slidingWindowSize: 10
                 minimumNumberOfCalls: 10
                 permittedNumberOfCallsInHalfOpenState: 3
+                initialState: METRICS_ONLY
                 waitDurationInOpenState: PT5s
                 failureRateThreshold: 60
                 eventConsumerBufferSize: 20

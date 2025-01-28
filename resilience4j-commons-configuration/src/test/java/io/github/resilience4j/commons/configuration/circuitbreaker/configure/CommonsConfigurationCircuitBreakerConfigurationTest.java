@@ -16,6 +16,7 @@
 
 package io.github.resilience4j.commons.configuration.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitBreakerConfigurationProperties;
 import io.github.resilience4j.commons.configuration.dummy.DummyIgnoredException;
@@ -73,6 +74,7 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
         Assertions.assertThat(configDefault.getSlowCallDurationThreshold()).isEqualTo(Duration.ofSeconds(2));
         Assertions.assertThat(configDefault.getWritableStackTraceEnabled()).isEqualTo(true);
         Assertions.assertThat(configDefault.getAutomaticTransitionFromOpenToHalfOpenEnabled()).isEqualTo(true);
+        Assertions.assertThat(configDefault.getInitialState()).isEqualTo(CircuitBreaker.State.CLOSED);
         Assertions.assertThat(configDefault.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
         Assertions.assertThat(configDefault.getMinimumNumberOfCalls()).isEqualTo(5);
         Assertions.assertThat(configDefault.getEventConsumerBufferSize()).isEqualTo(10);
@@ -115,5 +117,6 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
         Assertions.assertThat(instanceBackendB.getWaitDurationInOpenState()).isEqualTo(Duration.ofSeconds(5));
         Assertions.assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(20);
         Assertions.assertThat(instanceBackendB.getRecordFailurePredicate()).isEqualTo(DummyPredicateThrowable.class);
+        Assertions.assertThat(instanceBackendB.getInitialState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
     }
 }

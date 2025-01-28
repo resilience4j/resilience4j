@@ -395,6 +395,49 @@ public class CircuitBreakerRegistryTest {
         assertThat(circuitBreakerRegistry.getAllCircuitBreakers()).hasSize(2);
     }
 
+    @Test
+    public void testCreateUsingBuilderWithCircuitBreakerInitialStateOpen(){
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .initialState(CircuitBreaker.State.OPEN).build();
+        CircuitBreakerRegistry circuitBreakerRegistry =
+                CircuitBreakerRegistry.custom().addCircuitBreakerConfig("testName", circuitBreakerConfig).build();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", "testName");
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getInitialState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreakerRegistry.getConfiguration("testName").get().getInitialState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCircuitBreakerInitialStateMetricOnly(){
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .initialState(CircuitBreaker.State.METRICS_ONLY).build();
+        CircuitBreakerRegistry circuitBreakerRegistry =
+                CircuitBreakerRegistry.custom().addCircuitBreakerConfig("testName", circuitBreakerConfig).build();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", "testName");
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getInitialState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreakerRegistry.getConfiguration("testName").get().getInitialState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.METRICS_ONLY);
+
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCircuitBreakerInitialStateDisabled(){
+        CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
+                .initialState(CircuitBreaker.State.DISABLED).build();
+        CircuitBreakerRegistry circuitBreakerRegistry =
+                CircuitBreakerRegistry.custom().addCircuitBreakerConfig("testName", circuitBreakerConfig).build();
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("testName", "testName");
+
+        assertThat(circuitBreakerRegistry.getDefaultConfig().getInitialState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreakerRegistry.getConfiguration("testName").get().getInitialState()).isEqualTo(CircuitBreaker.State.DISABLED);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.DISABLED);
+
+    }
+
+
     private static class NoOpCircuitBreakerEventConsumer implements
         RegistryEventConsumer<CircuitBreaker> {
 
