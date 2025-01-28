@@ -940,7 +940,8 @@ public class CircuitBreakerStateMachineTest {
                 CircuitBreakerConfig.custom()
                         .initialState(OPEN)
                         .failureRateThreshold(50)
-                        .slidingWindowSize(5)
+                        .slidingWindowSize(1)
+                        .slidingWindowType(SlidingWindowType.TIME_BASED)
                         .permittedNumberOfCallsInHalfOpenState(4)
                         .waitDurationInOpenState(Duration.ofSeconds(2))
                         .automaticTransitionFromOpenToHalfOpenEnabled(true)
@@ -948,7 +949,7 @@ public class CircuitBreakerStateMachineTest {
                         .build());
 
         assertThat(intervalCircuitBreaker.getState()).isEqualTo(OPEN);
-        Thread.sleep(2 * 1000);
+        intervalCircuitBreaker.transitionToHalfOpenState();
         assertThat(intervalCircuitBreaker.getState()).isEqualTo(HALF_OPEN);
     }
 
