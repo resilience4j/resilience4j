@@ -542,6 +542,29 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCompletionStage<Void> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
+            return Decorators.ofCompletionStage(getCompletionStageSupplier(threadPoolBulkhead));
+        }
+
+        private Supplier<CompletionStage<Void>> getCompletionStageSupplier(
+            ThreadPoolBulkhead threadPoolBulkhead) {
+            return () -> {
+                try {
+                    return threadPoolBulkhead.executeRunnable(() -> {
+                        try {
+                            runnable.run();
+                        } catch (Throwable throwable) {
+                            throw new RuntimeException(throwable);
+                        }
+                    });
+                } catch (BulkheadFullException ex) {
+                    CompletableFuture<Void> future = new CompletableFuture<>();
+                    future.completeExceptionally(ex);
+                    return future;
+                }
+            };
+        }
+
         public CheckedRunnable decorate() {
             return runnable;
         }
