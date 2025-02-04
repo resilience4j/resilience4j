@@ -256,6 +256,11 @@ public class BulkheadAspect implements Ordered {
         }
 
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("ThreadPool bulkhead handling non-CompletionStage return type {} for method {} in backend {}",
+                        returnType.getSimpleName(), methodName, backend);
+            }
+
             CompletableFuture<Object> completableFuture = threadPoolBulkhead.executeCallable(() -> {
                 try {
                     return proceedingJoinPoint.proceed();
