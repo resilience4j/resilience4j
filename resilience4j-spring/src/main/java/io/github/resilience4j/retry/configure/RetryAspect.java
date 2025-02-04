@@ -19,6 +19,7 @@ import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.fallback.FallbackExecutor;
+import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.spelresolver.SpelResolver;
@@ -138,7 +139,8 @@ public class RetryAspect implements Ordered, AutoCloseable {
      * @return the configured retry
      */
     private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
-        io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend);
+        RetryConfig config = retryRegistry.getConfiguration(backend).orElse(retryRegistry.getDefaultConfig());
+        io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(

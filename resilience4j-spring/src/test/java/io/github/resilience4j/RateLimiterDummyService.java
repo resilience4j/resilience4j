@@ -1,6 +1,5 @@
 package io.github.resilience4j;
 
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.reactivex.*;
 import org.springframework.stereotype.Component;

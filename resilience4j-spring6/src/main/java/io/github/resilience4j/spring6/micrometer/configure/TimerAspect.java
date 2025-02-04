@@ -18,6 +18,7 @@ package io.github.resilience4j.spring6.micrometer.configure;
 
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
+import io.github.resilience4j.micrometer.TimerConfig;
 import io.github.resilience4j.micrometer.TimerRegistry;
 import io.github.resilience4j.micrometer.annotation.Timer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -101,7 +102,8 @@ public class TimerAspect implements Ordered {
     }
 
     private io.github.resilience4j.micrometer.Timer getOrCreateTimer(String methodName, String name) {
-        io.github.resilience4j.micrometer.Timer timer = timerRegistry.timer(name);
+        TimerConfig config = timerRegistry.getConfiguration(name).orElse(timerRegistry.getDefaultConfig());
+        io.github.resilience4j.micrometer.Timer timer = timerRegistry.timer(name, config);
         if (logger.isDebugEnabled()) {
             logger.debug("Created or retrieved timer '{}' for method: '{}'", name, methodName);
         }

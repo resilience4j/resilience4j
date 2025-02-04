@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 
+import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
@@ -149,7 +150,9 @@ public class BulkheadAspect implements Ordered {
 
     private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName,
         String backend) {
-        io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend);
+        BulkheadConfig config = bulkheadRegistry.getConfiguration(backend)
+                .orElse(bulkheadRegistry.getDefaultConfig());
+        io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(

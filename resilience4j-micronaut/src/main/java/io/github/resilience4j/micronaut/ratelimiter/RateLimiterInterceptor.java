@@ -75,6 +75,7 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.RateLimiter.class, "name").orElse("default");
+        // fixme: here as well?
         RateLimiter rateLimiter = this.rateLimiterRegistry.rateLimiter(name);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
