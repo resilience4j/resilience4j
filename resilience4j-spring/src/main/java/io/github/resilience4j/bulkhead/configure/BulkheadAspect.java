@@ -231,17 +231,6 @@ public class BulkheadAspect implements Ordered {
         }
 
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
-        if (bulkheadAspectExts != null && !bulkheadAspectExts.isEmpty()) {
-            for (BulkheadAspectExt bulkheadAspectExt : bulkheadAspectExts) {
-                if (bulkheadAspectExt.canHandleReturnType(returnType)) {
-                    return bulkheadAspectExt.handle(
-                            proceedingJoinPoint,
-                            bulkheadRegistry.bulkhead(backend),
-                            methodName
-                    );
-                }
-            }
-        }
 
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             // threadPoolBulkhead.executeSupplier throws a BulkheadFullException, if the Bulkhead is full.
@@ -264,9 +253,21 @@ public class BulkheadAspect implements Ordered {
                 future.completeExceptionally(ex);
                 return future;
             }
-        } else {
-            throw new IllegalStateException(
-                "ThreadPool bulkhead is only applicable for completable futures ");
+        }
+
+        try {
+            CompletableFuture<Object> completableFuture = threadPoolBulkhead.executeCallable(() -> {
+                try {
+                    return proceedingJoinPoint.proceed();
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }).toCompletableFuture();
+            return completableFuture.get();
+        } catch (BulkheadFullException ex) {
+            CompletableFuture<?> future = new CompletableFuture<>();
+            future.completeExceptionally(ex);
+            return future;
         }
     }
 
