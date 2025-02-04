@@ -51,7 +51,8 @@ public class PlainObjectBulkheadAspectExt implements BulkheadAspectExt {
     public boolean canHandleReturnType(Class returnType) {
         return !returnType.equals(CompletableFuture.class)
                 && !returnType.equals(Mono.class)
-                && !returnType.equals(Flux.class);
+                && !returnType.equals(Flux.class)
+                && !CompletionStage.class.isAssignableFrom(returnType);
     }
 
     /**
