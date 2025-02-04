@@ -26,14 +26,12 @@ import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustom
 import io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.configure.TimeLimiterConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
@@ -187,15 +185,6 @@ public class BulkheadConfiguration {
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
         return new ReactorBulkheadAspectExt();
-    }
-
-    @Bean
-    @Conditional(value = AspectJOnClasspathCondition.class)
-    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
-            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-            TimeLimiterRegistry timeLimiterRegistry,
-            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
-        return new PlainObjectBulkheadAspectExt(threadPoolBulkheadRegistry, timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 
     /**

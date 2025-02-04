@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.spring6.bulkhead.configure;
 
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
@@ -35,7 +34,6 @@ import io.github.resilience4j.spring6.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
@@ -169,15 +167,6 @@ public class BulkheadConfiguration {
     @Conditional(value = {ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
     public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
         return new ReactorBulkheadAspectExt();
-    }
-
-    @Bean
-    @Conditional(value = AspectJOnClasspathCondition.class)
-    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
-            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-            TimeLimiterRegistry timeLimiterRegistry,
-            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
-        return new PlainObjectBulkheadAspectExt(threadPoolBulkheadRegistry, timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 
     /**

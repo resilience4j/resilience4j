@@ -25,7 +25,6 @@ import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustom
 import io.github.resilience4j.common.bulkhead.configuration.CommonThreadPoolBulkheadConfigurationProperties;
 import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.bulkhead.configure.*;
 import io.github.resilience4j.spring6.bulkhead.configure.threadpool.ThreadPoolBulkheadConfiguration;
@@ -38,7 +37,6 @@ import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot3.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
 import io.github.resilience4j.springboot3.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.github.resilience4j.springboot3.timelimiter.autoconfigure.TimeLimiterConfigurationOnMissingBean;
-import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -124,16 +122,6 @@ public abstract class AbstractBulkheadConfigurationOnMissingBean {
     @ConditionalOnMissingBean
     public ReactorBulkheadAspectExt reactorBulkHeadAspectExt() {
         return bulkheadConfiguration.reactorBulkHeadAspectExt();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @Conditional(value = AspectJOnClasspathCondition.class)
-    public PlainObjectBulkheadAspectExt plainObjectBulkHeadAspectExt(
-            ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
-            TimeLimiterRegistry timeLimiterRegistry,
-            @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
-        return bulkheadConfiguration.plainObjectBulkHeadAspectExt(threadPoolBulkheadRegistry, timeLimiterRegistry, contextAwareScheduledThreadPoolExecutor);
     }
 
     @Bean
