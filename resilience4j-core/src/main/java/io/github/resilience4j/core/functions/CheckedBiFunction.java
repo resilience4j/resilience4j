@@ -26,4 +26,19 @@ import java.util.function.BiFunction;
 @FunctionalInterface
 public interface CheckedBiFunction<T, U, R> {
     R apply(T t, U u) throws Throwable;
+
+    default BiFunction<T, U, R> unchecked() {
+        return (t, u) -> {
+            try {
+                return apply(t, u);
+            } catch (Throwable x) {
+                return sneakyThrow(x);
+            }
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    static <T extends Throwable, R> R sneakyThrow(Throwable t) throws T {
+        throw (T) t;
+    }
 }
