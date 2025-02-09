@@ -18,6 +18,12 @@ public class RateLimiterDummyService implements TestDummyService {
     }
 
     @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "recovery")
+    public String syncSuccess() {
+        return "ok";
+    }
+
+    @Override
     public CompletionStage<String> asyncThreadPool() {
         //no-op
         return null;

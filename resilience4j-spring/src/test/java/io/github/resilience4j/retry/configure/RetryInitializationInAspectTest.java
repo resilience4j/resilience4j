@@ -1,8 +1,8 @@
-package io.github.resilience4j.ratelimiter.configure;
+package io.github.resilience4j.retry.configure;
 
 import io.github.resilience4j.TestDummyService;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,55 +13,50 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.Duration;
-
 import static io.github.resilience4j.TestDummyService.BACKEND;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(properties = {
-        "logging.level.io.github.resilience4j.ratelimiter.configure=debug",
+        "logging.level.io.github.resilience4j.retry.configure=debug",
         "spring.main.allow-bean-definition-overriding=true"
 })
-public class RateLimiterInitializationInAspectTest {
+public class RetryInitializationInAspectTest {
 
     @TestConfiguration
     static class TestConfig {
 
         @Bean
-        public RateLimiterRegistry rateLimiterRegistry() {
+        public RetryRegistry retryRegistry() {
 
-            RateLimiterConfig backendRateLimiterConfig = RateLimiterConfig.custom()
-                    .limitForPeriod(1)
-                    .limitRefreshPeriod(Duration.ofSeconds(10))
-                    .timeoutDuration(Duration.ofMillis(1))
+            RetryConfig retryConfig = RetryConfig.custom()
+                    .maxAttempts(4)     // more than the default
+                    .failAfterMaxAttempts(true)
                     .build();
 
-            return RateLimiterRegistry.custom()
-                    .withRateLimiterConfig(RateLimiterConfig.ofDefaults())
-                    .addRateLimiterConfig(BACKEND, backendRateLimiterConfig)
+            return RetryRegistry.custom()
+                    .withRetryConfig(RetryConfig.ofDefaults())
+                    .addRetryConfig(BACKEND, retryConfig)
                     .build();
         }
     }
 
     @Autowired
-    @Qualifier("rateLimiterDummyService")
+    @Qualifier("retryDummyService")
     TestDummyService testDummyService;
 
     @Autowired
-    RateLimiterRegistry registry;
+    RetryRegistry registry;
 
     @Before
     public void setUp() {
-        // ensure no rate limiters are initialized
-        assertThat(registry.getAllRateLimiters()).isEmpty();
+        // ensure no reties are initialized
+        assertThat(registry.getAllRetries()).isEmpty();
     }
 
     @Test
     public void testCorrectConfigIsUsedInAspect() {
 
-        // one successful call within 10s
         assertThat(testDummyService.syncSuccess()).isEqualTo("ok");
-        assertThat(testDummyService.syncSuccess()).isEqualTo("recovered");
     }
 }
