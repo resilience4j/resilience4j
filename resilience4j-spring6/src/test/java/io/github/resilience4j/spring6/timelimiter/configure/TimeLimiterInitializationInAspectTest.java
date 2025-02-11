@@ -14,7 +14,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static io.github.resilience4j.spring6.TestDummyService.BACKEND;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +57,7 @@ public class TimeLimiterInitializationInAspectTest {
     public void testCorrectConfigIsUsedInAspect() throws Exception {
 
         // Should not time out because the time limit is 3 seconds
-        assertThat(testDummyService.success().toCompletableFuture().get(5, TimeUnit.SECONDS))
+        assertThat(testDummyService.success().toCompletableFuture().get())
                 .isEqualTo("ok");
     }
 }
