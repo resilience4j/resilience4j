@@ -19,6 +19,7 @@ import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.util.PublisherExtension;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.InterceptorBean;
@@ -87,7 +88,9 @@ public class RetryInterceptor extends BaseInterceptor implements MethodIntercept
 
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.Retry.class, "name").orElse("default");
-        Retry retry = retryRegistry.retry(name);
+        RetryConfig config = retryRegistry.getConfiguration(name)
+                .orElse(retryRegistry.getDefaultConfig());
+        Retry retry = retryRegistry.retry(name, config);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
         try {
