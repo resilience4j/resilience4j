@@ -48,6 +48,7 @@ public class CircuitBreakerConfig implements Serializable {
     public static final int DEFAULT_SLIDING_WINDOW_SIZE = 100;
     public static final int DEFAULT_SLOW_CALL_DURATION_THRESHOLD = 60; // Seconds
     public static final int DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE = 0; // Seconds. It is an optional parameter
+    public static final State DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION = State.OPEN; // OPEN|CLOSED. It is an optional parameter
     public static final SlidingWindowType DEFAULT_SLIDING_WINDOW_TYPE = SlidingWindowType.COUNT_BASED;
     public static final SlidingWindowSynchronizationStrategy DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY =
             SlidingWindowSynchronizationStrategy.SYNCHRONIZED;
@@ -94,6 +95,7 @@ public class CircuitBreakerConfig implements Serializable {
         .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
     private Duration maxWaitDurationInHalfOpenState = Duration
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
+    private State transitionToStateAfterWaitDuration = DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION;
     private transient Clock clock = DEFAULT_CLOCK;
 
     private CircuitBreakerConfig() {
@@ -204,6 +206,10 @@ public class CircuitBreakerConfig implements Serializable {
 
     public Duration getMaxWaitDurationInHalfOpenState() {
         return maxWaitDurationInHalfOpenState;
+    }
+
+    public State getTransitionToStateAfterWaitDuration() {
+        return transitionToStateAfterWaitDuration;
     }
 
     public Clock getClock() {
@@ -366,6 +372,7 @@ public class CircuitBreakerConfig implements Serializable {
             .ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         private Duration maxWaitDurationInHalfOpenState = Duration
             .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
+        private State transitionToStateAfterWaitDuration = DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION;
         private byte createWaitIntervalFunctionCounter = 0;
         private Clock clock = DEFAULT_CLOCK;
 
@@ -390,6 +397,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.slowCallRateThreshold = baseConfig.slowCallRateThreshold;
             this.slowCallDurationThreshold = baseConfig.slowCallDurationThreshold;
             this.maxWaitDurationInHalfOpenState = baseConfig.maxWaitDurationInHalfOpenState;
+            this.transitionToStateAfterWaitDuration = baseConfig.transitionToStateAfterWaitDuration;
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
             this.clock = baseConfig.clock;
@@ -557,6 +565,26 @@ public class CircuitBreakerConfig implements Serializable {
                     "maxWaitDurationInHalfOpenState must be greater than or equal to 0[ms]");
             }
             this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
+            return this;
+        }
+
+        /**
+         * Configures CircuitBreaker transition after max wait duration in half open state. Possible values are
+         * OPEN or CLOSE, by default the value is OPEN.
+         *
+         * @param transitionToStateAfterWaitDuration transition to state after wait duration in half open state
+         * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code transitionToStateAfterWaitDuration == null ||
+         * transitionToStateAfterWaitDuration != State.OPEN && transitionToStateAfterWaitDuration != State.CLOSED}
+         */
+        public Builder transitionToStateAfterWaitDuration(State transitionToStateAfterWaitDuration) {
+            if (transitionToStateAfterWaitDuration == null) {
+                throw new IllegalArgumentException("transitionToStateAfterWaitDuration must not be null");
+            }
+            if (transitionToStateAfterWaitDuration != State.OPEN && transitionToStateAfterWaitDuration != State.CLOSED) {
+                throw new IllegalArgumentException("transitionToStateAfterWaitDuration must be either OPEN or CLOSED");
+            }
+            this.transitionToStateAfterWaitDuration = transitionToStateAfterWaitDuration;
             return this;
         }
 
@@ -896,6 +924,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.slidingWindowSynchronizationStrategy = slidingWindowSynchronizationStrategy;
             config.slowCallDurationThreshold = slowCallDurationThreshold;
             config.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
+            config.transitionToStateAfterWaitDuration = transitionToStateAfterWaitDuration;
             config.slowCallRateThreshold = slowCallRateThreshold;
             config.failureRateThreshold = failureRateThreshold;
             config.slidingWindowSize = slidingWindowSize;

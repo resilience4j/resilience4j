@@ -452,22 +452,15 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     }
 
     private CircuitBreakerState getCircuitBreakerStateObjectFromState(State state){
-        switch (state) {
-            case DISABLED:
-                return new DisabledState();
-            case CLOSED:
-                return new ClosedState();
-            case METRICS_ONLY:
-                return new MetricsOnlyState();
-            case HALF_OPEN: 
-                return new HalfOpenState(1);
-            case FORCED_OPEN: 
-                return new ForcedOpenState(1);
-            case OPEN: 
-                return new OpenState(1, CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig()));
-            default: 
-                return new ClosedState();
-        }
+        return switch (state) {
+            case DISABLED -> new DisabledState();
+            case CLOSED -> new ClosedState();
+            case METRICS_ONLY -> new MetricsOnlyState();
+            case HALF_OPEN -> new HalfOpenState(1);
+            case FORCED_OPEN -> new ForcedOpenState(1);
+            case OPEN -> new OpenState(1, CircuitBreakerMetrics.forClosed(getCircuitBreakerConfig()));
+            default -> new ClosedState();
+        };
     }
 
     private interface CircuitBreakerState {
@@ -1073,7 +1066,7 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         private final int attempts;
         private final CircuitBreakerMetrics circuitBreakerMetrics;
         @Nullable
-        private final ScheduledFuture<?> transitionToOpenFuture;
+        private final ScheduledFuture<?> transitionToFuture;
 
         HalfOpenState(int attempts) {
             int permittedNumberOfCallsInHalfOpenState = circuitBreakerConfig
@@ -1085,12 +1078,13 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
             this.attempts = attempts;
 
             final long maxWaitDurationInHalfOpenState = circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis();
-            if (maxWaitDurationInHalfOpenState >= 1) {
+            final CircuitBreaker.State transitionState = circuitBreakerConfig.getTransitionToStateAfterWaitDuration();
+            if (maxWaitDurationInHalfOpenState >= 1 && transitionState != null) {
                 ScheduledExecutorService scheduledExecutorService = schedulerFactory.getScheduler();
-                transitionToOpenFuture = scheduledExecutorService
-                    .schedule(this::toOpenState, maxWaitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
+                transitionToFuture = scheduledExecutorService
+                    .schedule(() -> toState(transitionState), maxWaitDurationInHalfOpenState, TimeUnit.MILLISECONDS);
             } else {
-                transitionToOpenFuture = null;
+                transitionToFuture = null;
             }
         }
 
@@ -1122,18 +1116,22 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
 
         @Override
         public void preTransitionHook() {
-            cancelAutomaticTransitionToOpen();
+            cancelAutomaticTransition();
         }
 
-        private void cancelAutomaticTransitionToOpen() {
-            if (transitionToOpenFuture != null && !transitionToOpenFuture.isDone()) {
-                transitionToOpenFuture.cancel(true);
+        private void cancelAutomaticTransition() {
+            if (transitionToFuture != null && !transitionToFuture.isDone()) {
+                transitionToFuture.cancel(true);
             }
         }
 
-        private void toOpenState() {
+        private void toState(State transitionState) {
             if (isHalfOpen.compareAndSet(true, false)) {
-                transitionToOpenState();
+                switch (transitionState) {
+                    case OPEN -> transitionToOpenState();
+                    case CLOSED -> transitionToClosedState();
+                    default -> throw new IllegalArgumentException("Unsuported transition state: " + transitionState);
+                }
             }
         }
 

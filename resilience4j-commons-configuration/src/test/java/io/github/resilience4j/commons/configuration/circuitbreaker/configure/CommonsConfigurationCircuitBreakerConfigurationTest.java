@@ -73,6 +73,8 @@ public class CommonsConfigurationCircuitBreakerConfigurationTest {
         Assertions.assertThat(configDefault.getSlowCallRateThreshold()).isEqualTo(50f);
         Assertions.assertThat(configDefault.getSlowCallDurationThreshold()).isEqualTo(Duration.ofSeconds(2));
         Assertions.assertThat(configDefault.getWritableStackTraceEnabled()).isEqualTo(true);
+        Assertions.assertThat(configDefault.getMaxWaitDurationInHalfOpenState()).isEqualTo(Duration.ofSeconds(10));
+        Assertions.assertThat(configDefault.getTransitionToStateAfterWaitDuration()).isEqualTo(CircuitBreaker.State.OPEN);
         Assertions.assertThat(configDefault.getAutomaticTransitionFromOpenToHalfOpenEnabled()).isEqualTo(true);
         Assertions.assertThat(configDefault.getInitialState()).isEqualTo(CircuitBreaker.State.CLOSED);
         Assertions.assertThat(configDefault.getSlidingWindowType()).isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);

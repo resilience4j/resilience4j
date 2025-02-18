@@ -138,6 +138,10 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
                 builder.maxWaitDurationInHalfOpenState(properties.getMaxWaitDurationInHalfOpenState());
             }
 
+            if (properties.getTransitionToStateAfterWaitDuration() != null) {
+                builder.transitionToStateAfterWaitDuration(properties.getTransitionToStateAfterWaitDuration());
+            }
+
             if (properties.getSlidingWindowSize() != null) {
                 builder.slidingWindowSize(properties.getSlidingWindowSize());
             }
@@ -177,7 +181,7 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             if (properties.ignoreExceptionPredicate != null) {
                 buildIgnoreExceptionPredicate(properties, builder);
             }
-            
+
             if (properties.automaticTransitionFromOpenToHalfOpenEnabled != null) {
                 builder.automaticTransitionFromOpenToHalfOpenEnabled(
                     properties.automaticTransitionFromOpenToHalfOpenEnabled);
@@ -307,6 +311,9 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
         @Nullable
         private Duration maxWaitDurationInHalfOpenState;
+
+        @Nullable
+        private State transitionToStateAfterWaitDuration;
 
         @Nullable
         private Float failureRateThreshold;
@@ -469,11 +476,11 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             this.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             return this;
         }
-        
+
         /**
          * Returns state by which Circuit breaker was initialized
          *
-         * @return initialState 
+         * @return initialState
          */
         @Nullable
         public State getInitialState(){
@@ -714,6 +721,11 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
             return maxWaitDurationInHalfOpenState;
         }
 
+        @Nullable
+        public State getTransitionToStateAfterWaitDuration() {
+            return transitionToStateAfterWaitDuration;
+        }
+
         public InstanceProperties setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
             Objects.requireNonNull(slowCallDurationThreshold);
             if (slowCallDurationThreshold.toNanos() < 1) {
@@ -734,6 +746,14 @@ public class CommonCircuitBreakerConfigurationProperties extends CommonPropertie
 
             this.maxWaitDurationInHalfOpenState = maxWaitDurationInHalfOpenState;
             return this;
+        }
+
+        public void setTransitionToStateAfterWaitDuration(State transitionToStateAfterWaitDuration) {
+            Objects.requireNonNull(transitionToStateAfterWaitDuration);
+            if (transitionToStateAfterWaitDuration != State.OPEN && transitionToStateAfterWaitDuration != State.CLOSED) {
+                throw new IllegalArgumentException("transitionToStateAfterWaitDuration must be either OPEN or CLOSED");
+            }
+            this.transitionToStateAfterWaitDuration = transitionToStateAfterWaitDuration;
         }
 
         @Nullable

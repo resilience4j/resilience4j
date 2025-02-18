@@ -10,6 +10,8 @@ resilience4j:
                 slowCallDurationThreshold: PT2S
                 writableStackTraceEnabled: true
                 automaticTransitionFromOpenToHalfOpenEnabled: true
+                maxWaitDurationInHalfOpenState: PT10S
+                transitionToStateAfterWaitDuration: OPEN
                 slidingWindowType: TIME_BASED
                 initialState: CLOSED
                 minimumNumberOfCalls: 5
