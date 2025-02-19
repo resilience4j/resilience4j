@@ -1,6 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.github.resilience4j.bulkhead.autoconfigure.RefreshScopedBulkheadAutoConfiguration,\
-io.github.resilience4j.circuitbreaker.autoconfigure.RefreshScopedCircuitBreakerAutoConfiguration,\
-io.github.resilience4j.ratelimiter.autoconfigure.RefreshScopedRateLimiterAutoConfiguration,\
-io.github.resilience4j.retry.autoconfigure.RefreshScopedRetryAutoConfiguration,\
-io.github.resilience4j.timelimiter.autoconfigure.RefreshScopedTimeLimiterAutoConfiguration
