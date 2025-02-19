@@ -1,8 +1,21 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+}
+
 ext.moduleName = 'io.github.resilience4j.core'
 
 dependencies {
     testImplementation(libraries.mock_clock)
     testImplementation(libraries.junitParams)
+    testImplementation(libraries.lincheck)
+}
+
+compileTestKotlin {
+    compilerOptions {
+        it.jvmTarget.set(JvmTarget.JVM_21)
+    }
 }
 
 test {
