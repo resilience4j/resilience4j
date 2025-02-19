@@ -23,9 +23,7 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,9 +35,9 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.mockito.Mockito.*;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(AtomicRateLimiter.class)
+@RunWith(MockitoJUnitRunner.class)
 public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
 
     private static final String LIMITER_NAME = "test";
@@ -61,8 +59,9 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
     }
 
     private void setTimeOnNanos(long nanoTime) throws Exception {
-        PowerMockito.doReturn(nanoTime)
-            .when(rateLimiter, "currentNanoTime");
+        doReturn(nanoTime)
+            .when(rateLimiter)
+            .currentNanoTime();
     }
 
     public void setup(Duration timeoutDuration) {
@@ -75,8 +74,7 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
             .limitRefreshPeriod(cycleDuration)
             .timeoutDuration(timeoutDuration)
             .build();
-        AtomicRateLimiter testLimiter = new AtomicRateLimiter(LIMITER_NAME, rateLimiterConfig);
-        rateLimiter = PowerMockito.spy(testLimiter);
+        rateLimiter = spy(new AtomicRateLimiter(LIMITER_NAME, rateLimiterConfig));
         metrics = rateLimiter.getDetailedMetrics();
     }
 
@@ -95,6 +93,7 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
         long firstCycle = waitForCurrentCycleToPass(rawDetailedMetrics, '.');
 
         boolean firstPermission = rawLimiter.acquirePermission();
+
         then(firstPermission).isTrue();
 
         waitForPermissionRenewal(rawDetailedMetrics, '*');
@@ -290,6 +289,7 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
         boolean permission = rateLimiter.acquirePermission();
         then(permission).isTrue();
         then(metrics.getAvailablePermissions()).isZero();
+
         then(metrics.getNanosToWait()).isEqualTo(CYCLE_IN_NANOS);
         then(metrics.getNumberOfWaitingThreads()).isZero();
 

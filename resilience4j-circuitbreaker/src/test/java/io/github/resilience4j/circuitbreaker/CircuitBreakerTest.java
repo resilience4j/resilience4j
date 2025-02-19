@@ -1127,8 +1127,8 @@ public class CircuitBreakerTest {
         assertThat(metrics.getNumberOfFailedCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfNotPermittedCalls()).isEqualTo(1);
 
-        then(helloWorldService).shouldHaveZeroInteractions();
-        then(future).shouldHaveZeroInteractions();
+        then(helloWorldService).shouldHaveNoInteractions();
+        then(future).shouldHaveNoInteractions();
     }
 
     @Test
