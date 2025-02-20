@@ -52,9 +52,9 @@ public class TimeLimiterRegistryTest {
 
     @Test
     public void noTagsByDefault() {
-        TimeLimiter TimeLimiter = TimeLimiterRegistry.ofDefaults()
+        TimeLimiter timeLimiter = TimeLimiterRegistry.ofDefaults()
             .timeLimiter("testName");
-        assertThat(TimeLimiter.getTags()).isEmpty();
+        assertThat(timeLimiter.getTags()).isEmpty();
     }
 
     @Test
@@ -65,19 +65,19 @@ public class TimeLimiterRegistryTest {
         Map<String, String> timeLimiterTags = Map.of("key1", "value1", "key2", "value2");
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry
             .of(timeLimiterConfigs, timeLimiterTags);
-        TimeLimiter TimeLimiter = timeLimiterRegistry.timeLimiter("testName");
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testName");
 
-        assertThat(TimeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
+        assertThat(timeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
     }
 
     @Test
     public void tagsAddedToInstance() {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         Map<String, String> timeLimiterTags = Map.of("key1", "value1", "key2", "value2");
-        TimeLimiter TimeLimiter = timeLimiterRegistry
+        TimeLimiter timeLimiter = timeLimiterRegistry
             .timeLimiter("testName", timeLimiterTags);
 
-        assertThat(TimeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
+        assertThat(timeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
     }
 
     @Test
@@ -85,14 +85,14 @@ public class TimeLimiterRegistryTest {
         TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.ofDefaults();
         TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.ofDefaults();
         Map<String, String> timeLimiterTags = Map.of("key1", "value1", "key2", "value2");
-        TimeLimiter TimeLimiter = timeLimiterRegistry
+        TimeLimiter timeLimiter = timeLimiterRegistry
             .timeLimiter("testName", timeLimiterConfig, timeLimiterTags);
         Map<String, String> timeLimiterTags2 = Map.of("key3", "value3", "key4", "value4");
-        TimeLimiter TimeLimiter2 = timeLimiterRegistry
+        TimeLimiter timeLimiter2 = timeLimiterRegistry
             .timeLimiter("otherTestName", timeLimiterConfig, timeLimiterTags2);
 
-        assertThat(TimeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
-        assertThat(TimeLimiter2.getTags()).containsAllEntriesOf(timeLimiterTags2);
+        assertThat(timeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
+        assertThat(timeLimiter2.getTags()).containsAllEntriesOf(timeLimiterTags2);
     }
 
     @Test
