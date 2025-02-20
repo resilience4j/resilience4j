@@ -118,7 +118,8 @@ public class InMemoryTimeLimiterRegistry extends
 
     public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
                                        List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers,
-                                       Map<String, String> tags, RegistryStore<TimeLimiter> registryStore) {
+                                       Map<String, String> tags,
+                                       RegistryStore<TimeLimiter> registryStore) {
         super(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()),
                 registryEventConsumers, Optional.ofNullable(tags).orElse(emptyMap()),
                 Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
