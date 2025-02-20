@@ -19,9 +19,11 @@
 package io.github.resilience4j.timelimiter;
 
 import io.github.resilience4j.core.Registry;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.timelimiter.internal.InMemoryTimeLimiterRegistry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -252,4 +254,93 @@ public interface TimeLimiterRegistry extends Registry<TimeLimiter, TimeLimiterCo
      */
     TimeLimiter timeLimiter(String name, String configName, Map<String, String> tags);
 
+    /**
+     * Returns a builder to create a custom TimeLimiterRegistry.
+     *
+     * @return a {@link TimeLimiterRegistry.Builder}
+     */
+    static Builder custom() {
+        return new Builder();
+    }
+
+    class Builder {
+
+        private static final String DEFAULT_CONFIG = "default";
+        private RegistryStore<TimeLimiter> registryStore;
+        private final Map<String, TimeLimiterConfig> timeLimiterConfigsMap;
+        private final List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers;
+        private Map<String, String> tags;
+
+        public Builder() {
+            this.timeLimiterConfigsMap = new java.util.HashMap<>();
+            this.registryEventConsumers = new ArrayList<>();
+        }
+
+        public Builder withRegistryStore(RegistryStore<TimeLimiter> registryStore) {
+            this.registryStore = registryStore;
+            return this;
+        }
+
+        /**
+         * Configures a TimeLimiterRegistry with a custom default TimeLimiter configuration.
+         *
+         * @param timeLimiterConfig a custom default TimeLimiter configuration
+         * @return a {@link TimeLimiterRegistry.Builder}
+         */
+        public Builder withTimeLimiterConfig(TimeLimiterConfig timeLimiterConfig) {
+            timeLimiterConfigsMap.put(DEFAULT_CONFIG, timeLimiterConfig);
+            return this;
+        }
+
+        /**
+         * Configures a TimeLimiterRegistry with a custom TimeLimiter configuration.
+         *
+         * @param configName configName for a custom shared TimeLimiter configuration
+         * @param configuration a custom shared TimeLimiter configuration
+         * @return a {@link TimeLimiterRegistry.Builder}
+         * @throws IllegalArgumentException if {@code configName.equals("default")}
+         */
+        public Builder addTimeLimiterConfig(String configName, TimeLimiterConfig configuration) {
+            if (configName.equals(DEFAULT_CONFIG)) {
+                throw new IllegalArgumentException(
+                        "You cannot add another configuration with name 'default' as it is preserved for default configuration");
+            }
+            timeLimiterConfigsMap.put(configName, configuration);
+            return this;
+        }
+
+        /**
+         * Configures a TimeLimiterRegistry with a TimeLimiter registry event consumer.
+         *
+         * @param registryEventConsumer a TimeLimiter registry event consumer.
+         * @return a {@link TimeLimiterRegistry.Builder}
+         */
+        public Builder addRegistryEventConsumer(RegistryEventConsumer<TimeLimiter> registryEventConsumer) {
+            this.registryEventConsumers.add(registryEventConsumer);
+            return this;
+        }
+
+        /**
+         * Configures a TimeLimiterRegistry with Tags.
+         * <p>
+         * Tags added to the registry will be added to every instance created by this registry.
+         *
+         * @param tags default tags to add to the registry.
+         * @return a {@link TimeLimiterRegistry.Builder}
+         */
+        public Builder withTags(Map<String, String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        /**
+         * Builds a TimeLimiterRegistry
+         *
+         * @return the TimeLimiterRegistry
+         */
+        public TimeLimiterRegistry build() {
+            return new InMemoryTimeLimiterRegistry(timeLimiterConfigsMap, registryEventConsumers, tags,
+                    registryStore);
+        }
+    }
 }

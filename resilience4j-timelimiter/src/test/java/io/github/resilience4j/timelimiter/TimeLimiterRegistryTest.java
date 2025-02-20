@@ -3,10 +3,7 @@ package io.github.resilience4j.timelimiter;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.core.EventProcessor;
 import io.github.resilience4j.core.Registry;
-import io.github.resilience4j.core.registry.EntryAddedEvent;
-import io.github.resilience4j.core.registry.EntryRemovedEvent;
-import io.github.resilience4j.core.registry.EntryReplacedEvent;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.core.registry.*;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -215,5 +212,123 @@ public class TimeLimiterRegistryTest {
         @Override
         public void onEntryReplacedEvent(EntryReplacedEvent<TimeLimiter> entryReplacedEvent) {
         }
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultConfig() {
+        TimeLimiterRegistry timeLimiterRegistry =
+                TimeLimiterRegistry.custom().withTimeLimiterConfig(TimeLimiterConfig.ofDefaults()).build();
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testName");
+        TimeLimiter timeLimiter2 = timeLimiterRegistry.timeLimiter("otherTestName");
+        assertThat(timeLimiter).isNotSameAs(timeLimiter2);
+
+        assertThat(timeLimiterRegistry.getAllTimeLimiters()).hasSize(2);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithCustomConfig() {
+        Duration durationForPeriod = Duration.ofSeconds(10);
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(durationForPeriod).build();
+
+        TimeLimiterRegistry timeLimiterRegistry =
+                TimeLimiterRegistry.custom().withTimeLimiterConfig(timeLimiterConfig).build();
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testName");
+
+        assertThat(timeLimiter.getTimeLimiterConfig().getTimeoutDuration())
+                .isEqualTo(durationForPeriod);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithoutDefaultConfig() {
+        Duration durationForPeriod = Duration.ofSeconds(10);
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(durationForPeriod).build();
+
+        TimeLimiterRegistry timeLimiterRegistry =
+                TimeLimiterRegistry.custom().addTimeLimiterConfig("someSharedConfig", timeLimiterConfig).build();
+
+        assertThat(timeLimiterRegistry.getDefaultConfig()).isNotNull();
+        assertThat(timeLimiterRegistry.getDefaultConfig().getTimeoutDuration())
+                .isEqualTo(Duration.ofSeconds(1));
+        assertThat(timeLimiterRegistry.getConfiguration("someSharedConfig")).isNotEmpty();
+
+        TimeLimiter timeLimiter = timeLimiterRegistry
+                .timeLimiter("name", "someSharedConfig");
+
+        assertThat(timeLimiter.getTimeLimiterConfig()).isEqualTo(timeLimiterConfig);
+        assertThat(timeLimiter.getTimeLimiterConfig().getTimeoutDuration())
+                .isEqualTo(durationForPeriod);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddMultipleDefaultConfigUsingBuilderShouldThrowException() {
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(Duration.ofSeconds(10)).build();
+        TimeLimiterRegistry.custom().addTimeLimiterConfig("default", timeLimiterConfig).build();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithDefaultAndCustomConfig() {
+
+        Duration defaultDuration = Duration.ofSeconds(10);
+        TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(defaultDuration).build();
+        TimeLimiterConfig customTimeLimiterConfig = TimeLimiterConfig.custom()
+                .timeoutDuration(Duration.ofSeconds(20)).build();
+
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.custom()
+                .withTimeLimiterConfig(timeLimiterConfig)
+                .addTimeLimiterConfig("custom", customTimeLimiterConfig)
+                .build();
+
+        assertThat(timeLimiterRegistry.getDefaultConfig()).isNotNull();
+        assertThat(timeLimiterRegistry.getDefaultConfig().getTimeoutDuration())
+                .isEqualTo(defaultDuration);
+        assertThat(timeLimiterRegistry.getConfiguration("custom")).isNotEmpty();
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithNullConfig() {
+        assertThatThrownBy(
+                () -> TimeLimiterRegistry.custom().withTimeLimiterConfig(null).build())
+                .isInstanceOf(NullPointerException.class).hasMessage("Config must not be null");
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithMultipleRegistryEventConsumer() {
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.custom()
+                .withTimeLimiterConfig(TimeLimiterConfig.ofDefaults())
+                .addRegistryEventConsumer(new NoOpTimeLimiterEventConsumer())
+                .addRegistryEventConsumer(new NoOpTimeLimiterEventConsumer())
+                .build();
+
+        getEventProcessor(timeLimiterRegistry.getEventPublisher())
+                .ifPresent(eventProcessor -> assertThat(eventProcessor.hasConsumers()).isTrue());
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryTags() {
+        Map<String, String> timeLimiterTags = Map.of("key1", "value1", "key2", "value2");
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.custom()
+                .withTimeLimiterConfig(TimeLimiterConfig.ofDefaults())
+                .withTags(timeLimiterTags)
+                .build();
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testName");
+
+        assertThat(timeLimiter.getTags()).containsAllEntriesOf(timeLimiterTags);
+    }
+
+    @Test
+    public void testCreateUsingBuilderWithRegistryStore() {
+        TimeLimiterRegistry timeLimiterRegistry = TimeLimiterRegistry.custom()
+                .withTimeLimiterConfig(TimeLimiterConfig.ofDefaults())
+                .withRegistryStore(new InMemoryRegistryStore<>())
+                .build();
+        TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter("testName");
+        TimeLimiter timeLimiter2 = timeLimiterRegistry.timeLimiter("otherTestName");
+
+        assertThat(timeLimiter).isNotSameAs(timeLimiter2);
+        assertThat(timeLimiterRegistry.getAllTimeLimiters()).hasSize(2);
     }
 }
