@@ -19,6 +19,7 @@ import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.util.PublisherExtension;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micronaut.aop.InterceptedMethod;
 import io.micronaut.aop.InterceptorBean;
@@ -75,7 +76,10 @@ public class RateLimiterInterceptor extends BaseInterceptor implements MethodInt
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.RateLimiter.class, "name").orElse("default");
-        RateLimiter rateLimiter = this.rateLimiterRegistry.rateLimiter(name);
+        RateLimiterConfig config = rateLimiterRegistry.getConfiguration(name)
+                .orElse(rateLimiterRegistry.getDefaultConfig());
+
+        RateLimiter rateLimiter = this.rateLimiterRegistry.rateLimiter(name, config);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
         try {

@@ -99,7 +99,9 @@ public class BulkheadInterceptor extends BaseInterceptor implements MethodInterc
         } else {
 
             final String name = bulkheadAnnotationValue.stringValue("name").orElse("default");
-            Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name);
+            BulkheadConfig config = this.bulkheadRegistry.getConfiguration(name)
+                    .orElse(this.bulkheadRegistry.getDefaultConfig());
+            Bulkhead bulkhead = this.bulkheadRegistry.bulkhead(name, config);
 
             InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
             try {

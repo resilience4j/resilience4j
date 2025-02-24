@@ -7,14 +7,27 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class RetryDummyService implements TestDummyService {
+
+    private final AtomicInteger attemptCounter = new AtomicInteger(0);
 
     @Override
     @Retry(name = BACKEND, fallbackMethod = "recovery")
     public String sync() {
         return syncError();
+    }
+
+    @Override
+    @Retry(name = BACKEND, fallbackMethod = "recovery")
+    public String syncSuccess() {
+        int attempt = attemptCounter.getAndIncrement();
+        if (attempt < 3) {
+            throw new RuntimeException("Test exception");
+        }
+        return "ok";
     }
 
     @Override

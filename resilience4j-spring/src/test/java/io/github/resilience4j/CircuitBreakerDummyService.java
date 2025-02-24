@@ -18,6 +18,12 @@ public class CircuitBreakerDummyService implements TestDummyService {
     }
 
     @Override
+    @CircuitBreaker(name = BACKEND, fallbackMethod = "recovery")
+    public String syncSuccess() {
+        return "ok";
+    }
+
+    @Override
     public CompletionStage<String> asyncThreadPool() {
         // no-op
         return null;

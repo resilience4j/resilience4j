@@ -1,6 +1,5 @@
 package io.github.resilience4j;
 
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.reactivex.*;
 import org.springframework.stereotype.Component;
@@ -16,6 +15,12 @@ public class RateLimiterDummyService implements TestDummyService {
     @RateLimiter(name = BACKEND, fallbackMethod = "recovery")
     public String sync() {
         return syncError();
+    }
+
+    @Override
+    @RateLimiter(name = BACKEND, fallbackMethod = "recovery")
+    public String syncSuccess() {
+        return "ok";
     }
 
     @Override

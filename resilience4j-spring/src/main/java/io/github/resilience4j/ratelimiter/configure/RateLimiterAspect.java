@@ -136,8 +136,10 @@ public class RateLimiterAspect implements Ordered {
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName,
         String name) {
+        RateLimiterConfig config = rateLimiterRegistry.getConfiguration(name)
+            .orElse(rateLimiterRegistry.getDefaultConfig());
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry
-            .rateLimiter(name);
+            .rateLimiter(name, config);
 
         if (logger.isDebugEnabled()) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();

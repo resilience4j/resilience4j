@@ -16,6 +16,7 @@
 package io.github.resilience4j.micronaut.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
@@ -75,7 +76,9 @@ public class CircuitBreakerInterceptor extends BaseInterceptor implements Method
         }
         ExecutableMethod executableMethod = context.getExecutableMethod();
         final String name = executableMethod.stringValue(io.github.resilience4j.micronaut.annotation.CircuitBreaker.class, "name").orElse("default");
-        CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name);
+        CircuitBreakerConfig config = this.circuitBreakerRegistry.getConfiguration(name)
+                .orElse(this.circuitBreakerRegistry.getDefaultConfig());
+        CircuitBreaker circuitBreaker = this.circuitBreakerRegistry.circuitBreaker(name, config);
 
         InterceptedMethod interceptedMethod = InterceptedMethod.of(context, conversionService);
         try {

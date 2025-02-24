@@ -29,6 +29,8 @@ public interface TestDummyService {
 
     String sync();
 
+    String syncSuccess();
+
     CompletionStage<String> asyncThreadPool();
 
     CompletionStage<String> asyncThreadPoolSuccess();

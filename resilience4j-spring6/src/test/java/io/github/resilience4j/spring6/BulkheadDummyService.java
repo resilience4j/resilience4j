@@ -19,6 +19,12 @@ public class BulkheadDummyService implements TestDummyService {
     }
 
     @Override
+    @Bulkhead(name = BACKEND, fallbackMethod = "recovery")
+    public String syncSuccess() {
+        return "ok";
+    }
+
+    @Override
     @Bulkhead(name = BACKEND, fallbackMethod = "completionStageRecovery")
     public CompletionStage<String> async() {
         return asyncError();

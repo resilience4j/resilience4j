@@ -111,7 +111,8 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
     }
 
     private io.github.resilience4j.timelimiter.TimeLimiter getOrCreateTimeLimiter(String methodName, String name) {
-        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(name);
+        TimeLimiterConfig config = timeLimiterRegistry.getConfiguration(name).orElse(timeLimiterRegistry.getDefaultConfig());
+        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(name, config);
 
         if (logger.isDebugEnabled()) {
             TimeLimiterConfig timeLimiterConfig = timeLimiter.getTimeLimiterConfig();

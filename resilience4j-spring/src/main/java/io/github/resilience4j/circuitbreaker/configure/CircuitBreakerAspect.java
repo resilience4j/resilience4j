@@ -15,6 +15,7 @@
  */
 package io.github.resilience4j.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -128,8 +129,10 @@ public class CircuitBreakerAspect implements Ordered {
 
     private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(
         String methodName, String backend) {
+        CircuitBreakerConfig config = circuitBreakerRegistry.getConfiguration(backend)
+            .orElse(circuitBreakerRegistry.getDefaultConfig());
         io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(backend);
+            .circuitBreaker(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(
