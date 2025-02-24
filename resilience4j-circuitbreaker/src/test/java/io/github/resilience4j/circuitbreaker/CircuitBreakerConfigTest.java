@@ -113,6 +113,16 @@ public class CircuitBreakerConfigTest {
         custom().maxWaitDurationInHalfOpenState(Duration.ofMillis(-1)).build();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void transitionToStateAfterWaitDurationNullShouldFail() {
+        custom().transitionToStateAfterWaitDuration(null).build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void transitionToStateAfterWaitDurationHalfOpenShouldFail() {
+        custom().transitionToStateAfterWaitDuration(CircuitBreaker.State.HALF_OPEN).build();
+    }
+
     @Test
     public void shouldSetDefaultSettings() {
         CircuitBreakerConfig circuitBreakerConfig = ofDefaults();
@@ -135,6 +145,8 @@ public class CircuitBreakerConfigTest {
             .isEqualTo(DEFAULT_SLOW_CALL_DURATION_THRESHOLD);
         then(circuitBreakerConfig.isWritableStackTraceEnabled())
             .isEqualTo(DEFAULT_WRITABLE_STACK_TRACE_ENABLED);
+        then(circuitBreakerConfig.getTransitionToStateAfterWaitDuration())
+            .isEqualTo(DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION);
     }
 
     @Test
@@ -154,6 +166,18 @@ public class CircuitBreakerConfigTest {
     public void shouldSetWaitDurationInHalfOpenState() {
         CircuitBreakerConfig circuitBreakerConfig = custom().maxWaitDurationInHalfOpenState(Duration.ofMillis(1000)).build();
         then(circuitBreakerConfig.getMaxWaitDurationInHalfOpenState().toMillis()).isEqualTo(1000);
+    }
+
+    @Test
+    public void shouldSetClosedStateTransitionToStateAfterWaitDuration() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().transitionToStateAfterWaitDuration(CircuitBreaker.State.CLOSED).build();
+        then(circuitBreakerConfig.getTransitionToStateAfterWaitDuration()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
+    public void shouldSetOpenStateTransitionToStateAfterWaitDuration() {
+        CircuitBreakerConfig circuitBreakerConfig = custom().transitionToStateAfterWaitDuration(CircuitBreaker.State.OPEN).build();
+        then(circuitBreakerConfig.getTransitionToStateAfterWaitDuration()).isEqualTo(CircuitBreaker.State.OPEN);
     }
 
     @Test
