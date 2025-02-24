@@ -417,6 +417,16 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCompletionStage<T> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
+            return Decorators.ofCompletionStage(() -> {
+                try {
+                    return threadPoolBulkhead.submit(supplier.unchecked()::get);
+                } catch (BulkheadFullException ex) {
+                    return CompletableFuture.failedStage(ex);
+                }
+            });
+        }
+
         public DecorateCheckedSupplier<T> withFallback(CheckedBiFunction<T, Throwable, T> handler) {
             supplier = CheckedFunctionUtils.andThen(supplier, handler);
             return this;
@@ -540,6 +550,17 @@ public interface Decorators {
         public DecorateCheckedRunnable withBulkhead(Bulkhead bulkhead) {
             runnable = Bulkhead.decorateCheckedRunnable(bulkhead, runnable);
             return this;
+        }
+
+        public DecorateCompletionStage<Void> withThreadPoolBulkhead(ThreadPoolBulkhead threadPoolBulkhead) {
+            return Decorators.ofCompletionStage(() -> {
+                try {
+                    return threadPoolBulkhead.submit(runnable.unchecked());
+                }
+                catch (BulkheadFullException ex) {
+                    return CompletableFuture.failedStage(ex);
+                }
+            });
         }
 
         public CheckedRunnable decorate() {
