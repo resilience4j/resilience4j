@@ -19,7 +19,9 @@
 package io.github.resilience4j.timelimiter.internal;
 
 import io.github.resilience4j.core.ConfigurationNotFoundException;
+import io.github.resilience4j.core.RegistryStore;
 import io.github.resilience4j.core.registry.AbstractRegistry;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
@@ -112,6 +114,16 @@ public class InMemoryTimeLimiterRegistry extends
     public InMemoryTimeLimiterRegistry(TimeLimiterConfig defaultConfig,
         List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers, Map<String, String> tags) {
         super(defaultConfig, registryEventConsumers, tags);
+    }
+
+    public InMemoryTimeLimiterRegistry(Map<String, TimeLimiterConfig> configs,
+                                       List<RegistryEventConsumer<TimeLimiter>> registryEventConsumers,
+                                       Map<String, String> tags,
+                                       RegistryStore<TimeLimiter> registryStore) {
+        super(configs.getOrDefault(DEFAULT_CONFIG, TimeLimiterConfig.ofDefaults()),
+                registryEventConsumers, Optional.ofNullable(tags).orElse(emptyMap()),
+                Optional.ofNullable(registryStore).orElse(new InMemoryRegistryStore<>()));
+        this.configurations.putAll(configs);
     }
 
     /**
