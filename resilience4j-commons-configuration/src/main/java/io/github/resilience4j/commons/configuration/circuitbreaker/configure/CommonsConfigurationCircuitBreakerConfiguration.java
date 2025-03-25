@@ -40,6 +40,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
     protected static final String SLOW_CALL_DURATION_THRESHOLD = "slowCallDurationThreshold";
     protected static final String RECORD_EXCEPTIONS = "recordExceptions";
     protected static final String MAX_WAIT_DURATION_IN_HALF_OPEN_STATE = "maxWaitDurationInHalfOpenState";
+    protected static final String TRANSITION_TO_STATE_AFTER_WAIT_DURATION = "transitionToStateAfterWaitDuration";
     protected static final String SLIDING_WINDOW_TYPE = "slidingWindowType";
     protected static final String MINIMUM_NUMBER_OF_CALLS = "minimumNumberOfCalls";
     protected static final String AUTOMATIC_TRANSITION_FROM_OPEN_TO_HALF_OPEN_ENABLED = "automaticTransitionFromOpenToHalfOpenEnabled";
@@ -98,6 +99,8 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
             instanceProperties.setSlowCallDurationThreshold(configuration.getDuration(SLOW_CALL_DURATION_THRESHOLD));
         if (configuration.containsKey(MAX_WAIT_DURATION_IN_HALF_OPEN_STATE))
             instanceProperties.setMaxWaitDurationInHalfOpenState(configuration.getDuration(MAX_WAIT_DURATION_IN_HALF_OPEN_STATE));
+        if (configuration.containsKey(TRANSITION_TO_STATE_AFTER_WAIT_DURATION))
+            instanceProperties.setTransitionToStateAfterWaitDuration(configuration.get(CircuitBreaker.State.class, TRANSITION_TO_STATE_AFTER_WAIT_DURATION));
         if (configuration.containsKey(FAILURE_RATE_THRESHOLD))
             instanceProperties.setFailureRateThreshold(configuration.getFloat(FAILURE_RATE_THRESHOLD));
         if (configuration.containsKey(SLOW_CALL_RATE_THRESHOLD))
@@ -150,7 +153,7 @@ public class CommonsConfigurationCircuitBreakerConfiguration extends CommonCircu
 
         if(configuration.containsKey(INITIAL_STATE))
             instanceProperties.setInitialState(configuration.getEnum(INITIAL_STATE, CircuitBreaker.State.class));
- 
+
         return instanceProperties;
     };
 }

@@ -916,6 +916,21 @@ public class CircuitBreakerStateMachineTest {
     }
 
     @Test
+    public void circuitBreakerTransitionsToClosedAfterWaitDurationInHalfOpenState() throws InterruptedException {
+        circuitBreaker = new CircuitBreakerStateMachine("testName", custom()
+            .maxWaitDurationInHalfOpenState(Duration.ofSeconds(1))
+            .transitionToStateAfterWaitDuration(CircuitBreaker.State.CLOSED)
+            .build());
+        circuitBreaker.transitionToOpenState();
+        // Initially the CircuitBreaker is in Half Open State
+        circuitBreaker.transitionToHalfOpenState();
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        // sleeping for maxWaitDurationInHalfOpenState to expire (maxWaitDurationInHalfOpenState = 1Sec)
+        Thread.sleep(2000l);
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+    }
+
+    @Test
     public void circuitBreakerInitializeInClosedState(){
         CircuitBreaker intervalCircuitBreaker = new CircuitBreakerStateMachine("testName",
                 CircuitBreakerConfig.custom()
