@@ -1,19 +1,8 @@
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
-}
-
 ext.moduleName = 'io.github.resilience4j.core'
 
 dependencies {
     testImplementation(libraries.mock_clock)
     testImplementation(libraries.junitParams)
-    testImplementation(libraries.lincheck)
-}
-
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 test {

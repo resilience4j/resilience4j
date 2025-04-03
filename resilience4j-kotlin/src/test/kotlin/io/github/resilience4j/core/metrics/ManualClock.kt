@@ -16,32 +16,31 @@
  *
  *
  */
-package io.github.resilience4j.core;
+package io.github.resilience4j.core.metrics
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import io.github.resilience4j.core.Clock
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * A clock that can be manually advanced in time for testing purposes.
  */
-public class ManualClock implements Clock {
-    private final AtomicLong timeNanos = new AtomicLong(0);
+class ManualClock : Clock {
+    private val timeNanos = AtomicLong(0)
 
-    public void advanceByMillis(long millis) {
-        timeNanos.addAndGet(TimeUnit.MILLISECONDS.toNanos(millis));
+    fun advanceByMillis(millis: Long) {
+        timeNanos.addAndGet(TimeUnit.MILLISECONDS.toNanos(millis))
     }
 
-    public void advanceBySeconds(long seconds) {
-        timeNanos.addAndGet(TimeUnit.SECONDS.toNanos(seconds));
+    fun advanceBySeconds(seconds: Long) {
+        timeNanos.addAndGet(TimeUnit.SECONDS.toNanos(seconds))
     }
 
-    @Override
-    public long wallTime() {
-        return TimeUnit.NANOSECONDS.toMillis(timeNanos.get());
+    override fun wallTime(): Long {
+        return TimeUnit.NANOSECONDS.toMillis(timeNanos.get())
     }
 
-    @Override
-    public long monotonicTime() {
-        return timeNanos.get();
+    override fun monotonicTime(): Long {
+        return timeNanos.get()
     }
 }

@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.core.metrics
 
-import io.github.resilience4j.core.ManualClock
 import io.github.resilience4j.core.metrics.Metrics.Outcome
 import org.jetbrains.kotlinx.lincheck.annotations.Operation
 import org.jetbrains.kotlinx.lincheck.check
