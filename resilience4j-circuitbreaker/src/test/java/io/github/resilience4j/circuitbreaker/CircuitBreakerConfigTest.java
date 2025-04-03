@@ -317,6 +317,20 @@ public class CircuitBreakerConfigTest {
     }
 
     @Test
+    public void shouldUseSynchronizedStrategyByDefault() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .slidingWindow(
+                        1000,
+                        1000,
+                        SlidingWindowType.COUNT_BASED
+                )
+                .build();
+        then(circuitBreakerConfig.getSlidingWindowSize()).isEqualTo(1000);
+        then(circuitBreakerConfig.getSlidingWindowSynchronizationStrategy())
+                .isEqualTo(SlidingWindowSynchronizationStrategy.SYNCHRONIZED);
+    }
+
+    @Test
     public void shouldSetWaitInterval() {
         CircuitBreakerConfig circuitBreakerConfig = custom()
             .waitDurationInOpenState(Duration.ofSeconds(1)).build();
