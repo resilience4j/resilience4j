@@ -672,6 +672,54 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
+         * Configures the sliding window which is used to record the outcome of calls when the
+         * CircuitBreaker is closed. {@code slidingWindowSize} configures the size of the sliding
+         * window. Sliding window can either be count-based or time-based, specified by {@code
+         * slidingWindowType}. {@code minimumNumberOfCalls} configures the minimum number of calls
+         * which are required (per sliding window period) before the CircuitBreaker can calculate
+         * the error rate. For example, if {@code minimumNumberOfCalls} is 10, then at least 10
+         * calls must be recorded, before the failure rate can be calculated. If only 9 calls have
+         * been recorded, the CircuitBreaker will not transition to open, even if all 9 calls have
+         * failed.
+         * <p>
+         * If {@code slidingWindowSize} is 100 and {@code slidingWindowType} is COUNT_BASED, the
+         * last 100 calls are recorded and aggregated. If {@code slidingWindowSize} is 10 and {@code
+         * slidingWindowType} is TIME_BASED, the calls of the last 10 seconds are recorded and
+         * aggregated.
+         * <p>
+         * The {@code slidingWindowSize} must be greater than 0. The {@code minimumNumberOfCalls}
+         * must be greater than 0. If the {@code slidingWindowType} is COUNT_BASED, the {@code
+         * minimumNumberOfCalls} may not be greater than {@code slidingWindowSize}. If a greater
+         * value is provided, {@code minimumNumberOfCalls} will be equal to {@code
+         * slidingWindowSize}. If the {@code slidingWindowType} is TIME_BASED, the {@code
+         * minimumNumberOfCalls} may be any amount.
+         * <p>
+         * Default slidingWindowSize is 100, minimumNumberOfCalls is 100 and slidingWindowType is
+         * COUNT_BASED.
+         * <p>
+         * Uses {@link SlidingWindowSynchronizationStrategy#SYNCHRONIZED} strategy by default.
+         *
+         * @see #slidingWindow(int, int, SlidingWindowType, SlidingWindowSynchronizationStrategy)
+         *
+         * @param slidingWindowSize    the size of the sliding window when the CircuitBreaker is
+         *                             closed.
+         * @param minimumNumberOfCalls the minimum number of calls that must be recorded before the
+         *                             failure rate can be calculated.
+         * @param slidingWindowType    the type of the sliding window. Either COUNT_BASED or
+         *                             TIME_BASED.
+         * @return the CircuitBreakerConfig.Builder
+         * @throws IllegalArgumentException if {@code slidingWindowSize < 1 || minimumNumberOfCalls
+         *                                  < 1}
+         */
+        public Builder slidingWindow(
+                int slidingWindowSize,
+                int minimumNumberOfCalls,
+                SlidingWindowType slidingWindowType
+        ) {
+            return slidingWindow(slidingWindowSize, minimumNumberOfCalls, slidingWindowType, DEFAULT_SLIDING_WINDOW_SYNCHRONIZATION_STRATEGY);
+        }
+
+        /**
          * Configures the size of the sliding window which is used to record the outcome of calls
          * when the CircuitBreaker is closed. {@code slidingWindowSize} configures the size of the
          * sliding window.
