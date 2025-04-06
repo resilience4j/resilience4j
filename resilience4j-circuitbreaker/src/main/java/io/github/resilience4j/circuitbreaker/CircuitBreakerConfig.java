@@ -935,8 +935,10 @@ public class CircuitBreakerConfig implements Serializable {
             config.automaticTransitionFromOpenToHalfOpenEnabled = automaticTransitionFromOpenToHalfOpenEnabled;
             config.initialState = initialState;
             config.writableStackTraceEnabled = writableStackTraceEnabled;
-            config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            Predicate<Throwable> baseRecordExceptionPredicate = createRecordExceptionPredicate();
+            config.recordExceptionPredicate = throwable ->
+                    !config.ignoreExceptionPredicate.test(throwable) && baseRecordExceptionPredicate.test(throwable);
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
             config.recordResultPredicate = recordResultPredicate;
