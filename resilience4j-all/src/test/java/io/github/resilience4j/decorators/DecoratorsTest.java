@@ -52,6 +52,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.matches;
@@ -240,6 +241,25 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateFunctionWithFallbackFromResult() throws Exception {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Function<String, String> decoratedFunction = Decorators
+                .ofFunction((Function<String, String>) str -> helloWorldService.returnHelloWorldWithName(str))
+                .withFallback(result -> result.equals("Hello world Name"), (result) -> "Fallback")
+                .withCircuitBreaker(circuitBreaker)
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+        then(helloWorldService).should(times(1)).returnHelloWorldWithName(any(String.class));
     }
 
     @Test
@@ -815,6 +835,27 @@ public class DecoratorsTest {
         String result = decoratedFunction.apply("Name");
 
         assertThat(result).isEqualTo("Hello world Name");
+        CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
+        assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
+        assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateFunctionWithFallback() {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willThrow(new RuntimeException("BAM!"));
+        CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
+        Function<String, String> decoratedFunction = Decorators
+                .ofFunction(helloWorldService::returnHelloWorldWithName)
+                .withCircuitBreaker(circuitBreaker)
+                .withRetry(Retry.ofDefaults("id"))
+                .withRateLimiter(RateLimiter.ofDefaults("testName"))
+                .withBulkhead(Bulkhead.ofDefaults("testName"))
+                .withFallback(throwable -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
