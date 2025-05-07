@@ -591,6 +591,30 @@ public class CircuitBreakerConfigTest {
         build = from(custom).build();
         assertThat(build.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(23434);
     }
+    @Test
+    public void shouldRespectIgnoreExceptionPriorityOverRecordException() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .recordExceptions(Exception.class)
+                .ignoreExceptions(RuntimeException.class, ExtendsException.class)
+                .build();
+
+        final Predicate<? super Throwable> recordExceptionPredicate =
+                circuitBreakerConfig.getRecordExceptionPredicate();
+        final Predicate<? super Throwable> ignoreExceptionPredicate =
+                circuitBreakerConfig.getIgnoreExceptionPredicate();
+
+
+        then(ignoreExceptionPredicate.test(new BusinessException())).isFalse();
+        then(recordExceptionPredicate.test(new BusinessException())).isTrue();
+        then(ignoreExceptionPredicate.test(new RuntimeException())).isTrue();
+        then(recordExceptionPredicate.test(new RuntimeException())).isFalse();
+        then(ignoreExceptionPredicate.test(new ExtendsRuntimeException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsRuntimeException())).isFalse();
+        then(ignoreExceptionPredicate.test(new ExtendsException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsException())).isFalse();
+        then(ignoreExceptionPredicate.test(new ExtendsExtendsException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsExtendsException())).isFalse();
+    }
 
     private static class ExtendsException extends Exception {
 
