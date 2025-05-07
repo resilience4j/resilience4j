@@ -527,6 +527,31 @@ public interface Decorators {
             return this;
         }
 
+        public DecorateCheckedFunction<T, R> withFallback(BiFunction<R, Throwable, R> handler) {
+            function = CheckedFunctionUtils.andThen(function, handler);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(Predicate<R> resultPredicate, UnaryOperator<R> resultHandler) {
+            function = CheckedFunctionUtils.recover(function, resultPredicate, resultHandler);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction<Throwable, R> exceptionHandler) {
+            function = CheckedFunctionUtils.recover(function, exceptionTypes, exceptionHandler);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(CheckedFunction<Throwable, R> exceptionHandler) {
+            function = CheckedFunctionUtils.recover(function, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateCheckedFunction<T, R> withFallback(Class<X> exceptionType, CheckedFunction<Throwable, R> exceptionHandler) {
+            function = CheckedFunctionUtils.recover(function, exceptionType, exceptionHandler);
+            return this;
+        }
+
         public CheckedFunction<T, R> decorate() {
             return function;
         }

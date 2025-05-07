@@ -144,7 +144,7 @@ public class FunctionUtils {
     }
 
     /**
-     * Returns a composed function that first executes the Runnable and optionally recovers from an
+     * Returns a composed function that first executes the Function and optionally recovers from an
      * exception.
      *
      * @param <T>           function parameter type

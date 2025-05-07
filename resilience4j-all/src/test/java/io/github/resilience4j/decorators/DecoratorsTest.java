@@ -257,6 +257,19 @@ public class DecoratorsTest {
     }
 
     @Test
+    public void testDecorateCheckedFunctionWithFallbackFromResult() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
+        CheckedFunction<String, String> decoratedFunction = Decorators
+                .ofCheckedFunction((CheckedFunction<String, String>) str -> helloWorldService.returnHelloWorldWithName(str))
+                .withFallback(result -> result.equals("Hello world Name"), (result) -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
+    }
+
+    @Test
     public void testDecorateCheckedSupplierWithFallbackFromResult() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -866,6 +879,19 @@ public class DecoratorsTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateCheckedFunctionWithFallback() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willThrow(new RuntimeException("BAM!"));
+        CheckedFunction<String, String> decoratedFunction = Decorators
+                .ofCheckedFunction(helloWorldService::returnHelloWorldWithName)
+                .withFallback(throwable -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
     }
 
     @Test

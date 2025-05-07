@@ -75,7 +75,7 @@ public class FunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverCallableFromSpecificResult() {
+    public void shouldRecoverFunctionFromSpecificResult() {
         Function<String, String> function = ignored -> "Wrong Result";
 
         Function<String, String> functionWithRecovery = FunctionUtils.recover(function, (result) -> result.equals("Wrong Result"), (r) -> "Correct Result");
