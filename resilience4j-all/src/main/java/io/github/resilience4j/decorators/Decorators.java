@@ -5,10 +5,7 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.CallableUtils;
-import io.github.resilience4j.core.CheckedFunctionUtils;
-import io.github.resilience4j.core.CompletionStageUtils;
-import io.github.resilience4j.core.SupplierUtils;
+import io.github.resilience4j.core.*;
 import io.github.resilience4j.core.functions.*;
 import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -428,27 +425,27 @@ public interface Decorators {
         }
 
         public DecorateCheckedSupplier<T> withFallback(CheckedBiFunction<T, Throwable, T> handler) {
-            supplier = CheckedFunctionUtils.andThen(supplier, handler);
+            supplier = CheckedSupplierUtils.andThen(supplier, handler);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withFallback(Predicate<T> resultPredicate, CheckedFunction<T, T> resultHandler) {
-            supplier = CheckedFunctionUtils.recover(supplier, resultPredicate, resultHandler);
+            supplier = CheckedSupplierUtils.recover(supplier, resultPredicate, resultHandler);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction<Throwable, T> exceptionHandler) {
-            supplier = CheckedFunctionUtils.recover(supplier, exceptionTypes, exceptionHandler);
+            supplier = CheckedSupplierUtils.recover(supplier, exceptionTypes, exceptionHandler);
             return this;
         }
 
         public DecorateCheckedSupplier<T> withFallback(CheckedFunction<Throwable, T> exceptionHandler) {
-            supplier = CheckedFunctionUtils.recover(supplier, exceptionHandler);
+            supplier = CheckedSupplierUtils.recover(supplier, exceptionHandler);
             return this;
         }
 
         public <X extends Throwable> DecorateCheckedSupplier<T> withFallback(Class<X> exceptionType, CheckedFunction<Throwable, T> exceptionHandler) {
-            supplier = CheckedFunctionUtils.recover(supplier, exceptionType, exceptionHandler);
+            supplier = CheckedSupplierUtils.recover(supplier, exceptionType, exceptionHandler);
             return this;
         }
 
