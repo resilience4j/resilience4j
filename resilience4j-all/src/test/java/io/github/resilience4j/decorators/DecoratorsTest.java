@@ -52,6 +52,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.matches;
@@ -240,6 +241,32 @@ public class DecoratorsTest {
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
+    }
+
+    @Test
+    public void testDecorateFunctionWithFallbackFromResult() throws Exception {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
+        Function<String, String> decoratedFunction = Decorators
+                .ofFunction((Function<String, String>) str -> helloWorldService.returnHelloWorldWithName(str))
+                .withFallback(result -> result.equals("Hello world Name"), (result) -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
+    }
+
+    @Test
+    public void testDecorateCheckedFunctionWithFallbackFromResult() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willReturn("Hello world Name");
+        CheckedFunction<String, String> decoratedFunction = Decorators
+                .ofCheckedFunction((CheckedFunction<String, String>) str -> helloWorldService.returnHelloWorldWithName(str))
+                .withFallback(result -> result.equals("Hello world Name"), (result) -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
     }
 
     @Test
@@ -821,6 +848,19 @@ public class DecoratorsTest {
     }
 
     @Test
+    public void testDecorateFunctionWithFallback() {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willThrow(new RuntimeException("BAM!"));
+        Function<String, String> decoratedFunction = Decorators
+                .ofFunction(helloWorldService::returnHelloWorldWithName)
+                .withFallback(throwable -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
+    }
+
+    @Test
     public void testDecorateCheckedFunction() throws IOException {
         given(helloWorldService.returnHelloWorldWithNameWithException("Name"))
             .willReturn("Hello world Name");
@@ -839,6 +879,19 @@ public class DecoratorsTest {
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSuccessfulCalls()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateCheckedFunctionWithFallback() throws Throwable {
+        given(helloWorldService.returnHelloWorldWithName("Name")).willThrow(new RuntimeException("BAM!"));
+        CheckedFunction<String, String> decoratedFunction = Decorators
+                .ofCheckedFunction(helloWorldService::returnHelloWorldWithName)
+                .withFallback(throwable -> "Fallback")
+                .decorate();
+
+        String result = decoratedFunction.apply("Name");
+
+        assertThat(result).isEqualTo("Fallback");
     }
 
     @Test
