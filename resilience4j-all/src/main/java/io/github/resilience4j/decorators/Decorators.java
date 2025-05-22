@@ -5,10 +5,7 @@ import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.core.CallableUtils;
-import io.github.resilience4j.core.CheckedFunctionUtils;
-import io.github.resilience4j.core.CompletionStageUtils;
-import io.github.resilience4j.core.SupplierUtils;
+import io.github.resilience4j.core.*;
 import io.github.resilience4j.core.functions.*;
 import io.github.resilience4j.micrometer.Timer;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -213,6 +210,31 @@ public interface Decorators {
 
         public DecorateFunction<T, R> withBulkhead(Bulkhead bulkhead) {
             function = Bulkhead.decorateFunction(bulkhead, function);
+            return this;
+        }
+
+        public DecorateFunction<T, R> withFallback(BiFunction<R, Throwable, R> handler) {
+            function = FunctionUtils.andThen(function, handler);
+            return this;
+        }
+
+        public DecorateFunction<T, R> withFallback(Predicate<R> resultPredicate, UnaryOperator<R> resultHandler) {
+            function = FunctionUtils.recover(function, resultPredicate, resultHandler);
+            return this;
+        }
+
+        public DecorateFunction<T, R> withFallback(List<Class<? extends Throwable>> exceptionTypes, Function<Throwable, R> exceptionHandler) {
+            function = FunctionUtils.recover(function, exceptionTypes, exceptionHandler);
+            return this;
+        }
+
+        public DecorateFunction<T, R> withFallback(Function<Throwable, R> exceptionHandler) {
+            function = FunctionUtils.recover(function, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateFunction<T, R> withFallback(Class<X> exceptionType, Function<Throwable, R> exceptionHandler) {
+            function = FunctionUtils.recover(function, exceptionType, exceptionHandler);
             return this;
         }
 
@@ -502,6 +524,31 @@ public interface Decorators {
 
         public DecorateCheckedFunction<T, R> withBulkhead(Bulkhead bulkhead) {
             function = Bulkhead.decorateCheckedFunction(bulkhead, function);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(BiFunction<R, Throwable, R> handler) {
+            function = CheckedFunctionUtils.andThen(function, handler);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(Predicate<R> resultPredicate, UnaryOperator<R> resultHandler) {
+            function = CheckedFunctionUtils.recover(function, resultPredicate, resultHandler);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(List<Class<? extends Throwable>> exceptionTypes, CheckedFunction<Throwable, R> exceptionHandler) {
+            function = CheckedFunctionUtils.recover(function, exceptionTypes, exceptionHandler);
+            return this;
+        }
+
+        public DecorateCheckedFunction<T, R> withFallback(CheckedFunction<Throwable, R> exceptionHandler) {
+            function = CheckedFunctionUtils.recover(function, exceptionHandler);
+            return this;
+        }
+
+        public <X extends Throwable> DecorateCheckedFunction<T, R> withFallback(Class<X> exceptionType, CheckedFunction<Throwable, R> exceptionHandler) {
+            function = CheckedFunctionUtils.recover(function, exceptionType, exceptionHandler);
             return this;
         }
 
