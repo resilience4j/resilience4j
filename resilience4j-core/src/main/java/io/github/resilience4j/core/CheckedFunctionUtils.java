@@ -24,7 +24,6 @@ import io.github.resilience4j.core.functions.CheckedSupplier;
 
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -33,118 +32,50 @@ public class CheckedFunctionUtils {
     private CheckedFunctionUtils() {
     }
 
-
     /**
-     * Returns a composed supplier that first executes the supplier and optionally recovers from an
-     * exception.
-     *
-     * @param <T>              return type of after
-     * @param supplier the supplier which should be recovered from a certain exception
-     * @param exceptionHandler the exception handler
-     * @return a supplier composed of callable and exceptionHandler
+     * @deprecated use {@link CheckedSupplierUtils#recover(CheckedSupplier, CheckedFunction)}
      */
+    @Deprecated
     public static <T> CheckedSupplier<T> recover(CheckedSupplier<T> supplier,
                                                  CheckedFunction<Throwable, T> exceptionHandler) {
-        return () -> {
-            try {
-                return supplier.get();
-            } catch (Throwable throwable) {
-                return exceptionHandler.apply(throwable);
-            }
-        };
+        return CheckedSupplierUtils.recover(supplier, exceptionHandler);
     }
 
     /**
-     * Returns a composed supplier that first applies the supplier and then applies {@linkplain
-     * BiFunction} {@code after} to the result.
-     *
-     * @param <T>     return type of callable
-     * @param <R>     return type of handler
-     * @param supplier the supplier
-     * @param handler the supplier applied after callable
-     * @return a supplier composed of supplier and handler
+     * @deprecated use {@link CheckedSupplierUtils#andThen(CheckedSupplier, CheckedBiFunction)}
      */
+    @Deprecated
     public static <T, R> CheckedSupplier<R> andThen(CheckedSupplier<T> supplier,
         CheckedBiFunction<T, Throwable, R> handler) {
-        return () -> {
-            try {
-                return handler.apply(supplier.get(), null);
-            } catch (Throwable throwable) {
-                return handler.apply(null, throwable);
-            }
-        };
+        return CheckedSupplierUtils.andThen(supplier, handler);
     }
 
     /**
-     * Returns a composed supplier that first executes the supplier and optionally recovers from a specific result.
-     *
-     * @param <T>              return type of after
-     * @param supplier the supplier
-     * @param resultPredicate the result predicate
-     * @param resultHandler the result handler
-     * @return a supplier composed of supplier and exceptionHandler
+     * @deprecated use {@link CheckedSupplierUtils#recover(CheckedSupplier, Predicate, CheckedFunction)}
      */
+    @Deprecated
     public static <T> CheckedSupplier<T> recover(CheckedSupplier<T> supplier,
         Predicate<T> resultPredicate, CheckedFunction<T, T> resultHandler) {
-        return () -> {
-            T result = supplier.get();
-            if(resultPredicate.test(result)){
-                return resultHandler.apply(result);
-            }
-            return result;
-        };
+        return CheckedSupplierUtils.recover(supplier, resultPredicate, resultHandler);
     }
 
     /**
-     * Returns a composed supplier that first executes the supplier and optionally recovers from an
-     * exception.
-     *
-     * @param <T>              return type of after
-     * @param supplier the supplier which should be recovered from a certain exception
-     * @param exceptionTypes the specific exception types that should be recovered
-     * @param exceptionHandler the exception handler
-     * @return a supplier composed of supplier and exceptionHandler
+     * @deprecated use {@link CheckedSupplierUtils#recover(CheckedSupplier, List, CheckedFunction)}
      */
+    @Deprecated
     public static <T> CheckedSupplier<T> recover(CheckedSupplier<T> supplier,
         List<Class<? extends Throwable>> exceptionTypes,
         CheckedFunction<Throwable, T> exceptionHandler) {
-        return () -> {
-            try {
-                return supplier.get();
-            } catch (Exception exception) {
-                if(exceptionTypes.stream().anyMatch(exceptionType -> exceptionType.isAssignableFrom(exception.getClass()))){
-                    return exceptionHandler.apply(exception);
-                }else{
-                    throw exception;
-                }
-            }
-        };
+        return CheckedSupplierUtils.recover(supplier, exceptionTypes, exceptionHandler);
     }
 
     /**
-     * Returns a composed supplier that first executes the supplier and optionally recovers from an
-     * exception.
-     *
-     * @param <T>              return type of after
-     * @param supplier the supplier which should be recovered from a certain exception
-     * @param exceptionType the specific exception type that should be recovered
-     * @param exceptionHandler the exception handler
-     * @return a supplier composed of callable and exceptionHandler
+     * @deprecated use {@link CheckedSupplierUtils#recover(CheckedSupplier, Class, CheckedFunction)}
      */
     public static <X extends Throwable, T> CheckedSupplier<T> recover(CheckedSupplier<T> supplier,
         Class<X> exceptionType,
         CheckedFunction<Throwable, T> exceptionHandler) {
-        return () -> {
-            try {
-                return supplier.get();
-            } catch (Throwable throwable) {
-                if(exceptionType.isAssignableFrom(throwable.getClass())) {
-                    return exceptionHandler.apply(throwable);
-                }else{
-                    throw throwable;
-                }
-            }
-        };
+        return CheckedSupplierUtils.recover(supplier, exceptionType, exceptionHandler);
     }
 
     /**
