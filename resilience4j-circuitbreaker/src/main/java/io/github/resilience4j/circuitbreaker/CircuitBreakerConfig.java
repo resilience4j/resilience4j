@@ -97,6 +97,7 @@ public class CircuitBreakerConfig implements Serializable {
         .ofSeconds(DEFAULT_WAIT_DURATION_IN_HALF_OPEN_STATE);
     private State transitionToStateAfterWaitDuration = DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION;
     private transient Clock clock = DEFAULT_CLOCK;
+    private boolean ignoreExceptionsPrecedenceEnabled = false;
 
     private CircuitBreakerConfig() {
     }
@@ -216,6 +217,10 @@ public class CircuitBreakerConfig implements Serializable {
         return clock;
     }
 
+    public boolean isIgnoreExceptionsPrecedenceEnabled() {
+        return ignoreExceptionsPrecedenceEnabled;
+    }
+
     public enum SlidingWindowType {
         TIME_BASED, COUNT_BASED
     }
@@ -275,6 +280,8 @@ public class CircuitBreakerConfig implements Serializable {
         circuitBreakerConfig.append(slowCallRateThreshold);
         circuitBreakerConfig.append(", slowCallDurationThreshold=");
         circuitBreakerConfig.append(slowCallDurationThreshold);
+        circuitBreakerConfig.append(", ignoreExceptionsPrecedenceEnabled=");
+        circuitBreakerConfig.append(ignoreExceptionsPrecedenceEnabled);
         circuitBreakerConfig.append("}");
         return circuitBreakerConfig.toString();
     }
@@ -335,7 +342,7 @@ public class CircuitBreakerConfig implements Serializable {
         }
     }
 
-	public static class Builder {
+    public static class Builder {
 
         @Nullable
         private Predicate<Throwable> recordExceptionPredicate;
@@ -375,6 +382,7 @@ public class CircuitBreakerConfig implements Serializable {
         private State transitionToStateAfterWaitDuration = DEFAULT_TRANSITION_TO_STATE_AFTER_WAIT_DURATION;
         private byte createWaitIntervalFunctionCounter = 0;
         private Clock clock = DEFAULT_CLOCK;
+        private boolean ignoreExceptionsPrecedenceEnabled = false;
 
 
         public Builder(CircuitBreakerConfig baseConfig) {
@@ -401,6 +409,7 @@ public class CircuitBreakerConfig implements Serializable {
             this.writableStackTraceEnabled = baseConfig.writableStackTraceEnabled;
             this.recordResultPredicate = baseConfig.recordResultPredicate;
             this.clock = baseConfig.clock;
+            this.ignoreExceptionsPrecedenceEnabled = baseConfig.ignoreExceptionsPrecedenceEnabled;
         }
 
         public Builder() {
@@ -959,6 +968,33 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         /**
+         * Enables ignoreExceptions to take precedence over recordExceptions.
+         * When enabled, if an exception matches both recordExceptions and ignoreExceptions,
+         * it will be ignored. When disabled (default), the legacy behavior is used where
+         * recordExceptions takes precedence for backward compatibility.
+         *
+         * @param enableIgnoreExceptionsPrecedence true to enable new behavior, false for legacy behavior (default)
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder ignoreExceptionsPrecedenceEnabled(boolean enableIgnoreExceptionsPrecedence) {
+            this.ignoreExceptionsPrecedenceEnabled = enableIgnoreExceptionsPrecedence;
+            return this;
+        }
+
+        /**
+         * Enables ignoreExceptions to take precedence over recordExceptions.
+         * This changes the default behavior where recordExceptions takes precedence.
+         * When enabled, exceptions that match both recordExceptions and ignoreExceptions
+         * will be ignored.
+         *
+         * @return the CircuitBreakerConfig.Builder
+         */
+        public Builder enableIgnoreExceptionsPrecedence() {
+            this.ignoreExceptionsPrecedenceEnabled = true;
+            return this;
+        }
+
+        /**
          * Builds a CircuitBreakerConfig
          *
          * @return the CircuitBreakerConfig
@@ -985,6 +1021,7 @@ public class CircuitBreakerConfig implements Serializable {
             config.writableStackTraceEnabled = writableStackTraceEnabled;
             config.recordExceptionPredicate = createRecordExceptionPredicate();
             config.ignoreExceptionPredicate = createIgnoreFailurePredicate();
+            config.ignoreExceptionsPrecedenceEnabled = ignoreExceptionsPrecedenceEnabled;
             config.currentTimestampFunction = currentTimestampFunction;
             config.timestampUnit = timestampUnit;
             config.recordResultPredicate = recordResultPredicate;
@@ -998,8 +1035,16 @@ public class CircuitBreakerConfig implements Serializable {
         }
 
         private Predicate<Throwable> createRecordExceptionPredicate() {
-            return PredicateCreator.createExceptionsPredicate(recordExceptionPredicate, recordExceptions)
-                .orElse(DEFAULT_RECORD_EXCEPTION_PREDICATE);
+            Predicate<Throwable> baseRecordExceptionPredicate = PredicateCreator.createExceptionsPredicate(recordExceptionPredicate, recordExceptions)
+                    .orElse(DEFAULT_RECORD_EXCEPTION_PREDICATE);
+
+
+            if (ignoreExceptionsPrecedenceEnabled) {
+                return throwable ->
+                        !createIgnoreFailurePredicate().test(throwable) &&
+                                baseRecordExceptionPredicate.test(throwable);
+            }
+            return baseRecordExceptionPredicate;
         }
 
         private IntervalFunction validateWaitIntervalFunctionInOpenState() {
