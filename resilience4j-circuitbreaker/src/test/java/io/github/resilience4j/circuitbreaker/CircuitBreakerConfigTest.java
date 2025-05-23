@@ -578,6 +578,80 @@ public class CircuitBreakerConfigTest {
         assertThat(build.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(23434);
     }
 
+
+    @Test
+    public void shouldSetIgnoreExceptionsPrecedenceEnabled() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .ignoreExceptionsPrecedenceEnabled(true)
+                .build();
+        then(circuitBreakerConfig.isIgnoreExceptionsPrecedenceEnabled()).isTrue();
+    }
+
+    @Test
+    public void shouldSetIgnoreExceptionsPrecedenceEnabledToFalse() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .ignoreExceptionsPrecedenceEnabled(false)
+                .build();
+        then(circuitBreakerConfig.isIgnoreExceptionsPrecedenceEnabled()).isFalse();
+    }
+
+    @Test
+    public void shouldEnableIgnoreExceptionsPrecedence() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .enableIgnoreExceptionsPrecedence()
+                .build();
+        then(circuitBreakerConfig.isIgnoreExceptionsPrecedenceEnabled()).isTrue();
+    }
+
+    @Test
+    public void shouldRespectIgnoreExceptionsWhenPrecedenceEnabled() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .recordExceptions(Exception.class)
+                .ignoreExceptions(RuntimeException.class, ExtendsException.class)
+                .enableIgnoreExceptionsPrecedence()
+                .build();
+
+        final Predicate<? super Throwable> recordExceptionPredicate =
+                circuitBreakerConfig.getRecordExceptionPredicate();
+        final Predicate<? super Throwable> ignoreExceptionPredicate =
+                circuitBreakerConfig.getIgnoreExceptionPredicate();
+
+        then(ignoreExceptionPredicate.test(new BusinessException())).isFalse();
+        then(recordExceptionPredicate.test(new BusinessException())).isTrue();
+        then(ignoreExceptionPredicate.test(new RuntimeException())).isTrue();
+        then(recordExceptionPredicate.test(new RuntimeException())).isFalse();
+        then(ignoreExceptionPredicate.test(new ExtendsRuntimeException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsRuntimeException())).isFalse();
+        then(ignoreExceptionPredicate.test(new ExtendsException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsException())).isFalse();
+        then(ignoreExceptionPredicate.test(new ExtendsExtendsException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsExtendsException())).isFalse();
+    }
+
+    @Test
+    public void shouldRespectRecordExceptionsWhenPrecedenceDisabled() {
+        CircuitBreakerConfig circuitBreakerConfig = custom()
+                .recordExceptions(Exception.class)
+                .ignoreExceptions(RuntimeException.class, ExtendsException.class)
+                .build();
+
+        final Predicate<? super Throwable> recordExceptionPredicate =
+                circuitBreakerConfig.getRecordExceptionPredicate();
+        final Predicate<? super Throwable> ignoreExceptionPredicate =
+                circuitBreakerConfig.getIgnoreExceptionPredicate();
+
+        then(ignoreExceptionPredicate.test(new BusinessException())).isFalse();
+        then(recordExceptionPredicate.test(new BusinessException())).isTrue();
+        then(ignoreExceptionPredicate.test(new RuntimeException())).isTrue();
+        then(recordExceptionPredicate.test(new RuntimeException())).isTrue();
+        then(ignoreExceptionPredicate.test(new ExtendsRuntimeException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsRuntimeException())).isTrue();
+        then(ignoreExceptionPredicate.test(new ExtendsException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsException())).isTrue();
+        then(ignoreExceptionPredicate.test(new ExtendsExtendsException())).isTrue();
+        then(recordExceptionPredicate.test(new ExtendsExtendsException())).isTrue();
+    }
+
     private static class ExtendsException extends Exception {
 
         ExtendsException() {
