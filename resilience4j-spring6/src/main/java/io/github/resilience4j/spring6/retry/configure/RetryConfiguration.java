@@ -77,11 +77,25 @@ public class RetryConfiguration {
             retryRegistryEventConsumer, compositeRetryCustomizer);
         registerEventConsumer(retryRegistry, retryEventConsumerRegistry,
             retryConfigurationProperties);
-        retryConfigurationProperties.getInstances()
-            .forEach((name, properties) ->
-                retryRegistry.retry(name, retryConfigurationProperties
-                    .createRetryConfig(name, compositeRetryCustomizer)));
+        initRetryRegistry(retryConfigurationProperties, compositeRetryCustomizer, retryRegistry);
         return retryRegistry;
+    }
+    /**
+     * Initializes the Retry registry with resilience4j instances.
+     *
+     * @param retryRegistry The retry registry.
+     * @param compositeRetryCustomizer customizers for instances and configs
+     */
+    private void initRetryRegistry(RetryConfigurationProperties retryConfigurationProperties,
+        CompositeCustomizer<RetryConfigCustomizer> compositeRetryCustomizer, RetryRegistry retryRegistry) {
+        retryConfigurationProperties.getInstances().forEach((name, properties) ->
+            retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name, compositeRetryCustomizer)));
+
+        compositeRetryCustomizer.instanceNames()
+            .stream()
+            .filter(name -> retryRegistry.getConfiguration(name).isEmpty())
+            .forEach(name ->
+                retryRegistry.retry(name, retryConfigurationProperties.createRetryConfig(name, compositeRetryCustomizer)));
     }
 
     @Bean
