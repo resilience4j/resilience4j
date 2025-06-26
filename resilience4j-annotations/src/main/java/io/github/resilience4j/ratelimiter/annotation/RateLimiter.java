@@ -40,6 +40,12 @@ public @interface RateLimiter {
     String name();
 
     /**
+     * Configuration key to use if name is given as a SpEL expression share the same configuration
+     * @return the configuration key
+     */
+    String configurationKey() default "";
+
+    /**
      * fallbackMethod method name.
      *
      * @return fallbackMethod method name.
