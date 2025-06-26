@@ -72,12 +72,27 @@ public class BulkheadConfiguration {
             bulkheadRegistryEventConsumer, compositeBulkheadCustomizer);
         registerEventConsumer(bulkheadRegistry, bulkheadEventConsumerRegistry,
             bulkheadConfigurationProperties);
-        bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
-            bulkheadRegistry
-                .bulkhead(name, bulkheadConfigurationProperties
-                    .createBulkheadConfig(properties, compositeBulkheadCustomizer,
-                        name)));
+        initBulkheadRegistry(bulkheadConfigurationProperties, compositeBulkheadCustomizer, bulkheadRegistry);
         return bulkheadRegistry;
+    }
+
+    /**
+     * Initializes the Bulkhead registry with resilience4j instances.
+     *
+     * @param bulkheadRegistry The bulkhead registry.
+     * @param compositeBulkheadCustomizer customizers for instances and configs
+     */
+    private void initBulkheadRegistry(BulkheadConfigurationProperties bulkheadConfigurationProperties,
+        CompositeCustomizer<BulkheadConfigCustomizer> compositeBulkheadCustomizer, BulkheadRegistry bulkheadRegistry) {
+        bulkheadConfigurationProperties.getInstances().forEach((name, properties) ->
+            bulkheadRegistry.bulkhead(name,
+                bulkheadConfigurationProperties.createBulkheadConfig(properties, compositeBulkheadCustomizer, name)));
+
+        compositeBulkheadCustomizer.instanceNames()
+            .stream()
+            .filter(name -> bulkheadRegistry.getConfiguration(name).isEmpty())
+            .forEach(name -> bulkheadRegistry.bulkhead(name,
+                bulkheadConfigurationProperties.createBulkheadConfig(null, compositeBulkheadCustomizer, name)));
     }
 
     @Bean

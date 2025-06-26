@@ -144,7 +144,7 @@ public class TimeLimiterConfiguration {
     }
 
     /**
-     * Initializes the TimeLimiter registry.
+     * Initializes the TimeLimiter registry with resilience4j instances.
      *
      * @param timeLimiterRegistry The time limiter registry.
      * @param compositeTimeLimiterCustomizer The Composite time limiter customizer
@@ -154,11 +154,19 @@ public class TimeLimiterConfiguration {
         TimeLimiterConfigurationProperties timeLimiterConfigurationProperties,
         CompositeCustomizer<TimeLimiterConfigCustomizer> compositeTimeLimiterCustomizer) {
 
-        timeLimiterConfigurationProperties.getInstances().forEach(
-            (name, properties) -> timeLimiterRegistry.timeLimiter(name,
+        timeLimiterConfigurationProperties.getInstances().forEach((name, properties) ->
+            timeLimiterRegistry.timeLimiter(name,
                 timeLimiterConfigurationProperties
                     .createTimeLimiterConfig(name, properties, compositeTimeLimiterCustomizer))
         );
+
+        compositeTimeLimiterCustomizer.instanceNames()
+            .stream()
+            .filter(name -> timeLimiterRegistry.getConfiguration(name).isEmpty())
+            .forEach(name ->
+                timeLimiterRegistry.timeLimiter(name, timeLimiterConfigurationProperties
+                    .createTimeLimiterConfig(name, null, compositeTimeLimiterCustomizer))
+            );
     }
     /**
      * Registers the post creation consumer function that registers the consumer events to the timeLimiters.

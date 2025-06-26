@@ -71,7 +71,6 @@ public class CircuitBreakerConfiguration {
         EventConsumerRegistry<CircuitBreakerEvent> eventConsumerRegistry,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
         @Qualifier("compositeCircuitBreakerCustomizer") CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
-
         CircuitBreakerRegistry circuitBreakerRegistry = createCircuitBreakerRegistry(
             circuitBreakerProperties, circuitBreakerRegistryEventConsumer,
             compositeCircuitBreakerCustomizer);
@@ -136,36 +135,37 @@ public class CircuitBreakerConfiguration {
      * Initializes a circuitBreaker registry.
      *
      * @param circuitBreakerProperties The circuit breaker configuration properties.
-     * @param customizerMap
+     * @param compositeCircuitBreakerCustomizer customizers for instances and configs
      * @return a CircuitBreakerRegistry
      */
     CircuitBreakerRegistry createCircuitBreakerRegistry(
         CircuitBreakerConfigurationProperties circuitBreakerProperties,
         RegistryEventConsumer<CircuitBreaker> circuitBreakerRegistryEventConsumer,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
 
         Map<String, CircuitBreakerConfig> configs = circuitBreakerProperties.getConfigs()
             .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> circuitBreakerProperties
-                    .createCircuitBreakerConfig(entry.getKey(), entry.getValue(),
-                        customizerMap)));
+                entry -> circuitBreakerProperties.createCircuitBreakerConfig(entry.getKey(), entry.getValue(), compositeCircuitBreakerCustomizer)));
 
         return CircuitBreakerRegistry.of(configs, circuitBreakerRegistryEventConsumer, Map.copyOf(circuitBreakerProperties.getTags()));
     }
 
     /**
-     * Initializes the CircuitBreaker registry.
+     * Initializes the CircuitBreaker registry with resilience4j instances.
      *
      * @param circuitBreakerRegistry The circuit breaker registry.
-     * @param customizerMap
+     * @param compositeCircuitBreakerCustomizer customizers for instances and configs
      */
-    void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry,
-        CompositeCustomizer<CircuitBreakerConfigCustomizer> customizerMap) {
-        circuitBreakerProperties.getInstances().forEach(
-            (name, properties) -> circuitBreakerRegistry.circuitBreaker(name,
-                circuitBreakerProperties
-                    .createCircuitBreakerConfig(name, properties, customizerMap))
-        );
+    private void initCircuitBreakerRegistry(CircuitBreakerRegistry circuitBreakerRegistry,
+        CompositeCustomizer<CircuitBreakerConfigCustomizer> compositeCircuitBreakerCustomizer) {
+        circuitBreakerProperties.getInstances().forEach((name, properties) -> circuitBreakerRegistry.circuitBreaker(name,
+            circuitBreakerProperties.createCircuitBreakerConfig(name, properties, compositeCircuitBreakerCustomizer)));
+
+        compositeCircuitBreakerCustomizer.instanceNames()
+            .stream()
+            .filter(name -> circuitBreakerRegistry.getConfiguration(name).isEmpty())
+            .forEach(name -> circuitBreakerRegistry.circuitBreaker(name,
+                circuitBreakerProperties.createCircuitBreakerConfig(name, null, compositeCircuitBreakerCustomizer)));
     }
 
     /**

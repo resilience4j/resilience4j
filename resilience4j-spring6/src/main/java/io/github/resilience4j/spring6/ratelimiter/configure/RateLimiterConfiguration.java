@@ -73,13 +73,29 @@ public class RateLimiterConfiguration {
             rateLimiterRegistryEventConsumer, compositeRateLimiterCustomizer);
         registerEventConsumer(rateLimiterRegistry, rateLimiterEventsConsumerRegistry,
             rateLimiterProperties);
-        rateLimiterProperties.getInstances().forEach(
-            (name, properties) ->
-                rateLimiterRegistry
-                    .rateLimiter(name, rateLimiterProperties
-                        .createRateLimiterConfig(properties, compositeRateLimiterCustomizer, name))
-        );
+        initRateLimiterRegistry(rateLimiterProperties, compositeRateLimiterCustomizer, rateLimiterRegistry);
         return rateLimiterRegistry;
+    }
+
+    /**
+     * Initializes the RateLimiter registry with resilience4j instances.
+     *
+     * @param rateLimiterRegistry The rate limiter registry.
+     * @param compositeRateLimiterCustomizer customizers for instances and configs
+     */
+    private void initRateLimiterRegistry(RateLimiterConfigurationProperties rateLimiterProperties,
+        CompositeCustomizer<RateLimiterConfigCustomizer> compositeRateLimiterCustomizer,
+        RateLimiterRegistry rateLimiterRegistry) {
+        rateLimiterProperties.getInstances().forEach((name, properties) ->
+            rateLimiterRegistry.rateLimiter(name, rateLimiterProperties
+                    .createRateLimiterConfig(properties, compositeRateLimiterCustomizer, name))
+        );
+
+        compositeRateLimiterCustomizer.instanceNames()
+            .stream()
+            .filter(name -> rateLimiterRegistry.getConfiguration(name).isEmpty())
+            .forEach(name -> rateLimiterRegistry.rateLimiter(name, rateLimiterProperties
+                .createRateLimiterConfig(null, compositeRateLimiterCustomizer, name)));
     }
 
     @Bean
