@@ -103,7 +103,7 @@ public class AtomicRateLimiter implements RateLimiter {
     /**
      * Calculates time elapsed from the class loading.
      */
-    private long currentNanoTime() {
+    long currentNanoTime() {
         return nanoTime() - nanoTimeStart;
     }
 

@@ -35,7 +35,7 @@ lambda expression or method reference with a Circuit Breaker, Rate Limiter, Retr
 You can stack more than one decorator on any functional interface, lambda expression or method reference.
 The advantage is that you have the choice to select the decorators you need and nothing else.
 
-Resilience4j 2 requires Java 17.
+Resilience4j 3 requires Java 21.
 
 [source,java]
 ----

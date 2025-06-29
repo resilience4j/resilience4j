@@ -5,16 +5,14 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Duration;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.Mockito.spy;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(TimeLimiterImpl.class)
+@RunWith(MockitoJUnitRunner.class)
 public class TimeLimiterImplTest {
 
     private static final String NAME = "name";
@@ -27,7 +25,7 @@ public class TimeLimiterImplTest {
             .timeoutDuration(Duration.ZERO)
             .build();
         TimeLimiterImpl testTimeout = new TimeLimiterImpl("name", timeLimiterConfig);
-        timeLimiter = PowerMockito.spy(testTimeout);
+        timeLimiter = spy(testTimeout);
     }
 
     @Test
