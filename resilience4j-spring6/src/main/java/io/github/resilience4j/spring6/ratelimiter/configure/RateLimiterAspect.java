@@ -66,7 +66,7 @@ import java.util.concurrent.CompletionStage;
 @Aspect
 public class RateLimiterAspect implements Ordered {
 
-    private static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'";
+    private static final String RATE_LIMITER_RECEIVED = "Created or retrieved rate limiter '{}' with period: '{}'; limit for period: '{}'; timeout: '{}'; method: '{}'; config: '{}'";
     private static final Logger logger = LoggerFactory.getLogger(RateLimiterAspect.class);
     private final RateLimiterRegistry rateLimiterRegistry;
     private final RateLimiterConfigurationProperties properties;
@@ -109,8 +109,9 @@ public class RateLimiterAspect implements Ordered {
             return proceedingJoinPoint.proceed();
         }
         String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.name());
+        String configKey = rateLimiterAnnotation.configurationKey().isEmpty() ? name : rateLimiterAnnotation.configurationKey();
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
-            methodName, name);
+            methodName, name, configKey);
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
@@ -134,8 +135,8 @@ public class RateLimiterAspect implements Ordered {
     }
 
     private io.github.resilience4j.ratelimiter.RateLimiter getOrCreateRateLimiter(String methodName,
-        String name) {
-        RateLimiterConfig config = rateLimiterRegistry.getConfiguration(name)
+        String name, String configKey) {
+        RateLimiterConfig config = rateLimiterRegistry.getConfiguration(configKey)
             .orElse(rateLimiterRegistry.getDefaultConfig());
         io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry
             .rateLimiter(name, config);
@@ -146,7 +147,7 @@ public class RateLimiterAspect implements Ordered {
                 RATE_LIMITER_RECEIVED,
                 name, rateLimiterConfig.getLimitRefreshPeriod(),
                 rateLimiterConfig.getLimitForPeriod(),
-                rateLimiterConfig.getTimeoutDuration(), methodName
+                rateLimiterConfig.getTimeoutDuration(), methodName, configKey
             );
         }
 
