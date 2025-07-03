@@ -116,8 +116,8 @@ public class BulkheadAspect implements Ordered {
                 () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType, backend);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         } else {
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName,
-                backend);
+            String configKey = bulkheadAnnotation.configuration().isEmpty() ? backend : bulkheadAnnotation.configuration();
+            var bulkhead = getOrCreateBulkhead(methodName, backend, configKey);
             final CheckedSupplier<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         }
@@ -149,10 +149,10 @@ public class BulkheadAspect implements Ordered {
     }
 
     private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName,
-        String backend) {
-        BulkheadConfig config = bulkheadRegistry.getConfiguration(backend)
+        String backend, String configKey) {
+        BulkheadConfig config = bulkheadRegistry.getConfiguration(configKey)
             .orElse(bulkheadRegistry.getDefaultConfig());
-        io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend, config);
+        var bulkhead = bulkheadRegistry.bulkhead(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(

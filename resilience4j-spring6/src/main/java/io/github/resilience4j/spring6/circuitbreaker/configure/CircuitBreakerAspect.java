@@ -103,8 +103,8 @@ public class CircuitBreakerAspect implements Ordered {
             return proceedingJoinPoint.proceed();
         }
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), circuitBreakerAnnotation.name());
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = getOrCreateCircuitBreaker(
-            methodName, backend);
+        String configKey = circuitBreakerAnnotation.configuration().isEmpty() ? backend : circuitBreakerAnnotation.configuration();
+        var circuitBreaker = getOrCreateCircuitBreaker(methodName, backend, configKey);
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> circuitBreakerExecution = () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, circuitBreakerAnnotation.fallbackMethod(), circuitBreakerExecution);
@@ -128,11 +128,10 @@ public class CircuitBreakerAspect implements Ordered {
     }
 
     private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(
-        String methodName, String backend) {
-        CircuitBreakerConfig config = circuitBreakerRegistry.getConfiguration(backend)
+        String methodName, String backend, String configKey) {
+        CircuitBreakerConfig config = circuitBreakerRegistry.getConfiguration(configKey)
             .orElse(circuitBreakerRegistry.getDefaultConfig());
-        io.github.resilience4j.circuitbreaker.CircuitBreaker circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(backend, config);
+        var circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(

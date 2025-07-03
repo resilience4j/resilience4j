@@ -81,7 +81,8 @@ public class TimerAspect implements Ordered {
             return proceedingJoinPoint.proceed();
         }
         String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), timerAnnotation.name());
-        io.github.resilience4j.micrometer.Timer timer = getOrCreateTimer(methodName, name);
+        String configKey = timerAnnotation.configuration().isEmpty() ? name : timerAnnotation.configuration();
+        var timer = getOrCreateTimer(methodName, name, configKey);
         Class<?> returnType = method.getReturnType();
         CheckedSupplier<Object> timerExecution = () -> proceed(proceedingJoinPoint, methodName, timer, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, timerAnnotation.fallbackMethod(), timerExecution);
@@ -101,9 +102,9 @@ public class TimerAspect implements Ordered {
         return handleDefaultJoinPoint(proceedingJoinPoint, timer);
     }
 
-    private io.github.resilience4j.micrometer.Timer getOrCreateTimer(String methodName, String name) {
-        TimerConfig config = timerRegistry.getConfiguration(name).orElse(timerRegistry.getDefaultConfig());
-        io.github.resilience4j.micrometer.Timer timer = timerRegistry.timer(name, config);
+    private io.github.resilience4j.micrometer.Timer getOrCreateTimer(String methodName, String name, String configKey) {
+        TimerConfig config = timerRegistry.getConfiguration(configKey).orElse(timerRegistry.getDefaultConfig());
+        var timer = timerRegistry.timer(name, config);
         if (logger.isDebugEnabled()) {
             logger.debug("Created or retrieved timer '{}' for method: '{}'", name, methodName);
         }

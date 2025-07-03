@@ -84,8 +84,8 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
             return proceedingJoinPoint.proceed();
         }
         String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), timeLimiterAnnotation.name());
-        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter =
-            getOrCreateTimeLimiter(methodName, name);
+        String configKey = timeLimiterAnnotation.configuration().isEmpty() ? name : timeLimiterAnnotation.configuration();
+        var timeLimiter = getOrCreateTimeLimiter(methodName, name, configKey);
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> timeLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, timeLimiterAnnotation.fallbackMethod(), timeLimiterExecution);
@@ -110,9 +110,9 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         return handleJoinPointCompletableFuture(proceedingJoinPoint, timeLimiter);
     }
 
-    private io.github.resilience4j.timelimiter.TimeLimiter getOrCreateTimeLimiter(String methodName, String name) {
-        TimeLimiterConfig config = timeLimiterRegistry.getConfiguration(name).orElse(timeLimiterRegistry.getDefaultConfig());
-        io.github.resilience4j.timelimiter.TimeLimiter timeLimiter = timeLimiterRegistry.timeLimiter(name, config);
+    private io.github.resilience4j.timelimiter.TimeLimiter getOrCreateTimeLimiter(String methodName, String name, String configKey) {
+        TimeLimiterConfig config = timeLimiterRegistry.getConfiguration(configKey).orElse(timeLimiterRegistry.getDefaultConfig());
+        var timeLimiter = timeLimiterRegistry.timeLimiter(name, config);
 
         if (logger.isDebugEnabled()) {
             TimeLimiterConfig timeLimiterConfig = timeLimiter.getTimeLimiterConfig();

@@ -109,9 +109,8 @@ public class RateLimiterAspect implements Ordered {
             return proceedingJoinPoint.proceed();
         }
         String name = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), rateLimiterAnnotation.name());
-        String configKey = rateLimiterAnnotation.configurationKey().isEmpty() ? name : rateLimiterAnnotation.configurationKey();
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = getOrCreateRateLimiter(
-            methodName, name, configKey);
+        String configKey = rateLimiterAnnotation.configuration().isEmpty() ? name : rateLimiterAnnotation.configuration();
+        var rateLimiter = getOrCreateRateLimiter(methodName, name, configKey);
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
@@ -138,8 +137,7 @@ public class RateLimiterAspect implements Ordered {
         String name, String configKey) {
         RateLimiterConfig config = rateLimiterRegistry.getConfiguration(configKey)
             .orElse(rateLimiterRegistry.getDefaultConfig());
-        io.github.resilience4j.ratelimiter.RateLimiter rateLimiter = rateLimiterRegistry
-            .rateLimiter(name, config);
+        var rateLimiter = rateLimiterRegistry.rateLimiter(name, config);
 
         if (logger.isDebugEnabled()) {
             RateLimiterConfig rateLimiterConfig = rateLimiter.getRateLimiterConfig();
