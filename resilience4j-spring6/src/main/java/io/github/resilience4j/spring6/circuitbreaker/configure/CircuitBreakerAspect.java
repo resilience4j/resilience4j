@@ -130,7 +130,7 @@ public class CircuitBreakerAspect implements Ordered {
     private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(
         String methodName, String backend, String configKey) {
         CircuitBreakerConfig config = circuitBreakerRegistry.getConfiguration(configKey)
-            .orElse(circuitBreakerRegistry.getDefaultConfig());
+            .orElseGet(circuitBreakerRegistry::getDefaultConfig);
         var circuitBreaker = circuitBreakerRegistry.circuitBreaker(backend, config);
 
         if (logger.isDebugEnabled()) {

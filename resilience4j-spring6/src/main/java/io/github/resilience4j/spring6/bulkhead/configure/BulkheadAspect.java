@@ -151,7 +151,7 @@ public class BulkheadAspect implements Ordered {
     private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName,
         String backend, String configKey) {
         BulkheadConfig config = bulkheadRegistry.getConfiguration(configKey)
-            .orElse(bulkheadRegistry.getDefaultConfig());
+            .orElseGet(bulkheadRegistry::getDefaultConfig);
         var bulkhead = bulkheadRegistry.bulkhead(backend, config);
 
         if (logger.isDebugEnabled()) {

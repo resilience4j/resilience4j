@@ -141,7 +141,7 @@ public class RetryAspect implements Ordered, AutoCloseable {
      * @return the configured retry
      */
     private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend, String configKey) {
-        RetryConfig config = retryRegistry.getConfiguration(configKey).orElse(retryRegistry.getDefaultConfig());
+        RetryConfig config = retryRegistry.getConfiguration(configKey).orElseGet(retryRegistry::getDefaultConfig);
         var retry = retryRegistry.retry(backend, config);
 
         if (logger.isDebugEnabled()) {

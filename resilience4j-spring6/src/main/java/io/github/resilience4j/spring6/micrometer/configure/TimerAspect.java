@@ -103,7 +103,7 @@ public class TimerAspect implements Ordered {
     }
 
     private io.github.resilience4j.micrometer.Timer getOrCreateTimer(String methodName, String name, String configKey) {
-        TimerConfig config = timerRegistry.getConfiguration(configKey).orElse(timerRegistry.getDefaultConfig());
+        TimerConfig config = timerRegistry.getConfiguration(configKey).orElseGet(timerRegistry::getDefaultConfig);
         var timer = timerRegistry.timer(name, config);
         if (logger.isDebugEnabled()) {
             logger.debug("Created or retrieved timer '{}' for method: '{}'", name, methodName);
