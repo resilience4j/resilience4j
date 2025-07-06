@@ -77,6 +77,10 @@ public interface TestDummyService {
         return monoError(backend);
     }
 
+    default Mono<String> spelMonoWithCfg(String backend) {
+        return monoError(backend);
+    }
+
     default String syncError() {
         throw new RuntimeException("Test");
     }

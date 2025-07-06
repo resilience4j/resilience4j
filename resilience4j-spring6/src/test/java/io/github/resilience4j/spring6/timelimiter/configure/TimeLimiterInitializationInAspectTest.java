@@ -1,8 +1,10 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
 import io.github.resilience4j.spring6.TimeLimiterDummyService;
+import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,11 +55,34 @@ public class TimeLimiterInitializationInAspectTest {
         assertThat(registry.getAllTimeLimiters()).isEmpty();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        registry.getAllTimeLimiters().stream().map(TimeLimiter::getName).forEach(registry::remove);
+    }
+
     @Test
     public void testCorrectConfigIsUsedInAspect() throws Exception {
 
         // Should not time out because the time limit is 3 seconds
         assertThat(testDummyService.success().toCompletableFuture().get())
                 .isEqualTo("ok");
+    }
+
+    @Test
+    public void testTimeLimiterSpelWithoutConfiguration() {
+        assertThat(testDummyService.spelMono("foo").block()).isEqualTo("foo");
+
+        assertThat(registry.getAllTimeLimiters()).hasSize(1).first()
+                .matches(timeLimiter ->  timeLimiter.getName().equals("foo"))
+                .matches(timeLimiter -> timeLimiter.getTimeLimiterConfig() == registry.getDefaultConfig());
+    }
+
+    @Test
+    public void testTimeLimiterSpelWithConfiguration() {
+        assertThat(testDummyService.spelMonoWithCfg("foo").block()).isEqualTo("foo");
+
+        assertThat(registry.getAllTimeLimiters()).hasSize(1).first()
+                .matches(timeLimiter ->  timeLimiter.getName().equals("foo"))
+                .matches(timeLimiter -> timeLimiter.getTimeLimiterConfig() == registry.getConfiguration(BACKEND).orElse(null));
     }
 }
