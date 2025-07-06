@@ -60,7 +60,7 @@ public class RateLimiterInitializationInAspectTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         registry.getAllRateLimiters().stream().map(RateLimiter::getName).forEach(registry::remove);
     }
 
@@ -87,6 +87,6 @@ public class RateLimiterInitializationInAspectTest {
         assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("recovered");
         assertThat(registry.getAllRateLimiters()).hasSize(1)
                 .allMatch(limiter -> limiter.getName().equals("foo"))
-                .allMatch(limiter -> limiter.getRateLimiterConfig() != registry.getDefaultConfig());
+                .allMatch(limiter -> limiter.getRateLimiterConfig() == registry.getConfiguration(BACKEND).orElse(null));
     }
 }

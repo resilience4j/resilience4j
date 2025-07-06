@@ -82,6 +82,6 @@ public class CircuitBreakerInitializationInAspectTest {
         assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("recovered");
         assertThat(registry.getAllCircuitBreakers()).hasSize(1).first()
                 .matches(circuitBreaker -> circuitBreaker.getName().equals("foo"))
-                .matches(circuitBreaker -> circuitBreaker.getCircuitBreakerConfig() != registry.getDefaultConfig());
+                .matches(circuitBreaker -> circuitBreaker.getCircuitBreakerConfig() == registry.getConfiguration(BACKEND).orElse(null));
     }
 }

@@ -82,7 +82,7 @@ public class BulkHeadInitializationInAspectTest {
         assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("recovered");
         assertThat(registry.getAllBulkheads()).hasSize(1).first()
                 .matches(bulkhead -> bulkhead.getName().equals("foo"))
-                .matches(bulkhead -> bulkhead.getBulkheadConfig() != registry.getDefaultConfig());
+                .matches(bulkhead -> bulkhead.getBulkheadConfig() == registry.getConfiguration(BACKEND).orElse(null));
     }
 
     @Test
