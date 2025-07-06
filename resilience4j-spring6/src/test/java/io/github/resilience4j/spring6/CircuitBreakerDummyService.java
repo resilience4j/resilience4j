@@ -118,4 +118,16 @@ public class CircuitBreakerDummyService implements TestDummyService {
     public String spelSync(String backend) {
         return syncError();
     }
+
+    @Override
+    @CircuitBreaker(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String spelSyncNoCfg(String backend) {
+        return backend;
+    }
+
+    @Override
+    @CircuitBreaker(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "#{'recovery'}")
+    public String spelSyncWithCfg(String backend) {
+        return backend;
+    }
 }
