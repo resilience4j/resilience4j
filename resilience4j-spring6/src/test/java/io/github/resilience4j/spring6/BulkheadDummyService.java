@@ -119,4 +119,16 @@ public class BulkheadDummyService implements TestDummyService {
     public String spelSync(String backend) {
         return syncError();
     }
+
+    @Override
+    @Bulkhead(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String spelSyncNoCfg(String backend) {
+        return backend;
+    }
+
+    @Override
+    @Bulkhead(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "#{'recovery'}")
+    public String spelSyncWithCfg(String backend) {
+        return backend;
+    }
 }
