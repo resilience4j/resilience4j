@@ -1,8 +1,10 @@
 package io.github.resilience4j.spring6.ratelimiter.configure;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.spring6.TestDummyService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,11 +59,34 @@ public class RateLimiterInitializationInAspectTest {
         assertThat(registry.getAllRateLimiters()).isEmpty();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        registry.getAllRateLimiters().stream().map(RateLimiter::getName).forEach(registry::remove);
+    }
+
     @Test
     public void testCorrectConfigIsUsedInAspect() {
 
         // one successful call within 10s
         assertThat(testDummyService.syncSuccess()).isEqualTo("ok");
         assertThat(testDummyService.syncSuccess()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testDefaultConfigurationIsUsedIfNoConfigurationAspect() {
+        assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
+        assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
+        assertThat(registry.getAllRateLimiters()).hasSize(1)
+                .allMatch(limiter -> limiter.getName().equals("foo"))
+                .allMatch(limiter -> limiter.getRateLimiterConfig() == registry.getDefaultConfig());
+    }
+
+    @Test
+    public void testSpecifiedConfigurationIsUsedIfConfigurationAspect() {
+        assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("foo");
+        assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("recovered");
+        assertThat(registry.getAllRateLimiters()).hasSize(1)
+                .allMatch(limiter -> limiter.getName().equals("foo"))
+                .allMatch(limiter -> limiter.getRateLimiterConfig() != registry.getDefaultConfig());
     }
 }

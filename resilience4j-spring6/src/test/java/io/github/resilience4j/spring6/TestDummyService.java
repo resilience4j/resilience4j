@@ -65,6 +65,14 @@ public interface TestDummyService {
         return syncError();
     }
 
+    default String spelSyncNoCfg(String backend) {
+        return syncError();
+    }
+
+    default String spelSyncWithCfg(String backend) {
+        return syncError();
+    }
+
     default Mono<String> spelMono(String backend) {
         return monoError(backend);
     }
