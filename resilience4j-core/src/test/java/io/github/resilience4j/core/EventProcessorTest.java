@@ -18,14 +18,16 @@
  */
 package io.github.resilience4j.core;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.Collection;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -33,13 +35,34 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class EventProcessorTest {
+@RunWith(Parameterized.class)
+public class EventProcessorTest extends ThreadModeTestBase {
+
+    @Parameterized.Parameters(name = "threadMode={0}")
+    public static Collection<Object[]> threadModes() {
+        return ThreadModeTestBase.threadModes();
+    }
+
+    /**
+     * Constructor for parameterized tests.
+     * 
+     * @param threadType the thread mode to test with ("platform" or "virtual")
+     */
+    public EventProcessorTest(ThreadType threadType) {
+        super(threadType);
+    }
 
     private Logger logger;
 
     @Before
     public void setUp() {
+        setUpThreadMode(); // Set up thread mode from ThreadModeTestBase
         logger = mock(Logger.class);
+    }
+
+    @After
+    public void tearDown() {
+        cleanUpThreadMode(); // Clean up thread mode from ThreadModeTestBase
     }
 
     @Test
@@ -181,6 +204,141 @@ public class EventProcessorTest {
         waitForConsumerRegistration.countDown();
 
         then(logger).should(times(1)).info("1");
+    }
+
+    @Test
+    public void testConcurrentConsumerRegistrationInBothThreadModes() throws Exception {
+        System.out.println("Running testConcurrentConsumerRegistrationInBothThreadModes in " + getThreadModeDescription());
+        
+        EventProcessor<Integer> eventProcessor = new EventProcessor<>();
+        int concurrentThreads = isVirtualThreadMode() ? 20 : 5; // More threads in virtual mode
+        AtomicInteger totalConsumers = new AtomicInteger(0);
+        
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch completionLatch = new CountDownLatch(concurrentThreads);
+        
+        // Create appropriate executor based on thread mode
+        try (ExecutorService executor = isVirtualThreadMode() ? 
+            Executors.newVirtualThreadPerTaskExecutor() : 
+            Executors.newFixedThreadPool(concurrentThreads)) {
+            
+            // Launch concurrent threads to register consumers
+            for (int i = 0; i < concurrentThreads; i++) {
+                final int threadNum = i;
+                
+                executor.submit(() -> {
+                    try {
+                        // Wait for all threads to be ready
+                        startLatch.await();
+                        
+                        // Register a consumer
+                        eventProcessor.registerConsumer(Integer.class.getName(), 
+                            event -> {
+                                totalConsumers.incrementAndGet();
+                                logger.info("Consumer " + threadNum + " processed: " + event);
+                            });
+                        
+                        return null;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        completionLatch.countDown();
+                    }
+                });
+            }
+            
+            // Start all threads
+            startLatch.countDown();
+            
+            // Wait for all threads to complete registration
+            boolean completed = completionLatch.await(5, TimeUnit.SECONDS);
+            assertThat(completed)
+                .as("All consumer registrations should complete within timeout in " + getThreadModeDescription())
+                .isTrue();
+        }
+        
+        // Process an event to verify all consumers were registered
+        boolean consumed = eventProcessor.processEvent(42);
+        
+        // Verify processing results
+        assertThat(consumed)
+            .as("Event should be consumed in " + getThreadModeDescription())
+            .isTrue();
+        assertThat(totalConsumers.get())
+            .as("All consumers should process the event in " + getThreadModeDescription())
+            .isEqualTo(concurrentThreads);
+        
+        System.out.println("✅ Concurrent consumer registration test passed in " + getThreadModeDescription() + 
+                         " - Consumers: " + concurrentThreads);
+    }
+
+    @Test
+    public void testConcurrentEventProcessingInBothThreadModes() throws Exception {
+        System.out.println("Running testConcurrentEventProcessingInBothThreadModes in " + getThreadModeDescription());
+        
+        EventProcessor<Integer> eventProcessor = new EventProcessor<>();
+        int concurrentThreads = isVirtualThreadMode() ? 15 : 3; // More threads in virtual mode
+        AtomicInteger eventsProcessed = new AtomicInteger(0);
+        AtomicInteger virtualThreadCount = new AtomicInteger(0);
+        
+        // Register a consumer that tracks thread type and processing
+        eventProcessor.registerConsumer(Integer.class.getName(), event -> {
+            // Record if running on a virtual thread
+            if (Thread.currentThread().isVirtual()) {
+                virtualThreadCount.incrementAndGet();
+            }
+            
+            eventsProcessed.incrementAndGet();
+            logger.info("Processed event: " + event);
+        });
+        
+        CountDownLatch completionLatch = new CountDownLatch(concurrentThreads);
+        
+        // Create appropriate executor based on thread mode
+        try (ExecutorService executor = isVirtualThreadMode() ? 
+            Executors.newVirtualThreadPerTaskExecutor() : 
+            Executors.newFixedThreadPool(concurrentThreads)) {
+            
+            // Launch concurrent threads to process events
+            for (int i = 0; i < concurrentThreads; i++) {
+                final int eventId = i;
+                
+                executor.submit(() -> {
+                    try {
+                        // Process an event
+                        eventProcessor.processEvent(eventId);
+                        return null;
+                    } finally {
+                        completionLatch.countDown();
+                    }
+                });
+            }
+            
+            // Wait for all threads to complete
+            boolean completed = completionLatch.await(5, TimeUnit.SECONDS);
+            assertThat(completed)
+                .as("All event processing should complete within timeout in " + getThreadModeDescription())
+                .isTrue();
+        }
+        
+        // Verify results
+        assertThat(eventsProcessed.get())
+            .as("All events should be processed in " + getThreadModeDescription())
+            .isEqualTo(concurrentThreads);
+        
+        // Thread type verification
+        if (isVirtualThreadMode()) {
+            assertThat(virtualThreadCount.get())
+                .as("Events should be processed on virtual threads when configured in " + getThreadModeDescription())
+                .isEqualTo(concurrentThreads);
+        } else {
+            assertThat(virtualThreadCount.get())
+                .as("Events should be processed on platform threads by default in " + getThreadModeDescription())
+                .isZero();
+        }
+        
+        System.out.println("✅ Concurrent event processing test passed in " + getThreadModeDescription() + 
+                         " - Events: " + concurrentThreads + ", Virtual threads: " + virtualThreadCount.get());
     }
 
 }

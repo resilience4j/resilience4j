@@ -18,6 +18,8 @@
  */
 package io.github.resilience4j.core.metrics;
 
+import io.github.resilience4j.core.CASBackoffUtil;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.util.Objects;
@@ -96,6 +98,7 @@ public class LockFreeFixedSizeSlidingWindowMetrics implements Metrics {
 
     @Override
     public Snapshot record(long duration, TimeUnit durationUnit, Outcome outcome) {
+        int spinCount = 0;
         while (true) {
             Node head = headRef;
             Node headNext = head.next;
@@ -108,12 +111,16 @@ public class LockFreeFixedSizeSlidingWindowMetrics implements Metrics {
             // advances the head in the meantime.
             // Without this check we might end up adding into the queue a new node with incorrect stats.
             if (head != headRef) {
+                // Virtual thread and platform thread friendly backoff strategy
+                spinCount = CASBackoffUtil.performBackoff(spinCount);
                 continue;
             }
 
             // This check is not actually needed for the well-functioning of the algorithm, it is just an optimization
             // to avoid unnecessary CAS operations, which are expensive.
             if (tail != tailRef) {
+                // Virtual thread and platform thread friendly backoff strategy
+                spinCount = CASBackoffUtil.performBackoff(spinCount);
                 continue;
             }
 
@@ -146,6 +153,9 @@ public class LockFreeFixedSizeSlidingWindowMetrics implements Metrics {
             } else {
                 TAIL.compareAndSet(this, tail, tailNext);
             }
+
+            // CAS operations failed, apply backoff strategy
+            spinCount = CASBackoffUtil.performBackoff(spinCount);
         }
     }
 
