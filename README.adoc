@@ -394,7 +394,27 @@ Find out more about components in our *https://resilience4j.readme.io/docs/getti
 
 == Spring Boot
 
-Setup and usage in Spring Boot 2 is demonstrated https://github.com/resilience4j/resilience4j-spring-boot2-demo[here].
+Setup and usage in Spring Boot 3 is demonstrated https://github.com/resilience4j/resilience4j-spring-boot3-demo[here].
+
+Virtual thread support (Java 21 Project Loom)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Starting with Resilience4j 3 you can switch the internal schedulers to Java *virtual threads*.
+
+[source,yaml]
+----
+resilience4j:
+  thread:
+    type: virtual
+----
+
+The same can also be enabled via JVM argument:
+
+```
+-Dresilience4j.thread.type=virtual
+```
+
+If the property (or system property) is omitted the library falls back to regular *platform* threads.
 
 == Usage examples
 

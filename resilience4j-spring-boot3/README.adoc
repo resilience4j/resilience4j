@@ -5,6 +5,59 @@ With this starter you can apply rate limiters and circuit breakers to any of you
 
 NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/getting-started-3[Usage Guide]*
 
+=== Virtual Thread configuration
+
+Starting with Resilience4j 3 the Spring Boot 3 starter can switch the internal schedulers
+(CircuitBreaker, RateLimiter, etc.) to Java *virtual threads* (Project Loom).
+
+[source,yaml]
+----
+resilience4j:
+  thread:
+    type: virtual
+----
+
+NOTE: The setting above **only switches the internal schedulers of Resilience4j** to
+virtual threads. If you also want your Spring Boot application (TaskExecutor,
+`@Scheduled`, Servlet container, etc.) to run on virtual threads, activate the
+following Spring properties as well:
+
+[source,yaml]
+----
+spring:
+  threads:
+    virtual:
+      enabled: true
+server:
+  virtual-threads:
+    enabled: true
+----
+
+You can achieve the same via a JVM flag:
+
+```
+-Dresilience4j.thread.type=virtual
+```
+
+If the property (or system property) is omitted, Resilience4j falls back to regular *platform* threads.
+
+=== Thread Metrics
+
+When virtual threads are enabled, you might want to monitor their usage. Resilience4j provides metrics to track whether virtual threads are enabled or not. These metrics are automatically registered when using Spring Boot with Micrometer.
+
+[source,yaml]
+----
+resilience4j:
+  thread:
+    metrics:
+      enabled: true  # default is true
+----
+
+When enabled, the following metric is available:
+- `resilience4j.thread.virtual_thread_enabled`: A gauge that reports whether virtual threads are enabled (1.0) or disabled (0.0)
+
+This is especially useful in environments where you want to verify the actual configuration is applied correctly across your services.
+
 [WARNING]
 ====
 **Important Note on Aspect Order**

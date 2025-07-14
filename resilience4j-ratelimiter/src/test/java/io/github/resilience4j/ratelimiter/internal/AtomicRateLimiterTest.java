@@ -35,10 +35,11 @@ import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
+public class AtomicRateLimiterTest {
 
     private static final String LIMITER_NAME = "test";
     private static final long CYCLE_IN_NANOS = 250_000_000L;
@@ -53,10 +54,6 @@ public class AtomicRateLimiterTest extends RateLimitersImplementationTest {
             .pollInterval(POLL_INTERVAL_IN_NANOS, TimeUnit.NANOSECONDS);
     }
 
-    @Override
-    protected RateLimiter buildRateLimiter(RateLimiterConfig config) {
-        return new AtomicRateLimiter("atomic", config);
-    }
 
     private void setTimeOnNanos(long nanoTime) throws Exception {
         doReturn(nanoTime)

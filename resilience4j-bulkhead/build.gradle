@@ -1,5 +1,6 @@
 dependencies {
     api project(':resilience4j-core')
     testImplementation project(':resilience4j-test')
+    testImplementation project(':resilience4j-core').sourceSets.test.output
 }
 ext.moduleName = 'io.github.resilience4j.bulkhead'

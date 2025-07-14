@@ -18,6 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
+import io.github.resilience4j.core.ExecutorServiceFactory;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -31,13 +32,11 @@ import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * A RateLimiter implementation that consists of {@link Semaphore} and scheduler that will refresh
@@ -116,12 +115,8 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
     }
 
     private ScheduledExecutorService configureScheduler() {
-        ThreadFactory threadFactory = target -> {
-            Thread thread = new Thread(target, "SchedulerForSemaphoreBasedRateLimiterImpl-" + name);
-            thread.setDaemon(true);
-            return thread;
-        };
-        return newSingleThreadScheduledExecutor(threadFactory);
+        return ExecutorServiceFactory.newSingleThreadScheduledExecutor(
+                "SchedulerForSemaphoreBasedRateLimiterImpl-" + name);
     }
 
     private ScheduledFuture<?> scheduleLimitRefresh() {
