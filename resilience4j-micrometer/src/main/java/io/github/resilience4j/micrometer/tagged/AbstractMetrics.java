@@ -31,6 +31,7 @@ abstract class AbstractMetrics {
     protected ConcurrentMap<String, Set<Meter.Id>> meterIdMap;
 
     AbstractMetrics() {
+        // Using ConcurrentHashMap for virtual thread optimization - simple meter ID tracking
         this.meterIdMap = new ConcurrentHashMap<>();
     }
 
