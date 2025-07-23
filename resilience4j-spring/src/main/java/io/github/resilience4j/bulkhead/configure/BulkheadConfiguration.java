@@ -32,6 +32,7 @@ import io.github.resilience4j.fallback.FallbackExecutor;
 import io.github.resilience4j.fallback.configure.FallbackConfiguration;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import io.github.resilience4j.spelresolver.configure.SpelResolverConfiguration;
+import io.github.resilience4j.timelimiter.configure.TimeLimiterConfiguration;
 import io.github.resilience4j.utils.AspectJOnClasspathCondition;
 import io.github.resilience4j.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.utils.RxJava2OnClasspathCondition;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
  * {@link Configuration Configuration} for resilience4j-bulkhead.
  */
 @Configuration
-@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class, SpelResolverConfiguration.class})
+@Import({ThreadPoolBulkheadConfiguration.class, FallbackConfiguration.class, SpelResolverConfiguration.class, TimeLimiterConfiguration.class})
 public class BulkheadConfiguration {
 
     @Bean
@@ -110,7 +111,7 @@ public class BulkheadConfiguration {
      * Initializes a bulkhead registry.
      *
      * @param bulkheadConfigurationProperties The bulkhead configuration properties.
-     * @param compositeBulkheadCustomizer
+     * @param compositeBulkheadCustomizer The composite bulkhead customizer.
      * @return a BulkheadRegistry
      */
     private BulkheadRegistry createBulkheadRegistry(

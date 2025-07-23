@@ -232,7 +232,9 @@ public class BulkheadAspect implements Ordered {
             logger.debug("ThreadPool bulkhead invocation for method {} in backend {}", methodName,
                 backend);
         }
+
         ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
+
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             // threadPoolBulkhead.executeSupplier throws a BulkheadFullException, if the Bulkhead is full.
             // The RuntimeException is converted into an exceptionally completed future
@@ -254,12 +256,28 @@ public class BulkheadAspect implements Ordered {
                 future.completeExceptionally(ex);
                 return future;
             }
-        } else {
-            throw new IllegalStateException(
-                "ThreadPool bulkhead is only applicable for completable futures ");
+        }
+
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("ThreadPool bulkhead handling non-CompletionStage return type {} for method {} in backend {}",
+                        returnType.getSimpleName(), methodName, backend);
+            }
+
+            CompletableFuture<Object> completableFuture = threadPoolBulkhead.executeCallable(() -> {
+                try {
+                    return proceedingJoinPoint.proceed();
+                } catch (Throwable e) {
+                    throw new CompletionException(e);
+                }
+            }).toCompletableFuture();
+            return completableFuture.get();
+        } catch (BulkheadFullException ex) {
+            CompletableFuture<?> future = new CompletableFuture<>();
+            future.completeExceptionally(ex);
+            return future;
         }
     }
-
 
     @Override
     public int getOrder() {
