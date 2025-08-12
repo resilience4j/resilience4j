@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.spring6.TestDummyService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,10 +55,33 @@ public class CircuitBreakerInitializationInAspectTest {
         assertThat(registry.getAllCircuitBreakers()).isEmpty();
     }
 
+    @After
+    public void tearDown() {
+        registry.getAllCircuitBreakers().stream().map(CircuitBreaker::getName).forEach(registry::remove);
+    }
+
     @Test
     public void testCorrectConfigIsUsedInAspect() {
 
         // The circuit breaker is configured to start in the OPEN state, so the call should be rejected
         assertThat(testDummyService.syncSuccess()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testSpelWithoutConfigurationInAspect() {
+        // default circuit breaker is configured to start in CLOSE state
+        assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
+        assertThat(registry.getAllCircuitBreakers()).hasSize(1).first()
+                .matches(circuitBreaker -> circuitBreaker.getName().equals("foo"))
+                .matches(circuitBreaker -> circuitBreaker.getCircuitBreakerConfig() == registry.getDefaultConfig());
+    }
+
+    @Test
+    public void testSpelWithConfigurationInAspect() {
+        // backend circuit breaker is configured to start in the OPEN state, so the call should be rejected
+        assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("recovered");
+        assertThat(registry.getAllCircuitBreakers()).hasSize(1).first()
+                .matches(circuitBreaker -> circuitBreaker.getName().equals("foo"))
+                .matches(circuitBreaker -> circuitBreaker.getCircuitBreakerConfig() == registry.getConfiguration(BACKEND).orElse(null));
     }
 }

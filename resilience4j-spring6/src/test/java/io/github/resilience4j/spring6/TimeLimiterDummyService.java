@@ -131,4 +131,10 @@ public class TimeLimiterDummyService implements TestDummyService {
     public Mono<String> spelMono(String backend) {
         return monoError(backend);
     }
+
+    @Override
+    @TimeLimiter(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "${missing.property:monoRecovery}")
+    public Mono<String> spelMonoWithCfg(String backend) {
+        return monoError(backend);
+    }
 }

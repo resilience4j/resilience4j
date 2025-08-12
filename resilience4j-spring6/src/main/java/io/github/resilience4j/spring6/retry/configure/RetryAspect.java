@@ -112,7 +112,8 @@ public class RetryAspect implements Ordered, AutoCloseable {
             return proceedingJoinPoint.proceed();
         }
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), retryAnnotation.name());
-        io.github.resilience4j.retry.Retry retry = getOrCreateRetry(methodName, backend);
+        String configKey = retryAnnotation.configuration().isEmpty() ? backend : retryAnnotation.configuration();
+        var retry = getOrCreateRetry(methodName, backend, configKey);
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> retryExecution = () -> proceed(proceedingJoinPoint, methodName, retry, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, retryAnnotation.fallbackMethod(), retryExecution);
@@ -136,11 +137,12 @@ public class RetryAspect implements Ordered, AutoCloseable {
     /**
      * @param methodName the retry method name
      * @param backend    the retry backend name
+     * @param configKey  the configuration key
      * @return the configured retry
      */
-    private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend) {
-        RetryConfig config = retryRegistry.getConfiguration(backend).orElse(retryRegistry.getDefaultConfig());
-        io.github.resilience4j.retry.Retry retry = retryRegistry.retry(backend, config);
+    private io.github.resilience4j.retry.Retry getOrCreateRetry(String methodName, String backend, String configKey) {
+        RetryConfig config = retryRegistry.getConfiguration(configKey).orElseGet(retryRegistry::getDefaultConfig);
+        var retry = retryRegistry.retry(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(

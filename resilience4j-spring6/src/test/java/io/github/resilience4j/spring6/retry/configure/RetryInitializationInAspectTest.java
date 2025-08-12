@@ -1,8 +1,10 @@
 package io.github.resilience4j.spring6.retry.configure;
 
+import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.spring6.TestDummyService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,13 +52,36 @@ public class RetryInitializationInAspectTest {
 
     @Before
     public void setUp() {
-        // ensure no reties are initialized
+        // ensure no retries are initialized
         assertThat(registry.getAllRetries()).isEmpty();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        registry.getAllRetries().stream().map(Retry::getName).forEach(registry::remove);
     }
 
     @Test
     public void testCorrectConfigIsUsedInAspect() {
 
         assertThat(testDummyService.syncSuccess()).isEqualTo("ok");
+    }
+
+    @Test
+    public void testSpelWithoutConfiguration() {
+        assertThat(testDummyService.spelSyncNoCfg("foo")).isEqualTo("foo");
+
+        assertThat(registry.getAllRetries()).hasSize(1).first()
+                .matches(retry ->  retry.getName().equals("foo"))
+                .matches(timeLimiter -> timeLimiter.getRetryConfig() == registry.getDefaultConfig());
+    }
+
+    @Test
+    public void testSpelWithConfiguration() {
+        assertThat(testDummyService.spelSyncWithCfg("foo")).isEqualTo("foo");
+
+        assertThat(registry.getAllRetries()).hasSize(1).first()
+                .matches(retry ->  retry.getName().equals("foo"))
+                .matches(timeLimiter -> timeLimiter.getRetryConfig() == registry.getConfiguration(BACKEND).orElse(null));
     }
 }

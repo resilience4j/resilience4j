@@ -118,4 +118,16 @@ public class RateLimiterDummyService implements TestDummyService {
     public String spelSync(String backend) {
         return syncError();
     }
+
+    @Override
+    @RateLimiter(name = "#root.args[0]", fallbackMethod = "recovery")
+    public String spelSyncNoCfg(String backend) {
+        return backend;
+    }
+
+    @Override
+    @RateLimiter(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "recovery")
+    public String spelSyncWithCfg(String backend) {
+        return backend;
+    }
 }

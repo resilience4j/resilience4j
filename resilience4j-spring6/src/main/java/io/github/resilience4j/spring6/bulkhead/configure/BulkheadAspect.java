@@ -38,6 +38,7 @@ import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -111,13 +112,13 @@ public class BulkheadAspect implements Ordered {
         }
         Class<?> returnType = method.getReturnType();
         String backend = spelResolver.resolve(method, proceedingJoinPoint.getArgs(), bulkheadAnnotation.name());
+        String configKey = bulkheadAnnotation.configuration().isEmpty() ? backend : bulkheadAnnotation.configuration();
         if (bulkheadAnnotation.type() == Bulkhead.Type.THREADPOOL) {
             final CheckedSupplier<Object> bulkheadExecution =
-                () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType, backend);
+                () -> proceedInThreadPoolBulkhead(proceedingJoinPoint, methodName, returnType, backend, configKey);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         } else {
-            io.github.resilience4j.bulkhead.Bulkhead bulkhead = getOrCreateBulkhead(methodName,
-                backend);
+            var bulkhead = getOrCreateBulkhead(methodName, backend, configKey);
             final CheckedSupplier<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         }
@@ -149,16 +150,32 @@ public class BulkheadAspect implements Ordered {
     }
 
     private io.github.resilience4j.bulkhead.Bulkhead getOrCreateBulkhead(String methodName,
-        String backend) {
-        BulkheadConfig config = bulkheadRegistry.getConfiguration(backend)
-            .orElse(bulkheadRegistry.getDefaultConfig());
-        io.github.resilience4j.bulkhead.Bulkhead bulkhead = bulkheadRegistry.bulkhead(backend, config);
+        String backend, String configKey) {
+        BulkheadConfig config = bulkheadRegistry.getConfiguration(configKey)
+            .orElseGet(bulkheadRegistry::getDefaultConfig);
+        var bulkhead = bulkheadRegistry.bulkhead(backend, config);
 
         if (logger.isDebugEnabled()) {
             logger.debug(
                 "Created or retrieved bulkhead '{}' with max concurrent call '{}' and max wait time '{}ms' for method: '{}'",
                 backend, bulkhead.getBulkheadConfig().getMaxConcurrentCalls(),
                 bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis(), methodName);
+        }
+
+        return bulkhead;
+    }
+
+    private ThreadPoolBulkhead getOrCreateThreadPoolBulkhead(String methodName,
+                                                                         String backend, String configKey) {
+        ThreadPoolBulkheadConfig config = threadPoolBulkheadRegistry.getConfiguration(configKey)
+                .orElseGet(threadPoolBulkheadRegistry::getDefaultConfig);
+        var bulkhead = threadPoolBulkheadRegistry.bulkhead(backend, config);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(
+                    "Created or retrieved thread pool bulkhead '{}' for key '{}' with max pool size '{}' and max queue size '{}' for method: '{}' and ",
+                    backend, configKey, config.getMaxThreadPoolSize(),
+                    config.getQueueCapacity(), methodName);
         }
 
         return bulkhead;
@@ -227,12 +244,12 @@ public class BulkheadAspect implements Ordered {
      * @throws Throwable
      */
     private Object proceedInThreadPoolBulkhead(ProceedingJoinPoint proceedingJoinPoint,
-        String methodName, Class<?> returnType, String backend) throws Throwable {
+        String methodName, Class<?> returnType, String backend, String configKey) throws Throwable {
         if (logger.isDebugEnabled()) {
             logger.debug("ThreadPool bulkhead invocation for method {} in backend {}", methodName,
                 backend);
         }
-        ThreadPoolBulkhead threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(backend);
+        ThreadPoolBulkhead threadPoolBulkhead = getOrCreateThreadPoolBulkhead(methodName, backend, configKey);
         if (CompletionStage.class.isAssignableFrom(returnType)) {
             // threadPoolBulkhead.executeSupplier throws a BulkheadFullException, if the Bulkhead is full.
             // The RuntimeException is converted into an exceptionally completed future
