@@ -20,6 +20,7 @@ package io.github.resilience4j.ratelimiter;
 
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.Either;
+import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
 import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import java.util.function.Predicate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willCallRealMethod;
 import static org.mockito.Mockito.*;
 
 
@@ -53,12 +53,9 @@ public class RateLimiterWithConditionalDrainTest {
             .limitForPeriod(LIMIT)
             .drainPermissionsOnResult(drainConditionChecker)
             .build();
-        limit = mock(RateLimiter.class);
-        willCallRealMethod().given(limit).onResult(any());
-        willCallRealMethod().given(limit).onSuccess();
-        willCallRealMethod().given(limit).onError(any());
-        willCallRealMethod().given(limit).drainIfNeeded(any());
-        given(limit.getRateLimiterConfig()).willReturn(config);
+        RateLimiter realLimit = new AtomicRateLimiter("test", config);
+        limit = spy(realLimit);
+        doReturn(true).when(limit).acquirePermission(1);
     }
 
     @Test

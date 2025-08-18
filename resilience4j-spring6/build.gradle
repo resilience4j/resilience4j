@@ -23,11 +23,10 @@ dependencies {
     testImplementation project(':resilience4j-reactor')
     testImplementation project(':resilience4j-rxjava2')
     testImplementation project(':resilience4j-rxjava3')
-    testImplementation(libraries.spring_context)
-    testImplementation(libraries.spring_test)
-    testImplementation(libraries.spring_boot2_web)
-    testImplementation(libraries.spring_boot2_test)
-    testImplementation(libraries.spring_boot2_aop)
+    testImplementation(libraries.spring6_context)
+    testImplementation(libraries.spring_boot3_test)
+    testImplementation(libraries.spring_boot3_web)
+    testImplementation(libraries.spring_boot3_aop)
     testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
 }
 ext.moduleName = 'io.github.resilience4j.spring6'

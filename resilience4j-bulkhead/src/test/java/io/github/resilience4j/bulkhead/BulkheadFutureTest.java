@@ -146,7 +146,7 @@ public class BulkheadFutureTest {
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
-        then(future).shouldHaveZeroInteractions();
+        then(future).shouldHaveNoInteractions();
     }
 
     @Test
@@ -168,8 +168,8 @@ public class BulkheadFutureTest {
         assertThat(thrown).isInstanceOf(ExecutionException.class)
                 .hasCauseInstanceOf(BulkheadFullException.class);
 
-        then(helloWorldService).shouldHaveZeroInteractions();
-        then(future).shouldHaveZeroInteractions();
+        then(helloWorldService).shouldHaveNoInteractions();
+        then(future).shouldHaveNoInteractions();
         // end::bulkheadFullException[]
     }
 
