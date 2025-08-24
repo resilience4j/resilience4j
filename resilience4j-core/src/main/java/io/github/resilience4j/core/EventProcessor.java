@@ -20,75 +20,53 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.lang.Nullable;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class EventProcessor<T> implements EventPublisher<T> {
 
     final Set<EventConsumer<T>> onEventConsumers = new CopyOnWriteArraySet<>();
-    final ConcurrentMap<String, Set<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
-    private boolean consumerRegistered;
+    final ConcurrentHashMap<String, CopyOnWriteArraySet<EventConsumer<T>>> eventConsumerMap = new ConcurrentHashMap<>();
+    private volatile boolean consumerRegistered;
 
     public boolean hasConsumers() {
         return consumerRegistered;
     }
 
-    private final ReentrantLock lock = new ReentrantLock();
-
     @SuppressWarnings("unchecked")
     public void registerConsumer(String className, EventConsumer<? extends T> eventConsumer) {
-        lock.lock();
+        Objects.requireNonNull(className, "className");
+        Objects.requireNonNull(eventConsumer, "eventConsumer");
 
-        try {
-            this.eventConsumerMap.compute(className, (k, consumers) -> {
-                if (consumers == null) {
-                    consumers = new CopyOnWriteArraySet<>();
-                    consumers.add((EventConsumer<T>) eventConsumer);
-                    return consumers;
-                } else {
-                    consumers.add((EventConsumer<T>) eventConsumer);
-                    return consumers;
-                }
-            });
-            this.consumerRegistered = true;
-        } finally {
-            lock.unlock();
-        }
+        CopyOnWriteArraySet<EventConsumer<T>> set =
+            eventConsumerMap.computeIfAbsent(className, k -> new CopyOnWriteArraySet<>());
+
+        set.add((EventConsumer<T>) eventConsumer);
+        consumerRegistered = true;
     }
 
     public <E extends T> boolean processEvent(E event) {
         boolean consumed = false;
+
         if (!onEventConsumers.isEmpty()) {
-            for (EventConsumer<T> onEventConsumer : onEventConsumers) {
-                onEventConsumer.consumeEvent(event);
-            }
+            for (EventConsumer<T> c : onEventConsumers) c.consumeEvent(event);
             consumed = true;
         }
 
-        if (!eventConsumerMap.isEmpty()) {
-            final Set<EventConsumer<T>> consumers = this.eventConsumerMap.get(event.getClass().getName());
-            if (consumers != null && !consumers.isEmpty()) {
-                for (EventConsumer<T> consumer : consumers) {
-                    consumer.consumeEvent(event);
-                }
-                consumed = true;
-            }
+        CopyOnWriteArraySet<EventConsumer<T>> set = eventConsumerMap.get(event.getClass().getName());
+        if (set != null && !set.isEmpty()) {
+            for (EventConsumer<T> c : set) c.consumeEvent(event);
+            consumed = true;
         }
         return consumed;
     }
 
     @Override
     public void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
-        lock.lock();
-
-        try {
-            this.onEventConsumers.add(onEventConsumer);
-            this.consumerRegistered = true;
-        } finally {
-            lock.unlock();
-        }
+        if (onEventConsumer == null) return;
+        onEventConsumers.add(onEventConsumer);
+        consumerRegistered = true;
     }
 }

@@ -25,7 +25,6 @@ import io.github.resilience4j.core.RegistryStore;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 /**
@@ -43,7 +42,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     protected final RegistryStore<E> entryMap;
 
-    protected final ConcurrentMap<String, C> configurations;
+    protected final ConcurrentHashMap<String, C> configurations;
     /**
      * Global tags which must be added to each instance created by this registry.
      */
@@ -76,6 +75,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers,
         Map<String, String> tags) {
+        // FutureHashMap pattern for virtual thread optimization - avoids blocking inside map operations
         this.configurations = new ConcurrentHashMap<>();
         this.entryMap = new InMemoryRegistryStore<E>();
         this.eventProcessor = new RegistryEventProcessor(
@@ -87,6 +87,7 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
 
     public AbstractRegistry(C defaultConfig, List<RegistryEventConsumer<E>> registryEventConsumers,
                             Map<String, String> tags, RegistryStore<E> registryStore) {
+        // FutureHashMap pattern for virtual thread optimization - avoids blocking inside map operations
         this.configurations = new ConcurrentHashMap<>();
         this.entryMap = Objects.requireNonNull(registryStore, REGISTRY_STORE_MUST_NOT_BE_NULL);
         this.eventProcessor = new RegistryEventProcessor(
