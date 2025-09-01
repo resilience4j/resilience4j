@@ -140,6 +140,10 @@ public class ConfigUtils {
             baseProperties.getExponentialMaxWaitDuration() != null) {
             instanceProperties.setExponentialMaxWaitDuration(baseProperties.getExponentialMaxWaitDuration());
         }
+        if (instanceProperties.getEventConsumerBufferSize() == null &&
+            baseProperties.getEventConsumerBufferSize() != null) {
+            instanceProperties.setEventConsumerBufferSize(baseProperties.getEventConsumerBufferSize());
+        }
     }
 
 	/**
