@@ -356,7 +356,11 @@ public class BulkheadTest {
         Try<Void> result = Try.run(() -> checkedRunnable.run());
 
         assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(BulkheadFullException.class);
+
+        final Throwable throwable = result.failed().get();
+
+        assertThat(throwable).isInstanceOf(BulkheadFullException.class);
+        assertThat(((BulkheadFullException) throwable).getBulkheadName()).isEqualTo(bulkhead.getName());
         // end::bulkheadFullException[]
     }
 
