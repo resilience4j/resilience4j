@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowSynchronizationStrategy.LOCK_FREE;
+import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -46,7 +48,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         instanceProperties1.setEventConsumerBufferSize(100);
         instanceProperties1.setRegisterHealthIndicator(true);
         instanceProperties1.setAllowHealthIndicatorToFail(true);
-        instanceProperties1.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
+        instanceProperties1.setSlidingWindowType(TIME_BASED);
         instanceProperties1.setSlidingWindowSize(200);
         instanceProperties1.setMinimumNumberOfCalls(10);
         instanceProperties1.setAutomaticTransitionFromOpenToHalfOpenEnabled(false);
@@ -81,7 +83,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker1).isNotNull();
         assertThat(circuitBreaker1.getSlidingWindowSize()).isEqualTo(200);
         assertThat(circuitBreaker1.getSlidingWindowType())
-            .isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
+            .isEqualTo(TIME_BASED);
         assertThat(circuitBreaker1.getMinimumNumberOfCalls()).isEqualTo(10);
         assertThat(circuitBreaker1.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(100);
         assertThat(circuitBreaker1.getFailureRateThreshold()).isEqualTo(50f);
@@ -162,7 +164,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         sharedProperties.setSlidingWindowSize(1337);
-        sharedProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
+        sharedProperties.setSlidingWindowType(TIME_BASED);
         sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties backendWithDefaultConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
@@ -200,7 +202,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker2).isNotNull();
         assertThat(circuitBreaker2.getSlidingWindowSize()).isEqualTo(1337);
         assertThat(circuitBreaker2.getSlidingWindowType())
-            .isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
+            .isEqualTo(TIME_BASED);
         assertThat(circuitBreaker2.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(999);
 
         // Unknown backend should get default config of Registry
@@ -224,7 +226,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         sharedProperties.setSlidingWindowSize(1337);
-        sharedProperties.setSlidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
+        sharedProperties.setSlidingWindowType(TIME_BASED);
         sharedProperties.setPermittedNumberOfCallsInHalfOpenState(1000);
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
@@ -262,7 +264,7 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(circuitBreaker2).isNotNull();
         assertThat(circuitBreaker2.getSlidingWindowSize()).isEqualTo(1337);
         assertThat(circuitBreaker2.getSlidingWindowType())
-            .isEqualTo(CircuitBreakerConfig.SlidingWindowType.TIME_BASED);
+            .isEqualTo(TIME_BASED);
         assertThat(circuitBreaker2.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(999);
 
         // Unknown backend should get default config of Registry
@@ -548,6 +550,14 @@ public class CircuitBreakerConfigurationPropertiesTest {
         assertThat(config.getMaxWaitDurationInHalfOpenState()).isEqualTo(baseProperties.getMaxWaitDurationInHalfOpenState());
         assertThat(config.getSlidingWindowSize()).isEqualTo(defaultProperties.getSlidingWindowSize());
         assertThat(config.getSlidingWindowType()).isEqualTo(defaultProperties.getSlidingWindowType());
+    }
+
+    @Test
+    public void shouldRejectLockFreeTimeBasedWithSize1() {
+        assertThatThrownBy(() -> CircuitBreakerConfig.custom()
+                .slidingWindow(1,1, CircuitBreakerConfig.SlidingWindowType.TIME_BASED, LOCK_FREE)
+                .build())
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
 

@@ -656,6 +656,9 @@ public class CircuitBreakerConfig implements Serializable {
          * @return the CircuitBreakerConfig.Builder
          * @throws IllegalArgumentException if {@code slidingWindowSize < 1 || minimumNumberOfCalls
          *                                  < 1}
+         *                                  or if {@code slidingWindowType == TIME_BASED
+         *                                  && slidingWindowSynchronizationStrategy == LOCK_FREE
+         *                                  && slidingWindowSize < 2}
          */
         public Builder slidingWindow(
                 int slidingWindowSize,
@@ -674,6 +677,11 @@ public class CircuitBreakerConfig implements Serializable {
             } else {
                 this.minimumNumberOfCalls = minimumNumberOfCalls;
             }
+
+            if(slidingWindowType == SlidingWindowType.TIME_BASED && slidingWindowSynchronizationStrategy == SlidingWindowSynchronizationStrategy.LOCK_FREE && slidingWindowSize < 2) {
+                throw new IllegalArgumentException("For TIME_BASED with LOCK_FREE strategy, slidingWindowSize must be at least 2");
+            }
+
             this.slidingWindowSize = slidingWindowSize;
             this.slidingWindowType = slidingWindowType;
             this.slidingWindowSynchronizationStrategy = slidingWindowSynchronizationStrategy;
