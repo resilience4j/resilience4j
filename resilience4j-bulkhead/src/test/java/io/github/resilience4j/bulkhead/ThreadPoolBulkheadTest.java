@@ -92,7 +92,10 @@ public class ThreadPoolBulkheadTest {
         second.join(100);
         third.join(100);
 
-        assertThat(exception.get()).isInstanceOf(BulkheadFullException.class);
+        final Exception caughtException = exception.get();
+
+        assertThat(caughtException).isInstanceOf(BulkheadFullException.class);
+        assertThat(((BulkheadFullException) caughtException).getBulkheadName()).isEqualTo(bulkhead.getName());
     }
 
     @Test
@@ -133,7 +136,10 @@ public class ThreadPoolBulkheadTest {
         second.join(100);
         third.join(100);
 
-        assertThat(exception.get()).isInstanceOf(BulkheadFullException.class);
+        final Exception caughtException = exception.get();
+
+        assertThat(caughtException).isInstanceOf(BulkheadFullException.class);
+        assertThat(((BulkheadFullException) caughtException).getBulkheadName()).isEqualTo(bulkhead.getName());
     }
 
     @Test
@@ -174,7 +180,10 @@ public class ThreadPoolBulkheadTest {
         second.join(100);
         third.join(100);
 
-        assertThat(exception.get()).isInstanceOf(BulkheadFullException.class);
+        final Exception caughtException = exception.get();
+
+        assertThat(caughtException).isInstanceOf(BulkheadFullException.class);
+        assertThat(((BulkheadFullException) caughtException).getBulkheadName()).isEqualTo(bulkhead.getName());
     }
 
 
@@ -224,7 +233,9 @@ public class ThreadPoolBulkheadTest {
         bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
 
         assertThatThrownBy(() -> bulkhead.executeCallable(helloWorldService::returnHelloWorld))
-            .isInstanceOf(BulkheadFullException.class);
+            .isInstanceOf(BulkheadFullException.class)
+            .hasFieldOrPropertyWithValue("bulkheadName", bulkhead.getName());
+
         assertThat(bulkhead.getMetrics().getQueueDepth()).isZero();
         assertThat(bulkhead.getMetrics().getRemainingQueueCapacity()).isZero();
         assertThat(bulkhead.getMetrics().getQueueCapacity()).isZero();
@@ -233,5 +244,4 @@ public class ThreadPoolBulkheadTest {
 
         latch.countDown();
     }
-
 }
