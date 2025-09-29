@@ -83,6 +83,18 @@
       "type": "java.lang.Boolean",
       "description": "Whether to enable the legacy-timelimiter-metrics.",
       "defaultValue": "false"
+    },
+    {
+      "name": "resilience4j.thread.type",
+      "type": "java.lang.String",
+      "description": "The thread type to be used by Resilience4j's internal schedulers. Supported values: platform (default), virtual (requires JDK 21+).",
+      "defaultValue": "platform"
+    },
+    {
+      "name": "resilience4j.thread.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the thread metrics for monitoring virtual thread usage.",
+      "defaultValue": "true"
     }
   ]
 }
