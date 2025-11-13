@@ -522,7 +522,7 @@ public class SupplierRetryTest {
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
         assertThat(result).isEqualTo(helloWorldServiceReturnValue);
-        assertThat(consumerInvocations.get()).isEqualTo(2);
+        assertThat(consumerInvocations.get()).isEqualTo(3);
     }
 
     @Test
@@ -555,7 +555,7 @@ public class SupplierRetryTest {
         then(helloWorldServiceAsync).should(times(3)).returnHelloWorld();
         assertThat(resultTry.isSuccess()).isTrue();
         assertThat(resultTry.get()).isEqualTo(helloWorldServiceReturnValue);
-        assertThat(consumerInvocations.get()).isEqualTo(2);
+        assertThat(consumerInvocations.get()).isEqualTo(3);
     }
 
 }

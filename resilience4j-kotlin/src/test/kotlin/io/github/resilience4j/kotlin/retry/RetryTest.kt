@@ -175,6 +175,6 @@ class RetryTest {
 
         Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(3)
         Assertions.assertThat(result).isEqualTo(helloWorldServiceReturnValue)
-        Assertions.assertThat(consumerInvocations.get()).isEqualTo(2)
+        Assertions.assertThat(consumerInvocations.get()).isEqualTo(3)
     }
 }
