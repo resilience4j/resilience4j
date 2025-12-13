@@ -36,6 +36,7 @@ public class DummyServiceImpl implements DummyService {
         return CompletableFuture.supplyAsync(() -> "Test result");
     }
 
+    @Override
     @Bulkhead(name = BulkheadDummyService.BACKEND_D, type = Bulkhead.Type.THREADPOOL)
     @TimeLimiter(name = BACKEND_B)
     public CompletableFuture<String> longDoSomethingAsync() {
