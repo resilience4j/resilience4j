@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
 public class SpringBoot3VerifierAutoConfiguration {
 
     @Bean
-    public SpringBoot3Verifier springBoot4Verifier() {
+    public SpringBoot3Verifier springBoot3Verifier() {
         var verifier = new SpringBoot3Verifier();
         verifier.verifyCompatibility();
         return verifier;
