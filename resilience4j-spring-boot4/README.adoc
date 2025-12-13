@@ -1,4 +1,4 @@
-= resilience4j-spring-boot3
+= resilience4j-spring-boot4
 
 This add-on gives simple to use and highly configurable Spring Boot 4 starter.
 With this starter you can apply rate limiters and circuit breakers to any of your beans by using annotations and configuration files.
