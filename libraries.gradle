@@ -20,7 +20,12 @@ ext {
     aspectjVersion = '1.9.2'
     spring6Version = '6.1.1'
     springBoot3Version = '3.2.0'
-    springCloudContext2Version = '3.1.5'
+    springCloud3OpenFeignVersion = '3.1.5'
+    springCloud3CloudContextVersion = '3.1.5'
+    spring7Version = '7.0.2'
+    springBoot4Version = '4.0.0'
+    springCloud5OpenFeignVersion = '5.0.0'
+    springCloud5CloudContextVersion = '5.0.0'
     spockVersion = '1.3-groovy-2.5'
     feignVersion = '12.0'
     reactiveStreamsVersion = '1.0.2'
@@ -29,7 +34,6 @@ ext {
     wiremockVersion = '2.26.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.6.4'
-    springBootOpenFeignVersion = '3.1.5'
     blockhoundVersion = '1.0.6.RELEASE'
     micronautVersion = '4.1.6'
     micronautTestVersion = '4.1.0'
@@ -80,6 +84,32 @@ ext {
             spring_boot3_autoconfigure_processor: "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot3Version}",
             spring_boot3_webflux: "org.springframework.boot:spring-boot-starter-webflux:${springBoot3Version}",
 
+            // Spring Cloud 3 addon (compatible with Spring Boot 3)
+            spring_cloud3_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springCloud3OpenFeignVersion}",
+            spring_cloud3_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springCloud3OpenFeignVersion}",
+            spring_cloud3_context: "org.springframework.cloud:spring-cloud-context:${springCloud3CloudContextVersion}",
+
+            // Spring Boot 4 addon
+            spring7_core: "org.springframework:spring-core:${spring7Version}",
+            spring7_context: "org.springframework:spring-context:${spring7Version}",
+            spring_boot4_aspectj: "org.springframework.boot:spring-boot-starter-aspectj:${springBoot4Version}",
+            spring_boot4_actuator: "org.springframework.boot:spring-boot-actuator-autoconfigure:${springBoot4Version}",
+            spring_boot4_health: "org.springframework.boot:spring-boot-health:${springBoot4Version}",
+            spring_boot4_jackson: "org.springframework.boot:spring-boot-jackson:${springBoot4Version}",
+            spring_boot4_test: "org.springframework.boot:spring-boot-starter-test:${springBoot4Version}",
+            spring_boot4_config_processor: "org.springframework.boot:spring-boot-configuration-processor:${springBoot4Version}",
+            spring_boot4_autoconfigure: "org.springframework.boot:spring-boot-autoconfigure:${springBoot4Version}",
+            spring_boot4_autoconfigure_processor: "org.springframework.boot:spring-boot-autoconfigure-processor:${springBoot4Version}",
+            spring_boot4_webflux: "org.springframework.boot:spring-boot-webflux:${springBoot4Version}",
+            spring_boot4_webmvc_test: "org.springframework.boot:spring-boot-starter-webmvc-test:${springBoot4Version}",
+            spring_boot4_webflux_test: "org.springframework.boot:spring-boot-starter-webflux-test:${springBoot4Version}",
+            spring_boot4_micrometer_metrics: "org.springframework.boot:spring-boot-micrometer-metrics:${springBoot4Version}",
+
+            // Spring Cloud 5 addon (compatible with Spring Boot 4)
+            spring_cloud5_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springCloud5OpenFeignVersion}",
+            spring_cloud5_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springCloud5OpenFeignVersion}",
+            spring_cloud5_context: "org.springframework.cloud:spring-cloud-context:${springCloud5CloudContextVersion}",
+
             // Hibernate validator addon
             hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
 
@@ -119,11 +149,6 @@ ext {
             // Kotlin addon
             kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
             kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}",
-
-            // Spring cloud addon
-            spring_cloud_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springBootOpenFeignVersion}",
-            spring_cloud_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springBootOpenFeignVersion}",
-            spring_cloud_context: "org.springframework.cloud:spring-cloud-context:${springCloudContext2Version}",
 
             // commons configuration addon
             apache_commons_configuration2: "org.apache.commons:commons-configuration2:${apacheCommonsConfiguration2Version}",

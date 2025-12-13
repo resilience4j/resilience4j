@@ -1,7 +1,7 @@
 dependencies {
     implementation project(':resilience4j-spring-boot2')
 
-    compileOnly(libraries.spring_cloud_context2)
+    compileOnly(libraries.spring_cloud3_context)
     compileOnly(libraries.spring_boot2_config_processor)
     compileOnly(libraries.spring_boot2_autoconfigure_processor)
     compileOnly(libraries.spring_boot2_actuator)
@@ -10,7 +10,7 @@ dependencies {
     testImplementation(libraries.spring_boot2_aop)
     testImplementation(libraries.spring_boot2_web)
     testImplementation(libraries.spring_boot2_actuator)
-    testImplementation(libraries.spring_cloud_context2)
+    testImplementation(libraries.spring_cloud3_context)
     testImplementation project(':resilience4j-spring-boot2')
 }
 

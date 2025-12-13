@@ -1,0 +1,2 @@
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+  io.github.resilience4j.springboot.nativeimage.configuration.NativeHintsConfiguration
