@@ -5,7 +5,6 @@ dependencies {
     compileOnly(libraries.spring_boot2_webflux)
     compileOnly(libraries.spring_boot2_aop)
     compileOnly(libraries.spring_boot2_actuator)
-    compileOnly(libraries.hibernate_validator)
     annotationProcessor(libraries.spring_boot2_config_processor)
     annotationProcessor(libraries.spring_boot2_autoconfigure_processor)
 

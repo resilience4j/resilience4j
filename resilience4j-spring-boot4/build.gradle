@@ -11,7 +11,6 @@ dependencies {
     compileOnly(libraries.spring_boot4_actuator)
     compileOnly(libraries.spring_boot4_jackson)
     compileOnly(libraries.spring_boot4_health)
-    compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_cloud5_openfeign_core)
     compileOnly(libraries.spring_cloud5_starter_openfeign)
     compileOnly(libraries.spring_cloud5_context)

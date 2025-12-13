@@ -29,8 +29,7 @@ ext {
     spockVersion = '1.3-groovy-2.5'
     feignVersion = '12.0'
     reactiveStreamsVersion = '1.0.2'
-    micrometerVersion = '1.10.0'
-    hibernateValidatorVersion = '6.0.18.Final'
+    micrometerVersion = '1.16.0'
     wiremockVersion = '2.26.0'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.6.4'
@@ -109,9 +108,6 @@ ext {
             spring_cloud5_openfeign_core: "org.springframework.cloud:spring-cloud-openfeign-core:${springCloud5OpenFeignVersion}",
             spring_cloud5_starter_openfeign: "org.springframework.cloud:spring-cloud-starter-openfeign:${springCloud5OpenFeignVersion}",
             spring_cloud5_context: "org.springframework.cloud:spring-cloud-context:${springCloud5CloudContextVersion}",
-
-            // Hibernate validator addon
-            hibernate_validator: "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
 
             // Feign addon
             feign: "io.github.openfeign:feign-core:${feignVersion}",
