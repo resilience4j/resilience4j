@@ -175,7 +175,7 @@ public class SpringBootCommonTest {
             .timeLimiterRegistryEventConsumer(Optional.empty())).isNotNull();
     }
 
-    class TestCustomizer implements CircuitBreakerConfigCustomizer {
+    static class TestCustomizer implements CircuitBreakerConfigCustomizer {
 
         @Override
         public void customize(
