@@ -8,6 +8,7 @@ ext {
 
 def projectArtifactId = 'resilience4j'
 def url = "https://resilience4j.readme.io"
+apply plugin: 'biz.aQute.bnd.builder'
 
 normalization {
     runtimeClasspath {
@@ -29,6 +30,18 @@ jar {
                 'Specification-Version': project.version,
                 'Implementation-Title': projectArtifactId,
                 'Implementation-Version': project.version,
+        )
+    }
+    bundle {
+        bnd(
+                '-exportcontents': '!io.github.resilience4j.*.internal,*;-noimport:=true',
+                'Import-Package': '!javax.annotation,!javax.annotation.meta,*',
+                'Bundle-Description': 'A lightweight fault tolerance library',
+                'Bundle-DocURL': 'https://github.com/resilience4j/resilience4j',
+                'Bundle-Name': project.name,
+                'Bundle-SymbolicName': "${project.group}.${project.name}",
+                '-reproducible': "true",
+                '-noextraheaders': "true"
         )
     }
 }
