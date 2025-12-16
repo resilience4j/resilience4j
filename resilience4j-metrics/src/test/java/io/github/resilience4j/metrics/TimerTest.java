@@ -36,10 +36,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -140,7 +140,7 @@ public class TimerTest {
         String value = stringCompletionStage.toCompletableFuture().get();
         assertThat(value).isEqualTo("Hello world");
         await().atMost(1, SECONDS)
-            .until(() -> {
+            .untilAsserted(() -> {
                 assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
                 assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
                 assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();

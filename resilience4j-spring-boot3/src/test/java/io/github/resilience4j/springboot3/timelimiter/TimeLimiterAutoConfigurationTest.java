@@ -4,11 +4,11 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.common.timelimiter.monitoring.endpoint.TimeLimiterEventsEndpointResponse;
+import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterAspect;
 import io.github.resilience4j.springboot3.service.test.DummyService;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.springboot3.timelimiter.autoconfigure.TimeLimiterProperties;
-import io.github.resilience4j.spring6.timelimiter.configure.TimeLimiterAspect;
+import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.Rule;
@@ -25,9 +25,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -115,8 +114,8 @@ public class TimeLimiterAutoConfigurationTest {
             return null;
         });
 
-        waitAtMost(3, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         TimeLimiterEventsEndpointResponse timeLimiterEventList = timeLimiterEvents("/actuator/timelimiterevents");
         assertThat(timeLimiterEventList.getTimeLimiterEvents())
@@ -153,8 +152,8 @@ public class TimeLimiterAutoConfigurationTest {
             return null;
         });
 
-        waitAtMost(3, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         TimeLimiterEventsEndpointResponse timeLimiterEventList = timeLimiterEvents("/actuator/timelimiterevents");
         assertThat(timeLimiterEventList.getTimeLimiterEvents())

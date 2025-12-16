@@ -25,6 +25,7 @@ import io.github.resilience4j.core.RegistryStore;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -98,11 +99,20 @@ public class AbstractRegistry<E, C> implements Registry<E, C> {
     }
 
     protected E computeIfAbsent(String name, Supplier<E> supplier) {
-        return entryMap.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL), k -> {
-            E entry = supplier.get();
-            eventProcessor.processEvent(new EntryAddedEvent<>(entry));
-            return entry;
+        // Publish EntryAddedEvent after the CHM call returns, not inside the
+        // mapping function. A consumer that touches this registry recursively
+        // (same key or a key that hashes to the same bin) would otherwise trip
+        // ConcurrentHashMap's recursive-update detection and throw
+        // IllegalStateException.
+        AtomicBoolean created = new AtomicBoolean(false);
+        E entry = entryMap.computeIfAbsent(Objects.requireNonNull(name, NAME_MUST_NOT_BE_NULL), k -> {
+            created.set(true);
+            return supplier.get();
         });
+        if (created.get()) {
+            eventProcessor.processEvent(new EntryAddedEvent<>(entry));
+        }
+        return entry;
     }
 
     @Override

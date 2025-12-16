@@ -15,25 +15,25 @@
  */
 package io.github.resilience4j.springboot3.bulkhead;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.util.ReflectionTestUtils.getField;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import org.apache.commons.lang3.StringUtils;
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
+import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
+import io.github.resilience4j.springboot3.TestThreadLocalContextPropagator;
+import io.github.resilience4j.springboot3.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
+import io.github.resilience4j.springboot3.bulkhead.autoconfigure.BulkheadProperties;
+import io.github.resilience4j.springboot3.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
+import io.github.resilience4j.springboot3.service.test.BeanContextPropagator;
+import io.github.resilience4j.springboot3.service.test.DummyFeignClient;
+import io.github.resilience4j.springboot3.service.test.TestApplication;
+import io.github.resilience4j.springboot3.service.test.bulkhead.BulkheadDummyService;
+import io.github.resilience4j.springboot3.service.test.bulkhead.BulkheadReactiveDummyService;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,19 +43,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import io.github.resilience4j.springboot3.TestThreadLocalContextPropagator;
-import io.github.resilience4j.springboot3.TestThreadLocalContextPropagator.TestThreadLocalContextHolder;
-import io.github.resilience4j.springboot3.bulkhead.autoconfigure.BulkheadProperties;
-import io.github.resilience4j.springboot3.bulkhead.autoconfigure.ThreadPoolBulkheadProperties;
-import io.github.resilience4j.common.CompositeCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.BulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.configuration.ThreadPoolBulkheadConfigCustomizer;
-import io.github.resilience4j.common.bulkhead.monitoring.endpoint.BulkheadEndpointResponse;
-import io.github.resilience4j.springboot3.service.test.BeanContextPropagator;
-import io.github.resilience4j.springboot3.service.test.DummyFeignClient;
-import io.github.resilience4j.springboot3.service.test.TestApplication;
-import io.github.resilience4j.springboot3.service.test.bulkhead.BulkheadDummyService;
-import io.github.resilience4j.springboot3.service.test.bulkhead.BulkheadReactiveDummyService;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.util.ReflectionTestUtils.getField;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -151,7 +148,7 @@ public class BulkheadAutoConfigurationTest {
         bulkhead.getEventPublisher().onCallPermitted(event -> permitted.incrementAndGet());
         bulkhead.getEventPublisher().onCallRejected(event -> rejected.incrementAndGet());
 
-        dummyFeignClient.doSomething(StringUtils.EMPTY);
+        dummyFeignClient.doSomething("");
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);

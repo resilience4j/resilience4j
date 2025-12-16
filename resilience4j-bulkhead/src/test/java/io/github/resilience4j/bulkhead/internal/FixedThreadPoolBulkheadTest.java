@@ -37,9 +37,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public class FixedThreadPoolBulkheadTest {
 
@@ -67,8 +66,8 @@ public class FixedThreadPoolBulkheadTest {
         CompletableFuture<Object> future = fixedThreadPoolBulkhead
             .submit(() -> TestThreadLocalContextHolder.get().orElse(null));
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
@@ -80,8 +79,8 @@ public class FixedThreadPoolBulkheadTest {
         fixedThreadPoolBulkhead
             .submit(() -> reference.set((String) TestThreadLocalContextHolder.get().orElse(null)));
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(reference).hasValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(reference).hasValue("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
