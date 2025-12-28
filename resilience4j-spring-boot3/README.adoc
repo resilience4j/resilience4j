@@ -5,6 +5,23 @@ With this starter you can apply rate limiters and circuit breakers to any of you
 
 NOTE: For detailed documentation look at our *https://resilience4j.readme.io/docs/getting-started-3[Usage Guide]*
 
+[WARNING]
+====
+**Important Note on Aspect Order**
+
+In Spring Boot 3, the default Aspect Order may cause `@Retry` to run *before* (outside) `@CircuitBreaker`. This means a single logical operation with multiple retries will be recorded as **multiple failures** by the CircuitBreaker, potentially opening the circuit too aggressively.
+
+To ensure the CircuitBreaker wraps the entire Retry operation (recording only 1 failure per total attempt), explicitly configure the aspect order so that the CircuitBreaker has a higher priority (lower value):
+
+[source,properties]
+----
+# Ensure CircuitBreaker runs first (Outer)
+resilience4j.circuitbreaker.circuitBreakerAspectOrder=1
+# Ensure Retry runs second (Inner)
+resilience4j.retry.retryAspectOrder=2
+----
+====
+
 == License
 
 Copyright 2017 Robert Winkler and Bohdan Storozhuk
