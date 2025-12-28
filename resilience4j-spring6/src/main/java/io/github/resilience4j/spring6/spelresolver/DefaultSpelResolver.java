@@ -44,7 +44,7 @@ public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelReso
 
     @Override
     public String resolve(Method method, Object[] arguments, String spelExpression) {
-        if (StringUtils.isEmpty(spelExpression)) {
+        if (!StringUtils.hasText(spelExpression)) {
             return spelExpression;
         }
 

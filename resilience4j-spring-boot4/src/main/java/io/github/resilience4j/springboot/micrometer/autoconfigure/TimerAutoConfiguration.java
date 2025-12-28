@@ -1,0 +1,151 @@
+/*
+ * Copyright 2025 Mariusz Kopylec, Artur Havliukovskyi
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.github.resilience4j.springboot.micrometer.autoconfigure;
+
+import io.github.resilience4j.common.CompositeCustomizer;
+import io.github.resilience4j.common.micrometer.configuration.TimerConfigCustomizer;
+import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
+import io.github.resilience4j.consumer.EventConsumerRegistry;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
+import io.github.resilience4j.micrometer.Timer;
+import io.github.resilience4j.micrometer.TimerRegistry;
+import io.github.resilience4j.micrometer.event.TimerEvent;
+import io.github.resilience4j.spring6.fallback.FallbackExecutor;
+import io.github.resilience4j.spring6.micrometer.configure.*;
+import io.github.resilience4j.spring6.spelresolver.SpelResolver;
+import io.github.resilience4j.spring6.utils.AspectJOnClasspathCondition;
+import io.github.resilience4j.spring6.utils.ReactorOnClasspathCondition;
+import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
+import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
+import io.github.resilience4j.springboot.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.springboot.micrometer.monitoring.endpoint.TimerEndpoint;
+import io.github.resilience4j.springboot.micrometer.monitoring.endpoint.TimerEventsEndpoint;
+import io.github.resilience4j.springboot.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+
+import java.util.List;
+import java.util.Optional;
+
+@AutoConfiguration
+@ConditionalOnClass(Timer.class)
+@EnableConfigurationProperties(TimerProperties.class)
+@Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
+public class TimerAutoConfiguration {
+
+    // delegate conditional auto-configurations to regular spring configuration
+    private final TimerConfiguration timerConfiguration = new TimerConfiguration();
+
+    /**
+     * The EventConsumerRegistry is used to manage EventConsumer instances.
+     * The EventConsumerRegistry is used by the Timer events monitor to show the latest TimerEvent events
+     * for each Timer instance.
+     *
+     * @return a default EventConsumerRegistry {@link DefaultEventConsumerRegistry}
+     */
+    @Bean
+    @ConditionalOnMissingBean(value = TimerEvent.class, parameterizedContainer = EventConsumerRegistry.class)
+    public EventConsumerRegistry<TimerEvent> timerEventsConsumerRegistry() {
+        return timerConfiguration.timerEventsConsumerRegistry();
+    }
+
+    @Bean
+    @Qualifier("compositeTimerCustomizer")
+    public CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer(@Autowired(required = false) List<TimerConfigCustomizer> customizers) {
+        return new CompositeCustomizer<>(customizers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public TimerRegistry timerRegistry(
+            TimerConfigurationProperties timerProperties,
+            EventConsumerRegistry<TimerEvent> timerEventsConsumerRegistry,
+            RegistryEventConsumer<Timer> timerRegistryEventConsumer,
+            @Qualifier("compositeTimerCustomizer") CompositeCustomizer<TimerConfigCustomizer> compositeTimerCustomizer,
+            @Autowired(required = false) MeterRegistry registry
+    ) {
+        return timerConfiguration.timerRegistry(timerProperties, timerEventsConsumerRegistry, timerRegistryEventConsumer, compositeTimerCustomizer, registry);
+    }
+
+    @Bean
+    @Primary
+    public RegistryEventConsumer<Timer> timerRegistryEventConsumer(Optional<List<RegistryEventConsumer<Timer>>> optionalRegistryEventConsumers) {
+        return timerConfiguration.timerRegistryEventConsumer(optionalRegistryEventConsumers);
+    }
+
+    @Bean
+    @Conditional(AspectJOnClasspathCondition.class)
+    @ConditionalOnMissingBean
+    public TimerAspect timerAspect(
+            TimerConfigurationProperties timerProperties,
+            TimerRegistry timerRegistry,
+            @Autowired(required = false) List<TimerAspectExt> timerAspectExtList,
+            FallbackExecutor fallbackExecutor,
+            SpelResolver spelResolver
+    ) {
+        return timerConfiguration.timerAspect(timerProperties, timerRegistry, timerAspectExtList, fallbackExecutor, spelResolver);
+    }
+
+    @Bean
+    @Conditional({RxJava2OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava2TimerAspectExt rxJava2TimerAspectExt() {
+        return timerConfiguration.rxJava2TimerAspectExt();
+    }
+
+    @Bean
+    @Conditional({RxJava3OnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public RxJava3TimerAspectExt rxJava3TimerAspectExt() {
+        return timerConfiguration.rxJava3TimerAspectExt();
+    }
+
+    @Bean
+    @Conditional({ReactorOnClasspathCondition.class, AspectJOnClasspathCondition.class})
+    @ConditionalOnMissingBean
+    public ReactorTimerAspectExt reactorTimerAspectExt() {
+        return timerConfiguration.reactorTimerAspectExt();
+    }
+
+    @AutoConfiguration
+    @ConditionalOnClass(Endpoint.class)
+    static class TimerAutoEndpointConfiguration {
+
+        @Bean
+        @ConditionalOnAvailableEndpoint
+        public TimerEndpoint timerEndpoint(TimerRegistry timerRegistry) {
+            return new TimerEndpoint(timerRegistry);
+        }
+
+        @Bean
+        @ConditionalOnAvailableEndpoint
+        public TimerEventsEndpoint timerEventsEndpoint(EventConsumerRegistry<TimerEvent> eventConsumerRegistry) {
+            return new TimerEventsEndpoint(eventConsumerRegistry);
+        }
+    }
+}

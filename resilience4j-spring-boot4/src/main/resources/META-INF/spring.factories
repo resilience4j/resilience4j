@@ -1,0 +1,2 @@
+org.springframework.boot.diagnostics.FailureAnalyzer=\
+io.github.resilience4j.springboot.verifier.autoconfigure.SpringBootVerifierFailureAnalyzer

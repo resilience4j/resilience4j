@@ -1,3 +1,4 @@
+io.github.resilience4j.springboot3.verifier.autoconfigure.SpringBoot3VerifierAutoConfiguration
 io.github.resilience4j.springboot3.bulkhead.autoconfigure.BulkheadAutoConfiguration
 io.github.resilience4j.springboot3.bulkhead.autoconfigure.BulkheadMetricsAutoConfiguration
 io.github.resilience4j.springboot3.bulkhead.autoconfigure.ThreadPoolBulkheadMetricsAutoConfiguration

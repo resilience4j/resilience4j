@@ -4,7 +4,6 @@ dependencies {
     api project(':resilience4j-framework-common')
 
     compileOnly(libraries.aspectj)
-    compileOnly(libraries.hibernate_validator)
     compileOnly(libraries.spring_core,libraries.spring_context)
     compileOnly(libraries.rxjava2)
     compileOnly(libraries.rxjava3)
