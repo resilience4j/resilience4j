@@ -82,7 +82,7 @@ public class TimeLimiterImpl implements TimeLimiter {
 
             return future.whenComplete((result, throwable) -> {
                 // complete
-                if (result != null) {
+                if (throwable == null) {
                     if (!timeoutFuture.isDone()) {
                         timeoutFuture.cancel(false);
                     }
