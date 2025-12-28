@@ -20,12 +20,21 @@ import org.springframework.core.Ordered;
 public class BulkheadConfigurationProperties extends
     io.github.resilience4j.common.bulkhead.configuration.CommonBulkheadConfigurationProperties {
 
+    private int bulkheadAspectOrder = Ordered.LOWEST_PRECEDENCE;
+
     /**
      * As of release 0.16.0 as we set an implicit spring aspect order for bulkhead to cover the
-     * async case of threadPool bulkhead
+     * async case of threadPool bulkhead but user can override it still if he has different use case
      */
     public int getBulkheadAspectOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
+        return bulkheadAspectOrder;
+    }
+
+    /**
+     * @param bulkheadAspectOrder bulkhead aspect order
+     */
+    public void setBulkheadAspectOrder(int bulkheadAspectOrder) {
+        this.bulkheadAspectOrder = bulkheadAspectOrder;
     }
 
 }
