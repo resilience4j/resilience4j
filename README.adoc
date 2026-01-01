@@ -115,6 +115,222 @@ NOTE: Find out full list of modules in our *https://resilience4j.readme.io/docs#
 
 TIP: For core modules package or `+Decorators+` builder see *https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-all[resilience4j-all]*.
 
+== Best Practices
+
+=== Instance Management: When to Share vs. Not Share Instances
+
+One of the most important concepts for newcomers to understand is when to create separate instances versus when to share instances across different remote services or backends.
+
+[IMPORTANT]
+====
+*The Golden Rule:* Create a unique instance (with a unique ID) for each protected remote service or backend you communicate with.
+====
+
+==== Why Unique Instances Matter
+
+Creating separate instances for each backend service is critical for:
+
+1. *Proper metrics collection* - Each instance tracks its own metrics, allowing you to monitor the health of individual services
+2. *Isolation of failures* - If Service A fails, it won't affect the resilience patterns protecting Service B
+3. *Independent configuration* - Different backends may require different timeout settings, retry policies, or circuit breaker thresholds
+
+==== Instance-Aware vs. Non-Instance-Aware Patterns
+
+Different resilience patterns have different requirements for instance separation:
+
+===== Instance-Aware Patterns (MUST NOT Share)
+
+These patterns maintain state that is specific to a particular service and *MUST* have separate instances:
+
+* *CircuitBreaker* - Tracks failure rates and state (OPEN/CLOSED/HALF_OPEN) per service
++
+[source,java]
+----
+// CORRECT: Separate CircuitBreaker for each service
+CircuitBreaker paymentServiceCB = CircuitBreaker.ofDefaults("paymentService");
+CircuitBreaker inventoryServiceCB = CircuitBreaker.ofDefaults("inventoryService");
+CircuitBreaker notificationServiceCB = CircuitBreaker.ofDefaults("notificationService");
+
+// WRONG: Sharing one CircuitBreaker across multiple services
+CircuitBreaker sharedCB = CircuitBreaker.ofDefaults("shared"); // DON'T DO THIS!
+// If one service fails, the circuit opens for ALL services!
+----
+
+* *Bulkhead* (both SemaphoreBulkhead and ThreadPoolBulkhead) - Manages concurrent call limits per service
++
+[source,java]
+----
+// CORRECT: Separate Bulkhead for each service
+Bulkhead paymentBulkhead = Bulkhead.ofDefaults("paymentService");
+Bulkhead inventoryBulkhead = Bulkhead.ofDefaults("inventoryService");
+
+// WRONG: Sharing limits resource isolation benefits
+Bulkhead sharedBulkhead = Bulkhead.ofDefaults("shared"); // DON'T DO THIS!
+----
+
+* *RateLimiter* - Controls request rate per service
++
+[source,java]
+----
+// CORRECT: Different rate limits for different services
+RateLimiter apiRateLimiter = RateLimiter.ofDefaults("externalAPI");
+RateLimiter dbRateLimiter = RateLimiter.ofDefaults("database");
+----
+
+===== Non-Instance-Aware Patterns (CAN Share, But Better Not To)
+
+These patterns create fresh context for each execution and don't maintain service-specific state:
+
+* *Retry* - Configuration can be shared, but unique instances are still recommended for proper metrics
+* *TimeLimiter* - Timeout settings can be shared if identical across services
+
+[source,java]
+----
+// TECHNICALLY OK: Retry doesn't maintain state between calls
+Retry sharedRetry = Retry.ofDefaults("shared");
+
+// BETTER: Unique instances provide better metrics and monitoring
+Retry paymentRetry = Retry.ofDefaults("paymentService");
+Retry inventoryRetry = Retry.ofDefaults("inventoryService");
+
+// Now you can track:
+// - How many retry attempts failed for paymentService specifically
+// - How many retry attempts failed for inventoryService specifically
+----
+
+==== Recommended Approach: Always Use Unique Instances
+
+Even for patterns that *can* be shared, creating unique instances is the recommended approach because:
+
+* *Better observability* - Metrics are tagged by instance name, letting you see which backend is struggling
+* *Easier troubleshooting* - Clear separation makes debugging production issues simpler
+* *Future flexibility* - If you later need different configurations per service, instances are already separated
+
+===== Complete Example: Multiple Services
+
+[source,java]
+----
+// You have 3 backend services to protect
+public class ServiceOrchestrator {
+
+    // Payment Service protection
+    private final CircuitBreaker paymentCB = CircuitBreaker.ofDefaults("paymentService");
+    private final Retry paymentRetry = Retry.ofDefaults("paymentService");
+    private final Bulkhead paymentBulkhead = Bulkhead.ofDefaults("paymentService");
+
+    // Inventory Service protection
+    private final CircuitBreaker inventoryCB = CircuitBreaker.ofDefaults("inventoryService");
+    private final Retry inventoryRetry = Retry.ofDefaults("inventoryService");
+    private final Bulkhead inventoryBulkhead = Bulkhead.ofDefaults("inventoryService");
+
+    // Notification Service protection
+    private final CircuitBreaker notificationCB = CircuitBreaker.ofDefaults("notificationService");
+    private final Retry notificationRetry = Retry.ofDefaults("notificationService");
+
+    public Order processOrder(OrderRequest request) {
+        // Each service call is protected by its own set of resilience instances
+
+        // Call payment service
+        Supplier<PaymentResult> paymentCall = () -> paymentService.charge(request);
+        PaymentResult payment = Decorators.ofSupplier(paymentCall)
+            .withCircuitBreaker(paymentCB)
+            .withRetry(paymentRetry)
+            .withBulkhead(paymentBulkhead)
+            .decorate()
+            .get();
+
+        // Call inventory service
+        Supplier<InventoryResult> inventoryCall = () -> inventoryService.reserve(request);
+        InventoryResult inventory = Decorators.ofSupplier(inventoryCall)
+            .withCircuitBreaker(inventoryCB)
+            .withRetry(inventoryRetry)
+            .withBulkhead(inventoryBulkhead)
+            .decorate()
+            .get();
+
+        // Call notification service (if payment fails, notification circuit is unaffected)
+        Supplier<Void> notificationCall = () -> notificationService.send(request);
+        Decorators.ofSupplier(notificationCall)
+            .withCircuitBreaker(notificationCB)
+            .withRetry(notificationRetry)
+            .decorate()
+            .get();
+
+        return new Order(payment, inventory);
+    }
+}
+----
+
+==== Using Registries for Instance Management
+
+Resilience4j provides Registry classes to manage multiple instances efficiently:
+
+[source,java]
+----
+// Create a registry with custom default configuration
+CircuitBreakerConfig defaultConfig = CircuitBreakerConfig.custom()
+    .failureRateThreshold(50)
+    .waitDurationInOpenState(Duration.ofSeconds(30))
+    .build();
+
+CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(defaultConfig);
+
+// Get or create instances by name
+CircuitBreaker paymentCB = registry.circuitBreaker("paymentService");
+CircuitBreaker inventoryCB = registry.circuitBreaker("inventoryService");
+
+// You can also override config for specific instances
+CircuitBreakerConfig customConfig = CircuitBreakerConfig.custom()
+    .failureRateThreshold(80)  // More lenient for this service
+    .build();
+CircuitBreaker legacyCB = registry.circuitBreaker("legacyService", customConfig);
+----
+
+NOTE: Registries are particularly useful in Spring Boot applications where they're auto-configured and instances are created on-demand based on configuration properties.
+
+==== Summary
+
+[cols="<.<*", options="header"]
+|===
+|Pattern |Can Share? |Should Share? |Why?
+
+|*CircuitBreaker*
+|No
+|No
+|State is service-specific. Sharing causes one service's failures to affect all others.
+
+|*Bulkhead*
+|No
+|No
+|Concurrent call limits must be isolated per service for proper resource management.
+
+|*RateLimiter*
+|No
+|No
+|Rate limits are typically different per service and sharing defeats the purpose.
+
+|*Retry*
+|Yes
+|No
+|While technically safe to share, unique instances provide better metrics and observability.
+
+|*TimeLimiter*
+|Yes
+|No
+|While technically safe to share, unique instances provide better metrics and observability.
+
+|*Cache*
+|Depends
+|Depends
+|Only share if the cached data is truly identical across use cases.
+
+|===
+
+[TIP]
+====
+When in doubt, create separate instances. The overhead is minimal, and the benefits for metrics, debugging, and flexibility are significant.
+====
+
 == Resilience patterns
 
 [cols="<.<*", options="header"]
