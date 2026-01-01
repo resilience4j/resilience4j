@@ -312,6 +312,34 @@ public final class CircuitBreakerSnapshot implements Serializable {
                 '}';
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof MetricsSnapshot)) {
+                return false;
+            }
+            MetricsSnapshot that = (MetricsSnapshot) o;
+            return numberOfSuccessfulCalls == that.numberOfSuccessfulCalls
+                && numberOfFailedCalls == that.numberOfFailedCalls
+                && numberOfSlowCalls == that.numberOfSlowCalls
+                && numberOfSlowSuccessfulCalls == that.numberOfSlowSuccessfulCalls
+                && numberOfSlowFailedCalls == that.numberOfSlowFailedCalls
+                && numberOfNotPermittedCalls == that.numberOfNotPermittedCalls;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(
+                numberOfSuccessfulCalls,
+                numberOfFailedCalls,
+                numberOfSlowCalls,
+                numberOfSlowSuccessfulCalls,
+                numberOfSlowFailedCalls,
+                numberOfNotPermittedCalls
+            );
+        }
         /**
          * Builder for creating MetricsSnapshot instances.
          */
