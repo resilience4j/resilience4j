@@ -400,6 +400,44 @@ public interface CircuitBreaker {
     }
 
     /**
+     * Creates a CircuitBreaker with a custom configuration and restores state from a snapshot.
+     * <p>
+     * This method allows you to recreate a CircuitBreaker with a different configuration while
+     * preserving the accumulated state and metrics from a previous instance. This is useful for
+     * runtime reconfiguration scenarios where you want to update configuration parameters without
+     * losing historical data.
+     * <p>
+     * The snapshot should be obtained using {@link #createSnapshot()} from an existing CircuitBreaker.
+     * <p>
+     * <strong>Example:</strong>
+     * <pre>{@code
+     * // Capture state from existing CircuitBreaker
+     * CircuitBreaker oldCb = CircuitBreaker.of("service", config1);
+     * // ... accumulate metrics ...
+     * CircuitBreakerSnapshot snapshot = oldCb.createSnapshot();
+     *
+     * // Create new CircuitBreaker with updated config, preserving state
+     * CircuitBreakerConfig newConfig = CircuitBreakerConfig.custom()
+     *     .failureRateThreshold(60) // Changed threshold
+     *     .build();
+     * CircuitBreaker newCb = CircuitBreaker.of("service", newConfig, snapshot);
+     * // newCb has the same state and metrics as oldCb
+     * }</pre>
+     *
+     * @param name     the name of the CircuitBreaker
+     * @param config   a custom CircuitBreaker configuration
+     * @param snapshot snapshot to restore state from
+     * @return a CircuitBreaker with the restored state and new configuration
+     * @throws NullPointerException if any parameter is null
+     * @since 2.4.0
+     */
+    static CircuitBreaker of(String name,
+                             CircuitBreakerConfig config,
+                             CircuitBreakerSnapshot snapshot) {
+        return new CircuitBreakerStateMachine(name, config, snapshot);
+    }
+
+    /**
      * Returns a supplier of type Future which is decorated by a CircuitBreaker. The elapsed time
      * includes {@link Future#get()} evaluation time even if the underlying call took less time to
      * return. Any delays in evaluating Future by caller will add towards total time.
@@ -609,6 +647,39 @@ public interface CircuitBreaker {
      * @return the Metrics of this CircuitBreaker
      */
     Metrics getMetrics();
+
+    /**
+     * Creates an immutable snapshot of the CircuitBreaker's current state and metrics.
+     * <p>
+     * The snapshot captures:
+     * <ul>
+     *   <li>Current state (CLOSED, OPEN, HALF_OPEN, etc.)</li>
+     *   <li>Accumulated metrics (success/failure counts, slow calls, etc.)</li>
+     *   <li>State-specific data (attempts, retry-after time)</li>
+     * </ul>
+     * <p>
+     * This snapshot can be used to restore state when reconfiguring the CircuitBreaker
+     * with {@link #of(String, CircuitBreakerConfig, CircuitBreakerSnapshot)}.
+     * <p>
+     * <strong>Thread Safety:</strong> This method is thread-safe and can be called
+     * concurrently with other operations.
+     * <p>
+     * <strong>Example:</strong>
+     * <pre>{@code
+     * // Capture current state
+     * CircuitBreakerSnapshot snapshot = circuitBreaker.createSnapshot();
+     *
+     * // Recreate with new configuration, preserving state
+     * CircuitBreakerConfig newConfig = CircuitBreakerConfig.custom()
+     *     .failureRateThreshold(60)
+     *     .build();
+     * CircuitBreaker newCb = CircuitBreaker.of("myService", newConfig, snapshot);
+     * }</pre>
+     *
+     * @return immutable snapshot of the current state
+     * @since 2.4.0
+     */
+    CircuitBreakerSnapshot createSnapshot();
 
     /**
      * Returns an unmodifiable map with tags assigned to this CircuitBreaker.
