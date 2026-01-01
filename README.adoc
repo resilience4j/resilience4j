@@ -132,7 +132,7 @@ Creating separate instances for each backend service is critical for:
 
 1. *Proper metrics collection* - Each instance tracks its own metrics, allowing you to monitor the health of individual services
 2. *Isolation of failures* - If Service A fails, it won't affect the resilience patterns protecting Service B
-3. *Independent configuration* - Different backends may require different timeout settings, retry policies, or circuit breaker thresholds
+3. *Independent configuration* - Different backends may require different circuit breaker thresholds, concurrency limits, rate limits, or retry policies
 
 ==== Instance-Aware vs. Non-Instance-Aware Patterns
 
@@ -248,13 +248,13 @@ public class ServiceOrchestrator {
             .decorate()
             .get();
 
-        // Call notification service (if payment fails, notification circuit is unaffected)
-        Supplier<Void> notificationCall = () -> notificationService.send(request);
-        Decorators.ofSupplier(notificationCall)
+        // Call notification service (demonstrates circuit isolation: the notification circuit breaker remains independent of the payment circuit breaker, even if payment opens its circuit in other calls)
+        Runnable notificationCall = () -> notificationService.send(request);
+        Decorators.ofRunnable(notificationCall)
             .withCircuitBreaker(notificationCB)
             .withRetry(notificationRetry)
             .decorate()
-            .get();
+            .run();
 
         return new Order(payment, inventory);
     }
