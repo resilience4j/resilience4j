@@ -50,7 +50,7 @@ suspend fun <T> CircuitBreaker.executeSuspendFunction(
         return result
     } catch (exception: Throwable) {
         val shouldIgnore =
-            try { ignoreThrowablePredicate(exception, coroutineContext) } catch (_: Throwable) { false }
+            try { ignoreThrowablePredicate(exception, coroutineContext) } catch (_: Exception) { false }
         if (shouldIgnore) {
             releasePermission()
         } else {
