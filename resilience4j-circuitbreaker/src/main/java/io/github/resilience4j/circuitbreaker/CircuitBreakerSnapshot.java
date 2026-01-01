@@ -127,6 +127,25 @@ public final class CircuitBreakerSnapshot implements Serializable {
             '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CircuitBreakerSnapshot that = (CircuitBreakerSnapshot) o;
+        return attempts == that.attempts
+            && state == that.state
+            && Objects.equals(metricsSnapshot, that.metricsSnapshot)
+            && Objects.equals(retryAfterWaitUntil, that.retryAfterWaitUntil);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(state, metricsSnapshot, attempts, retryAfterWaitUntil);
+    }
     /**
      * Builder for creating CircuitBreakerSnapshot instances.
      */
