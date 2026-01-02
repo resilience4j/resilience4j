@@ -24,14 +24,12 @@ import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,11 +46,6 @@ import static org.mockito.Mockito.times;
 @RunWith(Parameterized.class)
 public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return threadModes();
-    }
-
     public ThreadPoolBulkheadTest(ThreadType threadType) {
         super(threadType);
     }
@@ -62,8 +55,6 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
 
     @Before
     public void setUp() {
-        setUpThreadMode(); // Set up thread mode from ThreadModeTestBase
-        
         Awaitility.reset();
         helloWorldService = mock(HelloWorldService.class);
         config = ThreadPoolBulkheadConfig.custom()
@@ -71,11 +62,6 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
             .coreThreadPoolSize(1)
             .queueCapacity(1)
             .build();
-    }
-
-    @After
-    public void tearDown() {
-        cleanUpThreadMode(); // Clean up thread mode from ThreadModeTestBase
     }
 
     @Test

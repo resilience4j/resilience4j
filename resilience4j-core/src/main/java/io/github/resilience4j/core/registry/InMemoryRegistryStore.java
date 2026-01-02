@@ -74,6 +74,7 @@ public class InMemoryRegistryStore<E> implements RegistryStore<E> {
             future = created;
             try {
                 E value = mappingFunction.apply(key);     // ***Compute outside map lock*** (no pinning)
+                Objects.requireNonNull(value, "Mapping function must not return null for key: " + key);
                 future.complete(value);
             } catch (Throwable t) {
                 // Only cleanup if I'm the first to complete exceptionally → retry possible
@@ -87,15 +88,23 @@ public class InMemoryRegistryStore<E> implements RegistryStore<E> {
     }
 
     @Override
+    @Nullable
     public E putIfAbsent(String key, E value) {
         Objects.requireNonNull(key, "Key cannot be null");
         Objects.requireNonNull(value, "Value cannot be null");
-        
+
         CompletableFuture<E> future = entryMap.putIfAbsent(key, CompletableFuture.completedFuture(value));
-        if (isSuccessfullyCompleted(future)) {
-            return future.join();
+        if (future != null) {
+            try {
+                // Wait for computation to complete and return existing value
+                // join() uses LockSupport.park() internally - no virtual thread pinning
+                return future.join();
+            } catch (Exception e) {
+                // CompletionException from failed computeIfAbsent - treat as "no valid existing value"
+                return null;
+            }
         }
-        return null;
+        return null;  // Successfully inserted new value
     }
 
     @Override
@@ -110,8 +119,13 @@ public class InMemoryRegistryStore<E> implements RegistryStore<E> {
     @Override
     public Optional<E> remove(String name) {
         CompletableFuture<E> future = entryMap.remove(name);
-        if (isSuccessfullyCompleted(future)) {
-            return Optional.ofNullable(future.join());
+        if (future != null) {
+            try {
+                return Optional.ofNullable(future.join());
+            } catch (Exception e) {
+                // CompletionException from failed computeIfAbsent - treat as "no value"
+                return Optional.empty();
+            }
         }
         return Optional.empty();
     }
@@ -119,8 +133,13 @@ public class InMemoryRegistryStore<E> implements RegistryStore<E> {
     @Override
     public Optional<E> replace(String name, E newEntry) {
         CompletableFuture<E> future = entryMap.replace(name, CompletableFuture.completedFuture(newEntry));
-        if (isSuccessfullyCompleted(future)) {
-            return Optional.ofNullable(future.join());
+        if (future != null) {
+            try {
+                return Optional.ofNullable(future.join());
+            } catch (Exception e) {
+                // CompletionException from failed computeIfAbsent - treat as "no value"
+                return Optional.empty();
+            }
         }
         return Optional.empty();
     }

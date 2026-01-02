@@ -56,11 +56,13 @@ public class NamingThreadFactory implements ThreadFactory {
         Thread thread = ExecutorServiceFactory.getThreadType() == ThreadType.VIRTUAL
             ? Thread.ofVirtual().name(name, 0).unstarted(runnable)
             : new Thread(group, runnable, name, 0);
-        if (thread.isDaemon()) {
-            thread.setDaemon(false);
-        }
-        if (thread.getPriority() != Thread.NORM_PRIORITY) {
-            thread.setPriority(Thread.NORM_PRIORITY);
+        if (!thread.isVirtual()) {
+            if (thread.isDaemon()) {
+                thread.setDaemon(false);
+            }
+            if (thread.getPriority() != Thread.NORM_PRIORITY) {
+                thread.setPriority(Thread.NORM_PRIORITY);
+            }
         }
         return thread;
     }

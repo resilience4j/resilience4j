@@ -118,28 +118,12 @@ public class ThreadModeTestBaseTest {
 
     /**
      * Concrete implementation of ThreadModeTestBase for testing purposes.
-     * Exposes protected methods for verification.
+     * All methods are already public in the base class, so no overrides needed.
      */
     private static class TestableThreadModeTestBase extends ThreadModeTestBase {
-        
+
         public TestableThreadModeTestBase(ThreadType threadType) {
             super(threadType);
-        }
-        
-        public void setUpThreadMode() {
-            super.setUpThreadMode();
-        }
-        
-        public void cleanUpThreadMode() {
-            super.cleanUpThreadMode();
-        }
-        
-        public boolean isVirtualThreadMode() {
-            return super.isVirtualThreadMode();
-        }
-        
-        public String getThreadModeDescription() {
-            return super.getThreadModeDescription();
         }
     }
 

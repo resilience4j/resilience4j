@@ -279,7 +279,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
                     // Fast execution to test concurrency without triggering hedge
                     Callable<String> task = () -> {
-                        Thread.sleep(5 + (threadId % 5)); // Very fast, variable delay
+                        Thread.sleep(5L + (threadId % 5)); // Very fast, variable delay
                         return "result-" + threadId;
                     };
                     String result = hedge.submit(task, hedgeExecutor).get(5, TimeUnit.SECONDS);
@@ -335,7 +335,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
                     // Slow execution to potentially trigger hedge
                     Callable<String> task = () -> {
-                        Thread.sleep(50 + (threadId * 10)); // Longer than hedge delay
+                        Thread.sleep(50L + threadId * 10L); // Longer than hedge delay
                         return "hedge-result-" + threadId;
                     };
                     String result = hedge.submit(task, hedgeExecutor).get(10, TimeUnit.SECONDS);

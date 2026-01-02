@@ -20,7 +20,6 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagator;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,14 +55,8 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
         super(threadType);
     }
 
-    @Before
-    public void setUp() {
-        setUpThreadMode(); // Set up thread mode from ThreadModeTestBase
-    }
-
     @After
     public void tearDown() {
-        cleanUpThreadMode(); // Clean up thread mode from ThreadModeTestBase
         MDC.clear(); // Clean up any MDC values
     }
 
@@ -360,7 +353,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
         ThreadLocal<Integer> intThreadLocal = new ThreadLocal<>();
         
         String stringValue = "string-value-" + threadType;
-        Integer intValue = 42 + threadType.hashCode(); // Different value per mode
+        int intValue = 42 + threadType.hashCode(); // Different value per mode
         
         stringThreadLocal.set(stringValue);
         intThreadLocal.set(intValue);

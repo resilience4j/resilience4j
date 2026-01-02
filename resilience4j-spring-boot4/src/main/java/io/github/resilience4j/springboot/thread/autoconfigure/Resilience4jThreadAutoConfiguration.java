@@ -1,10 +1,10 @@
-package io.github.resilience4j.springboot3.thread.autoconfigure;
+package io.github.resilience4j.springboot.thread.autoconfigure;
 
-import io.github.resilience4j.springboot3.bulkhead.autoconfigure.BulkheadAutoConfiguration;
-import io.github.resilience4j.springboot3.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
-import io.github.resilience4j.springboot3.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
-import io.github.resilience4j.springboot3.retry.autoconfigure.RetryAutoConfiguration;
-import io.github.resilience4j.springboot3.timelimiter.autoconfigure.TimeLimiterAutoConfiguration;
+import io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadAutoConfiguration;
+import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBreakerAutoConfiguration;
+import io.github.resilience4j.springboot.ratelimiter.autoconfigure.RateLimiterAutoConfiguration;
+import io.github.resilience4j.springboot.retry.autoconfigure.RetryAutoConfiguration;
+import io.github.resilience4j.springboot.timelimiter.autoconfigure.TimeLimiterAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * <p>This configuration is activated iff the property {@code resilience4j.thread.type} is present.
  * If the system property is already set (e.g. via JVM arg) it is left untouched so that
  * command-line options win over Spring configuration.</p>
- * 
+ *
  * @author kanghyun.yang
  * @since 3.0.0
  */

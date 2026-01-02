@@ -205,7 +205,7 @@ public class VirtualThreadConfigurationTest {
     }
 
     @Test
-    public void shouldDocumentEnvironmentVariableSupport() {
+    public void shouldAcceptValidEnvironmentVariableValues() {
         assumeTrue("Virtual threads require Java 21+", isJava21OrLater());
         
         // This test documents that RESILIENCE4J_THREAD_TYPE environment variable

@@ -28,8 +28,6 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
 
     @Test
     public void acquireBigNumberOfPermitsAtStartOfCycleTest() {
-        System.out.println("Running acquireBigNumberOfPermitsAtStartOfCycleTest in " + getThreadModeDescription());
-        
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(500_000_000L))
@@ -38,7 +36,7 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
         RateLimiter limiter = buildRateLimiter(config);
         RateLimiter.Metrics metrics = limiter.getMetrics();
 
-        waitForRefresh(metrics, config, '.');
+        waitForRefresh(metrics, config);
 
         boolean firstPermission = limiter.acquirePermission(5);
         then(firstPermission).describedAs("First permission acquisition in " + getThreadModeDescription()).isTrue();
@@ -47,18 +45,14 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
         boolean firstNoPermission = limiter.acquirePermission(1);
         then(firstNoPermission).describedAs("Should reject additional permission in " + getThreadModeDescription()).isFalse();
 
-        waitForRefresh(metrics, config, '*');
+        waitForRefresh(metrics, config);
 
         boolean retryInNewCyclePermission = limiter.acquirePermission(1);
         then(retryInNewCyclePermission).describedAs("Retry after refresh in " + getThreadModeDescription()).isTrue();
-        
-        System.out.println("✅ acquireBigNumberOfPermitsAtStartOfCycleTest passed in " + getThreadModeDescription());
     }
 
     @Test
     public void tryToAcquireBigNumberOfPermitsAtEndOfCycleTest() {
-        System.out.println("Running tryToAcquireBigNumberOfPermitsAtEndOfCycleTest in " + getThreadModeDescription());
-        
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -67,7 +61,7 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
         RateLimiter limiter = buildRateLimiter(config);
         RateLimiter.Metrics metrics = limiter.getMetrics();
 
-        waitForRefresh(metrics, config, '.');
+        waitForRefresh(metrics, config);
 
         boolean firstPermission = limiter.acquirePermission(1);
         then(firstPermission).describedAs("First permission (1 permit) in " + getThreadModeDescription()).isTrue();
@@ -76,45 +70,37 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
         boolean firstNoPermission = limiter.acquirePermission(5);
         then(firstNoPermission).describedAs("Should reject 5 more permits (only 4 left) in " + getThreadModeDescription()).isFalse();
 
-        waitForRefresh(metrics, config, '*');
+        waitForRefresh(metrics, config);
 
         boolean retryInSecondCyclePermission = limiter.acquirePermission(5);
         then(retryInSecondCyclePermission).describedAs("Should acquire 5 permits after refresh in " + getThreadModeDescription()).isTrue();
-        
-        System.out.println("✅ tryToAcquireBigNumberOfPermitsAtEndOfCycleTest passed in " + getThreadModeDescription());
     }
 
     @Test
     public void tryToAcquirePermitsAfterDrainBeforeCycleEndsTest() {
-        System.out.println("Running tryToAcquirePermitsAfterDrainBeforeCycleEndsTest in " + getThreadModeDescription());
-        
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
             .timeoutDuration(Duration.ZERO)
             .build();
         RateLimiter limiter = buildRateLimiter(config);
-        
+
         RateLimiter.Metrics metrics = limiter.getMetrics();
         ensureRefreshIsComplete(metrics, config);
-        
+
         limiter.drainPermissions();
-        
+
         boolean firstNoPermission = limiter.acquirePermission();
         then(firstNoPermission).describedAs("Should not acquire permission after draining in " + getThreadModeDescription()).isFalse();
-        
+
         ensureNextCycleStarted(metrics, config);
-        
+
         boolean retryInSecondCyclePermission = limiter.acquirePermission();
         then(retryInSecondCyclePermission).describedAs("Should acquire permission after cycle refresh in " + getThreadModeDescription()).isTrue();
-        
-        System.out.println("✅ tryToAcquirePermitsAfterDrainBeforeCycleEndsTest passed in " + getThreadModeDescription());
     }
 
     @Test
     public void drainCycleWhichAlreadyHashNoPremitsLeftTest() {
-        System.out.println("Running drainCycleWhichAlreadyHashNoPremitsLeftTest in " + getThreadModeDescription());
-        
         RateLimiterConfig config = RateLimiterConfig.custom()
             .limitForPeriod(10)
             .limitRefreshPeriod(Duration.ofNanos(250_000_000L))
@@ -123,7 +109,7 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
         RateLimiter limiter = buildRateLimiter(config);
         RateLimiter.Metrics metrics = limiter.getMetrics();
 
-        waitForRefresh(metrics, config, '.');
+        waitForRefresh(metrics, config);
 
         limiter.drainPermissions();
         boolean firstPermission = limiter.acquirePermission(10);
@@ -135,27 +121,19 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
         Object event = eventAfterDrainCatcher.get();
         then(event).describedAs("Event should be RateLimiterOnDrainedEvent in " + getThreadModeDescription()).isInstanceOf(RateLimiterOnDrainedEvent.class);
         then(((RateLimiterOnDrainedEvent) event).getNumberOfPermits()).describedAs("Drained permits should be zero in " + getThreadModeDescription()).isZero();
-        
-        System.out.println("✅ drainCycleWhichAlreadyHashNoPremitsLeftTest passed in " + getThreadModeDescription());
     }
 
-    protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config,
-                                  char printedWhileWaiting) {
-        System.out.print("Waiting for refresh: ");
+    protected void waitForRefresh(RateLimiter.Metrics metrics, RateLimiterConfig config) {
         try {
             await()
                 .pollInterval(25, MILLISECONDS)
                 .atMost(config.getLimitRefreshPeriod().multipliedBy(3).toMillis(), MILLISECONDS)
-                .until(() -> {
-                    System.out.print(printedWhileWaiting);
-                    return metrics.getAvailablePermissions() == config.getLimitForPeriod();
-                });
+                .until(() -> metrics.getAvailablePermissions() == config.getLimitForPeriod());
         } catch (Exception e) {
-            throw new AssertionError("Failed to wait for refresh: " + e.getMessage() + 
-                ". Current permits: " + metrics.getAvailablePermissions() + 
+            throw new AssertionError("Failed to wait for refresh: " + e.getMessage() +
+                ". Current permits: " + metrics.getAvailablePermissions() +
                 ", Expected: " + config.getLimitForPeriod(), e);
         }
-        System.out.println();
     }
     
     protected void ensureNextCycleStarted(RateLimiter.Metrics metrics, RateLimiterConfig config) {

@@ -1,7 +1,5 @@
 package io.github.resilience4j.core;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -36,16 +34,6 @@ public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
      */
     public ExecutorServiceFactoryTest(ThreadType threadType) {
         super(threadType);
-    }
-
-    @Before
-    public void setUp() {
-        setUpThreadMode(); // Set up thread mode from ThreadModeTestBase
-    }
-
-    @After
-    public void tearDown() {
-        cleanUpThreadMode(); // Clean up thread mode from ThreadModeTestBase
     }
 
     @Test

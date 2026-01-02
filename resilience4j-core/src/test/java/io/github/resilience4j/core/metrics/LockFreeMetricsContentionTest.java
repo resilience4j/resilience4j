@@ -2,14 +2,12 @@ package io.github.resilience4j.core.metrics;
 
 import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,24 +21,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(Parameterized.class)
 public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
 
-    @Parameterized.Parameters(name = "threadMode={0}")
-    public static Collection<Object[]> data() {
-        return threadModes();
-    }
-
     public LockFreeMetricsContentionTest(ThreadType threadType) {
         super(threadType);
     }
 
     @Before
     public void setUp() {
-        setUpThreadMode();
         System.out.println("Running LockFreeMetricsContentionTest in " + getThreadModeDescription());
-    }
-
-    @After
-    public void tearDown() {
-        cleanUpThreadMode();
     }
 
     @Test
@@ -58,7 +45,9 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         AtomicInteger failureCount = new AtomicInteger(0);
 
         // When: multiple threads record metrics concurrently
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        ExecutorService executor = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(threadCount);
         try {
             List<Future<?>> futures = new ArrayList<>();
 
@@ -142,7 +131,9 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         CountDownLatch doneLatch = new CountDownLatch(threadCount);
 
         // When: threads record known numbers of successes and errors
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        ExecutorService executor = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(threadCount);
         try {
             for (int i = 0; i < threadCount; i++) {
                 executor.submit(() -> {
@@ -210,7 +201,9 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         }
 
         // When: all threads compete to update metrics
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        ExecutorService executor = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(threadCount);
         try {
             List<Future<?>> futures = new ArrayList<>();
 
@@ -267,7 +260,9 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         CountDownLatch doneLatch = new CountDownLatch(writerCount + readerCount);
 
         // When: writers update metrics while readers read snapshots
-        ExecutorService executor = Executors.newFixedThreadPool(writerCount + readerCount);
+        ExecutorService executor = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(writerCount + readerCount);
         try {
             // Writers
             for (int i = 0; i < writerCount; i++) {

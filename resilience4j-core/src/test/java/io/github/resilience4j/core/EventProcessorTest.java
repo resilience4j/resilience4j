@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.core;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,13 +55,7 @@ public class EventProcessorTest extends ThreadModeTestBase {
 
     @Before
     public void setUp() {
-        setUpThreadMode(); // Set up thread mode from ThreadModeTestBase
         logger = mock(Logger.class);
-    }
-
-    @After
-    public void tearDown() {
-        cleanUpThreadMode(); // Clean up thread mode from ThreadModeTestBase
     }
 
     @Test
@@ -204,6 +197,12 @@ public class EventProcessorTest extends ThreadModeTestBase {
         waitForConsumerRegistration.countDown();
 
         then(logger).should(times(1)).info("1");
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testOnEventRejectsNullConsumer() {
+        EventProcessor<Number> eventProcessor = new EventProcessor<>();
+        eventProcessor.onEvent(null);
     }
 
     @Test

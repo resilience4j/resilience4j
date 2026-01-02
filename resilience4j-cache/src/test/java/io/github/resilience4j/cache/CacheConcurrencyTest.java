@@ -125,7 +125,9 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
         
         final int numThreads = THREAD_COUNT;
         final int operationsPerThread = OPERATIONS_PER_THREAD;
-        executorService = Executors.newFixedThreadPool(numThreads);
+        executorService = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
         final CountDownLatch completeLatch = new CountDownLatch(numThreads);
         final AtomicInteger successCount = new AtomicInteger(0);
@@ -190,7 +192,9 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
         
         final int numThreads = THREAD_COUNT;
         final int operationsPerThread = OPERATIONS_PER_THREAD;
-        executorService = Executors.newFixedThreadPool(numThreads);
+        executorService = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
         final CountDownLatch completeLatch = new CountDownLatch(numThreads);
         final AtomicInteger callCount = new AtomicInteger(0);
@@ -251,7 +255,9 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
     @Test
     public void shouldHandleRaceConditions() throws Exception {
         final int numThreads = THREAD_COUNT;
-        executorService = Executors.newFixedThreadPool(numThreads);
+        executorService = isVirtualThreadMode()
+            ? Executors.newVirtualThreadPerTaskExecutor()
+            : Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
         final CountDownLatch completeLatch = new CountDownLatch(numThreads);
         final AtomicInteger supplierCallCount = new AtomicInteger(0);

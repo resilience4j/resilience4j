@@ -72,14 +72,14 @@ public abstract class ThreadModeTestBase {
     /**
      * Returns true if running in virtual thread mode.
      */
-    protected boolean isVirtualThreadMode() {
+    public boolean isVirtualThreadMode() {
         return threadType == ThreadType.VIRTUAL;
     }
     
     /**
      * Returns a descriptive string for the current thread mode.
      */
-    protected String getThreadModeDescription() {
+    public String getThreadModeDescription() {
         return isVirtualThreadMode() ? "Virtual Thread Mode" : "Platform Thread Mode";
     }
 }

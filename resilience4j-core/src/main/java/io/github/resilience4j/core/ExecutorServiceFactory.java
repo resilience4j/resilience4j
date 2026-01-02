@@ -37,8 +37,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *     <li>If still not specified, the default is {@code platform}.</li>
  * </ol>
  * <p>
- * Spring Boot 3 integration modules may override this factory by registering a
- * {@code ExecutorServiceFactoryCustomizer} Bean in order to read {@code application.yml}.
+ * Spring Boot 3 integration modules can configure the thread type via the
+ * {@code resilience4j.thread.type} property in {@code application.yml}.
  * 
  * @author kanghyun.yang
  * @since 3.0.0
@@ -79,11 +79,9 @@ public final class ExecutorServiceFactory {
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(String poolName, ThreadType threadType) {
         if (threadType == ThreadType.VIRTUAL) {
             /*
-             * The JDK currently does not ship a dedicated virtual-thread scheduler factory
-             * (java.util.concurrent.Executors API is still incubating).
-             * We therefore create a scheduled executor backed by a virtual-thread per task
-             * executor.  Implementation detail: use {@code Runnable::run} as the thread
-             * factory and rely on virtual threads for actual concurrency.
+             * Create a single-thread scheduled executor whose worker thread is created by
+             * the virtual-thread {@link ThreadFactory} returned from
+             * {@link #newVirtualThreadFactory(String)}.
              */
             return Executors.newSingleThreadScheduledExecutor(newVirtualThreadFactory(poolName));
         } else {

@@ -22,7 +22,6 @@ import com.jayway.awaitility.core.ConditionFactory;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,7 +31,6 @@ import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
@@ -47,11 +45,6 @@ import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return threadModes();
-    }
 
     public SemaphoreBasedRateLimiterImplTest(ThreadType threadType) {
         super(threadType);
@@ -80,18 +73,11 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
 
     @Before
     public void init() {
-        setUpThreadMode(); // Use ThreadModeTestBase setup instead of forcing platform mode
-
         config = RateLimiterConfig.custom()
             .timeoutDuration(TIMEOUT)
             .limitRefreshPeriod(REFRESH_PERIOD)
             .limitForPeriod(LIMIT)
             .build();
-    }
-
-    @After
-    public void cleanup() {
-        cleanUpThreadMode(); // Use ThreadModeTestBase cleanup
     }
 
     @Test

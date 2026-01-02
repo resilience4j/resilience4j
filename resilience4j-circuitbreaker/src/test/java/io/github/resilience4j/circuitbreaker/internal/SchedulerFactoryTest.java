@@ -2,13 +2,11 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,29 +16,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(Parameterized.class)
 public class SchedulerFactoryTest extends ThreadModeTestBase {
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return threadModes();
-    }
-
-    /**
-     * Constructor for parameterized tests.
-     *
-     * @param threadType the thread mode to test with ("platform" or "virtual")
-     */
     public SchedulerFactoryTest(ThreadType threadType) {
         super(threadType);
     }
 
     @Before
     public void setUp() {
-        setUpThreadMode(); // Set up thread mode from ThreadModeTestBase
         SchedulerFactory.getInstance().reset(); // Reset the factory before each test
-    }
-
-    @After
-    public void tearDown() {
-        cleanUpThreadMode(); // Clean up thread mode settings
     }
 
     @Test
