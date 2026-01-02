@@ -126,18 +126,22 @@ public class ThreadModeTestBaseTest {
             super(threadType);
         }
         
+        @Override
         public void setUpThreadMode() {
             super.setUpThreadMode();
         }
-        
+
+        @Override
         public void cleanUpThreadMode() {
             super.cleanUpThreadMode();
         }
-        
+
+        @Override
         public boolean isVirtualThreadMode() {
             return super.isVirtualThreadMode();
         }
-        
+
+        @Override
         public String getThreadModeDescription() {
             return super.getThreadModeDescription();
         }

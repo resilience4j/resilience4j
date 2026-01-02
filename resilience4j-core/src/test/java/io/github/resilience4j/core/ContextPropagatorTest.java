@@ -360,7 +360,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
         ThreadLocal<Integer> intThreadLocal = new ThreadLocal<>();
         
         String stringValue = "string-value-" + threadType;
-        Integer intValue = 42 + threadType.hashCode(); // Different value per mode
+        int intValue = 42 + threadType.hashCode(); // Different value per mode
         
         stringThreadLocal.set(stringValue);
         intThreadLocal.set(intValue);
