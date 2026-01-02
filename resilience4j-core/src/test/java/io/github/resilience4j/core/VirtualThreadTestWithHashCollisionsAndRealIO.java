@@ -260,12 +260,8 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
                     
                 } else {
                     // WRITE OPERATION: Create new entry with blocking I/O
-                    String writeKey;
-                    if (op < COLLISION_KEYS.length && threadId < COLLISION_KEYS.length) {
-                        writeKey = COLLISION_KEYS[threadId % COLLISION_KEYS.length] + "-" + op + "-" + threadId;
-                    } else {
-                        writeKey = "service-" + threadId + "-op-" + op + "-" + System.currentTimeMillis();
-                    }
+                    // Use collision keys for all threads - modulo ensures valid index for any threadId
+                    String writeKey = COLLISION_KEYS[threadId % COLLISION_KEYS.length] + "-" + op + "-" + threadId;
                     
                     long writeStartTime = System.currentTimeMillis();
                     result = component.processEntry(writeKey, k -> {
