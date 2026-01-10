@@ -38,6 +38,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -359,14 +360,14 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get())
+        Try.of(() -> retryableSupplier.get())
             .recover((throwable) -> "Hello world from recovery function");
         assertThat(Thread.currentThread().isInterrupted()).isTrue();
         Thread.interrupted();
     }
 
     @Test
-    public void shouldThrowNullPointerExceptionWhenInterruptedDuringRetryOnResult() {
+    public void shouldThrowCancellationExceptionWhenInterruptedDuringRetryOnResult() {
         CheckedConsumer<Long> previousSleepFunction = RetryImpl.sleepFunction;
         try {
             RetryImpl.sleepFunction = sleep -> {
@@ -382,7 +383,8 @@ public class SupplierRetryTest {
             Supplier<String> decorated = Retry.decorateSupplier(retry, () -> "any");
 
             assertThatThrownBy(decorated::get)
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(CancellationException.class)
+                .hasMessage("Thread was interrupted during retry wait interval");
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
             RetryImpl.sleepFunction = previousSleepFunction;
