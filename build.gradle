@@ -2,7 +2,7 @@ plugins {
     id "org.sonarqube" version "3.5.0.2730"
     id 'org.asciidoctor.jvm.convert' version '2.4.0'
     id "org.gradle.test-retry" version "1.5.10"
-    id "io.github.gradle-nexus.publish-plugin"  version "1.1.0"
+    id "io.github.gradle-nexus.publish-plugin"  version "2.0.0"
     id 'biz.aQute.bnd.builder' version '7.1.0' apply false
     id "me.champeau.jmh" version "0.6.8"
     id 'idea'
@@ -50,7 +50,8 @@ dependencies {
 nexusPublishing {
     repositories {
         sonatype {
-            stagingProfileId = '64e8d6879f4e95'
+            nexusUrl = uri("https://ossrh-staging-api.central.sonatype.com/service/local/")
+            snapshotRepositoryUrl = uri("https://central.sonatype.com/repository/maven-snapshots/")
         }
     }
 }
