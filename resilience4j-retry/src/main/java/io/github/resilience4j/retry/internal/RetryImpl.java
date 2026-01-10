@@ -33,6 +33,7 @@ import io.github.resilience4j.retry.event.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -287,10 +288,21 @@ public class RetryImpl<T> implements Retry {
                 sleepFunction.accept(interval);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                throw lastRuntimeException.get();
+                RuntimeException last = lastRuntimeException.get();
+                if (last != null) {
+                    throw last;
+                }
+                CancellationException cancellationException = new CancellationException(
+                    "Thread was interrupted during retry wait interval");
+                cancellationException.initCause(ex);
+                throw cancellationException;
             }
             catch (Throwable ex) {
-                throw lastRuntimeException.get();
+                RuntimeException last = lastRuntimeException.get();
+                if (last != null) {
+                    throw last;
+                }
+                throw new IllegalStateException("Unexpected exception during retry wait interval", ex);
             }
         }
 
