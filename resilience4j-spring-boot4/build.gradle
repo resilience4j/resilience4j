@@ -30,7 +30,7 @@ dependencies {
     testImplementation(project(":resilience4j-rxjava2"))
     testImplementation(project(":resilience4j-rxjava3"))
     testImplementation(project(":resilience4j-test"))
-    testImplementation(libs.feign.wiremock)
+    testImplementation(libs.wiremock)
     testImplementation(libs.metrics.core)
     testImplementation(libs.micrometer.registry.prometheus)
     testImplementation(libs.reactor.core)

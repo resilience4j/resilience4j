@@ -38,6 +38,7 @@ junit-bom = { module = "org.junit:junit-bom", version = "6.0.3" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
+wiremock = { module = "org.wiremock:wiremock", version = "3.13.1" }
 
 # resilience4j-cache
 jcache = { module = "javax.cache:cache-api", version = "1.1.0" }
@@ -54,7 +55,6 @@ mock-clock = { module = "com.statemachinesystems:mock-clock", version = "1.0" }
 
 # resilience4j-feign
 feign-core = { module = "io.github.openfeign:feign-core", version = "12.0" }
-feign-wiremock = { module = "org.wiremock:wiremock", version = "3.13.1" }
 
 # resilience4j-kotlin
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version = "1.9.25" }
@@ -107,6 +107,7 @@ rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.0.0" }
 aspectj-rt = { module = "org.aspectj:aspectjrt", version = "1.9.2" }
 spring6-context = { module = "org.springframework:spring-context", version.ref = "spring6" }
 spring6-core = { module = "org.springframework:spring-core", version.ref = "spring6" }
+spring6-web = { module = "org.springframework:spring-web", version.ref = "spring6" }
 
 # resilience4j-spring-boot3
 spring-boot3-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot3" }
