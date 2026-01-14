@@ -77,7 +77,6 @@ ext {
             spring6_core: "org.springframework:spring-core:${spring6Version}",
             spring6_context: "org.springframework:spring-context:${spring6Version}",
             spring6_web: "org.springframework:spring-web:${spring6Version}",
-            spring6_webflux: "org.springframework:spring-webflux:${spring6Version}",
             spring_boot3_aop: "org.springframework.boot:spring-boot-starter-aop:${springBoot3Version}",
             spring_boot3_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBoot3Version}",
             spring_boot3_web: "org.springframework.boot:spring-boot-starter-web:${springBoot3Version}",
