@@ -30,7 +30,8 @@ ext {
     feignVersion = '12.0'
     reactiveStreamsVersion = '1.0.2'
     micrometerVersion = '1.16.0'
-    wiremockVersion = '2.26.0'
+    wiremockJre8Version = '2.26.0'
+    wiremockVersion = '3.13.2'
     validationApiVersion = '2.0.1.Final'
     kotlinCoroutinesVersion = '1.6.4'
     blockhoundVersion = '1.0.6.RELEASE'
@@ -63,6 +64,7 @@ ext {
             mock_clock: "com.statemachinesystems:mock-clock:1.0",
             blockhound: "io.projectreactor.tools:blockhound:${blockhoundVersion}",
             lincheck: "org.jetbrains.kotlinx:lincheck:${lincheck}",
+            wiremock: "org.wiremock:wiremock:${wiremockVersion}",
 
             // Vert.x addon
             vertx: "io.vertx:vertx-core:${vertxVersion}",
@@ -74,6 +76,7 @@ ext {
             // Spring Boot3 addon
             spring6_core: "org.springframework:spring-core:${spring6Version}",
             spring6_context: "org.springframework:spring-context:${spring6Version}",
+            spring6_web: "org.springframework:spring-web:${spring6Version}",
             spring_boot3_aop: "org.springframework.boot:spring-boot-starter-aop:${springBoot3Version}",
             spring_boot3_actuator: "org.springframework.boot:spring-boot-starter-actuator:${springBoot3Version}",
             spring_boot3_web: "org.springframework.boot:spring-boot-starter-web:${springBoot3Version}",
@@ -111,7 +114,7 @@ ext {
 
             // Feign addon
             feign: "io.github.openfeign:feign-core:${feignVersion}",
-            feign_wiremock: "com.github.tomakehurst:wiremock-jre8:${wiremockVersion}",
+            feign_wiremock: "com.github.tomakehurst:wiremock-jre8:${wiremockJre8Version}",
 
             // Metrics addon
             metrics: "io.dropwizard.metrics:metrics-core:${metricsVersion}",
