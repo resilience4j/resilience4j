@@ -25,11 +25,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
 import java.lang.reflect.Method;
+import java.util.regex.Pattern;
 
 public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelResolver {
-    private static final String PLACEHOLDER_SPEL_REGEX = "^[$#]\\{.+}$";
-    private static final String METHOD_SPEL_REGEX = "^#.+$";
-    private static final String BEAN_SPEL_REGEX = "^@.+";
+    private static final Pattern PLACEHOLDER_SPEL_REGEX = Pattern.compile("^[$#]\\{.+}$");
+    private static final Pattern METHOD_SPEL_REGEX = Pattern.compile("^#.+$");
+    private static final Pattern BEAN_SPEL_REGEX = Pattern.compile("^@.+");
 
     private final SpelExpressionParser expressionParser;
     private final ParameterNameDiscoverer parameterNameDiscoverer;
@@ -48,11 +49,11 @@ public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelReso
             return spelExpression;
         }
 
-        if (spelExpression.matches(PLACEHOLDER_SPEL_REGEX) && stringValueResolver != null) {
+        if (PLACEHOLDER_SPEL_REGEX.matcher(spelExpression).matches() && stringValueResolver != null) {
             return stringValueResolver.resolveStringValue(spelExpression);
         }
 
-        if (spelExpression.matches(METHOD_SPEL_REGEX)) {
+        if (METHOD_SPEL_REGEX.matcher(spelExpression).matches()) {
             SpelRootObject rootObject = new SpelRootObject(method, arguments);
             MethodBasedEvaluationContext evaluationContext = new MethodBasedEvaluationContext(rootObject, method, arguments, parameterNameDiscoverer);
             Object evaluated = expressionParser.parseExpression(spelExpression).getValue(evaluationContext);
@@ -60,7 +61,7 @@ public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelReso
             return (String) evaluated;
         }
 
-        if (spelExpression.matches(BEAN_SPEL_REGEX)) {
+        if (BEAN_SPEL_REGEX.matcher(spelExpression).matches()) {
             SpelRootObject rootObject = new SpelRootObject(method, arguments);
 
             MethodBasedEvaluationContext evaluationContext = new MethodBasedEvaluationContext(rootObject, method, arguments, parameterNameDiscoverer);
