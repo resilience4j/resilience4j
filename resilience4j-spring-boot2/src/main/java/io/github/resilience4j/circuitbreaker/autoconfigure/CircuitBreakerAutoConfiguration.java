@@ -31,7 +31,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 
@@ -53,18 +52,25 @@ public class CircuitBreakerAutoConfiguration {
         this.environment = environment;
     }
 
+    /**
+     * Registers a custom converter for exception class binding.
+     * <p>
+     * Note: This converter is registered using @ConfigurationPropertiesBinding, which automatically
+     * adds it to Spring Boot's conversion service without needing to create a custom ConversionService bean.
+     * <p>
+     * Previous versions of this class included a genericConversionService() bean that caused issue #1448:
+     * Duration properties (like "2s", "0.5s", "100ms") failed to parse because the custom ConversionService
+     * lacked Spring Boot's default Duration converters. This has been fixed by removing that bean and relying
+     * on Spring Boot's built-in conversion service with our converter registered via @ConfigurationPropertiesBinding.
+     *
+     * @return the converter for handling exception class name binding
+     * @see <a href="https://github.com/resilience4j/resilience4j/issues/1448">Issue #1448</a>
+     */
     @Bean
     @ConfigurationPropertiesBinding
     public IgnoreClassBindingExceptionConverter ignoreClassBindingExceptionsConverter() {
         boolean ignoreClassBindingExceptions = isIgnoreClassBindingExceptionsEnabled();
         return new IgnoreClassBindingExceptionConverter(ignoreClassBindingExceptions);
-    }
-
-    @Bean
-    public GenericConversionService genericConversionService() {
-        GenericConversionService genericConversionService = new GenericConversionService();
-        genericConversionService.addConverter(ignoreClassBindingExceptionsConverter());
-        return genericConversionService;
     }
 
     private boolean isIgnoreClassBindingExceptionsEnabled() {
