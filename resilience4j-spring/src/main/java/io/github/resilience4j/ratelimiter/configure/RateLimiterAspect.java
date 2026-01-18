@@ -54,7 +54,7 @@ import java.util.concurrent.CompletionStage;
  *     }
  * </code></pre>
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
- * through a a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given
+ * through a {@link io.github.resilience4j.ratelimiter.RateLimiter} according to the given
  * config.
  * <p>
  * The fallbackMethod parameter signature must match either:
