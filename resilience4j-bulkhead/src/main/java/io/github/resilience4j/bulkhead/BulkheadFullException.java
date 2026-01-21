@@ -22,9 +22,12 @@ package io.github.resilience4j.bulkhead;
  * A {@link BulkheadFullException} signals that the bulkhead is full.
  */
 public class BulkheadFullException extends RuntimeException {
+    private final String bulkheadName;
 
-    private BulkheadFullException(String message, boolean writableStackTrace) {
+    private BulkheadFullException(String bulkheadName, String message, boolean writableStackTrace) {
         super(message, null, false, writableStackTrace);
+
+        this.bulkheadName = bulkheadName;
     }
 
     /**
@@ -36,17 +39,19 @@ public class BulkheadFullException extends RuntimeException {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
             .isWritableStackTraceEnabled();
 
+        String bulkheadName = bulkhead.getName();
+
         String message;
         if (Thread.currentThread().isInterrupted()) {
             message = String
                 .format("Bulkhead '%s' is full and thread was interrupted during permission wait",
-                    bulkhead.getName());
+                    bulkheadName);
         } else {
             message = String.format("Bulkhead '%s' is full and does not permit further calls",
-                bulkhead.getName());
+                bulkheadName);
         }
 
-        return new BulkheadFullException(message, writableStackTraceEnabled);
+        return new BulkheadFullException(bulkheadName, message, writableStackTraceEnabled);
     }
 
     /**
@@ -58,9 +63,15 @@ public class BulkheadFullException extends RuntimeException {
         boolean writableStackTraceEnabled = bulkhead.getBulkheadConfig()
             .isWritableStackTraceEnabled();
 
-        String message = String
-            .format("Bulkhead '%s' is full and does not permit further calls", bulkhead.getName());
+        String bulkheadName = bulkhead.getName();
 
-        return new BulkheadFullException(message, writableStackTraceEnabled);
+        String message = String
+            .format("Bulkhead '%s' is full and does not permit further calls", bulkheadName);
+
+        return new BulkheadFullException(bulkheadName, message, writableStackTraceEnabled);
+    }
+
+    public String getBulkheadName() {
+        return bulkheadName;
     }
 }
