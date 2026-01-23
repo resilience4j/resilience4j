@@ -879,17 +879,18 @@ public class CircuitBreakerConfig implements Serializable {
          * failure rate. Any exception matching or inheriting from one of the list should count as a
          * failure, unless ignored via {@link #ignoreExceptions(Class[])} or {@link
          * #ignoreException(Predicate)}.
-         *
-         * @param errorClasses the error classes that are recorded
-         * @return the CircuitBreakerConfig.Builder
-         * @see #ignoreExceptions(Class[]) ). Ignoring an exception has priority over recording an
-         * exception.
+         * <p>
+         * Ignoring an exception has priority over recording an exception.
          * <p>
          * Example: recordExceptions(Throwable.class) and ignoreExceptions(RuntimeException.class)
          * would capture all Errors and checked Exceptions, and ignore RuntimeExceptions.
          * <p>
          * For a more sophisticated exception management use the
-         * @see #recordException(Predicate) method
+         * {@link #recordException(Predicate)} method
+         *
+         * @param errorClasses the error classes that are recorded
+         * @return the CircuitBreakerConfig.Builder
+         * @see #ignoreExceptions(Class[])
          */
         @SuppressWarnings("unchecked")
         @SafeVarargs
