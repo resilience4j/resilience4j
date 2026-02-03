@@ -1,0 +1,99 @@
+# This workflow allows you to manually trigger a release to Maven Central
+# Usage: Go to Actions -> Release -> Run workflow -> Enter version (e.g., 3.0.0)
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 3.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: "Release to Maven Central"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Validate version format
+        run: |
+          if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z (e.g., 3.0.0)"
+            exit 1
+          fi
+          if [[ "${{ inputs.version }}" == *"SNAPSHOT"* ]]; then
+            echo "Error: Release version cannot contain SNAPSHOT"
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Update version in build.gradle
+        run: |
+          sed -i "s/version = '.*'/version = '${{ inputs.version }}'/" build.gradle
+          git add build.gradle
+          git commit -m "Release version ${{ inputs.version }}"
+
+      - name: Create and push tag
+        run: |
+          git tag -a "v${{ inputs.version }}" -m "Release version ${{ inputs.version }}"
+          git push origin "v${{ inputs.version }}"
+
+      - name: Build and test
+        uses: eskatos/gradle-command-action@v3.5.0
+        with:
+          arguments: check
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+
+      - name: Publish to Sonatype and release
+        uses: eskatos/gradle-command-action@v3.5.0
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USER }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PASSPHRASE }}
+        with:
+          arguments: publishToSonatype closeAndReleaseSonatypeStagingRepository
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Release ${{ inputs.version }}
+          body: |
+            Release version ${{ inputs.version }}
+            
+            See [RELEASENOTES.adoc](https://github.com/resilience4j/resilience4j/blob/master/RELEASENOTES.adoc) for details.
+          draft: false
+          prerelease: false
+
+      - name: Update to next SNAPSHOT version
+        run: |
+          NEXT_VERSION="${{ inputs.version }}"
+          IFS='.' read -r major minor patch <<< "$NEXT_VERSION"
+          NEXT_SNAPSHOT="$major.$((minor + 1)).0-SNAPSHOT"
+          sed -i "s/version = '.*'/version = '$NEXT_SNAPSHOT'/" build.gradle
+          git add build.gradle
+          git commit -m "Prepare next development iteration: $NEXT_SNAPSHOT"
+          git push origin HEAD:master
