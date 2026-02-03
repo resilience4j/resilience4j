@@ -96,4 +96,4 @@ jobs:
           sed -i "s/version = '.*'/version = '$NEXT_SNAPSHOT'/" build.gradle
           git add build.gradle
           git commit -m "Prepare next development iteration: $NEXT_SNAPSHOT"
-          git push origin HEAD:master
+          git push origin HEAD:${{ github.event.repository.default_branch }}
