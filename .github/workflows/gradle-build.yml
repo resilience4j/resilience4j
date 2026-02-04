@@ -3,16 +3,21 @@
 name: Build
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+  workflow_dispatch:
+
 jobs:
   validation:
     name: "Gradle wrapper validation"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.0
-      - uses: gradle/wrapper-validation-action@v3.5.0
+      - uses: actions/checkout@v6
+      - uses: gradle/actions/wrapper-validation@v3
+
   build:
     name: "Build and publish"
     runs-on: ubuntu-latest
@@ -21,14 +26,17 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4.2.0
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'gradle'
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v4.2.0
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
@@ -38,37 +46,69 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
+      - id: get-snapshot-version
+        name: Generate snapshot version
+        shell: bash
+        run: |
+          # expects git tag to be in format 'v0.1.0' or 'v0.1.0-rc1'
+          version=$(git describe --tag --abbrev=0 | cut -c 2-)
+          regex="^([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z0-9]+)?$"
+          if [[ $version =~ $regex ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+            pre_release="${BASH_REMATCH[4]:-}"
+
+            # increment patch version of the latest release to create new snapshot version
+            # when pre-release - continue snapshots of the same version
+            # v0.1.0    -> 0.1.1-SNAPSHOT
+            # v0.1.0-rc -> 0.1.0-SNAPSHOT
+            if [[ -z $pre_release ]]; then
+              patch=$(($patch + 1))
+            fi
+
+            snapshot_version="${major}.${minor}.${patch}"
+
+            if ! [[ $snapshot_version =~ $regex ]]; then
+              echo "SNAPSHOT version $snapshot_version is not a valid SemVer"
+              exit 1
+            fi
+
+            echo "${snapshot_version}-SNAPSHOT"
+            echo "snapshot-version=${snapshot_version}-SNAPSHOT" >> $GITHUB_OUTPUT
+          else
+            echo "Version $version is not a valid SemVer"
+            exit 1
+          fi
+
       - name: Build
-        id: gradle
-        uses: eskatos/gradle-command-action@v3.5.0
-        with:
-          arguments: check
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+        run: |
+          ./gradlew \
+            -Pversion=${{ steps.get-snapshot-version.outputs.snapshot-version }} \
+            check
+
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
         if: always()
         with:
           junit_files: '**/test-results/**/*.xml'
+
       - name: Analyze with SonarCloud
         continue-on-error: true
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''
-        uses: eskatos/gradle-command-action@v3.5.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          arguments: sonarqube -Psonar.organization=resilience4j
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+        run: |
+          ./gradlew \
+            -Pversion=${{ steps.get-snapshot-version.outputs.snapshot-version }} \
+            -Psonar.organization=resilience4j \
+            sonarqube
+
       - name: Publish to Sonatype
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        uses: eskatos/gradle-command-action@v3.5.0
-        env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USER }}
-          ORG_GRADLE_PROJECT_sonatypePassword : ${{ secrets.SONATYPE_PASSWORD }}
-        with:
-          arguments: publishToSonatype
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+        # only run on master and never on forks
+        if: github.ref == 'refs/heads/master' && github.repository == 'resilience4j/resilience4j'
+        run: |
+          ./gradlew \
+            -Pversion=${{ steps.get-snapshot-version.outputs.snapshot-version }} \
+            -PsonatypeUsername=${{ secrets.SONATYPE_USER }} \
+            -PsonatypePassword=${{ secrets.SONATYPE_PASSWORD }} \
+            publishAllPublicationsToSonatypeRepository closeSonatypeStagingRepository

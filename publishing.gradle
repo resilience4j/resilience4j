@@ -66,8 +66,13 @@ tasks.withType(Sign) {
 }
 
 signing {
+    def gpgKey = project.findProperty("gpgKey")
+    def gpgPassphrase = project.findProperty("gpgPassphrase")
+    required = !version.endsWith("SNAPSHOT")
+    useInMemoryPgpKeys(gpgKey, gpgPassphrase)
     sign publishing.publications
 }
+
 publishing {
     publications {
         resilience4j(MavenPublication) {

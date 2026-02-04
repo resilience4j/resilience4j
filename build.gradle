@@ -15,7 +15,7 @@ apply from: "${rootDir}/libraries.gradle"
 allprojects {
     apply plugin: 'jacoco'
 
-    version = '3.0.0-SNAPSHOT'
+    version = version == 'unspecified' ? '0.1.0-SNAPSHOT' : version
     group = 'io.github.resilience4j'
     description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
 
