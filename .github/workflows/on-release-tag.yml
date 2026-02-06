@@ -1,0 +1,48 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    # never run on forks
+    if: github.repository == 'resilience4j/resilience4j'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Get version from tag
+        id: get-version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          regex="^([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z0-9]+)?$"
+          if [[ $version =~ $regex ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          else
+            echo "Version $version is not a valid SemVer"
+            exit 1
+          fi
+
+      - name: Build
+        run: |
+          ./gradlew \
+            -Pversion=${{ steps.get-version.outputs.version }} \
+            publishToMavenLocal
+
+      - name: Upload release artifacts to Sonatype
+        run: |
+          ./gradlew \
+            -Pversion=${{ steps.get-version.outputs.version }} \
+            -PsonatypeUsername=${{ secrets.SONATYPE_USER }} \
+            -PsonatypePassword=${{ secrets.SONATYPE_PASSWORD }} \
+            -PgpgKey=${{ secrets.GPG_KEY }} \
+            -PgpgPassphrase=${{ secrets.GPG_PASSPHRASE }} \
+            publishAllPublicationsToSonatypeRepository closeAndReleaseSonatypeStagingRepository
