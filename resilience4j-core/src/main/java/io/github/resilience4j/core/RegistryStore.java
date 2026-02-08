@@ -16,6 +16,8 @@
 
 package io.github.resilience4j.core;
 
+import io.github.resilience4j.core.lang.Nullable;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
@@ -25,7 +27,7 @@ public interface RegistryStore<E> {
     E computeIfAbsent(String key,
         Function<? super String, ? extends E> mappingFunction);
 
-    E putIfAbsent(String key, E value);
+    @Nullable E putIfAbsent(String key, E value);
 
     Optional<E> find(String key);
 

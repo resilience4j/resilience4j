@@ -18,8 +18,6 @@
  */
 package io.github.resilience4j.core;
 
-import io.github.resilience4j.core.lang.Nullable;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +40,13 @@ public class EventProcessor<T> implements EventPublisher<T> {
         return !onEventConsumers.isEmpty() || !eventConsumerMap.isEmpty();
     }
 
+    /**
+     * Registers a consumer for events of the given class name.
+     *
+     * @param className     the fully qualified class name of the event type
+     * @param eventConsumer the event consumer to register
+     * @throws NullPointerException if {@code className} or {@code eventConsumer} is {@code null}
+     */
     @SuppressWarnings("unchecked")
     public void registerConsumer(String className, EventConsumer<? extends T> eventConsumer) {
         Objects.requireNonNull(className, "className");
@@ -69,9 +74,14 @@ public class EventProcessor<T> implements EventPublisher<T> {
         return consumed;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws NullPointerException if {@code onEventConsumer} is {@code null}
+     */
     @Override
-    public void onEvent(@Nullable EventConsumer<T> onEventConsumer) {
-        if (onEventConsumer == null) return;
+    public void onEvent(EventConsumer<T> onEventConsumer) {
+        Objects.requireNonNull(onEventConsumer, "eventConsumer must not be null");
         onEventConsumers.add(onEventConsumer);
     }
 }

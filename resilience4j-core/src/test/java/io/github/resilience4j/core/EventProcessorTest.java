@@ -206,6 +206,12 @@ public class EventProcessorTest extends ThreadModeTestBase {
         then(logger).should(times(1)).info("1");
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testOnEventRejectsNullConsumer() {
+        EventProcessor<Number> eventProcessor = new EventProcessor<>();
+        eventProcessor.onEvent(null);
+    }
+
     @Test
     public void testConcurrentConsumerRegistrationInBothThreadModes() throws Exception {
         System.out.println("Running testConcurrentConsumerRegistrationInBothThreadModes in " + getThreadModeDescription());
