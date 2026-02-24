@@ -54,7 +54,7 @@ import java.util.concurrent.*;
  *     }
  * </code></pre>
  * each time the {@code #fancyName(String)} method is invoked, the method's execution will pass
- * through a a {@link io.github.resilience4j.retry.Retry} according to the given config.
+ * through a {@link io.github.resilience4j.retry.Retry} according to the given config.
  * <p>
  * The fallbackMethod parameter signature must match either:
  * <p>
