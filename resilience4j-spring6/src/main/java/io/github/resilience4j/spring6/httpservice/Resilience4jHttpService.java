@@ -109,6 +109,7 @@ public final class Resilience4jHttpService {
         public <T> T build(Class<T> serviceType, String name) {
             Objects.requireNonNull(serviceType, "serviceType must not be null");
             Objects.requireNonNull(name, "name must not be null");
+            Objects.requireNonNull(factory, "factory must not be null");
 
             if (!serviceType.isInterface()) {
                 throw new IllegalArgumentException("serviceType must be an interface");
