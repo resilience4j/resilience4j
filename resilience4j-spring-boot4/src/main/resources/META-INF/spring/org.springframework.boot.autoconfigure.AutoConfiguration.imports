@@ -1,3 +1,5 @@
+io.github.resilience4j.springboot.thread.autoconfigure.Resilience4jThreadAutoConfiguration
+io.github.resilience4j.springboot.thread.autoconfigure.ThreadMetricsAutoConfiguration
 io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadRefreshScopedRegistryAutoConfiguration
 io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadAutoConfiguration
 io.github.resilience4j.springboot.bulkhead.autoconfigure.BulkheadMetricsAutoConfiguration

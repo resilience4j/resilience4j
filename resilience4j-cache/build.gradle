@@ -1,6 +1,7 @@
 dependencies {
     api project(':resilience4j-core')
     api (libraries.jcache)
+    testImplementation project(':resilience4j-core').sourceSets.test.output
     testImplementation project(':resilience4j-rxjava2')
     testImplementation(libraries.rxjava2)
 }

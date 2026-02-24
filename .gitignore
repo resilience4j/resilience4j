@@ -14,3 +14,4 @@ classes
 .attach_pid*
 java_pid*.hprof
 .DS_Store
+/.vscode/
