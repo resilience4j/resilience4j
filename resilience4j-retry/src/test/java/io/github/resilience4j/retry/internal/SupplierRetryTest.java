@@ -20,6 +20,7 @@ package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.IntervalBiFunction;
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.retry.MaxRetriesExceededException;
 import io.github.resilience4j.retry.Retry;
@@ -37,6 +38,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -358,10 +360,36 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get())
+        Try.of(() -> retryableSupplier.get())
             .recover((throwable) -> "Hello world from recovery function");
         assertThat(Thread.currentThread().isInterrupted()).isTrue();
         Thread.interrupted();
+    }
+
+    @Test
+    public void shouldThrowCancellationExceptionWhenInterruptedDuringRetryOnResult() {
+        CheckedConsumer<Long> previousSleepFunction = RetryImpl.sleepFunction;
+        try {
+            RetryImpl.sleepFunction = sleep -> {
+                throw new InterruptedException("Interrupted!");
+            };
+
+            RetryConfig retryConfig = RetryConfig.<String>custom()
+                .retryOnResult(result -> true)
+                .maxAttempts(3)
+                .build();
+            Retry retry = Retry.of("id", retryConfig);
+
+            Supplier<String> decorated = Retry.decorateSupplier(retry, () -> "any");
+
+            assertThatThrownBy(decorated::get)
+                .isInstanceOf(CancellationException.class)
+                .hasMessage("Thread was interrupted during retry wait interval");
+            assertThat(Thread.currentThread().isInterrupted()).isTrue();
+        } finally {
+            RetryImpl.sleepFunction = previousSleepFunction;
+            Thread.interrupted();
+        }
     }
 
 
