@@ -364,7 +364,7 @@ public class CircuitBreakerConfig implements Serializable {
         private Predicate<Object> recordResultPredicate = DEFAULT_RECORD_RESULT_PREDICATE;
 
         private IntervalFunction waitIntervalFunctionInOpenState = IntervalFunction
-            .of(Duration.ofSeconds(DEFAULT_SLOW_CALL_DURATION_THRESHOLD));
+            .of(Duration.ofSeconds(DEFAULT_WAIT_DURATION_IN_OPEN_STATE));
 
         private Function<Either<Object, Throwable>, TransitionCheckResult> transitionOnResult
             = DEFAULT_TRANSITION_ON_RESULT;
