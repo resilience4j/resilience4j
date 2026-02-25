@@ -25,6 +25,7 @@ import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.retry.event.*;
 import io.github.resilience4j.retry.internal.RetryImpl;
+import io.github.resilience4j.retry.internal.BudgetRetryImpl;
 
 import java.util.Collections;
 import java.util.Map;
@@ -94,6 +95,43 @@ public interface Retry {
     static Retry ofDefaults(String name) {
         return of(name, RetryConfig.ofDefaults(), Collections.emptyMap());
     }
+
+    /**
+     * Creates a Retry with a custom Retry configuration using Retry Budget.
+     */
+    static Retry ofRetryBudget(String name, RetryConfig retryConfig) {
+        return ofRetryBudget(name, retryConfig, Collections.emptyMap());
+    }
+
+    /**
+     * Creates a Retry with a custom Retry configuration using Retry Budget.
+     */
+    static Retry ofRetryBudget(String name, RetryConfig retryConfig, Map<String, String> tags) {
+        Retry retry = of(name, retryConfig, tags);
+        return new BudgetRetryImpl(retry, retryConfig);
+    }
+
+    /**
+     * Creates a Retry with a custom Retry configuration using Retry Budget.
+     */
+    static Retry ofRetryBudget(String name, Supplier<RetryConfig> retryConfigSupplier) {
+        return ofRetryBudget(name, retryConfigSupplier.get());
+    }
+
+    /**
+     * Creates a Retry with a custom Retry configuration using Retry Budget.
+     */
+    static Retry ofRetryBudget(String name, Supplier<RetryConfig> retryConfigSupplier, Map<String, String> tags) {
+        return ofRetryBudget(name, retryConfigSupplier.get(), tags);
+    }
+
+    /**
+     * Creates a Retry with default Retry Budget configuration.
+     */
+    static Retry ofRetryBudgetDefaults(String name) {
+        return ofRetryBudget(name, RetryConfig.ofDefaults(), Collections.emptyMap());
+    }
+
 
     /**
      * Decorates CompletionStageSupplier with Retry
