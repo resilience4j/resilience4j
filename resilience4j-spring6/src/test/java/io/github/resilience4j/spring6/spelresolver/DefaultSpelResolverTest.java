@@ -245,6 +245,41 @@ public class DefaultSpelResolverTest {
         assertThat(result).isEqualTo("$");
     }
 
+    /**
+     * #{'one.' + #root.args[0]} - SpEL template with method args context
+     */
+    @Test
+    public void spelTemplateWithArgsTest() throws Exception {
+        String testExpression = "#{'one.' + #root.args[0]}";
+        String firstArgument = "two";
+
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{firstArgument}, testExpression);
+
+        assertThat(result).isEqualTo("one.two");
+    }
+
+    /**
+     * #{'prefix.' + @dummySpelBean.getBulkheadName(#parameter)} - SpEL template with bean reference
+     */
+    @Test
+    public void spelTemplateWithBeanReferenceTest() throws Exception {
+        String testExpression = "#{'prefix.' + @dummySpelBean.getBulkheadName(#parameter)}";
+        String testMethodArg = "argg";
+        String bulkheadName = "sgt. bulko";
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        given(dummySpelBean.getBulkheadName(testMethodArg)).willReturn(bulkheadName);
+
+        String result = sut.resolve(testMethod, new Object[]{testMethodArg}, testExpression);
+
+        then(dummySpelBean).should(times(1)).getBulkheadName(testMethodArg);
+        assertThat(result).isEqualTo("prefix.sgt. bulko");
+    }
+
     public String testMethod(String parameter) {
         return "test";
     }
