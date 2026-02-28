@@ -5,6 +5,7 @@ import io.github.resilience4j.spelresolver.SpelResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.util.StringUtils;
@@ -42,9 +43,14 @@ public class FallbackExecutor implements BeanFactoryAware {
                 if (separatorIdx > 0 && beanFactory != null) {
                     String beanName = fallbackMethodName.substring(0, separatorIdx);
                     fallbackMethodName = fallbackMethodName.substring(separatorIdx + BEAN_METHOD_SEPARATOR.length());
+                    if (!StringUtils.hasLength(fallbackMethodName)) {
+                        throw new NoSuchMethodException(
+                            "Invalid fallbackMethod format: expected 'beanName::methodName' but got '" + fallbackMethodValue + "'");
+                    }
                     Object fallbackBean = beanFactory.getBean(beanName);
-                    original = fallbackBean;
                     proxy = fallbackBean;
+                    Object singletonTarget = AopProxyUtils.getSingletonTarget(fallbackBean);
+                    original = (singletonTarget != null) ? singletonTarget : fallbackBean;
                 } else {
                     original = proceedingJoinPoint.getTarget();
                     proxy = proceedingJoinPoint.getThis();

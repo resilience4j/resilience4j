@@ -151,6 +151,23 @@ public class FallbackExecutorTest {
         verify(fallbackDecorators, never()).decorate(any(), any());
     }
 
+    @Test
+    public void testPrimaryMethodExecutionWithEmptyFallbackBeanMethod() throws Throwable {
+        Method method = this.getClass().getMethod("getName", String.class);
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
+        final String fallbackMethodValue = "myFallbackBean::";
+
+        when(proceedingJoinPoint.getArgs()).thenReturn(new Object[]{});
+        when(spelResolver.resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue)).thenReturn(fallbackMethodValue);
+
+        final Object result = fallbackExecutor.execute(proceedingJoinPoint, method, fallbackMethodValue, primaryFunction);
+        assertThat(result).isEqualTo("Name");
+
+        verify(spelResolver, times(1)).resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue);
+        verify(beanFactory, never()).getBean(anyString());
+        verify(fallbackDecorators, never()).decorate(any(), any());
+    }
+
     public static class ExternalFallbackBean {
         public String getNameValidFallback(String parameter, Throwable throwable) {
             return "recovered-from-external-bean";
