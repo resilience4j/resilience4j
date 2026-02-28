@@ -30,6 +30,8 @@ public @interface Bulkhead {
 
     /**
      * fallbackMethod method name.
+     * It can be a SpEL expression. To reference a fallback method on an external
+     * Spring bean, use {@code "beanName::methodName"} syntax.
      *
      * @return fallbackMethod method name.
      */
