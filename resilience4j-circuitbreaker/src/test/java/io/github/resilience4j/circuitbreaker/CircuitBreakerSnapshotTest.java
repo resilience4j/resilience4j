@@ -18,9 +18,11 @@
  */
 package io.github.resilience4j.circuitbreaker;
 
+import com.statemachinesystems.mockclock.MockClock;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -324,5 +326,44 @@ public class CircuitBreakerSnapshotTest {
             .build())
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("MetricsSnapshot");
+    }
+
+    // --- Automatic transition test (#2) ---
+
+    @Test
+    public void shouldTransitionToHalfOpenAfterWaitDurationWhenRestoredFromSnapshot() {
+        MockClock mockClock = MockClock.at(2019, 1, 1, 12, 0, 0, ZoneId.of("UTC"));
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(5)
+            .minimumNumberOfCalls(5)
+            .waitDurationInOpenState(Duration.ofSeconds(5))
+            .currentTimestampFunction(clock -> clock.instant().toEpochMilli(), TimeUnit.MILLISECONDS)
+            .clock(mockClock)
+            .build();
+
+        CircuitBreaker cb1 = CircuitBreaker.of("testService", config);
+
+        // Trigger OPEN state
+        for (int i = 0; i < 5; i++) {
+            cb1.onError(100, TimeUnit.MILLISECONDS, new RuntimeException("fail"));
+        }
+        assertThat(cb1.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+        // Snapshot and restore
+        CircuitBreakerSnapshot snapshot = cb1.createSnapshot();
+        CircuitBreaker cb2 = CircuitBreaker.of("testService", config, snapshot);
+
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+        // Wait duration not yet elapsed — should still be OPEN
+        mockClock.advanceBySeconds(3);
+        assertThat(cb2.tryAcquirePermission()).isFalse();
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+        // Wait duration elapsed — should transition to HALF_OPEN
+        mockClock.advanceBySeconds(3);
+        assertThat(cb2.tryAcquirePermission()).isTrue();
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
     }
 }
