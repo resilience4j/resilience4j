@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Test to demonstrate issue #2325: Loss of metrics when recreating CircuitBreaker
@@ -286,5 +287,42 @@ public class CircuitBreakerSnapshotTest {
         assertThat(metrics.getNumberOfSlowCalls()).isEqualTo(2);
         assertThat(metrics.getNumberOfSlowSuccessfulCalls()).isEqualTo(1);
         assertThat(metrics.getNumberOfSlowFailedCalls()).isEqualTo(1);
+    }
+
+    // --- Null handling tests (#1) ---
+
+    @Test
+    public void shouldThrowNPEWhenSnapshotIsNull() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.ofDefaults();
+        assertThatThrownBy(() -> CircuitBreaker.of("test", config, (CircuitBreakerSnapshot) null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void shouldThrowNPEWhenConfigIsNullWithSnapshot() {
+        CircuitBreakerSnapshot snapshot = CircuitBreakerSnapshot.builder()
+            .state(CircuitBreaker.State.CLOSED)
+            .metricsSnapshot(CircuitBreakerSnapshot.MetricsSnapshot.builder().build())
+            .build();
+        assertThatThrownBy(() -> CircuitBreaker.of("test", (CircuitBreakerConfig) null, snapshot))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void shouldThrowNPEWhenBuilderStateIsNull() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.builder()
+            .metricsSnapshot(CircuitBreakerSnapshot.MetricsSnapshot.builder().build())
+            .build())
+            .isInstanceOf(NullPointerException.class)
+            .hasMessageContaining("State");
+    }
+
+    @Test
+    public void shouldThrowNPEWhenBuilderMetricsSnapshotIsNull() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.builder()
+            .state(CircuitBreaker.State.CLOSED)
+            .build())
+            .isInstanceOf(NullPointerException.class)
+            .hasMessageContaining("MetricsSnapshot");
     }
 }
