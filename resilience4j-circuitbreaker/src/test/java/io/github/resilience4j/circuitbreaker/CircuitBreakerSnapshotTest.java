@@ -366,4 +366,74 @@ public class CircuitBreakerSnapshotTest {
         assertThat(cb2.tryAcquirePermission()).isTrue();
         assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
     }
+
+    // --- Post-restore behavior tests (#3) ---
+
+    @Test
+    public void shouldTrackMetricsAfterRestore() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(10)
+            .minimumNumberOfCalls(5)
+            .build();
+
+        CircuitBreaker cb1 = CircuitBreaker.of("testService", config);
+        cb1.onSuccess(100, TimeUnit.MILLISECONDS);
+        cb1.onSuccess(100, TimeUnit.MILLISECONDS);
+
+        CircuitBreakerSnapshot snapshot = cb1.createSnapshot();
+        CircuitBreaker cb2 = CircuitBreaker.of("testService", config, snapshot);
+
+        // New calls after restore should be tracked
+        cb2.onSuccess(100, TimeUnit.MILLISECONDS);
+        cb2.onError(100, TimeUnit.MILLISECONDS, new RuntimeException("fail"));
+
+        assertThat(cb2.getMetrics().getNumberOfSuccessfulCalls()).isGreaterThanOrEqualTo(1);
+        assertThat(cb2.getMetrics().getNumberOfFailedCalls()).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    public void shouldTransitionFromClosedToOpenAfterRestore() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(5)
+            .minimumNumberOfCalls(5)
+            .build();
+
+        CircuitBreaker cb1 = CircuitBreaker.of("testService", config);
+        assertThat(cb1.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        CircuitBreakerSnapshot snapshot = cb1.createSnapshot();
+        CircuitBreaker cb2 = CircuitBreaker.of("testService", config, snapshot);
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+
+        // Trigger OPEN via failures on restored CB
+        for (int i = 0; i < 5; i++) {
+            cb2.onError(100, TimeUnit.MILLISECONDS, new RuntimeException("fail"));
+        }
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+    }
+
+    @Test
+    public void shouldTransitionFromOpenToHalfOpenAfterRestore() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(5)
+            .minimumNumberOfCalls(5)
+            .waitDurationInOpenState(Duration.ofMinutes(1))
+            .build();
+
+        CircuitBreaker cb1 = CircuitBreaker.of("testService", config);
+        for (int i = 0; i < 5; i++) {
+            cb1.onError(100, TimeUnit.MILLISECONDS, new RuntimeException("fail"));
+        }
+        assertThat(cb1.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+
+        CircuitBreakerSnapshot snapshot = cb1.createSnapshot();
+        CircuitBreaker cb2 = CircuitBreaker.of("testService", config, snapshot);
+
+        // Manual transition should still work
+        cb2.transitionToHalfOpenState();
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+    }
 }
