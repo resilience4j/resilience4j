@@ -361,6 +361,9 @@ public final class CircuitBreakerSnapshot implements Serializable {
              * @return this builder
              */
             public MetricsBuilder numberOfSuccessfulCalls(int numberOfSuccessfulCalls) {
+                if (numberOfSuccessfulCalls < 0) {
+                    throw new IllegalArgumentException("numberOfSuccessfulCalls must be non-negative");
+                }
                 this.numberOfSuccessfulCalls = numberOfSuccessfulCalls;
                 return this;
             }
@@ -372,6 +375,9 @@ public final class CircuitBreakerSnapshot implements Serializable {
              * @return this builder
              */
             public MetricsBuilder numberOfFailedCalls(int numberOfFailedCalls) {
+                if (numberOfFailedCalls < 0) {
+                    throw new IllegalArgumentException("numberOfFailedCalls must be non-negative");
+                }
                 this.numberOfFailedCalls = numberOfFailedCalls;
                 return this;
             }
@@ -383,6 +389,9 @@ public final class CircuitBreakerSnapshot implements Serializable {
              * @return this builder
              */
             public MetricsBuilder numberOfSlowCalls(int numberOfSlowCalls) {
+                if (numberOfSlowCalls < 0) {
+                    throw new IllegalArgumentException("numberOfSlowCalls must be non-negative");
+                }
                 this.numberOfSlowCalls = numberOfSlowCalls;
                 return this;
             }
@@ -394,6 +403,9 @@ public final class CircuitBreakerSnapshot implements Serializable {
              * @return this builder
              */
             public MetricsBuilder numberOfSlowSuccessfulCalls(int numberOfSlowSuccessfulCalls) {
+                if (numberOfSlowSuccessfulCalls < 0) {
+                    throw new IllegalArgumentException("numberOfSlowSuccessfulCalls must be non-negative");
+                }
                 this.numberOfSlowSuccessfulCalls = numberOfSlowSuccessfulCalls;
                 return this;
             }
@@ -405,6 +417,9 @@ public final class CircuitBreakerSnapshot implements Serializable {
              * @return this builder
              */
             public MetricsBuilder numberOfSlowFailedCalls(int numberOfSlowFailedCalls) {
+                if (numberOfSlowFailedCalls < 0) {
+                    throw new IllegalArgumentException("numberOfSlowFailedCalls must be non-negative");
+                }
                 this.numberOfSlowFailedCalls = numberOfSlowFailedCalls;
                 return this;
             }
@@ -416,6 +431,9 @@ public final class CircuitBreakerSnapshot implements Serializable {
              * @return this builder
              */
             public MetricsBuilder numberOfNotPermittedCalls(long numberOfNotPermittedCalls) {
+                if (numberOfNotPermittedCalls < 0) {
+                    throw new IllegalArgumentException("numberOfNotPermittedCalls must be non-negative");
+                }
                 this.numberOfNotPermittedCalls = numberOfNotPermittedCalls;
                 return this;
             }

@@ -458,4 +458,48 @@ public class CircuitBreakerSnapshotTest {
         assertThat(cb2.getTags()).isEqualTo(tags);
         assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
+
+    // --- MetricsBuilder negative value validation tests (#5) ---
+
+    @Test
+    public void shouldRejectNegativeNumberOfSuccessfulCalls() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
+            .numberOfSuccessfulCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldRejectNegativeNumberOfFailedCalls() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
+            .numberOfFailedCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldRejectNegativeNumberOfSlowCalls() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
+            .numberOfSlowCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldRejectNegativeNumberOfSlowSuccessfulCalls() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
+            .numberOfSlowSuccessfulCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldRejectNegativeNumberOfSlowFailedCalls() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
+            .numberOfSlowFailedCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldRejectNegativeNumberOfNotPermittedCalls() {
+        assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
+            .numberOfNotPermittedCalls(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }
