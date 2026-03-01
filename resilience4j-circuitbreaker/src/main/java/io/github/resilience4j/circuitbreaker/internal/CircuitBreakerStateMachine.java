@@ -166,19 +166,29 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
      */
     public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
         CircuitBreakerSnapshot snapshot) {
+        this(name, circuitBreakerConfig, snapshot, emptyMap());
+    }
+
+    /**
+     * Creates a circuitBreaker from a snapshot, restoring its state and metrics.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param snapshot             The snapshot to restore state from.
+     * @param tags                 tags added to the CircuitBreaker
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
+        CircuitBreakerSnapshot snapshot, Map<String, String> tags) {
         this.name = name;
         this.circuitBreakerConfig = Objects
             .requireNonNull(circuitBreakerConfig, "Config must not be null");
         this.eventProcessor = new CircuitBreakerEventProcessor();
         this.clock = circuitBreakerConfig.getClock();
         this.schedulerFactory = SchedulerFactory.getInstance();
-        this.tags = emptyMap();
+        this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.currentTimestampFunction = circuitBreakerConfig.getCurrentTimestampFunction();
         this.timestampUnit = circuitBreakerConfig.getTimestampUnit();
-
-        // Restore state from snapshot
-        this.stateReference = new AtomicReference<>(
-            restoreStateFromSnapshot(snapshot));
+        this.stateReference = new AtomicReference<>(restoreStateFromSnapshot(snapshot));
     }
 
     @Override

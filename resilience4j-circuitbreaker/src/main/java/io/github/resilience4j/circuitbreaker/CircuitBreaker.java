@@ -409,6 +409,11 @@ public interface CircuitBreaker {
      * <p>
      * The snapshot should be obtained using {@link #createSnapshot()} from an existing CircuitBreaker.
      * <p>
+     * <strong>Note:</strong> The new CircuitBreaker instance will have a fresh event processor,
+     * so event subscriptions from the original instance are not preserved. Tags will default to
+     * an empty map; use {@link #of(String, CircuitBreakerConfig, CircuitBreakerSnapshot, Map)}
+     * to preserve tags.
+     * <p>
      * <strong>Example:</strong>
      * <pre>{@code
      * // Capture state from existing CircuitBreaker
@@ -435,6 +440,31 @@ public interface CircuitBreaker {
                              CircuitBreakerConfig config,
                              CircuitBreakerSnapshot snapshot) {
         return new CircuitBreakerStateMachine(name, config, snapshot);
+    }
+
+    /**
+     * Creates a CircuitBreaker with a custom configuration and restores state from a snapshot,
+     * with the given tags.
+     * <p>
+     * This is equivalent to {@link #of(String, CircuitBreakerConfig, CircuitBreakerSnapshot)}
+     * but allows preserving tags from the original CircuitBreaker instance.
+     * <p>
+     * <strong>Note:</strong> The new CircuitBreaker instance will have a fresh event processor,
+     * so event subscriptions from the original instance are not preserved.
+     *
+     * @param name     the name of the CircuitBreaker
+     * @param config   a custom CircuitBreaker configuration
+     * @param snapshot snapshot to restore state from
+     * @param tags     tags added to the CircuitBreaker
+     * @return a CircuitBreaker with the restored state, new configuration, and given tags
+     * @throws NullPointerException if any parameter is null
+     * @since 2.4.0
+     */
+    static CircuitBreaker of(String name,
+                             CircuitBreakerConfig config,
+                             CircuitBreakerSnapshot snapshot,
+                             Map<String, String> tags) {
+        return new CircuitBreakerStateMachine(name, config, snapshot, tags);
     }
 
     /**

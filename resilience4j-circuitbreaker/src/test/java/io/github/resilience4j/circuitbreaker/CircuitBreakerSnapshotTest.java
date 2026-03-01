@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -435,5 +436,26 @@ public class CircuitBreakerSnapshotTest {
         // Manual transition should still work
         cb2.transitionToHalfOpenState();
         assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+    }
+
+    // --- Tags preservation test (#4) ---
+
+    @Test
+    public void shouldPreserveTagsWhenRestoringFromSnapshot() {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(10)
+            .build();
+
+        Map<String, String> tags = Map.of("env", "prod", "region", "us-east-1");
+        CircuitBreaker cb1 = CircuitBreaker.of("testService", config, tags);
+
+        cb1.onSuccess(100, TimeUnit.MILLISECONDS);
+        CircuitBreakerSnapshot snapshot = cb1.createSnapshot();
+
+        // Restore with tags
+        CircuitBreaker cb2 = CircuitBreaker.of("testService", config, snapshot, tags);
+        assertThat(cb2.getTags()).isEqualTo(tags);
+        assertThat(cb2.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
     }
 }
