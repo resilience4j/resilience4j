@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker;
 import com.statemachinesystems.mockclock.MockClock;
 import org.junit.Test;
 
+import java.io.*;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Map;
@@ -501,5 +502,90 @@ public class CircuitBreakerSnapshotTest {
         assertThatThrownBy(() -> CircuitBreakerSnapshot.MetricsSnapshot.builder()
             .numberOfNotPermittedCalls(-1))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // --- Serialization round-trip test (#6) ---
+
+    @Test
+    public void shouldSerializeAndDeserializeSnapshot() throws Exception {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(10)
+            .slowCallDurationThreshold(Duration.ofMillis(200))
+            .build();
+
+        CircuitBreaker cb = CircuitBreaker.of("testService", config);
+        cb.onSuccess(50, TimeUnit.MILLISECONDS);
+        cb.onSuccess(250, TimeUnit.MILLISECONDS);
+        cb.onError(50, TimeUnit.MILLISECONDS, new RuntimeException());
+        cb.onError(250, TimeUnit.MILLISECONDS, new RuntimeException());
+
+        CircuitBreakerSnapshot original = cb.createSnapshot();
+
+        // Serialize
+        byte[] bytes;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(original);
+            bytes = bos.toByteArray();
+        }
+
+        // Deserialize
+        CircuitBreakerSnapshot restored;
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             ObjectInputStream ois = new ObjectInputStream(bis)) {
+            restored = (CircuitBreakerSnapshot) ois.readObject();
+        }
+
+        // Verify all fields preserved
+        assertThat(restored.getState()).isEqualTo(original.getState());
+        assertThat(restored.getAttempts()).isEqualTo(original.getAttempts());
+        assertThat(restored.getRetryAfterWaitUntil()).isEqualTo(original.getRetryAfterWaitUntil());
+
+        CircuitBreakerSnapshot.MetricsSnapshot origMetrics = original.getMetricsSnapshot();
+        CircuitBreakerSnapshot.MetricsSnapshot restoredMetrics = restored.getMetricsSnapshot();
+        assertThat(restoredMetrics.getNumberOfSuccessfulCalls()).isEqualTo(origMetrics.getNumberOfSuccessfulCalls());
+        assertThat(restoredMetrics.getNumberOfFailedCalls()).isEqualTo(origMetrics.getNumberOfFailedCalls());
+        assertThat(restoredMetrics.getNumberOfSlowCalls()).isEqualTo(origMetrics.getNumberOfSlowCalls());
+        assertThat(restoredMetrics.getNumberOfSlowSuccessfulCalls()).isEqualTo(origMetrics.getNumberOfSlowSuccessfulCalls());
+        assertThat(restoredMetrics.getNumberOfSlowFailedCalls()).isEqualTo(origMetrics.getNumberOfSlowFailedCalls());
+        assertThat(restoredMetrics.getNumberOfNotPermittedCalls()).isEqualTo(origMetrics.getNumberOfNotPermittedCalls());
+    }
+
+    @Test
+    public void shouldSerializeAndDeserializeOpenStateSnapshot() throws Exception {
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slidingWindowSize(5)
+            .minimumNumberOfCalls(5)
+            .waitDurationInOpenState(Duration.ofMinutes(1))
+            .build();
+
+        CircuitBreaker cb = CircuitBreaker.of("testService", config);
+        for (int i = 0; i < 5; i++) {
+            cb.onError(100, TimeUnit.MILLISECONDS, new RuntimeException());
+        }
+
+        CircuitBreakerSnapshot original = cb.createSnapshot();
+        assertThat(original.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(original.getRetryAfterWaitUntil()).isNotNull();
+
+        // Round-trip
+        byte[] bytes;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(original);
+            bytes = bos.toByteArray();
+        }
+
+        CircuitBreakerSnapshot restored;
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             ObjectInputStream ois = new ObjectInputStream(bis)) {
+            restored = (CircuitBreakerSnapshot) ois.readObject();
+        }
+
+        assertThat(restored.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(restored.getAttempts()).isEqualTo(original.getAttempts());
+        assertThat(restored.getRetryAfterWaitUntil()).isEqualTo(original.getRetryAfterWaitUntil());
     }
 }
