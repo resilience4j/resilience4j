@@ -47,7 +47,7 @@ public class TimerEventsEndpoint {
     @ReadOperation
     public TimerEventsEndpointResponse getAllTimerEvents() {
         return new TimerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer().stream()
-                .flatMap(CircularEventConsumer::getBufferedEventsStream)
+                .flatMap(eventConsumer -> eventConsumer.getBufferedEvents().stream())
                 .sorted(Comparator.comparing(TimerEvent::getCreationTime))
                 .map(TimerEventDTOFactory::createTimerEventDTO)
                 .collect(Collectors.toList()));
@@ -82,7 +82,7 @@ public class TimerEventsEndpoint {
         final CircularEventConsumer<TimerEvent> syncEvents = eventConsumerRegistry
                 .getEventConsumer(name);
         if (syncEvents != null) {
-            return syncEvents.getBufferedEventsStream()
+            return syncEvents.getBufferedEvents().stream()
                     .filter(event -> event.getTimerName().equals(name))
                     .collect(Collectors.toList());
         } else {

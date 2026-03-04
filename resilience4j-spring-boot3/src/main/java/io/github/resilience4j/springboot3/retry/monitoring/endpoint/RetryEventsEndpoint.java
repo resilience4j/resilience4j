@@ -49,7 +49,7 @@ public class RetryEventsEndpoint {
     @ReadOperation
     public RetryEventsEndpointResponse getAllRetryEvents() {
         return new RetryEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(CircularEventConsumer::getBufferedEventsStream)
+            .flatMap(eventConsumer -> eventConsumer.getBufferedEvents().stream())
             .sorted(Comparator.comparing(RetryEvent::getCreationTime))
             .map(RetryEventDTOFactory::createRetryEventDTO)
             .collect(Collectors.toList()));
@@ -85,7 +85,7 @@ public class RetryEventsEndpoint {
         final CircularEventConsumer<RetryEvent> syncEvents = eventConsumerRegistry
             .getEventConsumer(name);
         if (syncEvents != null) {
-            return syncEvents.getBufferedEventsStream()
+            return syncEvents.getBufferedEvents().stream()
                 .filter(event -> event.getName().equals(name))
                 .collect(Collectors.toList());
         } else {

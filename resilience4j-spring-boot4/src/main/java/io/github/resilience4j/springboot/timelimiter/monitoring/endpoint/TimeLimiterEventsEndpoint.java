@@ -42,7 +42,7 @@ public class TimeLimiterEventsEndpoint {
     @ReadOperation
     public TimeLimiterEventsEndpointResponse getAllTimeLimiterEvents() {
         return new TimeLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer().stream()
-                .flatMap(CircularEventConsumer::getBufferedEventsStream)
+                .flatMap(eventConsumer -> eventConsumer.getBufferedEvents().stream())
                 .sorted(Comparator.comparing(TimeLimiterEvent::getCreationTime))
                 .map(TimeLimiterEventDTO::createTimeLimiterEventDTO)
                 .collect(Collectors.toList()));
@@ -66,7 +66,7 @@ public class TimeLimiterEventsEndpoint {
     private List<TimeLimiterEvent> getTimeLimiterEvents(String name) {
         CircularEventConsumer<TimeLimiterEvent> eventConsumer = eventsConsumerRegistry.getEventConsumer(name);
         if(eventConsumer != null){
-            return eventConsumer.getBufferedEventsStream()
+            return eventConsumer.getBufferedEvents().stream()
                     .filter(event -> event.getTimeLimiterName().equals(name))
                     .collect(Collectors.toList());
         }else{
