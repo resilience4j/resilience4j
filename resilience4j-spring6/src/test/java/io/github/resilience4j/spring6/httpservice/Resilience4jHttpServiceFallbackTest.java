@@ -21,6 +21,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.spring6.httpservice.test.TestHttpService;
+import io.github.resilience4j.spring6.httpservice.test.TestHttpServiceFallbackThrowingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.HttpServerErrorException;
@@ -273,6 +274,22 @@ class Resilience4jHttpServiceFallbackTest {
 
         assertThat(result).isEqualTo("fallback greeting");
         verify(testServiceFallback).greetingWithName("John");
+    }
+
+    @Test
+    void testFallbackMethodThrowingException() {
+        HttpServiceDecorators decorators = HttpServiceDecorators.builder()
+                .withFallback(new TestHttpServiceFallbackThrowingException())
+                .build();
+
+        TestHttpService service = Resilience4jHttpService.builder(decorators)
+                .factory(factory)
+                .build(TestHttpService.class);
+        givenResponse(500);
+
+        assertThatThrownBy(service::greeting)
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Exception in greeting fallback");
     }
 
     private void givenResponse(int responseCode) {

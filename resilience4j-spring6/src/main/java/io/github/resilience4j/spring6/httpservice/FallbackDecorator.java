@@ -41,8 +41,7 @@ class FallbackDecorator<T> implements HttpServiceDecorator {
      * Creates a fallback that will only be called for the specified {@link Exception}.
      */
     FallbackDecorator(FallbackHandler<T> fallback, Class<? extends Exception> filter) {
-        this(fallback, filter::isInstance);
-        requireNonNull(filter, "Filter cannot be null!");
+        this(fallback, requireNonNull(filter, "Filter cannot be null!")::isInstance);
     }
 
     /**

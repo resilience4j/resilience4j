@@ -23,8 +23,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.spring6.httpservice.test.TestHttpService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,9 @@ import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -248,8 +254,73 @@ class HttpServiceDecoratorsTest {
         assertThat(service.greeting()).isNotNull();
         assertThat(service.greeting()).isNotNull();
 
-        // Third call should be rate limited (might throw exception or timeout)
-        // Note: This test might be flaky depending on timing
+        // Third call should be rate limited and throw RequestNotPermitted
+        assertThatThrownBy(() -> service.greeting())
+                .isInstanceOf(RequestNotPermitted.class);
+
+        // Verify metrics
+        RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+        assertThat(metrics.getAvailablePermissions()).isEqualTo(0);
+    }
+
+    @Test
+    void shouldApplyTimeLimiterWithTimeout() {
+        stubFor(get(urlPathEqualTo("/api/greeting"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("Delayed Response")
+                        .withFixedDelay(2000))); // 2 second delay
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        TimeLimiter timeLimiter = TimeLimiter.of("test",
+                TimeLimiterConfig.custom()
+                        .timeoutDuration(Duration.ofMillis(500)) // 500ms timeout
+                        .build());
+
+        HttpServiceDecorators decorators = HttpServiceDecorators.builder()
+                .withTimeLimiter(timeLimiter, scheduler)
+                .build();
+
+        TestHttpService service = Resilience4jHttpService.builder(decorators)
+                .factory(factory)
+                .build(TestHttpService.class);
+
+        // Call should timeout and throw TimeoutException
+        assertThatThrownBy(() -> service.greeting())
+                .isInstanceOf(TimeoutException.class);
+
+        scheduler.shutdown();
+    }
+
+    @Test
+    void shouldApplyTimeLimiterWithoutTimeout() {
+        stubFor(get(urlPathEqualTo("/api/greeting"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("Fast Response")
+                        .withFixedDelay(100))); // 100ms delay
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        TimeLimiter timeLimiter = TimeLimiter.of("test",
+                TimeLimiterConfig.custom()
+                        .timeoutDuration(Duration.ofSeconds(2)) // 2 second timeout
+                        .build());
+
+        HttpServiceDecorators decorators = HttpServiceDecorators.builder()
+                .withTimeLimiter(timeLimiter, scheduler)
+                .build();
+
+        TestHttpService service = Resilience4jHttpService.builder(decorators)
+                .factory(factory)
+                .build(TestHttpService.class);
+
+        // Call should complete within timeout
+        String result = service.greeting();
+        assertThat(result).isEqualTo("Fast Response");
+
+        scheduler.shutdown();
     }
 
     @Test
@@ -296,7 +367,7 @@ class HttpServiceDecoratorsTest {
         assertThatThrownBy(() ->
                 Resilience4jHttpService.builder(decorators)
                         .build(TestHttpService.class))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("factory must be configured");
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("factory must not be null");
     }
 }

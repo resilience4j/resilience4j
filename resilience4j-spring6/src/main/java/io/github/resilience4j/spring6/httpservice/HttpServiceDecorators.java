@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
@@ -45,7 +46,7 @@ import java.util.function.UnaryOperator;
  *             .withRateLimiter(rateLimiter)
  *             .build();
  *     MyService myService = Resilience4jHttpService.builder(decorators)
- *             .restClient(restClient)
+ *             .factory(factory)
  *             .build(MyService.class);
  * }
  * </pre>
@@ -272,9 +273,9 @@ public class HttpServiceDecorators implements HttpServiceDecorator {
             // For CompletionStage/CompletableFuture return types
             if (CompletionStage.class.isAssignableFrom(returnType)) {
                 return args -> {
-                    CompletableFuture<Object> future =
-                            (CompletableFuture<Object>) invocationCall.apply(args);
-                    return timeLimiter.executeCompletionStage(executor, () -> future);
+                    CompletionStage<Object> stage =
+                            (CompletionStage<Object>) invocationCall.apply(args);
+                    return timeLimiter.executeCompletionStage(executor, () -> stage);
                 };
             }
 
@@ -285,16 +286,23 @@ public class HttpServiceDecorators implements HttpServiceDecorator {
                             try {
                                 return invocationCall.apply(args);
                             } catch (Throwable t) {
-                                if (t instanceof RuntimeException) {
-                                    throw (RuntimeException) t;
+                                if (t instanceof RuntimeException re) {
+                                    throw re;
+                                }
+                                if (t instanceof Error err) {
+                                    throw err;
                                 }
                                 throw new RuntimeException(t);
                             }
                         },
                         executor
                 );
-                return timeLimiter.executeCompletionStage(executor, () -> future)
-                        .toCompletableFuture().join();
+                try {
+                    return timeLimiter.executeCompletionStage(executor, () -> future)
+                            .toCompletableFuture().join();
+                } catch (CompletionException e) {
+                    throw (e.getCause() != null) ? e.getCause() : e;
+                }
             };
         }
     }
