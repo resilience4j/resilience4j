@@ -42,7 +42,7 @@ public class RateLimiterEventsEndpoint {
     @ReadOperation
     public RateLimiterEventsEndpointResponse getAllRateLimiterEvents() {
         return new RateLimiterEventsEndpointResponse(eventsConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(CircularEventConsumer::getBufferedEventsStream)
+            .flatMap(eventConsumer -> eventConsumer.getBufferedEvents().stream())
             .sorted(Comparator.comparing(RateLimiterEvent::getCreationTime))
             .map(RateLimiterEventDTO::createRateLimiterEventDTO)
             .collect(Collectors.toList()));
@@ -71,7 +71,7 @@ public class RateLimiterEventsEndpoint {
         CircularEventConsumer<RateLimiterEvent> eventConsumer = eventsConsumerRegistry
             .getEventConsumer(name);
         if (eventConsumer != null) {
-            return eventConsumer.getBufferedEventsStream()
+            return eventConsumer.getBufferedEvents().stream()
                 .filter(event -> event.getRateLimiterName().equals(name))
                 .collect(Collectors.toList());
         } else {

@@ -44,7 +44,7 @@ public class CircuitBreakerEventsEndpoint {
     @ReadOperation
     public CircuitBreakerEventsEndpointResponse getAllCircuitBreakerEvents() {
         return new CircuitBreakerEventsEndpointResponse(eventConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(CircularEventConsumer::getBufferedEventsStream)
+            .flatMap(eventConsumer -> eventConsumer.getBufferedEvents().stream())
             .sorted(Comparator.comparing(CircuitBreakerEvent::getCreationTime))
             .map(CircuitBreakerEventDTOFactory::createCircuitBreakerEventDTO)
             .collect(Collectors.toList()));
@@ -72,7 +72,7 @@ public class CircuitBreakerEventsEndpoint {
         CircularEventConsumer<CircuitBreakerEvent> eventConsumer = eventConsumerRegistry
             .getEventConsumer(circuitBreakerName);
         if (eventConsumer != null) {
-            return eventConsumer.getBufferedEventsStream()
+            return eventConsumer.getBufferedEvents().stream()
                 .filter(event -> event.getCircuitBreakerName().equals(circuitBreakerName))
                 .collect(Collectors.toList());
         } else {

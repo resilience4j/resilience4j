@@ -43,7 +43,7 @@ public class BulkheadEventsEndpoint {
     @ReadOperation
     public BulkheadEventsEndpointResponse getAllBulkheadEvents() {
         List<BulkheadEventDTO> response = eventConsumerRegistry.getAllEventConsumer().stream()
-            .flatMap(CircularEventConsumer::getBufferedEventsStream)
+            .flatMap(eventConsumer -> eventConsumer.getBufferedEvents().stream())
             .sorted(Comparator.comparing(BulkheadEvent::getCreationTime))
             .map(BulkheadEventDTOFactory::createBulkheadEventDTO)
             .collect(Collectors.toList());
@@ -80,14 +80,14 @@ public class BulkheadEventsEndpoint {
                 .getEventConsumer(
                     String.join("-", ThreadPoolBulkhead.class.getSimpleName(), bulkheadName));
             if (threadPoolEventConsumer != null) {
-                return threadPoolEventConsumer.getBufferedEventsStream()
+                return threadPoolEventConsumer.getBufferedEvents().stream()
                     .filter(event -> event.getBulkheadName().equals(bulkheadName))
                     .collect(Collectors.toList());
             } else {
                 return Collections.emptyList();
             }
         } else {
-            return eventConsumer.getBufferedEventsStream()
+            return eventConsumer.getBufferedEvents().stream()
                 .filter(event -> event.getBulkheadName().equals(bulkheadName))
                 .collect(Collectors.toList());
         }
