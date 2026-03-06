@@ -23,8 +23,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.spring6.httpservice.test.TestHttpService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -250,8 +253,13 @@ class HttpServiceDecoratorsTest {
         assertThat(service.greeting()).isNotNull();
         assertThat(service.greeting()).isNotNull();
 
-        // Third call should be rate limited (might throw exception or timeout)
-        // Note: This test might be flaky depending on timing
+        // Third call should be rate limited and throw RequestNotPermitted
+        assertThatThrownBy(() -> service.greeting())
+                .isInstanceOf(RequestNotPermitted.class);
+
+        // Verify metrics
+        RateLimiter.Metrics metrics = rateLimiter.getMetrics();
+        assertThat(metrics.getAvailablePermissions()).isEqualTo(0);
     }
 
     @Test
@@ -319,7 +327,7 @@ class HttpServiceDecoratorsTest {
         assertThatThrownBy(() ->
                 Resilience4jHttpService.builder(decorators)
                         .build(TestHttpService.class))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("factory must be configured");
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("factory must not be null");
     }
 }

@@ -17,6 +17,7 @@ package io.github.resilience4j.spring6.httpservice;
 
 import io.github.resilience4j.core.functions.CheckedFunction;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Predicate;
 
@@ -44,7 +45,11 @@ class DefaultFallbackHandler<T> implements FallbackHandler<T> {
                 return invocationCall.apply(args);
             } catch (Exception exception) {
                 if (filter.test(exception)) {
-                    return fallbackMethod.invoke(fallback, args);
+                    try {
+                        return fallbackMethod.invoke(fallback, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
                 }
                 throw exception;
             }

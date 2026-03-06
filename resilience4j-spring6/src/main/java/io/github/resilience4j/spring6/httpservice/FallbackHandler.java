@@ -53,6 +53,7 @@ interface FallbackHandler<T> {
                     + fallbackInstance.getClass() + "] for ["
                     + method.getDeclaringClass() + "]", e);
         }
+        fallbackMethod.setAccessible(true);
         return fallbackMethod;
     }
 }

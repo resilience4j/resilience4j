@@ -44,7 +44,7 @@ import java.util.function.UnaryOperator;
  *             .withRateLimiter(rateLimiter)
  *             .build();
  *     MyService myService = Resilience4jHttpService.builder(decorators)
- *             .restClient(restClient)
+ *             .factory(factory)
  *             .build(MyService.class);
  * }
  * </pre>
