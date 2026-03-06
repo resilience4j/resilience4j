@@ -31,7 +31,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
@@ -99,6 +101,14 @@ public class BulkheadAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
     }
 
+    @Pointcut("execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))")
+    public void matchMetaAnnotatedMethod() {
+    }
+
+    @Pointcut("within(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) *)")
+    public void matchMetaAnnotatedClass() {
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)", argNames = "proceedingJoinPoint, bulkheadAnnotation")
     public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
@@ -122,6 +132,18 @@ public class BulkheadAspect implements Ordered {
             final CheckedSupplier<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         }
+    }
+
+    @Around("matchMetaAnnotatedMethod()")
+    public Object bulkheadMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return bulkheadAroundAdvice(proceedingJoinPoint, null);
+    }
+
+    @Around("matchMetaAnnotatedClass()")
+    public Object bulkheadMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return bulkheadAroundAdvice(proceedingJoinPoint, null);
     }
 
     /**
@@ -187,6 +209,20 @@ public class BulkheadAspect implements Ordered {
      */
     @Nullable
     private Bulkhead getBulkheadAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
+        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
+
+        Bulkhead annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, Bulkhead.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
+        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, Bulkhead.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug("bulkhead parameter is null");
         }

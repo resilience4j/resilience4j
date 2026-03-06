@@ -30,7 +30,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
@@ -97,6 +99,14 @@ public class RateLimiterAspect implements Ordered {
         // Method used as pointcut
     }
 
+    @Pointcut("execution(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) * *(..))")
+    public void matchMetaAnnotatedMethod() {
+    }
+
+    @Pointcut("within(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) *)")
+    public void matchMetaAnnotatedClass() {
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)", argNames = "proceedingJoinPoint, rateLimiterAnnotation")
     public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
@@ -114,6 +124,18 @@ public class RateLimiterAspect implements Ordered {
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> rateLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, returnType, rateLimiter);
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
+    }
+
+    @Around("matchMetaAnnotatedMethod()")
+    public Object rateLimiterMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return rateLimiterAroundAdvice(proceedingJoinPoint, null);
+    }
+
+    @Around("matchMetaAnnotatedClass()")
+    public Object rateLimiterMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return rateLimiterAroundAdvice(proceedingJoinPoint, null);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
@@ -154,6 +176,20 @@ public class RateLimiterAspect implements Ordered {
 
     @Nullable
     private RateLimiter getRateLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
+        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
+
+        RateLimiter annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, RateLimiter.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
+        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, RateLimiter.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug(
                 "The rate limiter annotation is kept on a interface which is acting as a proxy");

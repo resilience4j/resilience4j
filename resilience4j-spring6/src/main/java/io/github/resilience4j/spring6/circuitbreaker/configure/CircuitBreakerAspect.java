@@ -31,7 +31,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
+import org.springframework.aop.support.AopUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -91,6 +93,14 @@ public class CircuitBreakerAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
     }
 
+    @Pointcut("execution(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) * *(..))")
+    public void matchMetaAnnotatedMethod() {
+    }
+
+    @Pointcut("within(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) *)")
+    public void matchMetaAnnotatedClass() {
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(circuitBreakerAnnotation)", argNames = "proceedingJoinPoint, circuitBreakerAnnotation")
     public Object circuitBreakerAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
@@ -108,6 +118,18 @@ public class CircuitBreakerAspect implements Ordered {
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> circuitBreakerExecution = () -> proceed(proceedingJoinPoint, methodName, circuitBreaker, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, circuitBreakerAnnotation.fallbackMethod(), circuitBreakerExecution);
+    }
+
+    @Around("matchMetaAnnotatedMethod()")
+    public Object circuitBreakerMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return circuitBreakerAroundAdvice(proceedingJoinPoint, null);
+    }
+
+    @Around("matchMetaAnnotatedClass()")
+    public Object circuitBreakerMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return circuitBreakerAroundAdvice(proceedingJoinPoint, null);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
@@ -145,6 +167,20 @@ public class CircuitBreakerAspect implements Ordered {
 
     @Nullable
     private CircuitBreaker getCircuitBreakerAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
+        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
+
+        CircuitBreaker annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, CircuitBreaker.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
+        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, CircuitBreaker.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug("circuitBreaker parameter is null");
         }

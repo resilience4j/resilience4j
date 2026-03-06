@@ -31,7 +31,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
@@ -100,6 +102,14 @@ public class RetryAspect implements Ordered, AutoCloseable {
     public void matchAnnotatedClassOrMethod(Retry retry) {
     }
 
+    @Pointcut("execution(@(@io.github.resilience4j.retry.annotation.Retry *) * *(..))")
+    public void matchMetaAnnotatedMethod() {
+    }
+
+    @Pointcut("within(@(@io.github.resilience4j.retry.annotation.Retry *) *)")
+    public void matchMetaAnnotatedClass() {
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(retryAnnotation)", argNames = "proceedingJoinPoint, retryAnnotation")
     public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable Retry retryAnnotation) throws Throwable {
@@ -117,6 +127,18 @@ public class RetryAspect implements Ordered, AutoCloseable {
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> retryExecution = () -> proceed(proceedingJoinPoint, methodName, retry, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, retryAnnotation.fallbackMethod(), retryExecution);
+    }
+
+    @Around("matchMetaAnnotatedMethod()")
+    public Object retryMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return retryAroundAdvice(proceedingJoinPoint, null);
+    }
+
+    @Around("matchMetaAnnotatedClass()")
+    public Object retryMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return retryAroundAdvice(proceedingJoinPoint, null);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
@@ -158,6 +180,20 @@ public class RetryAspect implements Ordered, AutoCloseable {
      */
     @Nullable
     private Retry getRetryAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
+        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
+
+        Retry annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, Retry.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
+        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, Retry.class);
+        if (annotation != null) {
+            return annotation;
+        }
+
         if (proceedingJoinPoint.getTarget() instanceof Proxy) {
             logger.debug("The retry annotation is kept on a interface which is acting as a proxy");
             return AnnotationExtractor
