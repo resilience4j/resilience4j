@@ -15,6 +15,7 @@ import java.util.concurrent.CompletionStage;
 
 @Component
 public class CircuitBreakerDummyService implements TestDummyService {
+    public static final String DIRECT_AND_COMPOSED_BACKEND = "backendDirectAndComposed";
 
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
@@ -142,6 +143,12 @@ public class CircuitBreakerDummyService implements TestDummyService {
 
     @ComposedCircuitBreaker(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
     public String composedSpelSync(String backend) {
+        return syncError();
+    }
+
+    @CircuitBreaker(name = DIRECT_AND_COMPOSED_BACKEND, fallbackMethod = "recovery")
+    @ComposedCircuitBreaker(name = DIRECT_AND_COMPOSED_BACKEND, fallbackMethod = "recovery")
+    public String directAndComposedSync() {
         return syncError();
     }
 

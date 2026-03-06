@@ -102,7 +102,8 @@ public class RetryAspect implements Ordered, AutoCloseable {
     public void matchAnnotatedClassOrMethod(Retry retry) {
     }
 
-    @Pointcut("execution(@(@io.github.resilience4j.retry.annotation.Retry *) * *(..))")
+    @Pointcut("execution(@(@io.github.resilience4j.retry.annotation.Retry *) * *(..))" +
+        " && !execution(@io.github.resilience4j.retry.annotation.Retry * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
 

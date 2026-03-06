@@ -74,7 +74,8 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         // a marker method
     }
 
-    @Pointcut("execution(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) * *(..))")
+    @Pointcut("execution(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) * *(..))" +
+        " && !execution(@io.github.resilience4j.timelimiter.annotation.TimeLimiter * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
 

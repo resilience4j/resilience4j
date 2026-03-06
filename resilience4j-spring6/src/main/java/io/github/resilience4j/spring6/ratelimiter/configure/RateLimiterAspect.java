@@ -99,7 +99,8 @@ public class RateLimiterAspect implements Ordered {
         // Method used as pointcut
     }
 
-    @Pointcut("execution(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) * *(..))")
+    @Pointcut("execution(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) * *(..))" +
+        " && !execution(@io.github.resilience4j.ratelimiter.annotation.RateLimiter * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
 

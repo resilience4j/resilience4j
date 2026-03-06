@@ -101,7 +101,8 @@ public class BulkheadAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
     }
 
-    @Pointcut("execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))")
+    @Pointcut("execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))" +
+        " && !execution(@io.github.resilience4j.bulkhead.annotation.Bulkhead * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
 

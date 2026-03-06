@@ -93,7 +93,8 @@ public class CircuitBreakerAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
     }
 
-    @Pointcut("execution(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) * *(..))")
+    @Pointcut("execution(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) * *(..))" +
+        " && !execution(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
 
