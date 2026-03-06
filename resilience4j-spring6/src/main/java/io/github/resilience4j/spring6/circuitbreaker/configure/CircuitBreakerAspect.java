@@ -31,12 +31,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
-import org.springframework.aop.support.AopUtils;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -93,7 +90,12 @@ public class CircuitBreakerAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(CircuitBreaker circuitBreaker) {
     }
 
+    /**
+     * Matches one-level composed annotations.
+     * AspectJ {@code @(@Ann *)} does not match transitive meta-annotation hierarchies.
+     */
     @Pointcut("execution(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) * *(..))" +
+        " && !within(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *)" +
         " && !execution(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
@@ -109,8 +111,9 @@ public class CircuitBreakerAspect implements Ordered {
         @Nullable CircuitBreaker circuitBreakerAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (circuitBreakerAnnotation == null) {
-            circuitBreakerAnnotation = getCircuitBreakerAnnotation(proceedingJoinPoint);
+        CircuitBreaker resolvedAnnotation = getCircuitBreakerAnnotation(proceedingJoinPoint);
+        if (resolvedAnnotation != null) {
+            circuitBreakerAnnotation = resolvedAnnotation;
         }
         if (circuitBreakerAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
@@ -164,32 +167,8 @@ public class CircuitBreakerAspect implements Ordered {
 
     @Nullable
     private CircuitBreaker getCircuitBreakerAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
-        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
-
-        CircuitBreaker annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, CircuitBreaker.class);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, CircuitBreaker.class);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("circuitBreaker parameter is null");
-        }
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger.debug(
-                "The circuit breaker annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor
-                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), CircuitBreaker.class);
-        } else {
-            return AnnotationExtractor
-                .extract(proceedingJoinPoint.getTarget().getClass(), CircuitBreaker.class);
-        }
+        return AnnotationExtractor.extractAnnotationFromJoinPoint(proceedingJoinPoint,
+            CircuitBreaker.class);
     }
 
     /**

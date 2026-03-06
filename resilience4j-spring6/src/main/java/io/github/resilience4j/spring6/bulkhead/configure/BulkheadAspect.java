@@ -31,9 +31,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
@@ -101,7 +99,12 @@ public class BulkheadAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
     }
 
+    /**
+     * Matches one-level composed annotations.
+     * AspectJ {@code @(@Ann *)} does not match transitive meta-annotation hierarchies.
+     */
     @Pointcut("execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))" +
+        " && !within(@io.github.resilience4j.bulkhead.annotation.Bulkhead *)" +
         " && !execution(@io.github.resilience4j.bulkhead.annotation.Bulkhead * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
@@ -117,8 +120,9 @@ public class BulkheadAspect implements Ordered {
         @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (bulkheadAnnotation == null) {
-            bulkheadAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
+        Bulkhead resolvedAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
+        if (resolvedAnnotation != null) {
+            bulkheadAnnotation = resolvedAnnotation;
         }
         if (bulkheadAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
@@ -206,32 +210,8 @@ public class BulkheadAspect implements Ordered {
      */
     @Nullable
     private Bulkhead getBulkheadAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
-        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
-
-        Bulkhead annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, Bulkhead.class);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, Bulkhead.class);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("bulkhead parameter is null");
-        }
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger
-                .debug("The bulkhead annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor
-                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Bulkhead.class);
-        } else {
-            return AnnotationExtractor
-                .extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
-        }
+        return AnnotationExtractor.extractAnnotationFromJoinPoint(proceedingJoinPoint,
+            Bulkhead.class);
     }
 
     /**

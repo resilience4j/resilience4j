@@ -32,12 +32,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.support.AopUtils;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -74,7 +71,12 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         // a marker method
     }
 
+    /**
+     * Matches one-level composed annotations.
+     * AspectJ {@code @(@Ann *)} does not match transitive meta-annotation hierarchies.
+     */
     @Pointcut("execution(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) * *(..))" +
+        " && !within(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *)" +
         " && !execution(@io.github.resilience4j.timelimiter.annotation.TimeLimiter * *(..))")
     public void matchMetaAnnotatedMethod() {
     }
@@ -90,8 +92,9 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         @Nullable TimeLimiter timeLimiterAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (timeLimiterAnnotation == null) {
-            timeLimiterAnnotation = getTimeLimiterAnnotation(proceedingJoinPoint);
+        TimeLimiter resolvedAnnotation = getTimeLimiterAnnotation(proceedingJoinPoint);
+        if (resolvedAnnotation != null) {
+            timeLimiterAnnotation = resolvedAnnotation;
         }
         if(timeLimiterAnnotation == null) {
             return proceedingJoinPoint.proceed();
@@ -146,26 +149,8 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
 
     @Nullable
     private TimeLimiter getTimeLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-        Class<?> targetClass = proceedingJoinPoint.getTarget() != null ? proceedingJoinPoint.getTarget().getClass() : method.getDeclaringClass();
-        Method targetMethod = AopUtils.getMostSpecificMethod(method, targetClass);
-
-        TimeLimiter annotation = AnnotatedElementUtils.findMergedAnnotation(targetMethod, TimeLimiter.class);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        annotation = AnnotatedElementUtils.findMergedAnnotation(targetClass, TimeLimiter.class);
-        if (annotation != null) {
-            return annotation;
-        }
-
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger.debug("The TimeLimiter annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), TimeLimiter.class);
-        } else {
-            return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), TimeLimiter.class);
-        }
+        return AnnotationExtractor.extractAnnotationFromJoinPoint(proceedingJoinPoint,
+            TimeLimiter.class);
     }
 
     private Object handleJoinPointCompletableFuture(
