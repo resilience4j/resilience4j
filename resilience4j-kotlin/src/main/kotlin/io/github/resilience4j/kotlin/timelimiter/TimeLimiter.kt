@@ -22,6 +22,7 @@ import io.github.resilience4j.kotlin.isCancellation
 import io.github.resilience4j.timelimiter.TimeLimiter
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.coroutineContext
 
@@ -76,4 +77,31 @@ suspend fun <T> TimeLimiter.executeSuspendFunction(block: suspend () -> T): T =
  */
 fun <T> TimeLimiter.decorateSuspendFunction(block: suspend () -> T): suspend () -> T = {
     executeSuspendFunction(block)
+}
+
+/**
+ * Decorates and executes the given function [block].
+ *
+ * The function is wrapped in a [CompletableFuture] and the timeout is applied using the
+ * TimeLimiter's configured timeout duration.
+ *
+ * @throws TimeoutException if the function execution exceeds the configured timeout
+ * @throws Exception if the function throws an exception
+ */
+@Throws(Exception::class)
+fun <T> TimeLimiter.executeFunction(block: () -> T): T {
+    return this.executeFutureSupplier { CompletableFuture.supplyAsync(block) }
+}
+
+/**
+ * Decorates the given function [block] and returns it.
+ *
+ * The returned function wraps the original in a [CompletableFuture] and applies the
+ * TimeLimiter's configured timeout.
+ *
+ * @throws TimeoutException if the function execution exceeds the configured timeout
+ * @throws Exception if the function throws an exception
+ */
+fun <T> TimeLimiter.decorateFunction(block: () -> T): () -> T = {
+    executeFunction(block)
 }
