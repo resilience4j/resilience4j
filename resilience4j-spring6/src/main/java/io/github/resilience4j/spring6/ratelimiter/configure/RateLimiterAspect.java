@@ -103,7 +103,9 @@ public class RateLimiterAspect implements Ordered {
     public void matchMetaAnnotatedMethod() {
     }
 
-    @Pointcut("within(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) *)")
+    @Pointcut("within(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) *)" +
+        " && !execution(@io.github.resilience4j.ratelimiter.annotation.RateLimiter * *(..))" +
+        " && !execution(@(@io.github.resilience4j.ratelimiter.annotation.RateLimiter *) * *(..))")
     public void matchMetaAnnotatedClass() {
     }
 
@@ -126,14 +128,8 @@ public class RateLimiterAspect implements Ordered {
         return fallbackExecutor.execute(proceedingJoinPoint, method, rateLimiterAnnotation.fallbackMethod(), rateLimiterExecution);
     }
 
-    @Around("matchMetaAnnotatedMethod()")
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
     public Object rateLimiterMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
-        throws Throwable {
-        return rateLimiterAroundAdvice(proceedingJoinPoint, null);
-    }
-
-    @Around("matchMetaAnnotatedClass()")
-    public Object rateLimiterMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
         throws Throwable {
         return rateLimiterAroundAdvice(proceedingJoinPoint, null);
     }

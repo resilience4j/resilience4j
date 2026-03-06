@@ -105,7 +105,9 @@ public class BulkheadAspect implements Ordered {
     public void matchMetaAnnotatedMethod() {
     }
 
-    @Pointcut("within(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) *)")
+    @Pointcut("within(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) *)" +
+        " && !execution(@io.github.resilience4j.bulkhead.annotation.Bulkhead * *(..))" +
+        " && !execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))")
     public void matchMetaAnnotatedClass() {
     }
 
@@ -134,14 +136,8 @@ public class BulkheadAspect implements Ordered {
         }
     }
 
-    @Around("matchMetaAnnotatedMethod()")
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
     public Object bulkheadMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
-        throws Throwable {
-        return bulkheadAroundAdvice(proceedingJoinPoint, null);
-    }
-
-    @Around("matchMetaAnnotatedClass()")
-    public Object bulkheadMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
         throws Throwable {
         return bulkheadAroundAdvice(proceedingJoinPoint, null);
     }

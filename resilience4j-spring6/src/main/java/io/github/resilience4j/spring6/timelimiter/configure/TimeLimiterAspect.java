@@ -78,7 +78,9 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
     public void matchMetaAnnotatedMethod() {
     }
 
-    @Pointcut("within(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) *)")
+    @Pointcut("within(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) *)" +
+        " && !execution(@io.github.resilience4j.timelimiter.annotation.TimeLimiter * *(..))" +
+        " && !execution(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) * *(..))")
     public void matchMetaAnnotatedClass() {
     }
 
@@ -101,14 +103,8 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         return fallbackExecutor.execute(proceedingJoinPoint, method, timeLimiterAnnotation.fallbackMethod(), timeLimiterExecution);
     }
 
-    @Around("matchMetaAnnotatedMethod()")
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
     public Object timeLimiterMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
-        throws Throwable {
-        return timeLimiterAroundAdvice(proceedingJoinPoint, null);
-    }
-
-    @Around("matchMetaAnnotatedClass()")
-    public Object timeLimiterMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
         throws Throwable {
         return timeLimiterAroundAdvice(proceedingJoinPoint, null);
     }

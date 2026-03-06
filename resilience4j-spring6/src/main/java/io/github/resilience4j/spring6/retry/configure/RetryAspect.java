@@ -106,7 +106,9 @@ public class RetryAspect implements Ordered, AutoCloseable {
     public void matchMetaAnnotatedMethod() {
     }
 
-    @Pointcut("within(@(@io.github.resilience4j.retry.annotation.Retry *) *)")
+    @Pointcut("within(@(@io.github.resilience4j.retry.annotation.Retry *) *)" +
+        " && !execution(@io.github.resilience4j.retry.annotation.Retry * *(..))" +
+        " && !execution(@(@io.github.resilience4j.retry.annotation.Retry *) * *(..))")
     public void matchMetaAnnotatedClass() {
     }
 
@@ -129,14 +131,8 @@ public class RetryAspect implements Ordered, AutoCloseable {
         return fallbackExecutor.execute(proceedingJoinPoint, method, retryAnnotation.fallbackMethod(), retryExecution);
     }
 
-    @Around("matchMetaAnnotatedMethod()")
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
     public Object retryMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
-        throws Throwable {
-        return retryAroundAdvice(proceedingJoinPoint, null);
-    }
-
-    @Around("matchMetaAnnotatedClass()")
-    public Object retryMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
         throws Throwable {
         return retryAroundAdvice(proceedingJoinPoint, null);
     }

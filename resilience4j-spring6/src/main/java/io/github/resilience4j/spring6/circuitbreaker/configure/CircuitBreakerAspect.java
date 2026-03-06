@@ -97,7 +97,9 @@ public class CircuitBreakerAspect implements Ordered {
     public void matchMetaAnnotatedMethod() {
     }
 
-    @Pointcut("within(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) *)")
+    @Pointcut("within(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) *)" +
+        " && !execution(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker * *(..))" +
+        " && !execution(@(@io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker *) * *(..))")
     public void matchMetaAnnotatedClass() {
     }
 
@@ -120,14 +122,8 @@ public class CircuitBreakerAspect implements Ordered {
         return fallbackExecutor.execute(proceedingJoinPoint, method, circuitBreakerAnnotation.fallbackMethod(), circuitBreakerExecution);
     }
 
-    @Around("matchMetaAnnotatedMethod()")
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
     public Object circuitBreakerMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
-        throws Throwable {
-        return circuitBreakerAroundAdvice(proceedingJoinPoint, null);
-    }
-
-    @Around("matchMetaAnnotatedClass()")
-    public Object circuitBreakerMetaAnnotationClassAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
         throws Throwable {
         return circuitBreakerAroundAdvice(proceedingJoinPoint, null);
     }
