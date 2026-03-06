@@ -2,14 +2,31 @@ package io.github.resilience4j.spring6;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.reactivex.*;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.CompletionStage;
 
 @Component
 public class CircuitBreakerDummyService implements TestDummyService {
+    public static final String DIRECT_AND_COMPOSED_BACKEND = "backendDirectAndComposed";
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @CircuitBreaker(name = BACKEND, fallbackMethod = "recovery")
+    public @interface ComposedCircuitBreaker {
+        @AliasFor(annotation = CircuitBreaker.class, attribute = "name")
+        String name() default BACKEND;
+
+        @AliasFor(annotation = CircuitBreaker.class, attribute = "fallbackMethod")
+        String fallbackMethod() default "recovery";
+    }
 
     @Override
     @CircuitBreaker(name = BACKEND, fallbackMethod = "recovery")
@@ -116,6 +133,22 @@ public class CircuitBreakerDummyService implements TestDummyService {
     @Override
     @CircuitBreaker(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
     public String spelSync(String backend) {
+        return syncError();
+    }
+
+    @ComposedCircuitBreaker
+    public String composedSync() {
+        return syncError();
+    }
+
+    @ComposedCircuitBreaker(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String composedSpelSync(String backend) {
+        return syncError();
+    }
+
+    @CircuitBreaker(name = DIRECT_AND_COMPOSED_BACKEND, fallbackMethod = "recovery")
+    @ComposedCircuitBreaker(name = DIRECT_AND_COMPOSED_BACKEND, fallbackMethod = "recovery")
+    public String directAndComposedSync() {
         return syncError();
     }
 
