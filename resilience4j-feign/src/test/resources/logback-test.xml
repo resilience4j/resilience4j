@@ -9,6 +9,7 @@
         </layout>
     </appender>
 
+    <!-- reduce noise from wiremock -->
     <logger name="org.eclipse.jetty" level="WARN"/>
 
     <root level="DEBUG">
