@@ -35,6 +35,7 @@ dependencies {
 
     testCompileOnly(project(":resilience4j-micronaut-annotation"))
 
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(project(":resilience4j-bulkhead"))
     testImplementation(project(":resilience4j-circuitbreaker"))
     testImplementation(project(":resilience4j-consumer"))

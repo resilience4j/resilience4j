@@ -27,8 +27,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.jayway.awaitility.Awaitility.await;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static io.github.resilience4j.micrometer.tagged.ThreadPoolBulkheadMetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -173,10 +175,13 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
         Gauge activeCount = meterRegistry.get(DEFAULT_BULKHEAD_ACTIVE_THREAD_COUNT_METRIC_NAME).gauge();
 
         assertThat(activeCount).isNotNull();
-        // `greaterThanOrEqualTo` prevents timing issue where active count drops
-        // between getting the value from the gauge and
-        // asserting it is equal to the current value
-        assertThat(activeCount.value()).isGreaterThanOrEqualTo(bulkhead.getMetrics().getActiveThreadCount());
+
+        // prevents timing issue with mismatching count as threads switch between active and available
+        await().atMost(100, TimeUnit.MILLISECONDS)
+                .pollDelay(10, TimeUnit.MILLISECONDS)
+                .until(() -> activeCount.value() == bulkhead.getMetrics().getActiveThreadCount());
+
+        assertThat(activeCount.value()).isEqualTo(bulkhead.getMetrics().getActiveThreadCount());
         assertThat(activeCount.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
     }
 
@@ -185,6 +190,12 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
         Gauge availableThreadCount = meterRegistry.get(DEFAULT_BULKHEAD_AVAILABLE_THREAD_COUNT_METRIC_NAME).gauge();
 
         assertThat(availableThreadCount).isNotNull();
+
+        // prevents timing issue with mismatching count as threads switch between active and available
+        await().atMost(100, TimeUnit.MILLISECONDS)
+                .pollDelay(10, TimeUnit.MILLISECONDS)
+                .until(() -> availableThreadCount.value() == bulkhead.getMetrics().getAvailableThreadCount());
+
         assertThat(availableThreadCount.value()).isEqualTo(bulkhead.getMetrics().getAvailableThreadCount());
         assertThat(availableThreadCount.getId().getTag(TagNames.NAME)).isEqualTo(bulkhead.getName());
     }
