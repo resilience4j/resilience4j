@@ -18,7 +18,6 @@ package io.github.resilience4j.micronaut.timelimiter;
 import io.github.resilience4j.micronaut.BaseInterceptor;
 import io.github.resilience4j.micronaut.ResilienceInterceptPhase;
 import io.github.resilience4j.micronaut.util.PublisherExtension;
-import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -33,7 +32,6 @@ import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
 import io.micronaut.scheduling.TaskExecutors;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

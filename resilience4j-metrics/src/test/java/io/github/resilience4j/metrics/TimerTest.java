@@ -24,8 +24,6 @@ import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.collection.Stream;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,8 +33,9 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -140,7 +139,7 @@ public class TimerTest {
         String value = stringCompletionStage.toCompletableFuture().get();
         assertThat(value).isEqualTo("Hello world");
         await().atMost(1, SECONDS)
-            .until(() -> {
+            .untilAsserted(() -> {
                 assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
                 assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
                 assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
@@ -200,10 +199,9 @@ public class TimerTest {
         Supplier<String> supplier = Timer
             .decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(supplier::get);
+        assertThatThrownBy(supplier::get)
+            .isInstanceOf(RuntimeException.class);
 
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
@@ -217,7 +215,7 @@ public class TimerTest {
         Supplier<String> timedSupplier = Timer
             .decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
-        Stream.range(0, 2).forEach((i) -> timedSupplier.get());
+        IntStream.range(0, 2).forEach((i) -> timedSupplier.get());
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(2);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
@@ -230,7 +228,7 @@ public class TimerTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world")
             .willThrow(new IllegalArgumentException("BAM!"));
 
-        Stream.range(0, 2).forEach((i) -> {
+        IntStream.range(0, 2).forEach((i) -> {
             try {
                 timer.executeSupplier(helloWorldService::returnHelloWorld);
             } catch (Exception e) {

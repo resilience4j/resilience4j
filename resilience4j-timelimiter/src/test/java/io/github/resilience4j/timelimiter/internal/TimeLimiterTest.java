@@ -2,7 +2,6 @@ package io.github.resilience4j.timelimiter.internal;
 
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.vavr.control.Try;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -10,6 +9,7 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -34,7 +34,7 @@ public class TimeLimiterTest {
         TimeLimiterConfig timeLimiterConfig = TimeLimiterConfig.custom()
             .timeoutDuration(timeoutDuration)
             .build();
-        TimeLimiter timeLimiter = TimeLimiter.of(TIME_LIMITER_NAME,timeLimiterConfig);
+        TimeLimiter timeLimiter = TimeLimiter.of(TIME_LIMITER_NAME, timeLimiterConfig);
 
         @SuppressWarnings("unchecked")
         Future<Integer> mockFuture = (Future<Integer>) mock(Future.class);
@@ -44,11 +44,10 @@ public class TimeLimiterTest {
             .willThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
-        Try<Integer> decoratedResult = Try.ofCallable(decorated);
 
-        assertThat(decoratedResult.isFailure()).isTrue();
-        assertThat(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
-        assertThat(decoratedResult.getCause()).hasMessage(TimeLimiter.createdTimeoutExceptionWithName(TIME_LIMITER_NAME, null).getMessage());
+        assertThatThrownBy(decorated::call)
+            .isInstanceOf(TimeoutException.class)
+            .hasMessage(TimeLimiter.createdTimeoutExceptionWithName(TIME_LIMITER_NAME, null).getMessage());
 
         then(mockFuture).should().cancel(true);
     }
@@ -71,9 +70,9 @@ public class TimeLimiterTest {
 
         CompletionStage<Integer> decorated = TimeLimiter
             .decorateCompletionStage(timeLimiter, scheduler, supplier).get();
-        Try<Integer> decoratedResult = Try.ofCallable(() -> decorated.toCompletableFuture().get());
-        assertThat(decoratedResult.isFailure()).isTrue();
-        assertThat(decoratedResult.getCause()).isInstanceOf(ExecutionException.class)
+
+        assertThatThrownBy(() -> decorated.toCompletableFuture().get())
+            .isInstanceOf(ExecutionException.class)
             .hasCauseExactlyInstanceOf(TimeoutException.class);
     }
 
@@ -92,10 +91,9 @@ public class TimeLimiterTest {
             .willThrow(new TimeoutException());
 
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
-        Try<Integer> decoratedResult = Try.ofCallable(decorated);
 
-        assertThat(decoratedResult.isFailure()).isTrue();
-        assertThat(decoratedResult.getCause()).isInstanceOf(TimeoutException.class);
+        assertThatThrownBy(decorated::call)
+            .isInstanceOf(TimeoutException.class);
 
         then(mockFuture).should(never()).cancel(true);
     }
@@ -153,9 +151,8 @@ public class TimeLimiterTest {
         });
         Callable<Integer> decorated = TimeLimiter.decorateFutureSupplier(timeLimiter, supplier);
 
-        Try<Integer> decoratedResult = Try.ofCallable(decorated);
-
-        assertThat(decoratedResult.getCause() instanceof RuntimeException).isTrue();
+        assertThatThrownBy(decorated::call)
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test

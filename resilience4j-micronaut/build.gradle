@@ -1,5 +1,7 @@
 apply plugin: "groovy"
 
+ext.moduleName = "io.github.resilience4j.micronaut"
+
 dependencies {
     annotationProcessor(platform(libs.micronaut.platform))
     annotationProcessor(libs.micronaut.inject.java)
@@ -54,9 +56,3 @@ dependencies {
     testImplementation(libs.micronaut.test.spock)
     testImplementation(libs.objenesis)
 }
-
-test {
-    useJUnitPlatform()
-}
-
-ext.moduleName = "io.github.resilience4j.micronaut"

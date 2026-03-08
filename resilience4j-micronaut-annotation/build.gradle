@@ -1,3 +1,5 @@
+ext.moduleName = "io.github.resilience4j.micronautannotation"
+
 dependencies {
     annotationProcessor(platform(libs.micronaut.platform))
     annotationProcessor(libs.micronaut.inject.java)
@@ -9,9 +11,3 @@ dependencies {
 
     testAnnotationProcessor(platform(libs.micronaut.platform))
 }
-
-test {
-    useJUnitPlatform()
-}
-
-ext.moduleName = "io.github.resilience4j.micronautannotation"

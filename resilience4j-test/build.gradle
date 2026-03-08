@@ -1,3 +1,5 @@
+ext.moduleName = "io.github.resilience4j.test"
+
 //artifactoryPublish.skip = true
 sonarqube.skipProject = true
 dependencies {
@@ -6,4 +8,3 @@ dependencies {
     implementation(project(":resilience4j-core"))
     implementation(libs.vavr)
 }
-ext.moduleName = "io.github.resilience4j.test"

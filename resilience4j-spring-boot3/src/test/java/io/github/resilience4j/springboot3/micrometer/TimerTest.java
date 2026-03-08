@@ -38,7 +38,6 @@ import static io.github.resilience4j.micrometer.event.TimerEvent.Type.*;
 import static io.github.resilience4j.springboot3.service.test.micrometer.TimedService.*;
 import static java.time.Duration.ofSeconds;
 import static java.time.ZonedDateTime.now;
-import static java.time.ZonedDateTime.parse;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;

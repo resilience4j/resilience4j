@@ -34,8 +34,6 @@ import java.time.Duration;
 import static io.vavr.API.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class VavrRetryTest {
 

@@ -1,3 +1,5 @@
+ext.moduleName = "io.github.resilience4j.rxjava2"
+
 dependencies {
     api(libs.rxjava2)
 
@@ -8,8 +10,10 @@ dependencies {
     implementation(project(":resilience4j-retry"))
     implementation(project(":resilience4j-timelimiter"))
 
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
     testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
     testImplementation(project(":resilience4j-test"))
     testImplementation(libs.rxjava2)
 }
-ext.moduleName = "io.github.resilience4j.rxjava2"

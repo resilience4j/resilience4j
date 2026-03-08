@@ -14,7 +14,7 @@ spring-cloud5 = "5.0.0"
 asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "2.4.0" }
 bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.1.0" }
 jmh = { id = "me.champeau.jmh", version = "0.6.8" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.25" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.21" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 sonarqube = { id = "org.sonarqube", version = "3.5.0.2730" }
 test-retry = { id = "org.gradle.test-retry", version = "1.5.10" }
@@ -28,11 +28,14 @@ jsr305 = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
 
 # Common test dependencies
 assertj-core = { module = "org.assertj:assertj-core", version = "3.18.1" }
-awaitility = { module = "com.jayway.awaitility:awaitility", version = "1.7.0" }
-jaxws-ri = { module = "com.sun.xml.ws:jaxws-ri", version = "2.3.2" }
-junit = { module = "junit:junit", version = "4.12" }
+awaitility = { module = "org.awaitility:awaitility", version = "4.3.0" }
+junit = { module = "junit:junit", version = "4.13.2" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.2.3" }
 mockito-core = { module = "org.mockito:mockito-core", version = "5.16.1" }
+junit-bom = { module = "org.junit:junit-bom", version = "6.0.3" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 
 # resilience4j-cache
 jcache = { module = "javax.cache:cache-api", version = "1.1.0" }
@@ -52,7 +55,7 @@ feign-core = { module = "io.github.openfeign:feign-core", version = "12.0" }
 feign-wiremock = { module = "com.github.tomakehurst:wiremock-jre8", version = "2.26.0" }
 
 # resilience4j-kotlin
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version = "1.9.0" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.6.4" }
 
 # resilience4j-metrics (Dropwizard)
@@ -138,4 +141,4 @@ spring7-core = { module = "org.springframework:spring-core", version.ref = "spri
 vavr = { module = "io.vavr:vavr", version = "0.10.2" }
 
 [bundles]
-testing = ["junit", "assertj-core", "logback-classic", "mockito-core", "awaitility"]
+testing = ["assertj-core", "logback-classic", "mockito-core", "awaitility", "junit-jupiter"]

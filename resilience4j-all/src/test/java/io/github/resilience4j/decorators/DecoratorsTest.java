@@ -21,8 +21,6 @@ package io.github.resilience4j.decorators;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -42,7 +40,6 @@ import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContext
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.MDC;
@@ -52,11 +49,9 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.awaitility.Awaitility.await;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -133,8 +128,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -176,8 +171,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldPropagateThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldPropagateThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -394,7 +389,7 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedSupplier() throws IOException {
+    public void testDecorateCheckedSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedSupplier<String> decoratedSupplier = Decorators
@@ -405,7 +400,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        String result = Try.of(() -> decoratedSupplier.get()).get();
+        String result = decoratedSupplier.get();
 
         assertThat(result).isEqualTo("Hello world");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -513,7 +508,7 @@ public class DecoratorsTest {
     public void testDecorateSupplierWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
-        
+
         given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
 
         CompletionStage<String> completionStage = Decorators
@@ -631,7 +626,7 @@ public class DecoratorsTest {
 
 
     @Test
-    public void testDecorateCheckedRunnable() throws IOException {
+    public void testDecorateCheckedRunnable() throws Throwable {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
         CheckedRunnable decoratedRunnable = Decorators
             .ofCheckedRunnable(() -> helloWorldService.sayHelloWorldWithException())
@@ -641,7 +636,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        Try.run(() -> decoratedRunnable.run());
+        decoratedRunnable.run();
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -757,8 +752,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
@@ -800,8 +795,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
@@ -861,7 +856,7 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedFunction() throws IOException {
+    public void testDecorateCheckedFunction() throws Throwable {
         given(helloWorldService.returnHelloWorldWithNameWithException("Name"))
             .willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -873,7 +868,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        String result = Try.of(() -> decoratedFunction.apply("Name")).get();
+        String result = decoratedFunction.apply("Name");
 
         assertThat(result).isEqualTo("Hello world Name");
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
@@ -895,7 +890,7 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecorateCheckedConsumer() {
+    public void testDecorateCheckedConsumer() throws Throwable {
         given(helloWorldService.returnHelloWorldWithName("Name"))
             .willReturn("Hello world Name");
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("helloBackend");
@@ -907,7 +902,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        Try.run(() -> decoratedConsumer.accept("Name"));
+        decoratedConsumer.accept("Name");
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -926,7 +921,7 @@ public class DecoratorsTest {
             .withBulkhead(Bulkhead.ofDefaults("testName"))
             .decorate();
 
-        Try.of(decoratedSupplier::get);
+        assertThatThrownBy(decoratedSupplier::get).isInstanceOf(RuntimeException.class);
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
@@ -935,7 +930,7 @@ public class DecoratorsTest {
     }
 
     @Test
-    public void testDecoratorBuilderWithRateLimiter() {
+    public void testDecoratorBuilderWithRateLimiter() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         RateLimiterConfig config = RateLimiterConfig.custom()
             .timeoutDuration(Duration.ofMillis(100))
@@ -949,12 +944,10 @@ public class DecoratorsTest {
             .decorate();
         alignTime(rateLimiter);
 
-        Try<String> firstTry = Try.of(() -> restrictedSupplier.get());
-        Try<String> secondTry = Try.of(() -> restrictedSupplier.get());
+        String firstResult = restrictedSupplier.get();
+        assertThatThrownBy(restrictedSupplier::get).isInstanceOf(RequestNotPermitted.class);
 
-        assertThat(firstTry.isSuccess()).isTrue();
-        assertThat(secondTry.isFailure()).isTrue();
-        assertThat(secondTry.getCause()).isInstanceOf(RequestNotPermitted.class);
+        assertThat(firstResult).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
@@ -972,7 +965,7 @@ public class DecoratorsTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testDecorateCheckedSupplierWithCache() {
+    public void testDecorateCheckedSupplierWithCache() throws Throwable {
         javax.cache.Cache<String, String> cache = mock(javax.cache.Cache.class);
         given(cache.containsKey("testKey")).willReturn(true);
         given(cache.get("testKey")).willReturn("Hello from cache");
@@ -981,9 +974,9 @@ public class DecoratorsTest {
             .withCache(Cache.of(cache))
             .decorate();
 
-        Try<String> value = Try.of(() -> cachedFunction.apply("testKey"));
+        String value = cachedFunction.apply("testKey");
 
-        assertThat(value).contains("Hello from cache");
+        assertThat(value).isEqualTo("Hello from cache");
     }
 
 

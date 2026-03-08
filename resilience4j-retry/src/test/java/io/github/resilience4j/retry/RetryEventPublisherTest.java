@@ -20,14 +20,12 @@ package io.github.resilience4j.retry;
 
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import static io.vavr.API.*;
-import static io.vavr.Predicates.instanceOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -75,7 +73,8 @@ public class RetryEventPublisherTest {
         retry.getEventPublisher().onRetry(
             event -> logger.info(event.getEventType().toString()));
 
-        Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        assertThatThrownBy(() -> Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get())
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
         then(logger).should(times(2)).info("RETRY");
@@ -87,7 +86,8 @@ public class RetryEventPublisherTest {
         retry.getEventPublisher().onError(
             event -> logger.info(event.getEventType().toString()));
 
-        Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        assertThatThrownBy(() -> Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get())
+            .isInstanceOf(HelloWorldException.class);
 
         then(logger).should(times(1)).info("ERROR");
         then(helloWorldService).should(times(3)).returnHelloWorld();
@@ -98,15 +98,14 @@ public class RetryEventPublisherTest {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException());
         RetryConfig retryConfig = RetryConfig.custom()
-            .retryOnException(throwable -> Match(throwable).of(
-                Case($(instanceOf(HelloWorldException.class)), false),
-                Case($(), true)))
+            .retryOnException(throwable -> !(throwable instanceof HelloWorldException))
             .build();
         retry = Retry.of("testName", retryConfig);
         retry.getEventPublisher().onIgnoredError(
             event -> logger.info(event.getEventType().toString()));
 
-        Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        assertThatThrownBy(() -> Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get())
+            .isInstanceOf(HelloWorldException.class);
 
         then(logger).should(times(1)).info("IGNORED_ERROR");
         then(helloWorldService).should(times(1)).returnHelloWorld();

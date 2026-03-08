@@ -20,7 +20,6 @@ import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,7 +80,10 @@ public abstract class AbstractRetryMetricsTest {
             .willThrow(new HelloWorldException());
         String value1 = retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-        Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        try {
+            Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get();
+        } catch (Exception ignored) {
+        }
 
         assertThat(value1).isEqualTo("Hello world");
         then(helloWorldService).should(times(5)).returnHelloWorld();

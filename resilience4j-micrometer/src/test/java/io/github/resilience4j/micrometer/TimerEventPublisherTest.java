@@ -23,11 +23,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.resilience4j.micrometer.event.TimerEvent.Type.*;
-import static java.time.ZonedDateTime.now;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.junit.rules.ExpectedException.none;
 

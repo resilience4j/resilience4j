@@ -1,3 +1,5 @@
+ext.moduleName = "io.github.resilience4j.spring6"
+
 dependencies {
     api(project(":resilience4j-annotations"))
     api(project(":resilience4j-consumer"))
@@ -14,6 +16,9 @@ dependencies {
     compileOnly(libs.spring6.context)
     compileOnly(libs.spring6.core)
 
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
     testImplementation(project(":resilience4j-metrics"))
     testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
     testImplementation(project(":resilience4j-reactor"))
@@ -28,4 +33,3 @@ dependencies {
     testImplementation(libs.spring.boot3.web)
     testImplementation(libs.spring6.context)
 }
-ext.moduleName = "io.github.resilience4j.spring6"

@@ -15,8 +15,6 @@
  */
 package io.github.resilience4j.spring6.retry.configure;
 
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties.InstanceProperties;

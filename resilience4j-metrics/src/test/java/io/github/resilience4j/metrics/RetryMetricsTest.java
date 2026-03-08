@@ -7,7 +7,6 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -17,6 +16,7 @@ import java.util.function.Supplier;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
@@ -108,10 +108,10 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException());
 
-        Try<String> supplier = Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        assertThatThrownBy(() -> Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get())
+            .isInstanceOf(Exception.class);
 
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(5);
-        assertThat(supplier.isFailure()).isTrue();
     }
 
     // throws only checked exception finally
@@ -130,10 +130,10 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
         Callable<String> retryableCallable = Retry.decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
 
-        Try<Void> run = Try.run(retryableCallable::call);
+        assertThatThrownBy(retryableCallable::call)
+            .isInstanceOf(Exception.class);
 
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(5);
-        assertThat(run.isFailure()).isTrue();
     }
 
 

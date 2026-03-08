@@ -21,7 +21,6 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,13 +34,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.API.*;
-import static io.vavr.Predicates.instanceOf;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
@@ -73,15 +70,12 @@ public class RateLimiterTest {
         CheckedSupplier supplier = mock(CheckedSupplier.class);
         CheckedSupplier decorated = RateLimiter.decorateCheckedSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try decoratedSupplierResult = Try.of(() -> decorated.get());
-        assertThat(decoratedSupplierResult.isFailure()).isTrue();
-        assertThat(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(decorated::get).isInstanceOf(RequestNotPermitted.class);
         then(supplier).should(never()).get();
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondSupplierResult = Try.of(() -> decorated.get());
-
-        assertThat(secondSupplierResult.isSuccess()).isTrue();
+        decorated.get();
         then(supplier).should().get();
     }
 
@@ -90,15 +84,12 @@ public class RateLimiterTest {
         CheckedRunnable runnable = mock(CheckedRunnable.class);
         CheckedRunnable decorated = RateLimiter.decorateCheckedRunnable(limit, runnable);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try decoratedRunnableResult = Try.run(() -> decorated.run());
-        assertThat(decoratedRunnableResult.isFailure()).isTrue();
-        assertThat(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(decorated::run).isInstanceOf(RequestNotPermitted.class);
         then(runnable).should(never()).run();
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondRunnableResult = Try.run(() -> decorated.run());
-
-        assertThat(secondRunnableResult.isSuccess()).isTrue();
+        decorated.run();
         then(runnable).should().run();
     }
 
@@ -108,15 +99,12 @@ public class RateLimiterTest {
         CheckedFunction<Integer, String> decorated = RateLimiter
             .decorateCheckedFunction(limit, function);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try<String> decoratedFunctionResult = Try.success(1).mapTry(value -> decorated.apply(value));
-        assertThat(decoratedFunctionResult.isFailure()).isTrue();
-        assertThat(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(() -> decorated.apply(1)).isInstanceOf(RequestNotPermitted.class);
         then(function).should(never()).apply(any());
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondFunctionResult = Try.success(1).mapTry(value -> decorated.apply(value));
-
-        assertThat(secondFunctionResult.isSuccess()).isTrue();
+        decorated.apply(1);
         then(function).should().apply(1);
     }
 
@@ -125,15 +113,12 @@ public class RateLimiterTest {
         Supplier supplier = mock(Supplier.class);
         Supplier decorated = RateLimiter.decorateSupplier(limit, supplier);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try decoratedSupplierResult = Try.success(decorated).map(Supplier::get);
-        assertThat(decoratedSupplierResult.isFailure()).isTrue();
-        assertThat(decoratedSupplierResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(decorated::get).isInstanceOf(RequestNotPermitted.class);
         then(supplier).should(never()).get();
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondSupplierResult = Try.success(decorated).map(Supplier::get);
-
-        assertThat(secondSupplierResult.isSuccess()).isTrue();
+        decorated.get();
         then(supplier).should().get();
     }
 
@@ -142,15 +127,12 @@ public class RateLimiterTest {
         Consumer<Integer> consumer = mock(Consumer.class);
         Consumer<Integer> decorated = RateLimiter.decorateConsumer(limit, consumer);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try<Integer> decoratedConsumerResult = Try.success(1).andThen(decorated);
-        assertThat(decoratedConsumerResult.isFailure()).isTrue();
-        assertThat(decoratedConsumerResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(() -> decorated.accept(1)).isInstanceOf(RequestNotPermitted.class);
         then(consumer).should(never()).accept(any());
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondConsumerResult = Try.success(1).andThen(decorated);
-
-        assertThat(secondConsumerResult.isSuccess()).isTrue();
+        decorated.accept(1);
         then(consumer).should().accept(1);
     }
 
@@ -159,15 +141,12 @@ public class RateLimiterTest {
         Runnable runnable = mock(Runnable.class);
         Runnable decorated = RateLimiter.decorateRunnable(limit, runnable);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try decoratedRunnableResult = Try.success(decorated).andThen(Runnable::run);
-        assertThat(decoratedRunnableResult.isFailure()).isTrue();
-        assertThat(decoratedRunnableResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(decorated::run).isInstanceOf(RequestNotPermitted.class);
         then(runnable).should(never()).run();
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondRunnableResult = Try.success(decorated).andThen(Runnable::run);
-
-        assertThat(secondRunnableResult.isSuccess()).isTrue();
+        decorated.run();
         then(runnable).should().run();
     }
 
@@ -176,20 +155,17 @@ public class RateLimiterTest {
         Function<Integer, String> function = mock(Function.class);
         Function<Integer, String> decorated = RateLimiter.decorateFunction(limit, function);
         given(limit.acquirePermission(1)).willReturn(false);
-        Try<String> decoratedFunctionResult = Try.success(1).map(decorated);
-        assertThat(decoratedFunctionResult.isFailure()).isTrue();
-        assertThat(decoratedFunctionResult.getCause()).isInstanceOf(RequestNotPermitted.class);
+
+        assertThatThrownBy(() -> decorated.apply(1)).isInstanceOf(RequestNotPermitted.class);
         then(function).should(never()).apply(any());
+
         given(limit.acquirePermission(1)).willReturn(true);
-
-        Try secondFunctionResult = Try.success(1).map(decorated);
-
-        assertThat(secondFunctionResult.isSuccess()).isTrue();
+        decorated.apply(1);
         then(function).should().apply(1);
     }
 
     @Test
-    public void decorateCompletionStage() {
+    public void decorateCompletionStage() throws Exception {
         Supplier supplier = mock(Supplier.class);
         given(supplier.get()).willReturn("Resource");
         Supplier<CompletionStage<String>> completionStage = () -> supplyAsync(supplier);
@@ -201,11 +177,8 @@ public class RateLimiterTest {
             .whenComplete((v, e) -> error.set(e))
             .toCompletableFuture();
 
-        Try<String> errorResult = Try.of(notPermittedFuture::get);
-
-        assertTrue(errorResult.isFailure());
-        assertThat(errorResult.getCause()).isInstanceOf(ExecutionException.class);
-        assertThat(notPermittedFuture.isCompletedExceptionally()).isTrue();
+        assertThatThrownBy(notPermittedFuture::get).isInstanceOf(ExecutionException.class);
+        assertTrue(notPermittedFuture.isCompletedExceptionally());
         assertThat(error.get()).isExactlyInstanceOf(RequestNotPermitted.class);
         then(supplier).should(never()).get();
 
@@ -215,9 +188,8 @@ public class RateLimiterTest {
             .whenComplete((v, e) -> error.set(e))
             .toCompletableFuture();
 
-        Try<String> successResult = Try.of(success::get);
-
-        assertThat(successResult.isSuccess()).isTrue();
+        String result = success.get();
+        assertThat(result).isEqualTo("Resource");
         assertThat(success.isCompletedExceptionally()).isFalse();
         assertThat(shouldBeEmpty.get()).isNull();
         then(supplier).should().get();
@@ -279,12 +251,14 @@ public class RateLimiterTest {
         AtomicBoolean wasInterrupted = new AtomicBoolean(true);
         Thread thread = new Thread(() -> {
             wasInterrupted.set(false);
-            Throwable cause = Try.run(() -> RateLimiter.waitForPermission(limit))
-                .getCause();
-            Boolean interrupted = Match(cause).of(
-                Case($(instanceOf(IllegalStateException.class)), true)
-            );
-            interrupted = interrupted && Thread.currentThread().isInterrupted();
+            Throwable cause = null;
+            try {
+                RateLimiter.waitForPermission(limit);
+            } catch (Throwable t) {
+                cause = t;
+            }
+            boolean interrupted = (cause instanceof IllegalStateException)
+                && Thread.currentThread().isInterrupted();
             wasInterrupted.set(interrupted);
         });
         thread.setDaemon(true);

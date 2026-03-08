@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.ratelimiter;
 
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -76,7 +75,10 @@ public class RateLimiterEventPublisherTest {
             event -> logger.info(event.getEventType().toString()));
         rateLimiter.executeSupplier(() -> "Hello world");
 
-        Try.ofSupplier(RateLimiter.decorateSupplier(rateLimiter, () -> "Hello world"));
+        try {
+            RateLimiter.decorateSupplier(rateLimiter, () -> "Hello world").get();
+        } catch (Exception ignored) {
+        }
 
         then(logger).should(times(1)).info("FAILED_ACQUIRE");
     }

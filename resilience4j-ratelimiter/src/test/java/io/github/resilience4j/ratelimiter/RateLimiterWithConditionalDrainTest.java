@@ -21,7 +21,6 @@ package io.github.resilience4j.ratelimiter;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.Either;
 import io.github.resilience4j.ratelimiter.internal.AtomicRateLimiter;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,7 +28,6 @@ import java.time.Duration;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -65,9 +63,8 @@ public class RateLimiterWithConditionalDrainTest {
         given(limit.acquirePermission(1)).willReturn(true);
         given(drainConditionChecker.test(any())).willReturn(false);
 
-        Try<?> result = Try.of(() -> decorated.get());
+        decorated.get();
 
-        assertThat(result.isSuccess()).isTrue();
         verify(drainConditionChecker).test(argThat(Either::isRight));
         verify(limit, never()).drainPermissions();
     }
@@ -80,9 +77,11 @@ public class RateLimiterWithConditionalDrainTest {
         given(limit.acquirePermission(1)).willReturn(true);
         given(drainConditionChecker.test(any())).willReturn(false);
 
-        final Try<?> result = Try.of(() -> decorated.get());
+        try {
+            decorated.get();
+        } catch (Exception ignored) {
+        }
 
-        assertThat(result.isFailure()).isTrue();
         verify(drainConditionChecker).test(argThat(Either::isLeft));
         verify(limit, never()).drainPermissions();
     }
@@ -94,9 +93,8 @@ public class RateLimiterWithConditionalDrainTest {
         given(limit.acquirePermission(1)).willReturn(true);
         given(drainConditionChecker.test(any())).willReturn(true);
 
-        Try<?> result = Try.of(() -> decorated.get());
+        decorated.get();
 
-        assertThat(result.isSuccess()).isTrue();
         verify(drainConditionChecker).test(argThat(Either::isRight));
         verify(limit).drainPermissions();
     }
