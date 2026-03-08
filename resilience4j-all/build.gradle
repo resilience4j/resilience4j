@@ -1,11 +1,12 @@
 dependencies {
-    api project(':resilience4j-ratelimiter')
-    api project(':resilience4j-circuitbreaker')
-    api project(':resilience4j-bulkhead')
-    api project(':resilience4j-retry')
-    api project(':resilience4j-cache')
-    api project(':resilience4j-timelimiter')
-    api project(':resilience4j-micrometer')
-    testImplementation project(':resilience4j-test')
+    api(project(":resilience4j-bulkhead"))
+    api(project(":resilience4j-cache"))
+    api(project(":resilience4j-circuitbreaker"))
+    api(project(":resilience4j-micrometer"))
+    api(project(":resilience4j-ratelimiter"))
+    api(project(":resilience4j-retry"))
+    api(project(":resilience4j-timelimiter"))
+
+    testImplementation(project(":resilience4j-test"))
 }
-ext.moduleName = 'io.github.resilience4j.all'
+ext.moduleName = "io.github.resilience4j.all"
