@@ -1,23 +1,21 @@
 plugins {
-    id "org.sonarqube" version "3.5.0.2730"
-    id 'org.asciidoctor.jvm.convert' version '2.4.0'
-    id "org.gradle.test-retry" version "1.5.10"
-    id "io.github.gradle-nexus.publish-plugin"  version "2.0.0"
-    id 'biz.aQute.bnd.builder' version '7.1.0' apply false
-    id "me.champeau.jmh" version "0.6.8"
-    id 'idea'
-    id 'jacoco-report-aggregation'
-    id 'jvm-test-suite'
+    alias(libs.plugins.sonarqube)
+    alias(libs.plugins.asciidoctor)
+    alias(libs.plugins.test.retry)
+    alias(libs.plugins.nexus.publish)
+    alias(libs.plugins.bnd.builder) apply false
+    alias(libs.plugins.jmh)
+    id("idea")
+    id("jacoco-report-aggregation")
+    id("jvm-test-suite")
 }
 
-apply from: "${rootDir}/libraries.gradle"
-
 allprojects {
-    apply plugin: 'jacoco'
+    apply plugin: "jacoco"
 
-    version = version == 'unspecified' ? '0.1.0-SNAPSHOT' : version
-    group = 'io.github.resilience4j'
-    description = 'Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming'
+    version = version == "unspecified" ? "0.1.0-SNAPSHOT" : version
+    group = "io.github.resilience4j"
+    description = "Resilience4j is a lightweight, easy-to-use fault tolerance library designed for Java8 and functional programming"
 
     repositories {
         mavenCentral()
@@ -44,7 +42,7 @@ normalization {
 }
 
 dependencies {
-    coreProjects.each { jacocoAggregation project(":${it.name}") }
+    coreProjects.each { jacocoAggregation(project(":${it.name}")) }
 }
 
 nexusPublishing {
@@ -57,43 +55,38 @@ nexusPublishing {
 }
 
 configure(project.coreProjects) {
-    apply plugin: 'java'
-    apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
-    apply plugin: 'signing'
+    apply plugin: "java"
+    apply plugin: "java-library"
+    apply plugin: "maven-publish"
+    apply plugin: "signing"
     apply from: "${rootDir}/publishing.gradle"
     apply plugin: "org.gradle.test-retry"
-    apply plugin: 'me.champeau.jmh'
+    apply plugin: "me.champeau.jmh"
 
     tasks.withType(Test).all {
         if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
             jvmArgs += [
-                    "-XX:+AllowRedefinitionToAddDeleteMethods", "--add-opens=java.base/java.lang=ALL-UNNAMED",  "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED", "--add-opens=java.base/java.time=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED"
+                    "-XX:+AllowRedefinitionToAddDeleteMethods", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED", "--add-opens=java.base/java.time=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED"
             ]
         }
     }
 
-
     dependencies {
-        implementation (libraries.slf4j)
+        implementation(libs.slf4j)
 
         // JSR-305 only used for non-required meta-annotations
-        compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+        compileOnly(libs.jsr305)
 
-        testImplementation (libraries.vavr)
-        testImplementation (libraries.junit)
-        testImplementation (libraries.assertj)
-        testImplementation (libraries.logback)
-        testImplementation (libraries.mockito)
-        testImplementation (libraries.awaitility)
-        testImplementation (libraries.jaxws)
+        testImplementation(libs.vavr)
+        testImplementation(libs.bundles.testing)
+        testImplementation(libs.jaxws.ri)
     }
 
     tasks.withType(JavaCompile) {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
         options.deprecation = true
-        options.encoding = 'UTF-8'
+        options.encoding = "UTF-8"
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
     }
 
@@ -113,14 +106,14 @@ configure(project.coreProjects) {
 
     afterEvaluate {
         jar {
-            from('../') {
-                include 'COPYRIGHT.txt'
-                include 'LICENSE.txt'
+            from("../") {
+                include "COPYRIGHT.txt"
+                include "LICENSE.txt"
             }
 
-            inputs.property('moduleName', moduleName)
+            inputs.property("moduleName", moduleName)
             manifest.attributes(
-                    'Automatic-Module-Name': moduleName
+                    "Automatic-Module-Name": moduleName
             )
         }
     }

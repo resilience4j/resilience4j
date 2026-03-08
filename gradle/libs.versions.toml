@@ -1,0 +1,141 @@
+[versions]
+micrometer = "1.16.0"
+reactor = "3.4.24"
+
+spring6 = "6.1.1"
+spring-boot3 = "3.2.0"
+spring-cloud3 = "3.1.5"
+
+spring7 = "7.0.2"
+spring-boot4 = "4.0.0"
+spring-cloud5 = "5.0.0"
+
+[plugins]
+asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "2.4.0" }
+bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.1.0" }
+jmh = { id = "me.champeau.jmh", version = "0.6.8" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.9.25" }
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
+sonarqube = { id = "org.sonarqube", version = "3.5.0.2730" }
+test-retry = { id = "org.gradle.test-retry", version = "1.5.10" }
+
+[libraries]
+# Common dependencies
+slf4j = { module = "org.slf4j:slf4j-api", version = "1.7.30" }
+
+# Common nullability dependency (compile-only)
+jsr305 = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
+
+# Common test dependencies
+assertj-core = { module = "org.assertj:assertj-core", version = "3.18.1" }
+awaitility = { module = "com.jayway.awaitility:awaitility", version = "1.7.0" }
+jaxws-ri = { module = "com.sun.xml.ws:jaxws-ri", version = "2.3.2" }
+junit = { module = "junit:junit", version = "4.12" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.2.3" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.16.1" }
+
+# resilience4j-cache
+jcache = { module = "javax.cache:cache-api", version = "1.1.0" }
+
+# resilience4j-commons-configuration
+apache-commons-configuration2 = { module = "org.apache.commons:commons-configuration2", version = "2.9.0" }
+apache-commons-beanutils = { module = "commons-beanutils:commons-beanutils", version = "1.9.4" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version = "2.12.3" }
+
+# resilience4j-core
+junit-params = { module = "pl.pragmatists:JUnitParams", version = "1.1.1" }
+lincheck = { module = "org.jetbrains.kotlinx:lincheck", version = "2.34" }
+mock-clock = { module = "com.statemachinesystems:mock-clock", version = "1.0" }
+
+# resilience4j-feign
+feign-core = { module = "io.github.openfeign:feign-core", version = "12.0" }
+feign-wiremock = { module = "com.github.tomakehurst:wiremock-jre8", version = "2.26.0" }
+
+# resilience4j-kotlin
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.6.4" }
+
+# resilience4j-metrics (Dropwizard)
+metrics-core = { module = "io.dropwizard.metrics:metrics-core", version = "4.1.16" }
+
+# resilience4j-micrometer
+micrometer-core = { module = "io.micrometer:micrometer-core", version.ref = "micrometer" }
+micrometer-observation = { module = "io.micrometer:micrometer-observation", version.ref = "micrometer" }
+micrometer-observation-test = { module = "io.micrometer:micrometer-observation-test", version.ref = "micrometer" }
+micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer" }
+
+# resilience4j-micronaut, resilience4j-micronaut-annotation
+cglib-nodep = { module = "cglib:cglib-nodep", version = "3.3.0" }
+micronaut-aop = { module = "io.micronaut:micronaut-aop" }
+micronaut-core-processor = { module = "io.micronaut:micronaut-core-processor" }
+micronaut-discovery-core = { module = "io.micronaut:micronaut-discovery-core" }
+micronaut-http = { module = "io.micronaut:micronaut-http" }
+micronaut-http-client = { module = "io.micronaut:micronaut-http-client" }
+micronaut-http-server = { module = "io.micronaut:micronaut-http-server" }
+micronaut-http-server-netty = { module = "io.micronaut:micronaut-http-server-netty" }
+micronaut-inject-groovy = { module = "io.micronaut:micronaut-inject-groovy" }
+micronaut-inject-java = { module = "io.micronaut:micronaut-inject-java" }
+micronaut-jackson-databind = { module = "io.micronaut:micronaut-jackson-databind" }
+micronaut-platform = { module = "io.micronaut.platform:micronaut-platform", version = "4.1.6" }
+micronaut-reactor = { module = "io.micronaut.reactor:micronaut-reactor" }
+micronaut-retry = { module = "io.micronaut:micronaut-retry" }
+micronaut-router = { module = "io.micronaut:micronaut-router" }
+micronaut-rxjava2 = { module = "io.micronaut.rxjava2:micronaut-rxjava2" }
+micronaut-rxjava3 = { module = "io.micronaut.rxjava3:micronaut-rxjava3" }
+micronaut-test-spock = { module = "io.micronaut.test:micronaut-test-spock", version = "4.1.0" }
+micronaut-validation = { module = "io.micronaut.validation:micronaut-validation" }
+objenesis = { module = "org.objenesis:objenesis", version = "3.3" }
+
+# resilience4j-reactor
+blockhound = { module = "io.projectreactor.tools:blockhound", version = "1.0.6.RELEASE" }
+reactive-streams-tck = { module = "org.reactivestreams:reactive-streams-tck", version = "1.0.2" }
+reactor-core = { module = "io.projectreactor:reactor-core", version.ref = "reactor" }
+reactor-test = { module = "io.projectreactor:reactor-test", version.ref = "reactor" }
+
+# resilience4j-rxjava2
+rxjava2 = { module = "io.reactivex.rxjava2:rxjava", version = "2.2.8" }
+
+# resilience4j-rxjava3
+rxjava3 = { module = "io.reactivex.rxjava3:rxjava", version = "3.0.0" }
+
+# resilience4j-spring6
+aspectj-rt = { module = "org.aspectj:aspectjrt", version = "1.9.2" }
+spring6-context = { module = "org.springframework:spring-context", version.ref = "spring6" }
+spring6-core = { module = "org.springframework:spring-core", version.ref = "spring6" }
+
+# resilience4j-spring-boot3
+spring-boot3-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot3" }
+spring-boot3-aop = { module = "org.springframework.boot:spring-boot-starter-aop", version.ref = "spring-boot3" }
+spring-boot3-autoconfigure-processor = { module = "org.springframework.boot:spring-boot-autoconfigure-processor", version.ref = "spring-boot3" }
+spring-boot3-config-processor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "spring-boot3" }
+spring-boot3-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot3" }
+spring-boot3-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot3" }
+spring-boot3-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux", version.ref = "spring-boot3" }
+spring-cloud3-context = { module = "org.springframework.cloud:spring-cloud-context", version.ref = "spring-cloud3" }
+spring-cloud3-openfeign-core = { module = "org.springframework.cloud:spring-cloud-openfeign-core", version.ref = "spring-cloud3" }
+spring-cloud3-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign", version.ref = "spring-cloud3" }
+
+# resilience4j-spring-boot4
+spring-boot4-actuator = { module = "org.springframework.boot:spring-boot-actuator-autoconfigure", version.ref = "spring-boot4" }
+spring-boot4-aspectj = { module = "org.springframework.boot:spring-boot-starter-aspectj", version.ref = "spring-boot4" }
+spring-boot4-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure", version.ref = "spring-boot4" }
+spring-boot4-autoconfigure-processor = { module = "org.springframework.boot:spring-boot-autoconfigure-processor", version.ref = "spring-boot4" }
+spring-boot4-config-processor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "spring-boot4" }
+spring-boot4-health = { module = "org.springframework.boot:spring-boot-health", version.ref = "spring-boot4" }
+spring-boot4-jackson = { module = "org.springframework.boot:spring-boot-jackson", version.ref = "spring-boot4" }
+spring-boot4-micrometer-metrics = { module = "org.springframework.boot:spring-boot-micrometer-metrics", version.ref = "spring-boot4" }
+spring-boot4-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot4" }
+spring-boot4-webflux = { module = "org.springframework.boot:spring-boot-webflux", version.ref = "spring-boot4" }
+spring-boot4-webflux-test = { module = "org.springframework.boot:spring-boot-starter-webflux-test", version.ref = "spring-boot4" }
+spring-boot4-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test", version.ref = "spring-boot4" }
+spring-cloud5-context = { module = "org.springframework.cloud:spring-cloud-context", version.ref = "spring-cloud5" }
+spring-cloud5-openfeign-core = { module = "org.springframework.cloud:spring-cloud-openfeign-core", version.ref = "spring-cloud5" }
+spring-cloud5-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign", version.ref = "spring-cloud5" }
+spring7-context = { module = "org.springframework:spring-context", version.ref = "spring7" }
+spring7-core = { module = "org.springframework:spring-core", version.ref = "spring7" }
+
+# resilience4j-vavr
+vavr = { module = "io.vavr:vavr", version = "0.10.2" }
+
+[bundles]
+testing = ["junit", "assertj-core", "logback-classic", "mockito-core", "awaitility"]
