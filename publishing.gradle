@@ -68,7 +68,7 @@ tasks.withType(Sign) {
 signing {
     def gpgKey = System.getenv("GPG_KEY")
     def gpgPassphrase = System.getenv("GPG_PASSPHRASE")
-    required = !version.endsWith("SNAPSHOT")
+    required = gpgKey != null
     useInMemoryPgpKeys(gpgKey, gpgPassphrase)
     sign publishing.publications
 }
