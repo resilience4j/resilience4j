@@ -32,19 +32,27 @@ jobs:
           fi
 
       - name: Build
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-version.outputs.version }} \
-            -PgpgKey=${{ secrets.GPG_KEY }} \
-            -PgpgPassphrase=${{ secrets.GPG_PASSPHRASE }} \
+            "-PgpgKey=$GPG_KEY" \
+            "-PgpgPassphrase=$GPG_PASSPHRASE" \
             publishToMavenLocal
 
       - name: Upload release artifacts to Sonatype
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-version.outputs.version }} \
-            -PsonatypeUsername=${{ secrets.SONATYPE_USER }} \
-            -PsonatypePassword=${{ secrets.SONATYPE_PASSWORD }} \
-            -PgpgKey=${{ secrets.GPG_KEY }} \
-            -PgpgPassphrase=${{ secrets.GPG_PASSPHRASE }} \
+            "-PsonatypeUsername=$SONATYPE_USERNAME" \
+            "-PsonatypePassword=$SONATYPE_PASSWORD" \
+            "-PgpgKey=$GPG_KEY" \
+            "-PgpgPassphrase=$GPG_PASSPHRASE" \
             publishAllPublicationsToSonatypeRepository closeAndReleaseSonatypeStagingRepository
