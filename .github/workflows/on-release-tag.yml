@@ -38,8 +38,6 @@ jobs:
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-version.outputs.version }} \
-            "-PgpgKey=$GPG_KEY" \
-            "-PgpgPassphrase=$GPG_PASSPHRASE" \
             publishToMavenLocal
 
       - name: Upload release artifacts to Sonatype
@@ -51,8 +49,6 @@ jobs:
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-version.outputs.version }} \
-            "-PsonatypeUsername=$SONATYPE_USERNAME" \
-            "-PsonatypePassword=$SONATYPE_PASSWORD" \
-            "-PgpgKey=$GPG_KEY" \
-            "-PgpgPassphrase=$GPG_PASSPHRASE" \
+            -PsonatypeUsername=$SONATYPE_USERNAME \
+            -PsonatypePassword=$SONATYPE_PASSWORD \
             publishAllPublicationsToSonatypeRepository closeAndReleaseSonatypeStagingRepository
