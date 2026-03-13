@@ -1,7 +1,13 @@
+ext.moduleName = "io.github.resilience4j.circuitbreaker"
+
 dependencies {
-    api project(':resilience4j-core')
-    testImplementation project(':resilience4j-test')
-    testImplementation(libraries.mock_clock)
-    testImplementation(libraries.junitParams)
+    api(project(":resilience4j-core"))
+
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
+    testImplementation(project(":resilience4j-test"))
+    testImplementation(libs.junit.params)
+    testImplementation(libs.mock.clock)
+    testImplementation(libs.vavr)
 }
-ext.moduleName = 'io.github.resilience4j.circuitbreaker'

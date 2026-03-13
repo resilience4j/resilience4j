@@ -29,7 +29,6 @@ import javax.cache.processor.MutableEntry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.mock;
 
 public class VavrCacheTest {
     private javax.cache.Cache<String, String> cache;

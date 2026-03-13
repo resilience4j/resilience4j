@@ -1,29 +1,34 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+    alias(libs.plugins.kotlin.jvm)
 }
 
+ext.moduleName = "io.github.resilience4j.kotlin"
+
 dependencies {
-    implementation(libraries.kotlin_stdlib)
-    implementation(libraries.kotlin_coroutines)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.core)
 
-    compileOnly(project(':resilience4j-bulkhead'))
-    compileOnly(project(':resilience4j-circuitbreaker'))
-    compileOnly(project(':resilience4j-ratelimiter'))
-    compileOnly(project(':resilience4j-retry'))
-    compileOnly(project(':resilience4j-timelimiter'))
-    compileOnly(project(':resilience4j-micrometer'))
+    compileOnly(project(":resilience4j-bulkhead"))
+    compileOnly(project(":resilience4j-circuitbreaker"))
+    compileOnly(project(":resilience4j-micrometer"))
+    compileOnly(project(":resilience4j-ratelimiter"))
+    compileOnly(project(":resilience4j-retry"))
+    compileOnly(project(":resilience4j-timelimiter"))
 
-    testImplementation(libraries.junitParams)
-    testImplementation(libraries.lincheck)
-    testImplementation(project(':resilience4j-bulkhead'))
-    testImplementation(project(':resilience4j-circuitbreaker'))
-    testImplementation(project(':resilience4j-ratelimiter'))
-    testImplementation(project(':resilience4j-retry'))
-    testImplementation(project(':resilience4j-timelimiter'))
-    testImplementation(project(':resilience4j-micrometer'))
-    testImplementation(project(':resilience4j-micrometer').sourceSets.test.output)
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
+    testImplementation(project(":resilience4j-bulkhead"))
+    testImplementation(project(":resilience4j-circuitbreaker"))
+    testImplementation(project(":resilience4j-micrometer"))
+    testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
+    testImplementation(project(":resilience4j-ratelimiter"))
+    testImplementation(project(":resilience4j-retry"))
+    testImplementation(project(":resilience4j-timelimiter"))
+    testImplementation(libs.junit.params)
+    testImplementation(libs.lincheck)
 }
 
 compileKotlin {
@@ -38,4 +43,3 @@ compileTestKotlin {
     }
 }
 
-ext.moduleName = 'io.github.resilience4j.kotlin'

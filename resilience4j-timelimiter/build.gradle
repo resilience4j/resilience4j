@@ -1,4 +1,9 @@
+ext.moduleName = "io.github.resilience4j.timelimiter"
+
 dependencies {
-    api project(':resilience4j-core')
+    api(project(":resilience4j-core"))
+
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
 }
-ext.moduleName = 'io.github.resilience4j.timelimiter'

@@ -33,7 +33,6 @@ import java.util.function.Function;
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.mock;
 
 public class CacheTest {
 

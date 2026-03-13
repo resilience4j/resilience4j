@@ -25,8 +25,6 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.Predicates;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,12 +32,9 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import static io.vavr.API.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class ConsumerRetryTest {
 
@@ -69,11 +64,10 @@ public class ConsumerRetryTest {
         Retry retry = Retry.ofDefaults("id");
         Consumer<String> consumer = Retry.decorateConsumer(retry, helloWorldService::sayHelloWorldWithName);
 
-        Try<Void> result = Try.run(() -> consumer.accept("Name"));
+        assertThatThrownBy(() -> consumer.accept("Name"))
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should(times(3)).sayHelloWorldWithName("Name");
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
@@ -104,11 +98,10 @@ public class ConsumerRetryTest {
         CheckedConsumer<String> retryableConsumer = Retry
             .decorateCheckedConsumer(retry, helloWorldService::sayHelloWorldWithNameWithException);
 
-        Try<Void> result = Try.run(() -> retryableConsumer.accept("Name"));
+        assertThatThrownBy(() -> retryableConsumer.accept("Name"))
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should(times(3)).sayHelloWorldWithNameWithException("Name");
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
@@ -120,11 +113,10 @@ public class ConsumerRetryTest {
         CheckedConsumer<String> retryableConsumer = Retry
             .decorateCheckedConsumer(retry, helloWorldService::sayHelloWorldWithName);
 
-        Try<Void> result = Try.run(() -> retryableConsumer.accept("Name"));
+        assertThatThrownBy(() -> retryableConsumer.accept("Name"))
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should().sayHelloWorldWithName("Name");
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isZero();
     }
 
@@ -132,25 +124,22 @@ public class ConsumerRetryTest {
     public void shouldReturnAfterOneAttemptAndIgnoreException() {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         RetryConfig config = RetryConfig.custom()
-            .retryOnException(throwable -> Match(throwable).of(
-                Case($(Predicates.instanceOf(HelloWorldException.class)), false),
-                Case($(), true)))
+            .retryOnException(throwable -> !(throwable instanceof HelloWorldException))
             .build();
         Retry retry = Retry.of("id", config);
         CheckedConsumer<String> retryableConsumer = Retry
             .decorateCheckedConsumer(retry, helloWorldService::sayHelloWorldWithName);
 
-        Try<Void> result = Try.run(() -> retryableConsumer.accept("Name"));
+        assertThatThrownBy(() -> retryableConsumer.accept("Name"))
+            .isInstanceOf(HelloWorldException.class);
 
         // because the exception should be rethrown immediately
         then(helloWorldService).should().sayHelloWorldWithName("Name");
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isZero();
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    public void shouldTakeIntoAccountBackoffFunction() throws Throwable {
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         RetryConfig config = RetryConfig
             .custom()
@@ -160,7 +149,10 @@ public class ConsumerRetryTest {
         CheckedConsumer<String> retryableConsumer = Retry
             .decorateCheckedConsumer(retry, helloWorldService::sayHelloWorldWithName);
 
-        Try.run(() -> retryableConsumer.accept("Name"));
+        try {
+            retryableConsumer.accept("Name");
+        } catch (HelloWorldException ignored) {
+        }
 
         then(helloWorldService).should(times(3)).sayHelloWorldWithName("Name");
         assertThat(sleptTime).isEqualTo(
@@ -169,7 +161,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldTakeIntoAccountRetryOnResult() {
+    public void shouldTakeIntoAccountRetryOnResult() throws Throwable {
         AtomicInteger value = new AtomicInteger(0);
         final int targetValue = 2;
         RetryConfig config = RetryConfig
@@ -183,7 +175,7 @@ public class ConsumerRetryTest {
                     value.incrementAndGet();
                 });
 
-        Try.run(() -> retryableConsumer.accept("Name"));
+        retryableConsumer.accept("Name");
 
         then(helloWorldService).should(times(targetValue)).sayHelloWorldWithName("Name");
         System.out.println(sleptTime);
@@ -191,7 +183,7 @@ public class ConsumerRetryTest {
     }
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecover() throws Throwable{
+    public void shouldReturnAfterThreeAttemptsAndRecover() throws Throwable {
 
         willThrow(new HelloWorldException()).given(helloWorldService).sayHelloWorldWithName("Name");
         doNothing().when(helloWorldService).sayHelloWorldWithName("RecoverName");
@@ -200,11 +192,11 @@ public class ConsumerRetryTest {
         Consumer<String> retryableConsumer = Retry
                 .decorateConsumer(retry, helloWorldService::sayHelloWorldWithName);
 
-        Try.run(() -> retryableConsumer.accept("Name"))
-                .recover((throwable) -> {
-                    retryableConsumer.accept("RecoverName");
-                    return null;
-                });
+        try {
+            retryableConsumer.accept("Name");
+        } catch (HelloWorldException e) {
+            retryableConsumer.accept("RecoverName");
+        }
         assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
 
         then(helloWorldService).should(times(3)).sayHelloWorldWithName("Name");
@@ -222,11 +214,11 @@ public class ConsumerRetryTest {
         Consumer<String> retryableConsumer = Retry
                 .decorateConsumer(retry, helloWorldService::sayHelloWorldWithName);
 
-        Try.run(() -> retryableConsumer.accept("Name"))
-                .recover((throwable) ->{
-                    retryableConsumer.accept("RecoverName");
-                    return null;
-                });
+        try {
+            retryableConsumer.accept("Name");
+        } catch (Exception e) {
+            retryableConsumer.accept("RecoverName");
+        }
         assertThat(Thread.currentThread().isInterrupted()).isTrue();
         Thread.interrupted();
     }

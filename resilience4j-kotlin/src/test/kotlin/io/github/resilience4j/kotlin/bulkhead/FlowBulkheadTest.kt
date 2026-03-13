@@ -33,6 +33,7 @@ import org.junit.Test
 import java.time.Duration
 import java.util.concurrent.Phaser
 
+@ExperimentalCoroutinesApi
 class FlowBulkheadTest {
 
     private var permittedEvents = 0

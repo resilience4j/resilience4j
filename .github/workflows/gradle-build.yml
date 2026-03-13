@@ -94,6 +94,15 @@ jobs:
         with:
           junit_files: '**/test-results/**/*.xml'
 
+      - name: Post coverage comment
+        uses: madrapps/jacoco-report@v1.7.1
+        if: github.event_name == 'pull_request'
+        with:
+          paths: ${{ github.workspace }}/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Code Coverage
+          update-comment: true
+
       - name: Analyze with SonarCloud
         continue-on-error: true
         if: env.SONAR_TOKEN != null && env.SONAR_TOKEN != ''

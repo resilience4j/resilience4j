@@ -4,7 +4,6 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,13 +11,10 @@ import java.io.IOException;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 public class CallableTest {
 
@@ -39,11 +35,10 @@ public class CallableTest {
         Callable<String> retryableCallable = Retry
             .decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
 
-        Try<Void> result = Try.run(retryableCallable::call);
+        assertThatThrownBy(retryableCallable::call)
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should().returnHelloWorldWithException();
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
     }
 
     @Test
@@ -72,11 +67,9 @@ public class CallableTest {
                 helloWorldService::returnHelloWorldWithException
         );
 
-        Try<Void> result = Try.run(callable::call);
+        assertThatThrownBy(callable::call)
+            .isInstanceOf(HelloWorldException.class);
 
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get())
-                .isInstanceOf(HelloWorldException.class);
         assertThat(numberOfRetryEvents).hasValue(1);
         assertThat(onErrorEventOccurred).isTrue();
         then(helloWorldService).should(times(2)).returnHelloWorldWithException();
@@ -108,11 +101,9 @@ public class CallableTest {
                 helloWorldService::returnHelloWorldWithException
         );
 
-        Try<Void> result = Try.run(callable::call);
+        assertThatThrownBy(callable::call)
+            .isInstanceOf(HelloWorldException.class);
 
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get())
-                .isInstanceOf(HelloWorldException.class);
         assertThat(numberOfRetryEvents).hasValue(2);
         assertThat(onErrorEventOccurred).isTrue();
         then(helloWorldService).should(times(3)).returnHelloWorldWithException();

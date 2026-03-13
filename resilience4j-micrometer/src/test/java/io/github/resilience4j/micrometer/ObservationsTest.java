@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.micrometer;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
@@ -26,15 +26,13 @@ import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.tck.TestObservationRegistry;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.Before;import org.junit.Test;
 
 import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -127,7 +125,7 @@ public class ObservationsTest {
         String value = stringCompletionStage.toCompletableFuture().get();
         assertThat(value).isEqualTo("Hello world");
         await().atMost(1, SECONDS)
-            .until(() -> {
+            .untilAsserted(() -> {
                 assertThatObservationWasStartedAndFinishedWithoutErrors();
             });
         then(helloWorldService).should(times(1)).returnHelloWorld();
@@ -164,7 +162,7 @@ public class ObservationsTest {
             .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
 
         Awaitility.await()
-            .until(() -> assertThat(observationRegistry)
+            .untilAsserted(() -> assertThat(observationRegistry)
                 .hasSingleObservationThat()
                 .hasNameEqualTo(ObservationsTest.class.getName())
                 .hasBeenStarted()
@@ -192,10 +190,8 @@ public class ObservationsTest {
         Supplier<String> supplier = Observations
             .decorateSupplier(observation, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(supplier::get);
-
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(supplier::get)
+            .isInstanceOf(RuntimeException.class);
         assertThat(observationRegistry)
             .hasSingleObservationThat()
             .hasNameEqualTo(ObservationsTest.class.getName())

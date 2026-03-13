@@ -19,7 +19,6 @@
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -27,6 +26,7 @@ import org.slf4j.Logger;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -82,7 +82,7 @@ public class BulkheadEventPublisherTest {
         Supplier<String> supplier = Bulkhead
             .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
 
-        Try.ofSupplier(supplier);
+        assertThatThrownBy(supplier::get).isInstanceOf(BulkheadFullException.class);
 
         then(logger).should(times(1)).info("CALL_REJECTED");
     }
@@ -95,7 +95,7 @@ public class BulkheadEventPublisherTest {
         Supplier<String> supplier = Bulkhead
             .decorateSupplier(bulkhead, helloWorldService::returnHelloWorld);
 
-        Try.ofSupplier(supplier);
+        supplier.get();
 
         then(logger).should(times(1)).info("CALL_FINISHED");
     }

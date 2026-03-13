@@ -28,9 +28,7 @@ import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.API;
-import io.vavr.Predicates;
-import io.vavr.control.Try;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,7 +44,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
-import static io.vavr.API.$;
+
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -267,7 +265,7 @@ public class SupplierRetryTest {
     }
 
     @Test
-    public void shouldReturnSuccessfullyAfterSecondAttempt() {
+    public void shouldReturnSuccessfullyAfterSecondAttempt() throws Throwable {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world");
@@ -275,10 +273,10 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get());
+        String result = retryableSupplier.get();
 
         then(helloWorldService).should(times(2)).returnHelloWorld();
-        assertThat(result.get()).isEqualTo("Hello world");
+        assertThat(result).isEqualTo("Hello world");
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION);
     }
 
@@ -289,11 +287,10 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get());
+        assertThatThrownBy(retryableSupplier::get)
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
@@ -305,11 +302,10 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get());
+        assertThatThrownBy(retryableSupplier::get)
+            .isInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should().returnHelloWorld();
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isZero();
     }
 
@@ -317,41 +313,42 @@ public class SupplierRetryTest {
     public void shouldReturnAfterOneAttemptAndIgnoreException() {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom()
-            .retryOnException(throwable -> API.Match(throwable).of(
-                API.Case($(Predicates.instanceOf(HelloWorldException.class)), false),
-                API.Case($(), true)))
+            .retryOnException(throwable -> !(throwable instanceof HelloWorldException))
             .build();
         Retry retry = Retry.of("id", config);
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get());
+        assertThatThrownBy(retryableSupplier::get)
+            .isInstanceOf(HelloWorldException.class);
 
         // Because the exception should be rethrown immediately.
         then(helloWorldService).should().returnHelloWorld();
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(HelloWorldException.class);
         assertThat(sleptTime).isZero();
     }
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecover() {
+    public void shouldReturnAfterThreeAttemptsAndRecover() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Retry retry = Retry.ofDefaults("id");
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get())
-            .recover((throwable) -> "Hello world from recovery function");
+        String result;
+        try {
+            result = retryableSupplier.get();
+        } catch (HelloWorldException e) {
+            result = "Hello world from recovery function";
+        }
         assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
-        assertThat(result.get()).isEqualTo("Hello world from recovery function");
+        assertThat(result).isEqualTo("Hello world from recovery function");
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
     @Test
-    public void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() {
+    public void shouldMarkThreadInterruptedWhenInterruptedDuringRetry() throws Throwable {
         RetryImpl.sleepFunction = sleep -> {
           throw new InterruptedException("Interrpted!");
         };
@@ -360,8 +357,11 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try.of(() -> retryableSupplier.get())
-            .recover((throwable) -> "Hello world from recovery function");
+        try {
+            retryableSupplier.get();
+        } catch (Exception e) {
+            // expected; recover silently
+        }
         assertThat(Thread.currentThread().isInterrupted()).isTrue();
         Thread.interrupted();
     }
@@ -394,7 +394,7 @@ public class SupplierRetryTest {
 
 
     @Test
-    public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() {
+    public void shouldReturnAfterThreeAttemptsAndRecoverWithResult() throws Throwable {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException())
             .willReturn("Hello world")
@@ -406,16 +406,20 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(() -> retryableSupplier.get())
-            .recover((throwable) -> "Hello world from recovery function");
+        String result;
+        try {
+            result = retryableSupplier.get();
+        } catch (HelloWorldException e) {
+            result = "Hello world from recovery function";
+        }
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
-        assertThat(result.get()).isEqualTo("Hello world from recovery function");
+        assertThat(result).isEqualTo("Hello world from recovery function");
         assertThat(sleptTime).isEqualTo(RetryConfig.DEFAULT_WAIT_DURATION * 2);
     }
 
     @Test
-    public void shouldTakeIntoAccountBackoffFunction() {
+    public void shouldTakeIntoAccountBackoffFunction() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         RetryConfig config = RetryConfig.custom()
             .intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0))
@@ -424,7 +428,10 @@ public class SupplierRetryTest {
         CheckedSupplier<String> retryableSupplier = Retry
             .decorateCheckedSupplier(retry, helloWorldService::returnHelloWorld);
 
-        Try.of(() -> retryableSupplier.get());
+        try {
+            retryableSupplier.get();
+        } catch (HelloWorldException ignored) {
+        }
 
         then(helloWorldService).should(times(3)).returnHelloWorld();
         assertThat(sleptTime).isEqualTo(
@@ -453,10 +460,9 @@ public class SupplierRetryTest {
             scheduler,
             () -> helloWorldServiceAsync.returnHelloWorld());
 
-        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+        awaitResult(supplier.get());
 
         then(helloWorldServiceAsync).should(times(noOfAttempts)).returnHelloWorld();
-        assertThat(resultTry.isSuccess()).isTrue();
     }
 
     @Test
@@ -578,11 +584,10 @@ public class SupplierRetryTest {
                 retry,
                 scheduler,
                 helloWorldServiceAsync::returnHelloWorld);
-        Try<String> resultTry = Try.of(() -> awaitResult(supplierAsync.get()));
+        String result = awaitResult(supplierAsync.get());
 
         then(helloWorldServiceAsync).should(times(3)).returnHelloWorld();
-        assertThat(resultTry.isSuccess()).isTrue();
-        assertThat(resultTry.get()).isEqualTo(helloWorldServiceReturnValue);
+        assertThat(result).isEqualTo(helloWorldServiceReturnValue);
         assertThat(consumerInvocations.get()).isEqualTo(2);
     }
 

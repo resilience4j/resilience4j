@@ -18,7 +18,7 @@
  */
 package io.github.resilience4j.ratelimiter.internal;
 
-import com.jayway.awaitility.core.ConditionFactory;
+import org.awaitility.core.ConditionFactory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.junit.Before;
@@ -35,13 +35,11 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.vavr.control.Try.run;
+import static org.awaitility.Awaitility.await;
 import static java.lang.Thread.State.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
@@ -123,13 +121,17 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
         RateLimiter.Metrics detailedMetrics = limit.getMetrics();
 
         SynchronousQueue<Object> synchronousQueue = new SynchronousQueue<>();
-        Thread thread = new Thread(() -> run(() -> {
-            for (int i = 0; i < LIMIT; i++) {
-                synchronousQueue.put(O);
+        Thread thread = new Thread(() -> {
+            try {
+                for (int i = 0; i < LIMIT; i++) {
+                    synchronousQueue.put(O);
+                    limit.acquirePermission();
+                }
                 limit.acquirePermission();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-            limit.acquirePermission();
-        }));
+        });
         thread.setDaemon(true);
         thread.start();
 

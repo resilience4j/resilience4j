@@ -18,10 +18,8 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Try;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,7 +60,13 @@ public class ThreadPoolBulkheadTest {
 
         Thread first = new Thread(() -> {
             try {
-                bulkhead.executeRunnable(() -> Try.run(() -> Thread.sleep(200)));
+                bulkhead.executeRunnable(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
             } catch (Exception e) {
                 exception.set(e);
             }
@@ -106,7 +110,14 @@ public class ThreadPoolBulkheadTest {
 
         Thread first = new Thread(() -> {
             try {
-                bulkhead.executeSupplier(() -> Try.run(() -> Thread.sleep(200)));
+                bulkhead.executeSupplier(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    return null;
+                });
             } catch (Exception e) {
                 exception.set(e);
             }
@@ -150,7 +161,14 @@ public class ThreadPoolBulkheadTest {
 
         Thread first = new Thread(() -> {
             try {
-                bulkhead.executeCallable(() -> Try.run(() -> Thread.sleep(200)));
+                bulkhead.executeCallable(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    return null;
+                });
             } catch (Exception e) {
                 exception.set(e);
             }
@@ -229,8 +247,20 @@ public class ThreadPoolBulkheadTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CountDownLatch latch = new CountDownLatch(1);
 
-        bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
-        bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
+        bulkhead.executeRunnable(() -> {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        bulkhead.executeRunnable(() -> {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
 
         assertThatThrownBy(() -> bulkhead.executeCallable(helloWorldService::returnHelloWorld))
             .isInstanceOf(BulkheadFullException.class)

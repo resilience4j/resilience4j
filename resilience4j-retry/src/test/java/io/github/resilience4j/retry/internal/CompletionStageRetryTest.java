@@ -23,7 +23,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
-import io.vavr.control.Try;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 import static io.github.resilience4j.retry.utils.AsyncUtils.awaitResult;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -275,11 +276,11 @@ public class CompletionStageRetryTest {
             scheduler,
             () -> helloWorldService.returnHelloWorld());
 
-        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+        assertThatThrownBy(() -> awaitResult(supplier.get()))
+            .isInstanceOf(RuntimeException.class)
+            .hasCauseInstanceOf(HelloWorldException.class);
 
         then(helloWorldService).should(times(noOfAttempts)).returnHelloWorld();
-        assertThat(resultTry.isFailure()).isTrue();
-        assertThat(resultTry.getCause().getCause()).isInstanceOf(HelloWorldException.class);
     }
 
     private void shouldCompleteFutureAfterAttemptsInCaseOfRetyOnResultAtAsyncStage(int noOfAttempts,
@@ -298,10 +299,9 @@ public class CompletionStageRetryTest {
             scheduler,
             () -> helloWorldService.returnHelloWorld());
 
-        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+        awaitResult(supplier.get());
 
         then(helloWorldService).should(times(noOfAttempts)).returnHelloWorld();
-        assertThat(resultTry.isSuccess()).isTrue();
     }
 
     @Test
@@ -319,11 +319,11 @@ public class CompletionStageRetryTest {
             retryContext,
             scheduler,
             () -> helloWorldService.returnHelloWorld());
-        Try<String> resultTry = Try.of(() -> awaitResult(supplier.get()));
+        assertThatThrownBy(() -> awaitResult(supplier.get()))
+            .isInstanceOf(RuntimeException.class)
+            .hasCauseInstanceOf(RuntimeException.class);
 
         then(helloWorldService).should(times(1)).returnHelloWorld();
-        assertThat(resultTry.isFailure()).isTrue();
-        assertThat(resultTry.getCause().getCause()).isInstanceOf(RuntimeException.class);
     }
 
 }

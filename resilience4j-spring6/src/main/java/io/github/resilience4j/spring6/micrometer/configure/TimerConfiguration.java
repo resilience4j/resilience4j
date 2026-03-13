@@ -16,8 +16,6 @@
 
 package io.github.resilience4j.spring6.micrometer.configure;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.micrometer.configuration.CommonTimerConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.common.micrometer.configuration.TimerConfigCustomizer;

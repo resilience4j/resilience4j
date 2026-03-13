@@ -18,7 +18,6 @@
  */
 package io.github.resilience4j.timelimiter;
 
-import io.vavr.control.Try;
 import org.junit.Test;
 import org.slf4j.Logger;
 
@@ -69,7 +68,10 @@ public class TimeLimiterEventPublisherTest {
         Supplier<CompletableFuture<String>> futureSupplier = () ->
             CompletableFuture.supplyAsync(this::timeout);
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        try {
+            timeLimiter.decorateFutureSupplier(futureSupplier).call();
+        } catch (Exception ignored) {
+        }
 
         then(logger).should().info("TIMEOUT");
     }
@@ -83,7 +85,10 @@ public class TimeLimiterEventPublisherTest {
         Supplier<CompletableFuture<String>> futureSupplier = () ->
             CompletableFuture.supplyAsync(this::fail);
 
-        Try.ofCallable(timeLimiter.decorateFutureSupplier(futureSupplier));
+        try {
+            timeLimiter.decorateFutureSupplier(futureSupplier).call();
+        } catch (Exception ignored) {
+        }
 
         then(logger).should().info("ERROR java.lang.RuntimeException");
     }
