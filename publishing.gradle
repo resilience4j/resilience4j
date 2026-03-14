@@ -61,10 +61,6 @@ artifacts {
     archives javadocJar
 }
 
-tasks.withType(Sign) {
-    onlyIf { !version.endsWith("SNAPSHOT") }
-}
-
 signing {
     def gpgKey = System.getenv("GPG_KEY")
     def gpgPassphrase = System.getenv("GPG_PASSPHRASE")
