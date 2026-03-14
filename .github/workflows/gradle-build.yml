@@ -106,6 +106,9 @@ jobs:
       - name: Publish to Sonatype
         # only run on master and never on forks
         if: github.ref == 'refs/heads/master' && github.repository == 'resilience4j/resilience4j'
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-snapshot-version.outputs.snapshot-version }} \
