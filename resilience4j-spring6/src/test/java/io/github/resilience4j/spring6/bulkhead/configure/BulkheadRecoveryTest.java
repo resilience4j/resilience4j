@@ -16,6 +16,7 @@
 package io.github.resilience4j.spring6.bulkhead.configure;
 
 import io.github.resilience4j.spring6.TestApplication;
+import io.github.resilience4j.spring6.BulkheadDummyService;
 import io.github.resilience4j.spring6.TestDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +37,22 @@ public class BulkheadRecoveryTest {
     @Qualifier("bulkheadDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    BulkheadDummyService bulkheadDummyService;
+
     @Test
     public void testRecovery() {
         assertThat(testDummyService.sync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationRecovery() {
+        assertThat(bulkheadDummyService.composedSync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationSpelRecovery() {
+        assertThat(bulkheadDummyService.composedSpelSync("backendB")).isEqualTo("recovered");
     }
 
     @Test

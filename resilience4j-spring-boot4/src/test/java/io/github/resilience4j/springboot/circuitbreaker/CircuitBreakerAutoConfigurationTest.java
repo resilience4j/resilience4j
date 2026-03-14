@@ -23,6 +23,7 @@ import io.github.resilience4j.springboot.circuitbreaker.autoconfigure.CircuitBre
 import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.springboot.service.test.ComposedCircuitBreakerDummyService;
 import io.github.resilience4j.springboot.service.test.DummyService;
 import io.github.resilience4j.springboot.service.test.TestApplication;
 import org.apache.http.HttpStatus;
@@ -64,6 +65,8 @@ public class CircuitBreakerAutoConfigurationTest {
     CircuitBreakerAspect circuitBreakerAspect;
     @Autowired
     DummyService dummyService;
+    @Autowired
+    ComposedCircuitBreakerDummyService composedCircuitBreakerDummyService;
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -120,6 +123,21 @@ public class CircuitBreakerAutoConfigurationTest {
         CircuitBreaker backendC = circuitBreakerRegistry.circuitBreaker("backendC");
 
         verifyCircuitBreakerAutoConfiguration(dynamicCircuitBreaker, sharedA, sharedB, backendB, backendC);
+    }
+
+    @Test
+    public void testComposedCircuitBreakerAnnotationAutoConfiguration() throws IOException {
+        int eventsBefore = getCircuitBreakerEvents(ComposedCircuitBreakerDummyService.BACKEND).size();
+
+        try {
+            composedCircuitBreakerDummyService.doSomething(true);
+        } catch (IOException ex) {
+            // Expected failure, recorded by CircuitBreaker.
+        }
+        composedCircuitBreakerDummyService.doSomething(false);
+
+        assertThat(getCircuitBreakerEvents(ComposedCircuitBreakerDummyService.BACKEND))
+            .hasSize(eventsBefore + 2);
     }
 
     private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker dynamicCircuitBreaker, CircuitBreaker sharedA, CircuitBreaker sharedB, CircuitBreaker backendB, CircuitBreaker backendC) {
