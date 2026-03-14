@@ -1,65 +1,62 @@
-apply plugin:'groovy'
+apply plugin: "groovy"
+
 dependencies {
-    annotationProcessor(platform(libraries.micronaut))
-    testAnnotationProcessor(platform(libraries.micronaut))
-    api project(':resilience4j-annotations')
-    implementation(platform(libraries.micronaut))
-    annotationProcessor "io.micronaut:micronaut-inject-java"
+    annotationProcessor(platform(libs.micronaut.platform))
+    annotationProcessor(libs.micronaut.inject.java)
 
-    compileOnly "io.micronaut:micronaut-http"
-    compileOnly "io.micronaut:micronaut-http-server"
-    compileOnly "io.micronaut:micronaut-aop"
+    api(project(":resilience4j-annotations"))
 
-    implementation "io.micronaut.validation:micronaut-validation"
-    implementation "io.micronaut:micronaut-router"
-    implementation "io.micronaut:micronaut-discovery-core"
-    implementation "io.micronaut:micronaut-retry"
+    implementation(platform(libs.micronaut.platform))
+    implementation(project(":resilience4j-framework-common"))
+    implementation(libs.micronaut.discovery.core)
+    implementation(libs.micronaut.retry)
+    implementation(libs.micronaut.router)
+    implementation(libs.micronaut.validation)
 
+    compileOnly(project(":resilience4j-bulkhead"))
+    compileOnly(project(":resilience4j-circuitbreaker"))
+    compileOnly(project(":resilience4j-consumer"))
+    compileOnly(project(":resilience4j-core"))
+    compileOnly(project(":resilience4j-ratelimiter"))
+    compileOnly(project(":resilience4j-reactor"))
+    compileOnly(project(":resilience4j-retry"))
+    compileOnly(project(":resilience4j-rxjava2"))
+    compileOnly(project(":resilience4j-rxjava3"))
+    compileOnly(project(":resilience4j-timelimiter"))
+    compileOnly(libs.micronaut.aop)
+    compileOnly(libs.micronaut.http)
+    compileOnly(libs.micronaut.http.server)
+    compileOnly(libs.reactor.core)
+    compileOnly(libs.rxjava2)
+    compileOnly(libs.rxjava3)
 
-    compileOnly(libraries.rxjava2)
-    compileOnly(libraries.rxjava3)
-    compileOnly(libraries.reactor)
-    compileOnly project(':resilience4j-reactor')
-    compileOnly project(':resilience4j-rxjava2')
-    compileOnly project(':resilience4j-rxjava3')
+    testAnnotationProcessor(platform(libs.micronaut.platform))
+    testAnnotationProcessor(project(":resilience4j-micronaut-annotation"))
 
-    compileOnly project(':resilience4j-circuitbreaker')
-    compileOnly project(':resilience4j-ratelimiter')
-    compileOnly project(':resilience4j-timelimiter')
-    compileOnly project(':resilience4j-retry')
-    compileOnly project(':resilience4j-bulkhead')
-    compileOnly project(':resilience4j-consumer')
-    compileOnly project(':resilience4j-core')
-    implementation project(':resilience4j-framework-common')
+    testCompileOnly(project(":resilience4j-micronaut-annotation"))
 
-    testAnnotationProcessor project(':resilience4j-micronaut-annotation')
-    testCompileOnly project(':resilience4j-micronaut-annotation')
-    testImplementation project(':resilience4j-circuitbreaker')
-    testImplementation project(':resilience4j-ratelimiter')
-    testImplementation project(':resilience4j-timelimiter')
-    testImplementation project(':resilience4j-bulkhead')
-    testImplementation project(':resilience4j-retry')
-    testImplementation project(':resilience4j-consumer')
-    testImplementation project(':resilience4j-rxjava2')
-    testImplementation "io.micronaut:micronaut-aop"
-    testImplementation("io.micronaut.reactor:micronaut-reactor")
-    testImplementation("io.micronaut.rxjava3:micronaut-rxjava3")
-    testImplementation("io.micronaut.rxjava2:micronaut-rxjava2")
-
-    testImplementation "io.micronaut:micronaut-http-client"
-    testImplementation "io.micronaut:micronaut-jackson-databind"
-    testImplementation "io.micronaut:micronaut-http-server-netty"
-
-    testImplementation(libraries.micronaut_inject)
-    testImplementation(libraries.micronaut_spock)
-
-    testImplementation "cglib:cglib-nodep:3.3.0"
-    testImplementation "org.objenesis:objenesis:3.3"
-    testImplementation "io.micronaut:micronaut-http-client"
-    testImplementation "io.micronaut:micronaut-http-server-netty"
+    testImplementation(project(":resilience4j-bulkhead"))
+    testImplementation(project(":resilience4j-circuitbreaker"))
+    testImplementation(project(":resilience4j-consumer"))
+    testImplementation(project(":resilience4j-ratelimiter"))
+    testImplementation(project(":resilience4j-retry"))
+    testImplementation(project(":resilience4j-rxjava2"))
+    testImplementation(project(":resilience4j-timelimiter"))
+    testImplementation(libs.cglib.nodep)
+    testImplementation(libs.micronaut.aop)
+    testImplementation(libs.micronaut.http.client)
+    testImplementation(libs.micronaut.http.server.netty)
+    testImplementation(libs.micronaut.inject.groovy)
+    testImplementation(libs.micronaut.jackson.databind)
+    testImplementation(libs.micronaut.reactor)
+    testImplementation(libs.micronaut.rxjava2)
+    testImplementation(libs.micronaut.rxjava3)
+    testImplementation(libs.micronaut.test.spock)
+    testImplementation(libs.objenesis)
 }
+
 test {
     useJUnitPlatform()
 }
 
-ext.moduleName = 'io.github.resilience4j.micronaut'
+ext.moduleName = "io.github.resilience4j.micronaut"

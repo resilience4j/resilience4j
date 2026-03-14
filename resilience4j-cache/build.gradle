@@ -1,7 +1,8 @@
 dependencies {
-    api project(':resilience4j-core')
-    api (libraries.jcache)
-    testImplementation project(':resilience4j-rxjava2')
-    testImplementation(libraries.rxjava2)
+    api(project(":resilience4j-core"))
+    api(libs.jcache)
+
+    testImplementation(project(":resilience4j-rxjava2"))
+    testImplementation(libs.rxjava2)
 }
-ext.moduleName = 'io.github.resilience4j.cache'
+ext.moduleName = "io.github.resilience4j.cache"
