@@ -5,6 +5,10 @@ plugins {
 }
 
 signing {
+    def gpgKey = System.getenv("GPG_KEY")
+    def gpgPassphrase = System.getenv("GPG_PASSPHRASE")
+    required = gpgKey != null
+    useInMemoryPgpKeys(gpgKey, gpgPassphrase)
     sign publishing.publications
 }
 
