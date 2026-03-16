@@ -1,13 +1,15 @@
 dependencies {
-    api(libraries.vavr )
-    implementation project(':resilience4j-retry')
-    implementation project(':resilience4j-circuitbreaker')
-    implementation project(':resilience4j-cache')
-    implementation project(':resilience4j-bulkhead')
-    implementation project(':resilience4j-ratelimiter')
-    implementation project(':resilience4j-metrics')
-    testImplementation project(':resilience4j-test')
-    testImplementation(libraries.metrics)
+    api(libs.vavr)
+
+    implementation(project(":resilience4j-bulkhead"))
+    implementation(project(":resilience4j-cache"))
+    implementation(project(":resilience4j-circuitbreaker"))
+    implementation(project(":resilience4j-metrics"))
+    implementation(project(":resilience4j-ratelimiter"))
+    implementation(project(":resilience4j-retry"))
+
+    testImplementation(project(":resilience4j-test"))
+    testImplementation(libs.metrics.core)
 }
 
-ext.moduleName = 'io.github.resilience4j.vavr'
+ext.moduleName = "io.github.resilience4j.vavr"
