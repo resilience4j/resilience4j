@@ -55,7 +55,7 @@ feign-core = { module = "io.github.openfeign:feign-core", version = "12.0" }
 feign-wiremock = { module = "com.github.tomakehurst:wiremock-jre8", version = "2.26.0" }
 
 # resilience4j-kotlin
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version = "1.9.25" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.6.4" }
 
 # resilience4j-metrics (Dropwizard)
