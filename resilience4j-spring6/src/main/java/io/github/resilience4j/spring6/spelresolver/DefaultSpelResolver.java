@@ -20,6 +20,7 @@ import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
@@ -28,9 +29,11 @@ import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelResolver {
-    private static final Pattern PLACEHOLDER_SPEL_REGEX = Pattern.compile("^[$#]\\{.+}$");
+    private static final Pattern PLACEHOLDER_SPEL_REGEX = Pattern.compile("^\\$\\{.+}$");
+    private static final Pattern SPEL_TEMPLATE_REGEX = Pattern.compile("^#\\{.+}$");
     private static final Pattern METHOD_SPEL_REGEX = Pattern.compile("^#.+$");
     private static final Pattern BEAN_SPEL_REGEX = Pattern.compile("^@.+");
+    private static final TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext();
 
     private final SpelExpressionParser expressionParser;
     private final ParameterNameDiscoverer parameterNameDiscoverer;
@@ -51,6 +54,13 @@ public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelReso
 
         if (PLACEHOLDER_SPEL_REGEX.matcher(spelExpression).matches() && stringValueResolver != null) {
             return stringValueResolver.resolveStringValue(spelExpression);
+        }
+
+        if (SPEL_TEMPLATE_REGEX.matcher(spelExpression).matches()) {
+            SpelRootObject rootObject = new SpelRootObject(method, arguments);
+            MethodBasedEvaluationContext evaluationContext = new MethodBasedEvaluationContext(rootObject, method, arguments, parameterNameDiscoverer);
+            evaluationContext.setBeanResolver(new BeanFactoryResolver(this.beanFactory));
+            return expressionParser.parseExpression(spelExpression, TEMPLATE_PARSER_CONTEXT).getValue(evaluationContext, String.class);
         }
 
         if (METHOD_SPEL_REGEX.matcher(spelExpression).matches()) {
