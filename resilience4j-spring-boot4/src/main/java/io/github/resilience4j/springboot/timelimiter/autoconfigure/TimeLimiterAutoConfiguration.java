@@ -20,7 +20,6 @@ import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.timelimiter.configuration.TimeLimiterConfigCustomizer;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
 import io.github.resilience4j.spring6.spelresolver.SpelResolver;
@@ -30,6 +29,7 @@ import io.github.resilience4j.spring6.utils.ReactorOnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava2OnClasspathCondition;
 import io.github.resilience4j.spring6.utils.RxJava3OnClasspathCondition;
 import io.github.resilience4j.springboot.fallback.autoconfigure.FallbackConfigurationOnMissingBean;
+import io.github.resilience4j.springboot.scheduled.threadpool.autoconfigure.ContextAwareScheduledThreadPoolAutoConfiguration;
 import io.github.resilience4j.springboot.spelresolver.autoconfigure.SpelResolverConfigurationOnMissingBean;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
@@ -51,6 +51,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @AutoConfiguration
 @ConditionalOnClass(TimeLimiter.class)
@@ -109,7 +110,7 @@ public class TimeLimiterAutoConfiguration {
         @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
         FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
-        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+        @Autowired(required = false) @Qualifier(ContextAwareScheduledThreadPoolAutoConfiguration.EXECUTOR_NAME) ScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
     ) {
         return timeLimiterConfiguration.timeLimiterAspect(
             timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);

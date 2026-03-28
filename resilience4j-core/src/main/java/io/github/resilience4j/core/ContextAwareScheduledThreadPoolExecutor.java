@@ -29,6 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toList;
 
+/**
+ * @deprecated in favor of <a href="https://docs.micrometer.io/context-propagation/reference/index.html">micrometer context-propagation</a>
+ */
+@Deprecated
 public class ContextAwareScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
     private final List<ContextPropagator> contextPropagators;

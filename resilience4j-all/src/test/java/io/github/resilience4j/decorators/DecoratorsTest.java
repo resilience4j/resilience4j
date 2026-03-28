@@ -18,11 +18,7 @@
  */
 package io.github.resilience4j.decorators;
 
-import io.github.resilience4j.bulkhead.Bulkhead;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
+import io.github.resilience4j.bulkhead.*;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -52,7 +48,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static com.jayway.awaitility.Awaitility.matches;
@@ -60,7 +55,6 @@ import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 public class DecoratorsTest {
 
@@ -514,7 +508,7 @@ public class DecoratorsTest {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
         
-        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+        willThrow(BulkheadFullException.createBulkheadFullException(bulkhead)).given(bulkheadMock).submit(any(Callable.class));
 
         CompletionStage<String> completionStage = Decorators
             .ofSupplier(() -> helloWorldService.returnHelloWorld())
@@ -532,7 +526,7 @@ public class DecoratorsTest {
     public void testDecorateCallableWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
-        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+        willThrow(BulkheadFullException.createBulkheadFullException(bulkhead)).given(bulkheadMock).submit(any(Callable.class));
 
         CompletionStage<String> completionStage = Decorators
             .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
@@ -550,7 +544,7 @@ public class DecoratorsTest {
     public void testDecorateRunnableWithBulkheadFullExceptionFallback() throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
-        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+        willThrow(BulkheadFullException.createBulkheadFullException(bulkhead)).given(bulkheadMock).submit(any(Callable.class));
 
         CompletionStage<Void> completionStage = Decorators
             .ofRunnable(() -> helloWorldService.sayHelloWorld())

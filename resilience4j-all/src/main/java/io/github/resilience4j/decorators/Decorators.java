@@ -2,6 +2,7 @@ package io.github.resilience4j.decorators;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.GenericBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -148,8 +149,12 @@ public interface Decorators {
             return Decorators.ofCompletionStage(getCompletionStageSupplier(threadPoolBulkhead));
         }
 
+        public DecorateCompletionStage<T> withBulkhead(GenericBulkhead genericBulkhead) {
+            return Decorators.ofCompletionStage(getCompletionStageSupplier(genericBulkhead));
+        }
+
         private Supplier<CompletionStage<T>> getCompletionStageSupplier(
-            ThreadPoolBulkhead threadPoolBulkhead) {
+            GenericBulkhead threadPoolBulkhead) {
             return () -> {
                 try {
                     return threadPoolBulkhead.executeSupplier(supplier);

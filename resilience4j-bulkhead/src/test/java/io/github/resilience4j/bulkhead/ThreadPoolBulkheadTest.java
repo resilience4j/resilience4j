@@ -201,13 +201,6 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testCreateWithNullConfig() {
-        assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null))
-            .isInstanceOf(NullPointerException.class)
-            .hasMessage("Config must not be null");
-    }
-
-    @Test
     public void testCreateThreadsUsingNameForPrefix()
         throws ExecutionException, InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);

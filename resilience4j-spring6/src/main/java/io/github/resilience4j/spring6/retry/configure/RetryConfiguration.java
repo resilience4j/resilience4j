@@ -15,14 +15,11 @@
  */
 package io.github.resilience4j.spring6.retry.configure;
 
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties.InstanceProperties;
 import io.github.resilience4j.consumer.DefaultEventConsumerRegistry;
 import io.github.resilience4j.consumer.EventConsumerRegistry;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.registry.CompositeRegistryEventConsumer;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -45,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -168,10 +166,10 @@ public class RetryConfiguration {
         @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
         FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
-        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+        @Autowired(required = false) @Qualifier("resilience4jTaskExecutor") ScheduledThreadPoolExecutor scheduledThreadPoolExecutor
     ) {
         return new RetryAspect(retryConfigurationProperties, retryRegistry, retryAspectExtList,
-            fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
+            fallbackExecutor, spelResolver, scheduledThreadPoolExecutor);
     }
 
     @Bean

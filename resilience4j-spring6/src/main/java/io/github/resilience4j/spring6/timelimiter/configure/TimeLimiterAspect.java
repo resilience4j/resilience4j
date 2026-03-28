@@ -16,7 +16,6 @@
 
 package io.github.resilience4j.spring6.timelimiter.configure;
 
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.lang.Nullable;
 import io.github.resilience4j.spring6.fallback.FallbackExecutor;
@@ -56,14 +55,14 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
                              @Nullable List<TimeLimiterAspectExt> timeLimiterAspectExtList,
                              FallbackExecutor fallbackExecutor,
                              SpelResolver spelResolver,
-                             @Nullable ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor) {
+                             @Nullable ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.properties = properties;
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
-        this.timeLimiterExecutorService = contextAwareScheduledThreadPoolExecutor != null ?
-            contextAwareScheduledThreadPoolExecutor :
+        this.timeLimiterExecutorService = scheduledThreadPoolExecutor != null ?
+            scheduledThreadPoolExecutor :
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 

@@ -40,6 +40,7 @@ import org.springframework.context.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @Configuration
 @Import({FallbackConfigurationOnMissingBean.class, SpelResolverConfigurationOnMissingBean.class})
@@ -86,10 +87,10 @@ public abstract class AbstractTimeLimiterConfigurationOnMissingBean {
         @Autowired(required = false) List<TimeLimiterAspectExt> timeLimiterAspectExtList,
         FallbackExecutor fallbackExecutor,
         SpelResolver spelResolver,
-        @Autowired(required = false) ContextAwareScheduledThreadPoolExecutor contextAwareScheduledThreadPoolExecutor
+        @Autowired(required = false) @Qualifier("resilience4jTaskExecutor") ScheduledThreadPoolExecutor scheduledThreadPoolExecutor
     ) {
         return timeLimiterConfiguration.timeLimiterAspect(
-            timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackExecutor, spelResolver, contextAwareScheduledThreadPoolExecutor);
+            timeLimiterProperties, timeLimiterRegistry, timeLimiterAspectExtList, fallbackExecutor, spelResolver, scheduledThreadPoolExecutor);
     }
 
     @Bean

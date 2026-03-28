@@ -45,26 +45,31 @@ public class HedgeImpl implements Hedge {
     private final HedgeEventProcessor eventProcessor;
     private final HedgeDurationSupplier durationSupplier;
     private final HedgeMetrics metrics;
-    private final ContextAwareScheduledThreadPoolExecutor configuredHedgeExecutor;
+    private final ScheduledThreadPoolExecutor  configuredHedgeExecutor;
 
     public HedgeImpl(String name, HedgeConfig hedgeConfig) {
         this(name, hedgeConfig, emptyMap());
     }
 
     public HedgeImpl(String name, HedgeConfig hedgeConfig,
-                     Map<String, String> tags) {
+                     Map<String, String> tags,
+                     ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
         this.name = name;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.hedgeConfig = hedgeConfig;
         this.eventProcessor = new HedgeEventProcessor();
         this.durationSupplier = HedgeDurationSupplier.fromConfig(hedgeConfig);
         this.metrics = new HedgeMetrics();
-        this.configuredHedgeExecutor =
-            ContextAwareScheduledThreadPoolExecutor
+        this.configuredHedgeExecutor = scheduledThreadPoolExecutor;
+    }
+
+    public HedgeImpl(String name, HedgeConfig hedgeConfig,
+                     Map<String, String> tags) {
+        this(name, hedgeConfig, tags, ContextAwareScheduledThreadPoolExecutor
                 .newScheduledThreadPool()
                 .corePoolSize(hedgeConfig.getConcurrentHedges())
                 .contextPropagators(hedgeConfig.getContextPropagators())
-                .build();
+                .build());
     }
 
     @Override
