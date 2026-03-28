@@ -15,7 +15,6 @@
  */
 package io.github.resilience4j.micrometer.tagged;
 
-import io.github.resilience4j.bulkhead.GenericBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
