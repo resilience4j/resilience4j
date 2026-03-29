@@ -132,7 +132,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
             .willThrow(new HelloWorldException());
 
         assertThatThrownBy(() -> Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get())
-            .isInstanceOf(Exception.class);
+            .isInstanceOf(HelloWorldException.class);
 
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(5);
     }
@@ -154,7 +154,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
         Callable<String> retryableCallable = Retry.decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
 
         assertThatThrownBy(retryableCallable::call)
-            .isInstanceOf(Exception.class);
+            .isInstanceOf(HelloWorldException.class);
 
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(5);
     }
