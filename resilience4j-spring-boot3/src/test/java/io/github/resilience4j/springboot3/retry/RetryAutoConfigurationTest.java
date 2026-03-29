@@ -28,7 +28,6 @@ import io.github.resilience4j.springboot3.service.test.TestApplication;
 import io.github.resilience4j.springboot3.service.test.retry.RetryDummyFeignClient;
 import io.github.resilience4j.springboot3.service.test.retry.RetryDummyService;
 import io.github.resilience4j.springboot3.service.test.retry.ReactiveRetryDummyService;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,7 +89,7 @@ public class RetryAutoConfigurationTest {
             // Do nothing. The IOException is recorded by the retry as it is one of failure exceptions
         }
         // The invocation is recorded by the CircuitBreaker as a success.
-        retryDummyFeignClient.doSomething(StringUtils.EMPTY);
+        retryDummyFeignClient.doSomething("");
 
         Retry retry = retryRegistry.retry(RetryDummyFeignClient.RETRY_DUMMY_FEIGN_CLIENT_NAME);
         assertThat(retry).isNotNull();
