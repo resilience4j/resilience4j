@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,8 +19,9 @@
 package io.github.resilience4j.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -31,19 +32,19 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class CircuitBreakerEventPublisherTest {
+class CircuitBreakerEventPublisherTest {
 
     private Logger logger;
     private CircuitBreaker circuitBreaker;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         logger = mock(Logger.class);
         circuitBreaker = CircuitBreaker.ofDefaults("testName");
     }
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         CircuitBreaker.EventPublisher eventPublisher = circuitBreaker.getEventPublisher();
         CircuitBreaker.EventPublisher eventPublisher2 = circuitBreaker.getEventPublisher();
 
@@ -51,7 +52,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnEvent() {
+    void shouldConsumeOnEvent() {
         circuitBreaker.getEventPublisher()
             .onEvent(this::logEventType);
 
@@ -61,7 +62,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnSuccessEvent() {
+    void shouldConsumeOnSuccessEvent() {
         circuitBreaker.getEventPublisher()
             .onSuccess(this::logEventType);
 
@@ -71,7 +72,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnErrorEvent() {
+    void shouldConsumeOnErrorEvent() {
         circuitBreaker.getEventPublisher()
             .onError(this::logEventType);
 
@@ -81,7 +82,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnResetEvent() {
+    void shouldConsumeOnResetEvent() {
         circuitBreaker.getEventPublisher()
             .onReset(this::logEventType);
 
@@ -91,7 +92,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnStateTransitionEvent() {
+    void shouldConsumeOnStateTransitionEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
             .slidingWindowSize(1).build());
         circuitBreaker.getEventPublisher()
@@ -104,7 +105,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeCallNotPermittedEvent() {
+    void shouldConsumeCallNotPermittedEvent() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
             .slidingWindowSize(1).build());
         circuitBreaker.getEventPublisher()
@@ -118,7 +119,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldNotProduceEventsInDisabledState() {
+    void shouldNotProduceEventsInDisabledState() {
         circuitBreaker = CircuitBreaker.of("test", CircuitBreakerConfig.custom()
             .slidingWindowSize(1).build());
         circuitBreaker.getEventPublisher()
@@ -146,7 +147,7 @@ public class CircuitBreakerEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeIgnoredErrorEvent() {
+    void shouldConsumeIgnoredErrorEvent() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .ignoreExceptions(IOException.class)
             .build();

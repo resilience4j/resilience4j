@@ -1,14 +1,14 @@
 package io.github.resilience4j.circuitbreaker;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static io.github.resilience4j.circuitbreaker.CallNotPermittedException.createCallNotPermittedException;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CallNotPermittedExceptionTest {
+class CallNotPermittedExceptionTest {
 
     @Test
-    public void shouldReturnCorrectMessageWhenStateIsOpen() {
+    void shouldReturnCorrectMessageWhenStateIsOpen() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         circuitBreaker.transitionToOpenState();
         final CallNotPermittedException callNotPermittedException = createCallNotPermittedException(circuitBreaker);
@@ -18,7 +18,7 @@ public class CallNotPermittedExceptionTest {
     }
 
     @Test
-    public void shouldReturnCorrectMessageWhenStateIsForcedOpen() {
+    void shouldReturnCorrectMessageWhenStateIsForcedOpen() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         circuitBreaker.transitionToForcedOpenState();
         final CallNotPermittedException callNotPermittedException = createCallNotPermittedException(circuitBreaker);
