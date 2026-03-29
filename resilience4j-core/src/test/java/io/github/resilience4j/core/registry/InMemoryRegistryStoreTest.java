@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 KrnSaurabh
+ * Copyright 2026 KrnSaurabh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 package io.github.resilience4j.core.registry;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-public class InMemoryRegistryStoreTest {
+class InMemoryRegistryStoreTest {
 
     private static final String DEFAULT_CONFIG_VALUE = "defaultConfig";
     private static final String DEFAULT_CONFIG = "default";
@@ -31,46 +30,47 @@ public class InMemoryRegistryStoreTest {
     private static final String CUSTOM_CONFIG = "custom";
     private InMemoryRegistryStore<String> inMemoryRegistryStore;
 
-    @Before
-    public void initialiseInMemoryRegistryStore() {
+    @BeforeEach
+    void initialiseInMemoryRegistryStore() {
         inMemoryRegistryStore = new InMemoryRegistryStore<>();
     }
 
     @Test
-    public void shouldComputeValueWhenKeyNotPresentInRegistryStore() {
-        assertEquals("Wrong Value",
-            DEFAULT_CONFIG_VALUE, inMemoryRegistryStore.computeIfAbsent(DEFAULT_CONFIG, k -> DEFAULT_CONFIG_VALUE));
+    void shouldComputeValueWhenKeyNotPresentInRegistryStore() {
+        assertThat(inMemoryRegistryStore.computeIfAbsent(DEFAULT_CONFIG, k -> DEFAULT_CONFIG_VALUE)).as("Wrong Value").isEqualTo(DEFAULT_CONFIG_VALUE);
         assertThat(inMemoryRegistryStore.values()).hasSize(1);
-        assertEquals("Wrong Value", DEFAULT_CONFIG_VALUE, inMemoryRegistryStore.computeIfAbsent(DEFAULT_CONFIG, k -> NEW_CONFIG));
+        assertThat(inMemoryRegistryStore.computeIfAbsent(DEFAULT_CONFIG, k -> NEW_CONFIG)).as("Wrong Value").isEqualTo(DEFAULT_CONFIG_VALUE);
     }
 
     @Test
-    public void shouldPutKeyIntoRegistryStoreAndReturnOldValue() {
-        assertNull(inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, DEFAULT_CONFIG_VALUE));
+    void shouldPutKeyIntoRegistryStoreAndReturnOldValue() {
+        assertThat(inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, DEFAULT_CONFIG_VALUE)).isNull();
         assertThat(inMemoryRegistryStore.values()).hasSize(1);
-        assertEquals("Wrong Value", DEFAULT_CONFIG_VALUE, inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, NEW_CONFIG));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void shouldThrowNPEWhenValueIsNull() {
-        inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void shouldThrowNPEWhenKeyIsNull() {
-        inMemoryRegistryStore.putIfAbsent(null, DEFAULT_CONFIG_VALUE);
+        assertThat(inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, NEW_CONFIG)).as("Wrong Value").isEqualTo(DEFAULT_CONFIG_VALUE);
     }
 
     @Test
-    public void shouldFindConfigFromRegistryStore() {
+    void shouldThrowNPEWhenValueIsNull() {
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() ->
+            inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, null));
+    }
+
+    @Test
+    void shouldThrowNPEWhenKeyIsNull() {
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() ->
+            inMemoryRegistryStore.putIfAbsent(null, DEFAULT_CONFIG_VALUE));
+    }
+
+    @Test
+    void shouldFindConfigFromRegistryStore() {
         inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, DEFAULT_CONFIG_VALUE);
-        assertThat(inMemoryRegistryStore.find(DEFAULT_CONFIG)).isNotEmpty();
+        assertThat(inMemoryRegistryStore.find(DEFAULT_CONFIG)).isPresent();
         assertThat(inMemoryRegistryStore.find(DEFAULT_CONFIG)).hasValue(DEFAULT_CONFIG_VALUE);
         assertThat(inMemoryRegistryStore.find(NEW_CONFIG)).isEmpty();
     }
 
     @Test
-    public void shouldRemoveConfigFromRegistryStore() {
+    void shouldRemoveConfigFromRegistryStore() {
         inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, DEFAULT_CONFIG_VALUE);
         inMemoryRegistryStore.putIfAbsent(CUSTOM_CONFIG, NEW_CONFIG);
         assertThat(inMemoryRegistryStore.remove(DEFAULT_CONFIG)).hasValue(DEFAULT_CONFIG_VALUE);
@@ -78,20 +78,20 @@ public class InMemoryRegistryStoreTest {
     }
 
     @Test
-    public void shouldReplaceKeyWithNewConfigValueWhenKeyPresent() {
+    void shouldReplaceKeyWithNewConfigValueWhenKeyPresent() {
         inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, DEFAULT_CONFIG_VALUE);
         assertThat(inMemoryRegistryStore.replace(DEFAULT_CONFIG, NEW_CONFIG)).hasValue(DEFAULT_CONFIG_VALUE);
         assertThat(inMemoryRegistryStore.find(DEFAULT_CONFIG)).hasValue(NEW_CONFIG);
     }
 
     @Test
-    public void shouldNotReplaceKeyWithNewConfigValueWhenKeyAbsent() {
+    void shouldNotReplaceKeyWithNewConfigValueWhenKeyAbsent() {
         assertThat(inMemoryRegistryStore.replace(NEW_CONFIG, NEW_CONFIG)).isEmpty();
         assertThat(inMemoryRegistryStore.values()).isEmpty();
     }
 
     @Test
-    public void shouldReturnCollectionOfConfigs() {
+    void shouldReturnCollectionOfConfigs() {
         inMemoryRegistryStore.putIfAbsent(DEFAULT_CONFIG, DEFAULT_CONFIG_VALUE);
         inMemoryRegistryStore.putIfAbsent(CUSTOM_CONFIG, NEW_CONFIG);
         assertThat(inMemoryRegistryStore.values()).containsExactlyInAnyOrder(NEW_CONFIG, DEFAULT_CONFIG_VALUE);

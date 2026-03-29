@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017: Robert Winkler
+ *  Copyright 2026: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,32 +18,31 @@
  */
 package io.github.resilience4j.core;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class EventProcessorTest {
+class EventProcessorTest {
 
     private Logger logger;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         logger = mock(Logger.class);
     }
 
     @Test
-    public void testRegisterOnEventConsumer() {
+    void registerOnEventConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Number> eventConsumer = event -> logger.info(event.toString());
 
@@ -57,7 +56,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testRegisterConsumer() {
+    void registerConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
 
@@ -71,7 +70,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testRegisterSameConsumerOnlyOnce() {
+    void registerSameConsumerOnlyOnce() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
 
@@ -86,7 +85,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testRegisterTwoDifferentConsumers() {
+    void registerTwoDifferentConsumers() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
 
         EventConsumer<Integer> eventConsumer1 = event -> logger.info(event.toString());
@@ -103,7 +102,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testRegisterDifferentConsumers() {
+    void registerDifferentConsumers() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> integerConsumer = event -> logger.info(event.toString());
         EventConsumer<Float> floatConsumer = event -> logger.info(event.toString());
@@ -123,7 +122,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testOnEventAndRegisterConsumer() {
+    void onEventAndRegisterConsumer() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> eventConsumer = event -> logger.info(event.toString());
 
@@ -136,7 +135,7 @@ public class EventProcessorTest {
     }
 
     @Test
-    public void testNoConsumers() {
+    void noConsumers() {
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
 
         boolean consumed = eventProcessor.processEvent(1);
@@ -146,19 +145,17 @@ public class EventProcessorTest {
 
 
     @Test
-    public void testOnEventParallel() throws ExecutionException, InterruptedException {
+    void onEventParallel() throws Exception {
         CountDownLatch eventConsumed = new CountDownLatch(1);
         CountDownLatch waitForConsumerRegistration = new CountDownLatch(1);
 
         EventProcessor<Number> eventProcessor = new EventProcessor<>();
         EventConsumer<Integer> eventConsumer1 = event -> {
-            try {
+            assertThatCode(() -> {
                 eventConsumed.countDown();
                 waitForConsumerRegistration.await(5, TimeUnit.SECONDS);
                 logger.info(event.toString());
-            } catch (InterruptedException e) {
-                fail("Must not happen");
-            }
+            }).withFailMessage("Must not happen").doesNotThrowAnyException();
         };
 
         EventConsumer<Integer> eventConsumer2 = event -> logger.info(event.toString());
@@ -167,9 +164,8 @@ public class EventProcessorTest {
         eventProcessor.registerConsumer(Integer.class.getName(), eventConsumer1);
 
         // process first event in a separate thread to create a race condition
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            eventProcessor.processEvent(1); // blocks because of the count down latch
-        });
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
+            eventProcessor.processEvent(1));
 
         eventConsumed.await(1, TimeUnit.SECONDS);
 

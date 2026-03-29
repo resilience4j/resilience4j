@@ -1,23 +1,23 @@
 package io.github.resilience4j.core;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StringUtilsTest {
+class StringUtilsTest {
 
     @Test
-    public void testString() {
+    void string() {
         assertThat(StringUtils.isNotEmpty("bla")).isTrue();
     }
 
     @Test
-    public void testEmptyString() {
+    void emptyString() {
         assertThat(StringUtils.isNotEmpty("")).isFalse();
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         assertThat(StringUtils.isNotEmpty(null)).isFalse();
     }
 }

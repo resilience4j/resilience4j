@@ -1,17 +1,33 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.core;
 
-import io.vavr.collection.List;
-import io.vavr.control.Try;
-import org.junit.Test;
-
 import java.time.Duration;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-public class IntervalFunctionTest {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class IntervalFunctionTest {
 
     @Test
-    public void shouldRejectNonPositiveDuration() {
+    void shouldRejectNonPositiveDuration() {
         final Duration negativeDuration = Duration.ofMillis(0);
         final Duration zeroDuration = Duration.ofMillis(0);
         final Duration positiveDuration = Duration.ofMillis(100);
@@ -19,35 +35,31 @@ public class IntervalFunctionTest {
         final long zeroInterval = 0;
         final long positiveInterval = 100;
 
-        List<Try<IntervalFunction>> tries = List.of(
-            Try.of(() -> IntervalFunction.of(negativeDuration)),
-            Try.of(() -> IntervalFunction.of(zeroDuration)),
+        assertThatThrownBy(() -> IntervalFunction.of(negativeDuration)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.of(zeroDuration)).isInstanceOf(IllegalArgumentException.class);
 
-            Try.of(() -> IntervalFunction.of(negativeInterval)),
-            Try.of(() -> IntervalFunction.of(zeroInterval)),
+        assertThatThrownBy(() -> IntervalFunction.of(negativeInterval)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.of(zeroInterval)).isInstanceOf(IllegalArgumentException.class);
 
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, negativeDuration)),
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, zeroDuration)),
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, negativeDuration)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(positiveDuration, 1, zeroDuration)).isInstanceOf(IllegalArgumentException.class);
 
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, negativeInterval)),
-            Try.of(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, zeroInterval)),
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, negativeInterval)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialBackoff(positiveInterval, 1, zeroInterval)).isInstanceOf(IllegalArgumentException.class);
 
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, negativeDuration)),
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, zeroDuration)),
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, negativeDuration)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(positiveDuration, 1, zeroDuration)).isInstanceOf(IllegalArgumentException.class);
 
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, negativeInterval)),
-            Try.of(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, zeroInterval))
-        );
-
-        assertThat(tries.forAll(Try::isFailure)).isTrue();
-        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException))
-            .isTrue();
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, negativeInterval)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofExponentialRandomBackoff(positiveInterval, 1, zeroInterval)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldPassPositiveDuration() {
+    void shouldPassPositiveDuration() {
         final List<Long> positiveIntervals = List.of(10L, 99L, 981L);
-        final List<Duration> positiveDurations = positiveIntervals.map(Duration::ofMillis);
+        final List<Duration> positiveDurations = List.of(
+            Duration.ofMillis(10L), Duration.ofMillis(99L), Duration.ofMillis(981L)
+        );
 
         positiveDurations.forEach(IntervalFunction::of);
         positiveIntervals.forEach(IntervalFunction::of);
@@ -66,7 +78,7 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void shouldRejectAttemptLessThenOne() {
+    void shouldRejectAttemptLessThenOne() {
         final List<IntervalFunction> fns = List.of(
             IntervalFunction.ofDefaults(),
             IntervalFunction.ofRandomized(),
@@ -74,15 +86,13 @@ public class IntervalFunctionTest {
             IntervalFunction.ofExponentialRandomBackoff()
         );
 
-        final List<Try<Long>> tries = fns.map(fn -> Try.of(() -> fn.apply(0)));
-
-        assertThat(tries.forAll(Try::isFailure)).isTrue();
-        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException))
-            .isTrue();
+        for (IntervalFunction fn : fns) {
+            assertThatThrownBy(() -> fn.apply(0)).isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     @Test
-    public void shouldPassAttemptGreaterThenZero() {
+    void shouldPassAttemptGreaterThenZero() {
         final List<IntervalFunction> fns = List.of(
             IntervalFunction.ofDefaults(),
             IntervalFunction.ofRandomized(),
@@ -90,45 +100,37 @@ public class IntervalFunctionTest {
             IntervalFunction.ofExponentialRandomBackoff()
         );
 
-        final List<Try<Long>> tries1 = fns.map(fn -> Try.of(() -> fn.apply(1)));
-        final List<Try<Long>> tries2 = fns.map(fn -> Try.of(() -> fn.apply(2)));
-
-        assertThat(tries1.forAll(Try::isFailure)).isFalse();
-        assertThat(tries2.forAll(Try::isFailure)).isFalse();
+        for (IntervalFunction fn : fns) {
+            fn.apply(1);
+            fn.apply(2);
+        }
     }
 
     @Test
-    public void shouldRejectOutOfBoundsRandomizationFactor() {
+    void shouldRejectOutOfBoundsRandomizationFactor() {
         final Duration duration = Duration.ofMillis(100);
 
         final float negativeFactor = -0.0001f;
         final float greaterThanOneFactor = 1.0001f;
 
-        final List<Try<IntervalFunction>> tries = List.of(
-            Try.of(() -> IntervalFunction.ofRandomized(duration, negativeFactor)),
-            Try.of(() -> IntervalFunction.ofRandomized(duration, greaterThanOneFactor))
-        );
-
-        assertThat(tries.forAll(Try::isFailure)).isTrue();
-        assertThat(tries.map(Try::getCause).forAll(t -> t instanceof IllegalArgumentException))
-            .isTrue();
+        assertThatThrownBy(() -> IntervalFunction.ofRandomized(duration, negativeFactor)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntervalFunction.ofRandomized(duration, greaterThanOneFactor)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldPassPositiveRandomizationFactor() {
+    void shouldPassPositiveRandomizationFactor() {
         final Duration duration = Duration.ofMillis(100);
         final float multiplier = 1.5f;
         final List<Float> correctFactors = List.of(0.0f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f);
 
         correctFactors.forEach(v -> IntervalFunction.ofRandomized(duration, v));
-        correctFactors
-            .forEach(v -> IntervalFunction.ofExponentialRandomBackoff(duration, multiplier, v));
+        correctFactors.forEach(v -> IntervalFunction.ofExponentialRandomBackoff(duration, multiplier, v));
 
         assertThat(true).isTrue();
     }
 
     @Test
-    public void shouldPassPositiveMultiplier() {
+    void shouldPassPositiveMultiplier() {
         final Duration duration = Duration.ofMillis(100);
         final float greaterThanOneMultiplier = 1.0001f;
 
@@ -139,7 +141,7 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void generatesRandomizedIntervals() {
+    void generatesRandomizedIntervals() {
         final IntervalFunction f = IntervalFunction.ofRandomized(100, 0.5);
 
         for (int i = 1; i < 50; i++) {
@@ -150,7 +152,7 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void generatesExponentialIntervals() {
+    void generatesExponentialIntervals() {
         final IntervalFunction f = IntervalFunction.ofExponentialBackoff(100, 1.5);
         long prevV = f.apply(1);
 
@@ -163,7 +165,7 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void generatesCappedExponentialIntervals() {
+    void generatesCappedExponentialIntervals() {
         final IntervalFunction f = IntervalFunction.ofExponentialBackoff(100, 2, 100_000);
         long prevV = f.apply(1);
 
@@ -179,7 +181,7 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void generatesExponentialRandomIntervals() {
+    void generatesExponentialRandomIntervals() {
         final IntervalFunction f = IntervalFunction.ofExponentialRandomBackoff(100, 1.5, 0.5);
         long expectedV = 100;
 
@@ -194,7 +196,7 @@ public class IntervalFunctionTest {
     }
 
     @Test
-    public void generatesCappedExponentialRandomIntervals() {
+    void generatesCappedExponentialRandomIntervals() {
         final IntervalFunction f = IntervalFunction.ofExponentialRandomBackoff(100, 1.5, 0.5,100_000);
         long expectedV = 100;
 
@@ -203,12 +205,12 @@ public class IntervalFunctionTest {
 
             long finalExpectedV = expectedV;
 
-            assertThat(v).satisfiesAnyOf(
+            assertThat(v)
+                    .satisfiesAnyOf(
                 x -> assertThat(x).isGreaterThanOrEqualTo((long) (finalExpectedV * 0.5) - 1),
                 x -> assertThat(x).isEqualTo(100_000)
-            );
-
-            assertThat(v).satisfiesAnyOf(
+            )
+                    .satisfiesAnyOf(
                 x -> assertThat(x).isLessThanOrEqualTo((long) (finalExpectedV * 1.5) + 1),
                 x -> assertThat(x).isEqualTo(100_000)
             );

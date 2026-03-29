@@ -18,8 +18,7 @@
  */
 package io.github.resilience4j.core;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
@@ -31,14 +30,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import org.junit.Test;
-
 import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagator;
 
-public class ContextPropagatorTest {
+import org.junit.jupiter.api.Test;
+
+class ContextPropagatorTest {
 
     @Test
-    public void contextPropagationFailureSingleTest() {
+    void contextPropagationFailureSingleTest() {
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary");
 
@@ -46,33 +45,33 @@ public class ContextPropagatorTest {
         //Thread boundary
         final CompletableFuture<String> future = CompletableFuture.supplyAsync(supplier);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue(null)));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue(null));
     }
 
     @Test
-    public void contextPropagationEmptyListShouldNotFail() {
+    void contextPropagationEmptyListShouldNotFail() {
         Supplier<String> supplier = () -> "Hello World";
 
         //Thread boundary
         Supplier<String> decoratedSupplier = ContextPropagator.decorateSupplier(Collections.emptyList(), supplier);
         final CompletableFuture<String> future = CompletableFuture.supplyAsync(decoratedSupplier);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("Hello World")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue("Hello World"));
     }
 
     @Test
-    public void contextPropagationEmptyListShouldNotFailWithCallable() {
+    void contextPropagationEmptyListShouldNotFailWithCallable() {
         //Thread boundary
         Callable<String> decorateCallable = ContextPropagator.decorateCallable(Collections.emptyList(), () -> "Hello World");
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(decorateCallable.call()).isEqualTo("Hello World")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(decorateCallable.call()).isEqualTo("Hello World"));
     }
 
     @Test
-    public void contextPropagationFailureMultipleTest() {
+    void contextPropagationFailureMultipleTest() {
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShould_NOT_CrossThreadBoundary");
 
@@ -86,12 +85,12 @@ public class ContextPropagatorTest {
         //Thread boundary
         final CompletableFuture<List<String>> future = CompletableFuture.supplyAsync(supplier);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future.get()).containsExactlyInAnyOrder(null, null)));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future.get()).containsExactlyInAnyOrder(null, null));
     }
 
     @Test
-    public void contextPropagationSupplierMultipleTest() {
+    void contextPropagationSupplierMultipleTest() {
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
 
@@ -107,15 +106,15 @@ public class ContextPropagatorTest {
         //Thread boundary
         final CompletableFuture<List<String>> future = CompletableFuture.supplyAsync(supplier);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(future.get()).containsExactlyInAnyOrder(
                 "FirstValueShouldCrossThreadBoundary",
                 "SecondValueShouldCrossThreadBoundary")
-        ));
+        );
     }
 
     @Test
-    public void contextPropagationSupplierMultipleTestWithCallable() {
+    void contextPropagationSupplierMultipleTestWithCallable() {
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
 
@@ -130,15 +129,15 @@ public class ContextPropagatorTest {
             () -> Arrays.asList(threadLocalOne.get(), threadLocalTwo.get()));
         //Thread boundary
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(callable.call()).containsExactlyInAnyOrder(
                 "FirstValueShouldCrossThreadBoundary",
                 "SecondValueShouldCrossThreadBoundary")
-        ));
+        );
     }
 
     @Test
-    public void contextPropagationSupplierSingleTest() {
+    void contextPropagationSupplierSingleTest() {
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShouldCrossThreadBoundary");
 
@@ -148,12 +147,12 @@ public class ContextPropagatorTest {
         //Thread boundary
         final CompletableFuture<String> future = CompletableFuture.supplyAsync(supplier);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("SingleValueShouldCrossThreadBoundary")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue("SingleValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void contextPropagationSupplierSingleTestWithCallable() {
+    void contextPropagationSupplierSingleTestWithCallable() {
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShouldCrossThreadBoundary");
 
@@ -161,12 +160,12 @@ public class ContextPropagatorTest {
             new TestThreadLocalContextPropagator(threadLocal),
             threadLocal::get);
 
-        waitAtMost(200, TimeUnit.MILLISECONDS).until(matches(() ->
-            assertThat(callable.call()).isEqualTo("SingleValueShouldCrossThreadBoundary")));
+        await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() ->
+            assertThat(callable.call()).isEqualTo("SingleValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void contextPropagationRunnableFailureSingleTest() {
+    void contextPropagationRunnableFailureSingleTest() {
         AtomicReference<String> reference = new AtomicReference<>();
         //Thread boundary
         Runnable runnable = ContextPropagator.decorateRunnable(
@@ -175,12 +174,12 @@ public class ContextPropagatorTest {
 
         CompletableFuture.runAsync(runnable);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(reference).hasValue("Hello World")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(reference).hasValue("Hello World"));
     }
 
     @Test
-    public void contextPropagationRunnableEmptyListShouldNotFail() {
+    void contextPropagationRunnableEmptyListShouldNotFail() {
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary");
 
@@ -189,12 +188,12 @@ public class ContextPropagatorTest {
         //Thread boundary
         CompletableFuture.runAsync(runnable);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(reference).hasValue(null)));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(reference).hasValue(null));
     }
 
     @Test
-    public void contextPropagationRunnableSingleTest() {
+    void contextPropagationRunnableSingleTest() {
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShouldCrossThreadBoundary");
 
@@ -205,12 +204,12 @@ public class ContextPropagatorTest {
         //Thread boundary
         CompletableFuture.runAsync(runnable);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(reference).hasValue("SingleValueShouldCrossThreadBoundary")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(reference).hasValue("SingleValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void contextPropagationRunnableMultipleTest() {
+    void contextPropagationRunnableMultipleTest() {
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
 
@@ -231,14 +230,14 @@ public class ContextPropagatorTest {
         //Thread boundary
         CompletableFuture.runAsync(runnable);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(reference.get()).containsExactlyInAnyOrder(
                 "FirstValueShouldCrossThreadBoundary",
-                "SecondValueShouldCrossThreadBoundary")));
+                "SecondValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void contextPropagationRunnableMultipleFailureTest() {
+    void contextPropagationRunnableMultipleFailureTest() {
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCross_NOT_ThreadBoundary");
 
@@ -254,7 +253,7 @@ public class ContextPropagatorTest {
         //Thread boundary
         CompletableFuture.runAsync(runnable);
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(reference.get()).containsExactlyInAnyOrder(null, null)));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(reference.get()).containsExactlyInAnyOrder(null, null));
     }
 }

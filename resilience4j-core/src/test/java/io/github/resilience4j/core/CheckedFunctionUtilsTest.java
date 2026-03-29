@@ -20,17 +20,19 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import org.junit.Test;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.Test;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-public class CheckedFunctionUtilsTest {
+class CheckedFunctionUtilsTest {
 
     @Test
-    public void shouldRecoverFromException() throws Throwable {
+    void shouldRecoverFromException() throws Throwable {
         CheckedSupplier<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -42,7 +44,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromSpecificExceptions() throws Throwable {
+    void shouldRecoverFromSpecificExceptions() throws Throwable {
         CheckedSupplier<String> callable = () -> {
             throw new IOException("BAM!");
         };
@@ -57,7 +59,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromResult() throws Throwable {
+    void shouldRecoverFromResult() throws Throwable {
         CheckedSupplier<String> callable = () -> "Wrong Result";
 
         CheckedSupplier<String> callableWithRecovery = CheckedFunctionUtils.andThen(callable, (result, ex) -> {
@@ -73,7 +75,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromException2() throws Throwable {
+    void shouldRecoverFromException2() throws Throwable {
         CheckedSupplier<String> callable = () -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -90,7 +92,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverFromSpecificResult() throws Throwable {
+    void shouldRecoverFromSpecificResult() throws Throwable {
         CheckedSupplier<String> supplier = () -> "Wrong Result";
 
         CheckedSupplier<String> callableWithRecovery = CheckedFunctionUtils.recover(supplier, (result) -> result.equals("Wrong Result"), (r) -> "Bla");
@@ -100,30 +102,32 @@ public class CheckedFunctionUtilsTest {
     }
 
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException() throws Throwable {
+    @Test
+    void shouldRethrowException() throws Throwable {
         CheckedSupplier<String> callable = () -> {
-            throw new IOException("BAM!");
-        };
+                throw new IOException("BAM!");
+            };
         CheckedSupplier<String> callableWithRecovery = CheckedFunctionUtils.recover(callable, (ex) -> {
-            throw new RuntimeException();
-        });
+                throw new RuntimeException();
+            });
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        callableWithRecovery.get();
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowException2() throws Throwable {
-        CheckedSupplier<String> callable = () -> {
-            throw new RuntimeException("BAM!");
-        };
-        CheckedSupplier<String> callableWithRecovery = CheckedFunctionUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
-
-        callableWithRecovery.get();
+            callableWithRecovery.get());
     }
 
     @Test
-    public void shouldChainCheckedFunctionAndResultHandler() throws Throwable {
+    void shouldRethrowException2() throws Throwable {
+        CheckedSupplier<String> callable = () -> {
+                throw new RuntimeException("BAM!");
+            };
+        CheckedSupplier<String> callableWithRecovery = CheckedFunctionUtils.recover(callable, IllegalArgumentException.class, (ex) -> "Bla");
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
+
+            callableWithRecovery.get());
+    }
+
+    @Test
+    void shouldChainCheckedFunctionAndResultHandler() throws Throwable {
         CheckedFunction<String, String> function = ignored -> "foo";
         CheckedFunction<String, String> functionWithRecovery = CheckedFunctionUtils.andThen(function, result -> "bar");
 
@@ -134,7 +138,7 @@ public class CheckedFunctionUtilsTest {
 
 
     @Test
-    public void shouldChainCheckedFunctionAndRecoverFromException() throws Throwable {
+    void shouldChainCheckedFunctionAndRecoverFromException() throws Throwable {
         CheckedFunction<String, String> function = ignored -> {
             throw new RuntimeException("BAM!");
         };
@@ -147,7 +151,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldChainCheckedFunctionAndRecoverWithErrorHandler() throws Throwable {
+    void shouldChainCheckedFunctionAndRecoverWithErrorHandler() throws Throwable {
         CheckedFunction<String, String> function = ignored -> {
             throw new RuntimeException("BAM!");
         };
@@ -160,7 +164,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverCheckedFunctionFromException() throws Throwable {
+    void shouldRecoverCheckedFunctionFromException() throws Throwable {
         CheckedFunction<String, String> function = ignored -> {
             throw new RuntimeException("BAM!");
         };
@@ -172,7 +176,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverCheckedFunctionFromSpecificExceptions() throws Throwable {
+    void shouldRecoverCheckedFunctionFromSpecificExceptions() throws Throwable {
         CheckedFunction<String, String> function = ignored -> {
             throw new IllegalArgumentException("BAM!");
         };
@@ -187,7 +191,7 @@ public class CheckedFunctionUtilsTest {
     }
 
     @Test
-    public void shouldRecoverCheckedFunctionFromSpecificResult() throws Throwable {
+    void shouldRecoverCheckedFunctionFromSpecificResult() throws Throwable {
         CheckedFunction<String, String> function = ignored -> "Wrong Result";
 
         CheckedFunction<String, String> functionWithRecovery = CheckedFunctionUtils.recover(function, (result) -> result.equals("Wrong Result"), (r) -> "Correct Result");
@@ -196,25 +200,27 @@ public class CheckedFunctionUtilsTest {
         assertThat(result).isEqualTo("Correct Result");
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowCheckedFunctionException() throws Throwable {
+    @Test
+    void shouldRethrowCheckedFunctionException() throws Throwable {
         CheckedFunction<String, String> function = ignored -> {
-            throw new IllegalArgumentException("BAM!");
-        };
+                throw new IllegalArgumentException("BAM!");
+            };
         CheckedFunction<String, String> functionWithRecovery = CheckedFunctionUtils.recover(function, (ex) -> {
-            throw new RuntimeException();
-        });
+                throw new RuntimeException();
+            });
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        functionWithRecovery.apply("foo");
+            functionWithRecovery.apply("foo"));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldRethrowCheckedFuntctionException2() throws Throwable {
+    @Test
+    void shouldRethrowCheckedFuntctionException2() throws Throwable {
         CheckedFunction<String, String> function = ignored -> {
-            throw new RuntimeException("BAM!");
-        };
+                throw new RuntimeException("BAM!");
+            };
         CheckedFunction<String, String> functionWithRecovery = CheckedFunctionUtils.recover(function, IllegalArgumentException.class, (ex) -> "foo");
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
 
-        functionWithRecovery.apply("bar");
+            functionWithRecovery.apply("bar"));
     }
 }
