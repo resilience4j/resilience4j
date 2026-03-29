@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,13 @@ import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static io.github.resilience4j.retry.utils.MetricNames.*;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITH_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.FAILED_CALLS_WITHOUT_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITH_RETRY;
+import static io.github.resilience4j.retry.utils.MetricNames.SUCCESSFUL_CALLS_WITHOUT_RETRY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -36,7 +38,7 @@ public abstract class AbstractRetryMetricsTest {
     private MetricRegistry metricRegistry;
     private HelloWorldService helloWorldService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         metricRegistry = new MetricRegistry();
         helloWorldService = mock(HelloWorldService.class);
@@ -81,7 +83,10 @@ public abstract class AbstractRetryMetricsTest {
             .willThrow(new HelloWorldException());
         String value1 = retry.executeSupplier(helloWorldService::returnHelloWorld);
 
-        Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        try {
+            Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get();
+        } catch (Exception ignored) {
+        }
 
         assertThat(value1).isEqualTo("Hello world");
         then(helloWorldService).should(times(5)).returnHelloWorld();
