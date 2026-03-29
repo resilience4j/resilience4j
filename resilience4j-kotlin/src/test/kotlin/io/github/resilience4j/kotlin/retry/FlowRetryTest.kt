@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 
 class FlowRetryTest {
@@ -48,15 +50,15 @@ class FlowRetryTest {
 
             //Then
             repeat(3) {
-                Assertions.assertThat(resultList[it]).isEqualTo("Hello world$it")
+                assertThat(resultList[it]).isEqualTo("Hello world$it")
             }
-            Assertions.assertThat(resultList.size).isEqualTo(3)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+            assertThat(resultList.size).isEqualTo(3)
+            assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isEqualTo(1)
+            assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+            assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(3)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(3)
         }
     }
 
@@ -85,15 +87,15 @@ class FlowRetryTest {
 
             //Then
             repeat(3) {
-                Assertions.assertThat(resultList[it]).isEqualTo("Hello world$it")
+                assertThat(resultList[it]).isEqualTo("Hello world$it")
             }
-            Assertions.assertThat(resultList.size).isEqualTo(3)
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+            assertThat(resultList.size).isEqualTo(3)
+            assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
+            assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked twice
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(4)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(4)
         }
     }
 
@@ -116,14 +118,14 @@ class FlowRetryTest {
                 .toList(resultList)
 
             //Then
-            Assertions.assertThat(resultList.size).isEqualTo(1)
-            Assertions.assertThat(resultList[0]).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
+            assertThat(resultList.size).isEqualTo(1)
+            assertThat(resultList[0]).isEqualTo("Hello world")
+            assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isEqualTo(1)
+            assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isZero()
             // Then the helloWorldService should be invoked twice
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(2)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(2)
         }
     }
 
@@ -152,13 +154,13 @@ class FlowRetryTest {
             }
 
             //Then
-            Assertions.assertThat(resultList).isEmpty()
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
-            Assertions.assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
+            assertThat(resultList).isEmpty()
+            assertThat(metrics.numberOfSuccessfulCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfSuccessfulCallsWithRetryAttempt).isZero()
+            assertThat(metrics.numberOfFailedCallsWithoutRetryAttempt).isZero()
+            assertThat(metrics.numberOfFailedCallsWithRetryAttempt).isEqualTo(1)
             // Then the helloWorldService should be invoked the maximum number of times
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(retry.retryConfig.maxAttempts)
         }
     }
 }

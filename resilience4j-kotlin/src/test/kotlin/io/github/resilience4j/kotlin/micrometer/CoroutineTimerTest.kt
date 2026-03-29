@@ -27,7 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.BDDAssertions.failBecauseExceptionWasNotThrown
 import org.assertj.core.api.BDDAssertions.then
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class CoroutineTimerTest {
 

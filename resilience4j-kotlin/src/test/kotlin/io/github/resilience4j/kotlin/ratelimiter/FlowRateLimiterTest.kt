@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 
 class FlowRateLimiterTest {
@@ -49,11 +51,11 @@ class FlowRateLimiterTest {
             }.rateLimiter(rateLimiter)
 
             //Then
-            Assertions.assertThat(testFlow.single()).isEqualTo("Hello world")
-            Assertions.assertThat(metrics.availablePermissions).isEqualTo(9)
-            Assertions.assertThat(metrics.numberOfWaitingThreads).isZero()
+            assertThat(testFlow.single()).isEqualTo("Hello world")
+            assertThat(metrics.availablePermissions).isEqualTo(9)
+            assertThat(metrics.numberOfWaitingThreads).isZero()
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
     }
 
@@ -76,10 +78,10 @@ class FlowRateLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(metrics.availablePermissions).isEqualTo(9)
-            Assertions.assertThat(metrics.numberOfWaitingThreads).isZero()
+            assertThat(metrics.availablePermissions).isEqualTo(9)
+            assertThat(metrics.numberOfWaitingThreads).isZero()
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
     }
 
@@ -107,10 +109,10 @@ class FlowRateLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(metrics.availablePermissions).isZero()
-            Assertions.assertThat(metrics.numberOfWaitingThreads).isZero()
+            assertThat(metrics.availablePermissions).isZero()
+            assertThat(metrics.numberOfWaitingThreads).isZero()
             // Then the helloWorldService should not be invoked after the initial 10 times to use up the permits
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(10)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(10)
         }
     }
 }

@@ -23,7 +23,8 @@ import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.kotlin.HelloWorldService
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
