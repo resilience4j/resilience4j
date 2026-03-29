@@ -66,8 +66,14 @@ configure(project.coreProjects) {
     tasks.withType(Test).all {
         if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
             jvmArgs += [
-                    "-XX:+AllowRedefinitionToAddDeleteMethods", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED", "--add-opens=java.base/java.time=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED"
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED",
+                    "--add-opens=java.base/java.time=ALL-UNNAMED",
+                    "--add-opens=java.base/java.io=ALL-UNNAMED",
             ]
+        }
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
+            jvmArgs += ["-XX:+EnableDynamicAgentLoading"]
         }
     }
 
@@ -77,9 +83,9 @@ configure(project.coreProjects) {
         // JSR-305 only used for non-required meta-annotations
         compileOnly(libs.jsr305)
 
-        testImplementation(libs.vavr)
+        testImplementation(platform(libs.junit.bom))
+        testRuntimeOnly(libs.junit.platform.launcher)
         testImplementation(libs.bundles.testing)
-        testImplementation(libs.jaxws.ri)
     }
 
     tasks.withType(JavaCompile) {
@@ -96,6 +102,7 @@ configure(project.coreProjects) {
             maxFailures = 20
             failOnPassedAfterRetry = true
         }
+        useJUnitPlatform()
     }
 
     jacocoTestReport {

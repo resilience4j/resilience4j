@@ -10,8 +10,4 @@ dependencies {
     testAnnotationProcessor(platform(libs.micronaut.platform))
 }
 
-test {
-    useJUnitPlatform()
-}
-
 ext.moduleName = "io.github.resilience4j.micronautannotation"
