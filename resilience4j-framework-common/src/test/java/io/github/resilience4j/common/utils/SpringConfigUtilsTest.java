@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,20 @@ import io.github.resilience4j.common.circuitbreaker.configuration.CommonCircuitB
 import io.github.resilience4j.common.ratelimiter.configuration.CommonRateLimiterConfigurationProperties;
 import io.github.resilience4j.common.retry.configuration.CommonRetryConfigurationProperties;
 import io.github.resilience4j.common.timelimiter.configuration.CommonTimeLimiterConfigurationProperties;
-import org.junit.Test;
 
 import java.time.Duration;
+
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * unit test for spring config merge properties
  */
-public class SpringConfigUtilsTest {
+class SpringConfigUtilsTest {
 
     @Test
-    public void testBulkHeadMergeSpringProperties() {
+    void bulkHeadMergeSpringProperties() {
         CommonBulkheadConfigurationProperties.InstanceProperties shared = new CommonBulkheadConfigurationProperties.InstanceProperties();
         shared.setMaxConcurrentCalls(3);
         shared.setEventConsumerBufferSize(200);
@@ -48,7 +49,7 @@ public class SpringConfigUtilsTest {
     }
 
     @Test
-    public void testCircuitBreakerMergeSpringProperties() {
+    void circuitBreakerMergeSpringProperties() {
 
         CommonCircuitBreakerConfigurationProperties.InstanceProperties sharedProperties = new CommonCircuitBreakerConfigurationProperties.InstanceProperties();
         sharedProperties.setSlidingWindowSize(1337);
@@ -70,7 +71,7 @@ public class SpringConfigUtilsTest {
     }
 
     @Test
-    public void testRetrySpringProperties() {
+    void retrySpringProperties() {
         CommonRetryConfigurationProperties.InstanceProperties sharedProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         sharedProperties.setMaxAttempts(2);
         sharedProperties.setWaitDuration(Duration.ofMillis(100));
@@ -95,7 +96,7 @@ public class SpringConfigUtilsTest {
     }
 
     @Test
-    public void testRateLimiterSpringProperties() {
+    void rateLimiterSpringProperties() {
 
         CommonRateLimiterConfigurationProperties.InstanceProperties sharedProperties = new CommonRateLimiterConfigurationProperties.InstanceProperties();
         sharedProperties.setLimitForPeriod(2);
@@ -118,8 +119,8 @@ public class SpringConfigUtilsTest {
         assertThat(backendWithDefaultConfig.getSubscribeForEvents()).isTrue();
     }
 
-	@Test
-	public void testTimeLimiterSpringProperties() {
+    @Test
+    void timeLimiterSpringProperties() {
 
 		CommonTimeLimiterConfigurationProperties.InstanceProperties sharedProperties = new CommonTimeLimiterConfigurationProperties.InstanceProperties();
 		sharedProperties.setTimeoutDuration(Duration.ofSeconds(20));
