@@ -1,13 +1,13 @@
 package io.github.resilience4j.circuitbreaker;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class IllegalStateTransitionExceptionTest {
+class IllegalStateTransitionExceptionTest {
 
     @Test
-    public void shouldReturnCorrectMessage() {
+    void shouldReturnCorrectMessage() {
         IllegalStateTransitionException illegalStateTransitionException = new IllegalStateTransitionException(
             "testName", CircuitBreaker.State.OPEN,
             CircuitBreaker.State.CLOSED);
