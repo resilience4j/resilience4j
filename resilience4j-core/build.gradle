@@ -1,12 +1,6 @@
 ext.moduleName = "io.github.resilience4j.core"
 
 dependencies {
-    testRuntimeOnly(libs.junit.vintage.engine)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.junit.params)
-    testImplementation(libs.awaitility.old)
-    testImplementation(libs.vavr)
     testImplementation(libs.mock.clock)
 }
 
