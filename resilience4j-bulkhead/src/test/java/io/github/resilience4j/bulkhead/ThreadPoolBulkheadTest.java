@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech, Mahmoud Romeh
+ *  Copyright 2026 Robert Winkler, Lucas Lech, Mahmoud Romeh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,16 +18,13 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.CheckedRunnable;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -38,13 +35,13 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class ThreadPoolBulkheadTest {
+class ThreadPoolBulkheadTest {
 
     private HelloWorldService helloWorldService;
     private ThreadPoolBulkheadConfig config;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         Awaitility.reset();
         helloWorldService = mock(HelloWorldService.class);
         config = ThreadPoolBulkheadConfig.custom()
@@ -55,14 +52,20 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void shouldExecuteRunnableAndFailWithBulkHeadFull() throws InterruptedException {
+    void shouldExecuteRunnableAndFailWithBulkHeadFull() throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
 
         Thread first = new Thread(() -> {
             try {
-                bulkhead.executeRunnable(() -> Try.run(() -> Thread.sleep(200)));
+                bulkhead.executeRunnable(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
             } catch (Exception e) {
                 exception.set(e);
             }
@@ -99,14 +102,21 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void shouldExecuteSupplierAndFailWithBulkHeadFull() throws InterruptedException {
+    void shouldExecuteSupplierAndFailWithBulkHeadFull() throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
 
         Thread first = new Thread(() -> {
             try {
-                bulkhead.executeSupplier(() -> Try.run(() -> Thread.sleep(200)));
+                bulkhead.executeSupplier(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    return null;
+                });
             } catch (Exception e) {
                 exception.set(e);
             }
@@ -143,14 +153,21 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void shouldExecuteCallableAndFailWithBulkHeadFull() throws InterruptedException {
+    void shouldExecuteCallableAndFailWithBulkHeadFull() throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         final AtomicReference<Exception> exception = new AtomicReference<>();
 
         Thread first = new Thread(() -> {
             try {
-                bulkhead.executeCallable(() -> Try.run(() -> Thread.sleep(200)));
+                bulkhead.executeCallable(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    return null;
+                });
             } catch (Exception e) {
                 exception.set(e);
             }
@@ -188,8 +205,8 @@ public class ThreadPoolBulkheadTest {
 
 
     @Test
-    public void shouldExecuteSupplierAndReturnWithSuccess()
-        throws ExecutionException, InterruptedException {
+    void shouldExecuteSupplierAndReturnWithSuccess()
+        throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
 
@@ -201,15 +218,15 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testCreateWithNullConfig() {
+    void createWithNullConfig() {
         assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("Config must not be null");
     }
 
     @Test
-    public void testCreateThreadsUsingNameForPrefix()
-        throws ExecutionException, InterruptedException {
+    void createThreadsUsingNameForPrefix()
+        throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);
         Supplier<String> getThreadName = () -> Thread.currentThread().getName();
 
@@ -219,7 +236,7 @@ public class ThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testWithSynchronousQueue() {
+    void withSynchronousQueue() {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead
             .of("test", ThreadPoolBulkheadConfig.custom()
                 .maxThreadPoolSize(2)
@@ -229,8 +246,20 @@ public class ThreadPoolBulkheadTest {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         CountDownLatch latch = new CountDownLatch(1);
 
-        bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
-        bulkhead.executeRunnable(CheckedRunnable.of(latch::await).unchecked());
+        bulkhead.executeRunnable(() -> {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        bulkhead.executeRunnable(() -> {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
 
         assertThatThrownBy(() -> bulkhead.executeCallable(helloWorldService::returnHelloWorld))
             .isInstanceOf(BulkheadFullException.class)

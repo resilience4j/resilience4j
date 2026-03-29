@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech, Mahmoud Romeh
+ *  Copyright 2026 Robert Winkler, Lucas Lech, Mahmoud Romeh
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,32 +18,31 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
+import org.awaitility.Awaitility;
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class ThreadPoolBulkheadEventPublisherTest {
+class ThreadPoolBulkheadEventPublisherTest {
 
     private HelloWorldService helloWorldService;
     private ThreadPoolBulkheadConfig config;
     private Logger logger;
     private ThreadPoolBulkhead bulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);
         config = ThreadPoolBulkheadConfig.custom()
             .maxThreadPoolSize(1)
@@ -57,7 +56,7 @@ public class ThreadPoolBulkheadEventPublisherTest {
     }
 
     @Test
-    public void shouldReturnTheSameConsumer() {
+    void shouldReturnTheSameConsumer() {
         ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher = bulkhead
             .getEventPublisher();
         ThreadPoolBulkhead.ThreadPoolBulkheadEventPublisher eventPublisher2 = bulkhead
@@ -67,7 +66,7 @@ public class ThreadPoolBulkheadEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnCallRejectedEvent() {
+    void shouldConsumeOnCallRejectedEvent() {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead
             .of("test", ThreadPoolBulkheadConfig.custom()
                 .maxThreadPoolSize(1)
@@ -83,8 +82,7 @@ public class ThreadPoolBulkheadEventPublisherTest {
             try {
                 bulkhead.executeRunnable(() -> {
                     final AtomicInteger counter = new AtomicInteger(0);
-                    waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS)
-                        .until(() -> counter.incrementAndGet() >= 2);
+                    await().atMost(200, TimeUnit.MILLISECONDS).untilAsserted(() -> assertThat(counter.incrementAndGet()).isGreaterThanOrEqualTo(2));
                 });
             } catch (Exception e) {
                 exception.initCause(e);
@@ -107,14 +105,14 @@ public class ThreadPoolBulkheadEventPublisherTest {
         }).start();
 
         final AtomicInteger counter = new AtomicInteger(0);
-        waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
+        await().atMost(500, TimeUnit.MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
         assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
         then(logger).should(times(1)).info("CALL_REJECTED");
     }
 
     @Test
-    public void shouldConsumeOnCallPermittedEvent()
-        throws ExecutionException, InterruptedException {
+    void shouldConsumeOnCallPermittedEvent()
+        throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         bulkhead.getEventPublisher().onCallPermitted(
@@ -128,7 +126,7 @@ public class ThreadPoolBulkheadEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
+    void shouldConsumeOnCallFinishedEventWhenExecutionIsFinished() throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         bulkhead.getEventPublisher().onCallFinished(

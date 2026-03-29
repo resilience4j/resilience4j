@@ -1,10 +1,30 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.bulkhead;
 
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,15 +36,15 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class BulkheadFutureTest {
+class BulkheadFutureTest {
 
     private HelloWorldService helloWorldService;
     private Future<String> future;
     private BulkheadConfig config;
 
-    @Before
+    @BeforeEach
     @SuppressWarnings("unchecked") 
-    public void setUp() {
+    void setUp() {
         helloWorldService = mock(HelloWorldService.class);        
         future = mock(Future.class);
         config = BulkheadConfig.custom()
@@ -33,7 +53,7 @@ public class BulkheadFutureTest {
     }
 
     @Test
-    public void shouldDecorateSupplierAndReturnWithSuccess() throws Exception {
+    void shouldDecorateSupplierAndReturnWithSuccess() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get()).willReturn("Hello world");
@@ -45,13 +65,13 @@ public class BulkheadFutureTest {
         String result = supplier.get().get();
 
         assertThat(result).isEqualTo("Hello world");
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(1)).get();
     }
 
     @Test
-    public void shouldDecorateSupplierAndReturnWithSuccessAndTimeout() throws Exception {
+    void shouldDecorateSupplierAndReturnWithSuccessAndTimeout() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get(anyLong(), any(TimeUnit.class))).willReturn("Hello world");
@@ -63,13 +83,13 @@ public class BulkheadFutureTest {
         String result = supplier.get().get(5, TimeUnit.SECONDS);
 
         assertThat(result).isEqualTo("Hello world");
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(1)).get(anyLong(), any(TimeUnit.class));
     }
 
     @Test
-    public void shouldDecorateFutureAndBulkheadApplyOnceOnMultipleFutureEval() throws Exception {
+    void shouldDecorateFutureAndBulkheadApplyOnceOnMultipleFutureEval() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get(anyLong(), any(TimeUnit.class))).willReturn("Hello world");
@@ -83,13 +103,13 @@ public class BulkheadFutureTest {
         decoratedFuture.get(5, TimeUnit.SECONDS);
         decoratedFuture.get(5, TimeUnit.SECONDS);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(2)).get(anyLong(), any(TimeUnit.class));
     }
 
     @Test
-    public void shouldDecorateFutureAndBulkheadApplyOnceOnMultipleFutureEvalFailure() throws Exception {
+    void shouldDecorateFutureAndBulkheadApplyOnceOnMultipleFutureEvalFailure() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get()).willThrow(new ExecutionException(new RuntimeException("Hello world")));
@@ -103,13 +123,13 @@ public class BulkheadFutureTest {
         catchThrowable(decoratedFuture::get);
         catchThrowable(decoratedFuture::get);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(2)).get();
     }
 
     @Test
-    public void shouldDecorateSupplierAndReturnWithExceptionAtAsyncStage() throws Exception {
+    void shouldDecorateSupplierAndReturnWithExceptionAtAsyncStage() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get()).willThrow(new ExecutionException(new RuntimeException("BAM!")));
@@ -125,13 +145,13 @@ public class BulkheadFutureTest {
 
         assertThat(thrown.getCause().getMessage()).isEqualTo("BAM!");
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(1)).get();
     }
 
     @Test
-    public void shouldDecorateSupplierAndReturnWithExceptionAtSyncStage() {
+    void shouldDecorateSupplierAndReturnWithExceptionAtSyncStage() {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(helloWorldService.returnHelloWorldFuture()).willThrow(new RuntimeException("BAM!"));
@@ -144,13 +164,13 @@ public class BulkheadFutureTest {
         assertThat(thrown).isInstanceOf(RuntimeException.class)
                 .hasMessage("BAM!");
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).shouldHaveNoInteractions();
     }
 
     @Test
-    public void shouldReturnFailureWithBulkheadFullException() throws Exception {
+    void shouldReturnFailureWithBulkheadFullException() throws Exception {
         // tag::bulkheadFullException[]
         BulkheadConfig config = BulkheadConfig.custom().maxConcurrentCalls(2).build();
         Bulkhead bulkhead = Bulkhead.of("test", config);
@@ -174,7 +194,7 @@ public class BulkheadFutureTest {
     }
 
     @Test
-    public void shouldReturnFailureWithFutureCancellationException() throws Exception {
+    void shouldReturnFailureWithFutureCancellationException() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get()).willThrow(new CancellationException());
@@ -187,13 +207,13 @@ public class BulkheadFutureTest {
 
         assertThat(thrown).isInstanceOf(CancellationException.class);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(1)).get();
     }
 
     @Test
-    public void shouldReturnFailureWithFutureTimeoutException() throws Exception {
+    void shouldReturnFailureWithFutureTimeoutException() throws Exception {
         Bulkhead bulkhead = Bulkhead.of("test", config);
 
         given(future.get(anyLong(), any(TimeUnit.class))).willThrow(new TimeoutException());
@@ -206,7 +226,7 @@ public class BulkheadFutureTest {
 
         assertThat(thrown).isInstanceOf(TimeoutException.class);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorldFuture();
         then(future).should(times(1)).get(anyLong(), any(TimeUnit.class));
     }

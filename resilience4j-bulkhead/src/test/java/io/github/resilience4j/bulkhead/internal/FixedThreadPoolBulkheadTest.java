@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,12 +21,16 @@ package io.github.resilience4j.bulkhead.internal;
 
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-import io.github.resilience4j.core.registry.*;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.github.resilience4j.test.TestContextPropagators;
 import io.github.resilience4j.test.TestContextPropagators.TestThreadLocalContextPropagatorWithHolder.TestThreadLocalContextHolder;
 import org.assertj.core.api.AssertionsForClassTypes;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,17 +41,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
+import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class FixedThreadPoolBulkheadTest {
+class FixedThreadPoolBulkheadTest {
 
     private ThreadPoolBulkhead bulkhead;
     private FixedThreadPoolBulkhead fixedThreadPoolBulkhead;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
             .maxThreadPoolSize(2)
             .coreThreadPoolSize(1)
@@ -60,19 +63,19 @@ public class FixedThreadPoolBulkheadTest {
     }
 
     @Test
-    public void testSupplierThreadLocalContextPropagator() {
+    void supplierThreadLocalContextPropagator() {
 
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
 
         CompletableFuture<Object> future = fixedThreadPoolBulkhead
             .submit(() -> TestThreadLocalContextHolder.get().orElse(null));
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void testRunnableThreadLocalContextPropagator() {
+    void runnableThreadLocalContextPropagator() {
 
         TestThreadLocalContextHolder.put("ValueShouldCrossThreadBoundary");
         AtomicReference<String> reference = new AtomicReference<>();
@@ -80,28 +83,28 @@ public class FixedThreadPoolBulkheadTest {
         fixedThreadPoolBulkhead
             .submit(() -> reference.set((String) TestThreadLocalContextHolder.get().orElse(null)));
 
-        waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(reference).hasValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(reference).hasValue("ValueShouldCrossThreadBoundary"));
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         String result = bulkhead.toString();
 
         assertThat(result).isEqualTo("FixedThreadPoolBulkhead 'test'");
     }
 
     @Test
-    public void testCustomSettings() {
+    void customSettings() {
         assertThat(bulkhead.getBulkheadConfig().getMaxThreadPoolSize()).isEqualTo(2);
         assertThat(bulkhead.getBulkheadConfig().getQueueCapacity()).isEqualTo(10);
-        assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getCoreThreadPoolSize()).isOne();
         assertThat(bulkhead.getBulkheadConfig().getKeepAliveDuration())
             .isEqualTo(Duration.ofMillis(10));
     }
 
     @Test
-    public void testCreateWithDefaults() {
+    void createWithDefaults() {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("test");
 
         assertThat(bulkhead).isNotNull();
@@ -115,7 +118,7 @@ public class FixedThreadPoolBulkheadTest {
     }
 
     @Test
-    public void shouldCreateThreadPoolBulkheadRegistryWithRegistryStore() {
+    void shouldCreateThreadPoolBulkheadRegistryWithRegistryStore() {
         RegistryEventConsumer<ThreadPoolBulkhead> registryEventConsumer = getNoOpsRegistryEventConsumer();
         List<RegistryEventConsumer<ThreadPoolBulkhead>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);
