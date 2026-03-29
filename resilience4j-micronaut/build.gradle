@@ -55,8 +55,4 @@ dependencies {
     testImplementation(libs.objenesis)
 }
 
-test {
-    useJUnitPlatform()
-}
-
 ext.moduleName = "io.github.resilience4j.micronaut"

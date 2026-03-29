@@ -4,5 +4,9 @@ dependencies {
 
     runtimeOnly(libs.apache.commons.beanutils)
     runtimeOnly(libs.jackson.dataformat.yaml)
+
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
 }
 ext.moduleName = "io.github.resilience4j.commons.configuration"

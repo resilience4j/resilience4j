@@ -6,6 +6,9 @@ dependencies {
 
     compileOnly(libs.feign.core)
 
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
     testImplementation(libs.feign.core)
     testImplementation(libs.feign.wiremock)
 }

@@ -1,7 +1,12 @@
 dependencies {
     api(project(":resilience4j-core"))
 
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-test"))
     testImplementation(libs.rxjava2)
+
 }
 ext.moduleName = "io.github.resilience4j.retry"

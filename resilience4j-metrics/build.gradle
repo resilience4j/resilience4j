@@ -6,6 +6,11 @@ dependencies {
     compileOnly(project(":resilience4j-timelimiter"))
     compileOnly(libs.metrics.core)
 
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.awaitility.old)
+    testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-bulkhead"))
     testImplementation(project(":resilience4j-circuitbreaker"))
     testImplementation(project(":resilience4j-ratelimiter"))

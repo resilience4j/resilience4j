@@ -19,6 +19,11 @@ dependencies {
     compileOnly(libs.spring.cloud5.openfeign.core)
     compileOnly(libs.spring.cloud5.starter.openfeign)
 
+    testRuntimeOnly(libs.junit.vintage.engine)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.awaitility.old)
+    testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-micrometer"))
     testImplementation(project(":resilience4j-micrometer").sourceSets.test.output)
     testImplementation(project(":resilience4j-reactor"))
