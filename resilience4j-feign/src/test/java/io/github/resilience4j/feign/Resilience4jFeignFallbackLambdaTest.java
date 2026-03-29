@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,42 +16,43 @@
  */
 package io.github.resilience4j.feign;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Feign;
 import io.github.resilience4j.feign.test.Issue560;
 import io.github.resilience4j.feign.test.TestService;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with the lambda as a fallback.
  */
-public class Resilience4jFeignFallbackLambdaTest {
-
-    private static final String MOCK_URL = "http://localhost:8080/";
-
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule();
+@WireMockTest
+class Resilience4jFeignFallbackLambdaTest {
 
     private TestService testService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(WireMockRuntimeInfo wmRuntimeInfo) {
         final FeignDecorators decorators = FeignDecorators.builder()
             .withFallback(Issue560.createLambdaFallback())
             .build();
 
         this.testService = Feign.builder()
             .addCapability(Resilience4jFeign.capability(decorators))
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, wmRuntimeInfo.getHttpBaseUrl() + "/");
     }
 
     @Test
-    public void testFallback() {
+    void fallback() {
         setupStub();
 
         final String result = testService.greeting();
