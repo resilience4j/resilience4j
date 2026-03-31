@@ -61,7 +61,7 @@ public class ContextAwareScheduledThreadPoolAutoConfiguration {
                 ThreadPoolTaskSchedulerBuilder builder) {
             ThreadPoolTaskSchedulerBuilder actualBuilder = builder.threadNamePrefix("resilience4j-").poolSize(poolProperties.getCorePoolSize());
             for (Resilience4JThreadPoolTaskSchedulerBuilderCustomizer customizer : customizers) {
-                actualBuilder = customizer.customize(builder);
+                actualBuilder = customizer.customize(actualBuilder);
             }
             return actualBuilder.build();
         }

@@ -1,6 +1,5 @@
 package io.github.resilience4j.bulkhead;
 
-import io.github.resilience4j.bulkhead.internal.FixedThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.internal.ExecutorServiceBulkhead;
 import io.github.resilience4j.core.lang.NonNull;
 

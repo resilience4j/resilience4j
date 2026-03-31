@@ -19,6 +19,7 @@
 package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
+import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
 import io.github.resilience4j.hedge.event.*;
@@ -53,7 +54,7 @@ public class HedgeImpl implements Hedge {
 
     public HedgeImpl(String name, HedgeConfig hedgeConfig,
                      Map<String, String> tags,
-                     ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
+                     @NonNull ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
         this.name = name;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
         this.hedgeConfig = hedgeConfig;

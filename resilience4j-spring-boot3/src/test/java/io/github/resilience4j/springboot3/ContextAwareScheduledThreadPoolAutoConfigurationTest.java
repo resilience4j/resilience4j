@@ -42,7 +42,8 @@ public class ContextAwareScheduledThreadPoolAutoConfigurationTest {
     @Test
     public void doesNotRegisterBeanWhenBeanAlreadyPresent() {
         ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = mock(ScheduledThreadPoolExecutor.class);
-        contextRunner.withBean(ContextAwareScheduledThreadPoolAutoConfiguration.EXECUTOR_NAME, ScheduledThreadPoolExecutor.class, () -> scheduledThreadPoolExecutor)
+        contextRunner.withPropertyValues("resilience4j.scheduled.executor.core-pool-size=1")
+                .withBean(ContextAwareScheduledThreadPoolAutoConfiguration.EXECUTOR_NAME, ScheduledThreadPoolExecutor.class, () -> scheduledThreadPoolExecutor)
                 .run(context -> {
                             assertThat(context).getBean(ScheduledThreadPoolExecutor.class)
                                     .isNotInstanceOf(ContextAwareScheduledThreadPoolExecutor.class);

@@ -84,14 +84,14 @@ public class RetryAspect implements Ordered, AutoCloseable {
                        @Autowired(required = false) List<RetryAspectExt> retryAspectExtList,
                        FallbackExecutor fallbackExecutor,
                        SpelResolver spelResolver,
-                       @Nullable ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
+                       @Nullable ScheduledExecutorService scheduledExecutorService) {
         this.retryConfigurationProperties = retryConfigurationProperties;
         this.retryRegistry = retryRegistry;
         this.retryAspectExtList = retryAspectExtList;
         this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
-        this.retryExecutorService = scheduledThreadPoolExecutor != null ?
-            scheduledThreadPoolExecutor :
+        this.retryExecutorService = scheduledExecutorService != null ?
+                scheduledExecutorService :
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 

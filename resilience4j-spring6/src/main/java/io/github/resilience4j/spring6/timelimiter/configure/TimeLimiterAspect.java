@@ -55,14 +55,14 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
                              @Nullable List<TimeLimiterAspectExt> timeLimiterAspectExtList,
                              FallbackExecutor fallbackExecutor,
                              SpelResolver spelResolver,
-                             @Nullable ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
+                             @Nullable ScheduledExecutorService scheduledExecutorService) {
         this.timeLimiterRegistry = timeLimiterRegistry;
         this.properties = properties;
         this.timeLimiterAspectExtList = timeLimiterAspectExtList;
         this.fallbackExecutor = fallbackExecutor;
         this.spelResolver = spelResolver;
-        this.timeLimiterExecutorService = scheduledThreadPoolExecutor != null ?
-            scheduledThreadPoolExecutor :
+        this.timeLimiterExecutorService = scheduledExecutorService != null ?
+                scheduledExecutorService :
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
