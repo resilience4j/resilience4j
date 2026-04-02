@@ -30,7 +30,6 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A Bulkhead implementation based on a fixed ThreadPoolExecutor. which is based into the thread

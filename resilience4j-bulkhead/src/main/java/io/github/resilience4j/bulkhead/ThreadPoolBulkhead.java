@@ -26,12 +26,65 @@ import io.github.resilience4j.bulkhead.internal.FixedThreadPoolBulkhead;
 import io.github.resilience4j.core.EventConsumer;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
 
 /**
  * A Bulkhead instance is thread-safe can be used to decorate multiple requests.
  */
 public interface ThreadPoolBulkhead extends GenericBulkhead {
+
+    /**
+     * Returns a supplier which submits a value-returning task for execution and
+     * returns a {@link CompletionStage} representing the pending results of the task.
+     *
+     * @param bulkhead the bulkhead
+     * @param callable the value-returning task to submit
+     * @param <T>      the result type of the callable
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task
+     * @throws BulkheadFullException if the task cannot be submitted because the Bulkhead is full
+     * @deprecated use {@link GenericBulkhead#decorateCallable(Callable)} instead.
+     */
+    @Deprecated
+    static <T> Supplier<CompletionStage<T>> decorateCallable(ThreadPoolBulkhead bulkhead,
+                                                             Callable<T> callable) {
+        return GenericBulkhead.decorateCallable(bulkhead, callable);
+    }
+
+    /**
+     * Returns a supplier which submits a value-returning task for execution
+     * and returns a {@link CompletionStage} representing the pending results of the task.
+     *
+     * @param bulkhead the bulkhead
+     * @param supplier the value-returning task to submit
+     * @param <T>      the result type of the supplier
+     * @return a supplier which submits a value-returning task for execution and returns a CompletionStage representing the pending
+     * results of the task
+     * @throws BulkheadFullException if the task cannot be submitted because the Bulkhead is full
+     * @deprecated use {@link GenericBulkhead#decorateSupplier(Supplier)} instead.
+     */
+    @Deprecated
+    static <T> Supplier<CompletionStage<T>> decorateSupplier(ThreadPoolBulkhead bulkhead,
+        Supplier<T> supplier) {
+        return GenericBulkhead.decorateSupplier(bulkhead, supplier);
+    }
+
+    /**
+     * Returns a supplier which submits a task for execution and returns a {@link CompletionStage} representing the state of the task.
+     *
+     * @param bulkhead the bulkhead
+     * @param runnable the to submit
+     * @return a supplier which submits a task for execution to the ThreadPoolBulkhead
+     * and returns a CompletionStage representing the state of the task
+     * @throws BulkheadFullException if the task cannot be submitted because the Bulkhead is full
+     * @deprecated use {@link GenericBulkhead#decorateRunnable(Runnable)} instead.
+     */
+    @Deprecated
+    static Supplier<CompletionStage<Void>> decorateRunnable(ThreadPoolBulkhead bulkhead, Runnable runnable) {
+        return GenericBulkhead.decorateRunnable(bulkhead, runnable);
+    }
 
     /**
      * Create a Bulkhead with a default configuration.
