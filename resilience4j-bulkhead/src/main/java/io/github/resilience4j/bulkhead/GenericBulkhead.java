@@ -16,15 +16,15 @@ public interface GenericBulkhead extends AutoCloseable {
 
     static GenericBulkhead of(String name,
                               @NonNull ExecutorService executor,
-                              boolean enableWritableStackTrace) {
-        return new ExecutorServiceBulkhead(name, executor, enableWritableStackTrace);
+                              @NonNull GenericBulkheadConfig config) {
+        return new ExecutorServiceBulkhead(name, executor, config.isWritableStackTraceEnabled());
     }
 
     static GenericBulkhead of(String name,
                               Map<String, String> tags,
                               @NonNull ExecutorService executor,
-                              boolean enableWritableStackTrace) {
-        return new ExecutorServiceBulkhead(name, tags, executor, enableWritableStackTrace);
+                              @NonNull GenericBulkheadConfig config) {
+        return new ExecutorServiceBulkhead(name, tags, executor, config.isWritableStackTraceEnabled());
     }
 
     /**

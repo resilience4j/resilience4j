@@ -26,6 +26,7 @@ import io.github.resilience4j.hedge.*;
 
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -37,8 +38,7 @@ import static java.util.Collections.emptyMap;
 public class InMemoryGenericHedgeRegistry extends
     AbstractRegistry<GenericHedge, SimpleHedgeConfig> implements GenericHedgeRegistry<GenericHedge, SimpleHedgeConfig> {
 
-    private final ScheduledExecutorService defaultExecutorService;
-
+    private final Function<SimpleHedgeConfig, ScheduledExecutorService> executorFunction;
     /**
      * Constructor
      *
@@ -49,9 +49,9 @@ public class InMemoryGenericHedgeRegistry extends
     public InMemoryGenericHedgeRegistry(SimpleHedgeConfig defaultConfig,
                                         List<RegistryEventConsumer<GenericHedge>> registryEventConsumers,
                                         Map<String, String> tags,
-                                        @NonNull ScheduledExecutorService executorService) {
+                                        @NonNull Function<SimpleHedgeConfig, ScheduledExecutorService> executorFunction) {
         super(defaultConfig, registryEventConsumers, tags);
-        this.defaultExecutorService = executorService;
+        this.executorFunction = executorFunction;
     }
 
     public static class Builder {
@@ -59,10 +59,10 @@ public class InMemoryGenericHedgeRegistry extends
         private final Map<String, SimpleHedgeConfig> configs = new HashMap<>();
         private SimpleHedgeConfig defaultConfig = SimpleHedgeConfig.ofDefaults();
         private final List<RegistryEventConsumer<GenericHedge>> consumers = new ArrayList<>();
-        private final ScheduledExecutorService defaultExecutorService;
+        private final Function<SimpleHedgeConfig, ScheduledExecutorService> executorServiceFunction;
 
-        public Builder(@NonNull ScheduledExecutorService executorService) {
-            this.defaultExecutorService = executorService;
+        public Builder(@NonNull Function<SimpleHedgeConfig, ScheduledExecutorService> executorFunction) {
+            this.executorServiceFunction = executorFunction;
         }
 
         public Builder withTags(Map<String, String> tags) {
@@ -96,7 +96,7 @@ public class InMemoryGenericHedgeRegistry extends
 
         public GenericHedgeRegistry<? super GenericHedge, ? super SimpleHedgeConfig> build() {
             configs.remove("default");
-            GenericHedgeRegistry<? super GenericHedge, ? super SimpleHedgeConfig> registry = new InMemoryGenericHedgeRegistry(defaultConfig, consumers, tags, defaultExecutorService);
+            GenericHedgeRegistry<? super GenericHedge, ? super SimpleHedgeConfig> registry = new InMemoryGenericHedgeRegistry(defaultConfig, consumers, tags, executorServiceFunction);
             configs.forEach(registry::addConfiguration);
             return registry;
         }
@@ -127,8 +127,11 @@ public class InMemoryGenericHedgeRegistry extends
     public GenericHedge hedge(String name,
                        SimpleHedgeConfig hedgeConfig,
                        Map<String, String> tags) {
-        return computeIfAbsent(name, () -> GenericHedge.of(name,
-            Objects.requireNonNull(hedgeConfig, CONFIG_MUST_NOT_BE_NULL), getAllTags(tags), defaultExecutorService));
+        return computeIfAbsent(name, () -> {
+            SimpleHedgeConfig simpleHedgeConfig = Objects.requireNonNull(hedgeConfig, CONFIG_MUST_NOT_BE_NULL);
+            return GenericHedge.of(name,
+                    simpleHedgeConfig, getAllTags(tags), executorFunction.apply(simpleHedgeConfig));
+        });
     }
 
     @Override
@@ -141,9 +144,12 @@ public class InMemoryGenericHedgeRegistry extends
     public GenericHedge hedge(String name,
                        Supplier<SimpleHedgeConfig> hedgeConfigSupplier,
                        Map<String, String> tags) {
-        return computeIfAbsent(name, () -> GenericHedge.of(name, Objects.requireNonNull(
-            Objects.requireNonNull(hedgeConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
-            CONFIG_MUST_NOT_BE_NULL), getAllTags(tags), defaultExecutorService));
+        return computeIfAbsent(name, () -> {
+            SimpleHedgeConfig simpleHedgeConfig = Objects.requireNonNull(
+                    Objects.requireNonNull(hedgeConfigSupplier, SUPPLIER_MUST_NOT_BE_NULL).get(),
+                    CONFIG_MUST_NOT_BE_NULL);
+            return GenericHedge.of(name, simpleHedgeConfig, getAllTags(tags), executorFunction.apply(simpleHedgeConfig));
+        });
     }
 
     @Override

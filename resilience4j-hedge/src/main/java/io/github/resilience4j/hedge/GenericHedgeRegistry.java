@@ -23,6 +23,7 @@ import io.github.resilience4j.hedge.internal.InMemoryGenericHedgeRegistry;
 
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -36,8 +37,8 @@ public interface GenericHedgeRegistry<H extends GenericHedge, C extends SimpleHe
      *
      * @return a builder for building {@link InMemoryGenericHedgeRegistry} instances.
      */
-    static InMemoryGenericHedgeRegistry.Builder builder(ScheduledExecutorService executorService) {
-        return new InMemoryGenericHedgeRegistry.Builder(executorService);
+    static InMemoryGenericHedgeRegistry.Builder builder(Function<SimpleHedgeConfig, ScheduledExecutorService> executorServiceFunction) {
+        return new InMemoryGenericHedgeRegistry.Builder(executorServiceFunction);
     }
 
     /**
