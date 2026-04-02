@@ -45,6 +45,7 @@ public class InMemoryGenericHedgeRegistry extends
      * @param defaultConfig          the default config to use for new Hedges
      * @param registryEventConsumers initialized consumers for hedges
      * @param tags                   a map of tags for the registry
+     * @param executorFunction       function that provides an executor service based on config
      */
     public InMemoryGenericHedgeRegistry(SimpleHedgeConfig defaultConfig,
                                         List<RegistryEventConsumer<GenericHedge>> registryEventConsumers,
@@ -54,6 +55,9 @@ public class InMemoryGenericHedgeRegistry extends
         this.executorFunction = executorFunction;
     }
 
+    /**
+     * Builder for an InMemoryGenericHedgeRegistry.
+     */
     public static class Builder {
         private final Map<String, String> tags = new HashMap<>();
         private final Map<String, SimpleHedgeConfig> configs = new HashMap<>();
@@ -61,20 +65,44 @@ public class InMemoryGenericHedgeRegistry extends
         private final List<RegistryEventConsumer<GenericHedge>> consumers = new ArrayList<>();
         private final Function<SimpleHedgeConfig, ScheduledExecutorService> executorServiceFunction;
 
+        /**
+         * Constructor for the Builder.
+         *
+         * @param executorFunction function to provide executor service
+         */
         public Builder(@NonNull Function<SimpleHedgeConfig, ScheduledExecutorService> executorFunction) {
             this.executorServiceFunction = executorFunction;
         }
 
+        /**
+         * Adds tags to the registry.
+         *
+         * @param tags the tags
+         * @return the Builder
+         */
         public Builder withTags(Map<String, String> tags) {
             this.tags.putAll(tags);
             return this;
         }
 
+        /**
+         * Adds configurations to the registry.
+         *
+         * @param configs the configurations
+         * @return the Builder
+         */
         public Builder withConfigs(Map<String, SimpleHedgeConfig> configs) {
             this.configs.putAll(configs);
             return this;
         }
 
+        /**
+         * Sets the default configuration.
+         *
+         * @param config the default configuration
+         * @return the Builder
+         * @throws NullPointerException if the config is null
+         */
         public Builder withDefaultConfig(SimpleHedgeConfig config) {
             if (config == null) {
                 throw new NullPointerException(CONFIG_MUST_NOT_BE_NULL);
@@ -84,16 +112,33 @@ public class InMemoryGenericHedgeRegistry extends
             }
         }
 
+        /**
+         * Adds consumers to the registry.
+         *
+         * @param registryEventConsumers the consumers
+         * @return the Builder
+         */
         public Builder withConsumers(List<RegistryEventConsumer<GenericHedge>> registryEventConsumers) {
             this.consumers.addAll(registryEventConsumers);
             return this;
         }
 
+        /**
+         * Adds a single consumer to the registry.
+         *
+         * @param registryEventConsumer the consumer
+         * @return the Builder
+         */
         public Builder withConsumer(RegistryEventConsumer<GenericHedge> registryEventConsumer) {
             this.consumers.add(registryEventConsumer);
             return this;
         }
 
+        /**
+         * Builds the registry.
+         *
+         * @return the newly constructed GenericHedgeRegistry
+         */
         public GenericHedgeRegistry<? super GenericHedge, ? super SimpleHedgeConfig> build() {
             configs.remove("default");
             GenericHedgeRegistry<? super GenericHedge, ? super SimpleHedgeConfig> registry = new InMemoryGenericHedgeRegistry(defaultConfig, consumers, tags, executorServiceFunction);

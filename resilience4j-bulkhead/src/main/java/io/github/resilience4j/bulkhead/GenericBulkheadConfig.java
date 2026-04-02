@@ -12,10 +12,20 @@ public class GenericBulkheadConfig implements Serializable {
 
     protected boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
 
+    /**
+     * Creates a default GenericBulkhead configuration.
+     *
+     * @return a default GenericBulkhead configuration.
+     */
     public static GenericBulkheadConfig ofDefaults() {
-    return new GenericBulkheadConfig();
+        return new GenericBulkheadConfig();
     }
 
+    /**
+     * Checks if writable stack trace is enabled.
+     *
+     * @return true if enabled, false otherwise.
+     */
     public boolean isWritableStackTraceEnabled() {
         return writableStackTraceEnabled;
     }

@@ -47,6 +47,7 @@ public interface GenericBulkheadRegistry extends
      * Creates a BulkheadRegistry with a custom Bulkhead configuration.
      *
      * @param bulkheadConfig a custom ThreadPoolBulkhead configuration
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry instance backed by a custom ThreadPoolBulkhead
      * configuration
      */
@@ -60,6 +61,7 @@ public interface GenericBulkheadRegistry extends
      *
      * @param bulkheadConfig        a custom default ThreadPoolBulkhead configuration.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration and a
      * ThreadPoolBulkhead registry event consumer.
      */
@@ -74,6 +76,7 @@ public interface GenericBulkheadRegistry extends
      *
      * @param bulkheadConfig         a custom default ThreadPoolBulkhead configuration.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a custom ThreadPoolBulkhead configuration and a
      * list of ThreadPoolBulkhead registry event consumers.
      */
@@ -86,6 +89,7 @@ public interface GenericBulkheadRegistry extends
     /**
      * Creates a ThreadPoolBulkheadRegistry with a default ThreadPoolBulkhead configuration
      *
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry instance backed by a default ThreadPoolBulkhead
      * configuration
      */
@@ -99,6 +103,7 @@ public interface GenericBulkheadRegistry extends
      * Tags added to the registry will be added to every instance created by this registry.
      *
      * @param tags default tags to add to the registry
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry instance backed by a default ThreadPoolBulkhead
      * configuration
      */
@@ -111,6 +116,7 @@ public interface GenericBulkheadRegistry extends
      * Creates a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
      *
      * @param configs a Map of shared Bulkhead configurations
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
      */
     static GenericBulkheadRegistry of(Map<String, GenericBulkheadConfig> configs, Function<GenericBulkheadConfig, ScheduledExecutorService> executorFunction) {
@@ -124,6 +130,7 @@ public interface GenericBulkheadRegistry extends
      *
      * @param configs a Map of shared Bulkhead configurations
      * @param tags    default tags to add to the registry
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations.
      */
     static GenericBulkheadRegistry of(Map<String, GenericBulkheadConfig> configs, Map<String, String> tags,
@@ -137,6 +144,7 @@ public interface GenericBulkheadRegistry extends
      *
      * @param configs               a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
      * and a ThreadPoolBulkhead registry event consumer.
      */
@@ -155,6 +163,7 @@ public interface GenericBulkheadRegistry extends
      * @param configs               a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumer a ThreadPoolBulkhead registry event consumer.
      * @param tags                  default tags to add to the registry
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
      * and a ThreadPoolBulkhead registry event consumer.
      */
@@ -170,6 +179,7 @@ public interface GenericBulkheadRegistry extends
      *
      * @param configs                a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
      * and a list of ThreadPoolBulkhead registry event consumers.
      */
@@ -188,6 +198,7 @@ public interface GenericBulkheadRegistry extends
      * @param configs                a Map of shared ThreadPoolBulkhead configurations.
      * @param registryEventConsumers a list of ThreadPoolBulkhead registry event consumers.
      * @param tags                   Tags to add to the ThreadPoolBulkhead
+     * @param executorFunction function that provides an executor service
      * @return a ThreadPoolBulkheadRegistry with a Map of shared ThreadPoolBulkhead configurations
      * and a list of ThreadPoolBulkhead registry event consumers.
      */
@@ -303,12 +314,16 @@ public interface GenericBulkheadRegistry extends
     /**
      * Returns a builder to create a custom ThreadPoolBulkheadRegistry.
      *
+     * @param executorFunction function that provides an executor service
      * @return a {@link GenericBulkheadRegistry.Builder}
      */
     static Builder custom(Function<GenericBulkheadConfig, ScheduledExecutorService> executorFunction) {
         return new Builder(executorFunction);
     }
 
+    /**
+     * Builder to create a custom GenericBulkheadRegistry.
+     */
     class Builder {
 
         private static final String DEFAULT_CONFIG = "default";
@@ -318,13 +333,23 @@ public interface GenericBulkheadRegistry extends
         private Map<String, String> tags;
         private Function<GenericBulkheadConfig, ScheduledExecutorService> executorServiceFunction;
 
-
+        /**
+         * Constructor for the Builder.
+         *
+         * @param executorServiceFunction function to provide an executor service
+         */
         public Builder(@NonNull Function<GenericBulkheadConfig, ScheduledExecutorService> executorServiceFunction) {
             this.threadPoolBulkheadConfigsMap = new java.util.HashMap<>();
             this.registryEventConsumers = new ArrayList<>();
             this.executorServiceFunction = executorServiceFunction;
         }
 
+        /**
+         * Sets the registry store.
+         *
+         * @param registryStore the registry store
+         * @return the Builder
+         */
         public Builder withRegistryStore(RegistryStore<GenericBulkhead> registryStore) {
             this.registryStore = registryStore;
             return this;

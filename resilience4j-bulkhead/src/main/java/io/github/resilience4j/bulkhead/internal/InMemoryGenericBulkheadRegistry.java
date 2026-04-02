@@ -43,26 +43,56 @@ public final class InMemoryGenericBulkheadRegistry extends
 
     /**
      * The constructor with default configuration.
+     *
+     * @param scheduledExecutorService function to create the scheduled executor service
      */
     public InMemoryGenericBulkheadRegistry(Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
         this(emptyMap(), scheduledExecutorService);
     }
 
+    /**
+     * The constructor with a map of configurations.
+     *
+     * @param configs a map of configurations
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(Map<String, GenericBulkheadConfig> configs, Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
         this(configs, emptyMap(), scheduledExecutorService);
     }
 
+    /**
+     * The constructor with a map of configurations and a map of tags.
+     *
+     * @param configs a map of configurations
+     * @param tags a map of tags
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(Map<String, GenericBulkheadConfig> configs, Map<String, String> tags, Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
         this(configs.getOrDefault(DEFAULT_CONFIG, GenericBulkheadConfig.ofDefaults()), tags, scheduledExecutorService);
         this.configurations.putAll(configs);
     }
 
+    /**
+     * The constructor with a map of configurations and a registry event consumer.
+     *
+     * @param configs a map of configurations
+     * @param registryEventConsumer a registry event consumer
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         Map<String, GenericBulkheadConfig> configs,
         RegistryEventConsumer<GenericBulkhead> registryEventConsumer, Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
         this(configs, registryEventConsumer, emptyMap(), scheduledExecutorService);
     }
 
+    /**
+     * The constructor with a map of configurations, a registry event consumer, and a map of tags.
+     *
+     * @param configs a map of configurations
+     * @param registryEventConsumer a registry event consumer
+     * @param tags a map of tags
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         Map<String, GenericBulkheadConfig> configs,
         RegistryEventConsumer<GenericBulkhead> registryEventConsumer, Map<String, String> tags,
@@ -72,6 +102,13 @@ public final class InMemoryGenericBulkheadRegistry extends
         this.configurations.putAll(configs);
     }
 
+    /**
+     * The constructor with a map of configurations and a list of registry event consumers.
+     *
+     * @param configs a map of configurations
+     * @param registryEventConsumers a list of registry event consumers
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         Map<String, GenericBulkheadConfig> configs,
         List<RegistryEventConsumer<GenericBulkhead>> registryEventConsumers,
@@ -79,6 +116,14 @@ public final class InMemoryGenericBulkheadRegistry extends
         this(configs, registryEventConsumers, emptyMap(), scheduledExecutorService);
     }
 
+    /**
+     * The constructor with a map of configurations, a list of registry event consumers, and a map of tags.
+     *
+     * @param configs a map of configurations
+     * @param registryEventConsumers a list of registry event consumers
+     * @param tags a map of tags
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         Map<String, GenericBulkheadConfig> configs,
         List<RegistryEventConsumer<GenericBulkhead>> registryEventConsumers, Map<String, String> tags,
@@ -92,17 +137,32 @@ public final class InMemoryGenericBulkheadRegistry extends
      * The constructor with custom default config.
      *
      * @param defaultConfig The default config.
+     * @param scheduledExecutorService function to create the scheduled executor service
      */
     public InMemoryGenericBulkheadRegistry(GenericBulkheadConfig defaultConfig, Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
         super(defaultConfig);
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
+    /**
+     * The constructor with a default configuration and a map of tags.
+     *
+     * @param defaultConfig the default configuration
+     * @param tags a map of tags
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(GenericBulkheadConfig defaultConfig, Map<String, String> tags, Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
         super(defaultConfig, tags);
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
+    /**
+     * The constructor with a default configuration and a registry event consumer.
+     *
+     * @param defaultConfig the default configuration
+     * @param registryEventConsumer a registry event consumer
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
             GenericBulkheadConfig defaultConfig,
         RegistryEventConsumer<GenericBulkhead> registryEventConsumer, Function<GenericBulkheadConfig, ScheduledExecutorService> scheduledExecutorService) {
@@ -110,6 +170,14 @@ public final class InMemoryGenericBulkheadRegistry extends
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
+    /**
+     * The constructor with a default configuration, a registry event consumer, and a map of tags.
+     *
+     * @param defaultConfig the default configuration
+     * @param registryEventConsumer a registry event consumer
+     * @param tags a map of tags
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         GenericBulkheadConfig defaultConfig,
         RegistryEventConsumer<GenericBulkhead> registryEventConsumer, Map<String, String> tags,
@@ -118,6 +186,13 @@ public final class InMemoryGenericBulkheadRegistry extends
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
+    /**
+     * The constructor with a default configuration and a list of registry event consumers.
+     *
+     * @param defaultConfig the default configuration
+     * @param registryEventConsumers a list of registry event consumers
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         GenericBulkheadConfig defaultConfig,
         List<RegistryEventConsumer<GenericBulkhead>> registryEventConsumers,
@@ -126,6 +201,14 @@ public final class InMemoryGenericBulkheadRegistry extends
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
+    /**
+     * The constructor with a default configuration, a list of registry event consumers, and a map of tags.
+     *
+     * @param defaultConfig the default configuration
+     * @param registryEventConsumers a list of registry event consumers
+     * @param tags a map of tags
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(
         GenericBulkheadConfig defaultConfig,
         List<RegistryEventConsumer<GenericBulkhead>> registryEventConsumers, Map<String, String> tags,
@@ -134,6 +217,15 @@ public final class InMemoryGenericBulkheadRegistry extends
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
+    /**
+     * The constructor with a map of configurations, a list of registry event consumers, a map of tags, a registry store, and an executor service function.
+     *
+     * @param configs a map of configurations
+     * @param registryEventConsumers a list of registry event consumers
+     * @param tags a map of tags
+     * @param registryStore the registry store
+     * @param scheduledExecutorService function to create the scheduled executor service
+     */
     public InMemoryGenericBulkheadRegistry(Map<String, GenericBulkheadConfig> configs,
                                            List<RegistryEventConsumer<GenericBulkhead>> registryEventConsumers,
                                            Map<String, String> tags, RegistryStore<GenericBulkhead> registryStore,

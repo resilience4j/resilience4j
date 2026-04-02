@@ -11,12 +11,16 @@ import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 
+/**
+ * A GenericHedge executes extra requests if the main execution does not return in time.
+ */
 public interface GenericHedge {
 
     /**
      * Creates a Hedge with a HedgeConfig configuration.
      *
      * @param hedgeConfig the HedgeConfig
+     * @param executorService the executor service
      * @return The Hedge
      */
     static GenericHedge of(SimpleHedgeConfig hedgeConfig, ScheduledExecutorService executorService) {
@@ -28,6 +32,7 @@ public interface GenericHedge {
      *
      * @param name        the name of the Hedge
      * @param hedgeConfig the HedgeConfig
+     * @param executorService the executor service
      * @return The Hedge
      */
     static GenericHedge of(String name, SimpleHedgeConfig hedgeConfig, ScheduledExecutorService executorService) {
@@ -44,6 +49,7 @@ public interface GenericHedge {
      * @param name        the name of the Hedge
      * @param hedgeConfig a custom Hedge configuration
      * @param tags        tags added to the Hedge
+     * @param executorService the executor service
      * @return a Hedge with a custom Hedge configuration.
      */
     static GenericHedge of(String name, SimpleHedgeConfig hedgeConfig,
@@ -55,6 +61,7 @@ public interface GenericHedge {
      * Creates a Hedge decorator with a timeout Duration.
      *
      * @param hedgeDuration the timeout Duration
+     * @param executorService the executor service
      * @return The Hedge
      */
     static GenericHedge of(Duration hedgeDuration, ScheduledExecutorService executorService) {
@@ -74,6 +81,11 @@ public interface GenericHedge {
      */
     <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService executorService);
 
+    /**
+     * Returns the name of this Hedge.
+     *
+     * @return the name of this Hedge
+     */
     String getName();
 
     /**
@@ -139,8 +151,6 @@ public interface GenericHedge {
      * @param duration  the duration the primary took to fail
      * @param throwable The throwable which must be recorded
      */
-
-    //make configurable to include errors in calculations (same with hedged)
     void onPrimaryFailure(Duration duration, Throwable throwable);
 
     /**

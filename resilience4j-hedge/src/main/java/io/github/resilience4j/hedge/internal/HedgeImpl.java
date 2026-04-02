@@ -38,6 +38,14 @@ public class HedgeImpl extends ExecutorServiceHedge<ScheduledThreadPoolExecutor>
         this(name, hedgeConfig, emptyMap());
     }
 
+    /**
+     * Creates a new HedgeImpl with the given name, config, and tags.
+     *
+     * @param name                      the name of the Hedge
+     * @param hedgeConfig               the Hedge configuration
+     * @param tags                      the tags of the Hedge
+     * @param scheduledThreadPoolExecutor the ScheduledThreadPoolExecutor to use
+     */
     public HedgeImpl(String name, HedgeConfig hedgeConfig,
                      Map<String, String> tags,
                      @NonNull ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
@@ -49,6 +57,13 @@ public class HedgeImpl extends ExecutorServiceHedge<ScheduledThreadPoolExecutor>
         eventProcessor.onSecondaryFailure(__ -> metrics.secondaryFailure.incrementAndGet());
     }
 
+    /**
+     * Creates a new HedgeImpl with the given name, config, and tags using a default context-aware executor.
+     *
+     * @param name        the name of the Hedge
+     * @param hedgeConfig the Hedge configuration
+     * @param tags        the tags of the Hedge
+     */
     public HedgeImpl(String name, HedgeConfig hedgeConfig,
                      Map<String, String> tags) {
         this(name, hedgeConfig, tags, ContextAwareScheduledThreadPoolExecutor

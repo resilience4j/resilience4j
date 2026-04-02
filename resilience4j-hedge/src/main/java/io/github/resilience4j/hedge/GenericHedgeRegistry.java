@@ -29,12 +29,16 @@ import java.util.stream.Stream;
 
 /**
  * Manages all Hedge instances.
+ *
+ * @param <H> the specific Hedge type
+ * @param <C> the specific configuration type
  */
 public interface GenericHedgeRegistry<H extends GenericHedge, C extends SimpleHedgeConfig> extends Registry<H, C> {
 
     /**
      * Gets a registry builder.
      *
+     * @param executorServiceFunction a function to provide an executor service
      * @return a builder for building {@link InMemoryGenericHedgeRegistry} instances.
      */
     static InMemoryGenericHedgeRegistry.Builder builder(Function<SimpleHedgeConfig, ScheduledExecutorService> executorServiceFunction) {

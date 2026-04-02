@@ -15,6 +15,11 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+/**
+ * A GenericHedge implementation backed by an ExecutorService.
+ *
+ * @param <E> the type of ScheduledExecutorService
+ */
 public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements GenericHedge {
     private static final Logger LOG = LoggerFactory.getLogger(ExecutorServiceHedge.class);
     protected final String name;
@@ -25,6 +30,14 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
 
     protected final E configuredHedgeExecutor;
 
+    /**
+     * Constructor for ExecutorServiceHedge.
+     *
+     * @param name                      the name of the Hedge
+     * @param tags                      the tags of the Hedge
+     * @param hedgeConfig               the configuration
+     * @param scheduledExecutorService  the ScheduledExecutorService to use
+     */
     public ExecutorServiceHedge(String name, Map<String, String> tags, SimpleHedgeConfig hedgeConfig, @NonNull E scheduledExecutorService) {
         this.name = name;
         this.tags = Objects.requireNonNull(tags, "Tags must not be null");
@@ -54,6 +67,7 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
         return durationSupplier.get();
     }
 
+    @Override
     public <T> CompletableFuture<T> submit(Callable<T> callable, ExecutorService primaryExecutor) {
         return decorateCaller(() -> ExecutorServiceHedge.callableFuture(callable, primaryExecutor), () -> ExecutorServiceHedge.callableFuture(callable, configuredHedgeExecutor))
                 .get()
@@ -123,6 +137,7 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
         return eventProcessor;
     }
 
+    @Override
     public void onPrimarySuccess(Duration duration) {
         durationSupplier.accept(HedgeEvent.Type.PRIMARY_SUCCESS, duration);
         if (eventProcessor.hasConsumers()) {
@@ -130,6 +145,7 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
         }
     }
 
+    @Override
     public void onSecondarySuccess(Duration duration) {
         durationSupplier.accept(HedgeEvent.Type.SECONDARY_SUCCESS, duration);
         if (eventProcessor.hasConsumers()) {
@@ -137,6 +153,7 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
         }
     }
 
+    @Override
     public void onPrimaryFailure(Duration duration, Throwable throwable) {
         durationSupplier.accept(HedgeEvent.Type.PRIMARY_FAILURE, duration);
         if (eventProcessor.hasConsumers()) {
@@ -144,6 +161,7 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
         }
     }
 
+    @Override
     public void onSecondaryFailure(Duration duration, Throwable throwable) {
         durationSupplier.accept(HedgeEvent.Type.SECONDARY_FAILURE, duration);
         if (eventProcessor.hasConsumers()) {
@@ -159,6 +177,11 @@ public class ExecutorServiceHedge<E extends ScheduledExecutorService> implements
         }
     }
 
+    /**
+     * Gets the configured hedge executor.
+     *
+     * @return the configured hedge executor
+     */
     public E getConfiguredHedgeExecutor() {
         return configuredHedgeExecutor;
     }
