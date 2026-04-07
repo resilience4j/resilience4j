@@ -31,13 +31,13 @@ dependencies {
 
 compileKotlin {
     compilerOptions {
-        it.jvmTarget.set(JvmTarget.JVM_17)
+        it.jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
 compileTestKotlin {
     compilerOptions {
-        it.jvmTarget.set(JvmTarget.JVM_17)
+        it.jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
