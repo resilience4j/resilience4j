@@ -268,9 +268,17 @@ public class RetryImpl<T> implements Retry {
                 sleepFunction.accept(interval);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                throw lastException.get();
+                Exception last = lastException.get();
+                if (last != null) {
+                    throw last;
+                }
+                throw ex;
             } catch (Throwable ex) {
-                throw lastException.get();
+                Exception last = lastException.get();
+                if (last != null) {
+                    throw last;
+                }
+                throw new IllegalStateException("Unexpected exception during retry wait interval", ex);
             }
         }
 
