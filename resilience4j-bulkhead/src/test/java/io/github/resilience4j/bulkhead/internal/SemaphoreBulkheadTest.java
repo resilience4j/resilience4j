@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Robert Winkler, Lucas Lech
+ *  Copyright 2026 Robert Winkler, Lucas Lech
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,11 +23,16 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
-import io.github.resilience4j.core.registry.*;
+import io.github.resilience4j.core.registry.EntryAddedEvent;
+import io.github.resilience4j.core.registry.EntryRemovedEvent;
+import io.github.resilience4j.core.registry.EntryReplacedEvent;
+import io.github.resilience4j.core.registry.InMemoryRegistryStore;
+import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import io.reactivex.subscribers.TestSubscriber;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.time.Duration;
@@ -39,22 +44,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static io.github.resilience4j.bulkhead.BulkheadConfig.*;
-import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
-import static java.lang.Thread.State.*;
+import static org.awaitility.Awaitility.await;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_FAIR_CALL_HANDLING_STRATEGY_ENABLED;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_MAX_CONCURRENT_CALLS;
+import static io.github.resilience4j.bulkhead.BulkheadConfig.DEFAULT_WRITABLE_STACK_TRACE_ENABLED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_FINISHED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_PERMITTED;
+import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.CALL_REJECTED;
+import static java.lang.Thread.State.RUNNABLE;
+import static java.lang.Thread.State.TERMINATED;
+import static java.lang.Thread.State.TIMED_WAITING;
+import static java.lang.Thread.State.WAITING;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class SemaphoreBulkheadTest {
+class SemaphoreBulkheadTest {
 
     private Bulkhead bulkhead;
     private TestSubscriber<BulkheadEvent.Type> testSubscriber;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(2)
             .maxWaitDuration(Duration.ofMillis(0))
@@ -66,19 +78,19 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void shouldReturnTheCorrectName() {
+    void shouldReturnTheCorrectName() {
         assertThat(bulkhead.getName()).isEqualTo("test");
     }
 
     @Test
-    public void testBulkhead() throws InterruptedException {
+    void bulkhead() throws Exception {
         bulkhead.tryAcquirePermission();
         bulkhead.tryAcquirePermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
         bulkhead.tryAcquirePermission();
         bulkhead.onComplete();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
 
         bulkhead.onComplete();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
@@ -90,14 +102,14 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         String result = bulkhead.toString();
 
         assertThat(result).isEqualTo("Bulkhead 'test'");
     }
 
     @Test
-    public void testCreateWithNullConfig() {
+    void createWithNullConfig() {
         Supplier<BulkheadConfig> configSupplier = () -> null;
 
         assertThatThrownBy(() -> Bulkhead.of("test", configSupplier))
@@ -105,7 +117,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testCreateWithDefaults() {
+    void createWithDefaults() {
         Bulkhead bulkhead = Bulkhead.ofDefaults("test");
 
         assertThat(bulkhead).isNotNull();
@@ -119,7 +131,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testTryEnterWithTimeout() throws InterruptedException {
+    void tryEnterWithTimeout() throws Exception {
         long expectedMillisOfWaitTime = 50;
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -146,7 +158,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testTryEnterWithInterruptDuringTimeout() throws InterruptedException {
+    void tryEnterWithInterruptDuringTimeout() throws Exception {
         Duration expectedWaitTime = Duration.ofMillis(2000);
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -181,7 +193,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testAcquireWithInterruptDuringTimeout() throws InterruptedException {
+    void acquireWithInterruptDuringTimeout() throws Exception {
         Duration expectedWaitTime = Duration.ofMillis(2000);
         BulkheadConfig configTemplate = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
@@ -225,7 +237,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testZeroMaxConcurrentCalls() {
+    void zeroMaxConcurrentCalls() {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(0)
             .maxWaitDuration(Duration.ofMillis(0))
@@ -238,7 +250,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void testEntryTimeout() {
+    void entryTimeout() {
         BulkheadConfig config = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(10))
@@ -252,7 +264,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void changePermissionsInIdleState() {
+    void changePermissionsInIdleState() {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(5000))
@@ -260,7 +272,7 @@ public class SemaphoreBulkheadTest {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(5)
@@ -269,7 +281,7 @@ public class SemaphoreBulkheadTest {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(5);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(2)
@@ -278,13 +290,13 @@ public class SemaphoreBulkheadTest {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         bulkhead.changeConfig(newConfig);
     }
 
     @Test
-    public void changeWaitTimeInIdleState() {
+    void changeWaitTimeInIdleState() {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(5000))
@@ -292,7 +304,7 @@ public class SemaphoreBulkheadTest {
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(5000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(5000);
 
         BulkheadConfig newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
@@ -301,7 +313,7 @@ public class SemaphoreBulkheadTest {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(3000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(3000);
 
         newConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
@@ -310,24 +322,24 @@ public class SemaphoreBulkheadTest {
 
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isEqualTo(7000);
+        Assertions.assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration()).hasMillis(7000);
 
         bulkhead.changeConfig(newConfig);
     }
 
     @SuppressWarnings("Duplicates")
     @Test
-    public void changePermissionsCountWhileOneThreadIsRunningWithThisPermission() {
+    void changePermissionsCountWhileOneThreadIsRunningWithThisPermission() {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(0))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
 
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
 
         AtomicBoolean bulkheadThreadTrigger = new AtomicBoolean(true);
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             while (bulkheadThreadTrigger.get()) {
@@ -352,7 +364,7 @@ public class SemaphoreBulkheadTest {
         bulkhead.changeConfig(newConfig);
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
         assertThat(bulkhead.getBulkheadConfig().getMaxWaitDuration().toMillis()).isZero();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         assertThat(bulkhead.tryEnterBulkhead()).isTrue();
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
@@ -379,25 +391,25 @@ public class SemaphoreBulkheadTest {
             .until(() -> changerThread.getState().equals(TERMINATED));
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
 
         bulkhead.onComplete();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
     }
 
     @Test
-    public void changePermissionsCountWhileOneThreadIsWaitingForPermission() {
+    void changePermissionsCountWhileOneThreadIsWaitingForPermission() {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(500000))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         bulkhead.tryAcquirePermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             bulkhead.onComplete();
@@ -419,21 +431,21 @@ public class SemaphoreBulkheadTest {
         await().atMost(1, SECONDS)
             .until(() -> bulkheadThread.getState().equals(TERMINATED));
         assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(2);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
     }
 
     @Test
-    public void changeWaitingTimeWhileOneThreadIsWaitingForPermission() {
+    void changeWaitingTimeWhileOneThreadIsWaitingForPermission() {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(1)
             .maxWaitDuration(Duration.ofMillis(500000))
             .build();
         SemaphoreBulkhead bulkhead = new SemaphoreBulkhead("test", originalConfig);
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
         bulkhead.tryAcquirePermission();
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isZero();
 
-        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getBulkheadConfig().getMaxConcurrentCalls()).isOne();
         Thread bulkheadThread = new Thread(() -> {
             bulkhead.tryAcquirePermission();
             bulkhead.onComplete();
@@ -460,7 +472,7 @@ public class SemaphoreBulkheadTest {
 
     @SuppressWarnings("Duplicates")
     @Test
-    public void changePermissionsConcurrently() throws NoSuchFieldException, IllegalAccessException {
+    void changePermissionsConcurrently() throws Exception {
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
             .maxWaitDuration(Duration.ofMillis(0))
@@ -491,7 +503,7 @@ public class SemaphoreBulkheadTest {
 
         assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(2);
         assertThat(bulkhead.tryEnterBulkhead()).isTrue();
-        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isEqualTo(1);
+        assertThat(bulkhead.getMetrics().getAvailableConcurrentCalls()).isOne();
 
         Thread firstChangerThread = new Thread(() -> {
             bulkhead.changeConfig(BulkheadConfig.custom()
@@ -536,7 +548,7 @@ public class SemaphoreBulkheadTest {
     }
 
     @Test
-    public void shouldCreateBulkheadRegistryWithRegistryStore() {
+    void shouldCreateBulkheadRegistryWithRegistryStore() {
         RegistryEventConsumer<Bulkhead> registryEventConsumer = getNoOpsRegistryEventConsumer();
         List<RegistryEventConsumer<Bulkhead>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(registryEventConsumer);
