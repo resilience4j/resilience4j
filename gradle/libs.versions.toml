@@ -2,8 +2,8 @@
 micrometer = "1.16.0"
 reactor = "3.4.24"
 
-spring6 = "6.1.1"
-spring-boot3 = "3.2.0"
+spring6 = "6.2.17"
+spring-boot3 = "3.5.11"
 spring-cloud3 = "3.1.5"
 
 spring7 = "7.0.2"

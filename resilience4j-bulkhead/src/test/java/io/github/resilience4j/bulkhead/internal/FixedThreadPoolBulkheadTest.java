@@ -19,6 +19,7 @@
 package io.github.resilience4j.bulkhead.internal;
 
 
+import io.github.resilience4j.bulkhead.GenericBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.core.registry.*;

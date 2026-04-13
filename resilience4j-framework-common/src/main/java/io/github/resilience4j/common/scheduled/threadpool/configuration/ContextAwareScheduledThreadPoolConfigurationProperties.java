@@ -27,22 +27,14 @@ import java.util.List;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
-public class ContextAwareScheduledThreadPoolConfigurationProperties {
+/**
+ * @deprecated
+ * @see ContextAwareScheduledThreadPoolExecutor
+ */
+@Deprecated
+public class ContextAwareScheduledThreadPoolConfigurationProperties extends Resilience4JThreadPoolConfigurationProperties {
 
-    private int corePoolSize;
     private Class<? extends ContextPropagator>[] contextPropagators = new Class[0];
-
-    public int getCorePoolSize() {
-        return corePoolSize;
-    }
-
-    public void setCorePoolSize(int corePoolSize) {
-        if (corePoolSize < 1) {
-            throw new IllegalArgumentException(
-                "corePoolSize must be a positive integer value >= 1");
-        }
-        this.corePoolSize = corePoolSize;
-    }
 
     public Class<? extends ContextPropagator>[] getContextPropagators() {
         return contextPropagators;
@@ -60,7 +52,7 @@ public class ContextAwareScheduledThreadPoolConfigurationProperties {
             .collect(toList());
 
         return ContextAwareScheduledThreadPoolExecutor.newScheduledThreadPool()
-            .corePoolSize(this.corePoolSize)
+            .corePoolSize(this.getCorePoolSize())
             .contextPropagators(contextPropagatorsList.toArray(new ContextPropagator[0]))
             .build();
     }
