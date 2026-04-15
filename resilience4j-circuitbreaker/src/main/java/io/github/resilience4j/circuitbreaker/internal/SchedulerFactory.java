@@ -62,9 +62,10 @@ public final class SchedulerFactory {
                 || scheduler.isShutdown()
                 || scheduler.isTerminated()) {
 
+                ThreadType desiredType = desiredVirtual ? ThreadType.VIRTUAL : ThreadType.PLATFORM;
                 ScheduledExecutorService fresh =
                     ExecutorServiceFactory.newSingleThreadScheduledExecutor(
-                        "CircuitBreakerAutoTransitionThread");
+                        "CircuitBreakerAutoTransitionThread", desiredType);
 
                 old = scheduler;
                 scheduler = fresh;

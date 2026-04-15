@@ -150,16 +150,6 @@ public abstract class RateLimitersImplementationTest extends ThreadModeTestBase 
     }
     
     protected void ensureRefreshIsComplete(RateLimiter.Metrics metrics, RateLimiterConfig config) {
-        try {
-            await()
-                .pollInterval(25, MILLISECONDS)
-                .atMost(config.getLimitRefreshPeriod().multipliedBy(3).toMillis(), MILLISECONDS)
-                .until(() -> metrics.getAvailablePermissions() == config.getLimitForPeriod());
-        } catch (Exception e) {
-            throw new AssertionError("Refresh did not complete within expected time. " +
-                "Current permits: " + metrics.getAvailablePermissions() + 
-                ", Expected: " + config.getLimitForPeriod() + 
-                ". Error: " + e.getMessage(), e);
-        }
+        waitForRefresh(metrics, config);
     }
 }
