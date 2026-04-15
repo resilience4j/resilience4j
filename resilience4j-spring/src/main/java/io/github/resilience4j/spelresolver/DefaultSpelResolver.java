@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 
 public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelResolver {
     private static final String PLACEHOLDER_SPEL_REGEX = "^\\$\\{.+}$";
-    private static final String SPEL_TEMPLATE_REGEX = "^#\\{.+}$";
+    private static final String SPEL_TEMPLATE_REGEX = ".*#\\{.+}.*";
     private static final String METHOD_SPEL_REGEX = "^#.+$";
     private static final String BEAN_SPEL_REGEX = "^@.+";
     private static final TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext();

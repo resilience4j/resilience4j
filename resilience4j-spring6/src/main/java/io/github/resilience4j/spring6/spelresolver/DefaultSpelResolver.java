@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 
 public class DefaultSpelResolver implements EmbeddedValueResolverAware, SpelResolver {
     private static final Pattern PLACEHOLDER_SPEL_REGEX = Pattern.compile("^\\$\\{.+}$");
-    private static final Pattern SPEL_TEMPLATE_REGEX = Pattern.compile("^#\\{.+}$");
+    private static final Pattern SPEL_TEMPLATE_REGEX = Pattern.compile(".*#\\{.+}.*");
     private static final Pattern METHOD_SPEL_REGEX = Pattern.compile("^#.+$");
     private static final Pattern BEAN_SPEL_REGEX = Pattern.compile("^@.+");
     private static final TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext();
