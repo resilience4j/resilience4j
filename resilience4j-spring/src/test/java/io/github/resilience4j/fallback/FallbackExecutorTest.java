@@ -4,6 +4,8 @@ import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.spelresolver.SpelResolver;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
@@ -119,22 +121,26 @@ public class FallbackExecutorTest {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "myFallbackBean::getNameValidFallback";
+        final Object[] args = new Object[]{"Name"};
 
-        when(proceedingJoinPoint.getArgs()).thenReturn(new Object[]{});
-        when(spelResolver.resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue)).thenReturn(fallbackMethodValue);
+        when(proceedingJoinPoint.getArgs()).thenReturn(args);
+        when(spelResolver.resolve(method, args, fallbackMethodValue)).thenReturn(fallbackMethodValue);
         when(beanFactory.getBean("myFallbackBean")).thenReturn(fallbackBean);
         when(fallbackDecorators.decorate(any(), eq(primaryFunction))).thenReturn(primaryFunction);
 
-        final Object result = fallbackExecutor.execute(proceedingJoinPoint, method, fallbackMethodValue, primaryFunction);
-        assertThat(result).isEqualTo("Name");
+        fallbackExecutor.execute(proceedingJoinPoint, method, fallbackMethodValue, primaryFunction);
 
-        verify(spelResolver, times(1)).resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue);
+        verify(spelResolver, times(1)).resolve(method, args, fallbackMethodValue);
         verify(beanFactory, times(1)).getBean("myFallbackBean");
-        verify(fallbackDecorators, times(1)).decorate(any(), eq(primaryFunction));
+
+        ArgumentCaptor<FallbackMethod> captor = ArgumentCaptor.forClass(FallbackMethod.class);
+        verify(fallbackDecorators, times(1)).decorate(captor.capture(), eq(primaryFunction));
+        Object fallbackResult = captor.getValue().fallback(new RuntimeException("boom"));
+        assertThat(fallbackResult).isEqualTo("recovered-from-external-bean");
     }
 
     @Test
-    public void testPrimaryMethodExecutionWithFallbackBeanNotFound() throws Throwable {
+    public void testPrimaryMethodExecutionWithFallbackMethodNotFound() throws Throwable {
         Method method = this.getClass().getMethod("getName", String.class);
         final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
         final String fallbackMethodValue = "myFallbackBean::nonExistentMethod";
@@ -149,6 +155,34 @@ public class FallbackExecutorTest {
         verify(spelResolver, times(1)).resolve(method, proceedingJoinPoint.getArgs(), fallbackMethodValue);
         verify(beanFactory, times(1)).getBean("myFallbackBean");
         verify(fallbackDecorators, never()).decorate(any(), any());
+    }
+
+    @Test
+    public void testPrimaryMethodExecutionWithAopProxiedFallbackBean() throws Throwable {
+        // CGLIB-proxied bean must be unwrapped via AopProxyUtils.getSingletonTarget
+        // so method discovery walks the real class instead of the synthetic subclass.
+        ExternalFallbackBean target = new ExternalFallbackBean();
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+        proxyFactory.setProxyTargetClass(true);
+        Object proxiedFallbackBean = proxyFactory.getProxy();
+        assertThat(proxiedFallbackBean).isNotSameAs(target);
+
+        Method method = this.getClass().getMethod("getName", String.class);
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
+        final String fallbackMethodValue = "myFallbackBean::getNameValidFallback";
+        final Object[] args = new Object[]{"Name"};
+
+        when(proceedingJoinPoint.getArgs()).thenReturn(args);
+        when(spelResolver.resolve(method, args, fallbackMethodValue)).thenReturn(fallbackMethodValue);
+        when(beanFactory.getBean("myFallbackBean")).thenReturn(proxiedFallbackBean);
+        when(fallbackDecorators.decorate(any(), eq(primaryFunction))).thenReturn(primaryFunction);
+
+        fallbackExecutor.execute(proceedingJoinPoint, method, fallbackMethodValue, primaryFunction);
+
+        ArgumentCaptor<FallbackMethod> captor = ArgumentCaptor.forClass(FallbackMethod.class);
+        verify(fallbackDecorators, times(1)).decorate(captor.capture(), eq(primaryFunction));
+        Object fallbackResult = captor.getValue().fallback(new RuntimeException("boom"));
+        assertThat(fallbackResult).isEqualTo("recovered-from-external-bean");
     }
 
     @Test
@@ -235,6 +269,26 @@ public class FallbackExecutorTest {
 
         verify(beanFactory, never()).getBean(anyString());
         verify(fallbackDecorators, never()).decorate(any(), any());
+    }
+
+    @Test
+    public void testCtorWithBeanFactoryArgResolvesExternalFallback() throws Throwable {
+        ExternalFallbackBean fallbackBean = new ExternalFallbackBean();
+        FallbackExecutor executor = new FallbackExecutor(spelResolver, fallbackDecorators, beanFactory);
+        Method method = this.getClass().getMethod("getName", String.class);
+        final CheckedSupplier<Object> primaryFunction = () -> getName("Name");
+        final String fallbackMethodValue = "myFallbackBean::getNameValidFallback";
+        final Object[] args = new Object[]{"Name"};
+
+        when(proceedingJoinPoint.getArgs()).thenReturn(args);
+        when(spelResolver.resolve(method, args, fallbackMethodValue)).thenReturn(fallbackMethodValue);
+        when(beanFactory.getBean("myFallbackBean")).thenReturn(fallbackBean);
+        when(fallbackDecorators.decorate(any(), eq(primaryFunction))).thenReturn(primaryFunction);
+
+        executor.execute(proceedingJoinPoint, method, fallbackMethodValue, primaryFunction);
+
+        verify(beanFactory, times(1)).getBean("myFallbackBean");
+        verify(fallbackDecorators, times(1)).decorate(any(), eq(primaryFunction));
     }
 
     @Test
