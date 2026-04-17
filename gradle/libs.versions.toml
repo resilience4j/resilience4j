@@ -11,13 +11,13 @@ spring-boot4 = "4.0.0"
 spring-cloud5 = "5.0.0"
 
 [plugins]
-asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "2.4.0" }
-bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.1.0" }
-jmh = { id = "me.champeau.jmh", version = "0.6.8" }
+asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "4.0.5" }
+bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.2.1" }
+jmh = { id = "me.champeau.jmh", version = "0.7.3" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.21" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
-sonarqube = { id = "org.sonarqube", version = "3.5.0.2730" }
-test-retry = { id = "org.gradle.test-retry", version = "1.5.10" }
+sonarqube = { id = "org.sonarqube", version = "7.2.3.7755" }
+test-retry = { id = "org.gradle.test-retry", version = "1.6.4" }
 
 [libraries]
 # Common dependencies
