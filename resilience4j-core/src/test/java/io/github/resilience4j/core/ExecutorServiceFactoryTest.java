@@ -3,6 +3,8 @@ package io.github.resilience4j.core;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.Future;
@@ -22,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(Parameterized.class)
 public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ExecutorServiceFactoryTest.class);
+
     @Parameterized.Parameters(name = "threadMode={0}")
     public static Collection<Object[]> threadModes() {
         return ThreadModeTestBase.threadModes();
@@ -38,8 +42,8 @@ public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
 
     @Test
     public void shouldDetectCorrectThreadTypeBasedOnConfiguration() {
-        System.out.println("Running shouldDetectCorrectThreadTypeBasedOnConfiguration in " + getThreadModeDescription());
-        
+        LOG.info("Running shouldDetectCorrectThreadTypeBasedOnConfiguration in {}", getThreadModeDescription());
+
         // Test that ExecutorServiceFactory correctly detects the configured thread mode
         ThreadType threadType = ExecutorServiceFactory.getThreadType();
         boolean useVirtualThreads = threadType == ThreadType.VIRTUAL;
@@ -54,13 +58,13 @@ public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
                 .isEqualTo(ThreadType.PLATFORM);
         }
         
-        System.out.println("✅ Thread type detection test passed in " + getThreadModeDescription() + " - Thread type: " + threadType);
+        LOG.info("Thread type detection test passed in {} - Thread type: {}", getThreadModeDescription(), threadType);
     }
 
     @Test
     public void scheduledExecutorShouldProduceCorrectThreadTypeInBothModes() throws Exception {
-        System.out.println("Running scheduledExecutorShouldProduceCorrectThreadTypeInBothModes in " + getThreadModeDescription());
-        
+        LOG.info("Running scheduledExecutorShouldProduceCorrectThreadTypeInBothModes in {}", getThreadModeDescription());
+
         ScheduledExecutorService executor =
                 ExecutorServiceFactory.newSingleThreadScheduledExecutor("executor-test-" + threadType);
 
@@ -79,8 +83,8 @@ public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
                     .isFalse();
             }
             
-            System.out.println("✅ Scheduled executor thread type test passed in " + getThreadModeDescription() + 
-                             " - Virtual thread: " + taskRanOnVirtualThread);
+            LOG.info("Scheduled executor thread type test passed in {} - Virtual thread: {}",
+                getThreadModeDescription(), taskRanOnVirtualThread);
         } finally {
             executor.shutdownNow();
         }
@@ -88,8 +92,8 @@ public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleExecutorNamingConsistentlyInBothThreadModes() throws Exception {
-        System.out.println("Running shouldHandleExecutorNamingConsistentlyInBothThreadModes in " + getThreadModeDescription());
-        
+        LOG.info("Running shouldHandleExecutorNamingConsistentlyInBothThreadModes in {}", getThreadModeDescription());
+
         ScheduledExecutorService executor =
                 ExecutorServiceFactory.newSingleThreadScheduledExecutor("executor-naming-test-" + threadType);
 
@@ -116,7 +120,7 @@ public class ExecutorServiceFactoryTest extends ThreadModeTestBase {
                     .startsWith("executor-naming-test-" + threadType);
             }
             
-            System.out.println("✅ Executor naming test passed in " + getThreadModeDescription() + " - Thread name: " + actualThreadName);
+            LOG.info("Executor naming test passed in {} - Thread name: {}", getThreadModeDescription(), actualThreadName);
         } finally {
             executor.shutdownNow();
         }

@@ -29,6 +29,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.*;
@@ -45,6 +47,8 @@ import static org.mockito.Mockito.*;
 
 @RunWith(Parameterized.class)
 public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SemaphoreBasedRateLimiterImplTest.class);
 
     public SemaphoreBasedRateLimiterImplTest(ThreadType threadType) {
         super(threadType);
@@ -82,7 +86,7 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
 
     @Test
     public void rateLimiterCreationWithProvidedScheduler() throws Exception {
-        System.out.println("Running rateLimiterCreationWithProvidedScheduler in " + getThreadModeDescription());
+        LOG.info("Running rateLimiterCreationWithProvidedScheduler in {}", getThreadModeDescription());
         
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);

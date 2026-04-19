@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -50,6 +51,8 @@ public class EventProcessorTest extends ThreadModeTestBase {
     public EventProcessorTest(ThreadType threadType) {
         super(threadType);
     }
+
+    private static final Logger LOG = LoggerFactory.getLogger(EventProcessorTest.class);
 
     private Logger logger;
 
@@ -207,8 +210,8 @@ public class EventProcessorTest extends ThreadModeTestBase {
 
     @Test
     public void testConcurrentConsumerRegistrationInBothThreadModes() throws Exception {
-        System.out.println("Running testConcurrentConsumerRegistrationInBothThreadModes in " + getThreadModeDescription());
-        
+        LOG.info("Running testConcurrentConsumerRegistrationInBothThreadModes in {}", getThreadModeDescription());
+
         EventProcessor<Integer> eventProcessor = new EventProcessor<>();
         int concurrentThreads = isVirtualThreadMode() ? 20 : 5; // More threads in virtual mode
         AtomicInteger totalConsumers = new AtomicInteger(0);
@@ -267,14 +270,14 @@ public class EventProcessorTest extends ThreadModeTestBase {
             .as("All consumers should process the event in " + getThreadModeDescription())
             .isEqualTo(concurrentThreads);
         
-        System.out.println("✅ Concurrent consumer registration test passed in " + getThreadModeDescription() + 
-                         " - Consumers: " + concurrentThreads);
+        LOG.info("Concurrent consumer registration test passed in {} - Consumers: {}",
+            getThreadModeDescription(), concurrentThreads);
     }
 
     @Test
     public void testConcurrentEventProcessingInBothThreadModes() throws Exception {
-        System.out.println("Running testConcurrentEventProcessingInBothThreadModes in " + getThreadModeDescription());
-        
+        LOG.info("Running testConcurrentEventProcessingInBothThreadModes in {}", getThreadModeDescription());
+
         EventProcessor<Integer> eventProcessor = new EventProcessor<>();
         int concurrentThreads = isVirtualThreadMode() ? 15 : 3; // More threads in virtual mode
         AtomicInteger eventsProcessed = new AtomicInteger(0);
@@ -336,8 +339,8 @@ public class EventProcessorTest extends ThreadModeTestBase {
                 .isZero();
         }
         
-        System.out.println("✅ Concurrent event processing test passed in " + getThreadModeDescription() + 
-                         " - Events: " + concurrentThreads + ", Virtual threads: " + virtualThreadCount.get());
+        LOG.info("Concurrent event processing test passed in {} - Events: {}, Virtual threads: {}",
+            getThreadModeDescription(), concurrentThreads, virtualThreadCount.get());
     }
 
 }

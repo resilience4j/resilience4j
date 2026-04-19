@@ -1,5 +1,8 @@
 package io.github.resilience4j.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -25,7 +28,9 @@ import java.util.function.Function;
  * @since 3.0.0
  */
 public class VirtualThreadTestWithHashCollisionsAndRealIO {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(VirtualThreadTestWithHashCollisionsAndRealIO.class);
+
     // Increased thread count to demonstrate Virtual Thread advantages
     private static final int VIRTUAL_THREAD_COUNT = 100;  // Increased from 15
     private static final int PLATFORM_THREAD_COUNT = 20;  // Limited pool size
@@ -61,57 +66,54 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
     private static final AtomicInteger readMisses = new AtomicInteger(0);
     
     public static void main(String[] args) throws Exception {
-        System.out.println("=== Corrected Virtual Thread Performance Test ===");
-        System.out.println("JDK Version: " + System.getProperty("java.version"));
-        System.out.println("Virtual Thread Count: " + VIRTUAL_THREAD_COUNT);
-        System.out.println("Platform Thread Pool Size: " + PLATFORM_THREAD_COUNT + " (limited)");
-        System.out.println("Operations per thread: " + OPERATIONS_PER_THREAD);
-        System.out.println("I/O delay range: " + MIN_IO_DELAY_MS + "-" + MAX_IO_DELAY_MS + "ms");
-        System.out.println("Designed to show Virtual Thread advantages in high-concurrency I/O scenarios");
-        System.out.println();
-        
+        LOG.info("=== Corrected Virtual Thread Performance Test ===");
+        LOG.info("JDK Version: {}", System.getProperty("java.version"));
+        LOG.info("Virtual Thread Count: {}", VIRTUAL_THREAD_COUNT);
+        LOG.info("Platform Thread Pool Size: {} (limited)", PLATFORM_THREAD_COUNT);
+        LOG.info("Operations per thread: {}", OPERATIONS_PER_THREAD);
+        LOG.info("I/O delay range: {}-{}ms", MIN_IO_DELAY_MS, MAX_IO_DELAY_MS);
+        LOG.info("Designed to show Virtual Thread advantages in high-concurrency I/O scenarios");
+
         verifyHashCollisions();
-        
+
         List<TestResult> results = new ArrayList<>();
-        
+
         // Test all combinations with corrected implementations
-        System.out.println("🧪 Testing ConcurrentSkipListMap (Current) with Virtual Threads...");
+        LOG.info("Testing ConcurrentSkipListMap (Current) with Virtual Threads...");
         results.add(runCorrectedTest("SkipListMap-Virtual", new SkipListMapComponent(), true));
-        
-        System.out.println("\n🧪 Testing ConcurrentSkipListMap (Current) with Platform Threads...");
+
+        LOG.info("Testing ConcurrentSkipListMap (Current) with Platform Threads...");
         results.add(runCorrectedTest("SkipListMap-Platform", new SkipListMapComponent(), false));
-        
-        System.out.println("\n🧪 Testing ConcurrentHashMap (Previous) with Virtual Threads...");
+
+        LOG.info("Testing ConcurrentHashMap (Previous) with Virtual Threads...");
         results.add(runCorrectedTest("HashMap-Virtual", new HashMapComponent(), true));
-        
-        System.out.println("\n🧪 Testing ConcurrentHashMap (Previous) with Platform Threads...");
+
+        LOG.info("Testing ConcurrentHashMap (Previous) with Platform Threads...");
         results.add(runCorrectedTest("HashMap-Platform", new HashMapComponent(), false));
-        
-        System.out.println("\n🧪 Testing Future-based HashMap (Optimized) with Virtual Threads...");
+
+        LOG.info("Testing Future-based HashMap (Optimized) with Virtual Threads...");
         results.add(runCorrectedTest("FutureHashMap-Virtual", new FutureBasedComponent(), true));
-        
-        System.out.println("\n🧪 Testing Future-based HashMap (Optimized) with Platform Threads...");
+
+        LOG.info("Testing Future-based HashMap (Optimized) with Platform Threads...");
         results.add(runCorrectedTest("FutureHashMap-Platform", new FutureBasedComponent(), false));
-        
+
         // Generate corrected analysis
         generateCorrectedAnalysis(results);
     }
     
     private static void verifyHashCollisions() {
-        System.out.println("🔍 Verifying hash collisions...");
+        LOG.info("Verifying hash collisions...");
         Map<Integer, List<String>> collisionGroups = new HashMap<>();
-        
+
         for (String key : COLLISION_KEYS) {
             int hashCode = key.hashCode();
             collisionGroups.computeIfAbsent(hashCode, k -> new ArrayList<>()).add(key);
         }
-        
+
         collisionGroups.entrySet().stream()
             .filter(entry -> entry.getValue().size() > 1)
-            .forEach(entry -> {
-                System.out.println("✅ Hash collision group (hashCode: " + entry.getKey() + "): " + entry.getValue());
-            });
-        System.out.println();
+            .forEach(entry ->
+                LOG.info("Hash collision group (hashCode: {}): {}", entry.getKey(), entry.getValue()));
     }
     
     private static TestResult runCorrectedTest(String testName, ComponentPattern component, boolean useVirtualThreads) throws Exception {
@@ -141,11 +143,11 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
         ExecutorService executor;
         if (useVirtualThreads) {
             executor = Executors.newVirtualThreadPerTaskExecutor();
-            System.out.println("Using Virtual Thread Executor (unlimited)");
+            LOG.info("Using Virtual Thread Executor (unlimited)");
         } else {
             // Limited Platform Thread pool to create realistic bottleneck
             executor = Executors.newFixedThreadPool(PLATFORM_THREAD_COUNT);
-            System.out.println("Using Fixed Platform Thread Pool (size: " + PLATFORM_THREAD_COUNT + ")");
+            LOG.info("Using Fixed Platform Thread Pool (size: {})", PLATFORM_THREAD_COUNT);
         }
         
         long startTime = System.currentTimeMillis();
@@ -160,7 +162,7 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
                     startLatch.await();
                     runCorrectedThreadOperations(threadId, testName, component);
                 } catch (Exception e) {
-                    System.err.println("❌ Error in thread " + threadId + ": " + e.getMessage());
+                    LOG.error("Error in thread {}: {}", threadId, e.getMessage());
                 } finally {
                     completionLatch.countDown();
                 }
@@ -171,7 +173,7 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
         }
         
         // Start all threads simultaneously
-        System.out.println("🚀 Starting " + threadCount + " threads for " + testName + "...");
+        LOG.info("Starting {} threads for {}...", threadCount, testName);
         startLatch.countDown();
         
         // Wait for completion with extended timeout
@@ -183,7 +185,7 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
             try {
                 future.get(30, TimeUnit.SECONDS);
             } catch (Exception e) {
-                System.err.println("❌ Future completion error: " + e.getMessage());
+                LOG.error("Future completion error: {}", e.getMessage());
             }
         }
         
@@ -289,11 +291,12 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
                 // Show progress for large thread counts
                 if (threadId < 5) { // Only show first few threads to avoid spam
                     String opType = isReadOperation ? "READ" : "WRITE";
-                    System.out.println("[" + testName + "] Thread-" + threadId + " " + opType + " operation " + op + " in " + (opEndTime - opStartTime) + "ms");
+                    LOG.info("[{}] Thread-{} {} operation {} in {}ms",
+                        testName, threadId, opType, op, opEndTime - opStartTime);
                 }
-                
+
             } catch (Exception e) {
-                System.err.println("[" + testName + "] ❌ Thread-" + threadId + " operation " + op + " failed: " + e.getMessage());
+                LOG.error("[{}] Thread-{} operation {} failed: {}", testName, threadId, op, e.getMessage());
             } finally {
                 activeThreads.decrementAndGet();
             }
@@ -339,7 +342,7 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
             performBlockingDatabaseSimulation(key, delayMs / 3);
             
         } catch (Exception e) {
-            System.err.println("⚠️ [" + testName + "] I/O operation failed for " + key + ": " + e.getMessage());
+            LOG.warn("[{}] I/O operation failed for {}: {}", testName, key, e.getMessage());
             // Fallback to guaranteed blocking operation
             try {
                 Thread.sleep(MIN_IO_DELAY_MS + random.nextInt(500));
@@ -514,63 +517,68 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
     }
     
     private static void printCorrectedTestResult(TestResult result) {
-        System.out.println("\n=== " + result.testName + " Results ===");
-        System.out.println("Execution time: " + result.executionTimeMs + "ms");
-        System.out.println("Thread count: " + result.threadCount);
-        System.out.println("Max concurrent threads: " + result.maxConcurrentThreads);
-        System.out.println("Success rate: " + String.format("%.1f%%", (result.completedOperations * 100.0 / result.expectedOperations)));
-        System.out.println("Throughput: " + String.format("%.1f", (result.completedOperations * 1000.0) / result.executionTimeMs) + " op/s");
-        System.out.println("Component size: " + result.componentSize);
-        System.out.println("Thread type: " + (result.isVirtualThread ? "Virtual" : "Platform"));
-        System.out.println("I/O operations: " + result.ioOperationsCount);
-        
+        LOG.info("=== {} Results ===", result.testName);
+        LOG.info("Execution time: {}ms", result.executionTimeMs);
+        LOG.info("Thread count: {}", result.threadCount);
+        LOG.info("Max concurrent threads: {}", result.maxConcurrentThreads);
+        LOG.info("Success rate: {}",
+            String.format("%.1f%%", result.completedOperations * 100.0 / result.expectedOperations));
+        LOG.info("Throughput: {} op/s",
+            String.format("%.1f", (result.completedOperations * 1000.0) / result.executionTimeMs));
+        LOG.info("Component size: {}", result.componentSize);
+        LOG.info("Thread type: {}", result.isVirtualThread ? "Virtual" : "Platform");
+        LOG.info("I/O operations: {}", result.ioOperationsCount);
+
         // Read/Write Performance Metrics
-        System.out.println("\n📊 Read/Write Performance Analysis:");
-        System.out.println("Read operations: " + result.readOperations + " (" + 
-            String.format("%.1f%%", result.readOperations * 100.0 / result.totalOperations) + ")");
-        System.out.println("Write operations: " + result.writeOperations + " (" + 
-            String.format("%.1f%%", result.writeOperations * 100.0 / result.totalOperations) + ")");
-        
+        LOG.info("Read/Write Performance Analysis:");
+        LOG.info("Read operations: {} ({})", result.readOperations,
+            String.format("%.1f%%", result.readOperations * 100.0 / result.totalOperations));
+        LOG.info("Write operations: {} ({})", result.writeOperations,
+            String.format("%.1f%%", result.writeOperations * 100.0 / result.totalOperations));
+
         if (result.readOperations > 0) {
-            System.out.println("Read hit rate: " + String.format("%.1f%%", result.readHitRate) + 
-                " (" + result.readHits + " hits, " + result.readMisses + " misses)");
-            System.out.println("Avg read time: " + String.format("%.2f", result.avgReadTimeMs) + "ms");
-            System.out.println("Read throughput: " + String.format("%.1f", (result.readOperations * 1000.0) / result.executionTimeMs) + " reads/s");
+            LOG.info("Read hit rate: {} ({} hits, {} misses)",
+                String.format("%.1f%%", result.readHitRate), result.readHits, result.readMisses);
+            LOG.info("Avg read time: {}ms", String.format("%.2f", result.avgReadTimeMs));
+            LOG.info("Read throughput: {} reads/s",
+                String.format("%.1f", (result.readOperations * 1000.0) / result.executionTimeMs));
         }
-        
+
         if (result.writeOperations > 0) {
-            System.out.println("Avg write time: " + String.format("%.2f", result.avgWriteTimeMs) + "ms");
-            System.out.println("Write throughput: " + String.format("%.1f", (result.writeOperations * 1000.0) / result.executionTimeMs) + " writes/s");
+            LOG.info("Avg write time: {}ms", String.format("%.2f", result.avgWriteTimeMs));
+            LOG.info("Write throughput: {} writes/s",
+                String.format("%.1f", (result.writeOperations * 1000.0) / result.executionTimeMs));
         }
-        
+
         if (result.readOperations > 0 && result.writeOperations > 0) {
             double readWriteRatio = result.avgWriteTimeMs / result.avgReadTimeMs;
-            System.out.println("Write/Read performance ratio: " + String.format("%.1fx", readWriteRatio) + 
-                " (writes are " + String.format("%.1fx", readWriteRatio) + " slower than reads)");
+            LOG.info("Write/Read performance ratio: {} (writes are {} slower than reads)",
+                String.format("%.1fx", readWriteRatio), String.format("%.1fx", readWriteRatio));
         }
-        
+
         if (result.isVirtualThread) {
-            System.out.println("\n✅ Virtual Thread advantages: Unlimited concurrency, no thread pool bottleneck");
+            LOG.info("Virtual Thread advantages: Unlimited concurrency, no thread pool bottleneck");
         } else {
-            System.out.println("\n⚠️ Platform Thread limitations: Fixed pool size (" + result.threadCount + "), potential bottlenecks");
+            LOG.info("Platform Thread limitations: Fixed pool size ({}), potential bottlenecks",
+                result.threadCount);
         }
     }
     
     private static void generateCorrectedAnalysis(List<TestResult> results) {
-        System.out.println("\n" + "=".repeat(150));
-        System.out.println("🏆 CORRECTED RESILIENCE4J PERFORMANCE ANALYSIS (High Concurrency I/O Scenarios)");
-        System.out.println("=".repeat(150));
-        
-        System.out.printf("%-25s | %12s | %12s | %12s | %12s | %12s | %12s | %12s%n", 
-            "Implementation", "Exec Time", "Thread Count", "Max Concurrent", "Success Rate", "Throughput", "Thread Type", "I/O Ops");
-        System.out.println("-".repeat(150));
-        
+        LOG.info("{}", "=".repeat(150));
+        LOG.info("CORRECTED RESILIENCE4J PERFORMANCE ANALYSIS (High Concurrency I/O Scenarios)");
+        LOG.info("{}", "=".repeat(150));
+
+        LOG.info(String.format("%-25s | %12s | %12s | %12s | %12s | %12s | %12s | %12s",
+            "Implementation", "Exec Time", "Thread Count", "Max Concurrent", "Success Rate", "Throughput", "Thread Type", "I/O Ops"));
+        LOG.info("{}", "-".repeat(150));
+
         for (TestResult result : results) {
             printCorrectedAnalysisRow(result);
         }
-        
-        System.out.println("-".repeat(150));
-        
+
+        LOG.info("{}", "-".repeat(150));
+
         // Corrected analysis
         analyzeVirtualThreadAdvantages(results);
         analyzeConcurrencyImpact(results);
@@ -580,8 +588,8 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
     private static void printCorrectedAnalysisRow(TestResult result) {
         double successRate = result.expectedOperations > 0 ? (result.completedOperations * 100.0 / result.expectedOperations) : 0;
         double throughput = result.executionTimeMs > 0 ? (result.completedOperations * 1000.0) / result.executionTimeMs : 0;
-        
-        System.out.printf("%-25s | %9dms | %12d | %12d | %9.1f%% | %9.1f op/s | %10s | %10d%n", 
+
+        LOG.info(String.format("%-25s | %9dms | %12d | %12d | %9.1f%% | %9.1f op/s | %10s | %10d",
             result.testName,
             result.executionTimeMs,
             result.threadCount,
@@ -589,145 +597,145 @@ public class VirtualThreadTestWithHashCollisionsAndRealIO {
             successRate,
             throughput,
             result.isVirtualThread ? "Virtual" : "Platform",
-            result.ioOperationsCount);
+            result.ioOperationsCount));
     }
     
     private static void analyzeVirtualThreadAdvantages(List<TestResult> results) {
-        System.out.println("\n🚀 VIRTUAL THREAD ADVANTAGES ANALYSIS");
-        System.out.println("-".repeat(80));
-        
+        LOG.info("VIRTUAL THREAD ADVANTAGES ANALYSIS");
+        LOG.info("{}", "-".repeat(80));
+
         List<TestResult> virtualResults = results.stream().filter(r -> r.isVirtualThread).toList();
         List<TestResult> platformResults = results.stream().filter(r -> !r.isVirtualThread).toList();
-        
-        System.out.println("Virtual Thread Characteristics:");
+
+        LOG.info("Virtual Thread Characteristics:");
         for (TestResult vr : virtualResults) {
-            System.out.printf("  %s: %d threads → %d max concurrent → %.1f op/s%n", 
-                vr.testName, vr.threadCount, vr.maxConcurrentThreads, 
-                (vr.completedOperations * 1000.0) / vr.executionTimeMs);
+            LOG.info(String.format("  %s: %d threads -> %d max concurrent -> %.1f op/s",
+                vr.testName, vr.threadCount, vr.maxConcurrentThreads,
+                (vr.completedOperations * 1000.0) / vr.executionTimeMs));
         }
-        
-        System.out.println("\nPlatform Thread Characteristics:");
+
+        LOG.info("Platform Thread Characteristics:");
         for (TestResult pr : platformResults) {
-            System.out.printf("  %s: %d threads → %d max concurrent → %.1f op/s%n", 
+            LOG.info(String.format("  %s: %d threads -> %d max concurrent -> %.1f op/s",
                 pr.testName, pr.threadCount, pr.maxConcurrentThreads,
-                (pr.completedOperations * 1000.0) / pr.executionTimeMs);
+                (pr.completedOperations * 1000.0) / pr.executionTimeMs));
         }
-        
+
         // Compare by implementation
-        System.out.println("\n📊 IMPLEMENTATION COMPARISON (Virtual vs Platform):");
+        LOG.info("IMPLEMENTATION COMPARISON (Virtual vs Platform):");
         Map<String, TestResult> vByImpl = new HashMap<>();
         Map<String, TestResult> pByImpl = new HashMap<>();
-        
+
         for (TestResult r : virtualResults) {
             vByImpl.put(r.testName.split("-")[0], r);
         }
         for (TestResult r : platformResults) {
             pByImpl.put(r.testName.split("-")[0], r);
         }
-        
+
         for (String impl : vByImpl.keySet()) {
             TestResult vr = vByImpl.get(impl);
             TestResult pr = pByImpl.get(impl);
-            
+
             double vThroughput = (vr.completedOperations * 1000.0) / vr.executionTimeMs;
             double pThroughput = (pr.completedOperations * 1000.0) / pr.executionTimeMs;
             double improvement = ((vThroughput - pThroughput) / pThroughput) * 100;
-            
-            System.out.printf("  %-15s: Virtual %.1f op/s vs Platform %.1f op/s → %+.1f%% improvement%n", 
-                impl, vThroughput, pThroughput, improvement);
+
+            LOG.info(String.format("  %-15s: Virtual %.1f op/s vs Platform %.1f op/s -> %+.1f%% improvement",
+                impl, vThroughput, pThroughput, improvement));
         }
     }
     
     private static void analyzeConcurrencyImpact(List<TestResult> results) {
-        System.out.println("\n🧵 CONCURRENCY IMPACT ANALYSIS");
-        System.out.println("-".repeat(80));
-        
+        LOG.info("CONCURRENCY IMPACT ANALYSIS");
+        LOG.info("{}", "-".repeat(80));
+
         TestResult bestVirtual = results.stream().filter(r -> r.isVirtualThread)
             .max((r1, r2) -> Double.compare(
                 (r1.completedOperations * 1000.0) / r1.executionTimeMs,
                 (r2.completedOperations * 1000.0) / r2.executionTimeMs
             )).orElse(null);
-            
+
         TestResult bestPlatform = results.stream().filter(r -> !r.isVirtualThread)
             .max((r1, r2) -> Double.compare(
                 (r1.completedOperations * 1000.0) / r1.executionTimeMs,
                 (r2.completedOperations * 1000.0) / r2.executionTimeMs
             )).orElse(null);
-        
+
         if (bestVirtual != null && bestPlatform != null) {
             double vThroughput = (bestVirtual.completedOperations * 1000.0) / bestVirtual.executionTimeMs;
             double pThroughput = (bestPlatform.completedOperations * 1000.0) / bestPlatform.executionTimeMs;
-            
-            System.out.printf("🥇 Best Virtual Thread Performance: %s (%.1f op/s, %d concurrent)%n", 
-                bestVirtual.testName, vThroughput, bestVirtual.maxConcurrentThreads);
-            System.out.printf("🥈 Best Platform Thread Performance: %s (%.1f op/s, %d concurrent)%n", 
-                bestPlatform.testName, pThroughput, bestPlatform.maxConcurrentThreads);
-            
+
+            LOG.info(String.format("Best Virtual Thread Performance: %s (%.1f op/s, %d concurrent)",
+                bestVirtual.testName, vThroughput, bestVirtual.maxConcurrentThreads));
+            LOG.info(String.format("Best Platform Thread Performance: %s (%.1f op/s, %d concurrent)",
+                bestPlatform.testName, pThroughput, bestPlatform.maxConcurrentThreads));
+
             double improvement = ((vThroughput - pThroughput) / pThroughput) * 100;
-            System.out.printf("📈 Virtual Thread Advantage: %+.1f%% improvement%n", improvement);
-            
-            System.out.printf("🔢 Concurrency Advantage: %dx more threads (%d vs %d)%n", 
+            LOG.info(String.format("Virtual Thread Advantage: %+.1f%% improvement", improvement));
+
+            LOG.info(String.format("Concurrency Advantage: %dx more threads (%d vs %d)",
                 bestVirtual.threadCount / bestPlatform.threadCount,
-                bestVirtual.threadCount, bestPlatform.threadCount);
+                bestVirtual.threadCount, bestPlatform.threadCount));
         }
     }
     
     private static void provideCorrectRecommendations(List<TestResult> results) {
-        System.out.println("\n💡 CORRECTED RECOMMENDATIONS FOR RESILIENCE4J");
-        System.out.println("=".repeat(80));
-        
+        LOG.info("CORRECTED RECOMMENDATIONS FOR RESILIENCE4J");
+        LOG.info("{}", "=".repeat(80));
+
         TestResult bestOverall = results.stream()
             .max((r1, r2) -> Double.compare(
                 (r1.completedOperations * 1000.0) / r1.executionTimeMs,
                 (r2.completedOperations * 1000.0) / r2.executionTimeMs
             )).orElse(null);
-        
+
         if (bestOverall != null) {
             double throughput = (bestOverall.completedOperations * 1000.0) / bestOverall.executionTimeMs;
-            
-            System.out.printf("🥇 OPTIMAL CONFIGURATION: %s%n", bestOverall.testName);
-            System.out.printf("   Performance: %.1f op/s (%dms total)%n", throughput, bestOverall.executionTimeMs);
-            System.out.printf("   Concurrency: %d threads → %d max concurrent%n", 
-                bestOverall.threadCount, bestOverall.maxConcurrentThreads);
-            
+
+            LOG.info(String.format("OPTIMAL CONFIGURATION: %s", bestOverall.testName));
+            LOG.info(String.format("   Performance: %.1f op/s (%dms total)", throughput, bestOverall.executionTimeMs));
+            LOG.info(String.format("   Concurrency: %d threads -> %d max concurrent",
+                bestOverall.threadCount, bestOverall.maxConcurrentThreads));
+
             String impl = bestOverall.testName.split("-")[0];
-            System.out.println("\n✅ IMPLEMENTATION RECOMMENDATION:");
-            
+            LOG.info("IMPLEMENTATION RECOMMENDATION:");
+
             switch (impl) {
                 case "SkipListMap":
-                    System.out.println("   ✅ ConcurrentSkipListMap remains the correct choice");
-                    System.out.println("   → Excellent performance with high concurrency");
-                    System.out.println("   → Lock-free design optimal for Virtual Threads");
+                    LOG.info("   ConcurrentSkipListMap remains the correct choice");
+                    LOG.info("   -> Excellent performance with high concurrency");
+                    LOG.info("   -> Lock-free design optimal for Virtual Threads");
                     break;
                 case "HashMap":
-                    System.out.println("   ⚠️ ConcurrentHashMap performance varies with concurrency level");
-                    System.out.println("   → ConcurrentSkipListMap still safer choice");
+                    LOG.info("   ConcurrentHashMap performance varies with concurrency level");
+                    LOG.info("   -> ConcurrentSkipListMap still safer choice");
                     break;
                 case "FutureHashMap":
-                    System.out.println("   🚀 Future-based pattern shows excellent scalability");
-                    System.out.println("   → Consider for extreme high-concurrency scenarios");
+                    LOG.info("   Future-based pattern shows excellent scalability");
+                    LOG.info("   -> Consider for extreme high-concurrency scenarios");
                     break;
             }
             
-            System.out.println("\n🧵 THREAD TYPE RECOMMENDATION:");
+            LOG.info("THREAD TYPE RECOMMENDATION:");
             if (bestOverall.isVirtualThread) {
-                System.out.println("   ✅ Virtual Threads are optimal for high-concurrency I/O scenarios");
-                System.out.println("   → Configure: resilience4j.thread.type=virtual");
-                System.out.println("   → Especially beneficial for microservice environments");
-                System.out.println("   → Handles " + bestOverall.threadCount + "+ concurrent operations efficiently");
+                LOG.info("   Virtual Threads are optimal for high-concurrency I/O scenarios");
+                LOG.info("   -> Configure: resilience4j.thread.type=virtual");
+                LOG.info("   -> Especially beneficial for microservice environments");
+                LOG.info("   -> Handles {}+ concurrent operations efficiently", bestOverall.threadCount);
             } else {
-                System.out.println("   📌 Platform Threads performed best in this specific scenario");
-                System.out.println("   → May indicate lower concurrency requirements");
+                LOG.info("   Platform Threads performed best in this specific scenario");
+                LOG.info("   -> May indicate lower concurrency requirements");
             }
-            
-            System.out.println("\n🎯 CORRECTED SUMMARY:");
-            System.out.println("   1. ✅ ConcurrentSkipListMap migration validated for high concurrency");
-            System.out.println("   2. ✅ Virtual Threads show clear advantages with proper I/O simulation");
-            System.out.println("   3. ✅ Fixed implementation reveals true Virtual Thread performance");
-            System.out.println("   4. 🚀 Ready for high-concurrency production deployment");
+
+            LOG.info("CORRECTED SUMMARY:");
+            LOG.info("   1. ConcurrentSkipListMap migration validated for high concurrency");
+            LOG.info("   2. Virtual Threads show clear advantages with proper I/O simulation");
+            LOG.info("   3. Fixed implementation reveals true Virtual Thread performance");
+            LOG.info("   4. Ready for high-concurrency production deployment");
         }
-        
-        System.out.println("\n" + "=".repeat(80));
+
+        LOG.info("{}", "=".repeat(80));
     }
     
     // Component implementations (same as before but for completeness)

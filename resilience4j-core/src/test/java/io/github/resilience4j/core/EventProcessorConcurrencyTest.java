@@ -2,6 +2,8 @@ package io.github.resilience4j.core;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * consumer registration and event processing.
  */
 public class EventProcessorConcurrencyTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EventProcessorConcurrencyTest.class);
 
     private static class TestEvent {
         private final String data;
@@ -94,8 +98,8 @@ public class EventProcessorConcurrencyTest {
                 .as("EventProcessor should have consumers")
                 .isTrue();
 
-            System.out.println("✅ Concurrent consumer registration test passed - " +
-                             totalRegistrations.get() + " consumers registered");
+            LOG.info("Concurrent consumer registration test passed - {} consumers registered",
+                totalRegistrations.get());
 
         } finally {
             executor.shutdown();
@@ -162,9 +166,8 @@ public class EventProcessorConcurrencyTest {
                     .isEqualTo(expectedEventsPerConsumer);
             }
 
-            System.out.println("✅ Concurrent event processing test passed - " +
-                             (threadCount * eventsPerThread) + " events processed by " +
-                             consumerCount + " consumers");
+            LOG.info("Concurrent event processing test passed - {} events processed by {} consumers",
+                threadCount * eventsPerThread, consumerCount);
 
         } finally {
             executor.shutdown();
@@ -247,8 +250,8 @@ public class EventProcessorConcurrencyTest {
                 .as("Should have consumers registered")
                 .isTrue();
 
-            System.out.println("✅ Concurrent registration and processing test passed - " +
-                             totalEventsProcessed.get() + " event consumptions");
+            LOG.info("Concurrent registration and processing test passed - {} event consumptions",
+                totalEventsProcessed.get());
 
         } finally {
             executor.shutdown();
@@ -305,8 +308,8 @@ public class EventProcessorConcurrencyTest {
                 .as("Type-specific event processing should complete")
                 .isTrue();
 
-            System.out.println("✅ Type-specific consumer test passed - TypeA: " +
-                             typeACount.get() + ", TypeB: " + typeBCount.get());
+            LOG.info("Type-specific consumer test passed - TypeA: {}, TypeB: {}",
+                typeACount.get(), typeBCount.get());
 
         } finally {
             executor.shutdown();
@@ -360,7 +363,7 @@ public class EventProcessorConcurrencyTest {
                 .as("Should accurately report having consumers after concurrent registration")
                 .isTrue();
 
-            System.out.println("✅ hasConsumers() correctness test passed under concurrency");
+            LOG.info("hasConsumers() correctness test passed under concurrency");
 
         } finally {
             executor.shutdown();

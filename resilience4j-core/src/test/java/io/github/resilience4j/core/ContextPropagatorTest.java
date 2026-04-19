@@ -23,6 +23,8 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.*;
@@ -40,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
 public class ContextPropagatorTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ContextPropagatorTest.class);
 
     @Parameterized.Parameters(name = "threadMode={0}")
     public static Collection<Object[]> threadModes() {
@@ -62,7 +66,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
 
     @Test
     public void contextPropagationFailureSingleTestInBothThreadModes() {
-        System.out.println("Running contextPropagationFailureSingleTestInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running contextPropagationFailureSingleTestInBothThreadModes in {}", getThreadModeDescription());
         
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary-" + threadType);
@@ -74,7 +78,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
             assertThat(future).isCompletedWithValue(null)));
         
-        System.out.println("✅ Context propagation failure test passed in " + getThreadModeDescription());
+        LOG.info("Context propagation failure test passed in {}", getThreadModeDescription());
     }
 
     @Test
@@ -166,7 +170,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
 
     @Test
     public void contextPropagationSupplierSingleTestInBothThreadModes() {
-        System.out.println("Running contextPropagationSupplierSingleTestInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running contextPropagationSupplierSingleTestInBothThreadModes in {}", getThreadModeDescription());
         
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         String expectedValue = "SingleValueShouldCrossThreadBoundary-" + threadType;
@@ -181,7 +185,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
             assertThat(future).isCompletedWithValue(expectedValue)));
         
-        System.out.println("✅ Context propagation supplier test passed in " + getThreadModeDescription());
+        LOG.info("Context propagation supplier test passed in {}", getThreadModeDescription());
     }
 
     @Test
@@ -292,7 +296,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
 
     @Test
     public void contextPropagationWithMDCInBothThreadModes() throws Exception {
-        System.out.println("Running contextPropagationWithMDCInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running contextPropagationWithMDCInBothThreadModes in {}", getThreadModeDescription());
         
         // Test MDC (Mapped Diagnostic Context) propagation
         String testKey = "test-key-" + threadType;
@@ -341,12 +345,12 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
         // Clean up
         MDC.remove(testKey);
         
-        System.out.println("✅ MDC context propagation test passed in " + getThreadModeDescription());
+        LOG.info("MDC context propagation test passed in {}", getThreadModeDescription());
     }
 
     @Test
     public void contextPropagationWithMultiplePropagators() throws Exception {
-        System.out.println("Running contextPropagationWithMultiplePropagators in " + getThreadModeDescription());
+        LOG.info("Running contextPropagationWithMultiplePropagators in {}", getThreadModeDescription());
         
         // Create multiple ThreadLocals and propagators 
         ThreadLocal<String> stringThreadLocal = new ThreadLocal<>();
@@ -418,12 +422,12 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
             .as("Both context values should be propagated correctly in " + getThreadModeDescription())
             .containsExactly(stringValue, intValue);
         
-        System.out.println("✅ Multiple propagators test passed in " + getThreadModeDescription());
+        LOG.info("Multiple propagators test passed in {}", getThreadModeDescription());
     }
 
     @Test
     public void contextPropagationWithConcurrentThreadsInBothModes() throws Exception {
-        System.out.println("Running contextPropagationWithConcurrentThreadsInBothModes in " + getThreadModeDescription());
+        LOG.info("Running contextPropagationWithConcurrentThreadsInBothModes in {}", getThreadModeDescription());
         
         // Reduced thread count for faster test execution
         int concurrentThreads = isVirtualThreadMode() ? 5 : 3;
@@ -468,7 +472,7 @@ public class ContextPropagatorTest extends ThreadModeTestBase {
             .as("All threads should successfully propagate context in " + getThreadModeDescription())
             .isEqualTo(concurrentThreads);
         
-        System.out.println("✅ Concurrent context propagation test passed in " + getThreadModeDescription() + 
-                         " - Threads: " + concurrentThreads + ", Successes: " + successCount.get());
+        LOG.info("Concurrent context propagation test passed in {} - Threads: {}, Successes: {}",
+            getThreadModeDescription(), concurrentThreads, successCount.get());
     }
 }

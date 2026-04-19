@@ -32,6 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.time.Duration;
@@ -51,6 +53,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(Parameterized.class)
 public class SemaphoreBulkheadTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SemaphoreBulkheadTest.class);
 
     /**
      * Constructor for parameterized tests.
@@ -91,7 +95,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleBasicBulkheadOperationsInBothThreadModes() throws InterruptedException {
-        System.out.println("Running shouldHandleBasicBulkheadOperationsInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running shouldHandleBasicBulkheadOperationsInBothThreadModes in {}", getThreadModeDescription());
         
         // Test basic permission acquisition
         boolean firstPermission = bulkhead.tryAcquirePermission();
@@ -136,7 +140,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
             .assertValues(CALL_PERMITTED, CALL_PERMITTED, CALL_REJECTED, CALL_FINISHED,
                 CALL_FINISHED, CALL_PERMITTED);
         
-        System.out.println("✅ Basic bulkhead operations test passed in " + getThreadModeDescription());
+        LOG.info("Basic bulkhead operations test passed in {}", getThreadModeDescription());
     }
 
     @Test
@@ -170,7 +174,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes() throws InterruptedException {
-        System.out.println("Running shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running shouldHandleTimeoutBehaviorConsistentlyInBothThreadModes in {}", getThreadModeDescription());
         
         long expectedMillisOfWaitTime = 50;
         BulkheadConfig config = BulkheadConfig.custom()
@@ -208,7 +212,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
             .as("Sub-thread should complete in " + getThreadModeDescription())
             .isFalse();
         
-        System.out.println("✅ Time-out behavior test passed in " + getThreadModeDescription());
+        LOG.info("Time-out behavior test passed in {}", getThreadModeDescription());
     }
 
     @Test
@@ -527,7 +531,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
     @SuppressWarnings("Duplicates")
     @Test
     public void changePermissionsConcurrentlyWithDetailedLockTesting() throws NoSuchFieldException, IllegalAccessException {
-        System.out.println("Running changePermissionsConcurrentlyWithDetailedLockTesting in " + getThreadModeDescription());
+        LOG.info("Running changePermissionsConcurrentlyWithDetailedLockTesting in {}", getThreadModeDescription());
         
         BulkheadConfig originalConfig = BulkheadConfig.custom()
             .maxConcurrentCalls(3)
@@ -612,7 +616,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBase {
             .as("Final config should reflect successful change in " + getThreadModeDescription())
             .isIn(1, 4);
         
-        System.out.println("✅ Enhanced concurrent permissions test passed in " + getThreadModeDescription());
+        LOG.info("Enhanced concurrent permissions test passed in {}", getThreadModeDescription());
     }
 
     @Test

@@ -9,6 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(Parameterized.class)
 public class HedgeConcurrencyTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HedgeConcurrencyTest.class);
 
     private static final int NUM_THREADS = 10;
 
@@ -88,7 +92,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
                           isVirtualThreadMode());
                           
-        System.out.println("Testing concurrent hedge operations with " + getThreadModeDescription());
+        LOG.info("Testing concurrent hedge operations with {}", getThreadModeDescription());
         
         Hedge hedge = Hedge.of(Duration.ofMillis(50));
             
@@ -131,7 +135,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
             assertThat(successCount.get()).isEqualTo(NUM_THREADS);
             
-            System.out.println("✅ Concurrent hedge operations test passed with " + getThreadModeDescription());
+            LOG.info("Concurrent hedge operations test passed with {}", getThreadModeDescription());
     }
 
     @Test
@@ -140,7 +144,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
                           isVirtualThreadMode());
                           
-        System.out.println("Testing concurrent hedge registry operations with " + getThreadModeDescription());
+        LOG.info("Testing concurrent hedge registry operations with {}", getThreadModeDescription());
         
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
@@ -190,7 +194,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         assertThat(registryOperationCount.get()).isEqualTo(NUM_THREADS);
         assertThat(hedgeRegistry.getAllHedges().count()).isEqualTo(NUM_THREADS);
         
-        System.out.println("✅ Concurrent hedge registry operations test passed with " + getThreadModeDescription());
+        LOG.info("Concurrent hedge registry operations test passed with {}", getThreadModeDescription());
     }
 
     @Test
@@ -199,7 +203,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
                           isVirtualThreadMode());
                           
-        System.out.println("Testing concurrent event publishing with " + getThreadModeDescription());
+        LOG.info("Testing concurrent event publishing with {}", getThreadModeDescription());
         
         HedgeConfig config = HedgeConfig.custom()
                 .preconfiguredDuration(Duration.ofMillis(50))
@@ -249,7 +253,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         // Verify events were published safely
         assertThat(events).isNotEmpty();
         
-        System.out.println("✅ Concurrent event publishing test passed with " + getThreadModeDescription());
+        LOG.info("Concurrent event publishing test passed with {}", getThreadModeDescription());
     }
 
     @Test
@@ -258,7 +262,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
                           isVirtualThreadMode());
                           
-        System.out.println("Testing race conditions with " + getThreadModeDescription());
+        LOG.info("Testing race conditions with {}", getThreadModeDescription());
         
         HedgeConfig config = HedgeConfig.custom()
                 .preconfiguredDuration(Duration.ofMillis(30))
@@ -305,7 +309,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
         assertThat(responseCount.get()).isEqualTo(NUM_THREADS);
         
-        System.out.println("✅ Race conditions test passed with " + getThreadModeDescription());
+        LOG.info("Race conditions test passed with {}", getThreadModeDescription());
     }
 
     @Test
@@ -314,7 +318,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
                           isVirtualThreadMode());
                           
-        System.out.println("Testing concurrent hedge triggering with " + getThreadModeDescription());
+        LOG.info("Testing concurrent hedge triggering with {}", getThreadModeDescription());
         
         HedgeConfig config = HedgeConfig.custom()
                 .preconfiguredDuration(Duration.ofMillis(30))
@@ -361,7 +365,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
         assertThat(responseCount.get()).isEqualTo(5);
         
-        System.out.println("✅ Concurrent hedge triggering test passed with " + getThreadModeDescription());
+        LOG.info("Concurrent hedge triggering test passed with {}", getThreadModeDescription());
     }
 
 }

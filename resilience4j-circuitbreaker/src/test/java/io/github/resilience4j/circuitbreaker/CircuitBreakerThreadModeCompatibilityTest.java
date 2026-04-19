@@ -5,6 +5,8 @@ import io.github.resilience4j.core.ThreadType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -27,6 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(Parameterized.class)
 public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerThreadModeCompatibilityTest.class);
 
     public CircuitBreakerThreadModeCompatibilityTest(ThreadType threadType) {
         super(threadType);
@@ -56,8 +60,8 @@ public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBas
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
         
-        System.out.println(threadType + " thread test: State=" + circuitBreaker.getState() +
-                          ", SuccessfulCalls=" + circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
+        LOG.info("{} thread test: State={}, SuccessfulCalls={}",
+            threadType, circuitBreaker.getState(), circuitBreaker.getMetrics().getNumberOfSuccessfulCalls());
     }
     
     @Test
@@ -95,7 +99,7 @@ public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBas
         assertThat(result).isEqualTo(threadType + " async result");
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         
-        System.out.println(threadType + " async: " + result);
+        LOG.info("{} async: {}", threadType, result);
     }
     
     @Test
@@ -130,7 +134,7 @@ public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBas
             }
         }
         
-        System.out.println(mode + " mode failures: " + failures.get() + ", State: " + circuitBreaker.getState());
+        LOG.info("{} mode failures: {}, State: {}", mode, failures.get(), circuitBreaker.getState());
         return failures.get();
     }
     
@@ -159,7 +163,7 @@ public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBas
         } catch (Exception ignored) {}
         
         CircuitBreaker.State finalState = circuitBreaker.getState();
-        System.out.println(mode + " state transitions: CLOSED -> " + openState + " -> " + finalState);
+        LOG.info("{} state transitions: CLOSED -> {} -> {}", mode, openState, finalState);
         
         return finalState;
     }

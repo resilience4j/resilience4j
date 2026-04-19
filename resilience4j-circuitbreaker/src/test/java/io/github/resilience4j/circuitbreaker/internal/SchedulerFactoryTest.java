@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
 public class SchedulerFactoryTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulerFactoryTest.class);
 
     public SchedulerFactoryTest(ThreadType threadType) {
         super(threadType);
@@ -43,8 +47,8 @@ public class SchedulerFactoryTest extends ThreadModeTestBase {
 
     @Test
     public void schedulerShouldRunTasksOnCorrectThreadTypeInBothModes() throws Exception {
-        System.out.println("Running schedulerShouldRunTasksOnCorrectThreadTypeInBothModes in " + getThreadModeDescription());
-        
+        LOG.info("Running schedulerShouldRunTasksOnCorrectThreadTypeInBothModes in {}", getThreadModeDescription());
+
         ScheduledExecutorService scheduler = SchedulerFactory.getInstance().getScheduler();
 
         Future<Boolean> isVirtual = scheduler.submit(() -> Thread.currentThread().isVirtual());
@@ -62,8 +66,8 @@ public class SchedulerFactoryTest extends ThreadModeTestBase {
                     .isFalse();
             }
             
-            System.out.println("✅ Scheduler thread type test passed in " + getThreadModeDescription() + 
-                             " - Virtual thread: " + taskRanOnVirtualThread);
+            LOG.info("Scheduler thread type test passed in {} - Virtual thread: {}",
+                getThreadModeDescription(), taskRanOnVirtualThread);
         } finally {
             scheduler.shutdownNow();
         }

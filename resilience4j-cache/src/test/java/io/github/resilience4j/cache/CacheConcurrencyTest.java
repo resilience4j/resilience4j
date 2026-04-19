@@ -8,6 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.MutableEntry;
@@ -38,6 +40,8 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(Parameterized.class)
 public class CacheConcurrencyTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CacheConcurrencyTest.class);
 
     private static final int THREAD_COUNT = 10;
     private static final int OPERATIONS_PER_THREAD = 50;
@@ -121,7 +125,7 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleConcurrentCacheOperations() throws Exception {
-        System.out.println("Testing cache concurrency with " + getThreadModeDescription());
+        LOG.info("Testing cache concurrency with {}", getThreadModeDescription());
         
         final int numThreads = THREAD_COUNT;
         final int operationsPerThread = OPERATIONS_PER_THREAD;
@@ -183,12 +187,12 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
         assertThat(events).isNotEmpty();
         // Note: Exact hit/miss ratios depend on cache implementation details and timing
         
-        System.out.println("✅ Cache concurrency test passed with " + getThreadModeDescription());
+        LOG.info("Cache concurrency test passed with {}", getThreadModeDescription());
     }
 
     @Test
     public void shouldHandleConcurrentDecoratorUsage() throws Exception {
-        System.out.println("Testing concurrent decorator usage with " + getThreadModeDescription());
+        LOG.info("Testing concurrent decorator usage with {}", getThreadModeDescription());
         
         final int numThreads = THREAD_COUNT;
         final int operationsPerThread = OPERATIONS_PER_THREAD;
@@ -249,7 +253,7 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
         // (exact count depends on timing and cache implementation)
         assertThat(supplierCallCount.get()).isLessThan(callCount.get());
         
-        System.out.println("✅ Concurrent decorator usage test passed with " + getThreadModeDescription());
+        LOG.info("Concurrent decorator usage test passed with {}", getThreadModeDescription());
     }
 
     @Test
@@ -307,6 +311,6 @@ public class CacheConcurrencyTest extends ThreadModeTestBase {
         // The main goal is to verify no exceptions occurred and all threads completed
         // Cache behavior with mocks is too complex to test reliably in this context
         
-        System.out.println("✅ Race condition test passed with " + getThreadModeDescription());
+        LOG.info("Race condition test passed with {}", getThreadModeDescription());
     }
 }

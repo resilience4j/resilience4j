@@ -28,6 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.*;
@@ -45,6 +47,8 @@ import static org.mockito.Mockito.times;
 
 @RunWith(Parameterized.class)
 public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolBulkheadTest.class);
 
     public ThreadPoolBulkheadTest(ThreadType threadType) {
         super(threadType);
@@ -66,7 +70,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
 
     @Test
     public void shouldExecuteRunnableAndFailWithBulkHeadFull() throws InterruptedException {
-        System.out.println("Running shouldExecuteRunnableAndFailWithBulkHeadFull in " + getThreadModeDescription());
+        LOG.info("Running shouldExecuteRunnableAndFailWithBulkHeadFull in {}", getThreadModeDescription());
         
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("test", config);
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
@@ -222,7 +226,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     @Test
     public void testCreateThreadsUsingNameForPrefix()
         throws ExecutionException, InterruptedException {
-        System.out.println("Running testCreateThreadsUsingNameForPrefix in " + getThreadModeDescription());
+        LOG.info("Running testCreateThreadsUsingNameForPrefix in {}", getThreadModeDescription());
         
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("TEST", config);
         Supplier<String> getThreadName = () -> Thread.currentThread().getName();
@@ -230,7 +234,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
         CompletionStage<String> result = bulkhead.executeSupplier(getThreadName);
 
         String actualThreadName = result.toCompletableFuture().get();
-        System.out.println("Thread name in " + getThreadModeDescription() + ": " + actualThreadName);
+        LOG.info("Thread name in {}: {}", getThreadModeDescription(), actualThreadName);
         
         // Thread naming differs between platform and virtual threads
         if (isVirtualThreadMode()) {
@@ -272,11 +276,11 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
 
     @Test
     public void shouldUseVirtualThreadsWhenConfigured() throws Exception {
-        System.out.println("Running shouldUseVirtualThreadsWhenConfigured in " + getThreadModeDescription());
+        LOG.info("Running shouldUseVirtualThreadsWhenConfigured in {}", getThreadModeDescription());
         
         // Only run the virtual thread specific checks when in virtual thread mode
         if (!isVirtualThreadMode()) {
-            System.out.println("Skipping virtual thread specific test in platform thread mode");
+            LOG.info("Skipping virtual thread specific test in platform thread mode");
             return;
         }
         
@@ -313,7 +317,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
                 .as("Task should execute on a virtual thread when configured in " + getThreadModeDescription())
                 .isTrue();
                 
-            System.out.println("✅ Virtual thread configuration test passed in " + getThreadModeDescription());
+            LOG.info("Virtual thread configuration test passed in {}", getThreadModeDescription());
         } finally {
             // Clean up
             bulkhead.close();
@@ -322,7 +326,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     
     @Test
     public void shouldHandleConcurrentTasksCorrectlyInBothThreadModes() throws Exception {
-        System.out.println("Running shouldHandleConcurrentTasksCorrectlyInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running shouldHandleConcurrentTasksCorrectlyInBothThreadModes in {}", getThreadModeDescription());
         
         // Create ThreadPoolBulkhead config with limited capacity
         ThreadPoolBulkheadConfig testConfig = ThreadPoolBulkheadConfig.custom()
@@ -391,8 +395,8 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
                 .as("Total tasks (completed + rejected) should equal the number of submitted tasks in " + getThreadModeDescription())
                 .isEqualTo(numberOfTasks);
                 
-            System.out.println("✅ Concurrency test passed in " + getThreadModeDescription() + 
-                             " - Completed: " + completedTasks.get() + ", Rejected: " + rejectedTasks.get());
+            LOG.info("Concurrency test passed in {} - Completed: {}, Rejected: {}",
+                getThreadModeDescription(), completedTasks.get(), rejectedTasks.get());
         } finally {
             // Clean up
             bulkhead.close();
@@ -401,7 +405,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     
     @Test
     public void shouldHaveCorrectMetricsInBothThreadModes() throws Exception {
-        System.out.println("Running shouldHaveCorrectMetricsInBothThreadModes in " + getThreadModeDescription());
+        LOG.info("Running shouldHaveCorrectMetricsInBothThreadModes in {}", getThreadModeDescription());
         
         // Create ThreadPoolBulkhead with custom config for this test
         ThreadPoolBulkheadConfig testConfig = ThreadPoolBulkheadConfig.custom()
@@ -448,7 +452,7 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
                 .as("Task should complete within timeout in " + getThreadModeDescription())
                 .isTrue();
             
-            System.out.println("✅ Metrics test passed in " + getThreadModeDescription());
+            LOG.info("Metrics test passed in {}", getThreadModeDescription());
         } finally {
             // Clean up
             bulkhead.close();

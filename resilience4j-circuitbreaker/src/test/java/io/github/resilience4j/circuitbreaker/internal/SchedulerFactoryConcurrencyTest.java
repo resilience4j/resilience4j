@@ -5,6 +5,8 @@ import io.github.resilience4j.core.ThreadType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -23,6 +25,8 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulerFactoryConcurrencyTest.class);
 
     public SchedulerFactoryConcurrencyTest(ThreadType threadType) {
         super(threadType);
@@ -47,7 +51,7 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleConcurrentAccess() throws Exception {
-        System.out.println("Testing concurrent access with " + getThreadModeDescription());
+        LOG.info("Testing concurrent access with {}", getThreadModeDescription());
         
         final int numThreads = 10;
         final int operationsPerThread = 100;
@@ -101,12 +105,12 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
         assertEquals("All operations should succeed", 
                     numThreads * operationsPerThread, successCount.get());
         
-        System.out.println("✅ Concurrent access test passed with " + getThreadModeDescription());
+        LOG.info("Concurrent access test passed with {}", getThreadModeDescription());
     }
 
     @Test
     public void shouldHandleConsistentThreadTypeUsage() throws Exception {
-        System.out.println("Testing thread type consistency with " + getThreadModeDescription());
+        LOG.info("Testing thread type consistency with {}", getThreadModeDescription());
         
         final int numOperations = 20;
         final ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -159,12 +163,12 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
         
         assertTrue("Most operations should succeed", successCount.get() > numOperations * 0.8);
         
-        System.out.println("✅ Thread type consistency test passed with " + getThreadModeDescription());
+        LOG.info("Thread type consistency test passed with {}", getThreadModeDescription());
     }
 
     @Test
     public void shouldHandleConcurrentResets() throws Exception {
-        System.out.println("Testing concurrent resets with " + getThreadModeDescription());
+        LOG.info("Testing concurrent resets with {}", getThreadModeDescription());
         
         final int numThreads = 3; // Reduced thread count
         final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -226,6 +230,6 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
             throw new AssertionError("Reset concurrency test failed", firstException.get());
         }
         
-        System.out.println("✅ Concurrent resets test passed with " + getThreadModeDescription());
+        LOG.info("Concurrent resets test passed with {}", getThreadModeDescription());
     }
 }

@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,13 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(Parameterized.class)
 public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
 
+    private static final Logger LOG = LoggerFactory.getLogger(LockFreeMetricsContentionTest.class);
+
     public LockFreeMetricsContentionTest(ThreadType threadType) {
         super(threadType);
     }
 
     @Before
     public void setUp() {
-        System.out.println("Running LockFreeMetricsContentionTest in " + getThreadModeDescription());
+        LOG.info("Running LockFreeMetricsContentionTest in {}", getThreadModeDescription());
     }
 
     @Test
@@ -106,10 +110,8 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
                 .as("Total recorded operations should match expected count")
                 .isEqualTo(threadCount * operationsPerThread);
 
-            System.out.println("✅ High contention test passed in " + getThreadModeDescription() +
-                             " - Total operations: " + totalRecorded +
-                             ", Success: " + successCount.get() +
-                             ", Failures: " + failureCount.get());
+            LOG.info("High contention test passed in {} - Total operations: {}, Success: {}, Failures: {}",
+                getThreadModeDescription(), totalRecorded, successCount.get(), failureCount.get());
 
         } finally {
             executor.shutdown();
@@ -175,9 +177,8 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
                 .isGreaterThan(0)
                 .isLessThanOrEqualTo(windowSize);
 
-            System.out.println("✅ Metrics correctness test passed in " + getThreadModeDescription() +
-                             " - Total calls: " + totalCalls +
-                             ", Failure rate: " + snapshot.getFailureRate());
+            LOG.info("Metrics correctness test passed in {} - Total calls: {}, Failure rate: {}",
+                getThreadModeDescription(), totalCalls, snapshot.getFailureRate());
 
         } finally {
             executor.shutdown();
@@ -238,8 +239,8 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
                     .isEqualTo(operationsPerThread);
             }
 
-            System.out.println("✅ No starvation test passed in " + getThreadModeDescription() +
-                             " - All " + threadCount + " threads completed " + operationsPerThread + " operations");
+            LOG.info("No starvation test passed in {} - All {} threads completed {} operations",
+                getThreadModeDescription(), threadCount, operationsPerThread);
 
         } finally {
             executor.shutdown();
@@ -306,7 +307,7 @@ public class LockFreeMetricsContentionTest extends ThreadModeTestBase {
                 .as("Mixed read/write should complete in " + getThreadModeDescription())
                 .isTrue();
 
-            System.out.println("✅ Mixed read/write contention test passed in " + getThreadModeDescription());
+            LOG.info("Mixed read/write contention test passed in {}", getThreadModeDescription());
 
         } finally {
             executor.shutdown();
