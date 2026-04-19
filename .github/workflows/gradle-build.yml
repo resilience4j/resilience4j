@@ -13,11 +13,6 @@ on:
 jobs:
   validation:
     name: "Gradle wrapper validation"
-    strategy:
-      fail-fast: false
-      matrix:
-        java-version: [21, 25]
-    continue-on-error: ${{ matrix.java-version == 25 }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -25,6 +20,11 @@ jobs:
 
   build:
     name: "Build and publish"
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [21, 25]
+    continue-on-error: ${{ matrix.java-version == 25 }}
     runs-on: ubuntu-latest
     permissions:
       checks: write
