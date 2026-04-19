@@ -13,6 +13,11 @@ on:
 jobs:
   validation:
     name: "Gradle wrapper validation"
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [21, 25]
+    continue-on-error: ${{ matrix.java-version == 25 }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -30,10 +35,10 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
+          java-version: ${{ matrix.java-version }}
           distribution: 'temurin'
           cache: 'gradle'
 
@@ -83,6 +88,8 @@ jobs:
           fi
 
       - name: Build
+        env:
+          GRADLE_OPTS: ${{ matrix.java-version == 25 && '-Djdk.tracePinnedThreads=full' || '' }}
         run: |
           ./gradlew \
             -Pversion=${{ steps.get-snapshot-version.outputs.snapshot-version }} \
@@ -105,7 +112,7 @@ jobs:
 
       - name: Publish to Sonatype
         # only run on master and never on forks
-        if: github.ref == 'refs/heads/master' && github.repository == 'resilience4j/resilience4j'
+        if: github.ref == 'refs/heads/master' && github.repository == 'resilience4j/resilience4j' && matrix.java-version == 21
         env:
           GPG_KEY: ${{ secrets.GPG_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
