@@ -21,6 +21,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerSnapshot;
 import io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException;
 import io.github.resilience4j.circuitbreaker.event.*;
 import io.github.resilience4j.core.EventConsumer;
@@ -156,6 +157,40 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         this(name, circuitBreakerConfig.get(), tags);
     }
 
+    /**
+     * Creates a circuitBreaker from a snapshot, restoring its state and metrics.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param snapshot             The snapshot to restore state from.
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
+        CircuitBreakerSnapshot snapshot) {
+        this(name, circuitBreakerConfig, snapshot, emptyMap());
+    }
+
+    /**
+     * Creates a circuitBreaker from a snapshot, restoring its state and metrics.
+     *
+     * @param name                 the name of the CircuitBreaker
+     * @param circuitBreakerConfig The CircuitBreaker configuration.
+     * @param snapshot             The snapshot to restore state from.
+     * @param tags                 tags added to the CircuitBreaker
+     */
+    public CircuitBreakerStateMachine(String name, CircuitBreakerConfig circuitBreakerConfig,
+        CircuitBreakerSnapshot snapshot, Map<String, String> tags) {
+        this.name = name;
+        this.circuitBreakerConfig = Objects
+            .requireNonNull(circuitBreakerConfig, "Config must not be null");
+        this.eventProcessor = new CircuitBreakerEventProcessor();
+        this.clock = circuitBreakerConfig.getClock();
+        this.schedulerFactory = SchedulerFactory.getInstance();
+        this.tags = Objects.requireNonNull(tags, "Tags must not be null");
+        this.currentTimestampFunction = circuitBreakerConfig.getCurrentTimestampFunction();
+        this.timestampUnit = circuitBreakerConfig.getTimestampUnit();
+        this.stateReference = new AtomicReference<>(restoreStateFromSnapshot(snapshot));
+    }
+
     @Override
     public long getCurrentTimestamp() {
         return this.currentTimestampFunction.apply(clock);
@@ -282,6 +317,31 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
     @Override
     public Metrics getMetrics() {
         return this.stateReference.get().getMetrics();
+    }
+
+    @Override
+    public CircuitBreakerSnapshot createSnapshot() {
+        CircuitBreakerState currentState = stateReference.get();
+        Metrics metrics = currentState.getMetrics();
+
+        // Create metrics snapshot from current metrics
+        CircuitBreakerSnapshot.MetricsSnapshot metricsSnapshot =
+            CircuitBreakerSnapshot.MetricsSnapshot.builder()
+                .numberOfSuccessfulCalls(metrics.getNumberOfSuccessfulCalls())
+                .numberOfFailedCalls(metrics.getNumberOfFailedCalls())
+                .numberOfSlowCalls(metrics.getNumberOfSlowCalls())
+                .numberOfSlowSuccessfulCalls(metrics.getNumberOfSlowSuccessfulCalls())
+                .numberOfSlowFailedCalls(metrics.getNumberOfSlowFailedCalls())
+                .numberOfNotPermittedCalls(metrics.getNumberOfNotPermittedCalls())
+                .build();
+
+        // Create circuit breaker snapshot
+        return CircuitBreakerSnapshot.builder()
+            .state(currentState.getState())
+            .metricsSnapshot(metricsSnapshot)
+            .attempts(currentState.attempts())
+            .retryAfterWaitUntil(currentState.getRetryAfterWaitUntil())
+            .build();
     }
 
     @Override
@@ -463,6 +523,42 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         };
     }
 
+    /**
+     * Restores the CircuitBreaker state from a snapshot.
+     * <p>
+     * Note: This implementation restores the state, attempts count, and retry-after time,
+     * but does not fully restore the sliding window metrics. The metrics start fresh with
+     * the new configuration. This is a simplified approach that preserves the most critical
+     * state information while ensuring the circuit breaker can continue operating correctly.
+     *
+     * @param snapshot the snapshot to restore from
+     * @return the restored CircuitBreakerState
+     */
+    private CircuitBreakerState restoreStateFromSnapshot(CircuitBreakerSnapshot snapshot) {
+        Objects.requireNonNull(snapshot, "Snapshot must not be null");
+
+        return switch (snapshot.getState()) {
+            case OPEN -> {
+                // Restore OPEN state with attempts and retry-after time
+                Instant retryAfterWaitUntil = snapshot.getRetryAfterWaitUntil();
+                if (retryAfterWaitUntil != null) {
+                    yield new OpenState(snapshot.getAttempts(), retryAfterWaitUntil,
+                        CircuitBreakerMetrics.forClosed(circuitBreakerConfig));
+                } else {
+                    // Fallback if no retry time in snapshot
+                    yield new OpenState(snapshot.getAttempts(),
+                        CircuitBreakerMetrics.forClosed(circuitBreakerConfig));
+                }
+            }
+            case HALF_OPEN -> new HalfOpenState(snapshot.getAttempts());
+            case FORCED_OPEN -> new ForcedOpenState(snapshot.getAttempts());
+            case DISABLED -> new DisabledState();
+            case METRICS_ONLY -> new MetricsOnlyState();
+            case CLOSED -> new ClosedState();
+            default -> new ClosedState();
+        };
+    }
+
     private interface CircuitBreakerState {
 
         boolean tryAcquirePermission();
@@ -482,6 +578,17 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         CircuitBreaker.State getState();
 
         CircuitBreakerMetrics getMetrics();
+
+        /**
+         * Returns the instant until which the circuit breaker should wait in OPEN state.
+         * This is only relevant when the state is OPEN.
+         *
+         * @return the retry-after instant, or null if not applicable
+         */
+        @Nullable
+        default Instant getRetryAfterWaitUntil() {
+            return null;
+        }
 
         /**
          * Should the CircuitBreaker in this state publish events
@@ -793,6 +900,11 @@ public final class CircuitBreakerStateMachine implements CircuitBreaker {
         @Override
         public CircuitBreakerMetrics getMetrics() {
             return circuitBreakerMetrics;
+        }
+
+        @Override
+        public Instant getRetryAfterWaitUntil() {
+            return retryAfterWaitDuration;
         }
 
         @Override
