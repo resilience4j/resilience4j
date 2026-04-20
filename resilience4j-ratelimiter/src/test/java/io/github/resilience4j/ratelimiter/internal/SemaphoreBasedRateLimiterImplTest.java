@@ -19,20 +19,21 @@
 package io.github.resilience4j.ratelimiter.internal;
 
 import com.jayway.awaitility.core.ConditionFactory;
+import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 import static com.jayway.awaitility.Awaitility.await;
@@ -44,8 +45,14 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-
+@RunWith(Parameterized.class)
 public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementationTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SemaphoreBasedRateLimiterImplTest.class);
+
+    public SemaphoreBasedRateLimiterImplTest(ThreadType threadType) {
+        super(threadType);
+    }
 
     private static final int LIMIT = 2;
     private static final Duration TIMEOUT = Duration.ofMillis(100);
@@ -79,6 +86,8 @@ public class SemaphoreBasedRateLimiterImplTest extends RateLimitersImplementatio
 
     @Test
     public void rateLimiterCreationWithProvidedScheduler() throws Exception {
+        LOG.info("Running rateLimiterCreationWithProvidedScheduler in {}", getThreadModeDescription());
+        
         ScheduledExecutorService scheduledExecutorService = mock(ScheduledExecutorService.class);
         RateLimiterConfig configSpy = spy(config);
         SemaphoreBasedRateLimiter limit = new SemaphoreBasedRateLimiter("test", configSpy,

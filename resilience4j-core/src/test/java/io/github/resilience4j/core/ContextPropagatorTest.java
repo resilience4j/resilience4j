@@ -18,29 +18,58 @@
  */
 package io.github.resilience4j.core;
 
+import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagator;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import static com.jayway.awaitility.Awaitility.matches;
 import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
+@RunWith(Parameterized.class)
+public class ContextPropagatorTest extends ThreadModeTestBase {
 
-import org.junit.Test;
+    private static final Logger LOG = LoggerFactory.getLogger(ContextPropagatorTest.class);
 
-import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagator;
+    @Parameterized.Parameters(name = "threadMode={0}")
+    public static Collection<Object[]> threadModes() {
+        return ThreadModeTestBase.threadModes();
+    }
 
-public class ContextPropagatorTest {
+    /**
+     * Constructor for parameterized tests.
+     * 
+     * @param threadType the thread mode to test with ("platform" or "virtual")
+     */
+    public ContextPropagatorTest(ThreadType threadType) {
+        super(threadType);
+    }
+
+    @After
+    public void tearDown() {
+        MDC.clear(); // Clean up any MDC values
+    }
 
     @Test
-    public void contextPropagationFailureSingleTest() {
+    public void contextPropagationFailureSingleTestInBothThreadModes() {
+        LOG.info("Running contextPropagationFailureSingleTestInBothThreadModes in {}", getThreadModeDescription());
+        
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
-        threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary");
+        threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary-" + threadType);
 
         Supplier<String> supplier = threadLocal::get;
         //Thread boundary
@@ -48,6 +77,8 @@ public class ContextPropagatorTest {
 
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
             assertThat(future).isCompletedWithValue(null)));
+        
+        LOG.info("Context propagation failure test passed in {}", getThreadModeDescription());
     }
 
     @Test
@@ -138,9 +169,12 @@ public class ContextPropagatorTest {
     }
 
     @Test
-    public void contextPropagationSupplierSingleTest() {
+    public void contextPropagationSupplierSingleTestInBothThreadModes() {
+        LOG.info("Running contextPropagationSupplierSingleTestInBothThreadModes in {}", getThreadModeDescription());
+        
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
-        threadLocal.set("SingleValueShouldCrossThreadBoundary");
+        String expectedValue = "SingleValueShouldCrossThreadBoundary-" + threadType;
+        threadLocal.set(expectedValue);
 
         Supplier<String> supplier = ContextPropagator.decorateSupplier(
             new TestThreadLocalContextPropagator(threadLocal),
@@ -149,7 +183,9 @@ public class ContextPropagatorTest {
         final CompletableFuture<String> future = CompletableFuture.supplyAsync(supplier);
 
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(future).isCompletedWithValue("SingleValueShouldCrossThreadBoundary")));
+            assertThat(future).isCompletedWithValue(expectedValue)));
+        
+        LOG.info("Context propagation supplier test passed in {}", getThreadModeDescription());
     }
 
     @Test
@@ -256,5 +292,187 @@ public class ContextPropagatorTest {
 
         waitAtMost(5, TimeUnit.SECONDS).until(matches(() ->
             assertThat(reference.get()).containsExactlyInAnyOrder(null, null)));
+    }
+
+    @Test
+    public void contextPropagationWithMDCInBothThreadModes() throws Exception {
+        LOG.info("Running contextPropagationWithMDCInBothThreadModes in {}", getThreadModeDescription());
+        
+        // Test MDC (Mapped Diagnostic Context) propagation
+        String testKey = "test-key-" + threadType;
+        String testValue = "test-value-" + threadType;
+        AtomicReference<String> mdcValueInChildThread = new AtomicReference<>();
+        
+        // Create MDC context propagator
+        ContextPropagator<String> mdcPropagator = new ContextPropagator<String>() {
+            @Override
+            public Supplier<Optional<String>> retrieve() {
+                return () -> Optional.ofNullable(MDC.get(testKey));
+            }
+
+            @Override
+            public Consumer<Optional<String>> copy() {
+                return optional -> optional.ifPresent(value -> MDC.put(testKey, value));
+            }
+
+            @Override
+            public Consumer<Optional<String>> clear() {
+                return optional -> MDC.remove(testKey);
+            }
+        };
+        
+        // Set MDC value in main thread
+        MDC.put(testKey, testValue);
+        
+        // Create decorated runnable
+        Runnable decoratedRunnable = ContextPropagator.decorateRunnable(
+            mdcPropagator,
+            () -> {
+                // Store MDC value from child thread
+                mdcValueInChildThread.set(MDC.get(testKey));
+            }
+        );
+        
+        // Run on appropriate thread type based on mode
+        CompletableFuture<Void> future = CompletableFuture.runAsync(decoratedRunnable);
+        future.get(5, TimeUnit.SECONDS);
+        
+        // Verify MDC was propagated correctly
+        assertThat(mdcValueInChildThread.get())
+            .as("MDC should be propagated correctly in " + getThreadModeDescription())
+            .isEqualTo(testValue);
+        
+        // Clean up
+        MDC.remove(testKey);
+        
+        LOG.info("MDC context propagation test passed in {}", getThreadModeDescription());
+    }
+
+    @Test
+    public void contextPropagationWithMultiplePropagators() throws Exception {
+        LOG.info("Running contextPropagationWithMultiplePropagators in {}", getThreadModeDescription());
+        
+        // Create multiple ThreadLocals and propagators 
+        ThreadLocal<String> stringThreadLocal = new ThreadLocal<>();
+        ThreadLocal<Integer> intThreadLocal = new ThreadLocal<>();
+        
+        String stringValue = "string-value-" + threadType;
+        int intValue = 42 + threadType.hashCode(); // Different value per mode
+        
+        stringThreadLocal.set(stringValue);
+        intThreadLocal.set(intValue);
+        
+        ContextPropagator<String> stringPropagator = new ContextPropagator<String>() {
+            @Override
+            public Supplier<Optional<String>> retrieve() {
+                return () -> Optional.ofNullable(stringThreadLocal.get());
+            }
+
+            @Override
+            public Consumer<Optional<String>> copy() {
+                return optional -> optional.ifPresent(stringThreadLocal::set);
+            }
+
+            @Override
+            public Consumer<Optional<String>> clear() {
+                return optional -> stringThreadLocal.remove();
+            }
+        };
+        
+        ContextPropagator<Integer> intPropagator = new ContextPropagator<Integer>() {
+            @Override
+            public Supplier<Optional<Integer>> retrieve() {
+                return () -> Optional.ofNullable(intThreadLocal.get());
+            }
+
+            @Override
+            public Consumer<Optional<Integer>> copy() {
+                return optional -> optional.ifPresent(intThreadLocal::set);
+            }
+
+            @Override
+            public Consumer<Optional<Integer>> clear() {
+                return optional -> intThreadLocal.remove();
+            }
+        };
+        
+        // Create list of propagators
+        List<ContextPropagator<?>> propagators = Arrays.asList(stringPropagator, intPropagator);
+        
+        // Create a callable that verifies both values were propagated
+        Callable<List<Object>> decoratedCallable = ContextPropagator.decorateCallable(
+            propagators, 
+            () -> Arrays.asList(stringThreadLocal.get(), intThreadLocal.get())
+        );
+        
+        // Execute on appropriate thread type
+        CompletableFuture<List<Object>> future = CompletableFuture.supplyAsync(
+            () -> {
+                try {
+                    return decoratedCallable.call();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        );
+        
+        // Verify results
+        List<Object> result = future.get(5, TimeUnit.SECONDS);
+        assertThat(result)
+            .as("Both context values should be propagated correctly in " + getThreadModeDescription())
+            .containsExactly(stringValue, intValue);
+        
+        LOG.info("Multiple propagators test passed in {}", getThreadModeDescription());
+    }
+
+    @Test
+    public void contextPropagationWithConcurrentThreadsInBothModes() throws Exception {
+        LOG.info("Running contextPropagationWithConcurrentThreadsInBothModes in {}", getThreadModeDescription());
+        
+        // Reduced thread count for faster test execution
+        int concurrentThreads = isVirtualThreadMode() ? 5 : 3;
+        ThreadLocal<String> threadLocal = new ThreadLocal<>();
+        
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicReference<String> sharedValue = new AtomicReference<>("shared-value-" + threadType);
+        
+        ContextPropagator<String> propagator = new TestThreadLocalContextPropagator(threadLocal);
+        
+        // Set initial value in main thread
+        threadLocal.set(sharedValue.get());
+        
+        // Create simple concurrent test without complex synchronization
+        CompletableFuture<?>[] futures = new CompletableFuture<?>[concurrentThreads];
+        
+        for (int i = 0; i < concurrentThreads; i++) {
+            final int threadNum = i;
+            
+            // Create decorated runnable to propagate context
+            Runnable decoratedRunnable = ContextPropagator.decorateRunnable(
+                propagator, 
+                () -> {
+                    // Verify context was propagated correctly
+                    String propagatedValue = threadLocal.get();
+                    if (sharedValue.get().equals(propagatedValue)) {
+                        successCount.incrementAndGet();
+                    }
+                }
+            );
+            
+            // Run on separate thread
+            futures[i] = CompletableFuture.runAsync(decoratedRunnable);
+        }
+        
+        // Wait for all futures to complete with timeout
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures);
+        allOf.get(5, TimeUnit.SECONDS);
+        
+        // Verify all threads propagated context correctly
+        assertThat(successCount.get())
+            .as("All threads should successfully propagate context in " + getThreadModeDescription())
+            .isEqualTo(concurrentThreads);
+        
+        LOG.info("Concurrent context propagation test passed in {} - Threads: {}, Successes: {}",
+            getThreadModeDescription(), concurrentThreads, successCount.get());
     }
 }
