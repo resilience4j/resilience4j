@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ package io.github.resilience4j.consumer;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +29,10 @@ import java.util.concurrent.TimeUnit;
 import static io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent.Type;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircularEventConsumerTest {
+class CircularEventConsumerTest {
 
     @Test
-    public void shouldBufferErrorEvents() {
+    void shouldBufferErrorEvents() {
         // tag::shouldBufferEvents[]
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(2);
@@ -54,7 +54,7 @@ public class CircularEventConsumerTest {
     }
 
     @Test
-    public void shouldBufferAllEvents() {
+    void shouldBufferAllEvents() {
         CircuitBreakerConfig circuitBreakerConfig = CircuitBreakerConfig.custom()
             .slidingWindowSize(3)
             .ignoreExceptions(IOException.class)
@@ -91,7 +91,7 @@ public class CircularEventConsumerTest {
     }
 
     @Test
-    public void shouldNotBufferEvents() {
+    void shouldNotBufferEvents() {
         CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("testName");
         CircularEventConsumer<CircuitBreakerEvent> ringBuffer = new CircularEventConsumer<>(2);
         assertThat(ringBuffer.getBufferedEvents()).isEmpty();
