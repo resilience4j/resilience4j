@@ -1,3 +1,5 @@
+ext.moduleName = "io.github.resilience4j.all"
+
 dependencies {
     api(project(":resilience4j-bulkhead"))
     api(project(":resilience4j-cache"))
@@ -7,11 +9,5 @@ dependencies {
     api(project(":resilience4j-retry"))
     api(project(":resilience4j-timelimiter"))
 
-    testRuntimeOnly(libs.junit.vintage.engine)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.awaitility.old)
-    testImplementation(libs.vavr)
     testImplementation(project(":resilience4j-test"))
 }
-ext.moduleName = "io.github.resilience4j.all"
