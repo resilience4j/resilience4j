@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.common.RecordFailurePredicate;
@@ -34,12 +36,12 @@ import io.github.resilience4j.common.utils.ConsumeResultBeforeRetryAttempt;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
 import io.github.resilience4j.retry.RetryConfig;
 
-@RunWith(MockitoJUnitRunner.class)
-public class RetryConfigurationPropertiesTest {
+@ExtendWith(MockitoExtension.class)
+class RetryConfigurationPropertiesTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testRetryProperties() {
+    void retryProperties() {
         CommonRetryConfigurationProperties.InstanceProperties instanceProperties1 = new CommonRetryConfigurationProperties.InstanceProperties();
         instanceProperties1.setMaxAttempts(3);
         instanceProperties1.setWaitDuration(Duration.ofMillis(1000));
@@ -82,14 +84,14 @@ public class RetryConfigurationPropertiesTest {
         assertThat(retry1.getConsumeResultBeforeRetryAttempt().getClass()).isEqualTo(ConsumeResultBeforeRetryAttempt.class);
         assertThat(retry2).isNotNull();
         assertThat(retry2.getMaxAttempts()).isEqualTo(2);
-        assertThat(retry2.getIntervalBiFunction().apply(1,null)).isEqualTo(99L);
-        assertThat(retry2.getIntervalBiFunction().apply(2,null)).isEqualTo(99L);
+        assertThat(retry2.getIntervalBiFunction().apply(1, null)).isEqualTo(99L);
+        assertThat(retry2.getIntervalBiFunction().apply(2, null)).isEqualTo(99L);
         assertThat(retry2.isFailAfterMaxAttempts()).isFalse();
         assertThat(retry2.getConsumeResultBeforeRetryAttempt()).isNull();
     }
 
     @Test
-    public void testExponentialRandomBackoffConfig() {
+    void exponentialRandomBackoffConfig() {
         CommonRetryConfigurationProperties.InstanceProperties instanceProperties1 = new CommonRetryConfigurationProperties.InstanceProperties();
         instanceProperties1.setMaxAttempts(3);
         instanceProperties1.setMaxAttempts(3);
@@ -111,7 +113,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateRetryPropertiesWithSharedConfigs() {
+    void createRetryPropertiesWithSharedConfigs() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxAttempts(3);
         defaultProperties.setWaitDuration(Duration.ofMillis(100L));
@@ -157,7 +159,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateRetryPropertiesWithDefaultConfig() {
+    void createRetryPropertiesWithDefaultConfig() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxAttempts(3);
         defaultProperties.setWaitDuration(Duration.ofMillis(100L));
@@ -203,7 +205,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreatePropertiesWithUnknownConfig() {
+    void createPropertiesWithUnknownConfig() {
         CommonRetryConfigurationProperties retryConfigurationProperties = new CommonRetryConfigurationProperties();
         CommonRetryConfigurationProperties.InstanceProperties instanceProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         instanceProperties.setBaseConfig("unknownConfig");
@@ -216,7 +218,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateRetryPropertiesWithWaitDurationSetToZero() {
+    void createRetryPropertiesWithWaitDurationSetToZero() {
         CommonRetryConfigurationProperties retryConfigurationProperties = new CommonRetryConfigurationProperties();
         CommonRetryConfigurationProperties.InstanceProperties instanceProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         instanceProperties.setWaitDuration(Duration.ZERO);
@@ -228,49 +230,57 @@ public class RetryConfigurationPropertiesTest {
         assertThat(retry.getIntervalBiFunction().apply(1, null)).isZero();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
+    @Test
+    void illegalArgumentOnEventConsumerBufferSizeLessThanOne() {
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnWaitDurationIsNegative() {
-        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setWaitDuration(Duration.ofNanos(-1));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMaxAttempts() {
-        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxAttempts(0);
-    }
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
-        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setExponentialBackoffMultiplier(0.0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnExponentialMaxWaitDurationNegative() {
-        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setExponentialMaxWaitDuration(Duration.ofNanos(-1));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRandomizedWaitFactorNegative() {
-        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setRandomizedWaitFactor(-0.001);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
-        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
-        defaultProperties.setRandomizedWaitFactor(1.0);
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testIntervalBiFunctionConfig() {
+    void illegalArgumentOnWaitDurationIsNegative() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setWaitDuration(Duration.ofNanos(-1)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnMaxAttempts() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setMaxAttempts(0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnExponentialBackoffMultiplierZeroOrLess() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setExponentialBackoffMultiplier(0.0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnExponentialMaxWaitDurationNegative() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setExponentialMaxWaitDuration(Duration.ofNanos(-1)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnRandomizedWaitFactorNegative() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setRandomizedWaitFactor(-0.001))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void illegalArgumentOnRandomizedWaitFactorBiggerOrEqualOne() {
+        CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setRandomizedWaitFactor(1.0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void intervalBiFunctionConfig() {
         CommonRetryConfigurationProperties.InstanceProperties instanceProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         instanceProperties.setIntervalBiFunction(TestIntervalBiFunction.class);
 
@@ -285,7 +295,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testRetryConfigWithBaseConfig() {
+    void retryConfigWithBaseConfig() {
         CommonRetryConfigurationProperties.InstanceProperties defaultConfig = new CommonRetryConfigurationProperties.InstanceProperties();
         defaultConfig.setMaxAttempts(10);
         defaultConfig.setWaitDuration(Duration.ofMillis(100L));
@@ -312,7 +322,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testGetBackendPropertiesPropertiesWithoutDefaultConfig() {
+    void getBackendPropertiesPropertiesWithoutDefaultConfig() {
         //Given
         CommonRetryConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonRetryConfigurationProperties.InstanceProperties();
 
@@ -320,7 +330,7 @@ public class RetryConfigurationPropertiesTest {
         retryConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(retryConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(retryConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get defaults
         CommonRetryConfigurationProperties.InstanceProperties retryProperties =
@@ -331,7 +341,7 @@ public class RetryConfigurationPropertiesTest {
     }
 
     @Test
-    public void testGetBackendPropertiesPropertiesWithDefaultConfig() {
+    void getBackendPropertiesPropertiesWithDefaultConfig() {
         //Given
         CommonRetryConfigurationProperties.InstanceProperties defaultProperties = new CommonRetryConfigurationProperties.InstanceProperties();
         defaultProperties.setEnableExponentialBackoff(true);
@@ -343,7 +353,7 @@ public class RetryConfigurationPropertiesTest {
         retryConfigurationProperties.getInstances().put("backendWithoutBaseConfig", backendWithoutBaseConfig);
 
         //Then
-        assertThat(retryConfigurationProperties.getInstances().size()).isEqualTo(1);
+        assertThat(retryConfigurationProperties.getInstances()).hasSize(1);
 
         // Should get default config and overwrite enableExponentialBackoff but not enableRandomizedWait
         CommonRetryConfigurationProperties.InstanceProperties retryProperties =
