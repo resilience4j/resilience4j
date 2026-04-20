@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2019 authors
+ *  Copyright 2026 authors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -25,58 +25,54 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.metrics.publisher.CircuitBreakerMetricsPublisher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
-public class StateTransitionMetricsTest {
+class StateTransitionMetricsTest {
 
     @SuppressWarnings("rawtypes")
     private static void circuitBreakerMetricsUsesFirstStateObjectInstance(
         CircuitBreaker circuitBreaker, MetricRegistry metricRegistry) throws Exception {
         SortedMap<String, Gauge> gauges = metricRegistry.getGauges();
 
-        assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(0));
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-            equalTo(0));
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue()).isEqualTo(0);
 
         circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
 
-        assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(1));
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(1));
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(1));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(1));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-            equalTo(0));
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue()).isEqualTo(1);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue()).isEqualTo(1);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue()).isEqualTo(0);
 
         for (int i = 0; i < 9; i++) {
             circuitBreaker.onError(0, TimeUnit.NANOSECONDS, new RuntimeException());
         }
 
-        assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.OPEN));
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(10));
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(10));
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue(), equalTo(1));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(10));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(10));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-            equalTo(0));
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(10);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(10);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue()).isEqualTo(1);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue()).isEqualTo(10);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue()).isEqualTo(10);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue()).isEqualTo(0);
 
         await().atMost(1500, TimeUnit.MILLISECONDS)
             .until(() -> {
@@ -85,42 +81,39 @@ public class StateTransitionMetricsTest {
             });
 
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
-        assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.HALF_OPEN));
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(1));
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls(), equalTo(1));
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isOne();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isOne();
 
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue(), equalTo(2));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(1));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-            equalTo(1));
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue()).isEqualTo(2);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue()).isEqualTo(1);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue()).isEqualTo(1);
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
-        assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.HALF_OPEN));
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(2));
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls(), equalTo(2));
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isEqualTo(2);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
 
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue(), equalTo(2));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(2));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-            equalTo(2));
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue()).isEqualTo(2);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue()).isEqualTo(2);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue()).isEqualTo(2);
         circuitBreaker.onSuccess(0, TimeUnit.NANOSECONDS);
-        assertThat(circuitBreaker.getState(), equalTo(CircuitBreaker.State.CLOSED));
-        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls(), equalTo(0));
-        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls(), equalTo(0));
-        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls(), equalTo(0));
+        assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
+        assertThat(circuitBreaker.getMetrics().getNumberOfBufferedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isZero();
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
 
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue(), equalTo(0));
-        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue(),
-            equalTo(0));
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.state").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.buffered").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.failed").getValue()).isEqualTo(0);
+        assertThat(gauges.get("resilience4j.circuitbreaker.test.successful").getValue()).isEqualTo(0);
     }
 
     @Test
-    public void testWithCircuitBreakerMetrics() throws Exception {
+    void withCircuitBreakerMetrics() throws Exception {
         CircuitBreakerConfig config =
             CircuitBreakerConfig.custom()
                 .waitDurationInOpenState(Duration.ofMillis(150))
@@ -137,7 +130,7 @@ public class StateTransitionMetricsTest {
     }
 
     @Test
-    public void testWithCircuitBreakerMetricsPublisher() throws Exception {
+    void withCircuitBreakerMetricsPublisher() throws Exception {
         CircuitBreakerConfig config =
             CircuitBreakerConfig.custom()
                 .waitDurationInOpenState(Duration.ofSeconds(1))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package io.github.resilience4j.metrics;
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;

@@ -1,3 +1,19 @@
+/*
+ *
+ * Copyright 2026
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ *
+ */
 package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
@@ -7,19 +23,26 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.test.AsyncHelloWorldService;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.control.Try;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
+
 public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
     @Override
@@ -44,7 +67,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
     // returns only success
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs1ForSuccess() {
+    void shouldReturnTotalNumberOfRequestsAs1ForSuccess() {
         HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
         Retry retry = Retry.of("metrics", RetryConfig.<String>custom()
@@ -54,12 +77,12 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
         given(helloWorldService.returnHelloWorld()).willReturn("Success");
         String result = Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get();
-        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isOne();
         assertThat(result).isEqualTo("Success");
     }
 
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs1ForSuccessVoid() {
+    void shouldReturnTotalNumberOfRequestsAs1ForSuccessVoid() {
         HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
         Retry retry = Retry.of("metrics", RetryConfig.custom()
@@ -69,12 +92,12 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
         retry.executeRunnable(helloWorldService::sayHelloWorld);
 
-        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isOne();
     }
 
     // returns fail twice and then success
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs3ForFail() {
+    void shouldReturnTotalNumberOfRequestsAs3ForFail() {
         HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
         Retry retry = Retry.of("metrics", RetryConfig.<String>custom()
@@ -95,7 +118,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
     // throws only exception finally
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs5OnlyFails() {
+    void shouldReturnTotalNumberOfRequestsAs5OnlyFails() {
 
         HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
@@ -108,15 +131,15 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
         given(helloWorldService.returnHelloWorld())
             .willThrow(new HelloWorldException());
 
-        Try<String> supplier = Try.ofSupplier(Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld));
+        assertThatThrownBy(() -> Retry.decorateSupplier(retry, helloWorldService::returnHelloWorld).get())
+            .isInstanceOf(HelloWorldException.class);
 
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(5);
-        assertThat(supplier.isFailure()).isTrue();
     }
 
     // throws only checked exception finally
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs5OnlyFailsChecked() throws IOException {
+    void shouldReturnTotalNumberOfRequestsAs5OnlyFailsChecked() throws Exception {
 
         HelloWorldService helloWorldService = mock(HelloWorldService.class);
 
@@ -130,16 +153,16 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
         Callable<String> retryableCallable = Retry.decorateCallable(retry, helloWorldService::returnHelloWorldWithException);
 
-        Try<Void> run = Try.run(retryableCallable::call);
+        assertThatThrownBy(retryableCallable::call)
+            .isInstanceOf(HelloWorldException.class);
 
         assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(5);
-        assertThat(run.isFailure()).isTrue();
     }
 
 
     // returns async success
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs1ForSuccessAsync() {
+    void shouldReturnTotalNumberOfRequestsAs1ForSuccessAsync() {
         AsyncHelloWorldService helloWorldService = mock(AsyncHelloWorldService.class);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -155,13 +178,13 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
         String result = awaitResult(supplier.get(), 5);
 
-        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+        assertThat(retry.getMetrics().getNumberOfTotalCalls()).isOne();
         assertThat(result).isEqualTo("Success");
     }
 
     // returns 1 failed and then 1 success async
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs3ForFailAsync() {
+    void shouldReturnTotalNumberOfRequestsAs3ForFailAsync() {
         AsyncHelloWorldService helloWorldService = mock(AsyncHelloWorldService.class);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -187,7 +210,7 @@ public class RetryMetricsTest extends AbstractRetryMetricsTest {
 
     // throws only exception async
     @Test
-    public void shouldReturnTotalNumberOfRequestsAs5ForFailAsync() {
+    void shouldReturnTotalNumberOfRequestsAs5ForFailAsync() {
         AsyncHelloWorldService helloWorldService = mock(AsyncHelloWorldService.class);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
