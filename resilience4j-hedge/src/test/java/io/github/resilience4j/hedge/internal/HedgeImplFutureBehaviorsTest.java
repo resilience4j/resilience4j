@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,11 +20,15 @@ package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.event.HedgeEvent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,7 +37,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
 
-public class HedgeImplFutureBehaviorsTest {
+class HedgeImplFutureBehaviorsTest {
 
     private static final Duration HEDGE_ACTIVATION_TIME = Duration.ofMillis(50);
     private static final String PRIMARY = "Primary";
@@ -56,7 +60,7 @@ public class HedgeImplFutureBehaviorsTest {
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     @Test
-    public void shouldReturnValueWhenSuppliedExecutor() throws Exception {
+    void shouldReturnValueWhenSuppliedExecutor() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onSecondarySuccess(event -> logger.info(event.getEventType().toString()));
@@ -68,7 +72,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimarySuccessFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
+    void slowPrimarySuccessFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onSecondarySuccess(event -> logger.info(event.getEventType().toString()));
@@ -79,7 +83,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimarySuccessFastHedgeFailureReturnsHedgeFailure() throws Exception {
+    void slowPrimarySuccessFastHedgeFailureReturnsHedgeFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onSecondaryFailure(event -> logger.info(event.getEventType().toString()));
@@ -95,7 +99,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimaryFailureFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
+    void slowPrimaryFailureFastHedgeSuccessReturnsHedgeSuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onSecondarySuccess(event -> logger.info(event.getEventType().toString()));
@@ -105,7 +109,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimaryFailureFastHedgeFailureReturnsHedgeFailure() throws Exception {
+    void slowPrimaryFailureFastHedgeFailureReturnsHedgeFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_FAILURE, FAST_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onSecondaryFailure(event -> logger.info(event.getEventType().toString()));
@@ -120,7 +124,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimarySuccessSlowHedgeSuccessReturnsPrimarySuccess() throws Exception {
+    void slowPrimarySuccessSlowHedgeSuccessReturnsPrimarySuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, SLOW_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));
@@ -130,7 +134,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimarySuccessSlowHedgeFailureReturnsPrimarySuccess() throws Exception {
+    void slowPrimarySuccessSlowHedgeFailureReturnsPrimarySuccess() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_SUCCESS, SLOW_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));
@@ -140,7 +144,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimaryFailureSlowHedgeSuccessReturnsPrimaryFailure() throws Exception {
+    void slowPrimaryFailureSlowHedgeSuccessReturnsPrimaryFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_FAILURE, SLOW_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimaryFailure(event -> logger.info(event.getEventType().toString()));
@@ -155,7 +159,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void slowPrimaryFailureSlowHedgeFailureReturnsPrimaryFailure() throws Exception {
+    void slowPrimaryFailureSlowHedgeFailureReturnsPrimaryFailure() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {SLOW_PRIMARY_FAILURE, SLOW_HEDGE_FAILURE};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimaryFailure(event -> logger.info(event.getEventType().toString()));
@@ -170,7 +174,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void fastPrimaryFailureDoesNotHedge() throws Exception {
+    void fastPrimaryFailureDoesNotHedge() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {FAST_PRIMARY_FAILURE, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimaryFailure(event -> logger.info(event.getEventType().toString()));
@@ -185,7 +189,7 @@ public class HedgeImplFutureBehaviorsTest {
     }
 
     @Test
-    public void fastPrimarySuccessDoesNotHedge() throws Exception {
+    void fastPrimarySuccessDoesNotHedge() throws Exception {
         HedgeBehaviorSpecification[] hedgeBehaviorSpecifications = {FAST_PRIMARY_SUCCESS, FAST_HEDGE_SUCCESS};
         Hedge hedge = Hedge.of(HEDGE_ACTIVATION_TIME);
         hedge.getEventPublisher().onPrimarySuccess(event -> logger.info(event.getEventType().toString()));

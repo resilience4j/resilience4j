@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,24 +19,21 @@
 package io.github.resilience4j.hedge.internal;
 
 import io.github.resilience4j.hedge.event.HedgeEvent;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import org.junit.jupiter.api.Test;
+
 
 import java.time.Duration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class AveragePlusResponseTimeCutoffTest {
+class AveragePlusResponseTimeCutoffTest {
 
     private static final Duration LONG_DURATION = Duration.ofMillis(1000);
     private static final Duration SHORT_DURATION = Duration.ofMillis(100);
 
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
     @Test
-    public void shouldComputeProperlyFromSuccesses() {
+    void shouldComputeProperlyFromSuccesses() {
         AverageDurationSupplier supplier = (AverageDurationSupplier) HedgeDurationSupplier.ofAveragePlus(true, 200, false, 100);
 
         supplier.accept(HedgeEvent.Type.PRIMARY_SUCCESS, LONG_DURATION);
@@ -46,7 +43,7 @@ public class AveragePlusResponseTimeCutoffTest {
     }
 
     @Test
-    public void shouldNotComputeFromHedges() {
+    void shouldNotComputeFromHedges() {
         AverageDurationSupplier supplier = (AverageDurationSupplier) HedgeDurationSupplier.ofAveragePlus(false, 0, false, 100);
 
         supplier.accept(HedgeEvent.Type.SECONDARY_SUCCESS, LONG_DURATION);
@@ -55,7 +52,7 @@ public class AveragePlusResponseTimeCutoffTest {
     }
 
     @Test
-    public void shouldNotComputeFromErrors() {
+    void shouldNotComputeFromErrors() {
         AverageDurationSupplier supplier = (AverageDurationSupplier) HedgeDurationSupplier.ofAveragePlus(false, 0, false, 100);
 
         supplier.accept(HedgeEvent.Type.PRIMARY_FAILURE, LONG_DURATION);
@@ -64,7 +61,7 @@ public class AveragePlusResponseTimeCutoffTest {
     }
 
     @Test
-    public void shouldComputeFromErrorsIfConfigured() {
+    void shouldComputeFromErrorsIfConfigured() {
         AverageDurationSupplier supplier = (AverageDurationSupplier) HedgeDurationSupplier.ofAveragePlus(false, 0, true, 100);
 
         supplier.accept(HedgeEvent.Type.PRIMARY_SUCCESS, SHORT_DURATION);
@@ -74,7 +71,7 @@ public class AveragePlusResponseTimeCutoffTest {
     }
 
     @Test
-    public void shouldUseCorrectAdditiveFactor() {
+    void shouldUseCorrectAdditiveFactor() {
         AverageDurationSupplier supplier = (AverageDurationSupplier) HedgeDurationSupplier.ofAveragePlus(false, 100, false, 100);
 
         supplier.accept(HedgeEvent.Type.PRIMARY_SUCCESS, LONG_DURATION);
