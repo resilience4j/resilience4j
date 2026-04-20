@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2020
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,45 +16,53 @@
  */
 package io.github.resilience4j.feign;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.mockito.Mockito.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link RateLimiter}
  */
-public class Resilience4jFeignRateLimiterTest {
+@WireMockTest
+class Resilience4jFeignRateLimiterTest {
 
-    private static final String MOCK_URL = "http://localhost:8080/";
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule();
-
+    private String baseUrl;
     private TestService testService;
     private RateLimiter rateLimiter;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(WireMockRuntimeInfo wmRuntimeInfo) {
+        baseUrl = wmRuntimeInfo.getHttpBaseUrl() + "/";
         rateLimiter = mock(RateLimiter.class);
         final FeignDecorators decorators = FeignDecorators.builder()
             .withRateLimiter(rateLimiter)
             .build();
         testService = Feign.builder()
             .addCapability(Resilience4jFeign.capability(decorators))
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
     }
 
     @Test
-    public void testSuccessfulCall() {
+    void successfulCall() {
         givenResponse(200);
         when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
@@ -65,7 +73,7 @@ public class Resilience4jFeignRateLimiterTest {
     }
 
     @Test
-    public void testSuccessfulCallWithDefaultMethod() {
+    void successfulCallWithDefaultMethod() {
         givenResponse(200);
         when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
@@ -75,35 +83,34 @@ public class Resilience4jFeignRateLimiterTest {
         verify(rateLimiter).acquirePermission(anyInt());
     }
 
-    @Test(expected = RequestNotPermitted.class)
-    public void testRateLimiterLimiting() {
+    @Test
+    void rateLimiterLimiting() {
         givenResponse(200);
         when(rateLimiter.acquirePermission(1)).thenReturn(false);
         when(rateLimiter.getRateLimiterConfig()).thenReturn(RateLimiterConfig.ofDefaults());
 
-        testService.greeting();
-
-        verify(0, getRequestedFor(urlPathEqualTo("/greeting")));
+        assertThatThrownBy(() -> testService.greeting())
+            .isInstanceOf(RequestNotPermitted.class);
     }
 
-    @Test(expected = FeignException.class)
-    public void testFailedHttpCall() {
+    @Test
+    void failedHttpCall() {
         givenResponse(400);
         when(rateLimiter.acquirePermission(1)).thenReturn(true);
 
-        testService.greeting();
+        assertThatThrownBy(() -> testService.greeting())
+            .isInstanceOf(FeignException.class);
     }
 
-    @Test(expected = RequestNotPermitted.class)
-    public void testRateLimiterCreateByStaticMethod() {
-        testService = TestService.create(MOCK_URL, rateLimiter);
+    @Test
+    void rateLimiterCreateByStaticMethod() {
+        testService = TestService.create(baseUrl, rateLimiter);
         givenResponse(200);
         when(rateLimiter.acquirePermission(1)).thenReturn(false);
         when(rateLimiter.getRateLimiterConfig()).thenReturn(RateLimiterConfig.ofDefaults());
 
-        testService.greeting();
-
-        verify(0, getRequestedFor(urlPathEqualTo("/greeting")));
+        assertThatThrownBy(() -> testService.greeting())
+            .isInstanceOf(RequestNotPermitted.class);
     }
 
 

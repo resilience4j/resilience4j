@@ -21,7 +21,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.springboot3.service.test.DummyFeignClient;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,8 +66,8 @@ public class CircuitBreakerFeignTest {
         } catch (Exception e) {
             // Ignore the error, we want to increase the error counts
         }
-        dummyFeignClient.doSomething(StringUtils.EMPTY);
-        dummyFeignClient.doSomething(StringUtils.EMPTY);
+        dummyFeignClient.doSomething("");
+        dummyFeignClient.doSomething("");
 
         CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("dummyFeignClient");
         assertThat(circuitBreaker).isNotNull();

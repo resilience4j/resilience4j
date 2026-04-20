@@ -25,7 +25,6 @@ import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitB
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
 import io.github.resilience4j.springboot3.service.test.DummyService;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import org.apache.http.HttpStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -171,7 +171,6 @@ public class CircuitBreakerAutoConfigurationTest {
     }
 
     private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker circuitBreaker) {
-        int ok=HttpStatus.SC_OK;
         assertThat(circuitBreaker).isNotNull();
         // expect CircuitBreaker is configured as defined in application.yml
         assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);
@@ -188,7 +187,7 @@ public class CircuitBreakerAutoConfigurationTest {
         assertThat(circuitBreaker.getCircuitBreakerConfig().getIgnoreExceptionPredicate()
             .test(new IgnoredException())).isTrue();
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordResultPredicate()
-            .test(ok)).isFalse();
+            .test(HttpStatus.OK)).isFalse();
         // Verify that an exception for which setRecordFailurePredicate returns false and it is not included in
         // setRecordExceptions evaluates to false.
         assertThat(circuitBreaker.getCircuitBreakerConfig().getRecordExceptionPredicate()
