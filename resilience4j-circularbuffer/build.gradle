@@ -1,7 +1,4 @@
 ext.moduleName = "io.github.resilience4j.circularbuffer"
 
 dependencies {
-    testRuntimeOnly(libs.junit.vintage.engine)
-
-    testImplementation(libs.junit)
 }
