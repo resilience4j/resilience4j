@@ -2,9 +2,6 @@ dependencies {
     api(project(":resilience4j-core"))
     api(libs.jcache)
 
-    testRuntimeOnly(libs.junit.vintage.engine)
-
-    testImplementation(libs.junit)
     testImplementation(project(":resilience4j-rxjava2"))
     testImplementation(libs.rxjava2)
     testImplementation(project(":resilience4j-core").sourceSets.test.output)
