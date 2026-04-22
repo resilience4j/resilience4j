@@ -18,12 +18,12 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import com.jayway.awaitility.Awaitility;
 import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedRunnable;
 import io.vavr.control.Try;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

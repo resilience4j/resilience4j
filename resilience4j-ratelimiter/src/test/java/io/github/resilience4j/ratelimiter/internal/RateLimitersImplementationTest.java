@@ -10,9 +10,9 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Tests for functions that are common in all implementations should go here.

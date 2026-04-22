@@ -2,22 +2,22 @@
 micrometer = "1.16.0"
 reactor = "3.4.24"
 
-spring6 = "6.1.1"
-spring-boot3 = "3.2.0"
-spring-cloud3 = "3.1.5"
+spring6 = "6.2.18"
+spring-boot3 = "3.5.13"
+spring-cloud3 = "4.3.2"
 
 spring7 = "7.0.2"
 spring-boot4 = "4.0.0"
 spring-cloud5 = "5.0.0"
 
 [plugins]
-asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "2.4.0" }
+asciidoctor = { id = "org.asciidoctor.jvm.convert", version = "4.0.4" }
 bnd-builder = { id = "biz.aQute.bnd.builder", version = "7.1.0" }
-jmh = { id = "me.champeau.jmh", version = "0.6.8" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.1.21" }
+jmh = { id = "me.champeau.jmh", version = "0.7.3" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "2.3.0" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
-sonarqube = { id = "org.sonarqube", version = "3.5.0.2730" }
-test-retry = { id = "org.gradle.test-retry", version = "1.5.10" }
+sonarqube = { id = "org.sonarqube", version = "6.0.1.5171" }
+test-retry = { id = "org.gradle.test-retry", version = "1.6.4" }
 
 [libraries]
 # Common dependencies
@@ -32,8 +32,8 @@ awaitility = { module = "org.awaitility:awaitility", version = "4.3.0" }
 awaitility-old = { module = "com.jayway.awaitility:awaitility", version = "1.7.0" }
 junit = { module = "junit:junit", version = "4.13.2" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version = "1.2.3" }
-mockito-core = { module = "org.mockito:mockito-core", version = "5.16.1" }
-mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version = "5.16.1" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.23.0" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version = "5.23.0" }
 junit-bom = { module = "org.junit:junit-bom", version = "6.0.3" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
@@ -57,8 +57,8 @@ feign-core = { module = "io.github.openfeign:feign-core", version = "12.0" }
 feign-wiremock = { module = "com.github.tomakehurst:wiremock-jre8", version = "2.26.0" }
 
 # resilience4j-kotlin
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version = "1.9.25" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.6.4" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version = "2.3.0" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
 
 # resilience4j-metrics (Dropwizard)
 metrics-core = { module = "io.dropwizard.metrics:metrics-core", version = "4.1.16" }
@@ -71,6 +71,7 @@ micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-p
 
 # resilience4j-micronaut, resilience4j-micronaut-annotation
 cglib-nodep = { module = "cglib:cglib-nodep", version = "3.3.0" }
+groovy-bom = { module = "org.apache.groovy:groovy-bom", version = "4.0.30" }
 micronaut-aop = { module = "io.micronaut:micronaut-aop" }
 micronaut-core-processor = { module = "io.micronaut:micronaut-core-processor" }
 micronaut-discovery-core = { module = "io.micronaut:micronaut-discovery-core" }

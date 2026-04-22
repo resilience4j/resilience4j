@@ -22,7 +22,7 @@ allprojects {
     }
 
     jacoco {
-        toolVersion = "0.8.12"
+        toolVersion = "0.8.14"
     }
 }
 
@@ -89,8 +89,8 @@ configure(project.coreProjects) {
     }
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
         options.deprecation = true
         options.encoding = "UTF-8"
         options.compilerArgs += ["-Xlint:unchecked", "-parameters"]

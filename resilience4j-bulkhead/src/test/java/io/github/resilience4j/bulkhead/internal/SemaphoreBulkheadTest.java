@@ -42,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static io.github.resilience4j.bulkhead.BulkheadConfig.*;
 import static io.github.resilience4j.bulkhead.event.BulkheadEvent.Type.*;
 import static java.lang.Thread.State.*;
@@ -50,6 +49,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 
 @RunWith(Parameterized.class)
 public class SemaphoreBulkheadTest extends ThreadModeTestBase {

@@ -33,6 +33,9 @@ dependencies {
     testAnnotationProcessor(platform(libs.micronaut.platform))
     testAnnotationProcessor(project(":resilience4j-micronaut-annotation"))
 
+    // Force Groovy 4.0.30 (ASM 9.8) to read JDK 25 bytecode during compileTestGroovy.
+    testImplementation(enforcedPlatform(libs.groovy.bom))
+
     testCompileOnly(project(":resilience4j-micronaut-annotation"))
 
     testImplementation(project(":resilience4j-bulkhead"))
