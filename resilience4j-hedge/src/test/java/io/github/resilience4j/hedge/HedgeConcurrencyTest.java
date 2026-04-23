@@ -4,7 +4,6 @@ import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +40,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
     private ScheduledExecutorService hedgeExecutor;
     private ExecutorService testExecutor;
     private HedgeRegistry hedgeRegistry;
+    private final List<Hedge> createdHedges = new ArrayList<>();
 
     public HedgeConcurrencyTest(ThreadType threadType) {
         super(threadType);
@@ -56,11 +56,29 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
         hedgeExecutor = Executors.newScheduledThreadPool(NUM_THREADS);
         testExecutor = Executors.newFixedThreadPool(NUM_THREADS);
         hedgeRegistry = HedgeRegistry.builder().build();
+        createdHedges.clear();
+    }
+
+    /**
+     * Registers a Hedge created inline in a test so the {@link #tearDown()} can
+     * release the scheduler threads it owns. Virtual-thread scheduler workers are
+     * implicitly daemon and cannot be made non-daemon, so explicit shutdown is
+     * required to stop them deterministically between tests.
+     */
+    private Hedge track(Hedge hedge) {
+        createdHedges.add(hedge);
+        return hedge;
     }
 
     @After
     public void tearDown() {
-        
+        for (Hedge hedge : createdHedges) {
+            hedge.close();
+        }
+        createdHedges.clear();
+
+        hedgeRegistry.close();
+
         if (hedgeExecutor != null && !hedgeExecutor.isShutdown()) {
             hedgeExecutor.shutdown();
             try {
@@ -72,7 +90,7 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
                 Thread.currentThread().interrupt();
             }
         }
-        
+
         if (testExecutor != null && !testExecutor.isShutdown()) {
             testExecutor.shutdown();
             try {
@@ -88,13 +106,9 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleConcurrentHedgeOperations() throws Exception {
-        // Skip virtual thread mode due to known hedge daemon thread limitation
-        Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
-                          isVirtualThreadMode());
-                          
         LOG.info("Testing concurrent hedge operations with {}", getThreadModeDescription());
-        
-        Hedge hedge = Hedge.of(Duration.ofMillis(50));
+
+        Hedge hedge = track(Hedge.of(Duration.ofMillis(50)));
             
             CountDownLatch startLatch = new CountDownLatch(1);
             CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
@@ -140,10 +154,6 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleConcurrentHedgeRegistryOperations() throws Exception {
-        // Skip virtual thread mode due to known hedge daemon thread limitation
-        Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
-                          isVirtualThreadMode());
-                          
         LOG.info("Testing concurrent hedge registry operations with {}", getThreadModeDescription());
         
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -199,17 +209,13 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleConcurrentEventPublishing() throws Exception {
-        // Skip virtual thread mode due to known hedge daemon thread limitation
-        Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
-                          isVirtualThreadMode());
-                          
         LOG.info("Testing concurrent event publishing with {}", getThreadModeDescription());
-        
+
         HedgeConfig config = HedgeConfig.custom()
                 .preconfiguredDuration(Duration.ofMillis(50))
                 .build();
 
-        Hedge hedge = Hedge.of(config);
+        Hedge hedge = track(Hedge.of(config));
 
         // Thread-safe event collection
         List<HedgeEvent> events = Collections.synchronizedList(new ArrayList<>());
@@ -258,17 +264,13 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleRaceConditionsBetweenOperations() throws Exception {
-        // Skip virtual thread mode due to known hedge daemon thread limitation
-        Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
-                          isVirtualThreadMode());
-                          
         LOG.info("Testing race conditions with {}", getThreadModeDescription());
-        
+
         HedgeConfig config = HedgeConfig.custom()
                 .preconfiguredDuration(Duration.ofMillis(30))
                 .build();
 
-        Hedge hedge = Hedge.of(config);
+        Hedge hedge = track(Hedge.of(config));
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
@@ -314,17 +316,13 @@ public class HedgeConcurrencyTest extends ThreadModeTestBase {
 
     @Test
     public void shouldHandleConcurrentHedgeTriggering() throws Exception {
-        // Skip virtual thread mode due to known hedge daemon thread limitation
-        Assume.assumeFalse("Hedge has known issues with virtual threads due to daemon thread limitations", 
-                          isVirtualThreadMode());
-                          
         LOG.info("Testing concurrent hedge triggering with {}", getThreadModeDescription());
-        
+
         HedgeConfig config = HedgeConfig.custom()
                 .preconfiguredDuration(Duration.ofMillis(30))
                 .build();
 
-        Hedge hedge = Hedge.of(config);
+        Hedge hedge = track(Hedge.of(config));
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(5); // Fewer threads for hedge triggering
