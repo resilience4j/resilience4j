@@ -94,18 +94,15 @@ public class BulkheadAspect implements Ordered {
         this.spelResolver = spelResolver;
     }
 
-    @Pointcut(value = "@within(Bulkhead) || @annotation(Bulkhead)", argNames = "Bulkhead")
-    public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
+    @Pointcut(value = "@within(io.github.resilience4j.bulkhead.annotation.Bulkhead) || @annotation(io.github.resilience4j.bulkhead.annotation.Bulkhead)")
+    public void matchAnnotatedClassOrMethod() {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)", argNames = "proceedingJoinPoint, bulkheadAnnotation")
-    public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-        @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
+    @Around(value = "matchAnnotatedClassOrMethod()", argNames = "proceedingJoinPoint")
+    public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (bulkheadAnnotation == null) {
-            bulkheadAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
-        }
+        Bulkhead bulkheadAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
         if (bulkheadAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }

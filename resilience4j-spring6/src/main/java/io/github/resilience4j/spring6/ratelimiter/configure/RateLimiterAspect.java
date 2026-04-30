@@ -97,14 +97,11 @@ public class RateLimiterAspect implements Ordered {
         // Method used as pointcut
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(rateLimiterAnnotation)", argNames = "proceedingJoinPoint, rateLimiterAnnotation")
-    public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-        @Nullable RateLimiter rateLimiterAnnotation) throws Throwable {
+    @Around(value = "matchAnnotatedClassOrMethod()", argNames = "proceedingJoinPoint")
+    public Object rateLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (rateLimiterAnnotation == null) {
-            rateLimiterAnnotation = getRateLimiterAnnotation(proceedingJoinPoint);
-        }
+        RateLimiter rateLimiterAnnotation = getRateLimiterAnnotation(proceedingJoinPoint);
         if (rateLimiterAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
