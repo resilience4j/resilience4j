@@ -19,13 +19,12 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.springboot3.circuitbreaker.autoconfigure.CircuitBreakerProperties;
-import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerAspect;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventDTO;
 import io.github.resilience4j.common.circuitbreaker.monitoring.endpoint.CircuitBreakerEventsEndpointResponse;
+import io.github.resilience4j.spring6.circuitbreaker.configure.CircuitBreakerAspect;
+import io.github.resilience4j.springboot3.circuitbreaker.autoconfigure.CircuitBreakerProperties;
 import io.github.resilience4j.springboot3.service.test.DummyService;
 import io.github.resilience4j.springboot3.service.test.TestApplication;
-import org.apache.http.HttpStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -41,9 +41,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -171,7 +171,7 @@ public class CircuitBreakerAutoConfigurationTest {
     }
 
     private void verifyCircuitBreakerAutoConfiguration(CircuitBreaker circuitBreaker) {
-        int ok=HttpStatus.SC_OK;
+        int ok=HttpStatus.OK.value();
         assertThat(circuitBreaker).isNotNull();
         // expect CircuitBreaker is configured as defined in application.yml
         assertThat(circuitBreaker.getCircuitBreakerConfig().getSlidingWindowSize()).isEqualTo(6);

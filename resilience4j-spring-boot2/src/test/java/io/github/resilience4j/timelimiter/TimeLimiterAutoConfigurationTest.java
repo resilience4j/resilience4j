@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
+
+import static org.awaitility.Awaitility.await;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -113,7 +113,7 @@ public class TimeLimiterAutoConfigurationTest {
             return null;
         });
 
-        waitAtMost(3, TimeUnit.SECONDS).until(matches(() ->
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
 
         TimeLimiterEventsEndpointResponse timeLimiterEventList = timeLimiterEvents("/actuator/timelimiterevents");
@@ -151,7 +151,7 @@ public class TimeLimiterAutoConfigurationTest {
             return null;
         });
 
-        waitAtMost(3, TimeUnit.SECONDS).until(matches(() ->
+        await().atMost(3, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(future).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
 
         TimeLimiterEventsEndpointResponse timeLimiterEventList = timeLimiterEvents("/actuator/timelimiterevents");

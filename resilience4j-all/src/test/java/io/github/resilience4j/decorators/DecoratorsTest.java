@@ -21,16 +21,14 @@ package io.github.resilience4j.decorators;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
 import io.github.resilience4j.cache.Cache;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.core.ContextAwareScheduledThreadPoolExecutor;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
@@ -52,15 +50,12 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static com.jayway.awaitility.Awaitility.matches;
-import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 public class DecoratorsTest {
 
@@ -133,8 +128,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -176,8 +171,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldPropagateThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldPropagateThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(1);
@@ -757,8 +752,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);
@@ -800,8 +795,8 @@ public class DecoratorsTest {
             return null;
         });
 
-        waitAtMost(2, TimeUnit.SECONDS).until(matches(() ->
-            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary")));
+        await().atMost(2, TimeUnit.SECONDS).untilAsserted(() ->
+            assertThat(completableFuture).isCompletedWithValue("ValueShouldCrossThreadBoundary"));
 
         CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         assertThat(metrics.getNumberOfBufferedCalls()).isEqualTo(3);

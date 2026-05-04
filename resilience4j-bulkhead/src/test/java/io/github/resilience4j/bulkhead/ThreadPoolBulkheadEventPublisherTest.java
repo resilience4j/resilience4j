@@ -18,17 +18,16 @@
  */
 package io.github.resilience4j.bulkhead;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
 import io.github.resilience4j.test.HelloWorldService;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 
-import static com.jayway.awaitility.Awaitility.waitAtMost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -67,7 +66,7 @@ public class ThreadPoolBulkheadEventPublisherTest {
     }
 
     @Test
-    public void shouldConsumeOnCallRejectedEvent() {
+    public void shouldConsumeOnCallRejectedEvent() throws InterruptedException {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead
             .of("test", ThreadPoolBulkheadConfig.custom()
                 .maxThreadPoolSize(1)
@@ -79,35 +78,37 @@ public class ThreadPoolBulkheadEventPublisherTest {
             event -> logger.info(event.getEventType().toString()));
         final Exception exception = new Exception();
 
-        new Thread(() -> {
+        // Occupy the running slot with a task that blocks until we release it.
+        // This is deterministic: the subsequent submissions happen only after the
+        // blocker is confirmed to be executing, so the queue/rejection state is
+        // predictable regardless of thread scheduling.
+        CountDownLatch blockerEntered = new CountDownLatch(1);
+        CountDownLatch blockerRelease = new CountDownLatch(1);
+        bulkhead.executeRunnable(() -> {
+            blockerEntered.countDown();
             try {
-                bulkhead.executeRunnable(() -> {
-                    final AtomicInteger counter = new AtomicInteger(0);
-                    waitAtMost(Duration.TWO_HUNDRED_MILLISECONDS)
-                        .until(() -> counter.incrementAndGet() >= 2);
-                });
-            } catch (Exception e) {
-                exception.initCause(e);
+                blockerRelease.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
+        });
+        assertThat(blockerEntered.await(2, TimeUnit.SECONDS))
+            .as("blocker task must be executing inside the bulkhead")
+            .isTrue();
 
-        }).start();
-        new Thread(() -> {
-            try {
-                bulkhead.executeCallable(helloWorldService::returnHelloWorld);
-            } catch (Exception e) {
-                exception.initCause(e);
-            }
-        }).start();
-        new Thread(() -> {
-            try {
-                bulkhead.executeCallable(helloWorldService::returnHelloWorld);
-            } catch (Exception e) {
-                exception.initCause(e);
-            }
-        }).start();
+        // Fill the queue (capacity 1).
+        bulkhead.executeCallable(helloWorldService::returnHelloWorld);
 
-        final AtomicInteger counter = new AtomicInteger(0);
-        waitAtMost(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> counter.incrementAndGet() >= 2);
+        // Third submission: pool is busy and queue is full, so this must be rejected.
+        try {
+            bulkhead.executeCallable(helloWorldService::returnHelloWorld);
+        } catch (Exception e) {
+            exception.initCause(e);
+        }
+
+        // Allow the blocker to complete so the executor can drain cleanly.
+        blockerRelease.countDown();
+
         assertThat(exception).hasCauseInstanceOf(BulkheadFullException.class);
         then(logger).should(times(1)).info("CALL_REJECTED");
     }
