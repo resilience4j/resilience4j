@@ -54,8 +54,8 @@ public class TimeLimiterConfig implements Serializable {
     public String toString() {
         return "TimeLimiterConfig{" +
             "timeoutDuration=" + timeoutDuration +
-            "cancelRunningFuture=" + cancelRunningFuture +
-            '}';
+            ", cancelRunningFuture=" + cancelRunningFuture +
+            "}";
     }
 
     public static class Builder {
