@@ -247,43 +247,25 @@ public class CircuitBreakerConfig implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder circuitBreakerConfig = new StringBuilder("CircuitBreakerConfig {");
-        circuitBreakerConfig.append("recordExceptionPredicate=");
-        circuitBreakerConfig.append(recordExceptionPredicate);
-        circuitBreakerConfig.append(", ignoreExceptionPredicate=");
-        circuitBreakerConfig.append(ignoreExceptionPredicate);
-        circuitBreakerConfig.append(", recordExceptions=");
-        circuitBreakerConfig.append(Arrays.toString(recordExceptions));
-        circuitBreakerConfig.append(", ignoreExceptions=");
-        circuitBreakerConfig.append(Arrays.toString(ignoreExceptions));
-        circuitBreakerConfig.append(", failureRateThreshold=");
-        circuitBreakerConfig.append(failureRateThreshold);
-        circuitBreakerConfig.append(", permittedNumberOfCallsInHalfOpenState=");
-        circuitBreakerConfig.append(permittedNumberOfCallsInHalfOpenState);
-        circuitBreakerConfig.append(", slidingWindowSize=");
-        circuitBreakerConfig.append(slidingWindowSize);
-        circuitBreakerConfig.append(", slidingWindowType=");
-        circuitBreakerConfig.append(slidingWindowType);
-        circuitBreakerConfig.append(", slidingWindowSynchronizationStrategy=");
-        circuitBreakerConfig.append(slidingWindowSynchronizationStrategy);
-        circuitBreakerConfig.append(", minimumNumberOfCalls=");
-        circuitBreakerConfig.append(minimumNumberOfCalls);
-        circuitBreakerConfig.append(", writableStackTraceEnabled=");
-        circuitBreakerConfig.append(writableStackTraceEnabled);
-        circuitBreakerConfig.append(", automaticTransitionFromOpenToHalfOpenEnabled=");
-        circuitBreakerConfig.append(automaticTransitionFromOpenToHalfOpenEnabled);
-        circuitBreakerConfig.append(", initialState=");
-        circuitBreakerConfig.append(initialState);
-        circuitBreakerConfig.append(", waitIntervalFunctionInOpenState=");
-        circuitBreakerConfig.append(waitIntervalFunctionInOpenState);
-        circuitBreakerConfig.append(", slowCallRateThreshold=");
-        circuitBreakerConfig.append(slowCallRateThreshold);
-        circuitBreakerConfig.append(", slowCallDurationThreshold=");
-        circuitBreakerConfig.append(slowCallDurationThreshold);
-        circuitBreakerConfig.append(", ignoreExceptionsPrecedenceEnabled=");
-        circuitBreakerConfig.append(ignoreExceptionsPrecedenceEnabled);
-        circuitBreakerConfig.append("}");
-        return circuitBreakerConfig.toString();
+        return "CircuitBreakerConfig{" +
+            "recordExceptionPredicate=" + recordExceptionPredicate +
+            ", ignoreExceptionPredicate=" + ignoreExceptionPredicate +
+            ", recordExceptions=" + Arrays.toString(recordExceptions) +
+            ", ignoreExceptions=" + Arrays.toString(ignoreExceptions) +
+            ", failureRateThreshold=" + failureRateThreshold +
+            ", permittedNumberOfCallsInHalfOpenState=" + permittedNumberOfCallsInHalfOpenState +
+            ", slidingWindowSize=" + slidingWindowSize +
+            ", slidingWindowType=" + slidingWindowType +
+            ", slidingWindowSynchronizationStrategy=" + slidingWindowSynchronizationStrategy +
+            ", minimumNumberOfCalls=" + minimumNumberOfCalls +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            ", automaticTransitionFromOpenToHalfOpenEnabled=" + automaticTransitionFromOpenToHalfOpenEnabled +
+            ", initialState=" + initialState +
+            ", waitIntervalFunctionInOpenState=" + waitIntervalFunctionInOpenState +
+            ", slowCallRateThreshold=" + slowCallRateThreshold +
+            ", slowCallDurationThreshold=" + slowCallDurationThreshold +
+            ", ignoreExceptionsPrecedenceEnabled=" + ignoreExceptionsPrecedenceEnabled +
+            "}";
     }
 
     /**

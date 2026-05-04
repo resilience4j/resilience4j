@@ -93,13 +93,12 @@ public class BulkheadConfig implements Serializable {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("BulkheadConfig{");
-        sb.append("maxConcurrentCalls=").append(maxConcurrentCalls);
-        sb.append(", maxWaitDuration=").append(maxWaitDuration);
-        sb.append(", writableStackTraceEnabled=").append(writableStackTraceEnabled);
-        sb.append(", fairCallHandlingEnabled=").append(fairCallHandlingEnabled);
-        sb.append('}');
-        return sb.toString();
+        return "BulkheadConfig{" +
+            "maxConcurrentCalls=" + maxConcurrentCalls +
+            ", maxWaitDuration=" + maxWaitDuration +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            ", fairCallHandlingEnabled=" + fairCallHandlingEnabled +
+            "}";
     }
 
     public static class Builder {
