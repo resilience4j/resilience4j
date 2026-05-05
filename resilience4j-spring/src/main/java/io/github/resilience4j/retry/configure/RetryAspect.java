@@ -96,18 +96,15 @@ public class RetryAspect implements Ordered, AutoCloseable {
             Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
-    @Pointcut(value = "@within(retry) || @annotation(retry)", argNames = "retry")
-    public void matchAnnotatedClassOrMethod(Retry retry) {
+    @Pointcut(value = "@within(io.github.resilience4j.retry.annotation.Retry) || @annotation(io.github.resilience4j.retry.annotation.Retry)")
+    public void matchAnnotatedClassOrMethod() {
     }
 
-    @Around(value = "matchAnnotatedClassOrMethod(retryAnnotation)", argNames = "proceedingJoinPoint, retryAnnotation")
-    public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
-        @Nullable Retry retryAnnotation) throws Throwable {
+    @Around(value = "matchAnnotatedClassOrMethod()", argNames = "proceedingJoinPoint")
+    public Object retryAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (retryAnnotation == null) {
-            retryAnnotation = getRetryAnnotation(proceedingJoinPoint);
-        }
+        Retry retryAnnotation = getRetryAnnotation(proceedingJoinPoint);
         if (retryAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
         }
