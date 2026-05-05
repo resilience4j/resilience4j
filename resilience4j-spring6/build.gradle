@@ -13,6 +13,7 @@ dependencies {
     compileOnly(libs.rxjava3)
     compileOnly(libs.spring6.context)
     compileOnly(libs.spring6.core)
+    compileOnly(libs.spring6.web)
 
     testRuntimeOnly(libs.junit.vintage.engine)
 
@@ -30,5 +31,6 @@ dependencies {
     testImplementation(libs.spring.boot3.test)
     testImplementation(libs.spring.boot3.web)
     testImplementation(libs.spring6.context)
+    testImplementation(libs.wiremock)
 }
 ext.moduleName = "io.github.resilience4j.spring6"
