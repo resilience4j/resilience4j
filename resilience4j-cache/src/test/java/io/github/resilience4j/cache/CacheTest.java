@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ package io.github.resilience4j.cache;
 import io.github.resilience4j.cache.event.CacheEvent;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.reactivex.subscribers.TestSubscriber;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -32,21 +32,24 @@ import java.util.function.Function;
 
 import static io.github.resilience4j.adapter.RxJava2Adapter.toFlowable;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 
-public class CacheTest {
+class CacheTest {
 
     private javax.cache.Cache<String, String> cache;
 
     @SuppressWarnings("unchecked")
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         cache = mock(javax.cache.Cache.class);
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
+    void shouldReturnValueFromDecoratedCheckedSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -61,14 +64,14 @@ public class CacheTest {
 
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
-        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isOne();
         testSubscriber
             .assertValueCount(1)
             .assertValues(CacheEvent.Type.CACHE_MISS);
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedSupplier() {
+    void shouldReturnValueFromDecoratedSupplier() {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -83,14 +86,14 @@ public class CacheTest {
 
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
-        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isOne();
         testSubscriber
             .assertValueCount(1)
             .assertValues(CacheEvent.Type.CACHE_MISS);
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedCallable() throws Throwable {
+    void shouldReturnValueFromDecoratedCallable() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         given(cache.invoke(eq("testKey"), any())).willAnswer(new CacheInvokeAnswer());
         Cache<String, String> cacheContext = Cache.of(cache);
@@ -105,14 +108,14 @@ public class CacheTest {
 
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
-        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isOne();
         testSubscriber
             .assertValueCount(1)
             .assertValues(CacheEvent.Type.CACHE_MISS);
     }
 
     @Test
-    public void shouldReturnValueOfSupplier() throws Throwable {
+    void shouldReturnValueOfSupplier() throws Throwable {
         given(cache.get("testKey")).willReturn(null);
         willThrow(new RuntimeException("Cache is not available")).given(cache)
             .invoke(eq("testKey"), any());
@@ -128,14 +131,14 @@ public class CacheTest {
 
         assertThat(value).isEqualTo("Hello world");
         assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isZero();
-        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isEqualTo(1);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isOne();
         testSubscriber
             .assertValueCount(2)
             .assertValues(CacheEvent.Type.CACHE_MISS, CacheEvent.Type.ERROR);
     }
 
     @Test
-    public void shouldReturnCachedValue() throws Throwable {
+    void shouldReturnCachedValue() throws Throwable {
         given(cache.get("testKey")).willReturn("Hello from cache");
         Cache<String, String> cacheContext = Cache.of(cache);
         TestSubscriber<CacheEvent.Type> testSubscriber =
@@ -148,7 +151,7 @@ public class CacheTest {
         String value = cachedFunction.apply("testKey");
 
         assertThat(value).isEqualTo("Hello from cache");
-        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isEqualTo(1);
+        assertThat(cacheContext.getMetrics().getNumberOfCacheHits()).isOne();
         assertThat(cacheContext.getMetrics().getNumberOfCacheMisses()).isZero();
         testSubscriber
             .assertValueCount(1)
@@ -156,7 +159,7 @@ public class CacheTest {
     }
 
     @Test
-    public void shouldReturnValueFromDecoratedCallableBecauseOfException() throws Throwable {
+    void shouldReturnValueFromDecoratedCallableBecauseOfException() throws Throwable {
         given(cache.get("testKey")).willThrow(new RuntimeException("Cache is not available"));
         given(cache.invoke(eq("testKey"), any())).willThrow(new RuntimeException("Cache is not available"));
         Cache<String, String> cacheContext = Cache.of(cache);
