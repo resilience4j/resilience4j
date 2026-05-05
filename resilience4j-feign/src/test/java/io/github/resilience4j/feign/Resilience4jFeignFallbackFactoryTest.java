@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2019
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,43 +16,51 @@
  */
 package io.github.resilience4j.feign;
 
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.feign.test.TestServiceFallbackThrowingException;
 import io.github.resilience4j.feign.test.TestServiceFallbackWithException;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.function.Function;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests on fallback factories.
  */
-public class Resilience4jFeignFallbackFactoryTest {
+@WireMockTest
+class Resilience4jFeignFallbackFactoryTest {
 
-    @ClassRule
-    public static final WireMockClassRule WIRE_MOCK_RULE = new WireMockClassRule(8080);
-    private static final String MOCK_URL = "http://localhost:8080/";
-    @Rule
-    public WireMockClassRule instanceRule = WIRE_MOCK_RULE;
+    private String baseUrl;
 
-    private static TestService buildTestService(Function<Exception, ?> fallbackSupplier) {
+    @BeforeEach
+    void setUp(WireMockRuntimeInfo wmRuntimeInfo) {
+        baseUrl = wmRuntimeInfo.getHttpBaseUrl() + "/";
+    }
+
+    private TestService buildTestService(Function<Exception, ?> fallbackSupplier) {
         FeignDecorators decorators = FeignDecorators.builder()
             .withFallbackFactory(fallbackSupplier)
             .build();
         return Feign.builder()
             .addCapability(Resilience4jFeign.capability(decorators))
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
     }
 
     private static void setupStub(int responseCode) {
@@ -64,7 +72,7 @@ public class Resilience4jFeignFallbackFactoryTest {
     }
 
     @Test
-    public void should_successfully_get_a_response() {
+    void successfullyGetsResponse() {
         setupStub(200);
         TestService testService = buildTestService(e -> "my fallback");
 
@@ -75,7 +83,7 @@ public class Resilience4jFeignFallbackFactoryTest {
     }
 
     @Test
-    public void should_lazily_fail_on_invalid_fallback() {
+    void lazilyFailsOnInvalidFallback() {
         TestService testService = buildTestService(e -> "my fallback");
 
         Throwable throwable = catchThrowable(testService::greeting);
@@ -86,7 +94,7 @@ public class Resilience4jFeignFallbackFactoryTest {
     }
 
     @Test
-    public void should_go_to_fallback_and_consume_exception() {
+    void goesToFallbackAndConsumesException() {
         setupStub(400);
         TestService testService = buildTestService(TestServiceFallbackWithException::new);
 
@@ -98,20 +106,20 @@ public class Resilience4jFeignFallbackFactoryTest {
     }
 
     @Test
-    public void should_go_to_fallback_and_rethrow_an_exception_thrown_in_fallback() {
+    void goesToFallbackAndRethrowsExceptionThrownInFallback() {
         setupStub(400);
         TestService testService = buildTestService(e -> new TestServiceFallbackThrowingException());
 
         Throwable result = catchThrowable(testService::greeting);
 
-        assertThat(result).isNotNull()
+        assertThat(result)
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Exception in greeting fallback");
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
     @Test
-    public void should_go_to_fallback_and_consume_exception_with_exception_filter() {
+    void goesToFallbackAndConsumesExceptionWithExceptionFilter() {
         setupStub(400);
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
@@ -120,18 +128,18 @@ public class Resilience4jFeignFallbackFactoryTest {
             .withFallbackFactory(e -> uselessFallback)
             .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
 
         String result = testService.greeting();
 
         assertThat(result)
             .startsWith("Message from exception: [400 Bad Request]");
-        verify(uselessFallback, times(0)).greeting();
+        verify(uselessFallback, never()).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
     @Test
-    public void should_go_to_second_fallback_and_consume_exception_with_exception_filter() {
+    void goesToSecondFallbackAndConsumesExceptionWithExceptionFilter() {
         setupStub(400);
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
@@ -140,18 +148,18 @@ public class Resilience4jFeignFallbackFactoryTest {
             .withFallbackFactory(TestServiceFallbackWithException::new)
             .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
 
         String result = testService.greeting();
 
         assertThat(result)
             .startsWith("Message from exception: [400 Bad Request]");
-        verify(uselessFallback, times(0)).greeting();
+        verify(uselessFallback, never()).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
     @Test
-    public void should_go_to_fallback_and_consume_exception_with_predicate() {
+    void goesToFallbackAndConsumesExceptionWithPredicate() {
         setupStub(400);
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
@@ -161,18 +169,18 @@ public class Resilience4jFeignFallbackFactoryTest {
             .withFallbackFactory(e -> uselessFallback)
             .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
 
         String result = testService.greeting();
 
         assertThat(result)
             .startsWith("Message from exception: [400 Bad Request]");
-        verify(uselessFallback, times(0)).greeting();
+        verify(uselessFallback, never()).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
     @Test
-    public void should_go_to_second_fallback_and_consume_exception_with_predicate() {
+    void goesToSecondFallbackAndConsumesExceptionWithPredicate() {
         setupStub(400);
         TestService uselessFallback = spy(TestService.class);
         when(uselessFallback.greeting()).thenReturn("I should not be called");
@@ -181,13 +189,13 @@ public class Resilience4jFeignFallbackFactoryTest {
             .withFallbackFactory(TestServiceFallbackWithException::new)
             .build();
         TestService testService = Resilience4jFeign.builder(decorators)
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
 
         String result = testService.greeting();
 
         assertThat(result)
             .startsWith("Message from exception: [400 Bad Request]");
-        verify(uselessFallback, times(0)).greeting();
+        verify(uselessFallback, never()).greeting();
         verify(1, getRequestedFor(urlPathEqualTo("/greeting")));
     }
 
