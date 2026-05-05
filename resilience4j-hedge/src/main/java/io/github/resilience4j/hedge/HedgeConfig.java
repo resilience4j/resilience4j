@@ -92,11 +92,11 @@ public class HedgeConfig implements Serializable {
     @Override
     public String toString() {
         return "HedgeConfig{" +
-            shouldUseFactorAsPercentage + "," +
-            hedgeTimeFactor + "," +
-            shouldMeasureErrors + "," +
-            windowSize + "," +
-            cutoff +
+            "shouldUseFactorAsPercentage="+shouldUseFactorAsPercentage +
+            ", hedgeTimeFactor=" + hedgeTimeFactor +
+            ", shouldMeasureErrors=" + shouldMeasureErrors +
+            ", windowSize=" + windowSize +
+            ", cutoff=" + cutoff +
             "}";
     }
 

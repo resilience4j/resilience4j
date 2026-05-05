@@ -236,10 +236,10 @@ public class SemaphoreBasedRateLimiter implements RateLimiter {
 
     @Override
     public String toString() {
-        return "SemaphoreBasedRateLimiter{"
-            + "name='" + name + '\''
-            + ", rateLimiterConfig=" + rateLimiterConfig
-            + '}';
+        return "SemaphoreBasedRateLimiter{" +
+            "name='" + name + '\'' +
+            ", rateLimiterConfig=" + rateLimiterConfig +
+            "}";
     }
 
     @Override

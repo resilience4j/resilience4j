@@ -21,7 +21,6 @@ package io.github.resilience4j.micrometer;
 import io.github.resilience4j.core.lang.NonNull;
 import io.github.resilience4j.core.lang.Nullable;
 
-import java.util.StringJoiner;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -86,10 +85,10 @@ public class TimerConfig {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", TimerConfig.class.getSimpleName() + "[", "]")
-                .add("metricNames=" + metricNames)
-                .add("onFailureTagResolver=" + onFailureTagResolver)
-                .toString();
+        return "TimerConfig{" +
+            "metricNames='" + metricNames + "'" +
+            ", onFailureTagResolver=" + onFailureTagResolver +
+            "}";
     }
 
     /**

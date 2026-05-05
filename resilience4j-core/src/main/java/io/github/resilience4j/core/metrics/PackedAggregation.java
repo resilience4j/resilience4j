@@ -142,6 +142,6 @@ public class PackedAggregation implements CumulativeMeasurement {
         return "PackedAggregation{" +
             "durations=" + Arrays.toString(durations) +
             ", counts=" + Arrays.toString(counts) +
-            '}';
+            "}";
     }
 }

@@ -162,31 +162,21 @@ public class RetryConfig implements Serializable {
     public <T> BiConsumer<Integer, T> getConsumeResultBeforeRetryAttempt(){
         return consumeResultBeforeRetryAttempt;
     }
+
     @Override
     public String toString() {
-        StringBuilder retryConfig = new StringBuilder("RetryConfig {");
-        retryConfig.append("maxAttempts=");
-        retryConfig.append(maxAttempts);
-        retryConfig.append(", failAfterMaxAttempts=");
-        retryConfig.append(failAfterMaxAttempts);
-        retryConfig.append(", writableStackTraceEnabled=");
-        retryConfig.append(writableStackTraceEnabled);
-        retryConfig.append(", intervalFunction=");
-        retryConfig.append(intervalFunction);
-        retryConfig.append(", retryOnExceptionPredicate=");
-        retryConfig.append(retryOnExceptionPredicate);
-        retryConfig.append(", retryOnResultPredicate=");
-        retryConfig.append(retryOnResultPredicate);
-        retryConfig.append(", intervalBiFunction=");
-        retryConfig.append(intervalBiFunction);
-        retryConfig.append(", consumeResultBeforeRetryAttempt=");
-        retryConfig.append(consumeResultBeforeRetryAttempt);
-        retryConfig.append(", retryExceptions=");
-        retryConfig.append(Arrays.toString(retryExceptions));
-        retryConfig.append(", ignoreExceptions=");
-        retryConfig.append(Arrays.toString(ignoreExceptions));
-        retryConfig.append("}");
-        return retryConfig.toString();
+        return "RetryConfig{" +
+            "maxAttempts=" + maxAttempts +
+            ", failAfterMaxAttempts=" + failAfterMaxAttempts +
+            ", writableStackTraceEnabled=" + writableStackTraceEnabled +
+            ", intervalFunction=" + intervalFunction +
+            ", retryOnExceptionPredicate=" + retryOnExceptionPredicate +
+            ", retryOnResultPredicate=" + retryOnResultPredicate +
+            ", intervalBiFunction=" + intervalBiFunction +
+            ", consumeResultBeforeRetryAttempt=" + consumeResultBeforeRetryAttempt +
+            ", retryExceptions=" + Arrays.toString(retryExceptions) +
+            ", ignoreExceptions=" + Arrays.toString(ignoreExceptions) +
+            "}";
     }
 
     public static class Builder<T> {
