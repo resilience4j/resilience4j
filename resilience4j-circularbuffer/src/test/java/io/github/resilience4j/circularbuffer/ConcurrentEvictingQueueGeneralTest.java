@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@
  */
 package io.github.resilience4j.circularbuffer;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -29,92 +27,92 @@ import java.util.Queue;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
-public class ConcurrentEvictingQueueGeneralTest {
+class ConcurrentEvictingQueueGeneralTest {
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
-    @Test(expected = IllegalArgumentException.class)
-    public void zeroCapacity() throws Exception {
-        new ConcurrentEvictingQueue<Integer>(0);
+    @Test
+    void zeroCapacity() {
+        assertThatThrownBy(() -> new ConcurrentEvictingQueue<Integer>(0))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void negativeCapacity() throws Exception {
-        new ConcurrentEvictingQueue<Integer>(-1);
+    @Test
+    void negativeCapacity() {
+        assertThatThrownBy(() -> new ConcurrentEvictingQueue<Integer>(-1))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
 
     @Test
-    public void iterator() throws Exception {
+    void iterator() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
         queue.addAll(asList(1, 2, 3, 4, 5));
         Iterator<Integer> iterator = queue.iterator();
-        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator).hasNext();
         Integer first = iterator.next();
         assertThat(first).isEqualTo(4);
 
-        exception.expect(UnsupportedOperationException.class);
-        iterator.remove();
+        assertThatThrownBy(iterator::remove)
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
-    public void iteratorIllegalNext() throws Exception {
+    void iteratorIllegalNext() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
         queue.addAll(asList(1, 2, 3, 4, 5));
         Iterator<Integer> iterator = queue.iterator();
-        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator).hasNext();
         Integer first = iterator.next();
         assertThat(first).isEqualTo(4);
 
-        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator).hasNext();
         Integer second = iterator.next();
         assertThat(second).isEqualTo(5);
 
-        assertThat(iterator.hasNext()).isFalse();
-        exception.expect(NoSuchElementException.class);
-        iterator.next();
+        assertThat(iterator).isExhausted();
+        assertThatThrownBy(iterator::next)
+                .isInstanceOf(NoSuchElementException.class);
     }
 
     @Test
-    public void iteratorModificationAdd() throws Exception {
+    void iteratorModificationAdd() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
         queue.addAll(asList(4, 5));
         Iterator<Integer> iterator = queue.iterator();
 
         queue.peek();
 
-        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator).hasNext();
         Integer first = iterator.next();
         assertThat(first).isEqualTo(4);
 
         queue.add(6);
-        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator).hasNext();
 
-        exception.expect(ConcurrentModificationException.class);
-        iterator.next();
+        assertThatThrownBy(iterator::next)
+                .isInstanceOf(ConcurrentModificationException.class);
     }
 
     @Test
-    public void iteratorModificationPoll() throws Exception {
+    void iteratorModificationPoll() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
         queue.addAll(asList(4, 5));
         Iterator<Integer> iterator = queue.iterator();
 
-        assertThat(iterator.hasNext()).isTrue();
+        assertThat(iterator).hasNext();
         Integer element = iterator.next();
         assertThat(element).isEqualTo(4);
 
         queue.poll();
 
-        exception.expect(ConcurrentModificationException.class);
-        iterator.next();
+        assertThatThrownBy(iterator::next)
+                .isInstanceOf(ConcurrentModificationException.class);
     }
 
     @Test
-    public void poll() throws Exception {
+    void poll() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
         assertThat(queue).isEmpty();
 
@@ -148,7 +146,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     }
 
     @Test
-    public void offer() throws Exception {
+    void offer() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(3);
         assertThat(queue).isEmpty();
 
@@ -171,7 +169,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     }
 
     @Test
-    public void offerWithOneLength() throws Exception {
+    void offerWithOneLength() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(1);
         assertThat(queue).isEmpty();
 
@@ -185,7 +183,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     }
 
     @Test
-    public void peek() throws Exception {
+    void peek() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
 
         Integer emptyPeek = queue.peek();
@@ -195,19 +193,19 @@ public class ConcurrentEvictingQueueGeneralTest {
         assertThat(queue.toArray()).containsExactly(1);
 
         Integer first = queue.peek();
-        assertThat(first).isEqualTo(1);
+        assertThat(first).isOne();
         assertThat(queue.toArray()).containsExactly(1);
 
         queue.offer(2);
         assertThat(queue.toArray()).containsExactly(1, 2);
 
         Integer second = queue.peek();
-        assertThat(second).isEqualTo(1);
+        assertThat(second).isOne();
         assertThat(queue.toArray()).containsExactly(1, 2);
     }
 
     @Test
-    public void clear() throws Exception {
+    void clear() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(2);
         assertThat(queue).isEmpty();
         queue.clear();
@@ -228,7 +226,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     }
 
     @Test
-    public void toArray() throws Exception {
+    void toArray() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(5);
         Object[] objects = queue.toArray();
         assertThat(objects).isEmpty();
@@ -249,7 +247,7 @@ public class ConcurrentEvictingQueueGeneralTest {
     }
 
     @Test
-    public void toPreAllocatedArray() throws Exception {
+    void toPreAllocatedArray() {
         Queue<Integer> queue = new ConcurrentEvictingQueue<>(5);
 
         Integer[] emptyArray = queue.toArray(new Integer[]{});
