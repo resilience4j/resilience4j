@@ -1,6 +1,7 @@
 package io.github.resilience4j.spring6.timelimiter.configure;
 
 import io.github.resilience4j.spring6.TestApplication;
+import io.github.resilience4j.spring6.TimeLimiterDummyService;
 import io.github.resilience4j.spring6.TestDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,9 +21,24 @@ public class TimeLimiterRecoveryTest {
     @Qualifier("timeLimiterDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    TimeLimiterDummyService timeLimiterDummyService;
+
     @Test
     public void testAsyncRecovery() throws Exception {
         String result = testDummyService.async().toCompletableFuture().get(5, TimeUnit.SECONDS);
+        assertThat(result).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationRecovery() throws Exception {
+        String result = timeLimiterDummyService.composedAsync().toCompletableFuture().get(5, TimeUnit.SECONDS);
+        assertThat(result).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationSpelRecovery() throws Exception {
+        String result = timeLimiterDummyService.composedSpelAsync("backendB").toCompletableFuture().get(5, TimeUnit.SECONDS);
         assertThat(result).isEqualTo("recovered");
     }
 

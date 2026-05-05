@@ -2,10 +2,15 @@ package io.github.resilience4j.spring6;
 
 import io.github.resilience4j.retry.annotation.Retry;
 import io.reactivex.*;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,6 +18,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RetryDummyService implements TestDummyService {
 
     private final AtomicInteger attemptCounter = new AtomicInteger(0);
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Retry(name = BACKEND, fallbackMethod = "recovery")
+    public @interface ComposedRetry {
+        @AliasFor(annotation = Retry.class, attribute = "name")
+        String name() default BACKEND;
+
+        @AliasFor(annotation = Retry.class, attribute = "fallbackMethod")
+        String fallbackMethod() default "recovery";
+    }
 
     @Override
     @Retry(name = BACKEND, fallbackMethod = "recovery")
@@ -136,5 +152,15 @@ public class RetryDummyService implements TestDummyService {
     @Retry(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "#{'recovery'}")
     public String spelSyncWithCfg(String backend) {
         return backend;
+    }
+
+    @ComposedRetry
+    public String composedSync() {
+        return syncError();
+    }
+
+    @ComposedRetry(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String composedSpelSync(String backend) {
+        return syncError();
     }
 }

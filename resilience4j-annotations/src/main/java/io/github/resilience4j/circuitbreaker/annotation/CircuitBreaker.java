@@ -25,7 +25,7 @@ import java.lang.annotation.*;
  * {@code name} and {@code fallbackMethod} can be resolved using Spring Expression Language (SpEL).
  */
 @Retention(value = RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.METHOD, ElementType.TYPE})
+@Target(value = {ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Documented
 public @interface CircuitBreaker {
 
