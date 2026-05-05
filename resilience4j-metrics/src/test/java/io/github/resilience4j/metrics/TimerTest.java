@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017: Robert Winkler
+ *  Copyright 2026: Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,10 +24,8 @@ import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.test.HelloWorldException;
 import io.github.resilience4j.test.HelloWorldService;
-import io.vavr.collection.Stream;
-import io.vavr.control.Try;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -35,8 +33,9 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,7 +44,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
-public class TimerTest {
+class TimerTest {
 
     private HelloWorldService helloWorldService;
 
@@ -53,54 +52,54 @@ public class TimerTest {
 
     private MetricRegistry metricRegistry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         metricRegistry = new MetricRegistry();
         timer = Timer.ofMetricRegistry(TimerTest.class.getName(), metricRegistry);
         helloWorldService = mock(HelloWorldService.class);
     }
 
     @Test
-    public void shouldDecorateCheckedSupplier() throws Throwable {
+    void shouldDecorateCheckedSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         CheckedSupplier<String> timedSupplier = Timer
             .decorateCheckedSupplier(timer, helloWorldService::returnHelloWorldWithException);
 
         String value = timedSupplier.get();
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(metricRegistry.getCounters()).hasSize(2);
-        assertThat(metricRegistry.getTimers().size()).isEqualTo(1);
+        assertThat(metricRegistry.getTimers()).hasSize(1);
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
-    public void shouldDecorateCallable() throws Throwable {
+    void shouldDecorateCallable() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
         Callable<String> timedSupplier = Timer
             .decorateCallable(timer, helloWorldService::returnHelloWorldWithException);
 
         String value = timedSupplier.call();
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
     }
 
     @Test
-    public void shouldExecuteCallable() throws Throwable {
+    void shouldExecuteCallable() throws Throwable {
         given(helloWorldService.returnHelloWorldWithException()).willReturn("Hello world");
 
         String value = timer
             .executeCallable(helloWorldService::returnHelloWorldWithException);
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         assertThat(value).isEqualTo("Hello world");
         then(helloWorldService).should(times(1)).returnHelloWorldWithException();
@@ -108,29 +107,29 @@ public class TimerTest {
 
 
     @Test
-    public void shouldDecorateRunnable() throws Throwable {
+    void shouldDecorateRunnable() throws Throwable {
         Runnable timedRunnable = Timer.decorateRunnable(timer, helloWorldService::sayHelloWorld);
 
         timedRunnable.run();
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
     @Test
-    public void shouldExecuteRunnable() throws Throwable {
+    void shouldExecuteRunnable() throws Throwable {
         timer.executeRunnable(helloWorldService::sayHelloWorld);
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should(times(1)).sayHelloWorld();
     }
 
     @Test
-    public void shouldExecuteCompletionStageSupplier() throws Throwable {
+    void shouldExecuteCompletionStageSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<CompletionStage<String>> completionStageSupplier =
             () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
@@ -140,16 +139,16 @@ public class TimerTest {
         String value = stringCompletionStage.toCompletableFuture().get();
         assertThat(value).isEqualTo("Hello world");
         await().atMost(1, SECONDS)
-            .until(() -> {
-                assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-                assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+            .untilAsserted(() -> {
+            assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+            assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
                 assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
             });
         then(helloWorldService).should(times(1)).returnHelloWorld();
     }
 
     @Test
-    public void shouldExecuteCompletionStageAndReturnWithExceptionAtSyncStage() throws Throwable {
+    void shouldExecuteCompletionStageAndReturnWithExceptionAtSyncStage() throws Throwable {
         Supplier<CompletionStage<String>> completionStageSupplier = () -> {
             throw new HelloWorldException();
         };
@@ -157,14 +156,14 @@ public class TimerTest {
         assertThatThrownBy(() -> timer.executeCompletionStageSupplier(completionStageSupplier))
             .isInstanceOf(HelloWorldException.class);
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isOne();
     }
 
 
     @Test
-    public void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() throws Throwable {
+    void shouldExecuteCompletionStageAndReturnWithExceptionAtASyncStage() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willThrow(new HelloWorldException());
         Supplier<CompletionStage<String>> completionStageSupplier =
             () -> CompletableFuture.supplyAsync(helloWorldService::returnHelloWorld);
@@ -174,50 +173,49 @@ public class TimerTest {
         assertThatThrownBy(() -> stringCompletionStage.toCompletableFuture().get())
             .isInstanceOf(ExecutionException.class).hasCause(new HelloWorldException());
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isOne();
         then(helloWorldService).should().returnHelloWorld();
     }
 
 
     @Test
-    public void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedRunnableAndReturnWithSuccess() throws Throwable {
         CheckedRunnable timedRunnable = Timer
             .decorateCheckedRunnable(timer, helloWorldService::sayHelloWorldWithException);
 
         timedRunnable.run();
 
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().sayHelloWorldWithException();
     }
 
     @Test
-    public void shouldDecorateSupplierAndReturnWithException() throws Throwable {
+    void shouldDecorateSupplierAndReturnWithException() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willThrow(new RuntimeException("BAM!"));
         Supplier<String> supplier = Timer
             .decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
-        Try<String> result = Try.of(supplier::get);
+        assertThatThrownBy(supplier::get)
+            .isInstanceOf(RuntimeException.class);
 
-        assertThat(result.isFailure()).isTrue();
-        assertThat(result.failed().get()).isInstanceOf(RuntimeException.class);
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isZero();
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isOne();
         then(helloWorldService).should(times(1)).returnHelloWorld();
 
     }
 
     @Test
-    public void shouldDecorateSupplier() throws Throwable {
+    void shouldDecorateSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world");
         Supplier<String> timedSupplier = Timer
             .decorateSupplier(timer, helloWorldService::returnHelloWorld);
 
-        Stream.range(0, 2).forEach((i) -> timedSupplier.get());
+        IntStream.range(0, 2).forEach((i) -> timedSupplier.get());
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(2);
         assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(2);
@@ -226,11 +224,11 @@ public class TimerTest {
     }
 
     @Test
-    public void shouldExecuteSupplier() throws Throwable {
+    void shouldExecuteSupplier() throws Throwable {
         given(helloWorldService.returnHelloWorld()).willReturn("Hello world")
             .willThrow(new IllegalArgumentException("BAM!"));
 
-        Stream.range(0, 2).forEach((i) -> {
+        IntStream.range(0, 2).forEach((i) -> {
             try {
                 timer.executeSupplier(helloWorldService::returnHelloWorld);
             } catch (Exception e) {
@@ -239,14 +237,14 @@ public class TimerTest {
         });
 
         assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(2);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfFailedCalls()).isOne();
         then(helloWorldService).should(times(2)).returnHelloWorld();
     }
 
 
     @Test
-    public void shouldDecorateFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateFunctionAndReturnWithSuccess() throws Throwable {
         given(helloWorldService.returnHelloWorldWithName("Tom")).willReturn("Hello world Tom");
         Function<String, String> function = Timer
             .decorateFunction(timer, helloWorldService::returnHelloWorldWithName);
@@ -254,14 +252,14 @@ public class TimerTest {
         String result = function.apply("Tom");
 
         assertThat(result).isEqualTo("Hello world Tom");
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithName("Tom");
     }
 
     @Test
-    public void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
+    void shouldDecorateCheckedFunctionAndReturnWithSuccess() throws Throwable {
         given(helloWorldService.returnHelloWorldWithNameWithException("Tom"))
             .willReturn("Hello world Tom");
         CheckedFunction<String, String> function = Timer.decorateCheckedFunction(timer,
@@ -270,8 +268,8 @@ public class TimerTest {
         String result = function.apply("Tom");
 
         assertThat(result).isEqualTo("Hello world Tom");
-        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isEqualTo(1);
-        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isEqualTo(1);
+        assertThat(timer.getMetrics().getNumberOfTotalCalls()).isOne();
+        assertThat(timer.getMetrics().getNumberOfSuccessfulCalls()).isOne();
         assertThat(timer.getMetrics().getNumberOfFailedCalls()).isZero();
         then(helloWorldService).should().returnHelloWorldWithNameWithException("Tom");
     }
