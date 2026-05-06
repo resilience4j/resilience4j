@@ -30,6 +30,12 @@ public class BulkheadFullException extends RuntimeException {
         this.bulkheadName = bulkheadName;
     }
 
+    private BulkheadFullException(String bulkheadName, boolean writableStackTrace) {
+        super(String.format("Bulkhead '%s' is full and does not permit further calls", bulkheadName), null, false, writableStackTrace);
+
+        this.bulkheadName = bulkheadName;
+    }
+
     /**
      * Static method to construct a {@link BulkheadFullException} with a Bulkhead.
      *
@@ -41,17 +47,11 @@ public class BulkheadFullException extends RuntimeException {
 
         String bulkheadName = bulkhead.getName();
 
-        String message;
         if (Thread.currentThread().isInterrupted()) {
-            message = String
-                .format("Bulkhead '%s' is full and thread was interrupted during permission wait",
-                    bulkheadName);
+            return new BulkheadFullAndInterruptedException(bulkheadName, writableStackTraceEnabled);
         } else {
-            message = String.format("Bulkhead '%s' is full and does not permit further calls",
-                bulkheadName);
+            return new BulkheadFullException(bulkheadName, writableStackTraceEnabled);
         }
-
-        return new BulkheadFullException(bulkheadName, message, writableStackTraceEnabled);
     }
 
     /**
@@ -65,13 +65,29 @@ public class BulkheadFullException extends RuntimeException {
 
         String bulkheadName = bulkhead.getName();
 
-        String message = String
-            .format("Bulkhead '%s' is full and does not permit further calls", bulkheadName);
+        return new BulkheadFullException(bulkheadName, writableStackTraceEnabled);
+    }
 
-        return new BulkheadFullException(bulkheadName, message, writableStackTraceEnabled);
+    /**
+     * Static method to construct a {@link BulkheadFullException} with a Bulkhead.
+     *
+     * @param bulkheadName the name of the bulkhead
+     * @param enableWritableStackTrace whether to enable the writable stack trace.
+     */
+    public static BulkheadFullException createBulkheadFullException(String bulkheadName, boolean enableWritableStackTrace) {
+        return new BulkheadFullException(bulkheadName, enableWritableStackTrace);
     }
 
     public String getBulkheadName() {
         return bulkheadName;
+    }
+
+    /**
+     *  * A {@link BulkheadFullAndInterruptedException} signals that the bulkhead is full and the thread was interrupted during permission wait.
+     */
+    public static class BulkheadFullAndInterruptedException extends BulkheadFullException {
+        private BulkheadFullAndInterruptedException(String bulkheadName, boolean writableStackTrace) {
+            super(bulkheadName, String.format("Bulkhead '%s' is full and thread was interrupted during permission wait", bulkheadName), writableStackTrace);
+        }
     }
 }

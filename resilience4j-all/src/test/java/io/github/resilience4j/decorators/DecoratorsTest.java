@@ -516,7 +516,7 @@ class DecoratorsTest {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
 
-        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+        willThrow(BulkheadFullException.createBulkheadFullException(bulkhead)).given(bulkheadMock).submit(any(Callable.class));
 
         CompletionStage<String> completionStage = Decorators
             .ofSupplier(() -> helloWorldService.returnHelloWorld())
@@ -534,7 +534,7 @@ class DecoratorsTest {
     void decorateCallableWithBulkheadFullExceptionFallback() throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
-        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+        willThrow(BulkheadFullException.createBulkheadFullException(bulkhead)).given(bulkheadMock).submit(any(Callable.class));
 
         CompletionStage<String> completionStage = Decorators
             .ofCallable(() -> helloWorldService.returnHelloWorldWithException())
@@ -552,7 +552,7 @@ class DecoratorsTest {
     void decorateRunnableWithBulkheadFullExceptionFallback() throws Exception {
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.ofDefaults("helloBackend");
         ThreadPoolBulkhead bulkheadMock = spy(bulkhead);
-        given(bulkheadMock.submit(any(Callable.class))).willThrow(BulkheadFullException.createBulkheadFullException(bulkhead));
+        willThrow(BulkheadFullException.createBulkheadFullException(bulkhead)).given(bulkheadMock).submit(any(Callable.class));
 
         CompletionStage<Void> completionStage = Decorators
             .ofRunnable(() -> helloWorldService.sayHelloWorld())

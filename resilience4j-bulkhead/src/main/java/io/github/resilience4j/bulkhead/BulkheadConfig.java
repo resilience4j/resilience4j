@@ -19,14 +19,13 @@
 package io.github.resilience4j.bulkhead;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
 import java.time.Duration;
 
 /**
  * A {@link BulkheadConfig} configures a {@link Bulkhead}
  */
 @Immutable
-public class BulkheadConfig implements Serializable {
+public class BulkheadConfig extends GenericBulkheadConfig {
 
     private static final long serialVersionUID = -9139631465007403460L;
 
@@ -37,7 +36,6 @@ public class BulkheadConfig implements Serializable {
 
     private final int maxConcurrentCalls;
     private final Duration maxWaitDuration;
-    private final boolean writableStackTraceEnabled;
     private final boolean fairCallHandlingEnabled;
 
     private BulkheadConfig(int maxConcurrentCalls, Duration maxWaitDuration,

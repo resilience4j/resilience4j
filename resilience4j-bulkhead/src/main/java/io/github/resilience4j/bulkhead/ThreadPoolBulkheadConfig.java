@@ -38,7 +38,8 @@ import static java.util.stream.Collectors.toList;
 /**
  * A {@link ThreadPoolBulkheadConfig} configures a {@link Bulkhead}
  */
-public class ThreadPoolBulkheadConfig {
+public class ThreadPoolBulkheadConfig extends GenericBulkheadConfig {
+    private static final long serialVersionUID = -3296453918126573034L;
 
     public static final int DEFAULT_QUEUE_CAPACITY = 100;
     public static final Duration DEFAULT_KEEP_ALIVE_DURATION = Duration.ofMillis(20);
@@ -47,13 +48,11 @@ public class ThreadPoolBulkheadConfig {
             - 1 : 1;
     public static final int DEFAULT_MAX_THREAD_POOL_SIZE = Runtime.getRuntime()
         .availableProcessors();
-    public static final boolean DEFAULT_WRITABLE_STACK_TRACE_ENABLED = true;
 
     private int maxThreadPoolSize = DEFAULT_MAX_THREAD_POOL_SIZE;
     private int coreThreadPoolSize = DEFAULT_CORE_THREAD_POOL_SIZE;
     private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
     private Duration keepAliveDuration = DEFAULT_KEEP_ALIVE_DURATION;
-    private boolean writableStackTraceEnabled = DEFAULT_WRITABLE_STACK_TRACE_ENABLED;    
     private List<ContextPropagator> contextPropagators = new ArrayList<>();
     private RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.AbortPolicy();
 
@@ -100,10 +99,6 @@ public class ThreadPoolBulkheadConfig {
     }
 
     public int getCoreThreadPoolSize() { return coreThreadPoolSize; }
-
-    public boolean isWritableStackTraceEnabled() {
-        return writableStackTraceEnabled;
-    }
 
     public List<ContextPropagator> getContextPropagator() {
         return contextPropagators;

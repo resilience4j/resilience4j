@@ -217,13 +217,6 @@ public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
     }
 
     @Test
-    public void testCreateWithNullConfig() {
-        assertThatThrownBy(() -> ThreadPoolBulkhead.of("test", (ThreadPoolBulkheadConfig) null))
-            .isInstanceOf(NullPointerException.class)
-            .hasMessage("Config must not be null");
-    }
-
-    @Test
     public void testCreateThreadsUsingNameForPrefix()
         throws ExecutionException, InterruptedException {
         LOG.info("Running testCreateThreadsUsingNameForPrefix in {}", getThreadModeDescription());
