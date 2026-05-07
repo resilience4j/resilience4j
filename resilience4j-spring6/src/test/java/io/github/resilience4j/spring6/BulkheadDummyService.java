@@ -2,15 +2,34 @@ package io.github.resilience4j.spring6;
 
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.reactivex.*;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Component
 public class BulkheadDummyService implements TestDummyService {
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Bulkhead(name = BACKEND, fallbackMethod = "recovery")
+    public @interface ComposedBulkhead {
+        @AliasFor(annotation = Bulkhead.class, attribute = "name")
+        String name() default BACKEND;
+
+        @AliasFor(annotation = Bulkhead.class, attribute = "fallbackMethod")
+        String fallbackMethod() default "recovery";
+
+        @AliasFor(annotation = Bulkhead.class, attribute = "type")
+        Bulkhead.Type type() default Bulkhead.Type.SEMAPHORE;
+    }
 
     @Override
     @Bulkhead(name = BACKEND, fallbackMethod = "recovery")
@@ -141,5 +160,15 @@ public class BulkheadDummyService implements TestDummyService {
     @Bulkhead(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "#{'recovery'}", type = Bulkhead.Type.THREADPOOL)
     public CompletionStage<String> spelSyncThreadPoolWithCfg(String backend) {
         return CompletableFuture.completedFuture(backend);
+    }
+
+    @ComposedBulkhead
+    public String composedSync() {
+        return syncError();
+    }
+
+    @ComposedBulkhead(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String composedSpelSync(String backend) {
+        return syncError();
     }
 }

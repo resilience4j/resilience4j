@@ -99,13 +99,30 @@ public class BulkheadAspect implements Ordered {
     public void matchAnnotatedClassOrMethod(Bulkhead Bulkhead) {
     }
 
+    /**
+     * Matches one-level composed annotations.
+     * AspectJ {@code @(@Ann *)} does not match transitive meta-annotation hierarchies.
+     */
+    @Pointcut("execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))" +
+        " && !within(@io.github.resilience4j.bulkhead.annotation.Bulkhead *)" +
+        " && !execution(@io.github.resilience4j.bulkhead.annotation.Bulkhead * *(..))")
+    public void matchMetaAnnotatedMethod() {
+    }
+
+    @Pointcut("within(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) *)" +
+        " && !execution(@io.github.resilience4j.bulkhead.annotation.Bulkhead * *(..))" +
+        " && !execution(@(@io.github.resilience4j.bulkhead.annotation.Bulkhead *) * *(..))")
+    public void matchMetaAnnotatedClass() {
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(bulkheadAnnotation)", argNames = "proceedingJoinPoint, bulkheadAnnotation")
     public Object bulkheadAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable Bulkhead bulkheadAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (bulkheadAnnotation == null) {
-            bulkheadAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
+        Bulkhead resolvedAnnotation = getBulkheadAnnotation(proceedingJoinPoint);
+        if (resolvedAnnotation != null) {
+            bulkheadAnnotation = resolvedAnnotation;
         }
         if (bulkheadAnnotation == null) { //because annotations wasn't found
             return proceedingJoinPoint.proceed();
@@ -122,6 +139,12 @@ public class BulkheadAspect implements Ordered {
             final CheckedSupplier<Object> bulkheadExecution = () -> proceed(proceedingJoinPoint, methodName, bulkhead, returnType);
             return fallbackExecutor.execute(proceedingJoinPoint, method, bulkheadAnnotation.fallbackMethod(), bulkheadExecution);
         }
+    }
+
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
+    public Object bulkheadMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return bulkheadAroundAdvice(proceedingJoinPoint, null);
     }
 
     /**
@@ -187,18 +210,8 @@ public class BulkheadAspect implements Ordered {
      */
     @Nullable
     private Bulkhead getBulkheadAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("bulkhead parameter is null");
-        }
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger
-                .debug("The bulkhead annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor
-                .extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), Bulkhead.class);
-        } else {
-            return AnnotationExtractor
-                .extract(proceedingJoinPoint.getTarget().getClass(), Bulkhead.class);
-        }
+        return AnnotationExtractor.extractAnnotationFromJoinPoint(proceedingJoinPoint,
+            Bulkhead.class);
     }
 
     /**

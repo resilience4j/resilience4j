@@ -16,6 +16,7 @@
 package io.github.resilience4j.spring6.retry.configure;
 
 import io.github.resilience4j.spring6.TestApplication;
+import io.github.resilience4j.spring6.RetryDummyService;
 import io.github.resilience4j.spring6.TestDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +37,22 @@ public class RetryRecoveryTest {
     @Qualifier("retryDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    RetryDummyService retryDummyService;
+
     @Test
     public void testRecovery() {
         assertThat(testDummyService.sync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationRecovery() {
+        assertThat(retryDummyService.composedSync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationSpelRecovery() {
+        assertThat(retryDummyService.composedSpelSync("backendB")).isEqualTo("recovered");
     }
 
     @Test

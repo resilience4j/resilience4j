@@ -2,14 +2,30 @@ package io.github.resilience4j.spring6;
 
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.reactivex.*;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.CompletionStage;
 
 @Component
 public class RateLimiterDummyService implements TestDummyService {
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @RateLimiter(name = BACKEND, fallbackMethod = "recovery")
+    public @interface ComposedRateLimiter {
+        @AliasFor(annotation = RateLimiter.class, attribute = "name")
+        String name() default BACKEND;
+
+        @AliasFor(annotation = RateLimiter.class, attribute = "fallbackMethod")
+        String fallbackMethod() default "recovery";
+    }
 
     @Override
     @RateLimiter(name = BACKEND, fallbackMethod = "recovery")
@@ -129,5 +145,15 @@ public class RateLimiterDummyService implements TestDummyService {
     @RateLimiter(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "recovery")
     public String spelSyncWithCfg(String backend) {
         return backend;
+    }
+
+    @ComposedRateLimiter
+    public String composedSync() {
+        return syncError();
+    }
+
+    @ComposedRateLimiter(name = "#root.args[0]", fallbackMethod = "#{'recovery'}")
+    public String composedSpelSync(String backend) {
+        return syncError();
     }
 }

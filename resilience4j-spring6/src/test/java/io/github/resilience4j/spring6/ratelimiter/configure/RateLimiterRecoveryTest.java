@@ -16,6 +16,7 @@
 package io.github.resilience4j.spring6.ratelimiter.configure;
 
 import io.github.resilience4j.spring6.TestApplication;
+import io.github.resilience4j.spring6.RateLimiterDummyService;
 import io.github.resilience4j.spring6.TestDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +37,22 @@ public class RateLimiterRecoveryTest {
     @Qualifier("rateLimiterDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    RateLimiterDummyService rateLimiterDummyService;
+
     @Test
     public void testRecovery() {
         assertThat(testDummyService.sync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationRecovery() {
+        assertThat(rateLimiterDummyService.composedSync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationSpelRecovery() {
+        assertThat(rateLimiterDummyService.composedSpelSync("backendB")).isEqualTo("recovered");
     }
 
     @Test

@@ -15,7 +15,11 @@
  */
 package io.github.resilience4j.spring6.circuitbreaker.configure;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.spring6.TestApplication;
+import io.github.resilience4j.spring6.ComposedClassLevelCircuitBreakerService;
+import io.github.resilience4j.spring6.CircuitBreakerDummyService;
 import io.github.resilience4j.spring6.TestDummyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,9 +40,42 @@ public class CircuitBreakerRecoveryTest {
     @Qualifier("circuitBreakerDummyService")
     TestDummyService testDummyService;
 
+    @Autowired
+    CircuitBreakerDummyService circuitBreakerDummyService;
+
+    @Autowired
+    CircuitBreakerRegistry circuitBreakerRegistry;
+
+    @Autowired
+    ComposedClassLevelCircuitBreakerService composedClassLevelCircuitBreakerService;
+
     @Test
     public void testRecovery() {
         assertThat(testDummyService.sync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationRecovery() {
+        assertThat(circuitBreakerDummyService.composedSync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedAnnotationSpelRecovery() {
+        assertThat(circuitBreakerDummyService.composedSpelSync("backendB")).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testComposedClassLevelAnnotationRecovery() {
+        assertThat(composedClassLevelCircuitBreakerService.sync()).isEqualTo("recovered");
+    }
+
+    @Test
+    public void testDirectAndComposedAnnotationRecoveryWithoutDuplicateAdvice() {
+        assertThat(circuitBreakerDummyService.directAndComposedSync()).isEqualTo("recovered");
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry
+            .circuitBreaker(CircuitBreakerDummyService.DIRECT_AND_COMPOSED_BACKEND);
+        assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(1);
+        assertThat(circuitBreaker.getMetrics().getNumberOfSuccessfulCalls()).isZero();
     }
 
     @Test

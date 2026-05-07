@@ -2,15 +2,31 @@ package io.github.resilience4j.spring6;
 
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.reactivex.*;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Component
 public class TimeLimiterDummyService implements TestDummyService {
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @TimeLimiter(name = BACKEND, fallbackMethod = "completionStageRecovery")
+    public @interface ComposedTimeLimiter {
+        @AliasFor(annotation = TimeLimiter.class, attribute = "name")
+        String name() default BACKEND;
+
+        @AliasFor(annotation = TimeLimiter.class, attribute = "fallbackMethod")
+        String fallbackMethod() default "completionStageRecovery";
+    }
 
     @Override
     public String sync() {
@@ -136,5 +152,15 @@ public class TimeLimiterDummyService implements TestDummyService {
     @TimeLimiter(name = "#root.args[0]", configuration = BACKEND, fallbackMethod = "${missing.property:monoRecovery}")
     public Mono<String> spelMonoWithCfg(String backend) {
         return monoError(backend);
+    }
+
+    @ComposedTimeLimiter
+    public CompletionStage<String> composedAsync() {
+        return asyncError();
+    }
+
+    @ComposedTimeLimiter(name = "#root.args[0]", fallbackMethod = "#{'completionStageRecovery'}")
+    public CompletionStage<String> composedSpelAsync(String backend) {
+        return asyncError();
     }
 }

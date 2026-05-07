@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -72,13 +71,30 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         // a marker method
     }
 
+    /**
+     * Matches one-level composed annotations.
+     * AspectJ {@code @(@Ann *)} does not match transitive meta-annotation hierarchies.
+     */
+    @Pointcut("execution(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) * *(..))" +
+        " && !within(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *)" +
+        " && !execution(@io.github.resilience4j.timelimiter.annotation.TimeLimiter * *(..))")
+    public void matchMetaAnnotatedMethod() {
+    }
+
+    @Pointcut("within(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) *)" +
+        " && !execution(@io.github.resilience4j.timelimiter.annotation.TimeLimiter * *(..))" +
+        " && !execution(@(@io.github.resilience4j.timelimiter.annotation.TimeLimiter *) * *(..))")
+    public void matchMetaAnnotatedClass() {
+    }
+
     @Around(value = "matchAnnotatedClassOrMethod(timeLimiterAnnotation)", argNames = "proceedingJoinPoint, timeLimiterAnnotation")
     public Object timeLimiterAroundAdvice(ProceedingJoinPoint proceedingJoinPoint,
         @Nullable TimeLimiter timeLimiterAnnotation) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
-        if (timeLimiterAnnotation == null) {
-            timeLimiterAnnotation = getTimeLimiterAnnotation(proceedingJoinPoint);
+        TimeLimiter resolvedAnnotation = getTimeLimiterAnnotation(proceedingJoinPoint);
+        if (resolvedAnnotation != null) {
+            timeLimiterAnnotation = resolvedAnnotation;
         }
         if(timeLimiterAnnotation == null) {
             return proceedingJoinPoint.proceed();
@@ -89,6 +105,12 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
         Class<?> returnType = method.getReturnType();
         final CheckedSupplier<Object> timeLimiterExecution = () -> proceed(proceedingJoinPoint, methodName, timeLimiter, returnType);
         return fallbackExecutor.execute(proceedingJoinPoint, method, timeLimiterAnnotation.fallbackMethod(), timeLimiterExecution);
+    }
+
+    @Around("matchMetaAnnotatedMethod() || matchMetaAnnotatedClass()")
+    public Object timeLimiterMetaAnnotationAroundAdvice(ProceedingJoinPoint proceedingJoinPoint)
+        throws Throwable {
+        return timeLimiterAroundAdvice(proceedingJoinPoint, null);
     }
 
     private Object proceed(ProceedingJoinPoint proceedingJoinPoint, String methodName,
@@ -126,13 +148,9 @@ public class TimeLimiterAspect implements Ordered, AutoCloseable {
     }
 
     @Nullable
-    private static TimeLimiter getTimeLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
-        if (proceedingJoinPoint.getTarget() instanceof Proxy) {
-            logger.debug("The TimeLimiter annotation is kept on a interface which is acting as a proxy");
-            return AnnotationExtractor.extractAnnotationFromProxy(proceedingJoinPoint.getTarget(), TimeLimiter.class);
-        } else {
-            return AnnotationExtractor.extract(proceedingJoinPoint.getTarget().getClass(), TimeLimiter.class);
-        }
+    private TimeLimiter getTimeLimiterAnnotation(ProceedingJoinPoint proceedingJoinPoint) {
+        return AnnotationExtractor.extractAnnotationFromJoinPoint(proceedingJoinPoint,
+            TimeLimiter.class);
     }
 
     private Object handleJoinPointCompletableFuture(
