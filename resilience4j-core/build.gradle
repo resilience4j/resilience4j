@@ -2,8 +2,17 @@ ext.moduleName = "io.github.resilience4j.core"
 
 dependencies {
     testImplementation(libs.mock.clock)
+    // TODO: other modules currently depend on ThreadModeTestBaseJUnit4
+    //  remove after migration to JUnit 6 is completed
+    testCompileOnly(libs.junit)
 }
 
 test {
     jvmArgs "-Xmx2G"
+}
+
+jmh {
+    if (project.hasProperty('jmhIncludes')) {
+        includes = [project.property('jmhIncludes')]
+    }
 }

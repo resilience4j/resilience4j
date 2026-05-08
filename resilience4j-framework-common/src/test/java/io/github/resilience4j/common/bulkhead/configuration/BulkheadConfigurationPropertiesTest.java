@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mahmoud Romeh
+ * Copyright 2026 Mahmoud Romeh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ package io.github.resilience4j.common.bulkhead.configuration;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.common.CompositeCustomizer;
 import io.github.resilience4j.core.ConfigurationNotFoundException;
-import org.junit.Test;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,10 +33,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * unit test for bulkhead properties
  */
-public class BulkheadConfigurationPropertiesTest {
+class BulkheadConfigurationPropertiesTest {
 
     @Test
-    public void testBulkHeadProperties() {
+    void bulkHeadProperties() {
         //Given
         CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties1 = new CommonBulkheadConfigurationProperties.InstanceProperties();
         instanceProperties1.setMaxConcurrentCalls(3);
@@ -71,7 +73,7 @@ public class BulkheadConfigurationPropertiesTest {
     }
 
     @Test
-    public void testCreateBulkHeadPropertiesWithSharedConfigs() {
+    void createBulkHeadPropertiesWithSharedConfigs() {
         //Given
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxConcurrentCalls(3);
@@ -115,7 +117,7 @@ public class BulkheadConfigurationPropertiesTest {
                 "backendWithDefaultConfig");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
+        Assertions.assertThat(bulkhead1.getMaxWaitDuration()).hasMillis(200L);
         assertThat(bulkhead1.isWritableStackTraceEnabled()).isTrue();
 
         // Should get shared config and overwrite wait time
@@ -124,7 +126,7 @@ public class BulkheadConfigurationPropertiesTest {
                 "backendWithSharedConfig");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
-        assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
+        Assertions.assertThat(bulkhead2.getMaxWaitDuration()).hasMillis(300L);
         assertThat(bulkhead2.isWritableStackTraceEnabled()).isFalse();
 
         // Unknown backend should get default config of Registry
@@ -132,13 +134,13 @@ public class BulkheadConfigurationPropertiesTest {
             .createBulkheadConfig(new CommonBulkheadConfigurationProperties.InstanceProperties(),
                 compositeBulkheadCustomizer(), "unknown");
         assertThat(bulkhead3).isNotNull();
-        assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(0L);
+        assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isZero();
         assertThat(bulkhead3.isWritableStackTraceEnabled()).isTrue();
 
     }
 
     @Test
-    public void testCreateBulkHeadPropertiesWithDefaultConfig() {
+    void createBulkHeadPropertiesWithDefaultConfig() {
         //Given
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setMaxConcurrentCalls(3);
@@ -181,7 +183,7 @@ public class BulkheadConfigurationPropertiesTest {
                 "backendWithoutBaseConfig");
         assertThat(bulkhead1).isNotNull();
         assertThat(bulkhead1.getMaxConcurrentCalls()).isEqualTo(3);
-        assertThat(bulkhead1.getMaxWaitDuration().toMillis()).isEqualTo(200L);
+        Assertions.assertThat(bulkhead1.getMaxWaitDuration()).hasMillis(200L);
         assertThat(bulkhead1.isWritableStackTraceEnabled()).isTrue();
 
         // Should get shared config and overwrite wait time
@@ -190,7 +192,7 @@ public class BulkheadConfigurationPropertiesTest {
                 "backendWithSharedConfig");
         assertThat(bulkhead2).isNotNull();
         assertThat(bulkhead2.getMaxConcurrentCalls()).isEqualTo(2);
-        assertThat(bulkhead2.getMaxWaitDuration().toMillis()).isEqualTo(300L);
+        Assertions.assertThat(bulkhead2.getMaxWaitDuration()).hasMillis(300L);
         assertThat(bulkhead2.isWritableStackTraceEnabled()).isFalse();
 
         // Unknown backend should get default config of Registry
@@ -198,13 +200,13 @@ public class BulkheadConfigurationPropertiesTest {
             .createBulkheadConfig(new CommonBulkheadConfigurationProperties.InstanceProperties(),
                 compositeBulkheadCustomizer(), "unknown");
         assertThat(bulkhead3).isNotNull();
-        assertThat(bulkhead3.getMaxWaitDuration().toMillis()).isEqualTo(50L);
+        Assertions.assertThat(bulkhead3.getMaxWaitDuration()).hasMillis(50L);
         assertThat(bulkhead3.isWritableStackTraceEnabled()).isTrue();
 
     }
 
     @Test
-    public void testCreateBulkHeadPropertiesWithUnknownConfig() {
+    void createBulkHeadPropertiesWithUnknownConfig() {
         CommonBulkheadConfigurationProperties bulkheadConfigurationProperties = new CommonBulkheadConfigurationProperties();
 
         CommonBulkheadConfigurationProperties.InstanceProperties instanceProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
@@ -219,26 +221,29 @@ public class BulkheadConfigurationPropertiesTest {
             .hasMessage("Configuration with name 'unknownConfig' does not exist");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMaxConcurrentCallsLessThanOne() {
-        CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxConcurrentCalls(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testIllegalArgumentOnMaxWaitDurationNegative() {
-        CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setMaxWaitDuration(Duration.ofNanos(-1));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testBulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
-        CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
-        defaultProperties.setEventConsumerBufferSize(0);
+    @Test
+    void illegalArgumentOnMaxConcurrentCallsLessThanOne() {
+CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setMaxConcurrentCalls(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testBulkheadConfigWithBaseConfig() {
+    void illegalArgumentOnMaxWaitDurationNegative() {
+CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setMaxWaitDuration(Duration.ofNanos(-1)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void bulkheadIllegalArgumentOnEventConsumerBufferSizeLessThanOne() {
+CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
+        assertThatThrownBy(() -> defaultProperties.setEventConsumerBufferSize(0))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void bulkheadConfigWithBaseConfig() {
         CommonBulkheadConfigurationProperties.InstanceProperties defaultConfig = new CommonBulkheadConfigurationProperties.InstanceProperties();
         defaultConfig.setMaxConcurrentCalls(2000);
         defaultConfig.setMaxWaitDuration(Duration.ofMillis(100L));
@@ -265,7 +270,7 @@ public class BulkheadConfigurationPropertiesTest {
     }
 
     @Test
-    public void testGetBackendPropertiesPropertiesWithoutDefaultConfig() {
+    void getBackendPropertiesPropertiesWithoutDefaultConfig() {
         //Given
         CommonBulkheadConfigurationProperties.InstanceProperties backendWithoutBaseConfig = new CommonBulkheadConfigurationProperties.InstanceProperties();
 
@@ -283,7 +288,7 @@ public class BulkheadConfigurationPropertiesTest {
     }
 
     @Test
-    public void testGetBackendPropertiesPropertiesWithDefaultConfig() {
+    void getBackendPropertiesPropertiesWithDefaultConfig() {
         //Given
         CommonBulkheadConfigurationProperties.InstanceProperties defaultProperties = new CommonBulkheadConfigurationProperties.InstanceProperties();
         defaultProperties.setEventConsumerBufferSize(99);

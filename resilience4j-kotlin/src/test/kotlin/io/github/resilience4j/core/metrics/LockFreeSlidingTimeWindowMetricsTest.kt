@@ -23,10 +23,10 @@ import org.jetbrains.kotlinx.lincheck.annotations.Operation
 import org.jetbrains.kotlinx.lincheck.check
 import org.jetbrains.kotlinx.lincheck.strategy.managed.modelchecking.ModelCheckingOptions
 import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
-import org.junit.AfterClass
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
@@ -50,7 +50,7 @@ import kotlin.random.Random
  * In contrast, stress testing is faster and can catch rare bugs that require many context switches,
  * making it suitable for regular builds.
  */
-@Category(ConcurrencyTests::class)
+
 class LockFreeSlidingTimeWindowMetricsTest {
     companion object {
         private val clock = ManualClock()
@@ -62,7 +62,7 @@ class LockFreeSlidingTimeWindowMetricsTest {
             }, interval, interval, TimeUnit.NANOSECONDS)
         }
 
-        @AfterClass
+        @AfterAll
         @JvmStatic
         fun cleanUp() {
             scheduler.shutdownNow()
@@ -82,6 +82,6 @@ class LockFreeSlidingTimeWindowMetricsTest {
     fun stressTest() = StressOptions().check(this::class)
 
     @Test
-    @Ignore
+    @Disabled
     fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
 }

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler
+ *  Copyright 2026 Robert Winkler
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ package io.github.resilience4j.consumer;
 
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerEvent;
 import io.github.resilience4j.core.EventConsumer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EventConsumerRegistryTest {
+class EventConsumerRegistryTest {
 
     @Test
-    public void shouldCreateAnEventConsumer() {
+    void shouldCreateAnEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         EventConsumer<CircuitBreakerEvent> eventEventConsumer = registry
             .createEventConsumer("testName", 5);
@@ -36,7 +36,7 @@ public class EventConsumerRegistryTest {
     }
 
     @Test
-    public void shouldRemoveAnEventConsumer() {
+    void shouldRemoveAnEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         String eventConsumerId = "testName";
 
@@ -52,7 +52,7 @@ public class EventConsumerRegistryTest {
         assertThat(eventEventConsumer).isNull();
     }
     @Test
-    public void shouldReturnTheSameEventConsumer() {
+    void shouldReturnTheSameEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         EventConsumer<CircuitBreakerEvent> eventEventConsumer1 = registry
             .createEventConsumer("testName", 5);
@@ -63,7 +63,7 @@ public class EventConsumerRegistryTest {
     }
 
     @Test
-    public void shouldReturnAllEventConsumer() {
+    void shouldReturnAllEventConsumer() {
         EventConsumerRegistry<CircuitBreakerEvent> registry = new DefaultEventConsumerRegistry<>();
         registry.createEventConsumer("testName1", 5);
         registry.createEventConsumer("testName2", 2);

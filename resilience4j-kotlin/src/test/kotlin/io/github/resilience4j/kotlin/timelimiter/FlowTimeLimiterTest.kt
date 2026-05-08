@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 import java.util.concurrent.TimeoutException
 
@@ -49,11 +51,11 @@ class FlowTimeLimiterTest {
 
             //Then
             repeat(3) {
-                Assertions.assertThat(resultList[it]).isEqualTo("Hello world$it")
+                assertThat(resultList[it]).isEqualTo("Hello world$it")
             }
-            Assertions.assertThat(resultList.size).isEqualTo(3)
+            assertThat(resultList.size).isEqualTo(3)
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(3)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(3)
         }
     }
 
@@ -76,9 +78,9 @@ class FlowTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(resultList.size).isZero()
+            assertThat(resultList.size).isZero()
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
     }
 
@@ -101,9 +103,9 @@ class FlowTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(resultList.size).isZero()
+            assertThat(resultList.size).isZero()
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
         }
     }
 }

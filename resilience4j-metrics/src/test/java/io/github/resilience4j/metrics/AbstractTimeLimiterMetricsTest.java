@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package io.github.resilience4j.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -37,7 +37,7 @@ public abstract class AbstractTimeLimiterMetricsTest {
     // fix visibility
     protected volatile MetricRegistry metricRegistry;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         metricRegistry = new MetricRegistry();
     }

@@ -1,5 +1,5 @@
 /*
- *   Copyright 2023: Deepak Kumar
+ *   Copyright 2026: Deepak Kumar
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -22,16 +22,16 @@ import io.github.resilience4j.commons.configuration.util.TestConstants;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.YAMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Map;
 
-public class CommonsConfigurationRateLimiterConfigurationTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class CommonsConfigurationRateLimiterConfigurationTest {
     @Test
-    public void testFromPropertiesFile() throws ConfigurationException {
+    void fromPropertiesFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(PropertiesConfiguration.class, TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME);
 
         CommonsConfigurationRateLimiterConfiguration bulkHeadConfiguration  = CommonsConfigurationRateLimiterConfiguration.of(config);
@@ -41,7 +41,7 @@ public class CommonsConfigurationRateLimiterConfigurationTest {
     }
 
     @Test
-    public void testFromYamlFile() throws ConfigurationException {
+    void fromYamlFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(YAMLConfiguration.class, TestConstants.RESILIENCE_CONFIG_YAML_FILE_NAME);
 
         CommonsConfigurationRateLimiterConfiguration bulkHeadConfiguration  = CommonsConfigurationRateLimiterConfiguration.of(config);
@@ -51,52 +51,54 @@ public class CommonsConfigurationRateLimiterConfigurationTest {
     }
 
     private void assertConfigs(Map<String, CommonRateLimiterConfigurationProperties.InstanceProperties> config) {
-        Assertions.assertThat(config.size()).isEqualTo(1);
-        Assertions.assertThat(config.containsKey(TestConstants.DEFAULT)).isTrue();
+        assertThat(config)
+                .hasSize(1)
+                .containsKey(TestConstants.DEFAULT);
         assertConfigDefault(config.get(TestConstants.DEFAULT));
     }
 
     private void assertInstances(Map<String, CommonRateLimiterConfigurationProperties.InstanceProperties> instances) {
-        Assertions.assertThat(instances.size()).isEqualTo(2);
-        Assertions.assertThat(instances.containsKey(TestConstants.BACKEND_A)).isTrue();
-        Assertions.assertThat(instances.containsKey(TestConstants.BACKEND_B)).isTrue();
+        assertThat(instances)
+                .hasSize(2)
+                .containsKey(TestConstants.BACKEND_A)
+                .containsKey(TestConstants.BACKEND_B);
         assertInstanceBackendA(instances.get(TestConstants.BACKEND_A));
         assertInstanceBackendB(instances.get(TestConstants.BACKEND_B));
     }
 
     private void assertConfigDefault(CommonRateLimiterConfigurationProperties.InstanceProperties configDefault) {
-        Assertions.assertThat(configDefault.getLimitForPeriod()).isEqualTo(10);
-        Assertions.assertThat(configDefault.getLimitRefreshPeriod()).isEqualTo(Duration.ofSeconds(1));
-        Assertions.assertThat(configDefault.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(10));
-        Assertions.assertThat(configDefault.getSubscribeForEvents()).isNull();
-        Assertions.assertThat(configDefault.getAllowHealthIndicatorToFail()).isNull();
-        Assertions.assertThat(configDefault.getRegisterHealthIndicator()).isFalse();
-        Assertions.assertThat(configDefault.getEventConsumerBufferSize()).isEqualTo(100);
-        Assertions.assertThat(configDefault.getWritableStackTraceEnabled()).isNull();
+        assertThat(configDefault.getLimitForPeriod()).isEqualTo(10);
+        assertThat(configDefault.getLimitRefreshPeriod()).isEqualTo(Duration.ofSeconds(1));
+        assertThat(configDefault.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(10));
+        assertThat(configDefault.getSubscribeForEvents()).isNull();
+        assertThat(configDefault.getAllowHealthIndicatorToFail()).isNull();
+        assertThat(configDefault.getRegisterHealthIndicator()).isFalse();
+        assertThat(configDefault.getEventConsumerBufferSize()).isEqualTo(100);
+        assertThat(configDefault.getWritableStackTraceEnabled()).isNull();
 
     }
 
     private void assertInstanceBackendA(CommonRateLimiterConfigurationProperties.InstanceProperties instanceBackendA) {
-        Assertions.assertThat(instanceBackendA.getBaseConfig()).isEqualTo(TestConstants.DEFAULT);
-        Assertions.assertThat(instanceBackendA.getLimitForPeriod()).isNull();
-        Assertions.assertThat(instanceBackendA.getLimitRefreshPeriod()).isNull();
-        Assertions.assertThat(instanceBackendA.getTimeoutDuration()).isNull();
-        Assertions.assertThat(instanceBackendA.getSubscribeForEvents()).isNull();
-        Assertions.assertThat(instanceBackendA.getAllowHealthIndicatorToFail()).isNull();
-        Assertions.assertThat(instanceBackendA.getRegisterHealthIndicator()).isNull();
-        Assertions.assertThat(instanceBackendA.getEventConsumerBufferSize()).isNull();
-        Assertions.assertThat(instanceBackendA.getWritableStackTraceEnabled()).isNull();
+        assertThat(instanceBackendA.getBaseConfig()).isEqualTo(TestConstants.DEFAULT);
+        assertThat(instanceBackendA.getLimitForPeriod()).isNull();
+        assertThat(instanceBackendA.getLimitRefreshPeriod()).isNull();
+        assertThat(instanceBackendA.getTimeoutDuration()).isNull();
+        assertThat(instanceBackendA.getSubscribeForEvents()).isNull();
+        assertThat(instanceBackendA.getAllowHealthIndicatorToFail()).isNull();
+        assertThat(instanceBackendA.getRegisterHealthIndicator()).isNull();
+        assertThat(instanceBackendA.getEventConsumerBufferSize()).isNull();
+        assertThat(instanceBackendA.getWritableStackTraceEnabled()).isNull();
     }
 
     private void assertInstanceBackendB(CommonRateLimiterConfigurationProperties.InstanceProperties instanceBackendB) {
-        Assertions.assertThat(instanceBackendB.getBaseConfig()).isNull();
-        Assertions.assertThat(instanceBackendB.getLimitForPeriod()).isEqualTo(6);
-        Assertions.assertThat(instanceBackendB.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(500));
-        Assertions.assertThat(instanceBackendB.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(3));
-        Assertions.assertThat(instanceBackendB.getSubscribeForEvents()).isTrue();
-        Assertions.assertThat(instanceBackendB.getAllowHealthIndicatorToFail()).isFalse();
-        Assertions.assertThat(instanceBackendB.getRegisterHealthIndicator()).isTrue();
-        Assertions.assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(10);
-        Assertions.assertThat(instanceBackendB.getWritableStackTraceEnabled()).isFalse();
+        assertThat(instanceBackendB.getBaseConfig()).isNull();
+        assertThat(instanceBackendB.getLimitForPeriod()).isEqualTo(6);
+        assertThat(instanceBackendB.getLimitRefreshPeriod()).isEqualTo(Duration.ofMillis(500));
+        assertThat(instanceBackendB.getTimeoutDuration()).isEqualTo(Duration.ofSeconds(3));
+        assertThat(instanceBackendB.getSubscribeForEvents()).isTrue();
+        assertThat(instanceBackendB.getAllowHealthIndicatorToFail()).isFalse();
+        assertThat(instanceBackendB.getRegisterHealthIndicator()).isTrue();
+        assertThat(instanceBackendB.getEventConsumerBufferSize()).isEqualTo(10);
+        assertThat(instanceBackendB.getWritableStackTraceEnabled()).isFalse();
     }
 }

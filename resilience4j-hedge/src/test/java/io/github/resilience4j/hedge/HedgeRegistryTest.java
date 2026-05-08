@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,16 +26,21 @@ import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
 import io.github.resilience4j.core.registry.RegistryEventConsumer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class HedgeRegistryTest {
+class HedgeRegistryTest {
 
     private static Optional<EventProcessor<?>> getEventProcessor(
         Registry.EventPublisher<Hedge> eventPublisher) {
@@ -47,7 +52,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithCustomConfig() {
+    void createWithCustomConfig() {
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(500))
             .build();
@@ -59,7 +64,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void shouldInitRegistryTags() {
+    void shouldInitRegistryTags() {
         HedgeConfig hedgeConfig = HedgeConfig.ofDefaults();
         Map<String, HedgeConfig> hedgeConfigs = Collections
             .singletonMap("default", hedgeConfig);
@@ -73,14 +78,14 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void noTagsByDefault() {
+    void noTagsByDefault() {
         Hedge Hedge = HedgeRegistry.builder().build()
             .hedge("testName");
         assertThat(Hedge.getTags()).isEmpty();
     }
 
     @Test
-    public void tagsOfRegistryAddedToInstance() {
+    void tagsOfRegistryAddedToInstance() {
         HedgeConfig hedgeConfig = HedgeConfig.ofDefaults();
         Map<String, HedgeConfig> hedgeConfigs = Collections
             .singletonMap("default", hedgeConfig);
@@ -93,7 +98,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void tagsAddedToInstance() {
+    void tagsAddedToInstance() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().build();
         Map<String, String> hedgeTags = Map.of("key1", "value1", "key2", "value2");
         Hedge Hedge = hedgeRegistry.hedge("testName", hedgeTags);
@@ -102,7 +107,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void tagsOfHedgesShouldNotBeMixed() {
+    void tagsOfHedgesShouldNotBeMixed() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().build();
         HedgeConfig hedgeConfig = HedgeConfig.ofDefaults();
         Map<String, String> hedgeTags = Map.of("key1", "value1", "key2", "value2");
@@ -116,7 +121,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void tagsOfInstanceTagsShouldOverrideRegistryTags() {
+    void tagsOfInstanceTagsShouldOverrideRegistryTags() {
         HedgeConfig hedgeConfig = HedgeConfig.ofDefaults();
         Map<String, HedgeConfig> hedgeConfigs = Collections
             .singletonMap("default", hedgeConfig);
@@ -133,7 +138,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMap() {
+    void createWithConfigurationMap() {
         Map<String, HedgeConfig> configs = new HashMap<>();
         configs.put("default", HedgeConfig.ofDefaults());
         configs.put("custom", HedgeConfig.ofDefaults());
@@ -145,7 +150,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithoutDefaultConfig() {
+    void createWithConfigurationMapWithoutDefaultConfig() {
         Map<String, HedgeConfig> configs = new HashMap<>();
         configs.put("custom", HedgeConfig.ofDefaults());
 
@@ -156,7 +161,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithSingleRegistryEventConsumer() {
+    void createWithSingleRegistryEventConsumer() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder()
             .withDefaultConfig(HedgeConfig.ofDefaults())
             .withConsumer(new NoOpHedgeEventConsumer())
@@ -167,7 +172,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithMultipleRegistryEventConsumer() {
+    void createWithMultipleRegistryEventConsumer() {
         List<RegistryEventConsumer<Hedge>> registryEventConsumers = new ArrayList<>();
         registryEventConsumers.add(new NoOpHedgeEventConsumer());
         registryEventConsumers.add(new NoOpHedgeEventConsumer());
@@ -182,7 +187,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithSingleRegistryEventConsumer() {
+    void createWithConfigurationMapWithSingleRegistryEventConsumer() {
         Map<String, HedgeConfig> configs = new HashMap<>();
         configs.put("custom", HedgeConfig.ofDefaults());
 
@@ -196,7 +201,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testCreateWithConfigurationMapWithMultiRegistryEventConsumer() {
+    void createWithConfigurationMapWithMultiRegistryEventConsumer() {
         Map<String, HedgeConfig> configs = new HashMap<>();
         configs.put("custom", HedgeConfig.ofDefaults());
 
@@ -214,7 +219,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testAddConfiguration() {
+    void addConfiguration() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().build();
         hedgeRegistry.addConfiguration("custom", HedgeConfig.custom().build());
 
@@ -223,7 +228,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void testWithNotExistingConfig() {
+    void withNotExistingConfig() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().build();
 
         assertThatThrownBy(() -> hedgeRegistry.hedge("test", "doesNotExist"))
@@ -231,7 +236,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void shouldUseCorrectConfig() {
+    void shouldUseCorrectConfig() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().build();
         HedgeConfig config = HedgeConfig.ofDefaults();
 
@@ -242,7 +247,7 @@ public class HedgeRegistryTest {
     }
 
     @Test
-    public void shouldUseCorrectConfigFromStringConfigName() {
+    void shouldUseCorrectConfigFromStringConfigName() {
         HedgeRegistry hedgeRegistry = HedgeRegistry.builder().build();
         HedgeConfig config = HedgeConfig.ofDefaults();
         hedgeRegistry.addConfiguration("test1", config);

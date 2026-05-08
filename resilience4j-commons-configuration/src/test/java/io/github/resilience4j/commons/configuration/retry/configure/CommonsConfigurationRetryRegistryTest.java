@@ -1,5 +1,5 @@
 /*
- *   Copyright 2023: Deepak Kumar
+ *   Copyright 2026: Deepak Kumar
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -23,31 +23,31 @@ import io.github.resilience4j.retry.RetryRegistry;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.YAMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-public class CommonsConfigurationRetryRegistryTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class CommonsConfigurationRetryRegistryTest {
 
     @Test
-    public void testRetryRegistryFromPropertiesFile() throws ConfigurationException {
+    void retryRegistryFromPropertiesFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(PropertiesConfiguration.class, TestConstants.RESILIENCE_CONFIG_PROPERTIES_FILE_NAME);
 
         RetryRegistry registry = CommonsConfigurationRetryRegistry.of(config, new CompositeCustomizer<>(List.of()));
 
-        Assertions.assertThat(registry.retry(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
-        Assertions.assertThat(registry.retry(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
+        assertThat(registry.retry(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
+        assertThat(registry.retry(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
     }
 
     @Test
-    public void testRetryRegistryFromYamlFile() throws ConfigurationException {
+    void retryRegistryFromYamlFile() throws Exception {
         Configuration config = CommonsConfigurationUtil.getConfiguration(YAMLConfiguration.class, TestConstants.RESILIENCE_CONFIG_YAML_FILE_NAME);
 
         RetryRegistry registry = CommonsConfigurationRetryRegistry.of(config, new CompositeCustomizer<>(List.of()));
 
-        Assertions.assertThat(registry.retry(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
-        Assertions.assertThat(registry.retry(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
+        assertThat(registry.retry(TestConstants.BACKEND_A).getName()).isEqualTo(TestConstants.BACKEND_A);
+        assertThat(registry.retry(TestConstants.BACKEND_B).getName()).isEqualTo(TestConstants.BACKEND_B);
     }
 }

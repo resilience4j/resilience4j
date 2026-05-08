@@ -31,6 +31,7 @@ import static java.util.Objects.requireNonNull;
 abstract class AbstractMetricsPublisher<E> implements MetricSet, MetricsPublisher<E> {
 
     protected final MetricRegistry metricRegistry;
+    // Using ConcurrentHashMap for virtual thread optimization - simple metrics name tracking
     protected final ConcurrentMap<String, Set<String>> metricsNameMap = new ConcurrentHashMap<>();
 
     protected AbstractMetricsPublisher(MetricRegistry metricRegistry) {

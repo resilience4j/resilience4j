@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@
  */
 package io.github.resilience4j.hedge.event;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class HedgeEventTest {
+class HedgeEventTest {
     private static final String HEDGE_NAME = "HEDGE_NAME";
     private static final Duration ONE_SECOND = Duration.ofMillis(1000);
     private static final Throwable THROWABLE = new Throwable(HEDGE_NAME);
@@ -34,7 +34,7 @@ public class HedgeEventTest {
     public static final String FAILED_PRIMARY_TEXT = "Hedge 'HEDGE_NAME' recorded an error: 'java.lang.Throwable: HEDGE_NAME' in 1000ms";
 
     @Test
-    public void shouldCreateCorrectHedgeSuccess() {
+    void shouldCreateCorrectHedgeSuccess() {
         HedgeOnSecondarySuccessEvent event = new HedgeOnSecondarySuccessEvent(HEDGE_NAME, ONE_SECOND);
 
         then(event.getEventType()).isEqualTo(HedgeEvent.Type.SECONDARY_SUCCESS);
@@ -44,7 +44,7 @@ public class HedgeEventTest {
     }
 
     @Test
-    public void shouldCreateCorrectHedgeFailure() {
+    void shouldCreateCorrectHedgeFailure() {
         HedgeOnSecondaryFailureEvent event = new HedgeOnSecondaryFailureEvent(HEDGE_NAME, ONE_SECOND, THROWABLE);
 
         then(event.getEventType()).isEqualTo(HedgeEvent.Type.SECONDARY_FAILURE);
@@ -55,7 +55,7 @@ public class HedgeEventTest {
     }
 
     @Test
-    public void shouldCreateCorrectPrimarySuccess() {
+    void shouldCreateCorrectPrimarySuccess() {
         HedgeOnPrimarySuccessEvent event = new HedgeOnPrimarySuccessEvent(HEDGE_NAME, ONE_SECOND);
 
         then(event.getEventType()).isEqualTo(HedgeEvent.Type.PRIMARY_SUCCESS);
@@ -65,7 +65,7 @@ public class HedgeEventTest {
     }
 
     @Test
-    public void shouldCreateCorrectPrimaryFailure() {
+    void shouldCreateCorrectPrimaryFailure() {
         HedgeOnPrimaryFailureEvent event = new HedgeOnPrimaryFailureEvent(HEDGE_NAME, ONE_SECOND, THROWABLE);
 
         then(event.getEventType()).isEqualTo(HedgeEvent.Type.PRIMARY_FAILURE);

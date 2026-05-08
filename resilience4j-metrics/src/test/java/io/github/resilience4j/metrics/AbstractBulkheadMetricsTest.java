@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Ingyu Hwang
+ * Copyright 2026 Ingyu Hwang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,15 @@ import com.codahale.metrics.MetricRegistry;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.test.HelloWorldService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -40,14 +44,14 @@ public abstract class AbstractBulkheadMetricsTest {
     private HelloWorldService helloWorldService;
     private ExecutorService executorService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         metricRegistry = new MetricRegistry();
         helloWorldService = mock(HelloWorldService.class);
         executorService = Executors.newSingleThreadExecutor();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         executorService.shutdown();
     }
