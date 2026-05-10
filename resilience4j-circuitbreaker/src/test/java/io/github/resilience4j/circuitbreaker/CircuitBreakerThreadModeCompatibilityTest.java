@@ -1,6 +1,6 @@
 package io.github.resilience4j.circuitbreaker;
 
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 3.0.0
  */
 @RunWith(Parameterized.class)
-public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBaseJUnit4 {
+public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(CircuitBreakerThreadModeCompatibilityTest.class);
 
@@ -38,7 +38,7 @@ public class CircuitBreakerThreadModeCompatibilityTest extends ThreadModeTestBas
 
     @Parameterized.Parameters(name = "{0} thread mode")
     public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBaseJUnit4.threadModes();
+        return ThreadModeTestBase.threadModes();
     }
 
     @Test

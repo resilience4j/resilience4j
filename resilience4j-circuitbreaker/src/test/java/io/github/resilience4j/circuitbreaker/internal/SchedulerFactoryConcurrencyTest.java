@@ -1,6 +1,6 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
  * @since 3.0.0
  */
 @RunWith(Parameterized.class)
-public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBaseJUnit4 {
+public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerFactoryConcurrencyTest.class);
 
@@ -34,7 +34,7 @@ public class SchedulerFactoryConcurrencyTest extends ThreadModeTestBaseJUnit4 {
 
     @Parameterized.Parameters(name = "{0} thread mode")
     public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBaseJUnit4.threadModes();
+        return ThreadModeTestBase.threadModes();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package io.github.resilience4j.ratelimiter.internal;
 
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * Tests for functions that are common in all implementations should go here.
  * Now supports both platform and virtual thread testing modes.
  */
-public abstract class RateLimitersImplementationTest extends ThreadModeTestBaseJUnit4 {
+public abstract class RateLimitersImplementationTest extends ThreadModeTestBase {
 
     public RateLimitersImplementationTest(ThreadType threadType) {
         super(threadType);

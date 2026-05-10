@@ -1,7 +1,7 @@
 package io.github.resilience4j.timelimiter.internal;
 
 import io.github.resilience4j.core.ExecutorServiceFactory;
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 @RunWith(Parameterized.class)
-public class TimeLimiterTest extends ThreadModeTestBaseJUnit4 {
+public class TimeLimiterTest extends ThreadModeTestBase {
 
     private static final String TIME_LIMITER_NAME = "TestTimeLimiter";
     private static final Duration TIMEOUT = Duration.ofMillis(1000);
@@ -38,7 +38,7 @@ public class TimeLimiterTest extends ThreadModeTestBaseJUnit4 {
 
     @Parameterized.Parameters(name = "{0} thread mode")
     public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBaseJUnit4.threadModes();
+        return ThreadModeTestBase.threadModes();
     }
 
     @Before

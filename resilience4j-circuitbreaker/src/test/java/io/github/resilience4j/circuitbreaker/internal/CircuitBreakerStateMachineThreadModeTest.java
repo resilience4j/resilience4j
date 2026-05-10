@@ -2,7 +2,7 @@ package io.github.resilience4j.circuitbreaker.internal;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
  * @since 3.0.0
  */
 @RunWith(Parameterized.class)
-public class CircuitBreakerStateMachineThreadModeTest extends ThreadModeTestBaseJUnit4 {
+public class CircuitBreakerStateMachineThreadModeTest extends ThreadModeTestBase {
 
     private static final Duration WAIT_DURATION = Duration.ofMillis(100);
 
@@ -34,7 +34,7 @@ public class CircuitBreakerStateMachineThreadModeTest extends ThreadModeTestBase
 
     @Parameterized.Parameters(name = "{0} thread mode")
     public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBaseJUnit4.threadModes();
+        return ThreadModeTestBase.threadModes();
     }
 
     @Override

@@ -1,7 +1,7 @@
 package io.github.resilience4j.retry.internal;
 
 import io.github.resilience4j.core.ExecutorServiceFactory;
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 3.0.0
  */
 @RunWith(Parameterized.class)
-public class RetryThreadModeTest extends ThreadModeTestBaseJUnit4 {
+public class RetryThreadModeTest extends ThreadModeTestBase {
 
     private static final Duration WAIT_DURATION = Duration.ofMillis(50);
     private ScheduledExecutorService scheduler;
@@ -39,7 +39,7 @@ public class RetryThreadModeTest extends ThreadModeTestBaseJUnit4 {
 
     @Parameterized.Parameters(name = "{0} thread mode")
     public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBaseJUnit4.threadModes();
+        return ThreadModeTestBase.threadModes();
     }
 
     @Before

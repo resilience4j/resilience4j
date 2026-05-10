@@ -21,7 +21,7 @@ package io.github.resilience4j.bulkhead.internal;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.bulkhead.event.BulkheadEvent;
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.core.exception.AcquirePermissionCancelledException;
 import io.github.resilience4j.core.registry.*;
@@ -52,7 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(Parameterized.class)
-public class SemaphoreBulkheadTest extends ThreadModeTestBaseJUnit4 {
+public class SemaphoreBulkheadTest extends ThreadModeTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SemaphoreBulkheadTest.class);
 
@@ -70,7 +70,7 @@ public class SemaphoreBulkheadTest extends ThreadModeTestBaseJUnit4 {
      */
     @Parameterized.Parameters(name = "threadMode={0}")
     public static Collection<Object[]> threadModes() {
-        return ThreadModeTestBaseJUnit4.threadModes();
+        return ThreadModeTestBase.threadModes();
     }
 
     private Bulkhead bulkhead;

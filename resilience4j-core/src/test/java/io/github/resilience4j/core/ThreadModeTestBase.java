@@ -1,22 +1,18 @@
 package io.github.resilience4j.core;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.runners.Parameterized;
 
-import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
- * Base class providing thread-mode lifecycle and helper utilities.
+ * Unified ThreadModeTestBase class for testing with both platform and virtual threads.
  *
- * <p><strong>Preferred usage</strong>: annotate the test class with
- * {@code @ExtendWith(ThreadModeExtension.class)} and use {@code @TestTemplate} instead of
- * extending this class. The extension handles property save/restore automatically and injects
- * the {@link ThreadType} parameter with no boilerplate.
- *
- * <p>This base class is retained for cases where inheritance is needed (e.g. shared abstract
- * test hierarchies). When used directly, call {@link #setUpThreadMode(ThreadType)} at the
- * start of each parameterized test; the {@code @BeforeEach}/{@code @AfterEach} methods handle
- * save and restore of the original property value automatically.
+ * This class consolidates the previously duplicated ThreadModeTestBase implementations
+ * from multiple modules into a single shared implementation in resilience4j-core.
+ * It provides parameterized test support for running tests in both thread modes.
  *
  * @author kanghyun.yang
  * @since 3.0.0
@@ -25,15 +21,47 @@ public abstract class ThreadModeTestBase {
 
     protected static final String SYS_PROP_KEY = "resilience4j.thread.type";
 
+    protected ThreadType threadType;
     private String originalPropertyValue;
 
-    @BeforeEach
-    public void saveThreadModeProperty() {
-        originalPropertyValue = System.getProperty(SYS_PROP_KEY);
+    /**
+     * Constructor for parameterized tests.
+     *
+     * @param threadType the thread type to test with
+     */
+    public ThreadModeTestBase(ThreadType threadType) {
+        this.threadType = threadType;
     }
 
-    @AfterEach
-    public void restoreThreadModeProperty() {
+    @Parameterized.Parameters(name = "threadMode={0}")
+    public static Collection<Object[]> threadModes() {
+        return Arrays.asList(new Object[][] {
+            {ThreadType.PLATFORM}, // Default platform threads
+            {ThreadType.VIRTUAL}   // Virtual threads
+        });
+    }
+
+    @Before
+    public void setUpThreadMode() {
+        // Save original property value
+        originalPropertyValue = System.getProperty(SYS_PROP_KEY);
+
+        // Configure thread mode for test
+        if (threadType == ThreadType.VIRTUAL) {
+            // Virtual threads require explicit activation via system property
+            // This sets "resilience4j.thread.type=virtual" to enable virtual thread mode
+            System.setProperty(SYS_PROP_KEY, threadType.toString());
+        } else {
+            // Platform threads are the default when no property is set
+            // Clear the property to ensure we fall back to platform thread mode
+            // This prevents interference from previous test runs
+            System.clearProperty(SYS_PROP_KEY);
+        }
+    }
+
+    @After
+    public void cleanUpThreadMode() {
+        // Restore original property value
         if (originalPropertyValue != null) {
             System.setProperty(SYS_PROP_KEY, originalPropertyValue);
         } else {
@@ -42,31 +70,16 @@ public abstract class ThreadModeTestBase {
     }
 
     /**
-     * Configure the system property for the given thread mode.
-     * Call this at the start of each parameterized test method.
+     * Returns true if running in virtual thread mode.
      */
-    protected void setUpThreadMode(ThreadType threadType) {
-        if (threadType == ThreadType.VIRTUAL) {
-            System.setProperty(SYS_PROP_KEY, threadType.toString());
-        } else {
-            System.clearProperty(SYS_PROP_KEY);
-        }
-    }
-
-    /**
-     * Returns a stream of all {@link ThreadType} values for use as a {@code @MethodSource}.
-     */
-    public static Stream<ThreadType> threadModes() {
-        return Stream.of(ThreadType.values());
-    }
-
-    /** Returns true if running in virtual thread mode. */
-    protected boolean isVirtualThreadMode(ThreadType threadType) {
+    public boolean isVirtualThreadMode() {
         return threadType == ThreadType.VIRTUAL;
     }
 
-    /** Returns a descriptive string for the given thread mode. */
-    protected String getThreadModeDescription(ThreadType threadType) {
-        return isVirtualThreadMode(threadType) ? "Virtual Thread Mode" : "Platform Thread Mode";
+    /**
+     * Returns a descriptive string for the current thread mode.
+     */
+    public String getThreadModeDescription() {
+        return isVirtualThreadMode() ? "Virtual Thread Mode" : "Platform Thread Mode";
     }
 }

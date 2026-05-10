@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code @TestTemplate} method for both platform and virtual thread modes.
  */
 @ExtendWith(ThreadModeExtension.class)
-class ThreadModeTestBaseParameterizedIntegrationTest {
+class ThreadModeExtensionTest {
 
     @TestTemplate
     void shouldRunWithBothThreadModes(ThreadType threadType) {

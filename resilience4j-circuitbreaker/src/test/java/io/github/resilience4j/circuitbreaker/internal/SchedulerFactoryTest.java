@@ -1,6 +1,6 @@
 package io.github.resilience4j.circuitbreaker.internal;
 
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
-public class SchedulerFactoryTest extends ThreadModeTestBaseJUnit4 {
+public class SchedulerFactoryTest extends ThreadModeTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerFactoryTest.class);
 

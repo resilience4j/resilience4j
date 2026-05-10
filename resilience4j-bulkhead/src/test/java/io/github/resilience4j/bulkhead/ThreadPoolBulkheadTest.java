@@ -19,7 +19,7 @@
 package io.github.resilience4j.bulkhead;
 
 import com.jayway.awaitility.Awaitility;
-import io.github.resilience4j.core.ThreadModeTestBaseJUnit4;
+import io.github.resilience4j.core.ThreadModeTestBase;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.test.HelloWorldService;
 import io.vavr.CheckedRunnable;
@@ -46,7 +46,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 @RunWith(Parameterized.class)
-public class ThreadPoolBulkheadTest extends ThreadModeTestBaseJUnit4 {
+public class ThreadPoolBulkheadTest extends ThreadModeTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolBulkheadTest.class);
 
