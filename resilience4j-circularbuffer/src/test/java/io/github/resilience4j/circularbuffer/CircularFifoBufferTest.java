@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2016 Robert Winkler and Bohdan Storozhuk
+ *  Copyright 2026 Robert Winkler and Bohdan Storozhuk
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 package io.github.resilience4j.circularbuffer;
 
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -27,17 +27,17 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CircularFifoBufferTest {
+class CircularFifoBufferTest {
 
     @Test
-    public void testCircularFifoBuffer() {
+    void circularFifoBuffer() {
         CircularFifoBuffer<Exception> exceptionBuffer = new ConcurrentCircularFifoBuffer<>(4);
 
         assertThat(exceptionBuffer.size()).isZero();
         assertThat(exceptionBuffer.isEmpty()).isTrue();
         assertThat(exceptionBuffer.isFull()).isFalse();
         exceptionBuffer.add(new IllegalArgumentException("bla bla"));
-        assertThat(exceptionBuffer.size()).isEqualTo(1);
+        assertThat(exceptionBuffer.size()).isOne();
         exceptionBuffer.add(new IOException("bla bla"));
         assertThat(exceptionBuffer.size()).isEqualTo(2);
         exceptionBuffer.add(new IllegalStateException("bla bla"));

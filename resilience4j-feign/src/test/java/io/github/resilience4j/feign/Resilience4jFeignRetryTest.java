@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2020 Mahmoud Romeh
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,45 +16,51 @@
  */
 package io.github.resilience4j.feign;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Feign;
 import feign.FeignException;
 import io.github.resilience4j.feign.test.TestService;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests the integration of the {@link Resilience4jFeign} with {@link Retry}
  */
-public class Resilience4jFeignRetryTest {
+@WireMockTest
+class Resilience4jFeignRetryTest {
 
-    private static final String MOCK_URL = "http://localhost:8080/";
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule();
-
+    private String baseUrl;
     private TestService testService;
     private Retry retry;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(WireMockRuntimeInfo wmRuntimeInfo) {
+        baseUrl = wmRuntimeInfo.getHttpBaseUrl() + "/";
         retry = spy(Retry.ofDefaults("test"));
         final FeignDecorators decorators = FeignDecorators.builder()
             .withRetry(retry)
             .build();
         testService = Feign.builder()
             .addCapability(Resilience4jFeign.capability(decorators))
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
     }
 
     @Test
-    public void testSuccessfulCall() {
+    void successfulCall() {
         givenResponse(200);
 
         testService.greeting();
@@ -64,7 +70,7 @@ public class Resilience4jFeignRetryTest {
     }
 
     @Test
-    public void testSuccessfulCallWithDefaultMethod() {
+    void successfulCallWithDefaultMethod() {
         givenResponse(200);
 
         testService.defaultGreeting();
@@ -73,36 +79,37 @@ public class Resilience4jFeignRetryTest {
         verify(retry).context();
     }
 
-    @Test(expected = FeignException.class)
-    public void testFailedHttpCall() {
+    @Test
+    void failedHttpCall() {
         givenResponse(400);
-        testService.greeting();
-    }
-
-    @Test(expected = FeignException.class)
-    public void testFailedHttpCallWithRetry() {
-        retry = Retry.of("test",RetryConfig.custom().retryExceptions(FeignException.class).maxAttempts(2).build());
-        final FeignDecorators decorators = FeignDecorators.builder()
-            .withRetry(retry)
-            .build();
-        testService = Resilience4jFeign.builder(decorators)
-            .target(TestService.class, MOCK_URL);
-        givenResponse(400);
-        testService.greeting();
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(2);
+        assertThatThrownBy(() -> testService.greeting())
+            .isInstanceOf(FeignException.class);
     }
 
     @Test
-    public void testRetryOnResult() {
-        retry = Retry.of("test",RetryConfig.<String>custom().retryOnResult(s->s.equalsIgnoreCase("hello world")).maxAttempts(2).build());
+    void failedHttpCallWithRetry() {
+        retry = Retry.of("test", RetryConfig.custom().retryExceptions(FeignException.class).maxAttempts(2).build());
         final FeignDecorators decorators = FeignDecorators.builder()
             .withRetry(retry)
             .build();
         testService = Resilience4jFeign.builder(decorators)
-            .target(TestService.class, MOCK_URL);
+            .target(TestService.class, baseUrl);
+        givenResponse(400);
+        assertThatThrownBy(() -> testService.greeting())
+            .isInstanceOf(FeignException.class);
+    }
+
+    @Test
+    void retryOnResult() {
+        retry = Retry.of("test", RetryConfig.<String>custom().retryOnResult(s -> s.equalsIgnoreCase("hello world")).maxAttempts(2).build());
+        final FeignDecorators decorators = FeignDecorators.builder()
+            .withRetry(retry)
+            .build();
+        testService = Resilience4jFeign.builder(decorators)
+            .target(TestService.class, baseUrl);
         givenResponse(200);
         testService.greeting();
-        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isEqualTo(1);
+        assertThat(retry.getMetrics().getNumberOfFailedCallsWithRetryAttempt()).isOne();
     }
 
 

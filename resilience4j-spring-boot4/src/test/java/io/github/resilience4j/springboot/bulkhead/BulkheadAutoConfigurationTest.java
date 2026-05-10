@@ -33,7 +33,6 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -153,7 +152,7 @@ public class BulkheadAutoConfigurationTest {
         bulkhead.getEventPublisher().onCallPermitted(event -> permitted.incrementAndGet());
         bulkhead.getEventPublisher().onCallRejected(event -> rejected.incrementAndGet());
 
-        dummyFeignClient.doSomething(StringUtils.EMPTY);
+        dummyFeignClient.doSomething("");
 
         ResponseEntity<BulkheadEndpointResponse> bulkheadList = restTemplate
             .getForEntity("/actuator/bulkheads", BulkheadEndpointResponse.class);

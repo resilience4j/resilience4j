@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,16 +19,16 @@
 package io.github.resilience4j.hedge;
 
 import io.github.resilience4j.hedge.internal.HedgeImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-public class HedgeTest {
+class HedgeTest {
 
     private static final String TEST_HEDGE = "TEST_HEDGE";
 
     @Test
-    public void shouldInitializeOfDefaults() {
+    void shouldInitializeOfDefaults() {
         Hedge hedge = Hedge.ofDefaults();
 
         then(hedge.getHedgeConfig().toString()).isEqualTo(HedgeConfig.ofDefaults().toString());
@@ -36,7 +36,7 @@ public class HedgeTest {
     }
 
     @Test
-    public void shouldInitializeOfName() {
+    void shouldInitializeOfName() {
         Hedge hedge = Hedge.ofDefaults(TEST_HEDGE);
 
         then(hedge.getHedgeConfig().toString()).isEqualTo(HedgeConfig.ofDefaults().toString());
@@ -44,14 +44,14 @@ public class HedgeTest {
     }
 
     @Test
-    public void shouldInitializeOfNameAndDefaults() {
+    void shouldInitializeOfNameAndDefaults() {
         Hedge hedge = Hedge.of(TEST_HEDGE, HedgeConfig.ofDefaults());
 
         then(hedge.getName()).isEqualTo(TEST_HEDGE);
     }
 
     @Test
-    public void shouldInitializeConfig() {
+    void shouldInitializeConfig() {
         HedgeConfig config = HedgeConfig.ofDefaults();
         Hedge hedge = Hedge.of(config);
 

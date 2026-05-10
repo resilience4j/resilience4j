@@ -26,7 +26,9 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 import java.util.concurrent.TimeoutException
 
@@ -45,10 +47,10 @@ class CoroutineTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(result).isEqualTo("Hello world")
+            assertThat(result).isEqualTo("Hello world")
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-            Assertions.assertThat(successfulEvents).hasSize(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(successfulEvents).hasSize(1)
         }
     }
 
@@ -72,8 +74,8 @@ class CoroutineTimeLimiterTest {
 
             //Then
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-            Assertions.assertThat(errorEvents).hasSize(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(errorEvents).hasSize(1)
         }
     }
 
@@ -97,8 +99,8 @@ class CoroutineTimeLimiterTest {
 
             //Then
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-            Assertions.assertThat(timeoutEvents).hasSize(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(timeoutEvents).hasSize(1)
         }
     }
 
@@ -122,8 +124,8 @@ class CoroutineTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(timeoutEvents).isEmpty()
-            Assertions.assertThat(successfulEvents).isEmpty()
+            assertThat(timeoutEvents).isEmpty()
+            assertThat(successfulEvents).isEmpty()
         }
     }
 
@@ -141,10 +143,10 @@ class CoroutineTimeLimiterTest {
             }
 
             //Then
-            Assertions.assertThat(function()).isEqualTo("Hello world")
+            assertThat(function()).isEqualTo("Hello world")
             // Then the helloWorldService should be invoked 1 time
-            Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-            Assertions.assertThat(successfulEvents).hasSize(1)
+            assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+            assertThat(successfulEvents).hasSize(1)
 
         }
     }

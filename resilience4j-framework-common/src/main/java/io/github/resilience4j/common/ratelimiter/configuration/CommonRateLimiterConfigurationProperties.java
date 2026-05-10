@@ -16,7 +16,6 @@
 package io.github.resilience4j.common.ratelimiter.configuration;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;

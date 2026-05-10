@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2018
+ * Copyright 2026
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,17 +18,18 @@ package io.github.resilience4j.feign;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RateLimiter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
-public class FeignDecoratorsTest {
+class FeignDecoratorsTest {
 
     @Test
-    public void testWithNothing() throws Throwable {
+    void withNothing() throws Throwable {
         final FeignDecorators testSubject = FeignDecorators.builder().build();
 
         final Object result = testSubject.decorate(args -> args[0], null, null, null)
@@ -41,7 +42,7 @@ public class FeignDecoratorsTest {
 
 
     @Test
-    public void testWithCircuitBreaker() throws Throwable {
+    void withCircuitBreaker() throws Throwable {
         final CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test");
         final CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
         final FeignDecorators testSubject = FeignDecorators.builder()
@@ -55,13 +56,12 @@ public class FeignDecoratorsTest {
             .describedAs("Returned result is correct")
             .isEqualTo("test01");
         assertThat(metrics.getNumberOfSuccessfulCalls())
-            .describedAs("Successful Calls")
-            .isEqualTo(1);
+            .describedAs("Successful Calls").isOne();
     }
 
 
     @Test
-    public void testWithRateLimiter() throws Throwable {
+    void withRateLimiter() throws Throwable {
         final RateLimiter rateLimiter = spy(RateLimiter.ofDefaults("test"));
         final FeignDecorators testSubject = FeignDecorators.builder().withRateLimiter(rateLimiter)
             .build();
@@ -73,6 +73,6 @@ public class FeignDecoratorsTest {
         assertThat(result)
             .describedAs("Returned result is correct")
             .isEqualTo("test01");
-        verify(rateLimiter, times(1)).acquirePermission(1);
+        verify(rateLimiter).acquirePermission(1);
     }
 }

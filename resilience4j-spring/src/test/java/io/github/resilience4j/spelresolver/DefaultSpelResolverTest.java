@@ -245,7 +245,77 @@ public class DefaultSpelResolverTest {
         assertThat(result).isEqualTo("$");
     }
 
+    /**
+     * #{'one.' + #root.args[0]} - SpEL template with method args context
+     */
+    @Test
+    public void spelTemplateWithArgsTest() throws Exception {
+        String testExpression = "#{'one.' + #root.args[0]}";
+        String firstArgument = "two";
+
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{firstArgument}, testExpression);
+
+        assertThat(result).isEqualTo("one.two");
+    }
+
+    /**
+     * #{'prefix.' + @dummySpelBean.getBulkheadName(#parameter)} - SpEL template with bean reference
+     */
+    @Test
+    public void spelTemplateWithBeanReferenceTest() throws Exception {
+        String testExpression = "#{'prefix.' + @dummySpelBean.getBulkheadName(#parameter)}";
+        String testMethodArg = "argg";
+        String bulkheadName = "sgt. bulko";
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        given(dummySpelBean.getBulkheadName(testMethodArg)).willReturn(bulkheadName);
+
+        String result = sut.resolve(testMethod, new Object[]{testMethodArg}, testExpression);
+
+        then(dummySpelBean).should(times(1)).getBulkheadName(testMethodArg);
+        assertThat(result).isEqualTo("prefix.sgt. bulko");
+    }
+
+    /**
+     * prefix-#{#root.args[0]}-suffix - SpEL template with literal text and embedded expression
+     */
+    @Test
+    public void spelTemplateWithMixedLiteralAndExpressionTest() throws Exception {
+        String testExpression = "prefix-#{#root.args[0]}-suffix";
+        String firstArgument = "value";
+
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethod", String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{firstArgument}, testExpression);
+
+        assertThat(result).isEqualTo("prefix-value-suffix");
+    }
+
+    /**
+     * #{#root.args[0]}-#{#root.args[1]} - SpEL template with multiple embedded expressions
+     */
+    @Test
+    public void spelTemplateWithMultipleEmbeddedExpressionsTest() throws Exception {
+        String testExpression = "#{#root.args[0]}-#{#root.args[1]}";
+
+        DefaultSpelResolverTest target = new DefaultSpelResolverTest();
+        Method testMethod = target.getClass().getMethod("testMethodTwoArgs", String.class, String.class);
+
+        String result = sut.resolve(testMethod, new Object[]{"foo", "bar"}, testExpression);
+
+        assertThat(result).isEqualTo("foo-bar");
+    }
+
     public String testMethod(String parameter) {
+        return "test";
+    }
+
+    public String testMethodTwoArgs(String first, String second) {
         return "test";
     }
 }

@@ -28,6 +28,14 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Abstraction to retrieve, copy and clean up values across thread boundary. This class is
  * specifically use for propagating {@link ThreadLocal} across different thread boundaries.
+ * <p>
+ * NOTE: For Java 21 and above with virtual threads, consider using Scoped Values (JEP 429)
+ * instead of ThreadLocal for better memory efficiency and to avoid virtual thread pinning.
+ * ThreadLocal usage with many virtual threads can lead to high memory usage as each virtual
+ * thread maintains its own copy of ThreadLocal values. Additionally, when a carrier thread
+ * is executing a virtual thread that accesses ThreadLocal variables, the virtual thread
+ * becomes "pinned" to that carrier thread until the ThreadLocal access completes, which
+ * reduces the concurrency benefits of virtual threads.
  *
  * @param <T> value type that is copied across thread boundary.
  */

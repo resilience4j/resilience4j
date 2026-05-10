@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,34 +18,28 @@
  */
 package io.github.resilience4j.hedge;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import io.github.resilience4j.hedge.internal.AverageDurationSupplier;
 import io.github.resilience4j.hedge.internal.HedgeDurationSupplier;
 
-public class HedgeConfigTest {
+class HedgeConfigTest {
 
     private static final String HEDGE_DURATION_MUST_NOT_BE_NULL = "HedgeDuration must not be null";
     private static final String HEDGE_TO_STRING = "HedgeConfig{false,0,true,100,null}";
 
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
     @Test
-    public void builderTimeoutIsNull() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage(HEDGE_DURATION_MUST_NOT_BE_NULL);
-
-        HedgeConfig.Builder.fromConfig(HedgeConfig.ofDefaults())
-            .preconfiguredDuration(null);
+    void builderTimeoutIsNull() {
+        assertThatThrownBy(() -> HedgeConfig.Builder.fromConfig(HedgeConfig.ofDefaults()).preconfiguredDuration(null))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessageContaining(HEDGE_DURATION_MUST_NOT_BE_NULL);
     }
 
     @Test
-    public void shouldInitializeFromOtherConfig() {
+    void shouldInitializeFromOtherConfig() {
         HedgeConfig config = HedgeConfig.custom().build();
         HedgeConfig.Builder builder = HedgeConfig.from(config);
 
@@ -53,12 +47,12 @@ public class HedgeConfigTest {
     }
 
     @Test
-    public void configToString() {
+    void configToString() {
         then(HedgeConfig.ofDefaults().toString()).isEqualTo(HEDGE_TO_STRING);
     }
 
     @Test
-    public void shouldCreatePercentCutoff() {
+    void shouldCreatePercentCutoff() {
         HedgeConfig config = HedgeConfig.custom()
             .averagePlusPercentageDuration(100, false).build();
 
@@ -66,7 +60,7 @@ public class HedgeConfigTest {
     }
 
     @Test
-    public void shouldCreateAmountCutoff() {
+    void shouldCreateAmountCutoff() {
         HedgeConfig config = HedgeConfig.custom()
             .averagePlusAmountDuration(200, false, 100).build();
 

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2021: Matthew Sandoz
+ *  Copyright 2026: Matthew Sandoz
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ package io.github.resilience4j.hedge.internal;
 import io.github.resilience4j.hedge.Hedge;
 import io.github.resilience4j.hedge.HedgeConfig;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 
@@ -35,7 +35,8 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
 
-public class HedgeImplTest {
+@ExtendWith(MockitoExtension.class)
+class HedgeImplTest {
 
     private static final String NAME = "name";
     private final HedgeConfig hedgeConfig = HedgeConfig.custom().preconfiguredDuration(Duration.ZERO).build();
@@ -44,34 +45,29 @@ public class HedgeImplTest {
     @InjectMocks
     private final Hedge hedge = new io.github.resilience4j.hedge.internal.HedgeImpl("name", hedgeConfig);
 
-    @Before
-    public void init() {
-        MockitoAnnotations.initMocks(this);
-    }
-
     @Test
-    public void shouldSetGivenName() {
+    void shouldSetGivenName() {
         Hedge hedge = Hedge.ofDefaults(NAME);
         assertThat(hedge.getName()).isEqualTo(NAME);
     }
 
     @Test
-    public void shouldPropagateConfig() {
+    void shouldPropagateConfig() {
         then(hedge.getHedgeConfig()).isEqualTo(hedgeConfig);
     }
 
     @Test
-    public void shouldPropagateName() {
+    void shouldPropagateName() {
         then(hedge.getName()).isEqualTo(NAME);
     }
 
     @Test
-    public void shouldDefaultToPreconfiguredSupplier() {
+    void shouldDefaultToPreconfiguredSupplier() {
         then(hedge.getDurationSupplier()).isOfAnyClassIn(PreconfiguredDurationSupplier.class);
     }
 
     @Test
-    public void shouldHandleConsumerErrors() {
+    void shouldHandleConsumerErrors() {
         hedge.getEventPublisher().onEvent(event -> {
             throw new RuntimeException("BAD_CONSUMER");
         });
@@ -79,12 +75,12 @@ public class HedgeImplTest {
     }
 
     @Test
-    public void shouldNotPublishWithoutConsumers() {
-        Mockito.doThrow(new RuntimeException("fail")).when(eventProcessor).consumeEvent(any());
-
+    void shouldNotPublishWithoutConsumers() {
         assertThatNoException().isThrownBy(() -> hedge.onPrimarySuccess(Duration.ofMillis(1000)));
         assertThatNoException().isThrownBy(() -> hedge.onSecondarySuccess(Duration.ofMillis(1000)));
         assertThatNoException().isThrownBy(() -> hedge.onPrimaryFailure(Duration.ofMillis(1000), new Throwable()));
         assertThatNoException().isThrownBy(() -> hedge.onSecondaryFailure(Duration.ofMillis(1000), new Throwable()));
+
+        Mockito.verify(eventProcessor, Mockito.never()).consumeEvent(any());
     }
 }

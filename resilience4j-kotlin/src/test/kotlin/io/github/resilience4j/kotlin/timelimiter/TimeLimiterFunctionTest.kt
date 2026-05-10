@@ -24,7 +24,9 @@ import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnSuccessEvent
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnTimeoutEvent
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+
 import java.time.Duration
 import java.util.concurrent.TimeoutException
 
@@ -43,9 +45,9 @@ class TimeLimiterFunctionTest {
         }
 
         // Then
-        Assertions.assertThat(result).isEqualTo("Hello world")
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-        Assertions.assertThat(successfulEvents).hasSize(1)
+        assertThat(result).isEqualTo("Hello world")
+        assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        assertThat(successfulEvents).hasSize(1)
     }
 
     @Test
@@ -66,8 +68,8 @@ class TimeLimiterFunctionTest {
         }
 
         // Then
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-        Assertions.assertThat(errorEvents).hasSize(1)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        assertThat(errorEvents).hasSize(1)
     }
 
     @Test
@@ -88,7 +90,7 @@ class TimeLimiterFunctionTest {
         }
 
         // Then
-        Assertions.assertThat(timeoutEvents).hasSize(1)
+        assertThat(timeoutEvents).hasSize(1)
     }
 
     @Test
@@ -104,9 +106,9 @@ class TimeLimiterFunctionTest {
         }
 
         // Then
-        Assertions.assertThat(function()).isEqualTo("Hello world")
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-        Assertions.assertThat(successfulEvents).hasSize(1)
+        assertThat(function()).isEqualTo("Hello world")
+        assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        assertThat(successfulEvents).hasSize(1)
     }
 
     @Test
@@ -129,7 +131,7 @@ class TimeLimiterFunctionTest {
         }
 
         // Then
-        Assertions.assertThat(helloWorldService.invocationCounter).isEqualTo(1)
-        Assertions.assertThat(errorEvents).hasSize(1)
+        assertThat(helloWorldService.invocationCounter).isEqualTo(1)
+        assertThat(errorEvents).hasSize(1)
     }
 }

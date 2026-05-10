@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static io.github.resilience4j.springboot.service.test.ratelimiter.RateLimiterDummyFeignClient.RATE_LIMITER_FEIGN_CLIENT_NAME;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -99,7 +98,7 @@ public class RateLimiterAutoConfigurationTest {
         } catch (Exception ex) {
             // Do nothing.
         }
-        rateLimiterDummyFeignClient.doSomething(EMPTY);
+        rateLimiterDummyFeignClient.doSomething("");
 
         assertThat(rateLimiter.getMetrics().getAvailablePermissions()).isEqualTo(8);
         assertThat(rateLimiter.getMetrics().getNumberOfWaitingThreads()).isZero();
@@ -121,7 +120,7 @@ public class RateLimiterAutoConfigurationTest {
 
         try {
             for (int i = 0; i < 11; i++) {
-                rateLimiterDummyFeignClient.doSomething(EMPTY);
+                rateLimiterDummyFeignClient.doSomething("");
             }
         } catch (RequestNotPermitted e) {
             // Do nothing

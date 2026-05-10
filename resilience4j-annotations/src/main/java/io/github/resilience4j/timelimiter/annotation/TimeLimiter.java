@@ -47,6 +47,8 @@ public @interface TimeLimiter {
 
     /**
      * fallbackMethod method name.
+     * It can be a SpEL expression. Use {@code "beanName::methodName"} to reference
+     * a fallback method on an external Spring bean.
      *
      * @return fallbackMethod method name.
      */

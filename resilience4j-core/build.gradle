@@ -13,3 +13,9 @@ dependencies {
 test {
     jvmArgs "-Xmx2G"
 }
+
+jmh {
+    if (project.hasProperty('jmhIncludes')) {
+        includes = [project.property('jmhIncludes')]
+    }
+}
