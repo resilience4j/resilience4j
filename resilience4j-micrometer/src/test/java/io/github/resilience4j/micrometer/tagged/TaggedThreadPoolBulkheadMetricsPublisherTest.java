@@ -26,11 +26,11 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static io.github.resilience4j.micrometer.tagged.MetricsTestHelper.findMeterByNamesTag;
 import static io.github.resilience4j.micrometer.tagged.ThreadPoolBulkheadMetricNames.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -177,9 +177,9 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
         assertThat(activeCount).isNotNull();
 
         // prevents timing issue with mismatching count as threads switch between active and available
-        await().atMost(100, TimeUnit.MILLISECONDS)
-                .pollDelay(10, TimeUnit.MILLISECONDS)
-                .pollInterval(10, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofMillis(100))
+                .pollDelay(Duration.ofMillis(10))
+                .pollInterval(Duration.ofMillis(10))
                 .until(() -> activeCount.value() == bulkhead.getMetrics().getActiveThreadCount());
 
         assertThat(activeCount.value()).isEqualTo(bulkhead.getMetrics().getActiveThreadCount());
@@ -193,9 +193,9 @@ public class TaggedThreadPoolBulkheadMetricsPublisherTest {
         assertThat(availableThreadCount).isNotNull();
 
         // prevents timing issue with mismatching count as threads switch between active and available
-        await().atMost(100, TimeUnit.MILLISECONDS)
-                .pollDelay(10, TimeUnit.MILLISECONDS)
-                .pollInterval(10, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofMillis(100))
+                .pollDelay(Duration.ofMillis(10))
+                .pollInterval(Duration.ofMillis(10))
                 .until(() -> availableThreadCount.value() == bulkhead.getMetrics().getAvailableThreadCount());
 
         assertThat(availableThreadCount.value()).isEqualTo(bulkhead.getMetrics().getAvailableThreadCount());
