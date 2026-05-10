@@ -1,7 +1,7 @@
 package io.github.resilience4j.core;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,36 +19,33 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author kanghyun.yang
  * @since 3.0.0
  */
-class ExecutorServiceFactoryTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class ExecutorServiceFactoryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExecutorServiceFactoryTest.class);
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldDetectCorrectThreadTypeBasedOnConfiguration(ThreadType threadType) {
-        setUpThreadMode(threadType);
-        LOG.info("Running shouldDetectCorrectThreadTypeBasedOnConfiguration in {}", getThreadModeDescription(threadType));
+        LOG.info("Running shouldDetectCorrectThreadTypeBasedOnConfiguration in {}", threadType);
 
         ThreadType detected = ExecutorServiceFactory.getThreadType();
 
-        if (isVirtualThreadMode(threadType)) {
+        if (threadType == ThreadType.VIRTUAL) {
             assertThat(detected)
-                .as("ExecutorServiceFactory should detect virtual thread mode when configured in " + getThreadModeDescription(threadType))
+                .as("ExecutorServiceFactory should detect virtual thread mode when configured in %s", threadType)
                 .isEqualTo(ThreadType.VIRTUAL);
         } else {
             assertThat(detected)
-                .as("ExecutorServiceFactory should detect platform thread mode when not configured in " + getThreadModeDescription(threadType))
+                .as("ExecutorServiceFactory should detect platform thread mode when not configured in %s", threadType)
                 .isEqualTo(ThreadType.PLATFORM);
         }
 
-        LOG.info("Thread type detection test passed in {} - Thread type: {}", getThreadModeDescription(threadType), detected);
+        LOG.info("Thread type detection test passed in {} - Thread type: {}", threadType, detected);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void scheduledExecutorShouldProduceCorrectThreadType(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running scheduledExecutorShouldProduceCorrectThreadType in {}", getThreadModeDescription(threadType));
+        LOG.info("Running scheduledExecutorShouldProduceCorrectThreadType in {}", threadType);
 
         ScheduledExecutorService executor =
             ExecutorServiceFactory.newSingleThreadScheduledExecutor("executor-test-" + threadType);
@@ -58,28 +55,26 @@ class ExecutorServiceFactoryTest extends ThreadModeTestBase {
         try {
             boolean taskRanOnVirtualThread = isVirtual.get(1, TimeUnit.SECONDS);
 
-            if (isVirtualThreadMode(threadType)) {
+            if (threadType == ThreadType.VIRTUAL) {
                 assertThat(taskRanOnVirtualThread)
-                    .as("Task should run on a virtual thread when configured in " + getThreadModeDescription(threadType))
+                    .as("Task should run on a virtual thread when configured in %s", threadType)
                     .isTrue();
             } else {
                 assertThat(taskRanOnVirtualThread)
-                    .as("Task should run on a platform thread by default in " + getThreadModeDescription(threadType))
+                    .as("Task should run on a platform thread by default in %s", threadType)
                     .isFalse();
             }
 
             LOG.info("Scheduled executor thread type test passed in {} - Virtual thread: {}",
-                getThreadModeDescription(threadType), taskRanOnVirtualThread);
+                threadType, taskRanOnVirtualThread);
         } finally {
             executor.shutdownNow();
         }
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleExecutorNamingConsistently(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running shouldHandleExecutorNamingConsistently in {}", getThreadModeDescription(threadType));
+        LOG.info("Running shouldHandleExecutorNamingConsistently in {}", threadType);
 
         ScheduledExecutorService executor =
             ExecutorServiceFactory.newSingleThreadScheduledExecutor("executor-naming-test-" + threadType);
@@ -90,10 +85,10 @@ class ExecutorServiceFactoryTest extends ThreadModeTestBase {
             String actualThreadName = threadName.get(1, TimeUnit.SECONDS);
 
             assertThat(actualThreadName)
-                .as("Thread name should include the provided prefix in " + getThreadModeDescription(threadType))
+                .as("Thread name should include the provided prefix in %s", threadType)
                 .containsIgnoringCase("executor-naming-test-" + threadType);
 
-            LOG.info("Executor naming test passed in {} - Thread name: {}", getThreadModeDescription(threadType), actualThreadName);
+            LOG.info("Executor naming test passed in {} - Thread name: {}", threadType, actualThreadName);
         } finally {
             executor.shutdownNow();
         }

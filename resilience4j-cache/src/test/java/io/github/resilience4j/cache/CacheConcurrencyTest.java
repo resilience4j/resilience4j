@@ -1,12 +1,12 @@
 package io.github.resilience4j.cache;
 
 import io.github.resilience4j.cache.event.CacheEvent;
-import io.github.resilience4j.core.ThreadModeTestBase;
+import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,8 @@ import static org.mockito.Mockito.mock;
  * @author kanghyun.yang
  * @since 3.0.0
  */
-class CacheConcurrencyTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class CacheConcurrencyTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(CacheConcurrencyTest.class);
 
@@ -105,15 +106,13 @@ class CacheConcurrencyTest extends ThreadModeTestBase {
         }
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleConcurrentCacheOperations(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Testing cache concurrency with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing cache concurrency with {}", threadType);
 
         final int numThreads = THREAD_COUNT;
         final int operationsPerThread = OPERATIONS_PER_THREAD;
-        executorService = isVirtualThreadMode(threadType)
+        executorService = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
@@ -159,18 +158,16 @@ class CacheConcurrencyTest extends ThreadModeTestBase {
         assertThat(successCount.get()).isEqualTo(numThreads * operationsPerThread);
         assertThat(events).isNotEmpty();
 
-        LOG.info("Cache concurrency test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Cache concurrency test passed with {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleConcurrentDecoratorUsage(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Testing concurrent decorator usage with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing concurrent decorator usage with {}", threadType);
 
         final int numThreads = THREAD_COUNT;
         final int operationsPerThread = OPERATIONS_PER_THREAD;
-        executorService = isVirtualThreadMode(threadType)
+        executorService = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
@@ -218,16 +215,13 @@ class CacheConcurrencyTest extends ThreadModeTestBase {
         assertThat(callCount.get()).isEqualTo(numThreads * operationsPerThread);
         assertThat(supplierCallCount.get()).isLessThan(callCount.get());
 
-        LOG.info("Concurrent decorator usage test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Concurrent decorator usage test passed with {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleRaceConditions(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-
         final int numThreads = THREAD_COUNT;
-        executorService = isVirtualThreadMode(threadType)
+        executorService = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(numThreads);
         final CountDownLatch startLatch = new CountDownLatch(1);
@@ -239,7 +233,6 @@ class CacheConcurrencyTest extends ThreadModeTestBase {
         String raceKey = "race-condition-key";
 
         Supplier<String> expensiveSupplier = () -> "result-" + supplierCallCount.incrementAndGet();
-
         Function<String, String> cachedFunction = Cache.decorateSupplier(cache, expensiveSupplier);
 
         for (int i = 0; i < numThreads; i++) {
@@ -264,6 +257,6 @@ class CacheConcurrencyTest extends ThreadModeTestBase {
 
         assertThat(results).hasSize(numThreads);
 
-        LOG.info("Race condition test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Race condition test passed with {}", threadType);
     }
 }

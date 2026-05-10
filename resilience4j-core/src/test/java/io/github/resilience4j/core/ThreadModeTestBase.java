@@ -2,30 +2,21 @@ package io.github.resilience4j.core;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.stream.Stream;
 
 /**
- * Base class for JUnit 5 parameterized tests that run in both platform and virtual thread modes.
+ * Base class providing thread-mode lifecycle and helper utilities.
  *
- * <p>Subclasses use {@code @ParameterizedTest @MethodSource("threadModes")} (or
- * {@code @EnumSource(ThreadType.class)}) and accept a {@link ThreadType} parameter.
- * Before each test, call {@link #setUpThreadMode(ThreadType)} to configure the system
- * property; the {@code @AfterEach} teardown restores the original value automatically.
+ * <p><strong>Preferred usage</strong>: annotate the test class with
+ * {@code @ExtendWith(ThreadModeExtension.class)} and use {@code @TestTemplate} instead of
+ * extending this class. The extension handles property save/restore automatically and injects
+ * the {@link ThreadType} parameter with no boilerplate.
  *
- * <p>Example usage:
- * <pre>{@code
- * class MyTest extends ThreadModeTestBase {
- *
- *     @ParameterizedTest(name = "{0} thread mode")
- *     @EnumSource(ThreadType.class)
- *     void myTest(ThreadType threadType) throws Exception {
- *         setUpThreadMode(threadType);
- *         // ... test body using isVirtualThreadMode(threadType) etc.
- *     }
- * }
- * }</pre>
+ * <p>This base class is retained for cases where inheritance is needed (e.g. shared abstract
+ * test hierarchies). When used directly, call {@link #setUpThreadMode(ThreadType)} at the
+ * start of each parameterized test; the {@code @BeforeEach}/{@code @AfterEach} methods handle
+ * save and restore of the original property value automatically.
  *
  * @author kanghyun.yang
  * @since 3.0.0

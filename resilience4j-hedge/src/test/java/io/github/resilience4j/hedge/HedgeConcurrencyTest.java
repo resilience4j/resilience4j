@@ -1,12 +1,12 @@
 package io.github.resilience4j.hedge;
 
-import io.github.resilience4j.core.ThreadModeTestBase;
+import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
 import io.github.resilience4j.hedge.event.HedgeEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,8 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
  * @author kanghyun.yang
  * @since 3.0.0
  */
-class HedgeConcurrencyTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class HedgeConcurrencyTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HedgeConcurrencyTest.class);
 
@@ -73,14 +74,12 @@ class HedgeConcurrencyTest extends ThreadModeTestBase {
         }
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleConcurrentHedgeOperations(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        assumeFalse(isVirtualThreadMode(threadType),
+        assumeFalse(threadType == ThreadType.VIRTUAL,
             "Hedge has known issues with virtual threads due to daemon thread limitations");
 
-        LOG.info("Testing concurrent hedge operations with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing concurrent hedge operations with {}", threadType);
 
         Hedge hedge = Hedge.of(Duration.ofMillis(50));
 
@@ -122,17 +121,15 @@ class HedgeConcurrencyTest extends ThreadModeTestBase {
 
         assertThat(successCount.get()).isEqualTo(NUM_THREADS);
 
-        LOG.info("Concurrent hedge operations test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Concurrent hedge operations test passed with {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleConcurrentHedgeRegistryOperations(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        assumeFalse(isVirtualThreadMode(threadType),
+        assumeFalse(threadType == ThreadType.VIRTUAL,
             "Hedge has known issues with virtual threads due to daemon thread limitations");
 
-        LOG.info("Testing concurrent hedge registry operations with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing concurrent hedge registry operations with {}", threadType);
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(NUM_THREADS);
@@ -180,17 +177,15 @@ class HedgeConcurrencyTest extends ThreadModeTestBase {
         assertThat(registryOperationCount.get()).isEqualTo(NUM_THREADS);
         assertThat(hedgeRegistry.getAllHedges().count()).isEqualTo(NUM_THREADS);
 
-        LOG.info("Concurrent hedge registry operations test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Concurrent hedge registry operations test passed with {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleConcurrentEventPublishing(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        assumeFalse(isVirtualThreadMode(threadType),
+        assumeFalse(threadType == ThreadType.VIRTUAL,
             "Hedge has known issues with virtual threads due to daemon thread limitations");
 
-        LOG.info("Testing concurrent event publishing with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing concurrent event publishing with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(50))
@@ -235,17 +230,15 @@ class HedgeConcurrencyTest extends ThreadModeTestBase {
         Thread.sleep(200);
         assertThat(events).isNotEmpty();
 
-        LOG.info("Concurrent event publishing test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Concurrent event publishing test passed with {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleRaceConditionsBetweenOperations(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        assumeFalse(isVirtualThreadMode(threadType),
+        assumeFalse(threadType == ThreadType.VIRTUAL,
             "Hedge has known issues with virtual threads due to daemon thread limitations");
 
-        LOG.info("Testing race conditions with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing race conditions with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(30))
@@ -291,17 +284,15 @@ class HedgeConcurrencyTest extends ThreadModeTestBase {
 
         assertThat(responseCount.get()).isEqualTo(NUM_THREADS);
 
-        LOG.info("Race conditions test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Race conditions test passed with {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleConcurrentHedgeTriggering(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        assumeFalse(isVirtualThreadMode(threadType),
+        assumeFalse(threadType == ThreadType.VIRTUAL,
             "Hedge has known issues with virtual threads due to daemon thread limitations");
 
-        LOG.info("Testing concurrent hedge triggering with {}", getThreadModeDescription(threadType));
+        LOG.info("Testing concurrent hedge triggering with {}", threadType);
 
         HedgeConfig config = HedgeConfig.custom()
             .preconfiguredDuration(Duration.ofMillis(30))
@@ -347,6 +338,6 @@ class HedgeConcurrencyTest extends ThreadModeTestBase {
 
         assertThat(responseCount.get()).isEqualTo(5);
 
-        LOG.info("Concurrent hedge triggering test passed with {}", getThreadModeDescription(threadType));
+        LOG.info("Concurrent hedge triggering test passed with {}", threadType);
     }
 }

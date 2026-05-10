@@ -1,9 +1,9 @@
 package io.github.resilience4j.core.metrics;
 
-import io.github.resilience4j.core.ThreadModeTestBase;
+import io.github.resilience4j.core.ThreadModeExtension;
 import io.github.resilience4j.core.ThreadType;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,15 +18,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration tests for lock-free metrics under high contention scenarios.
  * Tests that CAS backoff strategies work correctly with both platform and virtual threads.
  */
-class LockFreeMetricsContentionTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class LockFreeMetricsContentionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(LockFreeMetricsContentionTest.class);
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleHighContentionWithoutStarvation(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running shouldHandleHighContentionWithoutStarvation in {}", getThreadModeDescription(threadType));
+        LOG.info("Running shouldHandleHighContentionWithoutStarvation in {}", threadType);
 
         int windowSize = 10;
         LockFreeFixedSizeSlidingWindowMetrics metrics = new LockFreeFixedSizeSlidingWindowMetrics(windowSize);
@@ -38,7 +37,7 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failureCount = new AtomicInteger(0);
 
-        ExecutorService executor = isVirtualThreadMode(threadType)
+        ExecutorService executor = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(threadCount);
         try {
@@ -68,7 +67,7 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
 
             startLatch.countDown();
             assertThat(doneLatch.await(30, TimeUnit.SECONDS))
-                .as("All threads should complete within timeout in " + getThreadModeDescription(threadType))
+                .as("All threads should complete within timeout in %s", threadType)
                 .isTrue();
 
             for (Future<?> future : futures) {
@@ -81,19 +80,16 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
                 .isEqualTo(threadCount * operationsPerThread);
 
             LOG.info("High contention test passed in {} - Total: {}, Success: {}, Failures: {}",
-                getThreadModeDescription(threadType), successCount.get() + failureCount.get(),
-                successCount.get(), failureCount.get());
+                threadType, successCount.get() + failureCount.get(), successCount.get(), failureCount.get());
         } finally {
             executor.shutdown();
             executor.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldMaintainCorrectMetricsUnderContention(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running shouldMaintainCorrectMetricsUnderContention in {}", getThreadModeDescription(threadType));
+        LOG.info("Running shouldMaintainCorrectMetricsUnderContention in {}", threadType);
 
         int windowSize = 100;
         LockFreeFixedSizeSlidingWindowMetrics metrics = new LockFreeFixedSizeSlidingWindowMetrics(windowSize);
@@ -104,7 +100,7 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch doneLatch = new CountDownLatch(threadCount);
 
-        ExecutorService executor = isVirtualThreadMode(threadType)
+        ExecutorService executor = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(threadCount);
         try {
@@ -128,7 +124,7 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
 
             startLatch.countDown();
             assertThat(doneLatch.await(20, TimeUnit.SECONDS))
-                .as("All threads should complete in " + getThreadModeDescription(threadType))
+                .as("All threads should complete in %s", threadType)
                 .isTrue();
 
             Snapshot snapshot = metrics.getSnapshot();
@@ -138,18 +134,16 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
                 .isLessThanOrEqualTo(windowSize);
 
             LOG.info("Metrics correctness test passed in {} - Total calls: {}, Failure rate: {}",
-                getThreadModeDescription(threadType), snapshot.getTotalNumberOfCalls(), snapshot.getFailureRate());
+                threadType, snapshot.getTotalNumberOfCalls(), snapshot.getFailureRate());
         } finally {
             executor.shutdown();
             executor.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldNotExperienceStarvationWithCASBackoff(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running shouldNotExperienceStarvationWithCASBackoff in {}", getThreadModeDescription(threadType));
+        LOG.info("Running shouldNotExperienceStarvationWithCASBackoff in {}", threadType);
 
         LockFreeFixedSizeSlidingWindowMetrics metrics = new LockFreeFixedSizeSlidingWindowMetrics(50);
 
@@ -161,7 +155,7 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
             completedOps[i] = new AtomicInteger(0);
         }
 
-        ExecutorService executor = isVirtualThreadMode(threadType)
+        ExecutorService executor = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(threadCount);
         try {
@@ -189,23 +183,21 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
 
             for (int i = 0; i < threadCount; i++) {
                 assertThat(completedOps[i].get())
-                    .as("Thread %d should complete all operations in %s", i, getThreadModeDescription(threadType))
+                    .as("Thread %d should complete all operations in %s", i, threadType)
                     .isEqualTo(operationsPerThread);
             }
 
             LOG.info("No starvation test passed in {} - All {} threads completed {} operations",
-                getThreadModeDescription(threadType), threadCount, operationsPerThread);
+                threadType, threadCount, operationsPerThread);
         } finally {
             executor.shutdown();
             executor.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void shouldHandleMixedReadWriteContention(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running shouldHandleMixedReadWriteContention in {}", getThreadModeDescription(threadType));
+        LOG.info("Running shouldHandleMixedReadWriteContention in {}", threadType);
 
         LockFreeFixedSizeSlidingWindowMetrics metrics = new LockFreeFixedSizeSlidingWindowMetrics(100);
 
@@ -215,7 +207,7 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch doneLatch = new CountDownLatch(writerCount + readerCount);
 
-        ExecutorService executor = isVirtualThreadMode(threadType)
+        ExecutorService executor = threadType == ThreadType.VIRTUAL
             ? Executors.newVirtualThreadPerTaskExecutor()
             : Executors.newFixedThreadPool(writerCount + readerCount);
         try {
@@ -251,10 +243,10 @@ class LockFreeMetricsContentionTest extends ThreadModeTestBase {
 
             startLatch.countDown();
             assertThat(doneLatch.await(30, TimeUnit.SECONDS))
-                .as("Mixed read/write should complete in " + getThreadModeDescription(threadType))
+                .as("Mixed read/write should complete in %s", threadType)
                 .isTrue();
 
-            LOG.info("Mixed read/write contention test passed in {}", getThreadModeDescription(threadType));
+            LOG.info("Mixed read/write contention test passed in {}", threadType);
         } finally {
             executor.shutdown();
             executor.awaitTermination(5, TimeUnit.SECONDS);

@@ -20,8 +20,8 @@ package io.github.resilience4j.core;
 
 import io.github.resilience4j.core.TestContextPropagators.TestThreadLocalContextPropagator;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -41,7 +41,8 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-class ContextPropagatorTest extends ThreadModeTestBase {
+@ExtendWith(ThreadModeExtension.class)
+class ContextPropagatorTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ContextPropagatorTest.class);
 
@@ -50,11 +51,9 @@ class ContextPropagatorTest extends ThreadModeTestBase {
         MDC.clear(); // Clean up any MDC values
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationFailureSingleTestInBothThreadModes(ThreadType threadType) {
-        setUpThreadMode(threadType);
-        LOG.info("Running contextPropagationFailureSingleTestInBothThreadModes in {}", getThreadModeDescription(threadType));
+        LOG.info("Running contextPropagationFailureSingleTestInBothThreadModes in {}", threadType);
 
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary-" + threadType);
@@ -66,13 +65,11 @@ class ContextPropagatorTest extends ThreadModeTestBase {
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(future).isCompletedWithValue(null));
 
-        LOG.info("Context propagation failure test passed in {}", getThreadModeDescription(threadType));
+        LOG.info("Context propagation failure test passed in {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationEmptyListShouldNotFail(ThreadType threadType) {
-        setUpThreadMode(threadType);
         Supplier<String> supplier = () -> "Hello World";
 
         //Thread boundary
@@ -83,10 +80,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(future).isCompletedWithValue("Hello World"));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationEmptyListShouldNotFailWithCallable(ThreadType threadType) {
-        setUpThreadMode(threadType);
         //Thread boundary
         Callable<String> decorateCallable = ContextPropagator.decorateCallable(Collections.emptyList(), () -> "Hello World");
 
@@ -94,10 +89,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(decorateCallable.call()).isEqualTo("Hello World"));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationFailureMultipleTest(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShould_NOT_CrossThreadBoundary");
 
@@ -115,10 +108,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(future.get()).containsExactlyInAnyOrder(null, null));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationSupplierMultipleTest(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
 
@@ -141,10 +132,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
         );
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationSupplierMultipleTestWithCallable(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
 
@@ -166,11 +155,9 @@ class ContextPropagatorTest extends ThreadModeTestBase {
         );
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationSupplierSingleTestInBothThreadModes(ThreadType threadType) {
-        setUpThreadMode(threadType);
-        LOG.info("Running contextPropagationSupplierSingleTestInBothThreadModes in {}", getThreadModeDescription(threadType));
+        LOG.info("Running contextPropagationSupplierSingleTestInBothThreadModes in {}", threadType);
 
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         String expectedValue = "SingleValueShouldCrossThreadBoundary-" + threadType;
@@ -185,13 +172,11 @@ class ContextPropagatorTest extends ThreadModeTestBase {
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(future).isCompletedWithValue(expectedValue));
 
-        LOG.info("Context propagation supplier test passed in {}", getThreadModeDescription(threadType));
+        LOG.info("Context propagation supplier test passed in {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationSupplierSingleTestWithCallable(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShouldCrossThreadBoundary");
 
@@ -203,10 +188,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(callable.call()).isEqualTo("SingleValueShouldCrossThreadBoundary"));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationRunnableFailureSingleTest(ThreadType threadType) {
-        setUpThreadMode(threadType);
         AtomicReference<String> reference = new AtomicReference<>();
         //Thread boundary
         Runnable runnable = ContextPropagator.decorateRunnable(
@@ -219,10 +202,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(reference).hasValue("Hello World"));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationRunnableEmptyListShouldNotFail(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShould_NOT_CrossThreadBoundary");
 
@@ -235,10 +216,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(reference).hasValue(null));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationRunnableSingleTest(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
         threadLocal.set("SingleValueShouldCrossThreadBoundary");
 
@@ -253,10 +232,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(reference).hasValue("SingleValueShouldCrossThreadBoundary"));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationRunnableMultipleTest(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCrossThreadBoundary");
 
@@ -283,10 +260,8 @@ class ContextPropagatorTest extends ThreadModeTestBase {
                 "SecondValueShouldCrossThreadBoundary"));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationRunnableMultipleFailureTest(ThreadType threadType) {
-        setUpThreadMode(threadType);
         ThreadLocal<String> threadLocalOne = new ThreadLocal<>();
         threadLocalOne.set("FirstValueShouldCross_NOT_ThreadBoundary");
 
@@ -306,11 +281,9 @@ class ContextPropagatorTest extends ThreadModeTestBase {
             assertThat(reference.get()).containsExactlyInAnyOrder(null, null));
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationWithMDCInBothThreadModes(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running contextPropagationWithMDCInBothThreadModes in {}", getThreadModeDescription(threadType));
+        LOG.info("Running contextPropagationWithMDCInBothThreadModes in {}", threadType);
 
         // Test MDC (Mapped Diagnostic Context) propagation
         String testKey = "test-key-" + threadType;
@@ -353,20 +326,18 @@ class ContextPropagatorTest extends ThreadModeTestBase {
 
         // Verify MDC was propagated correctly
         assertThat(mdcValueInChildThread.get())
-            .as("MDC should be propagated correctly in " + getThreadModeDescription(threadType))
+            .as("MDC should be propagated correctly in %s", threadType)
             .isEqualTo(testValue);
 
         // Clean up
         MDC.remove(testKey);
 
-        LOG.info("MDC context propagation test passed in {}", getThreadModeDescription(threadType));
+        LOG.info("MDC context propagation test passed in {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationWithMultiplePropagators(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running contextPropagationWithMultiplePropagators in {}", getThreadModeDescription(threadType));
+        LOG.info("Running contextPropagationWithMultiplePropagators in {}", threadType);
 
         // Create multiple ThreadLocals and propagators
         ThreadLocal<String> stringThreadLocal = new ThreadLocal<>();
@@ -435,20 +406,18 @@ class ContextPropagatorTest extends ThreadModeTestBase {
         // Verify results
         List<Object> result = future.get(5, TimeUnit.SECONDS);
         assertThat(result)
-            .as("Both context values should be propagated correctly in " + getThreadModeDescription(threadType))
+            .as("Both context values should be propagated correctly in %s", threadType)
             .containsExactly(stringValue, intValue);
 
-        LOG.info("Multiple propagators test passed in {}", getThreadModeDescription(threadType));
+        LOG.info("Multiple propagators test passed in {}", threadType);
     }
 
-    @ParameterizedTest(name = "{0} thread mode")
-    @EnumSource(ThreadType.class)
+    @TestTemplate
     void contextPropagationWithConcurrentThreadsInBothModes(ThreadType threadType) throws Exception {
-        setUpThreadMode(threadType);
-        LOG.info("Running contextPropagationWithConcurrentThreadsInBothModes in {}", getThreadModeDescription(threadType));
+        LOG.info("Running contextPropagationWithConcurrentThreadsInBothModes in {}", threadType);
 
         // Reduced thread count for faster test execution
-        int concurrentThreads = isVirtualThreadMode(threadType) ? 5 : 3;
+        int concurrentThreads = threadType == ThreadType.VIRTUAL ? 5 : 3;
         ThreadLocal<String> threadLocal = new ThreadLocal<>();
 
         AtomicInteger successCount = new AtomicInteger(0);
@@ -484,10 +453,10 @@ class ContextPropagatorTest extends ThreadModeTestBase {
 
         // Verify all threads propagated context correctly
         assertThat(successCount.get())
-            .as("All threads should successfully propagate context in " + getThreadModeDescription(threadType))
+            .as("All threads should successfully propagate context in %s", threadType)
             .isEqualTo(concurrentThreads);
 
         LOG.info("Concurrent context propagation test passed in {} - Threads: {}, Successes: {}",
-            getThreadModeDescription(threadType), concurrentThreads, successCount.get());
+            threadType, concurrentThreads, successCount.get());
     }
 }
